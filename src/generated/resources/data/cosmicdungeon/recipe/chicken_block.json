@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "cosmicdungeon:chicken_block"
+  ],
+  "result": {
+    "count": 10,
+    "id": "minecraft:egg"
+  }
+}

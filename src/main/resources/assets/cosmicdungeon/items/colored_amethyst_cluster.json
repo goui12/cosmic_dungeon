@@ -1,0 +1,12 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "cosmicdungeon:item/colored_amethyst_cluster",
+    "tints": [
+      {
+        "type": "cosmicdungeon:amethyst_color",
+        "default": 16711935
+      }
+    ]
+  }
+}

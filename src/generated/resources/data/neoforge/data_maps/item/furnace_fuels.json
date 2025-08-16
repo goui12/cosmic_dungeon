@@ -1,0 +1,10 @@
+{
+  "values": {
+    "cosmicdungeon:frostfire_ice": {
+      "burn_time": 2400
+    },
+    "cosmicdungeon:starlight_ashes": {
+      "burn_time": 1200
+    }
+  }
+}

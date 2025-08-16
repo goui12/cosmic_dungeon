@@ -1,0 +1,3 @@
+// 1.21.8	2025-08-11T20:40:51.1843259	Tags for minecraft:block mod id cosmicdungeon
+9872f70748d82fc6df2ff56fab97cb01e6e3cafd data/minecraft/tags/block/mineable/pickaxe.json
+1b2e3de5d6440f665011660e9e4d08fb93d2775c data/minecraft/tags/block/needs_iron_tool.json
