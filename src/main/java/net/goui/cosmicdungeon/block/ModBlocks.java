@@ -22,9 +22,11 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public class ModBlocks {
     public static final DeferredRegister.Blocks BLOCKS =
             DeferredRegister.createBlocks(CosmicDungeonMod.MOD_ID);
+
     public static void register(IEventBus eventBus) {
         BLOCKS.register(eventBus);
     }
+
     // Block registration
     public static final DeferredBlock<Block> BISMUTH_BLOCK = BLOCKS.registerBlock("bismuth_block",
             props -> new Block(props.strength(4f).requiresCorrectToolForDrops().sound(SoundType.AMETHYST)));
@@ -35,9 +37,9 @@ public class ModBlocks {
             ));
 
     public static final DeferredBlock<Block> BISMUTH_DEEPSLATE_ORE = BLOCKS.registerBlock("bismuth_deepslate_ore",
-                    props -> new DropExperienceBlock(UniformInt.of(3, 6),
-                            props.strength(4f).requiresCorrectToolForDrops().sound(SoundType.DEEPSLATE)
-                    ));
+            props -> new DropExperienceBlock(UniformInt.of(3, 6),
+                    props.strength(4f).requiresCorrectToolForDrops().sound(SoundType.DEEPSLATE)
+            ));
     public static final DeferredBlock<Block> MAGIC_BLOCK = BLOCKS.registerBlock("magic_block",
             props -> new MagicBlock(props.strength(2f).noLootTable()));
 
@@ -108,33 +110,30 @@ public class ModBlocks {
 
     //Amethyst family item registration
 
-    public static final DeferredItem<BlockItem> COLORED_AMETHYST_BLOCK_ITEM =
-            ModItems.ITEMS.register("colored_amethyst_block",
-                    () -> new net.goui.cosmicdungeon.item.custom.ColoredBlockItem(
-                            COLORED_AMETHYST_BLOCK.get(), new Item.Properties()));
+    // registerItem gives you pre-initialized props (with the id), avoiding the NPE.
+    public static final DeferredItem<Item> COLORED_AMETHYST_BLOCK_ITEM =
+            ModItems.ITEMS.registerItem("colored_amethyst_block",
+                    props -> new net.goui.cosmicdungeon.item.custom.ColoredBlockItem(
+                            COLORED_AMETHYST_BLOCK.get(), props));
 
-    public static final DeferredItem<BlockItem> COLORED_BUDDING_AMETHYST_ITEM =
-            ModItems.ITEMS.register("colored_budding_amethyst",
-                    () -> new net.goui.cosmicdungeon.item.custom.ColoredBlockItem(
-                            COLORED_BUDDING_AMETHYST.get(), new Item.Properties()));
+    public static final DeferredItem<Item> COLORED_AMETHYST_BUD_SMALL_ITEM =
+            ModItems.ITEMS.registerItem("colored_amethyst_bud_small",
+                    props -> new net.goui.cosmicdungeon.item.custom.ColoredBlockItem(
+                            COLORED_AMETHYST_BUD_SMALL.get(), props));
 
-    public static final DeferredItem<BlockItem> COLORED_AMETHYST_BUD_SMALL_ITEM =
-            ModItems.ITEMS.register("colored_amethyst_bud_small",
-                    () -> new net.goui.cosmicdungeon.item.custom.ColoredBlockItem(
-                            COLORED_AMETHYST_BUD_SMALL.get(), new Item.Properties()));
+    public static final DeferredItem<Item> COLORED_AMETHYST_BUD_MEDIUM_ITEM =
+            ModItems.ITEMS.registerItem("colored_amethyst_bud_medium",
+                    props -> new net.goui.cosmicdungeon.item.custom.ColoredBlockItem(
+                            COLORED_AMETHYST_BUD_MEDIUM.get(), props));
 
-    public static final DeferredItem<BlockItem> COLORED_AMETHYST_BUD_MEDIUM_ITEM =
-            ModItems.ITEMS.register("colored_amethyst_bud_medium",
-                    () -> new net.goui.cosmicdungeon.item.custom.ColoredBlockItem(
-                            COLORED_AMETHYST_BUD_MEDIUM.get(), new Item.Properties()));
+    public static final DeferredItem<Item> COLORED_AMETHYST_BUD_LARGE_ITEM =
+            ModItems.ITEMS.registerItem("colored_amethyst_bud_large",
+                    props -> new net.goui.cosmicdungeon.item.custom.ColoredBlockItem(
+                            COLORED_AMETHYST_BUD_LARGE.get(), props));
 
-    public static final DeferredItem<BlockItem> COLORED_AMETHYST_BUD_LARGE_ITEM =
-            ModItems.ITEMS.register("colored_amethyst_bud_large",
-                    () -> new net.goui.cosmicdungeon.item.custom.ColoredBlockItem(
-                            COLORED_AMETHYST_BUD_LARGE.get(), new Item.Properties()));
-
-    public static final DeferredItem<BlockItem> COLORED_AMETHYST_CLUSTER_ITEM =
-            ModItems.ITEMS.register("colored_amethyst_cluster",
-                    () -> new net.goui.cosmicdungeon.item.custom.ColoredBlockItem(
-                            COLORED_AMETHYST_CLUSTER.get(), new Item.Properties()));
+    public static final DeferredItem<Item> COLORED_AMETHYST_CLUSTER_ITEM =
+            ModItems.ITEMS.registerItem("colored_amethyst_cluster",
+                    props -> new net.goui.cosmicdungeon.item.custom.ColoredBlockItem(
+                            COLORED_AMETHYST_CLUSTER.get(), props));
 }
+
