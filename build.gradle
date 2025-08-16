@@ -1,21 +1,25 @@
 plugins {
     id 'java-library'
-    id 'maven-publish'
     id 'net.neoforged.moddev' version '2.0.106'
     id 'idea'
-}
-
-tasks.named('wrapper', Wrapper).configure {
-    // Define wrapper values here so as to not have to always do so when updating gradlew.properties.
-    // Switching this to Wrapper.DistributionType.ALL will download the full gradle sources that comes with
-    // documentation attached on cursor hover of gradle classes and methods. However, this comes with increased
-    // file size for Gradle. If you do switch this to ALL, run the Gradle wrapper task twice afterwards.
-    // (Verify by checking gradle/wrapper/gradle-wrapper.properties to see if distributionUrl now points to `-all`)
-    distributionType = Wrapper.DistributionType.BIN
+    id("io.github.themrmilchmann.curseforge-publish") version "0.8.0"
 }
 
 version = mod_version
 group = mod_group_id
+
+curseforge {
+    apiToken = providers.gradleProperty('curseforgeApiToken').get()
+    publications {
+        named('neoForge') {
+            projectId = providers.gradleProperty('curseforgeProjectId').get()
+            artifacts.named('main') { }
+        }
+    }
+}
+
+
+
 
 repositories {
     // Add here additional repositories if required by some of the dependencies below.
@@ -160,19 +164,6 @@ sourceSets.main.resources.srcDir generateModMetadata
 // To avoid having to run "generateModMetadata" manually, make it run on every project reload
 neoForge.ideSyncTask generateModMetadata
 
-// Example configuration to allow publishing using the maven-publish plugin
-publishing {
-    publications {
-        register('mavenJava', MavenPublication) {
-            from components.java
-        }
-    }
-    repositories {
-        maven {
-            url "file://${project.projectDir}/repo"
-        }
-    }
-}
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation

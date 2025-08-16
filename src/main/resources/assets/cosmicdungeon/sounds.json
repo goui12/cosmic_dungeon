@@ -1,0 +1,30 @@
+{
+  "chicken_sound_1": {
+    "category": "blocks",
+    "sounds": [ "cosmicdungeon:chicken_sound_1" ]
+  },
+  "chicken_sound_2": {
+    "category": "blocks",
+    "sounds": [ "cosmicdungeon:chicken_sound_2" ]
+  },
+  "chicken_sound_3": {
+    "category": "blocks",
+    "sounds": [ "cosmicdungeon:chicken_sound_3" ]
+  },
+  "chicken_sound_4": {
+    "category": "blocks",
+    "sounds": [ "cosmicdungeon:chicken_sound_4" ]
+  },
+  "chicken_sound_5": {
+    "category": "blocks",
+    "sounds": [ "cosmicdungeon:chicken_sound_5" ]
+  },
+  "chicken_sound_6": {
+    "category": "blocks",
+    "sounds": [ "cosmicdungeon:chicken_sound_6" ]
+  },
+  "chicken_sound_7": {
+    "category": "blocks",
+    "sounds": [ "cosmicdungeon:chicken_sound_7" ]
+  }
+}

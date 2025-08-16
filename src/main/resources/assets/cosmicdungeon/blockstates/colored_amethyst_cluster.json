@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=up":    { "model": "cosmicdungeon:block/colored_amethyst_cluster" },
+    "facing=down":  { "model": "cosmicdungeon:block/colored_amethyst_cluster", "x": 180 },
+    "facing=north": { "model": "cosmicdungeon:block/colored_amethyst_cluster", "x": 90, "y": 180 },
+    "facing=south": { "model": "cosmicdungeon:block/colored_amethyst_cluster", "x": 90, "y": 0 },
+    "facing=west":  { "model": "cosmicdungeon:block/colored_amethyst_cluster", "x": 90, "y": 90 },
+    "facing=east":  { "model": "cosmicdungeon:block/colored_amethyst_cluster", "x": 90, "y": 270 }
+  }
+}
