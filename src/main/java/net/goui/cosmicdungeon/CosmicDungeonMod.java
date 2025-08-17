@@ -1,6 +1,9 @@
 package net.goui.cosmicdungeon;
 
 import net.goui.cosmicdungeon.block.ModBlocks;
+import net.goui.cosmicdungeon.command.ClassCommand;
+import net.goui.cosmicdungeon.command.CreativeCommand;
+import net.goui.cosmicdungeon.command.SurvivalCommand;
 import net.goui.cosmicdungeon.command.WorldCommand;
 import net.goui.cosmicdungeon.item.ModCreativeModeTabs;
 import net.goui.cosmicdungeon.item.ModItems;
@@ -51,6 +54,9 @@ public class CosmicDungeonMod {
 
     private void onRegisterCommands(RegisterCommandsEvent event) {
         WorldCommand.register(event.getDispatcher());
+        CreativeCommand.register(event.getDispatcher());
+        SurvivalCommand.register(event.getDispatcher());
+        ClassCommand.register(event.getDispatcher());
     }
 
 

@@ -69,16 +69,27 @@ public class ModCreativeModeTabs {
                             .icon(() -> new ItemStack(ModBlocks.AMETHYST.get(DyeColor.PURPLE).block().get()))
                             .displayItems((params, out) -> {
 
-                                ModBlocks.AMETHYST.values().forEach(v -> {
-                                    out.accept(v.block());
-                                    out.accept(v.budSmall());
-                                    out.accept(v.budMedium());
-                                    out.accept(v.budLarge());
-                                    out.accept(v.cluster());
-                                    out.accept(v.budding());
-                                });
-                                // --- Vanilla Minecraft amethyst stuff ---
-                                // (Guarded: if something has no item in this MC version, it just won’t be added)
+                                // Per-color ordering: base block -> LIT block -> buds/cluster/budding
+                                for (var color : DyeColor.values()) {
+                                    var fam = ModBlocks.AMETHYST.get(color);
+                                    if (fam == null) continue;
+
+                                    // Base block
+                                    out.accept(fam.block());
+
+                                    // Lit block (if registered for this color)
+                                    var litItem = ModBlocks.LIT_AMETHYST_ITEMS.get(color);
+                                    if (litItem != null) out.accept(litItem);
+
+                                    // Buds + cluster + budding for that color
+                                    out.accept(fam.budSmall());
+                                    out.accept(fam.budMedium());
+                                    out.accept(fam.budLarge());
+                                    out.accept(fam.cluster());
+                                    out.accept(fam.budding());
+                                }
+
+                                // --- Vanilla Minecraft amethyst (guarded) ---
                                 acceptIfHasItem(out, Blocks.AMETHYST_BLOCK);
                                 acceptIfHasItem(out, Blocks.BUDDING_AMETHYST);
                                 acceptIfHasItem(out, Blocks.SMALL_AMETHYST_BUD);

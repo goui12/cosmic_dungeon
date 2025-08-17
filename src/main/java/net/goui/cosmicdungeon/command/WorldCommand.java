@@ -22,9 +22,8 @@ import java.util.List;
 public final class WorldCommand {
     private WorldCommand() {}
 
-    // Tab-complete: aliases + all currently LOADED level keys
+    // Tab-complete: aliases + hard-coded dungeon dims
     private static final SuggestionProvider<CommandSourceStack> DIM_SUGGEST = (ctx, builder) -> {
-        var source = ctx.getSource();
         List<String> names = new ArrayList<>();
 
         // Friendly aliases
@@ -33,18 +32,19 @@ public final class WorldCommand {
         names.add("nether");
         names.add("end");
 
-        // Loaded dimensions (e.g., minecraft:overworld, cosmicdungeon:dungeon_1, etc.)
-        for (ResourceKey<Level> k : source.getServer().levelKeys()) {
-            String id = k.location().toString();
-            if (!names.contains(id)) names.add(id);
-        }
+        // Hard-coded dungeon dimensions
+        names.add("dungeon_1");
+        names.add("dungeon_2");
+        names.add("dungeon_3");
+        names.add("dungeon_4");
+        names.add("dungeon_5");
 
         return SharedSuggestionProvider.suggest(names, builder);
     };
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("world")
-                .requires(src -> src.hasPermission(0)) // change to 2 for OP-only
+                .requires(src -> src.hasPermission(2)) // OP-only
                 .then(Commands.argument("target", StringArgumentType.word())
                         .suggests(DIM_SUGGEST)
                         .executes(ctx -> {
@@ -95,19 +95,16 @@ public final class WorldCommand {
     private static BlockPos ensureStandable(ServerLevel level, BlockPos pos) {
         var m = pos.mutable();
         int minY = level.getMinY();
-        int maxY = minY + level.getLogicalHeight() - 1; // <- was getMaxBuildHeight()
+        int maxY = minY + level.getLogicalHeight() - 1;
 
-        // Climb up until there is solid ground and 2 air blocks
         for (int y = Math.max(minY + 1, m.getY()); y < maxY - 1; y++) {
             m.setY(y);
             if (isStandable(level, m)) return m.immutable();
         }
 
-        // Fallback: world surface at spawn XZ
         int surfaceY = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE, pos.getX(), pos.getZ());
         m.set(pos.getX(), Math.max(surfaceY, minY + 1), pos.getZ());
 
-        // Nudge upward a bit if needed
         for (int y = m.getY(); y < Math.min(m.getY() + 8, maxY - 1); y++) {
             m.setY(y);
             if (isStandable(level, m)) return m.immutable();
@@ -115,13 +112,11 @@ public final class WorldCommand {
         return m.immutable();
     }
 
-
     private static boolean isStandable(ServerLevel level, BlockPos pos) {
         var below = pos.below();
         var feet = level.getBlockState(pos);
         var head = level.getBlockState(pos.above());
 
-        // solid ground below (sturdy upward face), empty feet & head (no collision), and no fluid
         boolean sturdyBelow = level.getBlockState(below).isFaceSturdy(level, below, Direction.UP);
         boolean noFluid = level.getFluidState(pos).isEmpty() && level.getFluidState(pos.above()).isEmpty();
         boolean emptySpace = feet.getCollisionShape(level, pos).isEmpty()
@@ -139,7 +134,6 @@ public final class WorldCommand {
         ResourceLocation id = s.contains(":") ? ResourceLocation.tryParse(s) : ResourceLocation.tryBuild("cosmicdungeon", s);
         if (id == null) return null;
 
-        // Build a Level key like minecraft:overworld or yourmod:foo
         return ResourceKey.create(Registries.DIMENSION, id);
     }
 }

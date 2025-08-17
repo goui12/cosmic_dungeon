@@ -77,6 +77,11 @@ public class ModModelProvider extends ModelProvider {
             blockModels.createTrivialCube(v.block().get());
             blockModels.createTrivialCube(v.budding().get());
 
+// LIT amethyst block (also a plain cube; uses textures/block/lit_amethyst_block_<color>.png)
+            var litHolder = ModBlocks.LIT_AMETHYST_BLOCKS.get(dye);
+            if (litHolder != null) {
+                blockModels.createTrivialCube(litHolder.get());
+            }
             // ---------------- Small bud ----------------
             {
                 Block b = v.budSmall().get();
@@ -84,7 +89,6 @@ public class ModModelProvider extends ModelProvider {
                 ResourceLocation modelLoc = rlMod("block/" + id);
                 ResourceLocation tex = rlMod("block/" + id);
 
-                // Parent to generic cross (no vanilla amethyst textures), use "cross" key
                 blockModels.modelOutput.accept(modelLoc, () -> {
                     var root = new com.google.gson.JsonObject();
                     root.addProperty("parent", "block/cross");
@@ -96,7 +100,6 @@ public class ModModelProvider extends ModelProvider {
                     return root;
                 });
 
-                // Blockstate (6-way facing)
                 PropertyDispatch<MultiVariant> pd =
                         PropertyDispatch.initial(BlockStateProperties.FACING)
                                 .select(Direction.UP,    new MultiVariant(WeightedList.of(new Variant(modelLoc))))
@@ -108,7 +111,6 @@ public class ModModelProvider extends ModelProvider {
 
                 blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(b).with(pd));
 
-                // Item model: parent the block model (so it renders like the bud)
                 ResourceLocation itemLoc = rlMod("item/" + id);
                 itemModels.modelOutput.accept(itemLoc, () -> {
                     var root = new com.google.gson.JsonObject();

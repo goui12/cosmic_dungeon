@@ -5,6 +5,7 @@ import net.goui.cosmicdungeon.block.amethyst.ColoredAmethystBlock;
 import net.goui.cosmicdungeon.block.amethyst.ColoredBudBlock;
 import net.goui.cosmicdungeon.block.amethyst.ColoredBuddingAmethystBlock;
 import net.goui.cosmicdungeon.block.amethyst.ColoredClusterBlock;
+import net.goui.cosmicdungeon.block.amethyst.LitColoredAmethystBlock;
 import net.goui.cosmicdungeon.block.custom.ChickenBlock;
 import net.goui.cosmicdungeon.block.custom.MagicBlock;
 import net.goui.cosmicdungeon.item.ModItems;
@@ -85,10 +86,8 @@ public class ModBlocks {
             DeferredBlock<Block> cluster
     ) {}
 
-    // Blocks (used by datagen and elsewhere)
     public static final Map<DyeColor, AmethystSet> AMETHYST = new EnumMap<>(DyeColor.class);
 
-    // Matching BlockItems (no item for budding)
     public record AmethystItemSet(
             DeferredItem<BlockItem> block,
             DeferredItem<BlockItem> budding,
@@ -99,6 +98,12 @@ public class ModBlocks {
     ) {}
 
     public static final Map<DyeColor, AmethystItemSet> AMETHYST_ITEMS = new EnumMap<>(DyeColor.class);
+
+    // NEW: lit cube variants
+    public static final Map<DyeColor, DeferredBlock<? extends Block>> LIT_AMETHYST_BLOCKS =
+            new EnumMap<>(DyeColor.class);
+    public static final Map<DyeColor, DeferredItem<BlockItem>> LIT_AMETHYST_ITEMS =
+            new EnumMap<>(DyeColor.class);
 
     static {
         for (DyeColor dye : DyeColor.values()) {
@@ -123,7 +128,6 @@ public class ModBlocks {
                     )
             );
 
-// small
             DeferredBlock<Block> budSmall = BLOCKS.registerBlock(
                     smallPath,
                     props -> ColoredBudBlock.small(
@@ -131,8 +135,6 @@ public class ModBlocks {
                     )
             );
 
-
-// medium
             DeferredBlock<Block> budMedium = BLOCKS.registerBlock(
                     mediumPath,
                     props -> ColoredBudBlock.medium(
@@ -140,7 +142,6 @@ public class ModBlocks {
                     )
             );
 
-// large
             DeferredBlock<Block> budLarge = BLOCKS.registerBlock(
                     largePath,
                     props -> ColoredBudBlock.large(
@@ -148,7 +149,6 @@ public class ModBlocks {
                     )
             );
 
-// cluster
             DeferredBlock<Block> cluster = BLOCKS.registerBlock(
                     clusterPath,
                     props -> new ColoredClusterBlock(
@@ -165,30 +165,56 @@ public class ModBlocks {
                                     .sound(SoundType.AMETHYST)
                                     .noLootTable(),
                             budSmall::get, budMedium::get, budLarge::get, cluster::get,
-                            5 // 1-in-5 growth chance
+                            5
                     )
             );
 
             AMETHYST.put(dye, new AmethystSet(block, budding, budSmall, budMedium, budLarge, cluster));
 
-            // --- BlockItems (NO item for budding) ---
+            // --- BlockItems ---
             AMETHYST_ITEMS.put(dye, new AmethystItemSet(
                     ModItems.ITEMS.registerSimpleBlockItem(solidPath,   block),
-                    ModItems.ITEMS.registerSimpleBlockItem(buddingPath, budding),   // <— add budding item
+                    ModItems.ITEMS.registerSimpleBlockItem(buddingPath, budding),
                     ModItems.ITEMS.registerSimpleBlockItem(smallPath,   budSmall),
                     ModItems.ITEMS.registerSimpleBlockItem(mediumPath,  budMedium),
                     ModItems.ITEMS.registerSimpleBlockItem(largePath,   budLarge),
                     ModItems.ITEMS.registerSimpleBlockItem(clusterPath, cluster)
             ));
 
+// --- Lit cube variant ---
+            String litPath = "lit_amethyst_block_" + color;
+            DeferredBlock<Block> litBlock = BLOCKS.registerBlock(
+                    litPath,
+                    props -> new LitColoredAmethystBlock(
+                            props
+                                    .mapColor(dye.getMapColor())
+                                    .strength(1.5F, 6.0F)
+                                    .requiresCorrectToolForDrops()
+                                    .sound(SoundType.AMETHYST)
+                                    .noLootTable()
+                                    .lightLevel(s -> 15)
+                    )
+            );
+
+            LIT_AMETHYST_BLOCKS.put(dye, litBlock);
+
+            DeferredItem<BlockItem> litItem =
+                    ModItems.ITEMS.registerSimpleBlockItem(litPath, litBlock);
+            LIT_AMETHYST_ITEMS.put(dye, litItem);
+
+
         }
     }
 
-    /* Stream helper (optional) */
+    /* Stream helpers */
     public static Stream<DeferredBlock<? extends Block>> streamAllAmethystBlocks() {
         return AMETHYST.values().stream().flatMap(v -> Stream.of(
                 v.block(), v.budding(), v.budSmall(), v.budMedium(), v.budLarge(), v.cluster()
         ));
+    }
+
+    public static Stream<DeferredBlock<? extends Block>> streamAllLitAmethystBlocks() {
+        return LIT_AMETHYST_BLOCKS.values().stream();
     }
 
     /* ---------- BlockItems for non-amethyst misc ---------- */
