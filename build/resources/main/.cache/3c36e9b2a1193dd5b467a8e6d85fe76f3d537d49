@@ -1,0 +1,9 @@
+// 1.21.8	2025-08-16T13:17:09.4551511	CosmicDungeon Block Tags
+c3651420ada7117cdad67450a22691a066ea6100 data/cosmicdungeon/tags/block/amethyst_blocks.json
+d7c7fe3a6845a7001d6d47ab461c0cfd29232bb0 data/cosmicdungeon/tags/block/amethyst_buds_large.json
+ca2dbdb0b5146307d5062a4bba21287764195467 data/cosmicdungeon/tags/block/amethyst_buds_medium.json
+70665aa9f209d07ff3e060ab75be2ac1d2982c17 data/cosmicdungeon/tags/block/amethyst_buds_small.json
+e91cab28f09fe04cb0f59794cc125ecf69f4be74 data/cosmicdungeon/tags/block/amethyst_clusters.json
+d01e1a14f60954ad582865ddebbbecc43fc9ffbf data/cosmicdungeon/tags/block/budding_amethyst.json
+70311978346ae297ccfd2b4ae40352b9bbbf95d9 data/minecraft/tags/block/mineable/pickaxe.json
+57e81b0bab998c12663e20945f380cc8b33f017d data/minecraft/tags/block/needs_iron_tool.json

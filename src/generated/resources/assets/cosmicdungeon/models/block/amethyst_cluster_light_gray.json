@@ -1,0 +1,8 @@
+{
+  "parent": "block/cross",
+  "render_type": "cutout",
+  "textures": {
+    "cross": "cosmicdungeon:block/amethyst_cluster_light_gray",
+    "particle": "cosmicdungeon:block/amethyst_cluster_light_gray"
+  }
+}

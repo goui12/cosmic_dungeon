@@ -6,10 +6,9 @@ import net.goui.cosmicdungeon.component.ModDataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.*;
 import net.minecraft.world.level.ItemLike;
+import net.minecraft.world.level.block.Blocks;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -34,18 +33,20 @@ public class ModCreativeModeTabs {
                         output.accept(ModItems.STARLIGHT_ASHES);
                     }).build());
 
-    public static final Supplier<CreativeModeTab> BISMUTH_BLOCK_TAB = CREATIVE_MODE_TAB.register("bismuth_blocks_tab",
-            () -> CreativeModeTab.builder().icon(() -> new ItemStack(ModBlocks.BISMUTH_BLOCK))
-                    .withTabsBefore(ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "bismuth_items_tab"))
-                    .title(Component.translatable("creativetab.cosmicdungeon.bismuth_blocks"))
-                    .displayItems((itemDisplayParameters, output) -> {
-                        output.accept(ModBlocks.BISMUTH_BLOCK);
-                        output.accept(ModBlocks.BISMUTH_ORE);
-                        output.accept(ModBlocks.BISMUTH_DEEPSLATE_ORE);
-
-                        output.accept(ModBlocks.MAGIC_BLOCK);
-
-                    }).build());
+    public static final Supplier<CreativeModeTab> BISMUTH_BLOCK_TAB =
+            CREATIVE_MODE_TAB.register("bismuth_blocks_tab",
+                    () -> CreativeModeTab.builder()
+                            .icon(() -> new ItemStack(ModBlocks.BISMUTH_BLOCK.get())) // <-- .get()
+                            .withTabsBefore(ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "bismuth_items_tab"))
+                            .title(Component.translatable("creativetab.cosmicdungeon.bismuth_blocks"))
+                            .displayItems((p, out) -> {
+                                out.accept(ModBlocks.BISMUTH_BLOCK);
+                                out.accept(ModBlocks.BISMUTH_ORE);
+                                out.accept(ModBlocks.BISMUTH_DEEPSLATE_ORE);
+                                out.accept(ModBlocks.MAGIC_BLOCK);
+                            })
+                            .build()
+            );
 
     public static final Supplier<CreativeModeTab> DUNGEON_ITEM_TAB = CREATIVE_MODE_TAB.register("dungeon_items_tab",
             () -> CreativeModeTab.builder().icon(() -> new ItemStack(ModItems.BARNACLED_PEARL.get()))
@@ -58,35 +59,35 @@ public class ModCreativeModeTabs {
                         output.accept(ModBlocks.CHICKEN_BLOCK);
 
                     }).build());
-
-    // Tab: all colored amethyst variants
+    private static void acceptIfHasItem(CreativeModeTab.Output out, ItemLike like) {
+        if (like.asItem() != Items.AIR) out.accept(like);
+    }
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> COLORED_AMETHYST_ITEM_TAB =
             CREATIVE_MODE_TAB.register("amethyst_items_tab", () ->
                     CreativeModeTab.builder()
-                            .title(Component.translatable("creativetab.cosmicdungeon.dungeon_items"))
-                            // Icon: purple colored amethyst block (tinted via item color)
-                            .icon(() -> withColor(ModBlocks.COLORED_AMETHYST_BLOCK.get().asItem(), AmethystColor.PURPLE))
+                            .title(Component.translatable("creativetab.cosmicdungeon.amethyst_items"))
+                            .icon(() -> new ItemStack(ModBlocks.AMETHYST.get(DyeColor.PURPLE).block().get()))
                             .displayItems((params, out) -> {
-                                for (AmethystColor c : AmethystColor.values()) {
-                                    // Blocks
-                                    out.accept(withColor(ModBlocks.COLORED_AMETHYST_BLOCK.get().asItem(), c));
-                                    out.accept(withColor(ModBlocks.COLORED_BUDDING_AMETHYST.get().asItem(), c));
-                                    out.accept(withColor(ModBlocks.COLORED_AMETHYST_BUD_SMALL.get().asItem(), c));
-                                    out.accept(withColor(ModBlocks.COLORED_AMETHYST_BUD_MEDIUM.get().asItem(), c));
-                                    out.accept(withColor(ModBlocks.COLORED_AMETHYST_BUD_LARGE.get().asItem(), c));
-                                    out.accept(withColor(ModBlocks.COLORED_AMETHYST_CLUSTER.get().asItem(), c));
-                                }
+
+                                ModBlocks.AMETHYST.values().forEach(v -> {
+                                    out.accept(v.block());
+                                    out.accept(v.budSmall());
+                                    out.accept(v.budMedium());
+                                    out.accept(v.budLarge());
+                                    out.accept(v.cluster());
+                                    out.accept(v.budding());
+                                });
+                                // --- Vanilla Minecraft amethyst stuff ---
+                                // (Guarded: if something has no item in this MC version, it just won’t be added)
+                                acceptIfHasItem(out, Blocks.AMETHYST_BLOCK);
+                                acceptIfHasItem(out, Blocks.BUDDING_AMETHYST);
+                                acceptIfHasItem(out, Blocks.SMALL_AMETHYST_BUD);
+                                acceptIfHasItem(out, Blocks.MEDIUM_AMETHYST_BUD);
+                                acceptIfHasItem(out, Blocks.LARGE_AMETHYST_BUD);
+                                acceptIfHasItem(out, Blocks.AMETHYST_CLUSTER);
                             })
                             .build()
             );
-
-    // helper to imprint the color component on an ItemStack
-    private static ItemStack withColor(ItemLike item, AmethystColor color) {
-        ItemStack stack = new ItemStack(item);
-        stack.set(ModDataComponents.AMETHYST_COLOR.get(), color);
-        return stack;
-    }
-
 
     public static void register(IEventBus eventBus) {
         CREATIVE_MODE_TAB.register(eventBus);

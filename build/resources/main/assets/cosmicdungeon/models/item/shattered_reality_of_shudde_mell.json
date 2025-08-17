@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "cosmicdungeon:item/shattered_reality_of_shudde_mell"
+  }
+}

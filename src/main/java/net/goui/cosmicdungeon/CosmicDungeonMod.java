@@ -1,6 +1,7 @@
 package net.goui.cosmicdungeon;
 
 import net.goui.cosmicdungeon.block.ModBlocks;
+import net.goui.cosmicdungeon.command.WorldCommand;
 import net.goui.cosmicdungeon.item.ModCreativeModeTabs;
 import net.goui.cosmicdungeon.item.ModItems;
 import net.goui.cosmicdungeon.sound.ModSounds;
@@ -9,10 +10,12 @@ import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import org.slf4j.Logger;
 
@@ -36,11 +39,20 @@ public class CosmicDungeonMod {
 
         ModCreativeModeTabs.register(modEventBus);
         ModItems.register(modEventBus);
+
         ModBlocks.register(modEventBus);
         ModSounds.registerSounds(modEventBus);
 
+        //commands
+        NeoForge.EVENT_BUS.addListener(this::onRegisterCommands);
+
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
+
+    private void onRegisterCommands(RegisterCommandsEvent event) {
+        WorldCommand.register(event.getDispatcher());
+    }
+
 
     private void commonSetup(final FMLCommonSetupEvent event) {
 

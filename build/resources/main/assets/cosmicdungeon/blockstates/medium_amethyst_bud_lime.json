@@ -1,0 +1,30 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "cosmicdungeon:block/medium_amethyst_bud_lime",
+      "x": 180
+    },
+    "facing=east": {
+      "model": "cosmicdungeon:block/medium_amethyst_bud_lime",
+      "x": 90,
+      "y": 90
+    },
+    "facing=north": {
+      "model": "cosmicdungeon:block/medium_amethyst_bud_lime",
+      "x": 90
+    },
+    "facing=south": {
+      "model": "cosmicdungeon:block/medium_amethyst_bud_lime",
+      "x": 90,
+      "y": 180
+    },
+    "facing=up": {
+      "model": "cosmicdungeon:block/medium_amethyst_bud_lime"
+    },
+    "facing=west": {
+      "model": "cosmicdungeon:block/medium_amethyst_bud_lime",
+      "x": 90,
+      "y": 270
+    }
+  }
+}

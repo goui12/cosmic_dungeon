@@ -28,22 +28,15 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
     @Override
     protected void generate() {
 
-        dropSelf(ModBlocks.COLORED_AMETHYST_BLOCK.get());
-        dropSelf(ModBlocks.COLORED_BUDDING_AMETHYST.get());
-        dropSelf(ModBlocks.COLORED_AMETHYST_BUD_SMALL.get());
-        dropSelf(ModBlocks.COLORED_AMETHYST_BUD_MEDIUM.get());
-        dropSelf(ModBlocks.COLORED_AMETHYST_BUD_LARGE.get());
-        dropSelf(ModBlocks.COLORED_AMETHYST_CLUSTER.get());
 
-
+        // Bismuth stuff (normal)
         dropSelf(ModBlocks.BISMUTH_BLOCK.get());
-
         add(ModBlocks.BISMUTH_ORE.get(),
                 block -> createOreDrop(ModBlocks.BISMUTH_ORE.get(), ModItems.RAW_BISMUTH.get()));
-
         add(ModBlocks.BISMUTH_DEEPSLATE_ORE.get(),
                 block -> createMultipleOreDrops(ModBlocks.BISMUTH_DEEPSLATE_ORE.get(), ModItems.RAW_BISMUTH.get(), 2, 5));
     }
+
 
     protected LootTable.Builder createMultipleOreDrops(Block block, Item item, float minDrops, float maxDrops) {
         HolderLookup.RegistryLookup<Enchantment> enchantments = this.registries.lookupOrThrow(Registries.ENCHANTMENT);

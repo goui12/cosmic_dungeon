@@ -1,0 +1,4 @@
+// 1.21.8	2025-08-11T20:40:51.1884037	Loot Tables
+c36f7eae47bf300665e8edcd871c02555a89271e data/cosmicdungeon/loot_table/blocks/bismuth_block.json
+9d67a34598ca812577ae2b2b5f6348e0e65c2cbb data/cosmicdungeon/loot_table/blocks/bismuth_deepslate_ore.json
+59a9347978d060ae1d1d7cb8a2ed2cc25584f636 data/cosmicdungeon/loot_table/blocks/bismuth_ore.json

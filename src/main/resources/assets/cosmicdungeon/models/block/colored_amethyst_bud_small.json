@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:block/cross",
-  "textures": {
-    "cross": "cosmicdungeon:block/small_amethyst_bud_gray"
-  }
-}

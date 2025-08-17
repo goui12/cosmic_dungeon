@@ -6,57 +6,73 @@ import net.goui.cosmicdungeon.util.ModTags;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.common.data.BlockTagsProvider;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
 
 public class ModBlockTagProvider extends BlockTagsProvider {
-    public ModBlockTagProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider) {
+    public ModBlockTagProvider(PackOutput output,
+                               CompletableFuture<HolderLookup.Provider> lookupProvider) {
         super(output, lookupProvider, CosmicDungeonMod.MOD_ID);
     }
 
     @Override
     protected void addTags(HolderLookup.Provider provider) {
+        // ===== Vanilla: Bismuth =====
         tag(BlockTags.MINEABLE_WITH_PICKAXE).add(
                 ModBlocks.BISMUTH_BLOCK.get(),
                 ModBlocks.BISMUTH_ORE.get(),
-                ModBlocks.BISMUTH_DEEPSLATE_ORE.get(),
-                ModBlocks.COLORED_AMETHYST_BLOCK.get(),
-                ModBlocks.COLORED_BUDDING_AMETHYST.get(),
-                ModBlocks.COLORED_AMETHYST_BUD_SMALL.get(),
-                ModBlocks.COLORED_AMETHYST_BUD_MEDIUM.get(),
-                ModBlocks.COLORED_AMETHYST_BUD_LARGE.get(),
-                ModBlocks.COLORED_AMETHYST_CLUSTER.get());
+                ModBlocks.BISMUTH_DEEPSLATE_ORE.get()
+        );
 
         tag(BlockTags.NEEDS_IRON_TOOL).add(
-                ModBlocks.BISMUTH_DEEPSLATE_ORE.get(),
-                ModBlocks.COLORED_AMETHYST_BLOCK.get(),
-                ModBlocks.COLORED_BUDDING_AMETHYST.get(),
-                ModBlocks.COLORED_AMETHYST_CLUSTER.get());
-
-        tag(net.minecraft.tags.BlockTags.NEEDS_IRON_TOOL).add(
-                ModBlocks.COLORED_AMETHYST_BLOCK.get(),
-                ModBlocks.COLORED_BUDDING_AMETHYST.get(),
-                ModBlocks.COLORED_AMETHYST_CLUSTER.get()
+                ModBlocks.BISMUTH_DEEPSLATE_ORE.get()
         );
-        // ---- Your custom grouping tags
-        tag(net.goui.cosmicdungeon.util.ModTags.Blocks.AMETHYST_BLOCKS)
-                .add(ModBlocks.COLORED_AMETHYST_BLOCK.get());
 
-        tag(net.goui.cosmicdungeon.util.ModTags.Blocks.BUDDING_AMETHYST)
-                .add(ModBlocks.COLORED_BUDDING_AMETHYST.get());
+        // ===== Vanilla: Colored Amethyst (all colors, all stages) =====
+        tag(BlockTags.MINEABLE_WITH_PICKAXE).add(allAmethystBlocks());
 
-        tag(net.goui.cosmicdungeon.util.ModTags.Blocks.AMETHYST_BUDS_SMALL)
-                .add(ModBlocks.COLORED_AMETHYST_BUD_SMALL.get());
+        // If you want them to require a tier, uncomment ONE of these:
+        // tag(BlockTags.NEEDS_STONE_TOOL).add(allAmethystBlocks());
+         tag(BlockTags.NEEDS_IRON_TOOL).add(allAmethystBlocks());
+        // tag(BlockTags.NEEDS_DIAMOND_TOOL).add(allAmethystBlocks());
 
-        tag(net.goui.cosmicdungeon.util.ModTags.Blocks.AMETHYST_BUDS_MEDIUM)
-                .add(ModBlocks.COLORED_AMETHYST_BUD_MEDIUM.get());
+        // ===== Custom tags =====
+        tag(ModTags.Blocks.AMETHYST_BLOCKS).add(
+                ModBlocks.AMETHYST.values().stream().map(v -> v.block().get()).toArray(Block[]::new)
+        );
 
-        tag(net.goui.cosmicdungeon.util.ModTags.Blocks.AMETHYST_BUDS_LARGE)
-                .add(ModBlocks.COLORED_AMETHYST_BUD_LARGE.get());
+        tag(ModTags.Blocks.BUDDING_AMETHYST).add(
+                ModBlocks.AMETHYST.values().stream().map(v -> v.budding().get()).toArray(Block[]::new)
+        );
 
-        tag(net.goui.cosmicdungeon.util.ModTags.Blocks.AMETHYST_CLUSTERS)
-                .add(ModBlocks.COLORED_AMETHYST_CLUSTER.get());
+        tag(ModTags.Blocks.AMETHYST_BUDS_SMALL).add(
+                ModBlocks.AMETHYST.values().stream().map(v -> v.budSmall().get()).toArray(Block[]::new)
+        );
+
+        tag(ModTags.Blocks.AMETHYST_BUDS_MEDIUM).add(
+                ModBlocks.AMETHYST.values().stream().map(v -> v.budMedium().get()).toArray(Block[]::new)
+        );
+
+        tag(ModTags.Blocks.AMETHYST_BUDS_LARGE).add(
+                ModBlocks.AMETHYST.values().stream().map(v -> v.budLarge().get()).toArray(Block[]::new)
+        );
+
+        tag(ModTags.Blocks.AMETHYST_CLUSTERS).add(
+                ModBlocks.AMETHYST.values().stream().map(v -> v.cluster().get()).toArray(Block[]::new)
+        );
+    }
+
+    /** Helper: all colored amethyst blocks (any stage) as a flat array for tag().add(...) */
+    private static Block[] allAmethystBlocks() {
+        return ModBlocks.streamAllAmethystBlocks()
+                .map(net.neoforged.neoforge.registries.DeferredBlock::get)
+                .toArray(Block[]::new);
+    }
+
+    @Override
+    public String getName() {
+        return "CosmicDungeon Block Tags";
     }
 }
