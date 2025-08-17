@@ -21,7 +21,7 @@ license="All Rights Reserved"
 modId="cosmicdungeon" #mandatory
 
 # The version number of the mod
-version="1.0.1" #mandatory
+version="1.0.2" #mandatory
 
 # A display name for the mod
 displayName="Cosmic Dungeon" #mandatory
@@ -42,7 +42,9 @@ displayName="Cosmic Dungeon" #mandatory
 authors="Goui12, Toxxulia" #optional
 
 # The description text for the mod (multi line!) (#mandatory)
-description='''A sprawling dungeon of fractured realities and forgotten gods. 
+description='''Cosmic Dungeon
+UPDATED 09_16_25
+A sprawling dungeon of fractured realities and forgotten gods. 
 Can you escape its cosmic trap?'''
 
 # The [[mixins]] block allows you to declare your mixin config to FML so that it gets loaded.
