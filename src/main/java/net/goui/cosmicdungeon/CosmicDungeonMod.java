@@ -1,10 +1,14 @@
 package net.goui.cosmicdungeon;
 
 import net.goui.cosmicdungeon.block.ModBlocks;
+import net.goui.cosmicdungeon.client.CosmicDungeonClient;
 import net.goui.cosmicdungeon.command.ClassCommand;
 import net.goui.cosmicdungeon.command.CreativeCommand;
 import net.goui.cosmicdungeon.command.SurvivalCommand;
 import net.goui.cosmicdungeon.command.WorldCommand;
+import net.goui.cosmicdungeon.entity.MagmaGlobEntity;
+import net.goui.cosmicdungeon.entity.ModEntities;
+import net.goui.cosmicdungeon.entity.StoneWardenEntity;
 import net.goui.cosmicdungeon.item.ModCreativeModeTabs;
 import net.goui.cosmicdungeon.item.ModItems;
 import net.goui.cosmicdungeon.sound.ModSounds;
@@ -18,6 +22,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import org.slf4j.Logger;
@@ -43,7 +48,20 @@ public class CosmicDungeonMod {
         ModCreativeModeTabs.register(modEventBus);
         ModItems.register(modEventBus);
 
+        //Entities
+        modEventBus.addListener((net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent e) -> {
+            e.put(ModEntities.MAGMA_GLOB.get(), MagmaGlobEntity.createAttributes().build());
+            e.put(ModEntities.STONE_WARDEN.get(), StoneWardenEntity.createAttributes().build()); // <-- add this
+        });
+
+        ModEntities.register(modEventBus);
+        if (FMLEnvironment.dist.isClient()) {
+            CosmicDungeonClient.init(modEventBus);
+        }
+        //ModBlocks
         ModBlocks.register(modEventBus);
+
+        //Sounds
         ModSounds.registerSounds(modEventBus);
 
         //commands

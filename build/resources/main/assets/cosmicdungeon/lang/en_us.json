@@ -1,4 +1,10 @@
 {
+  "entity.cosmicdungeon.magma_glob": "Magma Glob",
+  "item.cosmicdungeon.magma_glob_spawn_egg": "Magma Glob Spawn Egg",
+
+  "entity.cosmicdungeon.stone_warden": "Stone Warden",
+  "item.cosmicdungeon.magma_glob_spawn_egg": "Stone Warden Spawn Egg",
+
   "item.cosmicdungeon.bismuth": "Bismuth",
   "item.cosmicdungeon.raw_bismuth": "Raw Bismuth",
   "item.cosmicdungeon.chisel": "Chisel",
@@ -11,7 +17,9 @@
   "item.cosmicdungeon.shattered_reality_of_shudde_mell": "Shattered Reality of Shudde Mell",
   "item.cosmicdungeon.barnacled_pearl": "Barnacled Pearl",
 
+  "block.cosmicdungeon.pile_of_books": "Pile of Books",
   "block.cosmicdungeon.amethyst_block_white": "White Block of Amethyst",
+  "block.cosmicdungeon.lit_amethyst_block_white": "White Lit Block of Amethyst",
   "block.cosmicdungeon.budding_amethyst_white": "White Budding Amethyst",
   "block.cosmicdungeon.small_amethyst_bud_white": "White Small Amethyst Bud",
   "block.cosmicdungeon.medium_amethyst_bud_white": "White Medium Amethyst Bud",
@@ -19,6 +27,7 @@
   "block.cosmicdungeon.amethyst_cluster_white": "White Amethyst Cluster",
 
   "block.cosmicdungeon.amethyst_block_orange": "Orange Block of Amethyst",
+  "block.cosmicdungeon.lit_amethyst_block_orange": "Orange Lit Block of Amethyst",
   "block.cosmicdungeon.budding_amethyst_orange": "Orange Budding Amethyst",
   "block.cosmicdungeon.small_amethyst_bud_orange": "Orange Small Amethyst Bud",
   "block.cosmicdungeon.medium_amethyst_bud_orange": "Orange Medium Amethyst Bud",
@@ -26,6 +35,7 @@
   "block.cosmicdungeon.amethyst_cluster_orange": "Orange Amethyst Cluster",
 
   "block.cosmicdungeon.amethyst_block_magenta": "Magenta Block of Amethyst",
+  "block.cosmicdungeon.lit_amethyst_block_magenta": "Magenta Lit Block of Amethyst",
   "block.cosmicdungeon.budding_amethyst_magenta": "Magenta Budding Amethyst",
   "block.cosmicdungeon.small_amethyst_bud_magenta": "Magenta Small Amethyst Bud",
   "block.cosmicdungeon.medium_amethyst_bud_magenta": "Magenta Medium Amethyst Bud",
@@ -33,6 +43,7 @@
   "block.cosmicdungeon.amethyst_cluster_magenta": "Magenta Amethyst Cluster",
 
   "block.cosmicdungeon.amethyst_block_light_blue": "Light Blue Block of Amethyst",
+  "block.cosmicdungeon.lit_amethyst_block_light_blue": "Light Blue Lit Block of Amethyst",
   "block.cosmicdungeon.budding_amethyst_light_blue": "Light Blue Budding Amethyst",
   "block.cosmicdungeon.small_amethyst_bud_light_blue": "Light Blue Small Amethyst Bud",
   "block.cosmicdungeon.medium_amethyst_bud_light_blue": "Light Blue Medium Amethyst Bud",
@@ -40,6 +51,7 @@
   "block.cosmicdungeon.amethyst_cluster_light_blue": "Light Blue Amethyst Cluster",
 
   "block.cosmicdungeon.amethyst_block_yellow": "Yellow Block of Amethyst",
+  "block.cosmicdungeon.lit_amethyst_block_yellow": "Yellow Lit Block of Amethyst",
   "block.cosmicdungeon.budding_amethyst_yellow": "Yellow Budding Amethyst",
   "block.cosmicdungeon.small_amethyst_bud_yellow": "Yellow Small Amethyst Bud",
   "block.cosmicdungeon.medium_amethyst_bud_yellow": "Yellow Medium Amethyst Bud",
@@ -47,6 +59,7 @@
   "block.cosmicdungeon.amethyst_cluster_yellow": "Yellow Amethyst Cluster",
 
   "block.cosmicdungeon.amethyst_block_lime": "Lime Block of Amethyst",
+  "block.cosmicdungeon.lit_amethyst_block_lime": "Lime Lit Block of Amethyst",
   "block.cosmicdungeon.budding_amethyst_lime": "Lime Budding Amethyst",
   "block.cosmicdungeon.small_amethyst_bud_lime": "Lime Small Amethyst Bud",
   "block.cosmicdungeon.medium_amethyst_bud_lime": "Lime Medium Amethyst Bud",
@@ -54,6 +67,7 @@
   "block.cosmicdungeon.amethyst_cluster_lime": "Lime Amethyst Cluster",
 
   "block.cosmicdungeon.amethyst_block_pink": "Pink Block of Amethyst",
+  "block.cosmicdungeon.lit_amethyst_block_pink": "Pink Lit Block of Amethyst",
   "block.cosmicdungeon.budding_amethyst_pink": "Pink Budding Amethyst",
   "block.cosmicdungeon.small_amethyst_bud_pink": "Pink Small Amethyst Bud",
   "block.cosmicdungeon.medium_amethyst_bud_pink": "Pink Medium Amethyst Bud",
@@ -61,6 +75,7 @@
   "block.cosmicdungeon.amethyst_cluster_pink": "Pink Amethyst Cluster",
 
   "block.cosmicdungeon.amethyst_block_gray": "Gray Block of Amethyst",
+  "block.cosmicdungeon.lit_amethyst_block_gray": "Gray Lit Block of Amethyst",
   "block.cosmicdungeon.budding_amethyst_gray": "Gray Budding Amethyst",
   "block.cosmicdungeon.small_amethyst_bud_gray": "Gray Small Amethyst Bud",
   "block.cosmicdungeon.medium_amethyst_bud_gray": "Gray Medium Amethyst Bud",
@@ -68,6 +83,7 @@
   "block.cosmicdungeon.amethyst_cluster_gray": "Gray Amethyst Cluster",
 
   "block.cosmicdungeon.amethyst_block_light_gray": "Light Gray Block of Amethyst",
+  "block.cosmicdungeon.lit_amethyst_block_light_gray": "Light Gray Lit Block of Amethyst",
   "block.cosmicdungeon.budding_amethyst_light_gray": "Light Gray Budding Amethyst",
   "block.cosmicdungeon.small_amethyst_bud_light_gray": "Light Gray Small Amethyst Bud",
   "block.cosmicdungeon.medium_amethyst_bud_light_gray": "Light Gray Medium Amethyst Bud",
@@ -75,6 +91,7 @@
   "block.cosmicdungeon.amethyst_cluster_light_gray": "Light Gray Amethyst Cluster",
 
   "block.cosmicdungeon.amethyst_block_cyan": "Cyan Block of Amethyst",
+  "block.cosmicdungeon.lit_amethyst_block_cyan": "Cyan Lit Block of Amethyst",
   "block.cosmicdungeon.budding_amethyst_cyan": "Cyan Budding Amethyst",
   "block.cosmicdungeon.small_amethyst_bud_cyan": "Cyan Small Amethyst Bud",
   "block.cosmicdungeon.medium_amethyst_bud_cyan": "Cyan Medium Amethyst Bud",
@@ -82,6 +99,7 @@
   "block.cosmicdungeon.amethyst_cluster_cyan": "Cyan Amethyst Cluster",
 
   "block.cosmicdungeon.amethyst_block_purple": "Purple Block of Amethyst",
+  "block.cosmicdungeon.lit_amethyst_block_purple": "Purple Lit Block of Amethyst",
   "block.cosmicdungeon.budding_amethyst_purple": "Purple Budding Amethyst",
   "block.cosmicdungeon.small_amethyst_bud_purple": "Purple Small Amethyst Bud",
   "block.cosmicdungeon.medium_amethyst_bud_purple": "Purple Medium Amethyst Bud",
@@ -89,6 +107,7 @@
   "block.cosmicdungeon.amethyst_cluster_purple": "Purple Amethyst Cluster",
 
   "block.cosmicdungeon.amethyst_block_blue": "Blue Block of Amethyst",
+  "block.cosmicdungeon.lit_amethyst_block_blue": "Blue Lit Block of Amethyst",
   "block.cosmicdungeon.budding_amethyst_blue": "Blue Budding Amethyst",
   "block.cosmicdungeon.small_amethyst_bud_blue": "Blue Small Amethyst Bud",
   "block.cosmicdungeon.medium_amethyst_bud_blue": "Blue Medium Amethyst Bud",
@@ -96,6 +115,7 @@
   "block.cosmicdungeon.amethyst_cluster_blue": "Blue Amethyst Cluster",
 
   "block.cosmicdungeon.amethyst_block_brown": "Brown Block of Amethyst",
+  "block.cosmicdungeon.lit_amethyst_block_brown": "Brown Lit Block of Amethyst",
   "block.cosmicdungeon.budding_amethyst_brown": "Brown Budding Amethyst",
   "block.cosmicdungeon.small_amethyst_bud_brown": "Brown Small Amethyst Bud",
   "block.cosmicdungeon.medium_amethyst_bud_brown": "Brown Medium Amethyst Bud",
@@ -103,6 +123,7 @@
   "block.cosmicdungeon.amethyst_cluster_brown": "Brown Amethyst Cluster",
 
   "block.cosmicdungeon.amethyst_block_green": "Green Block of Amethyst",
+  "block.cosmicdungeon.lit_amethyst_block_green": "Green Lit Block of Amethyst",
   "block.cosmicdungeon.budding_amethyst_green": "Green Budding Amethyst",
   "block.cosmicdungeon.small_amethyst_bud_green": "Green Small Amethyst Bud",
   "block.cosmicdungeon.medium_amethyst_bud_green": "Green Medium Amethyst Bud",
@@ -110,6 +131,7 @@
   "block.cosmicdungeon.amethyst_cluster_green": "Green Amethyst Cluster",
 
   "block.cosmicdungeon.amethyst_block_red": "Red Block of Amethyst",
+  "block.cosmicdungeon.lit_amethyst_block_red": "Red Lit Block of Amethyst",
   "block.cosmicdungeon.budding_amethyst_red": "Red Budding Amethyst",
   "block.cosmicdungeon.small_amethyst_bud_red": "Red Small Amethyst Bud",
   "block.cosmicdungeon.medium_amethyst_bud_red": "Red Medium Amethyst Bud",
@@ -117,12 +139,12 @@
   "block.cosmicdungeon.amethyst_cluster_red": "Red Amethyst Cluster",
 
   "block.cosmicdungeon.amethyst_block_black": "Black Block of Amethyst",
+  "block.cosmicdungeon.lit_amethyst_block_black": "Black Lit Block of Amethyst",
   "block.cosmicdungeon.budding_amethyst_black": "Black Budding Amethyst",
   "block.cosmicdungeon.small_amethyst_bud_black": "Black Small Amethyst Bud",
   "block.cosmicdungeon.medium_amethyst_bud_black": "Black Medium Amethyst Bud",
   "block.cosmicdungeon.large_amethyst_bud_black": "Black Large Amethyst Bud",
   "block.cosmicdungeon.amethyst_cluster_black": "Black Amethyst Cluster",
-
 
   "block.cosmicdungeon.bismuth_block": "Block of Bismuth",
   "block.cosmicdungeon.bismuth_ore": "Bismuth Ore",
@@ -130,7 +152,6 @@
   "block.cosmicdungeon.chicken_block": "Chicken Block",
 
   "block.cosmicdungeon.magic_block": "Magic Block",
-
 
   "creativetab.cosmicdungeon.bismuth_items": "Bismuth Items",
   "creativetab.cosmicdungeon.bismuth_blocks": "Bismuth Blocks",

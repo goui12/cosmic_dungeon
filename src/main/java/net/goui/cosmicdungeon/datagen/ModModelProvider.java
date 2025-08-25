@@ -47,6 +47,23 @@ public class ModModelProvider extends ModelProvider {
         blockModels.createTrivialCube(ModBlocks.MAGIC_BLOCK.get());
         blockModels.createTrivialCube(ModBlocks.BISMUTH_BLOCK.get());
         blockModels.createTrivialCube(ModBlocks.CHICKEN_BLOCK.get());
+        /* ===== Pile of Books (Blockbench block model + FLAT item) ===== */
+        {
+            var b = ModBlocks.PILE_OF_BOOKS.get();
+
+            // Blockstate -> Blockbench block model
+            var blockModel = rlMod("block/pile_of_books");
+            blockModels.blockStateOutput.accept(
+                    MultiVariantGenerator.dispatch(
+                            b,
+                            new MultiVariant(WeightedList.of(new Variant(blockModel)))
+                    )
+            );
+
+            // Item model -> flat 2D icon (uses textures/item/pile_of_books.png)
+            // This API writes a "minecraft:item/generated" style model.
+            itemModels.generateFlatItem(b.asItem(), ModelTemplates.FLAT_ITEM);
+        }
 
         /* ===== Colored amethyst sets (explicit, no helpers) ===== */
         for (AmethystColor ac : AmethystColor.values()) {

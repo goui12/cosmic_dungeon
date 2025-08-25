@@ -1,4 +1,10 @@
 {
+  "entity.cosmicdungeon.magma_glob": "Magma Glob",
+  "item.cosmicdungeon.magma_glob_spawn_egg": "Magma Glob Spawn Egg",
+
+  "entity.cosmicdungeon.stone_warden": "Stone Warden",
+  "item.cosmicdungeon.magma_glob_spawn_egg": "Stone Warden Spawn Egg",
+
   "item.cosmicdungeon.bismuth": "Bismuth",
   "item.cosmicdungeon.raw_bismuth": "Raw Bismuth",
   "item.cosmicdungeon.chisel": "Chisel",
@@ -11,6 +17,7 @@
   "item.cosmicdungeon.shattered_reality_of_shudde_mell": "Shattered Reality of Shudde Mell",
   "item.cosmicdungeon.barnacled_pearl": "Barnacled Pearl",
 
+  "block.cosmicdungeon.pile_of_books": "Pile of Books",
   "block.cosmicdungeon.amethyst_block_white": "White Block of Amethyst",
   "block.cosmicdungeon.lit_amethyst_block_white": "White Lit Block of Amethyst",
   "block.cosmicdungeon.budding_amethyst_white": "White Budding Amethyst",

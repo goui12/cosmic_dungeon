@@ -1,10 +1,12 @@
 package net.goui.cosmicdungeon.item;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
+import net.goui.cosmicdungeon.block.ModBlocks;
 import net.goui.cosmicdungeon.item.custom.BroodingForkItem;
 import net.goui.cosmicdungeon.item.custom.ChiselItem;
 import net.goui.cosmicdungeon.item.custom.ColoredBlockItem;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -33,7 +35,8 @@ public class ModItems {
     public static final DeferredItem<Item> SHATTERED_REALITY_OF_SHUDDE_MELL = ITEMS.registerSimpleItem("shattered_reality_of_shudde_mell");
     public static final DeferredItem<Item> FROSTFIRE_ICE = ITEMS.registerSimpleItem("frostfire_ice");
     public static final DeferredItem<Item> STARLIGHT_ASHES = ITEMS.registerSimpleItem("starlight_ashes");
-
+    public static final DeferredItem<BlockItem> PILE_OF_BOOKS =
+            ITEMS.registerSimpleBlockItem("pile_of_books", ModBlocks.PILE_OF_BOOKS);
     public static final DeferredItem<Item> CHISEL = ITEMS.registerItem("chisel",
             props -> new ChiselItem(props.durability(32)));
 

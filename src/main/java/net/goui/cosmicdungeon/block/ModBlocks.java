@@ -75,6 +75,13 @@ public class ModBlocks {
             )
     );
 
+    public static final DeferredBlock<Block> PILE_OF_BOOKS = BLOCKS.registerBlock(
+            "pile_of_books",
+            (BlockBehaviour.Properties props) -> new Block(
+                    props.strength(0.8F).sound(SoundType.WOOD).noOcclusion()
+            )
+    );
+
     /* ---------- Colored Amethyst: 6 variants × 16 colors ---------- */
 
     public record AmethystSet(
