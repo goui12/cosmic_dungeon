@@ -1,7 +1,9 @@
 package net.goui.cosmicdungeon.client;
 
+import net.goui.cosmicdungeon.client.model.GoblinAmbusherModel;
 import net.goui.cosmicdungeon.client.model.Magma_Glob;
 import net.goui.cosmicdungeon.client.model.StoneWardenModel;
+import net.goui.cosmicdungeon.client.render.GoblinAmbusherRenderer;
 import net.goui.cosmicdungeon.client.render.MagmaGlobRenderer;
 import net.goui.cosmicdungeon.client.render.StoneWardenRenderer;
 import net.goui.cosmicdungeon.entity.ModEntities;
@@ -17,16 +19,14 @@ public final class CosmicDungeonClient {
     }
 
     private static void registerLayers(EntityRenderersEvent.RegisterLayerDefinitions e) {
-        // Magma Glob model layer
         e.registerLayerDefinition(Magma_Glob.LAYER_LOCATION, Magma_Glob::createBodyLayer);
-        // Stone Warden model layer
         e.registerLayerDefinition(StoneWardenModel.LAYER_LOCATION, StoneWardenModel::createBodyLayer);
+        e.registerLayerDefinition(GoblinAmbusherModel.LAYER_LOCATION, GoblinAmbusherModel::createBodyLayer);
     }
 
     private static void registerRenderers(EntityRenderersEvent.RegisterRenderers e) {
-        // Magma Glob renderer
         e.registerEntityRenderer(ModEntities.MAGMA_GLOB.get(), MagmaGlobRenderer::new);
-        // Stone Warden renderer
         e.registerEntityRenderer(ModEntities.STONE_WARDEN.get(), StoneWardenRenderer::new);
+        e.registerEntityRenderer(ModEntities.GOBLIN_AMBUSHER.get(), GoblinAmbusherRenderer::new);
     }
 }

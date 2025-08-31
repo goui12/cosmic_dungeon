@@ -34,6 +34,17 @@ public final class ModEntities {
                         .build(key);
             });
 
+    /** Goblin Ambusher (sneaky, smaller hitbox). */
+    public static final DeferredHolder<EntityType<?>, EntityType<GoblinAmbusherEntity>> GOBLIN_AMBUSHER =
+            ENTITIES.register("goblin_ambusher", () -> {
+                ResourceLocation id = ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "goblin_ambusher");
+                ResourceKey<EntityType<?>> key = ResourceKey.create(Registries.ENTITY_TYPE, id);
+                return EntityType.Builder
+                        .of(GoblinAmbusherEntity::new, MobCategory.MONSTER)
+                        .sized(0.6f, 1.3f) // tweak if your model needs different bounds
+                        .build(key);
+            });
+
     private ModEntities() {}
 
     /** Call this once from your mod constructor: ModEntities.register(modEventBus); */

@@ -3,7 +3,10 @@
   "item.cosmicdungeon.magma_glob_spawn_egg": "Magma Glob Spawn Egg",
 
   "entity.cosmicdungeon.stone_warden": "Stone Warden",
-  "item.cosmicdungeon.magma_glob_spawn_egg": "Stone Warden Spawn Egg",
+  "item.cosmicdungeon.stone_warden_spawn_egg": "Stone Warden Spawn Egg",
+
+  "entity.cosmicdungeon.goblin_ambusher": "Goblin Ambusher",
+  "item.cosmicdungeon.goblin_ambusher_spawn_egg": "Goblin Ambusher Spawn Egg",
 
   "item.cosmicdungeon.bismuth": "Bismuth",
   "item.cosmicdungeon.raw_bismuth": "Raw Bismuth",
@@ -16,6 +19,13 @@
   "item.cosmicdungeon.seismic_core_fragment": "Seismic Core Fragment",
   "item.cosmicdungeon.shattered_reality_of_shudde_mell": "Shattered Reality of Shudde Mell",
   "item.cosmicdungeon.barnacled_pearl": "Barnacled Pearl",
+
+  "item.cosmicdungeon.aegis_of_absolution": "Aegis of Absolution",
+  "item.cosmicdungeon.aegis_of_chaos": "Aegis of Chaos",
+  "item.cosmicdungeon.azathots_hammer_of_final_verdict": "Azathots Hammer of Final Verdict",
+  "item.cosmicdungeon.forge_callers_maul": "Forge Callers Maul",
+  "item.cosmicdungeon.high_velocity_arrow": "High Velocity Arrow",
+  "item.cosmicdungeon.totem_of_dog_whispering": "Totem of Dog Whispering",
 
   "block.cosmicdungeon.pile_of_books": "Pile of Books",
   "block.cosmicdungeon.amethyst_block_white": "White Block of Amethyst",
@@ -157,6 +167,14 @@
   "creativetab.cosmicdungeon.bismuth_blocks": "Bismuth Blocks",
   "creativetab.cosmicdungeon.dungeon_items": "§eDungeon Items",
   "creativetab.cosmicdungeon.amethyst_items": "§dAmethyst Items",
+  "creativetab.cosmicdungeon.judicator_items": "§eJudicator Items",
+  "creativetab.cosmicdungeon.sanctified_theurgist_items": "§eSanctified Theurgist Items",
+  "creativetab.cosmicdungeon.pyroclast_items": "§ePyroclast Items",
+  "creativetab.cosmicdungeon.venefex_items": "§eVenefex Items",
+  "creativetab.cosmicdungeon.bogatur_items": "§eBogatur Items",
+  "creativetab.cosmicdungeon.dragoon_items": "§eDragoon Items",
+  "creativetab.cosmicdungeon.metalmancer_items": "§eMetalmancer Items",
+  "creativetab.cosmicdungeon.deadeye_items": "§eDeadeye Items",
 
   "tooltip.cosmicdungeon.magic_block.tooltip": "This Block is very §9MAGICAL§r",
 

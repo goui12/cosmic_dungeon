@@ -30,6 +30,16 @@ public class ModItems {
 
     public static final DeferredItem<Item> BISMUTH = ITEMS.registerSimpleItem("bismuth");
     public static final DeferredItem<Item> RAW_BISMUTH = ITEMS.registerSimpleItem("raw_bismuth");
+
+    public static final DeferredItem<Item> AZATHOTS_HAMMER_OF_FINAL_VERDICT = ITEMS.registerSimpleItem("azathots_hammer_of_final_verdict");
+    public static final DeferredItem<Item> FORGE_CALLERS_MAUL = ITEMS.registerSimpleItem("forge_callers_maul");
+    public static final DeferredItem<Item> HIGH_VELOCITY_ARROW = ITEMS.registerSimpleItem("high_velocity_arrow");
+    public static final DeferredItem<Item> TOTEM_OF_DOG_WHISPERING = ITEMS.registerSimpleItem("totem_of_dog_whispering");
+    public static final DeferredItem<Item> AEGIS_OF_ABSOLUTION = ITEMS.registerSimpleItem("aegis_of_absolution");
+    public static final DeferredItem<Item> AEGIS_OF_CHAOS = ITEMS.registerSimpleItem("aegis_of_chaos");
+
+
+
     public static final DeferredItem<Item> BARNACLED_PEARL = ITEMS.registerSimpleItem("barnacled_pearl");
     public static final DeferredItem<Item> SEISMIC_CORE_FRAGMENT = ITEMS.registerSimpleItem("seismic_core_fragment");
     public static final DeferredItem<Item> SHATTERED_REALITY_OF_SHUDDE_MELL = ITEMS.registerSimpleItem("shattered_reality_of_shudde_mell");

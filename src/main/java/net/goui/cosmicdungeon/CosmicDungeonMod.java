@@ -6,6 +6,7 @@ import net.goui.cosmicdungeon.command.ClassCommand;
 import net.goui.cosmicdungeon.command.CreativeCommand;
 import net.goui.cosmicdungeon.command.SurvivalCommand;
 import net.goui.cosmicdungeon.command.WorldCommand;
+import net.goui.cosmicdungeon.entity.GoblinAmbusherEntity;
 import net.goui.cosmicdungeon.entity.MagmaGlobEntity;
 import net.goui.cosmicdungeon.entity.ModEntities;
 import net.goui.cosmicdungeon.entity.StoneWardenEntity;
@@ -38,6 +39,8 @@ import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 @Mod(CosmicDungeonMod.MOD_ID)
 public class CosmicDungeonMod {
     public static final String MOD_ID = "cosmicdungeon";
+
+
     private static final Logger LOGGER = LogUtils.getLogger();
 
     public CosmicDungeonMod(IEventBus modEventBus, ModContainer modContainer) {
@@ -51,8 +54,10 @@ public class CosmicDungeonMod {
         //Entities
         modEventBus.addListener((net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent e) -> {
             e.put(ModEntities.MAGMA_GLOB.get(), MagmaGlobEntity.createAttributes().build());
-            e.put(ModEntities.STONE_WARDEN.get(), StoneWardenEntity.createAttributes().build()); // <-- add this
+            e.put(ModEntities.STONE_WARDEN.get(), StoneWardenEntity.createAttributes().build());
+            e.put(ModEntities.GOBLIN_AMBUSHER.get(), GoblinAmbusherEntity.createAttributes().build()); // fixed
         });
+
 
         ModEntities.register(modEventBus);
         if (FMLEnvironment.dist.isClient()) {

@@ -44,12 +44,12 @@ public class ModCreativeModeTabs {
                                 out.accept(ModBlocks.BISMUTH_ORE);
                                 out.accept(ModBlocks.BISMUTH_DEEPSLATE_ORE);
                                 out.accept(ModBlocks.MAGIC_BLOCK);
-                            })
-                            .build()
-            );
+                            }).build());
 
-    public static final Supplier<CreativeModeTab> DUNGEON_ITEM_TAB = CREATIVE_MODE_TAB.register("dungeon_items_tab",
-            () -> CreativeModeTab.builder().icon(() -> new ItemStack(ModItems.BARNACLED_PEARL.get()))
+    public static final Supplier<CreativeModeTab> DUNGEON_ITEM_TAB =
+            CREATIVE_MODE_TAB.register("dungeon_items_tab",
+            () -> CreativeModeTab.builder()
+                    .icon(() -> new ItemStack(ModItems.BARNACLED_PEARL.get()))
                     .title(Component.translatable("creativetab.cosmicdungeon.dungeon_items"))
                     .displayItems((itemDisplayParameters, output) -> {
                         output.accept(ModItems.BARNACLED_PEARL);
@@ -60,6 +60,138 @@ public class ModCreativeModeTabs {
                         output.accept(ModBlocks.PILE_OF_BOOKS);
 
                     }).build());
+
+    //~~~~~~~~~~~~~~~ Judicator Item Tab ~~~~~~~~~~~~~~~
+    public static final Supplier<CreativeModeTab> JUDICATOR_ITEM_TAB =
+            CREATIVE_MODE_TAB.register("judicator_items_tab",
+                    () -> CreativeModeTab.builder()
+                            .icon(() -> new ItemStack(ModItems.AZATHOTS_HAMMER_OF_FINAL_VERDICT.get()))
+                            .title(Component.translatable("creativetab.cosmicdungeon.judicator_items"))
+                            .displayItems((itemDisplayParameters, output) -> {
+                                  output.accept(ModItems.AEGIS_OF_ABSOLUTION);
+                                output.accept(ModItems.AEGIS_OF_CHAOS);
+                                output.accept(ModItems.AZATHOTS_HAMMER_OF_FINAL_VERDICT);
+    //                            output.accept(ModItems.BROODING_FORK);
+    //                            output.accept(ModBlocks.CHICKEN_BLOCK);
+    //                            output.accept(ModBlocks.PILE_OF_BOOKS);
+
+                            }).build());
+
+    //~~~~~~~~~~~~~~~ Sanctified Theurgist Item Tab ~~~~~~~~~~~~~~~
+    public static final Supplier<CreativeModeTab> SANCTIFIED_THEURGIST_ITEM_TAB =
+            CREATIVE_MODE_TAB.register("sanctified_theurgist_items_tab",
+                    () -> CreativeModeTab.builder()
+                            .icon(() -> new ItemStack(ModItems.BARNACLED_PEARL.get()))
+                            .title(Component.translatable("creativetab.cosmicdungeon.sanctified_theurgist_items"))
+                            .displayItems((itemDisplayParameters, output) -> {
+                                //                            output.accept(ModItems.BARNACLED_PEARL);
+                                //                            output.accept(ModItems.SEISMIC_CORE_FRAGMENT);
+                                //                            output.accept(ModItems.SHATTERED_REALITY_OF_SHUDDE_MELL);
+                                //                            output.accept(ModItems.BROODING_FORK);
+                                //                            output.accept(ModBlocks.CHICKEN_BLOCK);
+                                //                            output.accept(ModBlocks.PILE_OF_BOOKS);
+
+                            }).build());
+
+    //~~~~~~~~~~~~~~~ Pyroclast Item Tab ~~~~~~~~~~~~~~~
+    public static final Supplier<CreativeModeTab> PYROCLAST_ITEM_TAB =
+            CREATIVE_MODE_TAB.register("pyroclast_items_tab",
+                    () -> CreativeModeTab.builder()
+                            .icon(() -> new ItemStack(ModItems.BARNACLED_PEARL.get()))
+                            .title(Component.translatable("creativetab.cosmicdungeon.pyroclast_items"))
+                            .displayItems((itemDisplayParameters, output) -> {
+                                //                            output.accept(ModItems.BARNACLED_PEARL);
+                                //                            output.accept(ModItems.SEISMIC_CORE_FRAGMENT);
+                                //                            output.accept(ModItems.SHATTERED_REALITY_OF_SHUDDE_MELL);
+                                //                            output.accept(ModItems.BROODING_FORK);
+                                //                            output.accept(ModBlocks.CHICKEN_BLOCK);
+                                //                            output.accept(ModBlocks.PILE_OF_BOOKS);
+
+                            }).build());
+
+    //~~~~~~~~~~~~~~~ Venefex Item Tab ~~~~~~~~~~~~~~~
+    public static final Supplier<CreativeModeTab> VENEFEX_ITEM_TAB =
+            CREATIVE_MODE_TAB.register("venefex_items_tab",
+                    () -> CreativeModeTab.builder()
+                            .icon(() -> new ItemStack(ModItems.BARNACLED_PEARL.get()))
+                            .title(Component.translatable("creativetab.cosmicdungeon.venefex_items"))
+                            .displayItems((itemDisplayParameters, output) -> {
+                                //                            output.accept(ModItems.BARNACLED_PEARL);
+                                //                            output.accept(ModItems.SEISMIC_CORE_FRAGMENT);
+                                //                            output.accept(ModItems.SHATTERED_REALITY_OF_SHUDDE_MELL);
+                                //                            output.accept(ModItems.BROODING_FORK);
+                                //                            output.accept(ModBlocks.CHICKEN_BLOCK);
+                                //                            output.accept(ModBlocks.PILE_OF_BOOKS);
+
+                            }).build());
+
+    //~~~~~~~~~~~~~~~ Bogatur Item Tab ~~~~~~~~~~~~~~~
+    public static final Supplier<CreativeModeTab> BOGATUR_ITEM_TAB =
+            CREATIVE_MODE_TAB.register("bogatur_items_tab",
+                    () -> CreativeModeTab.builder()
+                            .icon(() -> new ItemStack(ModItems.TOTEM_OF_DOG_WHISPERING.get()))
+                            .title(Component.translatable("creativetab.cosmicdungeon.bogatur_items"))
+                            .displayItems((itemDisplayParameters, output) -> {
+                            output.accept(ModItems.TOTEM_OF_DOG_WHISPERING);
+                                //                            output.accept(ModItems.SEISMIC_CORE_FRAGMENT);
+                                //                            output.accept(ModItems.SHATTERED_REALITY_OF_SHUDDE_MELL);
+                                //                            output.accept(ModItems.BROODING_FORK);
+                                //                            output.accept(ModBlocks.CHICKEN_BLOCK);
+                                //                            output.accept(ModBlocks.PILE_OF_BOOKS);
+
+                            }).build());
+
+    //~~~~~~~~~~~~~~~ Dragoon Item Tab ~~~~~~~~~~~~~~~
+    public static final Supplier<CreativeModeTab> DRAGOON_ITEM_TAB =
+            CREATIVE_MODE_TAB.register("dragoon_items_tab",
+                    () -> CreativeModeTab.builder()
+                            .icon(() -> new ItemStack(ModItems.BARNACLED_PEARL.get()))
+                            .title(Component.translatable("creativetab.cosmicdungeon.dragoon_items"))
+                            .displayItems((itemDisplayParameters, output) -> {
+                                //                            output.accept(ModItems.BARNACLED_PEARL);
+                                //                            output.accept(ModItems.SEISMIC_CORE_FRAGMENT);
+                                //                            output.accept(ModItems.SHATTERED_REALITY_OF_SHUDDE_MELL);
+                                //                            output.accept(ModItems.BROODING_FORK);
+                                //                            output.accept(ModBlocks.CHICKEN_BLOCK);
+                                //                            output.accept(ModBlocks.PILE_OF_BOOKS);
+
+                            }).build());
+
+    //~~~~~~~~~~~~~~~ Metalmancer Item Tab ~~~~~~~~~~~~~~~
+    public static final Supplier<CreativeModeTab> METALMANCER_ITEM_TAB =
+            CREATIVE_MODE_TAB.register("metalmancer_items_tab",
+                    () -> CreativeModeTab.builder()
+                            .icon(() -> new ItemStack(ModItems.FORGE_CALLERS_MAUL.get()))
+                            .title(Component.translatable("creativetab.cosmicdungeon.metalmancer_items"))
+                            .displayItems((itemDisplayParameters, output) -> {
+                            output.accept(ModItems.FORGE_CALLERS_MAUL);
+                                //                            output.accept(ModItems.SEISMIC_CORE_FRAGMENT);
+                                //                            output.accept(ModItems.SHATTERED_REALITY_OF_SHUDDE_MELL);
+                                //                            output.accept(ModItems.BROODING_FORK);
+                                //                            output.accept(ModBlocks.CHICKEN_BLOCK);
+                                //                            output.accept(ModBlocks.PILE_OF_BOOKS);
+
+                            }).build());
+
+    //~~~~~~~~~~~~~~~ Deadeye Item Tab ~~~~~~~~~~~~~~~
+    public static final Supplier<CreativeModeTab> DEADEYE_ITEM_TAB =
+            CREATIVE_MODE_TAB.register("deadeye_items_tab",
+                    () -> CreativeModeTab.builder()
+                            .icon(() -> new ItemStack(ModItems.HIGH_VELOCITY_ARROW.get()))
+                            .title(Component.translatable("creativetab.cosmicdungeon.deadeye_items"))
+                            .displayItems((itemDisplayParameters, output) -> {
+                           output.accept(ModItems.HIGH_VELOCITY_ARROW);
+                            //output.accept(ModItems.SEISMIC_CORE_FRAGMENT);
+                                //                            output.accept(ModItems.SHATTERED_REALITY_OF_SHUDDE_MELL);
+                                //                            output.accept(ModItems.BROODING_FORK);
+                                //                            output.accept(ModBlocks.CHICKEN_BLOCK);
+                                //                            output.accept(ModBlocks.PILE_OF_BOOKS);
+
+                            }).build());
+
+
+
+
     private static void acceptIfHasItem(CreativeModeTab.Output out, ItemLike like) {
         if (like.asItem() != Items.AIR) out.accept(like);
     }

@@ -11,6 +11,10 @@ public class ModSounds {
     public static final DeferredRegister<SoundEvent> SOUND_EVENTS =
             DeferredRegister.create(Registries.SOUND_EVENT, CosmicDungeonMod.MOD_ID);
 
+    // Ambusher SFX
+    public static final DeferredHolder<SoundEvent, SoundEvent> BLOWDART = register("blowdart");
+
+    // Existing chicken sounds
     public static final DeferredHolder<SoundEvent, SoundEvent> CHICKEN_SOUND_1 = register("chicken_sound_1");
     public static final DeferredHolder<SoundEvent, SoundEvent> CHICKEN_SOUND_2 = register("chicken_sound_2");
     public static final DeferredHolder<SoundEvent, SoundEvent> CHICKEN_SOUND_3 = register("chicken_sound_3");
@@ -20,8 +24,8 @@ public class ModSounds {
     public static final DeferredHolder<SoundEvent, SoundEvent> CHICKEN_SOUND_7 = register("chicken_sound_7");
 
     private static DeferredHolder<SoundEvent, SoundEvent> register(String name) {
-        return SOUND_EVENTS.register(name,
-                () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, name)));
+        return SOUND_EVENTS.register(name, () ->
+                SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, name)));
     }
 
     public static void registerSounds(net.neoforged.bus.api.IEventBus eventBus) {

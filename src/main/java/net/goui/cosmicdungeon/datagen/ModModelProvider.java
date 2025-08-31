@@ -40,7 +40,12 @@ public class ModModelProvider extends ModelProvider {
         itemModels.generateFlatItem(ModItems.SEISMIC_CORE_FRAGMENT.get(), ModelTemplates.FLAT_ITEM);
         itemModels.generateFlatItem(ModItems.BROODING_FORK.get(), ModelTemplates.FLAT_ITEM);
         itemModels.generateFlatItem(ModItems.CHISEL.get(), ModelTemplates.FLAT_ITEM);
-
+        itemModels.generateFlatItem(ModItems.AEGIS_OF_ABSOLUTION.get(), ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.AEGIS_OF_CHAOS.get(), ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.AZATHOTS_HAMMER_OF_FINAL_VERDICT.get(), ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.FORGE_CALLERS_MAUL.get(), ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.HIGH_VELOCITY_ARROW.get(), ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.TOTEM_OF_DOG_WHISPERING.get(), ModelTemplates.FLAT_ITEM);
         /* ===== Simple cubes ===== */
         blockModels.createTrivialCube(ModBlocks.BISMUTH_ORE.get());
         blockModels.createTrivialCube(ModBlocks.BISMUTH_DEEPSLATE_ORE.get());
