@@ -33,11 +33,7 @@ public class ModBlockTagProvider extends BlockTagsProvider {
 
         // ===== Vanilla: Colored Amethyst (all colors, all stages) =====
         tag(BlockTags.MINEABLE_WITH_PICKAXE).add(allAmethystBlocks());
-
-        // If you want them to require a tier, uncomment ONE of these:
-        // tag(BlockTags.NEEDS_STONE_TOOL).add(allAmethystBlocks());
-         tag(BlockTags.NEEDS_IRON_TOOL).add(allAmethystBlocks());
-        // tag(BlockTags.NEEDS_DIAMOND_TOOL).add(allAmethystBlocks());
+        tag(BlockTags.NEEDS_IRON_TOOL).add(allAmethystBlocks());
 
         // ===== Custom tags =====
         tag(ModTags.Blocks.AMETHYST_BLOCKS).add(

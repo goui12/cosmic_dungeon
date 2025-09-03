@@ -28,6 +28,8 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import net.minecraft.world.level.block.state.properties.BlockSetType;
+
 public class ModBlocks {
     public static final DeferredRegister.Blocks BLOCKS =
             DeferredRegister.createBlocks(CosmicDungeonMod.MOD_ID);

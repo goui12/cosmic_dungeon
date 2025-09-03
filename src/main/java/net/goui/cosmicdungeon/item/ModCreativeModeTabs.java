@@ -58,7 +58,6 @@ public class ModCreativeModeTabs {
                         output.accept(ModItems.BROODING_FORK);
                         output.accept(ModBlocks.CHICKEN_BLOCK);
                         output.accept(ModBlocks.PILE_OF_BOOKS);
-
                     }).build());
 
     //~~~~~~~~~~~~~~~ Judicator Item Tab ~~~~~~~~~~~~~~~

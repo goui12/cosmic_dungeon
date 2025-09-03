@@ -2,10 +2,7 @@ package net.goui.cosmicdungeon;
 
 import net.goui.cosmicdungeon.block.ModBlocks;
 import net.goui.cosmicdungeon.client.CosmicDungeonClient;
-import net.goui.cosmicdungeon.command.ClassCommand;
-import net.goui.cosmicdungeon.command.CreativeCommand;
-import net.goui.cosmicdungeon.command.SurvivalCommand;
-import net.goui.cosmicdungeon.command.WorldCommand;
+import net.goui.cosmicdungeon.command.*;
 import net.goui.cosmicdungeon.entity.GoblinAmbusherEntity;
 import net.goui.cosmicdungeon.entity.MagmaGlobEntity;
 import net.goui.cosmicdungeon.entity.ModEntities;
@@ -13,15 +10,9 @@ import net.goui.cosmicdungeon.entity.StoneWardenEntity;
 import net.goui.cosmicdungeon.item.ModCreativeModeTabs;
 import net.goui.cosmicdungeon.item.ModItems;
 import net.goui.cosmicdungeon.sound.ModSounds;
-import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
-import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -35,10 +26,13 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.goui.cosmicdungeon.block.entity.ModBlockEntities;
+import net.goui.cosmicdungeon.component.ModDataComponents;
 
 @Mod(CosmicDungeonMod.MOD_ID)
 public class CosmicDungeonMod {
     public static final String MOD_ID = "cosmicdungeon";
+
 
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -50,6 +44,12 @@ public class CosmicDungeonMod {
 
         ModCreativeModeTabs.register(modEventBus);
         ModItems.register(modEventBus);
+        ModDataComponents.register(modEventBus);
+        ModBlockEntities.register(modEventBus);
+        // >>> THIS LINE makes the door use CUTOUT on the client <<<
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            net.goui.cosmicdungeon.client.CosmicDungeonClient.init(modEventBus);
+        }
 
         //Entities
         modEventBus.addListener((net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent e) -> {
@@ -80,6 +80,10 @@ public class CosmicDungeonMod {
         CreativeCommand.register(event.getDispatcher());
         SurvivalCommand.register(event.getDispatcher());
         ClassCommand.register(event.getDispatcher());
+        MoreCommand.register(event.getDispatcher());
+        DoorCountCommand.register(event.getDispatcher());
+        DoorPassLimitCommand.register(event.getDispatcher());
+        DoorResetCountCommand.register(event.getDispatcher());
     }
 
 

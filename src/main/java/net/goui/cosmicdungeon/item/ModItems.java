@@ -38,8 +38,6 @@ public class ModItems {
     public static final DeferredItem<Item> AEGIS_OF_ABSOLUTION = ITEMS.registerSimpleItem("aegis_of_absolution");
     public static final DeferredItem<Item> AEGIS_OF_CHAOS = ITEMS.registerSimpleItem("aegis_of_chaos");
 
-
-
     public static final DeferredItem<Item> BARNACLED_PEARL = ITEMS.registerSimpleItem("barnacled_pearl");
     public static final DeferredItem<Item> SEISMIC_CORE_FRAGMENT = ITEMS.registerSimpleItem("seismic_core_fragment");
     public static final DeferredItem<Item> SHATTERED_REALITY_OF_SHUDDE_MELL = ITEMS.registerSimpleItem("shattered_reality_of_shudde_mell");

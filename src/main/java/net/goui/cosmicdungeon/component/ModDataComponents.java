@@ -1,5 +1,6 @@
 package net.goui.cosmicdungeon.component;
 
+import com.mojang.serialization.Codec;
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.common.color.AmethystColor;
 import net.minecraft.core.BlockPos;
@@ -11,21 +12,25 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 import java.util.function.UnaryOperator;
 
-public class ModDataComponents {
+public final class ModDataComponents {
+    private ModDataComponents() {}
+
     public static final DeferredRegister<DataComponentType<?>> DATA_COMPONENT_TYPES =
             DeferredRegister.createDataComponents(Registries.DATA_COMPONENT_TYPE, CosmicDungeonMod.MOD_ID);
 
-    public static final DeferredHolder<DataComponentType<?>, DataComponentType<BlockPos>> COORDINATES = register("coordinates",
-            builder -> builder.persistent(BlockPos.CODEC));
+    /** Generic coordinate storage (already used in your project). */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<BlockPos>> COORDINATES =
+            register("coordinates", builder -> builder.persistent(BlockPos.CODEC));
 
-
-    // >>> NEW: color for amethyst items/blocks
+    /** Color data for amethyst items/blocks (already used in your project). */
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<AmethystColor>> AMETHYST_COLOR =
             register("amethyst_color", b -> b.persistent(AmethystColor.CODEC));
 
-    private static <T>DeferredHolder<DataComponentType<?>, DataComponentType<T>> register(String name,
-                                                                                          UnaryOperator<DataComponentType.Builder<T>> builderOperator) {
-        return DATA_COMPONENT_TYPES.register(name, () -> builderOperator.apply(DataComponentType.builder()).build());
+
+
+    private static <T> DeferredHolder<DataComponentType<?>, DataComponentType<T>> register(
+            String name, UnaryOperator<DataComponentType.Builder<T>> builderOp) {
+        return DATA_COMPONENT_TYPES.register(name, () -> builderOp.apply(DataComponentType.builder()).build());
     }
 
     public static void register(IEventBus eventBus) {

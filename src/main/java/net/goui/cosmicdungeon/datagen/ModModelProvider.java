@@ -46,17 +46,17 @@ public class ModModelProvider extends ModelProvider {
         itemModels.generateFlatItem(ModItems.FORGE_CALLERS_MAUL.get(), ModelTemplates.FLAT_ITEM);
         itemModels.generateFlatItem(ModItems.HIGH_VELOCITY_ARROW.get(), ModelTemplates.FLAT_ITEM);
         itemModels.generateFlatItem(ModItems.TOTEM_OF_DOG_WHISPERING.get(), ModelTemplates.FLAT_ITEM);
+
         /* ===== Simple cubes ===== */
         blockModels.createTrivialCube(ModBlocks.BISMUTH_ORE.get());
         blockModels.createTrivialCube(ModBlocks.BISMUTH_DEEPSLATE_ORE.get());
         blockModels.createTrivialCube(ModBlocks.MAGIC_BLOCK.get());
         blockModels.createTrivialCube(ModBlocks.BISMUTH_BLOCK.get());
         blockModels.createTrivialCube(ModBlocks.CHICKEN_BLOCK.get());
-        /* ===== Pile of Books (Blockbench block model + FLAT item) ===== */
+
+        /* ===== Pile of Books ===== */
         {
             var b = ModBlocks.PILE_OF_BOOKS.get();
-
-            // Blockstate -> Blockbench block model
             var blockModel = rlMod("block/pile_of_books");
             blockModels.blockStateOutput.accept(
                     MultiVariantGenerator.dispatch(
@@ -64,15 +64,11 @@ public class ModModelProvider extends ModelProvider {
                             new MultiVariant(WeightedList.of(new Variant(blockModel)))
                     )
             );
-
-            // Item model -> flat 2D icon (uses textures/item/pile_of_books.png)
-            // This API writes a "minecraft:item/generated" style model.
             itemModels.generateFlatItem(b.asItem(), ModelTemplates.FLAT_ITEM);
         }
 
-        /* ===== Colored amethyst sets (explicit, no helpers) ===== */
+        /* ===== Colored amethyst sets ===== */
         for (AmethystColor ac : AmethystColor.values()) {
-            // inline AmethystColor -> DyeColor
             DyeColor dye = switch (ac) {
                 case WHITE -> DyeColor.WHITE;
                 case ORANGE -> DyeColor.ORANGE;
@@ -95,166 +91,58 @@ public class ModModelProvider extends ModelProvider {
             var v = ModBlocks.AMETHYST.get(dye);
             if (v == null) continue;
 
-            // Base blocks (standard cubes with your textures)
             blockModels.createTrivialCube(v.block().get());
             blockModels.createTrivialCube(v.budding().get());
 
-// LIT amethyst block (also a plain cube; uses textures/block/lit_amethyst_block_<color>.png)
             var litHolder = ModBlocks.LIT_AMETHYST_BLOCKS.get(dye);
             if (litHolder != null) {
                 blockModels.createTrivialCube(litHolder.get());
             }
-            // ---------------- Small bud ----------------
-            {
-                Block b = v.budSmall().get();
-                String id = b.builtInRegistryHolder().key().location().getPath();
-                ResourceLocation modelLoc = rlMod("block/" + id);
-                ResourceLocation tex = rlMod("block/" + id);
 
-                blockModels.modelOutput.accept(modelLoc, () -> {
-                    var root = new com.google.gson.JsonObject();
-                    root.addProperty("parent", "block/cross");
-                    var texObj = new com.google.gson.JsonObject();
-                    texObj.addProperty("cross", tex.toString());
-                    texObj.addProperty("particle", tex.toString());
-                    root.add("textures", texObj);
-                    root.addProperty("render_type", "cutout");
-                    return root;
-                });
-
-                PropertyDispatch<MultiVariant> pd =
-                        PropertyDispatch.initial(BlockStateProperties.FACING)
-                                .select(Direction.UP,    new MultiVariant(WeightedList.of(new Variant(modelLoc))))
-                                .select(Direction.DOWN,  new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R180))))
-                                .select(Direction.NORTH, new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90))))
-                                .select(Direction.SOUTH, new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90).withYRot(Quadrant.R180))))
-                                .select(Direction.WEST,  new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90).withYRot(Quadrant.R270))))
-                                .select(Direction.EAST,  new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90).withYRot(Quadrant.R90))));
-
-                blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(b).with(pd));
-
-                ResourceLocation itemLoc = rlMod("item/" + id);
-                itemModels.modelOutput.accept(itemLoc, () -> {
-                    var root = new com.google.gson.JsonObject();
-                    root.addProperty("parent", modelLoc.toString());
-                    return root;
-                });
-            }
-
-            // ---------------- Medium bud ----------------
-            {
-                Block b = v.budMedium().get();
-                String id = b.builtInRegistryHolder().key().location().getPath();
-                ResourceLocation modelLoc = rlMod("block/" + id);
-                ResourceLocation tex = rlMod("block/" + id);
-
-                blockModels.modelOutput.accept(modelLoc, () -> {
-                    var root = new com.google.gson.JsonObject();
-                    root.addProperty("parent", "block/cross");
-                    var texObj = new com.google.gson.JsonObject();
-                    texObj.addProperty("cross", tex.toString());
-                    texObj.addProperty("particle", tex.toString());
-                    root.add("textures", texObj);
-                    root.addProperty("render_type", "cutout");
-                    return root;
-                });
-
-                PropertyDispatch<MultiVariant> pd =
-                        PropertyDispatch.initial(BlockStateProperties.FACING)
-                                .select(Direction.UP,    new MultiVariant(WeightedList.of(new Variant(modelLoc))))
-                                .select(Direction.DOWN,  new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R180))))
-                                .select(Direction.NORTH, new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90))))
-                                .select(Direction.SOUTH, new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90).withYRot(Quadrant.R180))))
-                                .select(Direction.WEST,  new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90).withYRot(Quadrant.R270))))
-                                .select(Direction.EAST,  new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90).withYRot(Quadrant.R90))));
-
-                blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(b).with(pd));
-
-                ResourceLocation itemLoc = rlMod("item/" + id);
-                itemModels.modelOutput.accept(itemLoc, () -> {
-                    var root = new com.google.gson.JsonObject();
-                    root.addProperty("parent", modelLoc.toString());
-                    return root;
-                });
-            }
-
-            // ---------------- Large bud ----------------
-            {
-                Block b = v.budLarge().get();
-                String id = b.builtInRegistryHolder().key().location().getPath();
-                ResourceLocation modelLoc = rlMod("block/" + id);
-                ResourceLocation tex = rlMod("block/" + id);
-
-                blockModels.modelOutput.accept(modelLoc, () -> {
-                    var root = new com.google.gson.JsonObject();
-                    root.addProperty("parent", "block/cross");
-                    var texObj = new com.google.gson.JsonObject();
-                    texObj.addProperty("cross", tex.toString());
-                    texObj.addProperty("particle", tex.toString());
-                    root.add("textures", texObj);
-                    root.addProperty("render_type", "cutout");
-                    return root;
-                });
-
-                PropertyDispatch<MultiVariant> pd =
-                        PropertyDispatch.initial(BlockStateProperties.FACING)
-                                .select(Direction.UP,    new MultiVariant(WeightedList.of(new Variant(modelLoc))))
-                                .select(Direction.DOWN,  new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R180))))
-                                .select(Direction.NORTH, new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90))))
-                                .select(Direction.SOUTH, new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90).withYRot(Quadrant.R180))))
-                                .select(Direction.WEST,  new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90).withYRot(Quadrant.R270))))
-                                .select(Direction.EAST,  new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90).withYRot(Quadrant.R90))));
-
-                blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(b).with(pd));
-
-                ResourceLocation itemLoc = rlMod("item/" + id);
-                itemModels.modelOutput.accept(itemLoc, () -> {
-                    var root = new com.google.gson.JsonObject();
-                    root.addProperty("parent", modelLoc.toString());
-                    return root;
-                });
-            }
-
-            // ---------------- Cluster ----------------
-            {
-                Block b = v.cluster().get();
-                String id = b.builtInRegistryHolder().key().location().getPath();
-                ResourceLocation modelLoc = rlMod("block/" + id);
-                ResourceLocation tex = rlMod("block/" + id);
-
-                blockModels.modelOutput.accept(modelLoc, () -> {
-                    var root = new com.google.gson.JsonObject();
-                    root.addProperty("parent", "block/cross");
-                    var texObj = new com.google.gson.JsonObject();
-                    texObj.addProperty("cross", tex.toString());
-                    texObj.addProperty("particle", tex.toString());
-                    root.add("textures", texObj);
-                    root.addProperty("render_type", "cutout");
-                    return root;
-                });
-
-                PropertyDispatch<MultiVariant> pd =
-                        PropertyDispatch.initial(BlockStateProperties.FACING)
-                                .select(Direction.UP,    new MultiVariant(WeightedList.of(new Variant(modelLoc))))
-                                .select(Direction.DOWN,  new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R180))))
-                                .select(Direction.NORTH, new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90))))
-                                .select(Direction.SOUTH, new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90).withYRot(Quadrant.R180))))
-                                .select(Direction.WEST,  new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90).withYRot(Quadrant.R270))))
-                                .select(Direction.EAST,  new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90).withYRot(Quadrant.R90))));
-
-                blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(b).with(pd));
-
-                ResourceLocation itemLoc = rlMod("item/" + id);
-                itemModels.modelOutput.accept(itemLoc, () -> {
-                    var root = new com.google.gson.JsonObject();
-                    root.addProperty("parent", modelLoc.toString());
-                    return root;
-                });
-            }
+            crossFacing(blockModels, itemModels, v.budSmall().get());
+            crossFacing(blockModels, itemModels, v.budMedium().get());
+            crossFacing(blockModels, itemModels, v.budLarge().get());
+            crossFacing(blockModels, itemModels, v.cluster().get());
         }
     }
 
+    // === Helpers ===
     private static ResourceLocation rlMod(String path) {
         return ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, path);
+    }
+
+    private void crossFacing(BlockModelGenerators blockModels, ItemModelGenerators itemModels, Block b) {
+        String id = b.builtInRegistryHolder().key().location().getPath();
+        ResourceLocation modelLoc = rlMod("block/" + id);
+        ResourceLocation tex = rlMod("block/" + id);
+
+        blockModels.modelOutput.accept(modelLoc, () -> {
+            var root = new com.google.gson.JsonObject();
+            root.addProperty("parent", "block/cross");
+            var texObj = new com.google.gson.JsonObject();
+            texObj.addProperty("cross", tex.toString());
+            texObj.addProperty("particle", tex.toString());
+            root.add("textures", texObj);
+            root.addProperty("render_type", "cutout");
+            return root;
+        });
+
+        PropertyDispatch<MultiVariant> pd =
+                PropertyDispatch.initial(BlockStateProperties.FACING)
+                        .select(Direction.UP,    new MultiVariant(WeightedList.of(new Variant(modelLoc))))
+                        .select(Direction.DOWN,  new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R180))))
+                        .select(Direction.NORTH, new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90))))
+                        .select(Direction.SOUTH, new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90).withYRot(Quadrant.R180))))
+                        .select(Direction.WEST,  new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90).withYRot(Quadrant.R270))))
+                        .select(Direction.EAST,  new MultiVariant(WeightedList.of(new Variant(modelLoc).withXRot(Quadrant.R90).withYRot(Quadrant.R90))));
+
+        blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(b).with(pd));
+
+        ResourceLocation itemLoc = rlMod("item/" + id);
+        itemModels.modelOutput.accept(itemLoc, () -> {
+            var root = new com.google.gson.JsonObject();
+            root.addProperty("parent", modelLoc.toString());
+            return root;
+        });
     }
 }
