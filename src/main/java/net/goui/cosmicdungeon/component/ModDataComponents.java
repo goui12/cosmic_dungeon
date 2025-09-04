@@ -10,6 +10,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+import java.util.UUID;
 import java.util.function.UnaryOperator;
 
 public final class ModDataComponents {
@@ -17,6 +18,10 @@ public final class ModDataComponents {
 
     public static final DeferredRegister<DataComponentType<?>> DATA_COMPONENT_TYPES =
             DeferredRegister.createDataComponents(Registries.DATA_COMPONENT_TYPE, CosmicDungeonMod.MOD_ID);
+
+    /** UUID codec written as string to avoid version/mapping differences. */
+    public static final Codec<UUID> UUID_STRING_CODEC =
+            Codec.STRING.xmap(UUID::fromString, UUID::toString);
 
     /** Generic coordinate storage (already used in your project). */
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<BlockPos>> COORDINATES =
@@ -26,7 +31,9 @@ public final class ModDataComponents {
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<AmethystColor>> AMETHYST_COLOR =
             register("amethyst_color", b -> b.persistent(AmethystColor.CODEC));
 
-
+    /** Door key binding (UUID of the lock). */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<UUID>> DOOR_LOCK_ID =
+            register("door_lock_id", b -> b.persistent(UUID_STRING_CODEC));
 
     private static <T> DeferredHolder<DataComponentType<?>, DataComponentType<T>> register(
             String name, UnaryOperator<DataComponentType.Builder<T>> builderOp) {

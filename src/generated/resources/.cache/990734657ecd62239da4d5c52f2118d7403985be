@@ -1,4 +1,4 @@
-// 1.21.8	2025-09-02T18:30:36.8084991	Model Definitions - cosmicdungeon
+// 1.21.8	2025-09-04T05:17:41.9090311	Model Definitions - cosmicdungeon
 5a66ffdd8a2e8eedf53f6dc3fde5516adf72264a assets/cosmicdungeon/blockstates/amethyst_block_black.json
 81517f0d786bda19404b187b856edfc244184b2e assets/cosmicdungeon/blockstates/amethyst_block_blue.json
 eeae820f52d0c1e216f1030b3821ae1d38be29e1 assets/cosmicdungeon/blockstates/amethyst_block_brown.json
@@ -176,6 +176,7 @@ e5f752aad238628e16d42a6856bf264f34e3a3b9 assets/cosmicdungeon/items/budding_amet
 3bfa5b5b1ab7dce7df99a16160128758a1305db8 assets/cosmicdungeon/items/budding_amethyst_yellow.json
 418695548f55774be72242dae4ffbaee59987b6f assets/cosmicdungeon/items/chicken_block.json
 3a641b5683f439df4d53faa79871e0cd871d6d41 assets/cosmicdungeon/items/chisel.json
+90b6673b49cc55c6b6ad7349e189edae9e6293ab assets/cosmicdungeon/items/door_key.json
 82e7ce70ba6cc5f26ee07e994802b91766862ca7 assets/cosmicdungeon/items/forge_callers_maul.json
 c60307d11e72940a6865decddc6e45a0ead1a1d5 assets/cosmicdungeon/items/frostfire_ice.json
 64d23729d68e279c05750cd9a47a6a15f5b54937 assets/cosmicdungeon/items/high_velocity_arrow.json
@@ -391,6 +392,7 @@ ac929e4666a471b4da497d5f8cd8e705b6029172 assets/cosmicdungeon/models/item/azatho
 c424513cded2637b950bd328baeffb827f602248 assets/cosmicdungeon/models/item/bismuth.json
 b82d56f6e0871421b02b0c324b000ef355dd9275 assets/cosmicdungeon/models/item/brooding_fork.json
 d4a86d088c463d2073043f09db191d9421810f71 assets/cosmicdungeon/models/item/chisel.json
+d3a5043fbe60dc30e99b3fac36874fd3b8640b92 assets/cosmicdungeon/models/item/door_key.json
 ff744751074ae3b1d60d525c33fd98eabcd085f9 assets/cosmicdungeon/models/item/forge_callers_maul.json
 5369142372a34da1d2e08fcd6a54455dc2443526 assets/cosmicdungeon/models/item/frostfire_ice.json
 d79f4d4a8f7ac530c80264883f7f8e10f471312f assets/cosmicdungeon/models/item/high_velocity_arrow.json

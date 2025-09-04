@@ -46,6 +46,8 @@ public class ModModelProvider extends ModelProvider {
         itemModels.generateFlatItem(ModItems.FORGE_CALLERS_MAUL.get(), ModelTemplates.FLAT_ITEM);
         itemModels.generateFlatItem(ModItems.HIGH_VELOCITY_ARROW.get(), ModelTemplates.FLAT_ITEM);
         itemModels.generateFlatItem(ModItems.TOTEM_OF_DOG_WHISPERING.get(), ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.DOOR_KEY.get(), ModelTemplates.FLAT_ITEM);
+
 
         /* ===== Simple cubes ===== */
         blockModels.createTrivialCube(ModBlocks.BISMUTH_ORE.get());

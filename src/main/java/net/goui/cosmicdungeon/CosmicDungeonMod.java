@@ -84,6 +84,10 @@ public class CosmicDungeonMod {
         DoorCountCommand.register(event.getDispatcher());
         DoorPassLimitCommand.register(event.getDispatcher());
         DoorResetCountCommand.register(event.getDispatcher());
+        DoorLockCommand.register(event.getDispatcher());
+        DoorInfoCommand.register(event.getDispatcher());
+        DoorKeyInfoCommand.register(event.getDispatcher());
+        DoorKeyDuplicateCommand.register(event.getDispatcher());
     }
 
 
