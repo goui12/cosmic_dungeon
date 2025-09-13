@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "cosmicdungeon:item/chausses_of_the_first_vow"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "layers": {
+    "humanoid": [
+      { "texture": "cosmicdungeon:judicator_chainmail" }
+    ],
+    "humanoid_leggings": [
+      { "texture": "cosmicdungeon:judicator_chainmail" }
+    ]
+  }
+}
