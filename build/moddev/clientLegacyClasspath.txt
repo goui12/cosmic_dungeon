@@ -1,4 +1,4 @@
-C:\Users\Cameron\Documents\mod_development\cosmic_dungeon\build\moddev\artifacts\neoforge-21.8.31-client-extra-aka-minecraft-resources.jar
+C:\Users\Cameron\Documents\mod_development\cosmic_dungeon\build\moddev\artifacts\neoforge-21.8.45-client-extra-aka-minecraft-resources.jar
 C:\Users\Cameron\gradle-home\caches\modules-2\files-2.1\com.electronwill.night-config\core\3.8.3\b442a95f09e349927f5a945ecb594455870fcf4f\core-3.8.3.jar
 C:\Users\Cameron\gradle-home\caches\modules-2\files-2.1\com.electronwill.night-config\toml\3.8.3\90b2fd6efcb4a7d5b9810cf78f9d824994d717f2\toml-3.8.3.jar
 C:\Users\Cameron\gradle-home\caches\modules-2\files-2.1\com.fasterxml.jackson.core\jackson-annotations\2.13.4\858c6cc78e1f08a885b1613e1d817c829df70a6e\jackson-annotations-2.13.4.jar
@@ -50,10 +50,10 @@ C:\Users\Cameron\gradle-home\caches\modules-2\files-2.1\net.minecrell\terminalco
 C:\Users\Cameron\gradle-home\caches\modules-2\files-2.1\net.minidev\accessors-smart\2.5.1\19b820261eb2e7de7d5bde11d1c06e4501dd7e5f\accessors-smart-2.5.1.jar
 C:\Users\Cameron\gradle-home\caches\modules-2\files-2.1\net.minidev\json-smart\2.5.1\4c11d2808d009132dfbbf947ebf37de6bf266c8e\json-smart-2.5.1.jar
 C:\Users\Cameron\gradle-home\caches\modules-2\files-2.1\net.neoforged.accesstransformers\at-parser\11.0.2\64aae57d6d26d69543c5275181fe6971707a4e16\at-parser-11.0.2.jar
-C:\Users\Cameron\gradle-home\caches\modules-2\files-2.1\net.neoforged.fancymodloader\bootstraplauncher\9.0.16\703417f9ccbdb2c69ba9b25b04458b0803987a0b\bootstraplauncher-9.0.16.jar
-C:\Users\Cameron\gradle-home\caches\modules-2\files-2.1\net.neoforged.fancymodloader\earlydisplay\9.0.16\303a11afeb7cb2f9477ab0e27cc739af2a930a9e\earlydisplay-9.0.16.jar
-C:\Users\Cameron\gradle-home\caches\modules-2\files-2.1\net.neoforged.fancymodloader\loader\9.0.16\ce1493ad6231325f40ee4571ae9b13d7ba98feff\loader-9.0.16.jar
-C:\Users\Cameron\gradle-home\caches\modules-2\files-2.1\net.neoforged.fancymodloader\securejarhandler\9.0.16\ae0b47dfdb029eb38243aae5d8980015f1274c59\securejarhandler-9.0.16.jar
+C:\Users\Cameron\gradle-home\caches\modules-2\files-2.1\net.neoforged.fancymodloader\bootstraplauncher\9.0.18\ec6c91c3e44cd3c77be98069010ce94b1555e292\bootstraplauncher-9.0.18.jar
+C:\Users\Cameron\gradle-home\caches\modules-2\files-2.1\net.neoforged.fancymodloader\earlydisplay\9.0.18\7d3e3280895c5e156838c122e7f33af303197868\earlydisplay-9.0.18.jar
+C:\Users\Cameron\gradle-home\caches\modules-2\files-2.1\net.neoforged.fancymodloader\loader\9.0.18\fada6a897afb213a5d2cf85ce82a9bbf03cdcfe4\loader-9.0.18.jar
+C:\Users\Cameron\gradle-home\caches\modules-2\files-2.1\net.neoforged.fancymodloader\securejarhandler\9.0.18\a130f48d1f454285428953ba2ab79861b7532db7\securejarhandler-9.0.18.jar
 C:\Users\Cameron\gradle-home\caches\modules-2\files-2.1\net.neoforged\JarJarFileSystems\0.4.1\78f59f89defcd032ed788b151ca6a0d40ace796a\JarJarFileSystems-0.4.1.jar
 C:\Users\Cameron\gradle-home\caches\modules-2\files-2.1\net.neoforged\JarJarMetadata\0.4.1\f8da03683dc81694556dc3e177c5e3bb77ae6fcb\JarJarMetadata-0.4.1.jar
 C:\Users\Cameron\gradle-home\caches\modules-2\files-2.1\net.neoforged\JarJarSelector\0.4.1\fb3cc7a58af22ad2880adb98af6d518128c47dae\JarJarSelector-0.4.1.jar

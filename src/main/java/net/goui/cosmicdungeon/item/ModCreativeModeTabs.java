@@ -58,6 +58,9 @@ public class ModCreativeModeTabs {
                         output.accept(ModItems.BROODING_FORK);
                         output.accept(ModBlocks.CHICKEN_BLOCK);
                         output.accept(ModBlocks.PILE_OF_BOOKS);
+                        output.accept(ModItems.AEGIS_OF_ABSOLUTION);
+                        output.accept(ModItems.AEGIS_OF_CHAOS);
+                        output.accept(ModItems.AZATHOTS_HAMMER_OF_FINAL_VERDICT);
                     }).build());
 
     //~~~~~~~~~~~~~~~ Judicator Item Tab ~~~~~~~~~~~~~~~
@@ -67,12 +70,11 @@ public class ModCreativeModeTabs {
                             .icon(() -> new ItemStack(ModItems.AZATHOTS_HAMMER_OF_FINAL_VERDICT.get()))
                             .title(Component.translatable("creativetab.cosmicdungeon.judicator_items"))
                             .displayItems((itemDisplayParameters, output) -> {
-                                  output.accept(ModItems.AEGIS_OF_ABSOLUTION);
-                                output.accept(ModItems.AEGIS_OF_CHAOS);
-                                output.accept(ModItems.AZATHOTS_HAMMER_OF_FINAL_VERDICT);
-    //                            output.accept(ModItems.BROODING_FORK);
-    //                            output.accept(ModBlocks.CHICKEN_BLOCK);
-    //                            output.accept(ModBlocks.PILE_OF_BOOKS);
+                                output.accept(ModItems.VISOR_OF_FIRST_OATH.get());
+                                output.accept(ModItems.HAUBERK_OF_THE_SWORN_WORD.get());
+                                output.accept(ModItems.CHAUSSES_OF_THE_FIRST_VOW.get());
+                                output.accept(ModItems.SABATONS_OF_THE_SILENT_PROMISE.get());
+
 
                             }).build());
 

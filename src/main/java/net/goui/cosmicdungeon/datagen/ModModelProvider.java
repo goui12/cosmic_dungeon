@@ -48,6 +48,12 @@ public class ModModelProvider extends ModelProvider {
         itemModels.generateFlatItem(ModItems.TOTEM_OF_DOG_WHISPERING.get(), ModelTemplates.FLAT_ITEM);
         itemModels.generateFlatItem(ModItems.DOOR_KEY.get(), ModelTemplates.FLAT_ITEM);
 
+        /* ===== Judicator Armor ===== */
+        itemModels.generateFlatItem(ModItems.VISOR_OF_FIRST_OATH.get(), ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.HAUBERK_OF_THE_SWORN_WORD.get(), ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.CHAUSSES_OF_THE_FIRST_VOW.get(), ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.SABATONS_OF_THE_SILENT_PROMISE.get(), ModelTemplates.FLAT_ITEM);
+
 
         /* ===== Simple cubes ===== */
         blockModels.createTrivialCube(ModBlocks.BISMUTH_ORE.get());

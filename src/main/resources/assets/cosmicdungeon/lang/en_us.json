@@ -29,6 +29,17 @@
   "item.cosmicdungeon.high_velocity_arrow": "High Velocity Arrow",
   "item.cosmicdungeon.totem_of_dog_whispering": "Totem of Dog Whispering",
 
+  "item.cosmicdungeon.visor_of_first_oath": "Visor of the First Oath",
+  "item.cosmicdungeon.hauberk_of_the_sworn_word": "Hauberk of the Sworn Word",
+  "item.cosmicdungeon.chausses_of_the_first_vow": "Chausses of the First Vow",
+  "item.cosmicdungeon.sabatons_of_the_silent_promise": "Sabatons of the Silent Promise",
+
+  "tooltip.cosmicdungeon.visor_of_first_oath": "The helm grants voice to the oath, spoken aloud for all to hear.",
+  "tooltip.cosmicdungeon.hauberk_of_the_sworn_word": "The chest binds the sworn word to the heart, sealed within.",
+  "tooltip.cosmicdungeon.chausses_of_the_first_vow": "The leggings carry the first vow, each step marking the path of service.",
+  "tooltip.cosmicdungeon.sabatons_of_the_silent_promise": "The boots bear the silent promise, unspoken yet unbroken.",
+
+
   "block.cosmicdungeon.pile_of_books": "Pile of Books",
   "block.cosmicdungeon.amethyst_block_white": "White Block of Amethyst",
   "block.cosmicdungeon.lit_amethyst_block_white": "White Lit Block of Amethyst",
