@@ -1,8 +1,6 @@
 package net.goui.cosmicdungeon.item;
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.block.ModBlocks;
-import net.goui.cosmicdungeon.common.color.AmethystColor;
-import net.goui.cosmicdungeon.component.ModDataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -70,13 +68,63 @@ public class ModCreativeModeTabs {
                             .icon(() -> new ItemStack(ModItems.AZATHOTS_HAMMER_OF_FINAL_VERDICT.get()))
                             .title(Component.translatable("creativetab.cosmicdungeon.judicator_items"))
                             .displayItems((itemDisplayParameters, output) -> {
-                                output.accept(ModItems.VISOR_OF_FIRST_OATH.get());
-                                output.accept(ModItems.HAUBERK_OF_THE_SWORN_WORD.get());
-                                output.accept(ModItems.CHAUSSES_OF_THE_FIRST_VOW.get());
-                                output.accept(ModItems.SABATONS_OF_THE_SILENT_PROMISE.get());
+                                // ===== Dungeon 1 — Tier 3 (Diamond) =====
+                                output.accept(ModItems.EDICT_OF_SILENCE.get());
+                                output.accept(ModItems.VOWKEEPER.get());
+                                output.accept(ModItems.VIELPIERCER.get());
+                                output.accept(ModItems.SCINTILLA_VITALIS.get());     // first and only listing
+                                output.accept(ModItems.GUSTING_BOLT.get());
+                                output.accept(ModItems.SHARD_OF_THE_MAD_STRIDER.get());
+                                output.accept(ModItems.GONFALON_OF_JUDIFICATION.get());
 
+                                // ===== Dungeon 1 — Tier 4 (Netherite) =====
+                                output.accept(ModItems.EDICT_OF_RUIN.get());
+                                output.accept(ModItems.AEGIS_OF_TRUTH.get());
+                                output.accept(ModItems.LUX_VITALIS.get());            // first and only listing
+                                output.accept(ModItems.EBONSIGHT.get());
+                                output.accept(ModItems.FANG_OF_THE_BRUTE.get());
+                                output.accept(ModItems.ENSIGN_OF_THE_JUDICATOR.get());
 
+                                // ===== Dungeon 2 — Tier 1 (Chainmail) =====
+                                output.accept(ModItems.VISOR_OF_THE_RESOLUTE.get()); // Head
+                                output.accept(ModItems.CUIRASS_OF_PURPOSE.get());    // Body
+                                output.accept(ModItems.CHAUSSES_OF_THE_PLEDGE.get());// Legs
+                                output.accept(ModItems.SABATONS_OF_THE_UNHEARD_OATH.get()); // Feet
+                                output.accept(ModItems.EMPOWERED_HAMMER.get());
+                                output.accept(ModItems.WORKED_PLANK.get());
+                                output.accept(ModItems.ARROW_OF_WRIT.get());          // first and only listing
+                                output.accept(ModItems.STANDARD_OF_THE_INITIATE_JUDGE.get());
+
+                                // ===== Dungeon 2 — Tier 2 (Iron) =====
+                                output.accept(ModItems.OATHBOUND_VISOR.get());       // Head
+                                output.accept(ModItems.CUIRASS_OF_RESOLUTION.get()); // Body
+                                output.accept(ModItems.GREAVES_OF_BINDING.get());    // Legs
+                                output.accept(ModItems.SABATONS_OF_THE_PACT.get());  // Feet
+                                output.accept(ModItems.REINFORCED_HAMMER.get());
+                                output.accept(ModItems.REINFORCED_IRON_SLAB.get());
+                                // (SCINTILLA_VITALIS was already listed in D1–T3; don't add again)
+                                output.accept(ModItems.STANDARD_OF_THE_NASCENT_JUDGE.get());
+
+                                // ===== Dungeon 3 — Tier 3 (Diamond) =====
+                                output.accept(ModItems.VISOR_OF_THE_COVENANT.get()); // Head
+                                output.accept(ModItems.CUIRASS_OF_DEVOTION.get());   // Body
+                                output.accept(ModItems.GREAVES_OF_THE_TRIBUNAL_PATH.get()); // Legs
+                                output.accept(ModItems.SABATONS_OF_PURSUIT.get());   // Feet
+                                output.accept(ModItems.TIDAL_MACE.get());
+                                output.accept(ModItems.SHIELD_OF_TIDAL_FORCE.get());
+                                // (ARROW_OF_WRIT & LUX_VITALIS already listed earlier; don't add again)
+                                output.accept(ModItems.STANDARD_OF_THE_ABYSSAL_JUDGE.get()); // first and only listing
+
+                                // ===== Dungeon 3 — Tier 4 (Netherite) =====
+                                output.accept(ModItems.VISOR_OF_IMMUTABLE_WILL.get()); // Head
+                                output.accept(ModItems.CUIRASS_OF_CONVICTION.get());   // Body
+                                output.accept(ModItems.GREAVES_OF_THE_ETERNAL_MARCH.get()); // Legs
+                                output.accept(ModItems.SABATONS_OF_BOUNDLESS_STEPS.get());  // Feet
+                                output.accept(ModItems.ABYSSAL_MACE.get());
+                                output.accept(ModItems.SHIELD_OF_THE_DEEP.get());
+                                // (ARROW_OF_WRIT, LUX_VITALIS, and STANDARD_OF_THE_ABYSSAL_JUDGE already listed; don't add again)
                             }).build());
+
 
     //~~~~~~~~~~~~~~~ Sanctified Theurgist Item Tab ~~~~~~~~~~~~~~~
     public static final Supplier<CreativeModeTab> SANCTIFIED_THEURGIST_ITEM_TAB =

@@ -1,0 +1,16 @@
+{
+  "parent": "cosmicdungeon:item/aegis_of_truth_item",
+  "textures": {
+    "0": "cosmicdungeon:item/aegis_of_truth_base",
+    "particle": "cosmicdungeon:item/aegis_of_truth_base"
+  },
+  "display": {
+    "thirdperson_righthand": { "rotation": [45, -20, 0], "translation": [-1, 4, 4], "scale": [1, 1, 1] },
+    "thirdperson_lefthand":  { "rotation": [45, -20, 0], "translation": [-1, 4, 4], "scale": [1, 1, 1] },
+    "firstperson_righthand": { "rotation": [90, -90, 20], "translation": [1, 1, -10], "scale": [1.25, 1.25, 1.25] },
+    "firstperson_lefthand":  { "rotation": [90, -90, 20], "translation": [1, 1, -10], "scale": [1.25, 1.25, 1.25] },
+    "gui":                   { "rotation": [0, 180, 0], "translation": [0, -2, 0], "scale": [0.65, 0.65, 0.65] },
+    "fixed":                 { "rotation": [0, 0, 0], "translation": [0, -2, 0], "scale": [0.7, 0.7, 0.7] },
+    "ground":                { "rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [0.7, 0.7, 0.7] }
+  }
+}
