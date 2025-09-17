@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "cosmicdungeon:block/budding_amethyst_gray"
-  }
-}

@@ -1,8 +1,0 @@
-{
-  "parent": "block/cross",
-  "render_type": "cutout",
-  "textures": {
-    "cross": "cosmicdungeon:block/small_amethyst_bud_black",
-    "particle": "cosmicdungeon:block/small_amethyst_bud_black"
-  }
-}

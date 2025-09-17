@@ -1648,7 +1648,7 @@ Writing Output: C:\Users\Cameron\Documents\mod_development\cosmic_dungeon\MCreat
   net/minecraft/client/model/SalmonModel.class
   net/minecraft/client/model/SheepFurModel.class
   net/minecraft/client/model/SheepModel.class
-  net/minecraft/client/model/ShieldModel.class
+  net/minecraft/client/mode`l/ShieldModel.class
   net/minecraft/client/model/ShulkerBulletModel.class
   net/minecraft/client/model/ShulkerModel.class
   net/minecraft/client/model/SilverfishModel.class

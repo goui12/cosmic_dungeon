@@ -16,6 +16,8 @@ public final class CosmicDungeonClient {
     public static void init(IEventBus modEventBus) {
         modEventBus.addListener(CosmicDungeonClient::registerLayers);
         modEventBus.addListener(CosmicDungeonClient::registerRenderers);
+        // ✅ No item property registration. We use JSON overrides with "minecraft:using_item".
+
     }
 
     private static void registerLayers(EntityRenderersEvent.RegisterLayerDefinitions e) {

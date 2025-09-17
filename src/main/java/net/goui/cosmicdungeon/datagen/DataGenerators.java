@@ -1,11 +1,13 @@
 package net.goui.cosmicdungeon.datagen;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
+
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.data.BlockTagsProvider;
@@ -23,9 +25,8 @@ public class DataGenerators {
         DataGenerator generator = event.getGenerator();
         PackOutput packOutput = generator.getPackOutput();
 
-        // CLIENT-ONLY providers
+        // All your block + item models live here (including Vowkeeper shield)
         generator.addProvider(true, new ModModelProvider(packOutput));
-        // If you add a LanguageProvider later, add it here too.
     }
 
     @SubscribeEvent
@@ -34,7 +35,6 @@ public class DataGenerators {
         PackOutput packOutput = generator.getPackOutput();
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
 
-        // SERVER-ONLY providers
         generator.addProvider(true, new LootTableProvider(
                 packOutput,
                 Collections.emptySet(),

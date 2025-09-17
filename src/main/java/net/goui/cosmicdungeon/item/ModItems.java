@@ -2,16 +2,13 @@ package net.goui.cosmicdungeon.item;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.block.ModBlocks;
-import net.goui.cosmicdungeon.item.custom.BroodingForkItem;
-import net.goui.cosmicdungeon.item.custom.ChiselItem;
-import net.goui.cosmicdungeon.item.custom.ColoredBlockItem;
-import net.goui.cosmicdungeon.item.custom.DoorKeyItem;
+import net.goui.cosmicdungeon.item.custom.*;
 
-import net.minecraft.ChatFormatting;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.BlocksAttacks;
 import net.minecraft.world.item.component.TooltipDisplay;
-import net.minecraft.world.item.equipment.ArmorMaterials;
 import net.minecraft.world.item.equipment.ArmorType;
 import net.minecraft.world.level.block.Block;
 
@@ -22,68 +19,37 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-
-/**
- * ModItems (NeoForge 1.21.8)
- *
- * Uses DeferredRegister.Items (createItems) and DeferredItem<T>.
- * - Keep all item registration centralized here.
- * - Group items by category with clear headers.
- * - Use anonymous subclasses when we just need custom tooltips.
- *
- * Notes:
- * - Judicator armor variants below use vanilla CHAINMAIL stats & models,
- *   are NOT craftable by default (no recipes provided),
- *   and each has a purple/magenta tooltip line via translatable keys.
- * - Texture filenames should be lowercase underscored (e.g., visor_of_first_oath.png).
- */
 public class ModItems {
 
-    /** Primary item register for this mod id. */
     public static final DeferredRegister.Items ITEMS =
             DeferredRegister.createItems(CosmicDungeonMod.MOD_ID);
 
-    // --------------------------------------------------------------------------------------------
-    // Helpers
-    // --------------------------------------------------------------------------------------------
-
-    /** Helper for ColoredBlockItem (keeps BlockItem props consistent & avoids lambdas throughout). */
+    // === Helpers ===
     public static <T extends Block> DeferredItem<Item> registerColoredBlockItem(String name, Supplier<T> block) {
         return ITEMS.registerItem(name, props -> new ColoredBlockItem(block.get(), props));
     }
 
-    // --------------------------------------------------------------------------------------------
-    // Core / Materials / Simple Items
-    // --------------------------------------------------------------------------------------------
+    // === Core / Materials / Simple Items ===
+    public static final DeferredItem<Item> BISMUTH               = ITEMS.registerSimpleItem("bismuth");
+    public static final DeferredItem<Item> RAW_BISMUTH           = ITEMS.registerSimpleItem("raw_bismuth");
 
-    public static final DeferredItem<Item> BISMUTH                  = ITEMS.registerSimpleItem("bismuth");
-    public static final DeferredItem<Item> RAW_BISMUTH              = ITEMS.registerSimpleItem("raw_bismuth");
+    public static final DeferredItem<Item> FROSTFIRE_ICE         = ITEMS.registerSimpleItem("frostfire_ice");
+    public static final DeferredItem<Item> STARLIGHT_ASHES       = ITEMS.registerSimpleItem("starlight_ashes");
+    public static final DeferredItem<Item> BARNACLED_PEARL       = ITEMS.registerSimpleItem("barnacled_pearl");
+    public static final DeferredItem<Item> SEISMIC_CORE_FRAGMENT = ITEMS.registerSimpleItem("seismic_core_fragment");
+    public static final DeferredItem<Item> SHATTERED_REALITY_OF_SHUDDE_MELL =
+            ITEMS.registerSimpleItem("shattered_reality_of_shudde_mell");
 
-    public static final DeferredItem<Item> FROSTFIRE_ICE            = ITEMS.registerSimpleItem("frostfire_ice");
-    public static final DeferredItem<Item> STARLIGHT_ASHES          = ITEMS.registerSimpleItem("starlight_ashes");
-    public static final DeferredItem<Item> BARNACLED_PEARL          = ITEMS.registerSimpleItem("barnacled_pearl");
-    public static final DeferredItem<Item> SEISMIC_CORE_FRAGMENT    = ITEMS.registerSimpleItem("seismic_core_fragment");
-    public static final DeferredItem<Item> SHATTERED_REALITY_OF_SHUDDE_MELL = ITEMS.registerSimpleItem("shattered_reality_of_shudde_mell");
-
-    // --------------------------------------------------------------------------------------------
-    // Tools / Weapons / Utility
-    // --------------------------------------------------------------------------------------------
-
+    // === Tools / Weapons / Utility (non-Judicator) ===
     public static final DeferredItem<Item> CHISEL = ITEMS.registerItem(
-            "chisel",
-            props -> new ChiselItem(props.durability(32))
+            "chisel", props -> new ChiselItem(props.durability(32))
     );
-
     public static final DeferredItem<Item> BROODING_FORK = ITEMS.registerItem(
-            "brooding_fork",
-            props -> new BroodingForkItem(props.stacksTo(1))
+            "brooding_fork", props -> new BroodingForkItem(props.stacksTo(1))
     );
-
     public static final DeferredItem<Item> DOOR_KEY = ITEMS.registerItem(
-            "door_key",
-            props -> new DoorKeyItem(props.stacksTo(1))
+            "door_key", props -> new DoorKeyItem(props.stacksTo(1))
     );
-
     public static final DeferredItem<Item> AZATHOTS_HAMMER_OF_FINAL_VERDICT = ITEMS.registerSimpleItem("azathots_hammer_of_final_verdict");
     public static final DeferredItem<Item> FORGE_CALLERS_MAUL               = ITEMS.registerSimpleItem("forge_callers_maul");
     public static final DeferredItem<Item> HIGH_VELOCITY_ARROW              = ITEMS.registerSimpleItem("high_velocity_arrow");
@@ -91,20 +57,13 @@ public class ModItems {
     public static final DeferredItem<Item> AEGIS_OF_ABSOLUTION              = ITEMS.registerSimpleItem("aegis_of_absolution");
     public static final DeferredItem<Item> AEGIS_OF_CHAOS                   = ITEMS.registerSimpleItem("aegis_of_chaos");
 
-    // --------------------------------------------------------------------------------------------
-    // Blocks as Items
-    // --------------------------------------------------------------------------------------------
-
+    // === Blocks as Items ===
     public static final DeferredItem<BlockItem> PILE_OF_BOOKS =
             ITEMS.registerSimpleBlockItem("pile_of_books", ModBlocks.PILE_OF_BOOKS);
 
-    // --------------------------------------------------------------------------------------------
-    // Food
-    // --------------------------------------------------------------------------------------------
-
+    // === Food ===
     public static final DeferredItem<Item> RADISH = ITEMS.registerItem(
             "radish",
-            // Example with modern tooltip override signature (1.21.8):
             props -> new Item(props.food(ModFoodProperties.RADISH)) {
                 @Override
                 public void appendHoverText(ItemStack stack,
@@ -117,77 +76,156 @@ public class ModItems {
             }
     );
 
-    // ========================================================================
-    //  J U D I C A T O R   I T E M S  —  CHAINMAIL VARIANT (1.21.8-style armor)
-    // ========================================================================
-    // Uses vanilla CHAINMAIL material with custom item names + magenta tooltip.
-    // Non-craftable: no recipes are provided.
-    //
-    // Textures (inventory icons):
-    //   assets/cosmicdungeon/textures/item/<lowercase_name>.png
-    //     visor_of_first_oath.png
-    //     hauberk_of_the_sworn_word.png
-    //     chausses_of_the_first_vow.png
-    //     sabatons_of_the_silent_promise.png
-    //
-    // Wear rendering:
-    //   Uses the default CHAINMAIL equipment assets from ArmorMaterials.
-    //   (If you want fully custom worn visuals, we can add an EquipmentClientInfo
-    //    JSON and a custom ArmorMaterial asset key later.)
+    // ============================================================================================
+    // JUDICATOR ITEMS — BY DUNGEON & TIER
+    // ============================================================================================
 
-    // Helm — VISOR_OF_FIRST_OATH
-    public static final DeferredItem<Item> VISOR_OF_FIRST_OATH =
-            ITEMS.registerItem("visor_of_first_oath", props ->
-                    new Item(props.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_CHAINMAIL, ArmorType.HELMET)
-                    ) {
-                        @Override
-                        public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display,
-                                                    Consumer<Component> tooltip, TooltipFlag flags) {
-                            tooltip.accept(Component.literal("§dThe helm grants voice to the oath, spoken aloud for all to hear."));
-                        }
-                    });
+    // D1 T3 (Diamond)
+    public static final DeferredItem<Item> EDICT_OF_SILENCE =
+            ITEMS.registerItem("edict_of_silence", p -> new Item(p.stacksTo(1).durability(1561)));
+    public static final DeferredItem<Item> VOWKEEPER =
+            ITEMS.registerItem("vowkeeper", p -> new SimpleShieldItem(
+                    p.stacksTo(1).durability(336)
+                            // keep vanilla-like shield mechanics:
+                            .component(DataComponents.BLOCKS_ATTACKS, new BlocksAttacks(
+                                    0.05F, 1.0F,
+                                    java.util.List.of(new BlocksAttacks.DamageReduction(120.0F, java.util.Optional.empty(), 0.0F, 0.60F)),
+                                    new BlocksAttacks.ItemDamageFunction(2.0F, 0.0F, 0.50F),
+                                    java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty()
+                            ))));
+    public static final DeferredItem<Item> VIELPIERCER =
+            ITEMS.registerItem("vielpiercer", SpectralArrowItem::new);
+    public static final DeferredItem<Item> SCINTILLA_VITALIS =
+            ITEMS.registerItem("scintilla_vitalis", TippedArrowItem::new);
+    public static final DeferredItem<Item> GUSTING_BOLT =
+            ITEMS.registerItem("gusting_bolt", ArrowItem::new);
+    public static final DeferredItem<Item> SHARD_OF_THE_MAD_STRIDER =
+            ITEMS.registerItem("shard_of_the_mad_strider", TippedArrowItem::new);
+    public static final DeferredItem<Item> GONFALON_OF_JUDIFICATION =
+            ITEMS.registerSimpleItem("gonfalon_of_judification");
 
-    // Chestplate — HAUBERK_OF_THE_SWORN_WORD
-    public static final DeferredItem<Item> HAUBERK_OF_THE_SWORN_WORD =
-            ITEMS.registerItem("hauberk_of_the_sworn_word", props ->
-                    new Item(props.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_CHAINMAIL, ArmorType.CHESTPLATE)
-                    ) {
-                        @Override
-                        public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display,
-                                                    Consumer<Component> tooltip, TooltipFlag flags) {
-                            tooltip.accept(Component.literal("§dThe chest binds the sworn word to the heart, sealed within."));
-                        }
-                    });
+    // D1 T4 (Netherite)
+    public static final DeferredItem<Item> EDICT_OF_RUIN =
+            ITEMS.registerItem("edict_of_ruin", p -> new Item(p.stacksTo(1).durability(2031)));
+    public static final DeferredItem<Item> AEGIS_OF_TRUTH =
+            ITEMS.registerItem("aegis_of_truth", p -> new SimpleShieldItem(
+                    p.stacksTo(1).durability(336)
+                            // keep vanilla-like shield mechanics:
+                            .component(DataComponents.BLOCKS_ATTACKS, new BlocksAttacks(
+                                    0.05F, 1.0F,
+                                    java.util.List.of(new BlocksAttacks.DamageReduction(120.0F, java.util.Optional.empty(), 0.0F, 0.60F)),
+                                    new BlocksAttacks.ItemDamageFunction(2.0F, 0.0F, 0.50F),
+                                    java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty()
+                            ))
+            ));
+    public static final DeferredItem<Item> LUX_VITALIS =
+            ITEMS.registerItem("lux_vitalis", TippedArrowItem::new);
+    public static final DeferredItem<Item> EBONSIGHT =
+            ITEMS.registerItem("ebonsight", TippedArrowItem::new);
+    public static final DeferredItem<Item> FANG_OF_THE_BRUTE =
+            ITEMS.registerItem("fang_of_the_brute", TippedArrowItem::new);
+    public static final DeferredItem<Item> ENSIGN_OF_THE_JUDICATOR =
+            ITEMS.registerSimpleItem("ensign_of_the_judicator");
 
-    // Leggings — CHAUSSES_OF_THE_FIRST_VOW
-    public static final DeferredItem<Item> CHAUSSES_OF_THE_FIRST_VOW =
-            ITEMS.registerItem("chausses_of_the_first_vow", props ->
-                    new Item(props.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_CHAINMAIL, ArmorType.LEGGINGS)
-                    ) {
-                        @Override
-                        public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display,
-                                                    Consumer<Component> tooltip, TooltipFlag flags) {
-                            tooltip.accept(Component.literal("§dThe leggings carry the first vow, each step marking the path of service."));
-                        }
-                    });
+    // D2 T1 (Rustic Chainmail — custom material)
+    public static final DeferredItem<Item> VISOR_OF_THE_RESOLUTE =
+            ITEMS.registerItem("visor_of_the_resolute", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_CHAINMAIL, ArmorType.HELMET)));
+    public static final DeferredItem<Item> CUIRASS_OF_PURPOSE =
+            ITEMS.registerItem("cuirass_of_purpose", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_CHAINMAIL, ArmorType.CHESTPLATE)));
+    public static final DeferredItem<Item> CHAUSSES_OF_THE_PLEDGE =
+            ITEMS.registerItem("chausses_of_the_pledge", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_CHAINMAIL, ArmorType.LEGGINGS)));
+    public static final DeferredItem<Item> SABATONS_OF_THE_UNHEARD_OATH =
+            ITEMS.registerItem("sabatons_of_the_unheard_oath", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_CHAINMAIL, ArmorType.BOOTS)));
 
-    // Boots — SABATONS_OF_THE_SILENT_PROMISE
-    public static final DeferredItem<Item> SABATONS_OF_THE_SILENT_PROMISE =
-            ITEMS.registerItem("sabatons_of_the_silent_promise", props ->
-                    new Item(props.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_CHAINMAIL, ArmorType.BOOTS)
-                    ) {
-                        @Override
-                        public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display,
-                                                    Consumer<Component> tooltip, TooltipFlag flags) {
-                            tooltip.accept(Component.literal("§dThe boots bear the silent promise, unspoken yet unbroken."));
-                        }
-                    });
+    public static final DeferredItem<Item> EMPOWERED_HAMMER =
+            ITEMS.registerItem("empowered_hammer", p -> new Item(p.stacksTo(1).durability(250)));
+    public static final DeferredItem<Item> WORKED_PLANK =
+            ITEMS.registerItem("worked_plank", p -> new SimpleShieldItem(
+                    p.stacksTo(1).durability(336)
+                            // keep vanilla-like shield mechanics:
+                            .component(DataComponents.BLOCKS_ATTACKS, new BlocksAttacks(
+                                    0.05F, 1.0F,
+                                    java.util.List.of(new BlocksAttacks.DamageReduction(120.0F, java.util.Optional.empty(), 0.0F, 0.60F)),
+                                    new BlocksAttacks.ItemDamageFunction(2.0F, 0.0F, 0.50F),
+                                    java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty()
+                            ))));
+    public static final DeferredItem<Item> ARROW_OF_WRIT =
+            ITEMS.registerItem("arrow_of_writ", ArrowItem::new);
+    public static final DeferredItem<Item> STANDARD_OF_THE_INITIATE_JUDGE =
+            ITEMS.registerSimpleItem("standard_of_the_initiate_judge");
 
+    // D2 T2 (Rustic Iron — custom material)
+    public static final DeferredItem<Item> OATHBOUND_VISOR =
+            ITEMS.registerItem("oathbound_visor", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_RUSTIC_IRON, ArmorType.HELMET)));
+    public static final DeferredItem<Item> CUIRASS_OF_RESOLUTION =
+            ITEMS.registerItem("cuirass_of_resolution", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_RUSTIC_IRON, ArmorType.CHESTPLATE)));
+    public static final DeferredItem<Item> GREAVES_OF_BINDING =
+            ITEMS.registerItem("greaves_of_binding", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_RUSTIC_IRON, ArmorType.LEGGINGS)));
+    public static final DeferredItem<Item> SABATONS_OF_THE_PACT =
+            ITEMS.registerItem("sabatons_of_the_pact", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_RUSTIC_IRON, ArmorType.BOOTS)));
 
+    public static final DeferredItem<Item> REINFORCED_HAMMER =
+            ITEMS.registerItem("reinforced_hammer", p -> new Item(p.stacksTo(1).durability(250)));
+    public static final DeferredItem<Item> REINFORCED_IRON_SLAB =
+            ITEMS.registerItem("reinforced_iron_slab", p -> new SimpleShieldItem(
+                    p.stacksTo(1).durability(336)
+                            // keep vanilla-like shield mechanics:
+                            .component(DataComponents.BLOCKS_ATTACKS, new BlocksAttacks(
+                                    0.05F, 1.0F,
+                                    java.util.List.of(new BlocksAttacks.DamageReduction(120.0F, java.util.Optional.empty(), 0.0F, 0.60F)),
+                                    new BlocksAttacks.ItemDamageFunction(2.0F, 0.0F, 0.50F),
+                                    java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty()
+                            ))));
+    public static final DeferredItem<Item> STANDARD_OF_THE_NASCENT_JUDGE =
+            ITEMS.registerSimpleItem("standard_of_the_nascent_judge");
 
-    // --------------------------------------------------------------------------------------------
-    // Registration hook
-    // --------------------------------------------------------------------------------------------
+    // D3 T3 (Ocean Templar Diamond — custom material)
+    public static final DeferredItem<Item> VISOR_OF_THE_COVENANT =
+            ITEMS.registerItem("visor_of_the_covenant", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_OCEAN_TEMPLAR_DIAMOND, ArmorType.HELMET)));
+    public static final DeferredItem<Item> CUIRASS_OF_DEVOTION =
+            ITEMS.registerItem("cuirass_of_devotion", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_OCEAN_TEMPLAR_DIAMOND, ArmorType.CHESTPLATE)));
+    public static final DeferredItem<Item> GREAVES_OF_THE_TRIBUNAL_PATH =
+            ITEMS.registerItem("greaves_of_the_tribunal_path", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_OCEAN_TEMPLAR_DIAMOND, ArmorType.LEGGINGS)));
+    public static final DeferredItem<Item> SABATONS_OF_PURSUIT =
+            ITEMS.registerItem("sabatons_of_pursuit", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_OCEAN_TEMPLAR_DIAMOND, ArmorType.BOOTS)));
+
+    public static final DeferredItem<Item> TIDAL_MACE =
+            ITEMS.registerItem("tidal_mace", p -> new Item(p.stacksTo(1).durability(1561)));
+    public static final DeferredItem<Item> SHIELD_OF_TIDAL_FORCE =
+            ITEMS.registerItem("shield_of_tidal_force", p -> new SimpleShieldItem(
+                    p.stacksTo(1).durability(336)
+                            // keep vanilla-like shield mechanics:
+                            .component(DataComponents.BLOCKS_ATTACKS, new BlocksAttacks(
+                                    0.05F, 1.0F,
+                                    java.util.List.of(new BlocksAttacks.DamageReduction(120.0F, java.util.Optional.empty(), 0.0F, 0.60F)),
+                                    new BlocksAttacks.ItemDamageFunction(2.0F, 0.0F, 0.50F),
+                                    java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty()
+                            ))));
+    public static final DeferredItem<Item> STANDARD_OF_THE_ABYSSAL_JUDGE =
+            ITEMS.registerSimpleItem("standard_of_the_abyssal_judge");
+
+    // D3 T4 (Ocean Templar Netherite — custom material)
+    public static final DeferredItem<Item> VISOR_OF_IMMUTABLE_WILL =
+            ITEMS.registerItem("visor_of_immutable_will", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_OCEAN_TEMPLAR_NETHERITE, ArmorType.HELMET)));
+    public static final DeferredItem<Item> CUIRASS_OF_CONVICTION =
+            ITEMS.registerItem("cuirass_of_conviction", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_OCEAN_TEMPLAR_NETHERITE, ArmorType.CHESTPLATE)));
+    public static final DeferredItem<Item> GREAVES_OF_THE_ETERNAL_MARCH =
+            ITEMS.registerItem("greaves_of_the_eternal_march", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_OCEAN_TEMPLAR_NETHERITE, ArmorType.LEGGINGS)));
+    public static final DeferredItem<Item> SABATONS_OF_BOUNDLESS_STEPS =
+            ITEMS.registerItem("sabatons_of_boundless_steps", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_OCEAN_TEMPLAR_NETHERITE, ArmorType.BOOTS)));
+
+    public static final DeferredItem<Item> ABYSSAL_MACE =
+            ITEMS.registerItem("abyssal_mace", p -> new Item(p.stacksTo(1).durability(2031)));
+    public static final DeferredItem<Item> SHIELD_OF_THE_DEEP =
+            ITEMS.registerItem("shield_of_the_deep", p -> new SimpleShieldItem(
+                    p.stacksTo(1).durability(336)
+                            // keep vanilla-like shield mechanics:
+                            .component(DataComponents.BLOCKS_ATTACKS, new BlocksAttacks(
+                                    0.05F, 1.0F,
+                                    java.util.List.of(new BlocksAttacks.DamageReduction(120.0F, java.util.Optional.empty(), 0.0F, 0.60F)),
+                                    new BlocksAttacks.ItemDamageFunction(2.0F, 0.0F, 0.50F),
+                                    java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty()
+                            ))));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

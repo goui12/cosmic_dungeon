@@ -36,5 +36,8 @@ public class ModTags {
         private static TagKey<Item> create(String path) {
             return ItemTags.create(ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, path));
         }
+        public static final TagKey<Item> SHIELDS =
+                ItemTags.create(ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "shields"));
+
     }
 }
