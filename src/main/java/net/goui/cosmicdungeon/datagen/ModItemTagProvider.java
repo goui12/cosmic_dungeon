@@ -5,6 +5,8 @@ import net.goui.cosmicdungeon.item.ModItems;
 import net.goui.cosmicdungeon.util.ModTags;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
+import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.data.ItemTagsProvider;
 
 import java.util.concurrent.CompletableFuture;
@@ -29,5 +31,12 @@ public class ModItemTagProvider extends ItemTagsProvider {
                 .add(ModItems.REINFORCED_IRON_SLAB.get())
                 .add(ModItems.SHIELD_OF_TIDAL_FORCE.get())
                 .add(ModItems.SHIELD_OF_THE_DEEP.get());
+        tag(ModTags.Items.INFINITE_SHOOTABLES)
+                .add(Items.ARROW)
+                .add(Items.SPECTRAL_ARROW)
+                .add(Items.SNOWBALL)
+                .add(Items.FIRE_CHARGE)
+                .add(Items.WIND_CHARGE);
+
     }
 }

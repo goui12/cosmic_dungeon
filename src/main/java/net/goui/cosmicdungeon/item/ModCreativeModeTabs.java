@@ -59,7 +59,11 @@ public class ModCreativeModeTabs {
                         output.accept(ModItems.AEGIS_OF_ABSOLUTION);
                         output.accept(ModItems.AEGIS_OF_CHAOS);
                         output.accept(ModItems.AZATHOTS_HAMMER_OF_FINAL_VERDICT);
+                        output.accept(ModBlocks.INFINITE_DISPENSER);
                     }).build());
+
+
+
 
     //~~~~~~~~~~~~~~~ Judicator Item Tab ~~~~~~~~~~~~~~~
     public static final Supplier<CreativeModeTab> JUDICATOR_ITEM_TAB =

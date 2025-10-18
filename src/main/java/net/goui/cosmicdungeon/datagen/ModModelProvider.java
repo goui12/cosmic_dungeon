@@ -134,6 +134,41 @@ public class ModModelProvider extends ModelProvider {
             FLAT.accept(b.asItem());
         }
 
+        // ===== Infinite Dispenser =====
+        {
+            var b = ModBlocks.INFINITE_DISPENSER.get();
+
+            ResourceLocation horiz = rlMod("block/infinite_dispenser");
+            ResourceLocation vert  = rlMod("block/infinite_dispenser_vertical");
+
+            // Reuse vanilla parents so we don't duplicate textures
+            blockModels.modelOutput.accept(horiz, () -> {
+                var root = new com.google.gson.JsonObject();
+                root.addProperty("parent", "minecraft:block/dispenser");
+                return root;
+            });
+            blockModels.modelOutput.accept(vert, () -> {
+                var root = new com.google.gson.JsonObject();
+                root.addProperty("parent", "minecraft:block/dispenser_vertical");
+                return root;
+            });
+
+            // Blockstate: face in 6 directions (use vertical model for up/down)
+            var pd = PropertyDispatch.initial(BlockStateProperties.FACING)
+                    .select(Direction.NORTH, new MultiVariant(WeightedList.of(new Variant(horiz))))
+                    .select(Direction.SOUTH, new MultiVariant(WeightedList.of(new Variant(horiz).withYRot(Quadrant.R180))))
+                    .select(Direction.WEST,  new MultiVariant(WeightedList.of(new Variant(horiz).withYRot(Quadrant.R270))))
+                    .select(Direction.EAST,  new MultiVariant(WeightedList.of(new Variant(horiz).withYRot(Quadrant.R90))))
+                    .select(Direction.UP,    new MultiVariant(WeightedList.of(new Variant(vert))))
+                    .select(Direction.DOWN,  new MultiVariant(WeightedList.of(new Variant(vert).withXRot(Quadrant.R180))));
+
+            blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(b).with(pd));
+
+            // Item model → point at the horizontal block model
+            registerExternalItem(itemModels, b.asItem(), horiz);
+        }
+
+
         // ===== Colored amethyst sets =====
         for (AmethystColor ac : AmethystColor.values()) {
             DyeColor dye = switch (ac) {

@@ -65,12 +65,12 @@ public class GoblinAmbusherEntity extends Monster {
     public void tick() {
         super.tick();
 
-        if (!this.level().isClientSide && this.faceTargetTicksServer > 0 && this.getTarget() != null) {
+        if (!this.level().isClientSide() && this.faceTargetTicksServer > 0 && this.getTarget() != null) {
             faceTargetInstant(this.getTarget().getX(), this.getTarget().getZ());
             this.faceTargetTicksServer--;
         }
 
-        if (this.level().isClientSide) {
+        if (this.level().isClientSide()) {
             boolean moving = (this.getNavigation().isInProgress() || this.getMoveControl().hasWanted())
                     && this.getDeltaMovement().horizontalDistanceSqr() > 1.0E-4D;
             if (moving) this.walkLoop.startIfStopped(this.tickCount);
@@ -95,7 +95,7 @@ public class GoblinAmbusherEntity extends Monster {
     }
 
     public void startAttackWindupClientCue() {
-        if (!this.level().isClientSide) {
+        if (!this.level().isClientSide()) {
             this.faceTargetTicksServer = 20; // 1s
         }
         this.level().broadcastEntityEvent(this, (byte) 5);
@@ -104,7 +104,7 @@ public class GoblinAmbusherEntity extends Monster {
     @Override
     public void handleEntityEvent(byte id) {
         if (id == 5) {
-            if (this.level().isClientSide) {
+            if (this.level().isClientSide()) {
                 this.attackAnimation.start(this.tickCount);
                 this.attackAnimEndClient = this.tickCount + 20;
                 this.attackSfxTickClient = this.tickCount + 10;

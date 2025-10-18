@@ -39,5 +39,9 @@ public class ModTags {
         public static final TagKey<Item> SHIELDS =
                 ItemTags.create(ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "shields"));
 
+        public static final TagKey<Item> INFINITE_SHOOTABLES =
+                ItemTags.create(ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "infinite_shootables"));
+
+
     }
 }

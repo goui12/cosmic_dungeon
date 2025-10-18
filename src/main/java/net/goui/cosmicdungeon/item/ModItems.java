@@ -6,8 +6,12 @@ import net.goui.cosmicdungeon.item.custom.*;
 
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.BlocksAttacks;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.equipment.ArmorType;
 import net.minecraft.world.level.block.Block;
@@ -82,7 +86,11 @@ public class ModItems {
 
     // D1 T3 (Diamond)
     public static final DeferredItem<Item> EDICT_OF_SILENCE =
-            ITEMS.registerItem("edict_of_silence", p -> new Item(p.stacksTo(1).durability(1561)));
+            ITEMS.registerItem("edict_of_silence", p -> new MaceItem(
+                    p.stacksTo(1).durability(1561)
+                            .component(DataComponents.TOOL, MaceItem.createToolProperties())
+                            .attributes(vanillaMaceAttrs())
+            ));
     public static final DeferredItem<Item> VOWKEEPER =
             ITEMS.registerItem("vowkeeper", p -> new SimpleShieldItem(
                     p.stacksTo(1).durability(336)
@@ -106,7 +114,12 @@ public class ModItems {
 
     // D1 T4 (Netherite)
     public static final DeferredItem<Item> EDICT_OF_RUIN =
-            ITEMS.registerItem("edict_of_ruin", p -> new Item(p.stacksTo(1).durability(2031)));
+            ITEMS.registerItem("edict_of_ruin", p -> new MaceItem(
+                    p.stacksTo(1).durability(1561)
+                            .component(DataComponents.TOOL, MaceItem.createToolProperties())
+                            .attributes(vanillaMaceAttrs())
+            ));
+
     public static final DeferredItem<Item> AEGIS_OF_TRUTH =
             ITEMS.registerItem("aegis_of_truth", p -> new SimpleShieldItem(
                     p.stacksTo(1).durability(336)
@@ -138,7 +151,15 @@ public class ModItems {
             ITEMS.registerItem("sabatons_of_the_unheard_oath", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_CHAINMAIL, ArmorType.BOOTS)));
 
     public static final DeferredItem<Item> EMPOWERED_HAMMER =
-            ITEMS.registerItem("empowered_hammer", p -> new Item(p.stacksTo(1).durability(250)));
+            ITEMS.registerItem("empowered_hammer", p -> new MaceItem(
+                    p.stacksTo(1)
+                            .durability(1561)
+                            // give it “is a mace” behavior
+                            .component(DataComponents.TOOL, MaceItem.createToolProperties())
+                            // vanilla attack damage/speed
+                            .attributes(vanillaMaceAttrs())
+            ));
+
     public static final DeferredItem<Item> WORKED_PLANK =
             ITEMS.registerItem("worked_plank", p -> new SimpleShieldItem(
                     p.stacksTo(1).durability(336)
@@ -165,7 +186,11 @@ public class ModItems {
             ITEMS.registerItem("sabatons_of_the_pact", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_RUSTIC_IRON, ArmorType.BOOTS)));
 
     public static final DeferredItem<Item> REINFORCED_HAMMER =
-            ITEMS.registerItem("reinforced_hammer", p -> new Item(p.stacksTo(1).durability(250)));
+            ITEMS.registerItem("reinforced_hammer", p -> new MaceItem(
+                    p.stacksTo(1).durability(1561)
+                            .component(DataComponents.TOOL, MaceItem.createToolProperties())
+                            .attributes(vanillaMaceAttrs())
+            ));
     public static final DeferredItem<Item> REINFORCED_IRON_SLAB =
             ITEMS.registerItem("reinforced_iron_slab", p -> new SimpleShieldItem(
                     p.stacksTo(1).durability(336)
@@ -190,7 +215,12 @@ public class ModItems {
             ITEMS.registerItem("sabatons_of_pursuit", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_OCEAN_TEMPLAR_DIAMOND, ArmorType.BOOTS)));
 
     public static final DeferredItem<Item> TIDAL_MACE =
-            ITEMS.registerItem("tidal_mace", p -> new Item(p.stacksTo(1).durability(1561)));
+            ITEMS.registerItem("tidal_mace", p -> new MaceItem(
+                    p.stacksTo(1).durability(1561)
+                            .component(DataComponents.TOOL, MaceItem.createToolProperties())
+                            .attributes(vanillaMaceAttrs())
+            ));
+
     public static final DeferredItem<Item> SHIELD_OF_TIDAL_FORCE =
             ITEMS.registerItem("shield_of_tidal_force", p -> new SimpleShieldItem(
                     p.stacksTo(1).durability(336)
@@ -215,7 +245,12 @@ public class ModItems {
             ITEMS.registerItem("sabatons_of_boundless_steps", p -> new Item(p.humanoidArmor(JudicatorArmorMaterials.JUDICATOR_OCEAN_TEMPLAR_NETHERITE, ArmorType.BOOTS)));
 
     public static final DeferredItem<Item> ABYSSAL_MACE =
-            ITEMS.registerItem("abyssal_mace", p -> new Item(p.stacksTo(1).durability(2031)));
+            ITEMS.registerItem("abyssal_mace", p -> new MaceItem(
+                    p.stacksTo(1).durability(1561)
+                            .component(DataComponents.TOOL, MaceItem.createToolProperties())
+                            .attributes(vanillaMaceAttrs())
+            ));
+
     public static final DeferredItem<Item> SHIELD_OF_THE_DEEP =
             ITEMS.registerItem("shield_of_the_deep", p -> new SimpleShieldItem(
                     p.stacksTo(1).durability(336)
@@ -227,7 +262,22 @@ public class ModItems {
                                     java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty()
                             ))));
 
+
+
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);
     }
+
+    private static ItemAttributeModifiers vanillaMaceAttrs() {
+        return ItemAttributeModifiers.builder()
+                .add(Attributes.ATTACK_DAMAGE,
+                        new AttributeModifier(Item.BASE_ATTACK_DAMAGE_ID, 5.0, AttributeModifier.Operation.ADD_VALUE),
+                        EquipmentSlotGroup.MAINHAND)
+                .add(Attributes.ATTACK_SPEED,
+                        new AttributeModifier(Item.BASE_ATTACK_SPEED_ID, -3.4, AttributeModifier.Operation.ADD_VALUE),
+                        EquipmentSlotGroup.MAINHAND)
+                .build();
+    }
+
+
 }

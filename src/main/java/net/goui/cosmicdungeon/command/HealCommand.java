@@ -21,7 +21,7 @@ public final class HealCommand {
 
                             healPlayer(player);
                             src.sendSuccess(() -> Component.literal(
-                                    "Healed " + player.getGameProfile().getName() + "."), true);
+                                    "Healed " + player.getScoreboardName() + "."), true);
                             return 1;
                         })
                         // /heal <target>
@@ -32,7 +32,7 @@ public final class HealCommand {
 
                                     healPlayer(target);
                                     src.sendSuccess(() -> Component.literal(
-                                            "Healed " + target.getGameProfile().getName() + "."), true);
+                                            "Healed " + target.getScoreboardName() + "."), true);
                                     return 1;
                                 })
                         )
