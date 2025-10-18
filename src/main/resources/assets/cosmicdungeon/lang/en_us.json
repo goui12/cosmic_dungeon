@@ -77,7 +77,8 @@
   "item.cosmicdungeon.shield_of_the_deep": "Shield of the Deep",
 
   "block.cosmicdungeon.pile_of_books": "Pile of Books",
-
+  "block.cosmicdungeon.infinite_dispenser": "Infinite Dispenser",
+  "container.cosmicdungeon.infinite_dispenser": "§eInfinite Dispenser Menu",
   "block.cosmicdungeon.amethyst_block_white": "White Block of Amethyst",
   "block.cosmicdungeon.lit_amethyst_block_white": "White Lit Block of Amethyst",
   "block.cosmicdungeon.budding_amethyst_white": "White Budding Amethyst",

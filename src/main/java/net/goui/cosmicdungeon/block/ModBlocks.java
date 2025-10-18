@@ -7,6 +7,7 @@ import net.goui.cosmicdungeon.block.amethyst.ColoredBuddingAmethystBlock;
 import net.goui.cosmicdungeon.block.amethyst.ColoredClusterBlock;
 import net.goui.cosmicdungeon.block.amethyst.LitColoredAmethystBlock;
 import net.goui.cosmicdungeon.block.custom.ChickenBlock;
+import net.goui.cosmicdungeon.block.custom.InfiniteDispenserBlock;
 import net.goui.cosmicdungeon.block.custom.MagicBlock;
 import net.goui.cosmicdungeon.item.ModItems;
 import net.goui.cosmicdungeon.sound.ModSoundTypes;
@@ -19,6 +20,7 @@ import net.minecraft.world.level.block.DropExperienceBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
+import net.minecraft.world.level.material.MapColor;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -83,6 +85,17 @@ public class ModBlocks {
                     props.strength(0.8F).sound(SoundType.WOOD).noOcclusion()
             )
     );
+    public static final DeferredBlock<Block> INFINITE_DISPENSER = BLOCKS.registerBlock(
+            "infinite_dispenser",
+            (BlockBehaviour.Properties props) -> new InfiniteDispenserBlock(
+                    props
+                            .mapColor(MapColor.STONE)
+                            .strength(3.5F) // same ballpark as vanilla dispenser
+                            .requiresCorrectToolForDrops()
+                            .sound(SoundType.STONE)
+            )
+    );
+
 
     /* ---------- Colored Amethyst: 6 variants × 16 colors ---------- */
 
@@ -237,4 +250,7 @@ public class ModBlocks {
             ModItems.ITEMS.registerSimpleBlockItem("magic_block", MAGIC_BLOCK);
     public static final DeferredItem<BlockItem> CHICKEN_BLOCK_ITEM =
             ModItems.ITEMS.registerSimpleBlockItem("chicken_block", CHICKEN_BLOCK);
+    public static final DeferredItem<BlockItem> INFINITE_DISPENSER_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("infinite_dispenser", INFINITE_DISPENSER);
+
 }

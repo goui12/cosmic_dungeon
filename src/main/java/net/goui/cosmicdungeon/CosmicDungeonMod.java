@@ -15,6 +15,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import org.slf4j.Logger;
@@ -47,7 +48,7 @@ public class CosmicDungeonMod {
         ModDataComponents.register(modEventBus);
         ModBlockEntities.register(modEventBus);
         // >>> THIS LINE makes the door use CUTOUT on the client <<<
-        if (FMLEnvironment.dist == Dist.CLIENT) {
+        if (FMLLoader.getCurrent().getDist() == Dist.CLIENT) {
             net.goui.cosmicdungeon.client.CosmicDungeonClient.init(modEventBus);
         }
 
@@ -60,7 +61,7 @@ public class CosmicDungeonMod {
 
 
         ModEntities.register(modEventBus);
-        if (FMLEnvironment.dist.isClient()) {
+        if (FMLLoader.getCurrent().getDist().isClient()) {
             CosmicDungeonClient.init(modEventBus);
         }
         //ModBlocks
@@ -89,6 +90,8 @@ public class CosmicDungeonMod {
         DoorKeyInfoCommand.register(event.getDispatcher());
         DoorKeyDuplicateCommand.register(event.getDispatcher());
         HealCommand.register(event.getDispatcher());
+        FlyCommand.register(event.getDispatcher());
+        FlySpeedCommand.register(event.getDispatcher());
     }
 
 

@@ -6,7 +6,6 @@ import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.client.model.Magma_Glob;
 import net.goui.cosmicdungeon.client.renderstate.MagmaGlobRenderState;
 import net.goui.cosmicdungeon.entity.MagmaGlobEntity;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
@@ -29,39 +28,20 @@ public class MagmaGlobRenderer
     @Override
     public void extractRenderState(MagmaGlobEntity entity, MagmaGlobRenderState state, float partialTick) {
         super.extractRenderState(entity, state, partialTick);
-
-        // Map entity animation states into our render state
         state.walkAnimation   = entity.walkAnimation;
         state.attackAnimation = entity.attackAnimation;
-
-        // Age used as the time parameter for keyframed animation evaluation
-        state.ageInTicks = entity.tickCount + partialTick;
+        state.ageInTicks      = entity.tickCount + partialTick;
     }
 
-
-    // 1.21.8 signature: rotates using the RENDER STATE (not the entity)
+    // 1.21.9 signature: (state, poseStack, bodyRot, scale)
     @Override
     protected void setupRotations(MagmaGlobRenderState state, PoseStack poseStack,
-                                  float bodyYaw, float partialTick) {
-        super.setupRotations(state, poseStack, bodyYaw, partialTick);
+                                  float bodyRot, float scale) {
+        super.setupRotations(state, poseStack, bodyRot, scale);
 
-        // Flip back upright (pick ONE axis; XP fixes "hanging from ceiling" most often)
-        poseStack.translate(0.0D, 1.50D, 0.0D);   // try 1.0D first; tweak to 1.2–1.5 if needed
+        // Your flip + height nudge
+        poseStack.translate(0.0D, 1.20D, 0.0D);           // adjust 1.0–1.5 to fit your model
         poseStack.mulPose(Axis.XP.rotationDegrees(180.0F));
-
-
-    }
-
-    // 1.21.8 signature: render(state, poseStack, buffer, light)
-    @Override
-    public void render(MagmaGlobRenderState state, PoseStack poseStack,
-                       MultiBufferSource buffer, int packedLight) {
-        // After flipping 180°, push the model down so feet touch the ground.
-
-        // Tweak this value to your model's true height (try -0.9D..-1.2D).
-
-
-        super.render(state, poseStack, buffer, packedLight);
     }
 
     @Override

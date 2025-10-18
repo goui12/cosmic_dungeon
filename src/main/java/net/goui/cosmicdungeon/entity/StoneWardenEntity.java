@@ -68,7 +68,7 @@ public class StoneWardenEntity extends Monster {
     public void tick() {
         super.tick();
 
-        if (this.level().isClientSide) {
+        if (this.level().isClientSide()) {
             // Drive walk cycle by movement
             boolean moving =
                     this.onGround()

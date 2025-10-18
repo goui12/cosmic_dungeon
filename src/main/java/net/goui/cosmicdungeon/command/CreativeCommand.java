@@ -22,7 +22,7 @@ public final class CreativeCommand {
 
                             player.setGameMode(GameType.CREATIVE);
                             src.sendSuccess(() -> Component.literal(
-                                    "Set " + player.getGameProfile().getName() + " to Creative."), true);
+                                    "Set " + player.getScoreboardName() + " to Creative."), true);
                             return 1;
                         })
                         // /creative <target>
@@ -33,7 +33,7 @@ public final class CreativeCommand {
 
                                     target.setGameMode(GameType.CREATIVE);
                                     src.sendSuccess(() -> Component.literal(
-                                            "Set " + target.getGameProfile().getName() + " to Creative."), true);
+                                            "Set " + target.getScoreboardName() + " to Creative."), true);
                                     return 1;
                                 })
                         )

@@ -65,7 +65,7 @@ public class MagmaGlobEntity extends Monster {
     public void tick() {
         super.tick();
 
-        if (this.level().isClientSide) {
+        if (this.level().isClientSide()) {
             // Tighter "moving" test: must be on ground AND actually navigating or has a move target
             boolean moving =
                     this.onGround()

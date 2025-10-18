@@ -22,7 +22,7 @@ public final class SurvivalCommand {
 
                             player.setGameMode(GameType.SURVIVAL);
                             src.sendSuccess(() -> Component.literal(
-                                    "Set " + player.getGameProfile().getName() + " to Survival."), true);
+                                    "Set " + player.getScoreboardName() + " to Survival."), true);
                             return 1;
                         })
                         // /survival <target>
@@ -33,7 +33,7 @@ public final class SurvivalCommand {
 
                                     target.setGameMode(GameType.SURVIVAL);
                                     src.sendSuccess(() -> Component.literal(
-                                            "Set " + target.getGameProfile().getName() + " to Survival."), true);
+                                            "Set " + target.getScoreboardName() + " to Survival."), true);
                                     return 1;
                                 })
                         )

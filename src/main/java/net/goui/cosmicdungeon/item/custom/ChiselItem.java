@@ -1,7 +1,6 @@
 package net.goui.cosmicdungeon.item.custom;
 
 import net.goui.cosmicdungeon.block.ModBlocks;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -17,8 +16,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
-import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class ChiselItem extends Item {
     private static final Map<Block, Block> CHISEL_MAP =
@@ -40,35 +39,40 @@ public class ChiselItem extends Item {
         Level level = context.getLevel();
         Block clickedBlock = level.getBlockState(context.getClickedPos()).getBlock();
 
-        if(CHISEL_MAP.containsKey(clickedBlock)) {
-            if(!level.isClientSide()) {
+        if (CHISEL_MAP.containsKey(clickedBlock)) {
+            if (!level.isClientSide()) {
+                // Replace block
                 level.setBlockAndUpdate(context.getClickedPos(), CHISEL_MAP.get(clickedBlock).defaultBlockState());
 
-                context.getItemInHand().hurtAndBreak(1, ((ServerLevel) level), context.getPlayer(),
-                        item -> context.getPlayer().onEquippedItemBroken(item, EquipmentSlot.MAINHAND));
+                // Damage the tool (null-safe for player)
+                ServerLevel server = (ServerLevel) level;
+                context.getItemInHand().hurtAndBreak(1, server, context.getPlayer(), brokenItem -> {
+                    if (context.getPlayer() != null) {
+                        context.getPlayer().onEquippedItemBroken(brokenItem, EquipmentSlot.MAINHAND);
+                    }
+                });
 
+                // Play feedback sound
                 level.playSound(null, context.getClickedPos(), SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS);
             }
+            return InteractionResult.SUCCESS;
         }
 
-        return InteractionResult.SUCCESS;
+        return InteractionResult.PASS;
     }
 
+    // 1.21.9+ tooltip override (new signature)
     @Override
-    public void appendHoverText(
-            ItemStack stack,
-            TooltipContext context,
-            TooltipDisplay tooltipDisplay,
-            java.util.function.Consumer<Component> tooltipConsumer,
-            TooltipFlag tooltipFlag
-    ) {
-        if (Screen.hasShiftDown()) {
-            tooltipConsumer.accept(Component.translatable("tooltip.cosmicdungeon.chisel.shift_down"));
+    public void appendHoverText(ItemStack stack,
+                                Item.TooltipContext ctx,
+                                TooltipDisplay display,
+                                Consumer<Component> adder,
+                                TooltipFlag flag) {
+        boolean showMore = flag.isAdvanced(); // F3+H
+        if (showMore) {
+            adder.accept(Component.translatable("tooltip.cosmicdungeon.chisel.shift_down"));
         } else {
-            tooltipConsumer.accept(Component.translatable("tooltip.cosmicdungeon.chisel"));
+            adder.accept(Component.translatable("tooltip.cosmicdungeon.chisel"));
         }
-
-        super.appendHoverText(stack, context, tooltipDisplay, tooltipConsumer, tooltipFlag);
     }
-
 }

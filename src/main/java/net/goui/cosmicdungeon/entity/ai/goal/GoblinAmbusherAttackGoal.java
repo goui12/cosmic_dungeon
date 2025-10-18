@@ -80,7 +80,7 @@ public class GoblinAmbusherAttackGoal extends Goal {
 
             if (--windupTicks == 0) {
                 // Fire on the server if still valid: in range and (re)has line-of-sight.
-                if (!mob.level().isClientSide && target.isAlive()
+                if (!mob.level().isClientSide() && target.isAlive()
                         && distSq <= MAX_SHOOT_RANGE_SQR && mob.getSensing().hasLineOfSight(target)) {
 
                     float dmg = (float) mob.getAttributeValue(Attributes.ATTACK_DAMAGE);

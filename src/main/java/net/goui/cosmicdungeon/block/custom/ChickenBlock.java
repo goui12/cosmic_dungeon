@@ -41,14 +41,14 @@ public class ChickenBlock extends Block {
                               @Nullable BlockEntity blockEntity, ItemStack tool) {
         super.playerDestroy(level, player, pos, state, blockEntity, tool);
 
-        if (!level.isClientSide) {
+        if (!level.isClientSide()) {
             SoundEvent randomSound = CHICKEN_SOUNDS[level.random.nextInt(CHICKEN_SOUNDS.length)];
             level.playSound(null, pos, randomSound, SoundSource.BLOCKS, 1.0f, 1.0f);
         }
     }
     @Override
     public void attack(BlockState state, Level level, BlockPos pos, Player player) {
-        if (!level.isClientSide && player.getMainHandItem().is(ModItems.BROODING_FORK.get())) {
+        if (!level.isClientSide() && player.getMainHandItem().is(ModItems.BROODING_FORK.get())) {
             destroyConnectedChickenBlocks(level, pos, player);
         }
 

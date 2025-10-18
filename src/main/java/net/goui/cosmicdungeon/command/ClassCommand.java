@@ -61,7 +61,7 @@ public final class ClassCommand {
                                     ServerPlayer t = EntityArgument.getPlayer(ctx, "target");
                                     var cls = ClassData.get(t);
                                     src.sendSuccess(() -> prefix()
-                                            .append(Component.literal(t.getGameProfile().getName() + ": ").withStyle(ChatFormatting.GRAY))
+                                            .append(Component.literal(nameOf(t) + ": ").withStyle(ChatFormatting.GRAY))
                                             .append(formatClass(cls)), false);
                                     return 1;
                                 })
@@ -93,7 +93,7 @@ public final class ClassCommand {
                                           //  net.goui.cosmicdungeon.classsystem.ClassAttributeApplier.refresh(t, pc);
                                             src.sendSuccess(() -> prefix()
                                                     .append(Component.literal("Set ").withStyle(ChatFormatting.GREEN))
-                                                    .append(Component.literal(t.getGameProfile().getName()).withStyle(ChatFormatting.AQUA))
+                                                    .append(nameOfC(t).withStyle(ChatFormatting.AQUA))
                                                     .append(Component.literal(" to ").withStyle(ChatFormatting.GREEN))
                                                     .append(Component.literal(pc.name()).withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)), true);
                                             return 1;
@@ -121,7 +121,7 @@ public final class ClassCommand {
                                     t.getPersistentData().remove(KEY);
                                     src.sendSuccess(() -> prefix()
                                             .append(Component.literal("Removed class from ").withStyle(ChatFormatting.YELLOW))
-                                            .append(Component.literal(t.getGameProfile().getName()).withStyle(ChatFormatting.AQUA)), true);
+                                            .append(nameOfC(t).withStyle(ChatFormatting.AQUA)), true);
                                     return 1;
                                 })
                         )
@@ -142,5 +142,12 @@ public final class ClassCommand {
             return Component.literal("None").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC);
         }
         return Component.literal(cls.name()).withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD);
+    }
+    // Helpers
+    private static String nameOf(ServerPlayer p) {
+        return p.getScoreboardName(); // non-null, stable
+    }
+    private static MutableComponent nameOfC(ServerPlayer p) {
+        return Component.literal(p.getScoreboardName());
     }
 }

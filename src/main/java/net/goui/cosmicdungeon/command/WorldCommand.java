@@ -64,15 +64,13 @@ public final class WorldCommand {
                                 return 0;
                             }
 
-                            // Start with the world's configured spawn
-                            BlockPos spawn = dest.getSharedSpawnPos();
-
+                            var rd   = dest.getLevelData().getRespawnData();
+                            BlockPos spawn = rd.pos();
                             // Find a safe standable position near/at spawn
                             BlockPos safe = ensureStandable(dest, spawn);
 
-                            // Orientation: use world spawn angle
-                            float yaw = dest.getSharedSpawnAngle();
-                            float pitch = 0f;
+                            float    yaw   = rd.yaw();
+                            float    pitch = rd.pitch();
 
                             // Center on block
                             double x = safe.getX() + 0.5;
