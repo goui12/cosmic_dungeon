@@ -23,11 +23,13 @@ public class ModBlockTagProvider extends BlockTagsProvider {
         tag(BlockTags.MINEABLE_WITH_PICKAXE).add(
                 ModBlocks.BISMUTH_BLOCK.get(),
                 ModBlocks.BISMUTH_ORE.get(),
-                ModBlocks.BISMUTH_DEEPSLATE_ORE.get()
+                ModBlocks.BISMUTH_DEEPSLATE_ORE.get(),
+                ModBlocks.COSMIC_MOB_SPAWNER.get()
         );
 
         tag(BlockTags.NEEDS_IRON_TOOL).add(
-                ModBlocks.BISMUTH_DEEPSLATE_ORE.get()
+                ModBlocks.BISMUTH_DEEPSLATE_ORE.get(),
+                ModBlocks.COSMIC_MOB_SPAWNER.get()
         );
         this.tag(BlockTags.MINEABLE_WITH_AXE).add(ModBlocks.PILE_OF_BOOKS.get());
 

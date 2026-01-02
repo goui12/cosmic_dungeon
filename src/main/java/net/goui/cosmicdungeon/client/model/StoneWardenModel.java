@@ -189,7 +189,6 @@ public class StoneWardenModel extends EntityModel<StoneWardenRenderState> {
 
         this.walkingAnimation.applyWalk(state.walkAnimationPos, state.walkAnimationSpeed, 2f, 2.5f);
 
-        // was: state.attackAnimationState
         this.attackAnimation.apply(state.attackAnimation, state.ageInTicks, 1f);
     }
 }

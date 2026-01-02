@@ -3,7 +3,15 @@ package net.goui.cosmicdungeon.client.renderstate;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.world.entity.AnimationState;
 
+/**
+ * Render state for Stone Warden.
+ *
+ * Entity owns the AnimationState instances; this class just holds references.
+ */
 public class StoneWardenRenderState extends LivingEntityRenderState {
-    public final AnimationState walkAnimation = new AnimationState();
-    public final AnimationState attackAnimation = new AnimationState();
+    /** Driven by StoneWardenEntity.walkAnimation. */
+    public AnimationState walkAnimation;
+
+    /** Driven by StoneWardenEntity.attackAnimation. */
+    public AnimationState attackAnimation;
 }

@@ -1,0 +1,27 @@
+package net.goui.cosmicdungeon.menu;
+
+import net.goui.cosmicdungeon.CosmicDungeonMod;
+import net.goui.cosmicdungeon.playerclass.api.ExtraInventoryMenu;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.inventory.MenuType;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredRegister;
+
+import java.util.function.Supplier;
+
+public final class ModMenus {
+    private ModMenus() {}
+
+    public static final DeferredRegister<MenuType<?>> MENUS =
+            DeferredRegister.create(BuiltInRegistries.MENU, CosmicDungeonMod.MOD_ID);
+
+    /** Metalmancer inventory (player inv + 3 extra slots) */
+    public static final Supplier<MenuType<ExtraInventoryMenu>> METALMANCER_INVENTORY =
+            MENUS.register("metalmancer_inventory",
+                    () -> new MenuType<>(ExtraInventoryMenu::new, FeatureFlags.DEFAULT_FLAGS));
+
+    public static void register(IEventBus modBus) {
+        MENUS.register(modBus);
+    }
+}

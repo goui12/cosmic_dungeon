@@ -4,17 +4,18 @@ import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.world.entity.AnimationState;
 
 /**
- * Render state for Goblin Ambusher (NeoForge 1.21.8).
+ * Render state for Goblin Ambusher.
  *
- * - Inherits standard LivingEntity fields (ageInTicks, walkAnimationPos, walkAnimationSpeed, etc.).
- * - Exposes an AnimationState "attackAnimation" which we use to drive the ShootAnimation.
+ * Entity owns the AnimationState instances; this class just holds references.
  */
 public class GoblinAmbusherRenderState extends LivingEntityRenderState {
-    /** Optional channel; walk uses walkAnimationPos/Speed. */
-    public final AnimationState walkAnimation = new AnimationState();
+    /** Driven by GoblinAmbusherEntity.walkLoop. */
+    public AnimationState walkAnimation;
 
-    /** Used by GoblinAmbusherModel to play the ShootAnimation (copied from entity.attackAnimation). */
-    public final AnimationState attackAnimation = new AnimationState();
+    /** Driven by GoblinAmbusherEntity.attackAnimation. */
+    public AnimationState attackAnimation;
 
-    public boolean isAttacking() { return attackAnimation.isStarted(); }
+    public boolean isAttacking() {
+        return attackAnimation != null && attackAnimation.isStarted();
+    }
 }

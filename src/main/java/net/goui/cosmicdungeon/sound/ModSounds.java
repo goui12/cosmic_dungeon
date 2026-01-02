@@ -23,9 +23,15 @@ public class ModSounds {
     public static final DeferredHolder<SoundEvent, SoundEvent> CHICKEN_SOUND_6 = register("chicken_sound_6");
     public static final DeferredHolder<SoundEvent, SoundEvent> CHICKEN_SOUND_7 = register("chicken_sound_7");
 
+    // Cosmic Rift ambience
+    public static final DeferredHolder<SoundEvent, SoundEvent> RIFT_HUM = register("rift_hum");
+    public static final DeferredHolder<SoundEvent, SoundEvent> RIFT_SCREAM = register("rift_scream");
+    public static final DeferredHolder<SoundEvent, SoundEvent> RIFT_TELEPORT = register("rift_teleport");
     private static DeferredHolder<SoundEvent, SoundEvent> register(String name) {
         return SOUND_EVENTS.register(name, () ->
-                SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, name)));
+                SoundEvent.createVariableRangeEvent(
+                        ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, name)
+                ));
     }
 
     public static void registerSounds(net.neoforged.bus.api.IEventBus eventBus) {

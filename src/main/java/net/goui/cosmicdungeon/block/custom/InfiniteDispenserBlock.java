@@ -1,12 +1,9 @@
 package net.goui.cosmicdungeon.block.custom;
 
 import net.goui.cosmicdungeon.block.entity.InfiniteDispenserBlockEntity;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
@@ -81,8 +78,6 @@ public class InfiniteDispenserBlock extends Block implements EntityBlock {
             MenuProvider provider = getMenuProvider(state, level, pos);
             if (provider != null) {
                 player.openMenu(provider);
-                // GameProfile now uses name()
-                debug(level, pos, "GUI opened by " + player.getGameProfile().name());
             }
         }
         return InteractionResult.SUCCESS;
@@ -99,25 +94,20 @@ public class InfiniteDispenserBlock extends Block implements EntityBlock {
         if (powered && !triggered) {
             level.scheduleTick(pos, this, 4);
             level.setBlock(pos, state.setValue(TRIGGERED, true), 2);
-            debug(level, pos, "Energized: scheduling tick in 4t. Facing=" + state.getValue(FACING));
         } else if (!powered && triggered) {
             level.setBlock(pos, state.setValue(TRIGGERED, false), 2);
-            debug(level, pos, "De-energized.");
         }
     }
 
     @Override
     public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource rng) {
-        debug(level, pos, "Tick fired.");
         BlockEntity be = level.getBlockEntity(pos);
         if (!(be instanceof InfiniteDispenserBlockEntity disp)) {
-            debug(level, pos, "No block entity found (aborting).");
             return;
         }
 
-        int slot = disp.findFirstShootableSlot(); // BE logs its search too
+        int slot = disp.findFirstShootableSlot();
         if (slot != -1) {
-            debug(level, pos, "Found shootable slot=" + slot + " → attempting projectile.");
             disp.shootStack(level, pos, state.getValue(FACING), disp.getItem(slot)); // no consume
             level.gameEvent(GameEvent.BLOCK_ACTIVATE, pos, GameEvent.Context.of(state));
             return;
@@ -126,10 +116,9 @@ public class InfiniteDispenserBlock extends Block implements EntityBlock {
         // No shootables → mimic fail feedback only
         level.levelEvent(1001, pos, 0);
         level.gameEvent(GameEvent.BLOCK_ACTIVATE, pos, GameEvent.Context.of(state));
-        debug(level, pos, "No shootables found — played fail event.");
     }
 
-    // ----- Comparator output (signatures are public in 1.21.x) -----
+    // ----- Comparator output -----
     @Override
     public boolean hasAnalogOutputSignal(BlockState state) {
         return true;
@@ -137,12 +126,9 @@ public class InfiniteDispenserBlock extends Block implements EntityBlock {
 
     @Override
     public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos, Direction side) {
-        int sig = net.minecraft.world.inventory.AbstractContainerMenu
+        return net.minecraft.world.inventory.AbstractContainerMenu
                 .getRedstoneSignalFromBlockEntity(level.getBlockEntity(pos));
-        debug(level, pos, "Comparator read: " + sig);
-        return sig;
     }
-
 
     // ----- Removal / drops -----
     // Keep this without @Override to avoid mapping wiggles across toolchains.
@@ -150,29 +136,11 @@ public class InfiniteDispenserBlock extends Block implements EntityBlock {
         if (oldState.getBlock() != newState.getBlock()) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof InfiniteDispenserBlockEntity disp) {
-                debug(level, pos, "Block removed — dropping all contents.");
                 disp.dropAllContents(level, pos);
                 level.removeBlockEntity(pos);
             }
-            // Handle neighbor updates explicitly
             level.updateNeighbourForOutputSignal(pos, this);
             level.updateNeighborsAt(pos, this);
-        }
-    }
-
-    /* ---------- chat debug helper ---------- */
-    private static void debug(Level level, BlockPos pos, String msg) {
-        if (level.isClientSide()) return;
-        String prefixed = "[InfiniteDispenser] " + msg + " @ " + pos.getX() + "," + pos.getY() + "," + pos.getZ();
-        if (level instanceof ServerLevel sl) {
-            for (ServerPlayer sp : sl.players()) {
-                double dx = sp.getX() - (pos.getX() + 0.5);
-                double dy = sp.getY() - (pos.getY() + 0.5);
-                double dz = sp.getZ() - (pos.getZ() + 0.5);
-                if ((dx * dx + dy * dy + dz * dz) <= (48 * 48)) {
-                    sp.sendSystemMessage(Component.literal(prefixed).withStyle(ChatFormatting.AQUA));
-                }
-            }
         }
     }
 }

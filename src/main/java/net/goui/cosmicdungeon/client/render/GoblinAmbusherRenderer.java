@@ -16,11 +16,11 @@ public class GoblinAmbusherRenderer
     private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(
             CosmicDungeonMod.MOD_ID, "textures/entity/goblin_ambusher.png");
 
-    // After Y-flip fix, most models need a 180° yaw so they face forward in-game.
-    private static final float MODEL_YAW_FIX_DEG = 180f;
+    // Model exported facing the wrong way; rotate once here.
+    private static final float MODEL_YAW_FIX_DEG = 180.0F;
 
     public GoblinAmbusherRenderer(EntityRendererProvider.Context ctx) {
-        super(ctx, new GoblinAmbusherModel(ctx.bakeLayer(GoblinAmbusherModel.LAYER_LOCATION)), 0.6f);
+        super(ctx, new GoblinAmbusherModel(ctx.bakeLayer(GoblinAmbusherModel.LAYER_LOCATION)), 0.6F);
     }
 
     @Override
@@ -29,18 +29,30 @@ public class GoblinAmbusherRenderer
     }
 
     @Override
-    protected void scale(GoblinAmbusherRenderState state, PoseStack stack) {
-        // No Y flip anymore (upright data). Only correct facing.
-        stack.mulPose(Axis.YP.rotationDegrees(MODEL_YAW_FIX_DEG));
-    }
-
-    @Override
     public void extractRenderState(GoblinAmbusherEntity entity,
                                    GoblinAmbusherRenderState state,
                                    float partialTicks) {
         super.extractRenderState(entity, state, partialTicks);
-        state.attackAnimation.copyFrom(entity.attackAnimation);
-        if (state.attackAnimation.isStarted()) state.walkAnimationSpeed = 0.0F;
+
+        // Wire up entity animation channels to the render state
+        state.walkAnimation = entity.walkLoop;
+        state.attackAnimation = entity.attackAnimation;
+        state.ageInTicks = entity.tickCount + partialTicks;
+
+        // When attacking, clamp walk speed so footsteps don't play over the windup.
+        if (state.attackAnimation != null && state.attackAnimation.isStarted()) {
+            state.walkAnimationSpeed = 0.0F;
+        }
+    }
+
+    // 1.21.9+ signature: (state, poseStack, bodyRot, unusedScaleParam)
+    @Override
+    protected void setupRotations(GoblinAmbusherRenderState state,
+                                  PoseStack poseStack,
+                                  float bodyRot,
+                                  float unused) {
+        super.setupRotations(state, poseStack, bodyRot, unused);
+        poseStack.mulPose(Axis.YP.rotationDegrees(MODEL_YAW_FIX_DEG));
     }
 
     @Override

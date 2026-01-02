@@ -1,12 +1,58 @@
 {
+
+  "item.cosmicdungeon.bent_rod_of_melted_shavings": "Bent Rod of Melted Shavings",
+  "tooltip.cosmicdungeon.bent_rod_of_melted_shavings.codex": "New Weapon \u2014 Staff (Bent Rod of Melted Shavings)",
+  "tooltip.cosmicdungeon.bent_rod_of_melted_shavings.definition": "A rough rod of fused scrap and cooled slag, humming faintly in time with its bearer.",
+  "tooltip.cosmicdungeon.bent_rod_of_melted_shavings.lore": "The first crude conductor of resonance, binding a bronze golem through patience and imperfection.",
+
+  "hud.cosmicdungeon.spawner": "Spawner: %s",
+
+
+  "item.cosmicdungeon.erzfuehler": "Erzfühler",
+  "tooltip.cosmicdungeon.erzfuehler.codex": "New Weapon \u2014 Staff (Erzfühler) (Ore-Feeler)",
+  "tooltip.cosmicdungeon.erzfuehler.definition": "A slender iron staff tuned to the pull of buried metal, its etched spirals glowing when ore is near.",
+  "tooltip.cosmicdungeon.erzfuehler.lore": "Forged during the first harmonic alignment, it summons an iron golem whose movements obey deliberate rhythm.",
+
   "entity.cosmicdungeon.magma_glob": "Magma Glob",
   "item.cosmicdungeon.magma_glob_spawn_egg": "Magma Glob Spawn Egg",
 
   "entity.cosmicdungeon.stone_warden": "Stone Warden",
   "item.cosmicdungeon.stone_warden_spawn_egg": "Stone Warden Spawn Egg",
 
+  "block.cosmicdungeon.cosmic_mob_spawner": "Cosmic Mob Spawner",
+  "tooltip.cosmicdungeon.cosmic_mob_spawner": "Spawns mobs in any light level.",
+  "block.cosmicdungeon.cosmic_rift": "Cosmic Rift",
+  "block.cosmicdungeon.rift_top1": "Rift Tile (Top 1)",
+  "block.cosmicdungeon.rift_top2": "Rift Tile (Top 2)",
+  "block.cosmicdungeon.rift_top3": "Rift Tile (Top 3)",
+  "block.cosmicdungeon.rift_top4": "Rift Tile (Top 4)",
+
+  "block.cosmicdungeon.rift_mid_top1": "Rift Tile (Mid Top 1)",
+  "block.cosmicdungeon.rift_mid_top2": "Rift Tile (Mid Top 2)",
+  "block.cosmicdungeon.rift_mid_top3": "Rift Tile (Mid Top 3)",
+  "block.cosmicdungeon.rift_mid_top4": "Rift Tile (Mid Top 4)",
+
+  "block.cosmicdungeon.rift_mid_bot1": "Rift Tile (Mid Bottom 1)",
+  "block.cosmicdungeon.rift_mid_bot2": "Rift Tile (Mid Bottom 2)",
+  "block.cosmicdungeon.rift_mid_bot3": "Rift Tile (Mid Bottom 3)",
+  "block.cosmicdungeon.rift_mid_bot4": "Rift Tile (Mid Bottom 4)",
+
+  "block.cosmicdungeon.rift_bot1": "Rift Tile (Bottom 1)",
+  "block.cosmicdungeon.rift_bot2": "Rift Tile (Bottom 2)",
+  "block.cosmicdungeon.rift_bot3": "Rift Tile (Bottom 3)",
+  "block.cosmicdungeon.rift_bot4": "Rift Tile (Bottom 4)",
+
+  "entity.cosmicdungeon.metalmancer_golem": "Metalmancer Golem",
+  "item.cosmicdungeon.metalmancer_golem_spawn_egg": "Metalmancer Golem Spawn Egg",
+"message.cosmicdungeon.metalmancer.not_enough_ore": "You need 40 ore to summon Golem.",
+  "message.cosmicdungeon.metalmancer.golem_already_active": "You already have a Golem!",
+
   "entity.cosmicdungeon.goblin_ambusher": "Goblin Ambusher",
   "item.cosmicdungeon.goblin_ambusher_spawn_egg": "Goblin Ambusher Spawn Egg",
+
+  "item.cosmicdungeon.satchel_of_samples": "Satchel of Samples",
+  "tooltip.cosmicdungeon.satchel.ore": "Ore: %1$s / %2$s",
+  "tooltip.cosmicdungeon.satchel.hint": "The Metalmancer consumes/spends metal",
 
   "item.cosmicdungeon.bismuth": "Bismuth",
   "item.cosmicdungeon.raw_bismuth": "Raw Bismuth",
@@ -232,5 +278,15 @@
   "tooltip.cosmicdungeon.chisel": "Press §eShift§r for more Information",
   "tooltip.cosmicdungeon.brooding_fork.shift_down": "Right click dirt for seeds, and right click grass for chickens!",
   "tooltip.cosmicdungeon.brooding_fork": "Press §eShift§r for more Information",
-  "tooltip.cosmicdungeon.radish.tooltip": "Tastes really great!"
+  "tooltip.cosmicdungeon.radish.tooltip": "Tastes really great!",
+
+  "block.cosmicdungeon.redstone_transmitter": "RF Transmitter",
+  "block.cosmicdungeon.redstone_receiver": "RF Receiver",
+
+  "screen.cosmicdungeon.rf_config": "RF Config",
+  "screen.cosmicdungeon.rf_config.title_transmitter": "Redstone Transmitter",
+  "screen.cosmicdungeon.rf_config.title_receiver": "Redstone Receiver",
+  "screen.cosmicdungeon.rf_config.hz": "Hz:",
+  "screen.cosmicdungeon.rf_config.save": "Save",
+  "screen.cosmicdungeon.rf_config.close": "Close"
 }

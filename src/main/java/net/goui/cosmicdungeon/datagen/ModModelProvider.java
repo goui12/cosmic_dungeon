@@ -5,6 +5,7 @@ import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.block.ModBlocks;
 import net.goui.cosmicdungeon.common.color.AmethystColor;
 import net.goui.cosmicdungeon.item.ModItems;
+import net.goui.cosmicdungeon.playerclass.metalmancer.MetalmancerItems;
 
 import net.minecraft.client.data.models.BlockModelGenerators;
 import net.minecraft.client.data.models.ItemModelGenerators;
@@ -35,9 +36,9 @@ public class ModModelProvider extends ModelProvider {
     @Override
     protected void registerModels(BlockModelGenerators blockModels, ItemModelGenerators itemModels) {
         // Shorthand helpers
-        java.util.function.Consumer<net.minecraft.world.item.Item> FLAT = i -> itemModels.generateFlatItem(i, ModelTemplates.FLAT_ITEM);
-        java.util.function.Consumer<net.minecraft.world.item.Item> MACE = i -> itemModels.generateFlatItem(i, ModelTemplates.FLAT_HANDHELD_MACE_ITEM);
-        java.util.function.Consumer<net.minecraft.world.item.Item> ROD  = i -> itemModels.generateFlatItem(i, ModelTemplates.FLAT_HANDHELD_ROD_ITEM);
+        java.util.function.Consumer<Item> FLAT = i -> itemModels.generateFlatItem(i, ModelTemplates.FLAT_ITEM);
+        java.util.function.Consumer<Item> MACE = i -> itemModels.generateFlatItem(i, ModelTemplates.FLAT_HANDHELD_MACE_ITEM);
+        java.util.function.Consumer<Item> ROD  = i -> itemModels.generateFlatItem(i, ModelTemplates.FLAT_HANDHELD_ROD_ITEM);
 
         // ===== Flat/simple items =====
         FLAT.accept(ModItems.BISMUTH.get());
@@ -61,9 +62,8 @@ public class ModModelProvider extends ModelProvider {
         // ===== Judicator — D1 T3 (Diamond) =====
         MACE.accept(ModItems.EDICT_OF_SILENCE.get());
 
-        // Vowkeeper uses your hand-authored custom-geometry JSONs.
+        // Vowkeeper uses hand-authored custom-geometry JSONs (no generation here)
         registerExternalItem(itemModels, ModItems.VOWKEEPER.get(), rlMod("item/vowkeeper"));
-        // DO NOT generate any model here.
 
         FLAT.accept(ModItems.VIELPIERCER.get());
         FLAT.accept(ModItems.SCINTILLA_VITALIS.get());
@@ -116,6 +116,13 @@ public class ModModelProvider extends ModelProvider {
         MACE.accept(ModItems.ABYSSAL_MACE.get());
         registerExternalItem(itemModels, ModItems.SHIELD_OF_THE_DEEP.get(), rlMod("item/shield_of_the_deep"));
 
+        // ===== Metalmancer =====
+
+        FLAT.accept(MetalmancerItems.SATCHEL_OF_SAMPLES.get());
+
+        // New: Summoning staffs (rod models)
+        ROD.accept(MetalmancerItems.BENT_ROD_OF_MELTED_SHAVINGS.get());
+        ROD.accept(MetalmancerItems.ERZFUEHLER.get());
 
         // ===== Simple cubes =====
         blockModels.createTrivialCube(ModBlocks.BISMUTH_ORE.get());
@@ -123,8 +130,16 @@ public class ModModelProvider extends ModelProvider {
         blockModels.createTrivialCube(ModBlocks.MAGIC_BLOCK.get());
         blockModels.createTrivialCube(ModBlocks.BISMUTH_BLOCK.get());
         blockModels.createTrivialCube(ModBlocks.CHICKEN_BLOCK.get());
+// ===== Cosmic Rift (placer) =====
+        {
+            var b = ModBlocks.COSMIC_RIFT.get();
+            blockModels.createTrivialCube(b); // uses block/cosmic_rift texture
+            // Ensure item points to block model
+            registerExternalItem(itemModels, b.asItem(), rlMod("block/cosmic_rift"));
+        }
+        registerRiftTile_BlockbenchStyle(blockModels, ModBlocks.COSMIC_RIFT_TILE.get(), rlMod("block/rift/cosmic_rift_tile"));
 
-        // ===== Pile of Books =====
+        // ===== Pile of Books (points at external hand-authored model) =====
         {
             var b = ModBlocks.PILE_OF_BOOKS.get();
             var blockModel = rlMod("block/pile_of_books");
@@ -134,14 +149,13 @@ public class ModModelProvider extends ModelProvider {
             FLAT.accept(b.asItem());
         }
 
-        // ===== Infinite Dispenser =====
+        // ===== Infinite Dispenser (uses vanilla parents) =====
         {
             var b = ModBlocks.INFINITE_DISPENSER.get();
 
             ResourceLocation horiz = rlMod("block/infinite_dispenser");
             ResourceLocation vert  = rlMod("block/infinite_dispenser_vertical");
 
-            // Reuse vanilla parents so we don't duplicate textures
             blockModels.modelOutput.accept(horiz, () -> {
                 var root = new com.google.gson.JsonObject();
                 root.addProperty("parent", "minecraft:block/dispenser");
@@ -153,7 +167,6 @@ public class ModModelProvider extends ModelProvider {
                 return root;
             });
 
-            // Blockstate: face in 6 directions (use vertical model for up/down)
             var pd = PropertyDispatch.initial(BlockStateProperties.FACING)
                     .select(Direction.NORTH, new MultiVariant(WeightedList.of(new Variant(horiz))))
                     .select(Direction.SOUTH, new MultiVariant(WeightedList.of(new Variant(horiz).withYRot(Quadrant.R180))))
@@ -164,10 +177,67 @@ public class ModModelProvider extends ModelProvider {
 
             blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(b).with(pd));
 
-            // Item model → point at the horizontal block model
             registerExternalItem(itemModels, b.asItem(), horiz);
         }
 
+
+// ===== Cosmic Mob Spawner (fully custom model, no vanilla spawner parent) =====
+        blockModels.createTrivialCube(ModBlocks.COSMIC_MOB_SPAWNER.get());
+
+
+
+
+
+
+
+        // ===== Redstone: Transmitter & Receiver (point at external Blockbench JSONs) =====
+        {
+            // --- Transmitter: POWERED -> on/off
+            {
+                var b = ModBlocks.REDSTONE_TRANSMITTER.get();
+                ResourceLocation modelOff = rlMod("block/redstone_transmitter_off");
+                ResourceLocation modelOn  = rlMod("block/redstone_transmitter_on");
+
+                var pd = PropertyDispatch.initial(BlockStateProperties.POWERED);
+                pd.select(Boolean.TRUE,  new MultiVariant(WeightedList.of(new Variant(modelOn))));
+                pd.select(Boolean.FALSE, new MultiVariant(WeightedList.of(new Variant(modelOff))));
+
+                blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(b).with(pd));
+
+                registerExternalItem(itemModels, b.asItem(), modelOff);
+            }
+
+            // --- Receiver: FACING x POWERED -> rotated on/off
+            {
+                var b = ModBlocks.REDSTONE_RECEIVER.get();
+                ResourceLocation modelOff = rlMod("block/redstone_receiver_off");
+                ResourceLocation modelOn  = rlMod("block/redstone_receiver_on");
+
+                var pd = PropertyDispatch.initial(BlockStateProperties.FACING, BlockStateProperties.POWERED);
+
+                pd.select(Direction.NORTH, Boolean.TRUE,  new MultiVariant(WeightedList.of(new Variant(modelOn))));
+                pd.select(Direction.NORTH, Boolean.FALSE, new MultiVariant(WeightedList.of(new Variant(modelOff))));
+
+                pd.select(Direction.SOUTH, Boolean.TRUE,  new MultiVariant(WeightedList.of(new Variant(modelOn ).withYRot(Quadrant.R180))));
+                pd.select(Direction.SOUTH, Boolean.FALSE, new MultiVariant(WeightedList.of(new Variant(modelOff).withYRot(Quadrant.R180))));
+
+                pd.select(Direction.WEST,  Boolean.TRUE,  new MultiVariant(WeightedList.of(new Variant(modelOn ).withYRot(Quadrant.R270))));
+                pd.select(Direction.WEST,  Boolean.FALSE, new MultiVariant(WeightedList.of(new Variant(modelOff).withYRot(Quadrant.R270))));
+
+                pd.select(Direction.EAST,  Boolean.TRUE,  new MultiVariant(WeightedList.of(new Variant(modelOn ).withYRot(Quadrant.R90))));
+                pd.select(Direction.EAST,  Boolean.FALSE, new MultiVariant(WeightedList.of(new Variant(modelOff).withYRot(Quadrant.R90))));
+
+                pd.select(Direction.UP,    Boolean.TRUE,  new MultiVariant(WeightedList.of(new Variant(modelOn ).withXRot(Quadrant.R270))));
+                pd.select(Direction.UP,    Boolean.FALSE, new MultiVariant(WeightedList.of(new Variant(modelOff).withXRot(Quadrant.R270))));
+
+                pd.select(Direction.DOWN,  Boolean.TRUE,  new MultiVariant(WeightedList.of(new Variant(modelOn ).withXRot(Quadrant.R90))));
+                pd.select(Direction.DOWN,  Boolean.FALSE, new MultiVariant(WeightedList.of(new Variant(modelOff).withXRot(Quadrant.R90))));
+
+                blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(b).with(pd));
+
+                registerExternalItem(itemModels, b.asItem(), modelOff);
+            }
+        }
 
         // ===== Colored amethyst sets =====
         for (AmethystColor ac : AmethystColor.values()) {
@@ -212,6 +282,7 @@ public class ModModelProvider extends ModelProvider {
     }
 
     // === Shield item definitions for vanilla-style shields ===
+    @SuppressWarnings("unused")
     private static void registerShield(ItemModelGenerators itemModels, Item item) {
         itemModels.generateShield(item);
     }
@@ -256,7 +327,7 @@ public class ModModelProvider extends ModelProvider {
         });
     }
 
-    // === IMPORTANT: Exclude VOWKEEPER from auto item model generation ===
+    // === IMPORTANT: Exclude specific items from auto item model generation ===
     @Override
     protected Stream<? extends Holder<Item>> getKnownItems() {
         return ModItems.ITEMS.getEntries().stream()
@@ -266,6 +337,71 @@ public class ModModelProvider extends ModelProvider {
                 .filter(x -> !x.is(ModItems.SHIELD_OF_THE_DEEP))
                 .filter(x -> !x.is(ModItems.SHIELD_OF_TIDAL_FORCE))
                 .filter(x -> !x.is(ModItems.WORKED_PLANK));
+    }
+
+    private void registerRiftTile_BlockbenchStyle(BlockModelGenerators blockModels, Block b, ResourceLocation texture) {
+        String id = b.builtInRegistryHolder().key().location().getPath();
+        ResourceLocation modelLoc = rlMod("block/" + id);
+
+        blockModels.modelOutput.accept(modelLoc, () -> {
+            var root = new com.google.gson.JsonObject();
+
+            // Optional Blockbench metadata (Minecraft will ignore unknown fields)
+            root.addProperty("format_version", "1.21.6");
+            root.addProperty("credit", "Made with Blockbench");
+
+            var texSize = new com.google.gson.JsonArray();
+            texSize.add(256);
+            texSize.add(256);
+            root.add("texture_size", texSize);
+
+            // textures: { "1": "cosmicdungeon:block/rift/..." }
+            var textures = new com.google.gson.JsonObject();
+            textures.addProperty("1", texture.toString());
+            textures.addProperty("particle", texture.toString()); // <-- important
+            root.add("textures", textures);
+
+
+            // elements array
+            var elements = new com.google.gson.JsonArray();
+            var el = new com.google.gson.JsonObject();
+
+            var from = new com.google.gson.JsonArray();
+            from.add(0); from.add(0); from.add(0);
+            el.add("from", from);
+
+            var to = new com.google.gson.JsonArray();
+            to.add(16); to.add(1); to.add(16); // matches your example exactly
+            el.add("to", to);
+
+            var faces = new com.google.gson.JsonObject();
+            faces.add("north", face(0, 0, 1, 0.0625f, "#1"));
+            faces.add("east",  face(0.0625f, 0, 1, 0.0625f, "#1"));
+            faces.add("south", face(0, 0, 1, 0.0625f, "#1"));
+            faces.add("west",  face(0, 0, 0.9375f, 0.0625f, "#1"));
+            faces.add("up",    face(0, 0, 16, 16, "#1"));
+            faces.add("down",  face(2, 2.5625f, 3, 3.5f, "#1"));
+
+            el.add("faces", faces);
+            elements.add(el);
+            root.add("elements", elements);
+
+            return root;
+        });
+
+        // Single-variant blockstate -> modelLoc
+        blockModels.blockStateOutput.accept(
+                MultiVariantGenerator.dispatch(b, new MultiVariant(WeightedList.of(new Variant(modelLoc))))
+        );
+    }
+
+    private static com.google.gson.JsonObject face(float u1, float v1, float u2, float v2, String texRef) {
+        var o = new com.google.gson.JsonObject();
+        var uv = new com.google.gson.JsonArray();
+        uv.add(u1); uv.add(v1); uv.add(u2); uv.add(v2);
+        o.add("uv", uv);
+        o.addProperty("texture", texRef);
+        return o;
     }
 
 }

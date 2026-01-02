@@ -7,20 +7,25 @@ import net.goui.cosmicdungeon.block.amethyst.ColoredBuddingAmethystBlock;
 import net.goui.cosmicdungeon.block.amethyst.ColoredClusterBlock;
 import net.goui.cosmicdungeon.block.amethyst.LitColoredAmethystBlock;
 import net.goui.cosmicdungeon.block.custom.ChickenBlock;
+import net.goui.cosmicdungeon.block.custom.CosmicMobSpawnerBlock;
 import net.goui.cosmicdungeon.block.custom.InfiniteDispenserBlock;
 import net.goui.cosmicdungeon.block.custom.MagicBlock;
 import net.goui.cosmicdungeon.item.ModItems;
+import net.goui.cosmicdungeon.redstone.rf.RedstoneReceiverBlock;
+import net.goui.cosmicdungeon.redstone.rf.RedstoneTransmitterBlock;
 import net.goui.cosmicdungeon.sound.ModSoundTypes;
 
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Block;
+import net.goui.cosmicdungeon.block.custom.CosmicRiftPlacerBlock;
+import net.goui.cosmicdungeon.block.custom.CosmicRiftTileBlock;
 import net.minecraft.world.level.block.DropExperienceBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
-
 import net.minecraft.world.level.material.MapColor;
+
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -29,8 +34,6 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.stream.Stream;
-
-import net.minecraft.world.level.block.state.properties.BlockSetType;
 
 public class ModBlocks {
     public static final DeferredRegister.Blocks BLOCKS =
@@ -85,6 +88,7 @@ public class ModBlocks {
                     props.strength(0.8F).sound(SoundType.WOOD).noOcclusion()
             )
     );
+
     public static final DeferredBlock<Block> INFINITE_DISPENSER = BLOCKS.registerBlock(
             "infinite_dispenser",
             (BlockBehaviour.Properties props) -> new InfiniteDispenserBlock(
@@ -96,6 +100,60 @@ public class ModBlocks {
             )
     );
 
+    public static final DeferredBlock<Block> REDSTONE_TRANSMITTER = BLOCKS.registerBlock(
+            "redstone_transmitter",
+            (BlockBehaviour.Properties props) -> new RedstoneTransmitterBlock(
+                    props
+                            .mapColor(MapColor.STONE)
+                            .strength(1.5F)
+                            .sound(SoundType.METAL)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredBlock<Block> REDSTONE_RECEIVER = BLOCKS.registerBlock(
+            "redstone_receiver",
+            (BlockBehaviour.Properties props) -> new RedstoneReceiverBlock(
+                    props
+                            .mapColor(MapColor.METAL)
+                            .strength(0.5F)
+                            .sound(SoundType.METAL)
+                            .noOcclusion() // small chip, non-full cube
+            )
+    );
+
+
+    /* ---------- Cosmic Mob Spawner ---------- */
+
+    // Example: ModBlocks registration snippet
+    public static final DeferredBlock<Block> COSMIC_MOB_SPAWNER = BLOCKS.registerBlock(
+            "cosmic_mob_spawner",
+            (BlockBehaviour.Properties props) -> new CosmicMobSpawnerBlock(
+                    props
+                            .strength(5.0F, 1200.0F)          // spawner-like
+                            .requiresCorrectToolForDrops()    // important for “minecraftish” breaking
+                            .sound(SoundType.SPAWNER)
+                            .noLootTable()
+                            .lightLevel(state -> 8)
+                            .noOcclusion()
+            )
+    );
+
+// ===== Cosmic Rift (placer + single tile) =====
+
+    public static final DeferredBlock<Block> COSMIC_RIFT = BLOCKS.registerBlock(
+            "cosmic_rift",
+            (BlockBehaviour.Properties props) -> new CosmicRiftPlacerBlock(
+                    props.strength(1.0F).noOcclusion().noLootTable().sound(SoundType.BASALT)
+            )
+    );
+
+    private static BlockBehaviour.Properties riftTileProps(BlockBehaviour.Properties props) {
+        return props.strength(1.0F).noOcclusion().noLootTable().sound(SoundType.BASALT);
+    }
+
+    public static final DeferredBlock<Block> COSMIC_RIFT_TILE =
+            BLOCKS.registerBlock("cosmic_rift_tile", p -> new CosmicRiftTileBlock(riftTileProps(p)));
 
     /* ---------- Colored Amethyst: 6 variants × 16 colors ---------- */
 
@@ -203,7 +261,7 @@ public class ModBlocks {
                     ModItems.ITEMS.registerSimpleBlockItem(clusterPath, cluster)
             ));
 
-// --- Lit cube variant ---
+            // --- Lit cube variant ---
             String litPath = "lit_amethyst_block_" + color;
             DeferredBlock<Block> litBlock = BLOCKS.registerBlock(
                     litPath,
@@ -223,8 +281,6 @@ public class ModBlocks {
             DeferredItem<BlockItem> litItem =
                     ModItems.ITEMS.registerSimpleBlockItem(litPath, litBlock);
             LIT_AMETHYST_ITEMS.put(dye, litItem);
-
-
         }
     }
 
@@ -252,5 +308,12 @@ public class ModBlocks {
             ModItems.ITEMS.registerSimpleBlockItem("chicken_block", CHICKEN_BLOCK);
     public static final DeferredItem<BlockItem> INFINITE_DISPENSER_ITEM =
             ModItems.ITEMS.registerSimpleBlockItem("infinite_dispenser", INFINITE_DISPENSER);
-
+    public static final DeferredItem<BlockItem> REDSTONE_TRANSMITTER_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("redstone_transmitter", REDSTONE_TRANSMITTER);
+    public static final DeferredItem<BlockItem> REDSTONE_RECEIVER_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("redstone_receiver", REDSTONE_RECEIVER);
+    public static final DeferredItem<BlockItem> COSMIC_MOB_SPAWNER_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("cosmic_mob_spawner", COSMIC_MOB_SPAWNER);
+    public static final DeferredItem<BlockItem> COSMIC_RIFT_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("cosmic_rift", COSMIC_RIFT);
 }

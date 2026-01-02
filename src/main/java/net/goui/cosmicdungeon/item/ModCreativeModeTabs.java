@@ -46,21 +46,27 @@ public class ModCreativeModeTabs {
 
     public static final Supplier<CreativeModeTab> DUNGEON_ITEM_TAB =
             CREATIVE_MODE_TAB.register("dungeon_items_tab",
-            () -> CreativeModeTab.builder()
-                    .icon(() -> new ItemStack(ModItems.BARNACLED_PEARL.get()))
-                    .title(Component.translatable("creativetab.cosmicdungeon.dungeon_items"))
-                    .displayItems((itemDisplayParameters, output) -> {
-                        output.accept(ModItems.BARNACLED_PEARL);
-                        output.accept(ModItems.SEISMIC_CORE_FRAGMENT);
-                        output.accept(ModItems.SHATTERED_REALITY_OF_SHUDDE_MELL);
-                        output.accept(ModItems.BROODING_FORK);
-                        output.accept(ModBlocks.CHICKEN_BLOCK);
-                        output.accept(ModBlocks.PILE_OF_BOOKS);
-                        output.accept(ModItems.AEGIS_OF_ABSOLUTION);
-                        output.accept(ModItems.AEGIS_OF_CHAOS);
-                        output.accept(ModItems.AZATHOTS_HAMMER_OF_FINAL_VERDICT);
-                        output.accept(ModBlocks.INFINITE_DISPENSER);
-                    }).build());
+                    () -> CreativeModeTab.builder()
+                            .icon(() -> new ItemStack(ModItems.BARNACLED_PEARL.get()))
+                            .title(Component.translatable("creativetab.cosmicdungeon.dungeon_items"))
+                            .displayItems((itemDisplayParameters, output) -> {
+                                // Dungeon items
+                                output.accept(ModItems.BARNACLED_PEARL);
+                                output.accept(ModItems.SEISMIC_CORE_FRAGMENT);
+                                output.accept(ModItems.SHATTERED_REALITY_OF_SHUDDE_MELL);
+                                output.accept(ModItems.BROODING_FORK);
+
+                                // Dungeon blocks
+                                output.accept(ModBlocks.CHICKEN_BLOCK);
+                                output.accept(ModBlocks.PILE_OF_BOOKS);
+                                output.accept(ModBlocks.INFINITE_DISPENSER);
+                                output.accept(ModBlocks.COSMIC_MOB_SPAWNER);
+                               output.accept(ModBlocks.COSMIC_RIFT);
+
+                                // RF system
+                                output.accept(ModBlocks.REDSTONE_TRANSMITTER);
+                                output.accept(ModBlocks.REDSTONE_RECEIVER);
+                            }).build());
 
 
 
