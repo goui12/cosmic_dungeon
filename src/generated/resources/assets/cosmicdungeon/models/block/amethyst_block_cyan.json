@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "cosmicdungeon:block/amethyst_block_cyan"
+  }
+}

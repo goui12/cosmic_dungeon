@@ -1,0 +1,82 @@
+{
+  "credit": "Made with Blockbench",
+  "elements": [
+    {
+      "faces": {
+        "down": {
+          "texture": "#1",
+          "uv": [
+            2.0,
+            2.5625,
+            3.0,
+            3.5
+          ]
+        },
+        "east": {
+          "texture": "#1",
+          "uv": [
+            0.0625,
+            0.0,
+            1.0,
+            0.0625
+          ]
+        },
+        "north": {
+          "texture": "#1",
+          "uv": [
+            0.0,
+            0.0,
+            1.0,
+            0.0625
+          ]
+        },
+        "south": {
+          "texture": "#1",
+          "uv": [
+            0.0,
+            0.0,
+            1.0,
+            0.0625
+          ]
+        },
+        "up": {
+          "texture": "#1",
+          "uv": [
+            0.0,
+            0.0,
+            16.0,
+            16.0
+          ]
+        },
+        "west": {
+          "texture": "#1",
+          "uv": [
+            0.0,
+            0.0,
+            0.9375,
+            0.0625
+          ]
+        }
+      },
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        1,
+        16
+      ]
+    }
+  ],
+  "format_version": "1.21.6",
+  "texture_size": [
+    256,
+    256
+  ],
+  "textures": {
+    "1": "cosmicdungeon:block/rift/cosmic_rift_tile",
+    "particle": "cosmicdungeon:block/rift/cosmic_rift_tile"
+  }
+}

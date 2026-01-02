@@ -1,0 +1,30 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "cosmicdungeon:block/amethyst_cluster_green",
+      "x": 180
+    },
+    "facing=east": {
+      "model": "cosmicdungeon:block/amethyst_cluster_green",
+      "x": 90,
+      "y": 90
+    },
+    "facing=north": {
+      "model": "cosmicdungeon:block/amethyst_cluster_green",
+      "x": 90
+    },
+    "facing=south": {
+      "model": "cosmicdungeon:block/amethyst_cluster_green",
+      "x": 90,
+      "y": 180
+    },
+    "facing=up": {
+      "model": "cosmicdungeon:block/amethyst_cluster_green"
+    },
+    "facing=west": {
+      "model": "cosmicdungeon:block/amethyst_cluster_green",
+      "x": 90,
+      "y": 270
+    }
+  }
+}
