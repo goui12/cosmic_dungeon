@@ -419,29 +419,37 @@ public final class RiftConfigScreen extends Screen {
 
     public static void onServerConfig(RiftPayloads.S2C_RiftConfig payload) {
         Minecraft mc = Minecraft.getInstance();
-        if (!(mc.screen instanceof RiftConfigScreen screen)) return;
-        if (screen.clickedTile == null || !screen.clickedTile.equals(payload.clickedTilePos())) return;
 
-        screen.loading = false;
-        screen.saving = false;
+        mc.execute(() -> {
+            if (!(mc.screen instanceof RiftConfigScreen)) {
+                RiftConfigScreen.openForClickedTile(payload.clickedTilePos());
+            }
 
-        screen.anchorPos = payload.anchorPos();
+            if (!(mc.screen instanceof RiftConfigScreen screen)) return;
+            if (screen.clickedTile == null || !screen.clickedTile.equals(payload.clickedTilePos())) return;
 
-        String riftName = payload.riftName() == null ? "" : payload.riftName();
-        screen.nameField.setValue(riftName);
-        screen.nameField.setEditable(true);
+            screen.loading = false;
+            screen.saving = false;
 
-        String dest = payload.destinationName() == null ? "" : payload.destinationName();
-        screen.currentDestination = dest;
-        screen.destinationField.setValue(dest);
-        screen.destinationField.setEditable(true);
+            screen.anchorPos = payload.anchorPos();
 
-        screen.allDestinations.clear();
-        if (payload.allDestinations() != null) screen.allDestinations.addAll(payload.allDestinations());
+            String riftName = payload.riftName() == null ? "" : payload.riftName();
+            screen.nameField.setValue(riftName);
+            screen.nameField.setEditable(true);
 
-        screen.rebuildDestinationFilter(screen.destinationField.getValue());
-        screen.saveBtn.active = true;
+            String dest = payload.destinationName() == null ? "" : payload.destinationName();
+            screen.currentDestination = dest;
+            screen.destinationField.setValue(dest);
+            screen.destinationField.setEditable(true);
+
+            screen.allDestinations.clear();
+            if (payload.allDestinations() != null) screen.allDestinations.addAll(payload.allDestinations());
+
+            screen.rebuildDestinationFilter(screen.destinationField.getValue());
+            screen.saveBtn.active = true;
+        });
     }
+
 
     public static void onServerSaveResult(RiftPayloads.S2C_SaveResult payload) {
         Minecraft mc = Minecraft.getInstance();

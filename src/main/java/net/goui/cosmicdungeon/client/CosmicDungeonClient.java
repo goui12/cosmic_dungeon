@@ -7,6 +7,7 @@ import net.goui.cosmicdungeon.client.model.*;
 import net.goui.cosmicdungeon.client.render.*;
 import net.goui.cosmicdungeon.client.render.blockentity.CosmicSpawnerRenderer;
 import net.goui.cosmicdungeon.client.rift.RiftAmbienceClient;
+import net.goui.cosmicdungeon.client.screen.ClassSelectorScreen;
 import net.goui.cosmicdungeon.entity.ModEntities;
 import net.goui.cosmicdungeon.menu.ModMenus;
 import net.goui.cosmicdungeon.playerclass.api.ExtraInventoryScreen;
@@ -27,10 +28,13 @@ public final class CosmicDungeonClient {
         modEventBus.addListener(CosmicDungeonClient::registerRenderers);
         modEventBus.addListener(CosmicDungeonClient::onClientSetup);
 
-        // Metalmancer extra inventory screen
-        modEventBus.addListener((RegisterMenuScreensEvent e) ->
-                e.register(ModMenus.METALMANCER_INVENTORY.get(), ExtraInventoryScreen::new)
-        );
+        modEventBus.addListener((RegisterMenuScreensEvent e) -> {
+            // Metalmancer extra inventory screen
+            e.register(ModMenus.METALMANCER_INVENTORY.get(), ExtraInventoryScreen::new);
+
+            // Class selector screen
+            e.register(ModMenus.CLASS_SELECTOR.get(), ClassSelectorScreen::new);
+        });
 
         // Existing overlay
         NeoForge.EVENT_BUS.register(CosmicSpawnerHoverOverlay.class);
@@ -41,7 +45,13 @@ public final class CosmicDungeonClient {
 
     private static void onClientSetup(FMLClientSetupEvent e) {
         e.enqueueWork(() -> {
+            // Spawner visuals
             ItemBlockRenderTypes.setRenderLayer(ModBlocks.COSMIC_MOB_SPAWNER.get(), ChunkSectionLayer.TRANSLUCENT);
+
+            // Region look ghost glass
+            ItemBlockRenderTypes.setRenderLayer(ModBlocks.REGION_GHOST_GLASS.get(), ChunkSectionLayer.TRANSLUCENT);
+            ItemBlockRenderTypes.setRenderLayer(ModBlocks.CLASS_SELECTOR_BLOCK.get(), ChunkSectionLayer.CUTOUT);
+
         });
     }
 

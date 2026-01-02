@@ -44,6 +44,13 @@ public class ModItems {
     public static final DeferredItem<Item> SHATTERED_REALITY_OF_SHUDDE_MELL =
             ITEMS.registerSimpleItem("shattered_reality_of_shudde_mell");
 
+    //REGION
+
+    public static final DeferredItem<Item> REGION_WAND = ITEMS.registerItem(
+            "region_wand", props -> new RegionWandItem(props.stacksTo(1))
+                    );
+
+
     // === Tools / Weapons / Utility (non-Judicator) ===
     public static final DeferredItem<Item> CHISEL = ITEMS.registerItem(
             "chisel", props -> new ChiselItem(props.durability(32))

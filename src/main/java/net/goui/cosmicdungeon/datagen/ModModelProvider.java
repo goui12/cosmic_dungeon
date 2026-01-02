@@ -1,3 +1,4 @@
+// file: src/main/java/net/goui/cosmicdungeon/datagen/ModModelProvider.java
 package net.goui.cosmicdungeon.datagen;
 
 import com.mojang.math.Quadrant;
@@ -40,6 +41,22 @@ public class ModModelProvider extends ModelProvider {
         java.util.function.Consumer<Item> MACE = i -> itemModels.generateFlatItem(i, ModelTemplates.FLAT_HANDHELD_MACE_ITEM);
         java.util.function.Consumer<Item> ROD  = i -> itemModels.generateFlatItem(i, ModelTemplates.FLAT_HANDHELD_ROD_ITEM);
 
+        // ===== Dungeon 1: Spectral Blooms (vanilla flower-style cross model) =====
+        simpleCrossPlant(blockModels, itemModels, ModBlocks.BLOOM_OF_QUIET_ASSURANCE.get());
+        simpleCrossPlant(blockModels, itemModels, ModBlocks.BLOOM_OF_GENTLE_LIES.get());
+        simpleCrossPlant(blockModels, itemModels, ModBlocks.BLOOM_OF_WANING_MERCY.get());
+        simpleCrossPlant(blockModels, itemModels, ModBlocks.BLOOM_OF_CONSTRICTING_BONDS.get());
+        simpleCrossPlant(blockModels, itemModels, ModBlocks.BLOOM_OF_UNSPOKEN_RESIGNATION.get());
+        simpleCrossPlant(blockModels, itemModels, ModBlocks.BLOOM_OF_ELEGY.get());
+
+        // ===== Dungeon 1: Spectral Blooms (potted variants) =====
+        pottedCrossPlant(blockModels, itemModels, ModBlocks.POTTED_BLOOM_OF_QUIET_ASSURANCE.get());
+        pottedCrossPlant(blockModels, itemModels, ModBlocks.POTTED_BLOOM_OF_GENTLE_LIES.get());
+        pottedCrossPlant(blockModels, itemModels, ModBlocks.POTTED_BLOOM_OF_WANING_MERCY.get());
+        pottedCrossPlant(blockModels, itemModels, ModBlocks.POTTED_BLOOM_OF_CONSTRICTING_BONDS.get());
+        pottedCrossPlant(blockModels, itemModels, ModBlocks.POTTED_BLOOM_OF_UNSPOKEN_RESIGNATION.get());
+        pottedCrossPlant(blockModels, itemModels, ModBlocks.POTTED_BLOOM_OF_ELEGY.get());
+
         // ===== Flat/simple items =====
         FLAT.accept(ModItems.BISMUTH.get());
         FLAT.accept(ModItems.RAW_BISMUTH.get());
@@ -51,6 +68,7 @@ public class ModModelProvider extends ModelProvider {
         FLAT.accept(ModItems.SEISMIC_CORE_FRAGMENT.get());
         FLAT.accept(ModItems.BROODING_FORK.get());
         FLAT.accept(ModItems.CHISEL.get());
+        FLAT.accept(ModItems.REGION_WAND.get());
         FLAT.accept(ModItems.AEGIS_OF_ABSOLUTION.get());
         FLAT.accept(ModItems.AEGIS_OF_CHAOS.get());
         FLAT.accept(ModItems.AZATHOTS_HAMMER_OF_FINAL_VERDICT.get());
@@ -117,7 +135,6 @@ public class ModModelProvider extends ModelProvider {
         registerExternalItem(itemModels, ModItems.SHIELD_OF_THE_DEEP.get(), rlMod("item/shield_of_the_deep"));
 
         // ===== Metalmancer =====
-
         FLAT.accept(MetalmancerItems.SATCHEL_OF_SAMPLES.get());
 
         // New: Summoning staffs (rod models)
@@ -130,13 +147,18 @@ public class ModModelProvider extends ModelProvider {
         blockModels.createTrivialCube(ModBlocks.MAGIC_BLOCK.get());
         blockModels.createTrivialCube(ModBlocks.BISMUTH_BLOCK.get());
         blockModels.createTrivialCube(ModBlocks.CHICKEN_BLOCK.get());
-// ===== Cosmic Rift (placer) =====
+
+        // ===== Ghost Block =====
+        ghostCube(blockModels, itemModels, ModBlocks.REGION_GHOST_GLASS.get(), true);
+
+        // ===== Cosmic Rift (placer) =====
         {
             var b = ModBlocks.COSMIC_RIFT.get();
             blockModels.createTrivialCube(b); // uses block/cosmic_rift texture
             // Ensure item points to block model
             registerExternalItem(itemModels, b.asItem(), rlMod("block/cosmic_rift"));
         }
+
         registerRiftTile_BlockbenchStyle(blockModels, ModBlocks.COSMIC_RIFT_TILE.get(), rlMod("block/rift/cosmic_rift_tile"));
 
         // ===== Pile of Books (points at external hand-authored model) =====
@@ -147,6 +169,19 @@ public class ModModelProvider extends ModelProvider {
                     MultiVariantGenerator.dispatch(b, new MultiVariant(WeightedList.of(new Variant(blockModel))))
             );
             FLAT.accept(b.asItem());
+        }
+
+        // ===== Class Selector Block (points at external hand-authored Blockbench model) =====
+        {
+            var b = ModBlocks.CLASS_SELECTOR_BLOCK.get();
+            var blockModel = rlMod("block/class_selector_block");
+
+            blockModels.blockStateOutput.accept(
+                    MultiVariantGenerator.dispatch(b, new MultiVariant(WeightedList.of(new Variant(blockModel))))
+            );
+
+            // Item should be the 3D block model (not flat) so it looks like the placed model.
+            registerExternalItem(itemModels, b.asItem(), blockModel);
         }
 
         // ===== Infinite Dispenser (uses vanilla parents) =====
@@ -180,15 +215,8 @@ public class ModModelProvider extends ModelProvider {
             registerExternalItem(itemModels, b.asItem(), horiz);
         }
 
-
-// ===== Cosmic Mob Spawner (fully custom model, no vanilla spawner parent) =====
+        // ===== Cosmic Mob Spawner (fully custom model, no vanilla spawner parent) =====
         blockModels.createTrivialCube(ModBlocks.COSMIC_MOB_SPAWNER.get());
-
-
-
-
-
-
 
         // ===== Redstone: Transmitter & Receiver (point at external Blockbench JSONs) =====
         {
@@ -276,15 +304,48 @@ public class ModModelProvider extends ModelProvider {
         }
     }
 
+    /**
+     * Vanilla flower-style model:
+     * - block model: parent minecraft:block/cross
+     * - blockstate: single variant -> that model (no properties)
+     * - item model: parent -> block model
+     */
+    private void simpleCrossPlant(BlockModelGenerators blockModels, ItemModelGenerators itemModels, Block b) {
+        String id = b.builtInRegistryHolder().key().location().getPath();
+        ResourceLocation modelLoc = rlMod("block/" + id);
+        ResourceLocation tex = rlMod("block/" + id);
+
+        // block/<id>.json
+        blockModels.modelOutput.accept(modelLoc, () -> {
+            var root = new com.google.gson.JsonObject();
+            root.addProperty("parent", "minecraft:block/cross");
+
+            var texObj = new com.google.gson.JsonObject();
+            texObj.addProperty("cross", tex.toString());
+            texObj.addProperty("particle", tex.toString());
+            root.add("textures", texObj);
+
+            root.addProperty("render_type", "cutout");
+            return root;
+        });
+
+        // blockstates/<id>.json  (single variant)
+        blockModels.blockStateOutput.accept(
+                MultiVariantGenerator.dispatch(b, new MultiVariant(WeightedList.of(new Variant(modelLoc))))
+        );
+
+        // item/<id>.json -> parent is the block model
+        ResourceLocation itemLoc = rlMod("item/" + id);
+        itemModels.modelOutput.accept(itemLoc, () -> {
+            var root = new com.google.gson.JsonObject();
+            root.addProperty("parent", modelLoc.toString());
+            return root;
+        });
+    }
+
     // points <item> to an existing model at <model>, without generating that model file
     private static void registerExternalItem(ItemModelGenerators itemModels, Item item, ResourceLocation model) {
         itemModels.itemModelOutput.accept(item, ItemModelUtils.plainModel(model));
-    }
-
-    // === Shield item definitions for vanilla-style shields ===
-    @SuppressWarnings("unused")
-    private static void registerShield(ItemModelGenerators itemModels, Item item) {
-        itemModels.generateShield(item);
     }
 
     // === Helpers ===
@@ -339,6 +400,32 @@ public class ModModelProvider extends ModelProvider {
                 .filter(x -> !x.is(ModItems.WORKED_PLANK));
     }
 
+    private void ghostCube(BlockModelGenerators blockModels, ItemModelGenerators itemModels, Block b, boolean translucent) {
+        String id = b.builtInRegistryHolder().key().location().getPath();
+        ResourceLocation modelLoc = rlMod("block/" + id);
+        ResourceLocation tex = rlMod("block/" + id);
+
+        blockModels.modelOutput.accept(modelLoc, () -> {
+            var root = new com.google.gson.JsonObject();
+            root.addProperty("parent", "block/cube_all");
+
+            var textures = new com.google.gson.JsonObject();
+            textures.addProperty("all", tex.toString());
+            textures.addProperty("particle", tex.toString());
+            root.add("textures", textures);
+
+            root.addProperty("render_type", translucent ? "translucent" : "cutout");
+            return root;
+        });
+
+        blockModels.blockStateOutput.accept(
+                MultiVariantGenerator.dispatch(b, new MultiVariant(WeightedList.of(new Variant(modelLoc))))
+        );
+
+        // Item points at the block model
+        registerExternalItem(itemModels, b.asItem(), modelLoc);
+    }
+
     private void registerRiftTile_BlockbenchStyle(BlockModelGenerators blockModels, Block b, ResourceLocation texture) {
         String id = b.builtInRegistryHolder().key().location().getPath();
         ResourceLocation modelLoc = rlMod("block/" + id);
@@ -346,7 +433,6 @@ public class ModModelProvider extends ModelProvider {
         blockModels.modelOutput.accept(modelLoc, () -> {
             var root = new com.google.gson.JsonObject();
 
-            // Optional Blockbench metadata (Minecraft will ignore unknown fields)
             root.addProperty("format_version", "1.21.6");
             root.addProperty("credit", "Made with Blockbench");
 
@@ -355,14 +441,11 @@ public class ModModelProvider extends ModelProvider {
             texSize.add(256);
             root.add("texture_size", texSize);
 
-            // textures: { "1": "cosmicdungeon:block/rift/..." }
             var textures = new com.google.gson.JsonObject();
             textures.addProperty("1", texture.toString());
-            textures.addProperty("particle", texture.toString()); // <-- important
+            textures.addProperty("particle", texture.toString());
             root.add("textures", textures);
 
-
-            // elements array
             var elements = new com.google.gson.JsonArray();
             var el = new com.google.gson.JsonObject();
 
@@ -371,7 +454,7 @@ public class ModModelProvider extends ModelProvider {
             el.add("from", from);
 
             var to = new com.google.gson.JsonArray();
-            to.add(16); to.add(1); to.add(16); // matches your example exactly
+            to.add(16); to.add(1); to.add(16);
             el.add("to", to);
 
             var faces = new com.google.gson.JsonObject();
@@ -389,7 +472,6 @@ public class ModModelProvider extends ModelProvider {
             return root;
         });
 
-        // Single-variant blockstate -> modelLoc
         blockModels.blockStateOutput.accept(
                 MultiVariantGenerator.dispatch(b, new MultiVariant(WeightedList.of(new Variant(modelLoc))))
         );
@@ -404,4 +486,28 @@ public class ModModelProvider extends ModelProvider {
         return o;
     }
 
+    private void pottedCrossPlant(BlockModelGenerators blockModels, ItemModelGenerators itemModels, Block pottedBlock) {
+        String id = pottedBlock.builtInRegistryHolder().key().location().getPath();
+        ResourceLocation modelLoc = rlMod("block/" + id);
+
+        blockModels.modelOutput.accept(modelLoc, () -> {
+            var root = new com.google.gson.JsonObject();
+            root.addProperty("parent", "minecraft:block/flower_pot_cross");
+
+            var texObj = new com.google.gson.JsonObject();
+
+            String plantId = id.startsWith("potted_") ? id.substring("potted_".length()) : id;
+            texObj.addProperty("plant", rlMod("block/" + plantId).toString());
+            texObj.addProperty("dirt", ResourceLocation.withDefaultNamespace("block/dirt").toString());
+            texObj.addProperty("particle", rlMod("block/" + plantId).toString());
+
+            root.add("textures", texObj);
+            root.addProperty("render_type", "cutout");
+            return root;
+        });
+
+        blockModels.blockStateOutput.accept(
+                MultiVariantGenerator.dispatch(pottedBlock, new MultiVariant(WeightedList.of(new Variant(modelLoc))))
+        );
+    }
 }

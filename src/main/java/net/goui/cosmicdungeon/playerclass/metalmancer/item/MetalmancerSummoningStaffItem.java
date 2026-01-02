@@ -1,3 +1,4 @@
+// file: src/main/java/net/goui/cosmicdungeon/playerclass/metalmancer/item/MetalmancerSummoningStaffItem.java
 package net.goui.cosmicdungeon.playerclass.metalmancer.item;
 
 import net.goui.cosmicdungeon.playerclass.api.ClassNet;
@@ -13,9 +14,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
-import net.minecraft.client.Minecraft;
-import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
-import net.goui.cosmicdungeon.playerclass.api.ClassNet;
 
 import java.util.function.Consumer;
 
@@ -28,9 +26,6 @@ import java.util.function.Consumer;
  * Right-click:
  *  - normal: staff_summon
  *  - sneaking: staff_reforge
- *
- * Left-click semantics can later be moved to events if you want to
- * strictly match L/R click docs; for now we use sneak to distinguish.
  */
 public class MetalmancerSummoningStaffItem extends MetalmancerOnlyItem {
 
@@ -43,8 +38,7 @@ public class MetalmancerSummoningStaffItem extends MetalmancerOnlyItem {
             int reforgeOrePerHeart,
             int selfReforgeOrePerHeart,
             int regenOrePerMinute
-    ) {
-    }
+    ) {}
 
     // Tier index (1 = Bent Rod of Melted Shavings, 2 = Erzfuehler, etc.)
     private final int tier;
@@ -95,29 +89,21 @@ public class MetalmancerSummoningStaffItem extends MetalmancerOnlyItem {
 
     @Override
     public InteractionResult use(Level level, Player player, InteractionHand hand) {
-        ItemStack stack = player.getItemInHand(hand);
-
         // Only Metalmancers can actually use this
         if (!allowed(player)) {
             return InteractionResult.PASS;
         }
 
         if (level.isClientSide()) {
-            // For now:
             //  - normal right-click = summon
             //  - sneak right-click = reforge
             String actionId = player.isShiftKeyDown()
                     ? MetalmancerActions.ACTION_STAFF_REFORGE
                     : MetalmancerActions.ACTION_STAFF_SUMMON;
 
-            var conn = Minecraft.getInstance().getConnection();
-            if (conn != null) {
-                conn.send(new ServerboundCustomPayloadPacket(new ClassNet.C2S_Action(actionId)));
-            }
-
+            ClassNet.sendActionToServer(actionId);
         }
 
-        // Let the swing / use animation play and mark as handled
         return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
     }
 
@@ -127,10 +113,8 @@ public class MetalmancerSummoningStaffItem extends MetalmancerOnlyItem {
                                 TooltipDisplay tooltipDisplay,
                                 Consumer<Component> tooltipAdder,
                                 TooltipFlag flag) {
-        // Call vanilla / parent behavior first
         super.appendHoverText(stack, context, tooltipDisplay, tooltipAdder, flag);
 
-        // Bent Rod of Melted Shavings
         if (stack.is(MetalmancerItems.BENT_ROD_OF_MELTED_SHAVINGS.get())) {
             tooltipAdder.accept(Component.translatable(
                     "tooltip.cosmicdungeon.bent_rod_of_melted_shavings.codex"
@@ -144,7 +128,6 @@ public class MetalmancerSummoningStaffItem extends MetalmancerOnlyItem {
                     "tooltip.cosmicdungeon.bent_rod_of_melted_shavings.lore"
             ).withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
         }
-        // Erzfühler
         else if (stack.is(MetalmancerItems.ERZFUEHLER.get())) {
             tooltipAdder.accept(Component.translatable(
                     "tooltip.cosmicdungeon.erzfuehler.codex"

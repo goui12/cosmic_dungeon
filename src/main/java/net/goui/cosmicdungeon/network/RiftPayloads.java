@@ -16,6 +16,20 @@ public final class RiftPayloads {
     private static final StreamCodec<ByteBuf, BlockPos> BLOCK_POS_STREAM =
             ByteBufCodecs.VAR_LONG.map(BlockPos::of, BlockPos::asLong);
 
+    /* ---------- S2C: open rift config (server-authorized) ---------- */
+    public record S2C_OpenRiftConfig(BlockPos clickedTilePos) implements CustomPacketPayload {
+        public static final Type<S2C_OpenRiftConfig> TYPE =
+                new Type<>(ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "rift_open"));
+
+        public static final StreamCodec<ByteBuf, S2C_OpenRiftConfig> STREAM_CODEC =
+                StreamCodec.composite(
+                        BLOCK_POS_STREAM, S2C_OpenRiftConfig::clickedTilePos,
+                        S2C_OpenRiftConfig::new
+                );
+
+        @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    }
+
     /* ---------- C2S: request config for clicked tile ---------- */
     public record C2S_RequestRiftConfig(BlockPos clickedTilePos) implements CustomPacketPayload {
         public static final Type<C2S_RequestRiftConfig> TYPE =

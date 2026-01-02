@@ -1,12 +1,16 @@
+// file: src/main/java/net/goui/cosmicdungeon/block/custom/CosmicRiftTileBlock.java
 package net.goui.cosmicdungeon.block.custom;
 
 import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import net.goui.cosmicdungeon.auth.Authority;
 import net.goui.cosmicdungeon.block.ModBlocks;
-import net.goui.cosmicdungeon.client.rift.RiftConfigScreen;
+import net.goui.cosmicdungeon.network.ModNetwork;
+import net.goui.cosmicdungeon.network.RiftPayloads;
 import net.goui.cosmicdungeon.rift.RiftRegistryData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -34,21 +38,24 @@ public class CosmicRiftTileBlock extends Block {
 
     private static final VoxelShape SHAPE = Block.box(0, 0, 0, 16, 1, 16);
 
-    // Safety cap (64x64)
+    // BFS deletion cap
     private static final int MAX_BREAK_TILES = 64 * 64;
 
-    // Prevent recursive destruction loops
+    // Prevent recursion when we call destroyBlock() on many tiles
     private static final ThreadLocal<Boolean> BREAKING_WHOLE =
             ThreadLocal.withInitial(() -> Boolean.FALSE);
 
-    /* ===================== TELEPORT CONFIG ===================== */
-
+    // Teleport throttle
     private static final long TELEPORT_COOLDOWN_TICKS = 12;
     private static final Map<UUID, Long> NEXT_ALLOWED_TELEPORT = new ConcurrentHashMap<>();
 
+    // Safe landing search
     private static final int SAFE_SEARCH_RADIUS = 6;
     private static final int SAFE_SEARCH_UP = 4;
     private static final int SAFE_SEARCH_DOWN = 2;
+
+    // UI proximity (server-authoritative)
+    private static final int CONFIG_MAX_DIST = 16;
 
     public CosmicRiftTileBlock(Properties props) {
         super(props);
@@ -66,16 +73,53 @@ public class CosmicRiftTileBlock extends Block {
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-        if (level.isClientSide()) {
-            RiftConfigScreen.openForClickedTile(pos);
+        // Server-authoritative: NEVER open UI client-side.
+        if (!(player instanceof ServerPlayer sp)) return InteractionResult.SUCCESS;
+        if (!(level instanceof ServerLevel sl)) return InteractionResult.SUCCESS;
+
+        if (!Authority.isDeveloper(sp)) {
+            sp.displayClientMessage(Component.literal("You do not have permission to configure rifts."), true);
+            return InteractionResult.SUCCESS;
         }
+
+        // Proximity guard so you can't configure from across the world.
+        if (sp.blockPosition().distManhattan(pos) > CONFIG_MAX_DIST) {
+            sp.displayClientMessage(Component.literal("Too far from rift to configure."), true);
+            return InteractionResult.SUCCESS;
+        }
+
+        // Robust pattern: send CONFIG directly (no separate "open" payload).
+        // Client opens screen when it receives S2C_RiftConfig (or if already open, it populates it).
+        RiftRegistryData data = RiftRegistryData.get(sl);
+
+        OptionalLong anchorOpt = data.getAnchorForTile(pos);
+
+        BlockPos anchor;
+        String name = "";
+        String dest = "";
+
+        if (anchorOpt.isEmpty()) {
+            anchor = pos;
+        } else {
+            anchor = BlockPos.of(anchorOpt.getAsLong());
+            var portal = data.getPortal(anchor.asLong()).orElse(null);
+            if (portal != null) {
+                name = portal.portalName() == null ? "" : portal.portalName();
+                dest = portal.destinationName() == null ? "" : portal.destinationName();
+            }
+        }
+
+        ModNetwork.sendTo(sp, new RiftPayloads.S2C_RiftConfig(
+                pos,
+                anchor,
+                name,
+                dest,
+                data.listDestinationNamesSorted()
+        ));
+
         return InteractionResult.SUCCESS;
     }
 
-    /**
-     * Correct 1.21.10 override.
-     * This is reliably called for thin/raised shapes like your 1/16 tile.
-     */
     @Override
     protected void entityInside(BlockState state,
                                 Level level,
@@ -90,11 +134,8 @@ public class CosmicRiftTileBlock extends Block {
         if (!(level instanceof ServerLevel sl)) return;
         if (!(entity instanceof ServerPlayer sp)) return;
 
-        // Optional: avoid midair triggers (but still works with the 1/16 raised tile)
         if (!sp.onGround()) return;
 
-        // Important for 1/16 raised tile: the player's blockPosition() is often the block BELOW.
-        // So accept if the player is standing on the block below this tile OR on this tile.
         BlockPos feet = sp.blockPosition();
         if (!feet.equals(pos) && !feet.above().equals(pos)) return;
 
@@ -137,7 +178,7 @@ public class CosmicRiftTileBlock extends Block {
 
         BlockPos rawTarget = dest.pos();
 
-        // Ensure chunk loaded (force-load)
+        // Ensure chunk is loaded before we test collision/fluid
         targetLevel.getChunk(rawTarget);
 
         BlockPos safe = findSafeTeleportPos(targetLevel, rawTarget);
@@ -157,7 +198,7 @@ public class CosmicRiftTileBlock extends Block {
         );
 
         if (!ok) return;
-// Custom rift teleport SFX (play in BOTH dimensions)
+
         currentLevel.playSound(
                 null,
                 steppedTile,
@@ -176,8 +217,8 @@ public class CosmicRiftTileBlock extends Block {
                 0.95F + targetLevel.getRandom().nextFloat() * 0.10F
         );
 
-        // Cooldown based on the target world's time base
-        NEXT_ALLOWED_TELEPORT.put(id, targetLevel.getGameTime() + TELEPORT_COOLDOWN_TICKS);
+        // Use currentLevel time for cooldown (player UUID is global; keep it consistent)
+        NEXT_ALLOWED_TELEPORT.put(id, now + TELEPORT_COOLDOWN_TICKS);
     }
 
     private static BlockPos findSafeTeleportPos(ServerLevel level, BlockPos preferred) {
@@ -190,6 +231,7 @@ public class CosmicRiftTileBlock extends Block {
         for (int r = 1; r <= SAFE_SEARCH_RADIUS; r++) {
             for (int dx = -r; dx <= r; dx++) {
                 for (int dz = -r; dz <= r; dz++) {
+                    // Only perimeter at this radius (faster)
                     if (Math.abs(dx) != r && Math.abs(dz) != r) continue;
 
                     for (int dy = -SAFE_SEARCH_DOWN; dy <= SAFE_SEARCH_UP; dy++) {
@@ -208,17 +250,18 @@ public class CosmicRiftTileBlock extends Block {
         BlockState head = level.getBlockState(pos.above());
         BlockState floor = level.getBlockState(pos.below());
 
+        // Must have 2-block tall empty space
         if (!feet.getCollisionShape(level, pos).isEmpty()) return false;
         if (!head.getCollisionShape(level, pos.above()).isEmpty()) return false;
 
+        // No fluids at feet/head
         FluidState ff = feet.getFluidState();
         FluidState hf = head.getFluidState();
         if (!ff.isEmpty()) return false;
         if (!hf.isEmpty()) return false;
 
-        if (floor.getCollisionShape(level, pos.below()).isEmpty()) return false;
-
-        return true;
+        // Must have solid floor
+        return !floor.getCollisionShape(level, pos.below()).isEmpty();
     }
 
     @Override
@@ -273,8 +316,10 @@ public class CosmicRiftTileBlock extends Block {
             }
         }
 
+        // Remove rift registry data for all tiles
         RiftRegistryData.get(level).onRiftTilesBroken(visited);
 
+        // Break blocks
         for (long packed : visited) {
             BlockPos p = BlockPos.of(packed);
             boolean drop = p.equals(origin);

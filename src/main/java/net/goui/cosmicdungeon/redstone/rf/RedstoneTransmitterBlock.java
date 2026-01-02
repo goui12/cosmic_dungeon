@@ -1,6 +1,8 @@
 package net.goui.cosmicdungeon.redstone.rf;
 
+import net.goui.cosmicdungeon.auth.Authority;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -23,56 +25,21 @@ import org.jetbrains.annotations.Nullable;
 public class RedstoneTransmitterBlock extends Block implements EntityBlock {
     public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
 
+    private static final VoxelShape SHAPE_HALF_BLOCK = Block.box(0, 0, 0, 16, 8, 16);
+
     public RedstoneTransmitterBlock(BlockBehaviour.Properties props) {
         super(props);
         this.registerDefaultState(this.stateDefinition.any().setValue(POWERED, Boolean.FALSE));
     }
-    // inside RedstoneTransmitterBlock
-    private static final VoxelShape SHAPE_HALF_BLOCK = Block.box(0, 0, 0, 16, 8, 16); // 0..8 = half-height
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext ctx) {
-        return SHAPE_HALF_BLOCK; // outline / “hitbox”
+        return SHAPE_HALF_BLOCK;
     }
-
-    // RedstoneTransmitterBlock.java
-
-// RedstoneTransmitterBlock.java
-
-    @Override
-    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
-        // Called BEFORE the block becomes air; old state is valid here.
-        if (!level.isClientSide()) {
-            var be = level.getBlockEntity(pos);
-            if (be instanceof RedstoneTransmitterBE tbe) {
-                boolean wasPowered = state.hasProperty(POWERED) && state.getValue(POWERED);
-                if (wasPowered) {
-                    RfBusManager.get((net.minecraft.server.level.ServerLevel) level)
-                            .removeActive((net.minecraft.server.level.ServerLevel) level, tbe.getHz());
-                }
-            }
-        }
-        return super.playerWillDestroy(level, pos, state, player);
-    }
-
-    @Override
-    protected void affectNeighborsAfterRemoval(BlockState state,
-                                               net.minecraft.server.level.ServerLevel level,
-                                               BlockPos pos,
-                                               boolean moved) {
-        // Fallback path (pistons/support loss/commands). BE may or may not still exist here.
-        var be = level.getBlockEntity(pos);
-        if (be instanceof RedstoneTransmitterBE tbe) {
-            boolean wasPowered = state.hasProperty(POWERED) && state.getValue(POWERED);
-            if (wasPowered) RfBusManager.get(level).removeActive(level, tbe.getHz());
-        }
-        super.affectNeighborsAfterRemoval(state, level, pos, moved);
-    }
-
 
     @Override
     public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext ctx) {
-        return SHAPE_HALF_BLOCK; // physical collision
+        return SHAPE_HALF_BLOCK;
     }
 
     @Override
@@ -80,7 +47,6 @@ public class RedstoneTransmitterBlock extends Block implements EntityBlock {
         b.add(POWERED);
     }
 
-    // Placement doesn’t need facing; keep default state
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
         return this.defaultBlockState();
@@ -94,8 +60,6 @@ public class RedstoneTransmitterBlock extends Block implements EntityBlock {
         return new RedstoneTransmitterBE(pos, state);
     }
 
-    /* ----- Redstone I/O ----- */
-
     @Override
     public boolean hasAnalogOutputSignal(BlockState state) { return true; }
 
@@ -104,7 +68,6 @@ public class RedstoneTransmitterBlock extends Block implements EntityBlock {
         return state.getValue(POWERED) ? 15 : 0;
     }
 
-    // 1.21.9 signature includes Orientation + movedByPiston
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block neighborBlock, @Nullable Orientation ori, boolean movedByPiston) {
         if (level.isClientSide()) return;
@@ -123,13 +86,47 @@ public class RedstoneTransmitterBlock extends Block implements EntityBlock {
         super.neighborChanged(state, level, pos, neighborBlock, ori, movedByPiston);
     }
 
-    /* ----- Right-click: open tiny Hz screen (client-only UI) ----- */
-
     @Override
     public InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-        if (level.isClientSide()) {
-            HzConfigScreen.openForTransmitter(pos);
+        if (!level.isClientSide()) {
+            if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
+                if (!net.goui.cosmicdungeon.auth.AccessPolicy.isDeveloper(sp)) {
+                    return InteractionResult.SUCCESS;
+                }
+            }
+            return InteractionResult.SUCCESS;
         }
+
+        HzConfigScreen.openForTransmitter(pos);
         return InteractionResult.SUCCESS;
+    }
+
+
+    @Override
+    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+        if (!level.isClientSide()) {
+            var be = level.getBlockEntity(pos);
+            if (be instanceof RedstoneTransmitterBE tbe) {
+                boolean wasPowered = state.hasProperty(POWERED) && state.getValue(POWERED);
+                if (wasPowered) {
+                    RfBusManager.get((net.minecraft.server.level.ServerLevel) level)
+                            .removeActive((net.minecraft.server.level.ServerLevel) level, tbe.getHz());
+                }
+            }
+        }
+        return super.playerWillDestroy(level, pos, state, player);
+    }
+
+    @Override
+    protected void affectNeighborsAfterRemoval(BlockState state,
+                                               net.minecraft.server.level.ServerLevel level,
+                                               BlockPos pos,
+                                               boolean moved) {
+        var be = level.getBlockEntity(pos);
+        if (be instanceof RedstoneTransmitterBE tbe) {
+            boolean wasPowered = state.hasProperty(POWERED) && state.getValue(POWERED);
+            if (wasPowered) RfBusManager.get(level).removeActive(level, tbe.getHz());
+        }
+        super.affectNeighborsAfterRemoval(state, level, pos, moved);
     }
 }

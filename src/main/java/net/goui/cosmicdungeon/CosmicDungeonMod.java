@@ -13,6 +13,7 @@ import net.goui.cosmicdungeon.network.ModNetwork;
 import net.goui.cosmicdungeon.playerclass.metalmancer.MetalmancerCommand;
 import net.goui.cosmicdungeon.playerclass.metalmancer.MetalmancerItems;
 import net.goui.cosmicdungeon.redstone.rf.ModRfBlockEntities;
+import net.goui.cosmicdungeon.region.RegionWandEvents;
 import net.goui.cosmicdungeon.sound.ModSounds;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.world.item.CreativeModeTabs;
@@ -50,6 +51,10 @@ public class CosmicDungeonMod {
         // forge bus listeners (commands, etc.)
         NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.addListener(this::onRegisterCommands);
+
+        // Region wand selection (LeftClickBlock handler)
+        NeoForge.EVENT_BUS.register(new RegionWandEvents());
+
 
         // registries
         ModRfBlockEntities.register(modEventBus);
@@ -106,10 +111,18 @@ public class CosmicDungeonMod {
         ShakeCommand.register(event.getDispatcher());
         SpawnerCommand.register(event.getDispatcher());
         RiftCommand.register(event.getDispatcher());
+        RegionCommand.register(event.getDispatcher());
+        RankCommand.register(event.getDispatcher());
+        PasswordCommand.register(event.getDispatcher());
+        RankCommand.register(event.getDispatcher());
+        DeveloperCommand.register(event.getDispatcher());
+        DungeoneerCommand.register(event.getDispatcher());
+
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
-        // common init if needed
+        event.enqueueWork(ModBlocks::registerFlowerPots);
+
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {

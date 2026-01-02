@@ -1,24 +1,44 @@
+// file: src/main/java/net/goui/cosmicdungeon/network/ModNetwork.java
 package net.goui.cosmicdungeon.network;
 
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+import net.goui.cosmicdungeon.auth.AccessPolicy;
+import net.goui.cosmicdungeon.network.handler.RegionLookAllClientPayloadHandler;
+import net.goui.cosmicdungeon.network.handler.RegionLookAllServerPayloadHandler;
+import net.goui.cosmicdungeon.network.handler.RegionLookClientPayloadHandler;
+import net.goui.cosmicdungeon.network.payload.RegionLookAllPayload;
+import net.goui.cosmicdungeon.network.payload.RegionLookAllRequestPayload;
+import net.goui.cosmicdungeon.network.payload.RegionLookPayload;
+import net.goui.cosmicdungeon.playerclass.api.ClassData;
+import net.goui.cosmicdungeon.playerclass.api.ClassKeys;
+import net.goui.cosmicdungeon.playerclass.api.ClassNet;
+import net.goui.cosmicdungeon.playerclass.api.ClassNbtUtil;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
-/**
- * Centralized payload registration + small helpers.
- * Server-first style: screens request authoritative state from server.
- */
+import java.util.Objects;
+
 public final class ModNetwork {
     private ModNetwork() {}
 
-    // wired from CosmicDungeonMod constructor with modEventBus.addListener(ModNetwork::registerPayloadHandlers)
+    /**
+     * Wired from CosmicDungeonMod constructor with:
+     * modEventBus.addListener(ModNetwork::registerPayloadHandlers)
+     */
     public static void registerPayloadHandlers(final RegisterPayloadHandlersEvent event) {
         final PayloadRegistrar registrar = event.registrar("1");
 
-        // existing
+        /* ===================== SHAKE ===================== */
+
         registrar.playToClient(
                 ShakeScreenPayload.TYPE,
-                ShakeScreenPayload.STREAM_CODEC
+                ShakeScreenPayload.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() ->
+                        ClientNetworkDispatch.dispatch("onShakeScreen", payload)
+                )
         );
 
         /* ===================== RIFT (SERVER-AUTHORITATIVE) ===================== */
@@ -30,13 +50,16 @@ public final class ModNetwork {
                     if (!(ctx.player() instanceof net.minecraft.server.level.ServerPlayer sp)) return;
                     if (!(sp.level() instanceof net.minecraft.server.level.ServerLevel level)) return;
 
-                    var data = net.goui.cosmicdungeon.rift.RiftRegistryData.get(level);
+                    if (!AccessPolicy.isDeveloper(sp)) return;
 
+                    var data = net.goui.cosmicdungeon.rift.RiftRegistryData.get(level);
                     var clicked = payload.clickedTilePos();
+
+                    if (sp.blockPosition().distManhattan(clicked) > 16) return;
+
                     var anchorOpt = data.getAnchorForTile(clicked);
 
                     if (anchorOpt.isEmpty()) {
-                        // Not registered / not part of a known portal
                         ctx.reply(new RiftPayloads.S2C_RiftConfig(
                                 clicked,
                                 clicked,
@@ -70,10 +93,14 @@ public final class ModNetwork {
                     if (!(ctx.player() instanceof net.minecraft.server.level.ServerPlayer sp)) return;
                     if (!(sp.level() instanceof net.minecraft.server.level.ServerLevel level)) return;
 
-                    var data = net.goui.cosmicdungeon.rift.RiftRegistryData.get(level);
+                    if (!AccessPolicy.isDeveloper(sp)) {
+                        ctx.reply(new RiftPayloads.S2C_SaveResult(payload.anchorPos(), false, "No permission."));
+                        return;
+                    }
 
-                    // basic sanity / proximity check (professional default)
+                    var data = net.goui.cosmicdungeon.rift.RiftRegistryData.get(level);
                     var anchor = payload.anchorPos();
+
                     if (sp.blockPosition().distManhattan(anchor) > 16) {
                         ctx.reply(new RiftPayloads.S2C_SaveResult(anchor, false, "Too far from rift to configure."));
                         return;
@@ -94,35 +121,164 @@ public final class ModNetwork {
         registrar.playToClient(
                 RiftPayloads.S2C_RiftConfig.TYPE,
                 RiftPayloads.S2C_RiftConfig.STREAM_CODEC,
-                (payload, ctx) -> net.minecraft.client.Minecraft.getInstance().execute(() ->
-                        net.goui.cosmicdungeon.client.rift.RiftConfigScreen.onServerConfig(payload)
+                (payload, ctx) -> ctx.enqueueWork(() ->
+                        ClientNetworkDispatch.dispatch("onRiftConfig", payload)
+                )
+        );
+
+        registrar.playToClient(
+                RiftPayloads.S2C_OpenRiftConfig.TYPE,
+                RiftPayloads.S2C_OpenRiftConfig.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() ->
+                        ClientNetworkDispatch.dispatch("onOpenRiftConfig", payload)
                 )
         );
 
         registrar.playToClient(
                 RiftPayloads.S2C_SaveResult.TYPE,
                 RiftPayloads.S2C_SaveResult.STREAM_CODEC,
-                (payload, ctx) -> net.minecraft.client.Minecraft.getInstance().execute(() ->
-                        net.goui.cosmicdungeon.client.rift.RiftConfigScreen.onServerSaveResult(payload)
+                (payload, ctx) -> ctx.enqueueWork(() ->
+                        ClientNetworkDispatch.dispatch("onRiftSaveResult", payload)
                 )
+        );
+
+        /* ===================== CLASS (SERVER-AUTHORITATIVE) ===================== */
+
+        // S2C: class sync applies on client (common-safe)
+        registrar.playToClient(
+                ClassPayloads.S2C_ClassSync.TYPE,
+                ClassPayloads.S2C_ClassSync.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() -> {
+                    var player = ctx.player();
+                    if (player == null) return;
+
+                    String cls = Objects.requireNonNullElse(payload.classId(), ClassKeys.CLASS_ID_NONE);
+                    ClassNbtUtil.setClassId(player, cls);
+
+                    CompoundTag pd = player.getPersistentData();
+                    CompoundTag root = pd.getCompoundOrEmpty(ClassData.ROOT_TAG).copy();
+
+                    if (ClassKeys.CLASS_ID_METALMANCER.equals(cls)) {
+                        root.put(ClassData.KEY_EXTRA, payload.extraNbt() == null ? new CompoundTag() : payload.extraNbt());
+                    } else {
+                        root.remove(ClassData.KEY_EXTRA);
+                    }
+
+                    pd.put(ClassData.ROOT_TAG, root);
+                })
+        );
+
+        // C2S: request current class sync
+        registrar.playToServer(
+                ClassPayloads.C2S_RequestClass.TYPE,
+                ClassPayloads.C2S_RequestClass.STREAM_CODEC,
+                (payload, ctx) -> {
+                    if (!(ctx.player() instanceof ServerPlayer sp)) return;
+                    ClassNet.sendFullTo(sp);
+                }
+        );
+
+        // C2S: metalmancer action
+        registrar.playToServer(
+                ClassPayloads.C2S_Action.TYPE,
+                ClassPayloads.C2S_Action.STREAM_CODEC,
+                (payload, ctx) -> {
+                    if (!(ctx.player() instanceof ServerPlayer sp)) return;
+                    ClassNet.handleMetalmancerAction(sp, payload.actionId());
+                }
+        );
+
+        // C2S: open metalmancer inventory
+        registrar.playToServer(
+                ClassPayloads.C2S_OpenMetalmancerInventory.TYPE,
+                ClassPayloads.C2S_OpenMetalmancerInventory.STREAM_CODEC,
+                (payload, ctx) -> {
+                    if (!(ctx.player() instanceof ServerPlayer sp)) return;
+                    ClassNet.openMetalmancerInventory(sp);
+                }
+        );
+
+        // C2S: selector data
+        registrar.playToServer(
+                ClassPayloads.C2S_RequestSelectorData.TYPE,
+                ClassPayloads.C2S_RequestSelectorData.STREAM_CODEC,
+                (payload, ctx) -> {
+                    if (!(ctx.player() instanceof ServerPlayer sp)) return;
+                    ctx.reply(new ClassPayloads.S2C_SelectorData(
+                            Objects.requireNonNullElse(ClassNbtUtil.getClassId(sp), ClassKeys.CLASS_ID_NONE),
+                            ClassNet.getSelectableClasses(sp)
+                    ));
+                }
+        );
+
+        // C2S: select class
+        registrar.playToServer(
+                ClassPayloads.C2S_SelectClass.TYPE,
+                ClassPayloads.C2S_SelectClass.STREAM_CODEC,
+                (payload, ctx) -> {
+                    if (!(ctx.player() instanceof ServerPlayer sp)) return;
+
+                    String requested = payload.classId();
+                    String normalized = ClassNet.normalizeRequestedClass(sp, requested);
+
+                    ClassNet.applySelectedClass(sp, normalized);
+
+                    String now = Objects.requireNonNullElse(ClassNbtUtil.getClassId(sp), ClassKeys.CLASS_ID_NONE);
+                    ctx.reply(new ClassPayloads.S2C_SelectResult(true, "Class selected: " + now, now));
+
+                    // Also push updated selector data (nice UX)
+                    ctx.reply(new ClassPayloads.S2C_SelectorData(now, ClassNet.getSelectableClasses(sp)));
+                }
+        );
+
+        // S2C: selector screen data (client-only screen handled via dispatch)
+        registrar.playToClient(
+                ClassPayloads.S2C_SelectorData.TYPE,
+                ClassPayloads.S2C_SelectorData.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() ->
+                        ClientNetworkDispatch.dispatch("onClassSelectorData", payload)
+                )
+        );
+
+        // S2C: selection result (client-only screen handled via dispatch)
+        registrar.playToClient(
+                ClassPayloads.S2C_SelectResult.TYPE,
+                ClassPayloads.S2C_SelectResult.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() ->
+                        ClientNetworkDispatch.dispatch("onClassSelectorResult", payload)
+                )
+        );
+
+        /* ===================== REGION LOOK ===================== */
+
+        registrar.playToClient(
+                RegionLookPayload.TYPE,
+                RegionLookPayload.STREAM_CODEC,
+                RegionLookClientPayloadHandler::handle
+        );
+
+        registrar.playToServer(
+                RegionLookAllRequestPayload.TYPE,
+                RegionLookAllRequestPayload.STREAM_CODEC,
+                RegionLookAllServerPayloadHandler::handle
+        );
+
+        registrar.playToClient(
+                RegionLookAllPayload.TYPE,
+                RegionLookAllPayload.STREAM_CODEC,
+                RegionLookAllClientPayloadHandler::handle
         );
     }
 
-    /* ===================== CLIENT SEND HELPERS ===================== */
-
     /**
-     * Client-only convenience: send one payload to server.
-     * Uses NeoForge's ClientPacketDistributor so you don't need to wrap packets manually.
+     * Common-safe. On client it will send; on dedicated server it becomes a safe no-op.
+     * (You should only call this from client code, but this makes mistakes non-fatal.)
      */
-    public static void sendToServer(net.minecraft.network.protocol.common.custom.CustomPacketPayload payload) {
-        ClientPacketDistributor.sendToServer(payload);
+    public static void sendToServer(CustomPacketPayload payload) {
+        ClientNetworkDispatch.sendToServer(payload);
     }
 
-    /**
-     * Overload for batching (optional).
-     */
-    public static void sendToServer(net.minecraft.network.protocol.common.custom.CustomPacketPayload payload,
-                                    net.minecraft.network.protocol.common.custom.CustomPacketPayload... more) {
-        ClientPacketDistributor.sendToServer(payload, more);
+    public static void sendTo(ServerPlayer player, CustomPacketPayload payload) {
+        PacketDistributor.sendToPlayer(player, payload);
     }
 }

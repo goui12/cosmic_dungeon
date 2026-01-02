@@ -1,3 +1,4 @@
+// file: src/main/java/net/goui/cosmicdungeon/block/ModBlocks.java
 package net.goui.cosmicdungeon.block;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
@@ -7,9 +8,13 @@ import net.goui.cosmicdungeon.block.amethyst.ColoredBuddingAmethystBlock;
 import net.goui.cosmicdungeon.block.amethyst.ColoredClusterBlock;
 import net.goui.cosmicdungeon.block.amethyst.LitColoredAmethystBlock;
 import net.goui.cosmicdungeon.block.custom.ChickenBlock;
+import net.goui.cosmicdungeon.block.custom.ClassSelectorBlock;
 import net.goui.cosmicdungeon.block.custom.CosmicMobSpawnerBlock;
+import net.goui.cosmicdungeon.block.custom.CosmicRiftPlacerBlock;
+import net.goui.cosmicdungeon.block.custom.CosmicRiftTileBlock;
 import net.goui.cosmicdungeon.block.custom.InfiniteDispenserBlock;
 import net.goui.cosmicdungeon.block.custom.MagicBlock;
+import net.goui.cosmicdungeon.block.custom.SpectralBloomBlock;
 import net.goui.cosmicdungeon.item.ModItems;
 import net.goui.cosmicdungeon.redstone.rf.RedstoneReceiverBlock;
 import net.goui.cosmicdungeon.redstone.rf.RedstoneTransmitterBlock;
@@ -19,10 +24,10 @@ import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Block;
-import net.goui.cosmicdungeon.block.custom.CosmicRiftPlacerBlock;
-import net.goui.cosmicdungeon.block.custom.CosmicRiftTileBlock;
 import net.minecraft.world.level.block.DropExperienceBlock;
+import net.minecraft.world.level.block.FlowerPotBlock;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 
@@ -60,6 +65,20 @@ public class ModBlocks {
             )
     );
 
+    // ===== Region Look: Ghost block for client-side rendering =====
+    // No BlockItem on purpose: this is a visual-only helper block.
+    public static final DeferredBlock<Block> REGION_GHOST_GLASS = BLOCKS.registerBlock(
+            "region_ghost_glass",
+            (BlockBehaviour.Properties props) -> new Block(
+                    props
+                            .strength(0.3F)
+                            .sound(SoundType.GLASS)
+                            .noCollision()
+                            .isViewBlocking((state, level, pos) -> false)
+                            .mapColor(MapColor.COLOR_LIGHT_BLUE)
+            )
+    );
+
     public static final DeferredBlock<Block> BISMUTH_DEEPSLATE_ORE = BLOCKS.registerBlock(
             "bismuth_deepslate_ore",
             (BlockBehaviour.Properties props) -> new DropExperienceBlock(
@@ -71,14 +90,14 @@ public class ModBlocks {
     public static final DeferredBlock<Block> MAGIC_BLOCK = BLOCKS.registerBlock(
             "magic_block",
             (BlockBehaviour.Properties props) -> new MagicBlock(
-                    props.strength(2f).noLootTable()
+                    props.strength(2f)
             )
     );
 
     public static final DeferredBlock<Block> CHICKEN_BLOCK = BLOCKS.registerBlock(
             "chicken_block",
             (BlockBehaviour.Properties props) -> new ChickenBlock(
-                    props.strength(1.0f).noLootTable().sound(ModSoundTypes.CHICKEN)
+                    props.strength(1.0f).sound(ModSoundTypes.CHICKEN)
             )
     );
 
@@ -89,12 +108,20 @@ public class ModBlocks {
             )
     );
 
+    // ===== Class Selector Block (custom block opens GUI) =====
+    public static final DeferredBlock<Block> CLASS_SELECTOR_BLOCK = BLOCKS.registerBlock(
+            "class_selector_block",
+            (BlockBehaviour.Properties props) -> new ClassSelectorBlock(
+                    props.strength(0.8F).sound(SoundType.WOOD).noOcclusion()
+            )
+    );
+
     public static final DeferredBlock<Block> INFINITE_DISPENSER = BLOCKS.registerBlock(
             "infinite_dispenser",
             (BlockBehaviour.Properties props) -> new InfiniteDispenserBlock(
                     props
                             .mapColor(MapColor.STONE)
-                            .strength(3.5F) // same ballpark as vanilla dispenser
+                            .strength(3.5F)
                             .requiresCorrectToolForDrops()
                             .sound(SoundType.STONE)
             )
@@ -118,42 +145,126 @@ public class ModBlocks {
                             .mapColor(MapColor.METAL)
                             .strength(0.5F)
                             .sound(SoundType.METAL)
-                            .noOcclusion() // small chip, non-full cube
+                            .noOcclusion()
             )
     );
 
-
     /* ---------- Cosmic Mob Spawner ---------- */
 
-    // Example: ModBlocks registration snippet
     public static final DeferredBlock<Block> COSMIC_MOB_SPAWNER = BLOCKS.registerBlock(
             "cosmic_mob_spawner",
             (BlockBehaviour.Properties props) -> new CosmicMobSpawnerBlock(
                     props
-                            .strength(5.0F, 1200.0F)          // spawner-like
-                            .requiresCorrectToolForDrops()    // important for “minecraftish” breaking
+                            .strength(3.5F, 6.0F)
+                            .requiresCorrectToolForDrops()
                             .sound(SoundType.SPAWNER)
-                            .noLootTable()
                             .lightLevel(state -> 8)
                             .noOcclusion()
             )
     );
 
-// ===== Cosmic Rift (placer + single tile) =====
+    /* ---------- Cosmic Rift (placer + single tile) ---------- */
 
     public static final DeferredBlock<Block> COSMIC_RIFT = BLOCKS.registerBlock(
             "cosmic_rift",
             (BlockBehaviour.Properties props) -> new CosmicRiftPlacerBlock(
-                    props.strength(1.0F).noOcclusion().noLootTable().sound(SoundType.BASALT)
+                    props.strength(1.0F).noOcclusion().sound(SoundType.BASALT)
             )
     );
 
     private static BlockBehaviour.Properties riftTileProps(BlockBehaviour.Properties props) {
-        return props.strength(1.0F).noOcclusion().noLootTable().sound(SoundType.BASALT);
+        return props.strength(1.0F).noOcclusion().sound(SoundType.BASALT);
     }
 
     public static final DeferredBlock<Block> COSMIC_RIFT_TILE =
             BLOCKS.registerBlock("cosmic_rift_tile", p -> new CosmicRiftTileBlock(riftTileProps(p)));
+
+    /* ---------- Dungeon 1: Spectral Blooms ---------- */
+
+    private static BlockBehaviour.Properties spectralBloomProps(BlockBehaviour.Properties props) {
+        return props
+                .noCollision()
+                .instabreak()
+                .sound(SoundType.GRASS)
+                .noOcclusion()
+                .lightLevel(s -> 15); // legendary glow
+    }
+
+    public static final DeferredBlock<Block> BLOOM_OF_QUIET_ASSURANCE = BLOCKS.registerBlock(
+            "bloom_of_quiet_assurance",
+            props -> new SpectralBloomBlock(spectralBloomProps(props))
+    );
+
+    public static final DeferredBlock<Block> BLOOM_OF_GENTLE_LIES = BLOCKS.registerBlock(
+            "bloom_of_gentle_lies",
+            props -> new SpectralBloomBlock(spectralBloomProps(props))
+    );
+
+    public static final DeferredBlock<Block> BLOOM_OF_WANING_MERCY = BLOCKS.registerBlock(
+            "bloom_of_waning_mercy",
+            props -> new SpectralBloomBlock(spectralBloomProps(props))
+    );
+
+    public static final DeferredBlock<Block> BLOOM_OF_CONSTRICTING_BONDS = BLOCKS.registerBlock(
+            "bloom_of_constricting_bonds",
+            props -> new SpectralBloomBlock(spectralBloomProps(props))
+    );
+
+    public static final DeferredBlock<Block> BLOOM_OF_UNSPOKEN_RESIGNATION = BLOCKS.registerBlock(
+            "bloom_of_unspoken_resignation",
+            props -> new SpectralBloomBlock(spectralBloomProps(props))
+    );
+
+    public static final DeferredBlock<Block> BLOOM_OF_ELEGY = BLOCKS.registerBlock(
+            "bloom_of_elegy",
+            props -> new SpectralBloomBlock(spectralBloomProps(props))
+    );
+
+    // POTTED variants (no item). These MUST exist for flower pots.
+    public static final DeferredBlock<Block> POTTED_BLOOM_OF_QUIET_ASSURANCE = BLOCKS.registerBlock(
+            "potted_bloom_of_quiet_assurance",
+            props -> new FlowerPotBlock(() -> (FlowerPotBlock) Blocks.FLOWER_POT, BLOOM_OF_QUIET_ASSURANCE, props)
+    );
+
+    public static final DeferredBlock<Block> POTTED_BLOOM_OF_GENTLE_LIES = BLOCKS.registerBlock(
+            "potted_bloom_of_gentle_lies",
+            props -> new FlowerPotBlock(() -> (FlowerPotBlock) Blocks.FLOWER_POT, BLOOM_OF_GENTLE_LIES, props)
+    );
+
+    public static final DeferredBlock<Block> POTTED_BLOOM_OF_WANING_MERCY = BLOCKS.registerBlock(
+            "potted_bloom_of_waning_merry",
+            props -> new FlowerPotBlock(() -> (FlowerPotBlock) Blocks.FLOWER_POT, BLOOM_OF_WANING_MERCY, props)
+    );
+
+    public static final DeferredBlock<Block> POTTED_BLOOM_OF_CONSTRICTING_BONDS = BLOCKS.registerBlock(
+            "potted_bloom_of_constricting_bonds",
+            props -> new FlowerPotBlock(() -> (FlowerPotBlock) Blocks.FLOWER_POT, BLOOM_OF_CONSTRICTING_BONDS, props)
+    );
+
+    public static final DeferredBlock<Block> POTTED_BLOOM_OF_UNSPOKEN_RESIGNATION = BLOCKS.registerBlock(
+            "potted_bloom_of_unspoken_resignation",
+            props -> new FlowerPotBlock(() -> (FlowerPotBlock) Blocks.FLOWER_POT, BLOOM_OF_UNSPOKEN_RESIGNATION, props)
+    );
+
+    public static final DeferredBlock<Block> POTTED_BLOOM_OF_ELEGY = BLOCKS.registerBlock(
+            "potted_bloom_of_elegy",
+            props -> new FlowerPotBlock(() -> (FlowerPotBlock) Blocks.FLOWER_POT, BLOOM_OF_ELEGY, props)
+    );
+
+    /**
+     * Call this during common setup (enqueueWork) AFTER registries are ready.
+     * This registers the plant -> potted mapping in the vanilla flower pot.
+     */
+    public static void registerFlowerPots() {
+        FlowerPotBlock pot = (FlowerPotBlock) Blocks.FLOWER_POT;
+
+        pot.addPlant(BLOOM_OF_QUIET_ASSURANCE.getId(), POTTED_BLOOM_OF_QUIET_ASSURANCE);
+        pot.addPlant(BLOOM_OF_GENTLE_LIES.getId(), POTTED_BLOOM_OF_GENTLE_LIES);
+        pot.addPlant(BLOOM_OF_WANING_MERCY.getId(), POTTED_BLOOM_OF_WANING_MERCY);
+        pot.addPlant(BLOOM_OF_CONSTRICTING_BONDS.getId(), POTTED_BLOOM_OF_CONSTRICTING_BONDS);
+        pot.addPlant(BLOOM_OF_UNSPOKEN_RESIGNATION.getId(), POTTED_BLOOM_OF_UNSPOKEN_RESIGNATION);
+        pot.addPlant(BLOOM_OF_ELEGY.getId(), POTTED_BLOOM_OF_ELEGY);
+    }
 
     /* ---------- Colored Amethyst: 6 variants × 16 colors ---------- */
 
@@ -179,7 +290,6 @@ public class ModBlocks {
 
     public static final Map<DyeColor, AmethystItemSet> AMETHYST_ITEMS = new EnumMap<>(DyeColor.class);
 
-    // NEW: lit cube variants
     public static final Map<DyeColor, DeferredBlock<? extends Block>> LIT_AMETHYST_BLOCKS =
             new EnumMap<>(DyeColor.class);
     public static final Map<DyeColor, DeferredItem<BlockItem>> LIT_AMETHYST_ITEMS =
@@ -196,7 +306,6 @@ public class ModBlocks {
             final String largePath   = "large_amethyst_bud_" + color;
             final String clusterPath = "amethyst_cluster_" + color;
 
-            // --- Blocks ---
             DeferredBlock<Block> block = BLOCKS.registerBlock(
                     solidPath,
                     (BlockBehaviour.Properties props) -> new ColoredAmethystBlock(
@@ -204,35 +313,35 @@ public class ModBlocks {
                                     .strength(1.5F, 6.0F)
                                     .requiresCorrectToolForDrops()
                                     .sound(SoundType.AMETHYST)
-                                    .noLootTable()
+
                     )
             );
 
             DeferredBlock<Block> budSmall = BLOCKS.registerBlock(
                     smallPath,
                     props -> ColoredBudBlock.small(
-                            props.noOcclusion().strength(1.0F).sound(SoundType.AMETHYST).noLootTable().lightLevel(s -> 1)
+                            props.noOcclusion().strength(1.0F).sound(SoundType.AMETHYST).lightLevel(s -> 1)
                     )
             );
 
             DeferredBlock<Block> budMedium = BLOCKS.registerBlock(
                     mediumPath,
                     props -> ColoredBudBlock.medium(
-                            props.noOcclusion().strength(1.0F).sound(SoundType.AMETHYST).noLootTable().lightLevel(s -> 2)
+                            props.noOcclusion().strength(1.0F).sound(SoundType.AMETHYST).lightLevel(s -> 2)
                     )
             );
 
             DeferredBlock<Block> budLarge = BLOCKS.registerBlock(
                     largePath,
                     props -> ColoredBudBlock.large(
-                            props.noOcclusion().strength(1.0F).sound(SoundType.AMETHYST).noLootTable().lightLevel(s -> 4)
+                            props.noOcclusion().strength(1.0F).sound(SoundType.AMETHYST).lightLevel(s -> 4)
                     )
             );
 
             DeferredBlock<Block> cluster = BLOCKS.registerBlock(
                     clusterPath,
                     props -> new ColoredClusterBlock(
-                            props.noOcclusion().strength(1.0F).sound(SoundType.AMETHYST).noLootTable().lightLevel(s -> 5)
+                            props.noOcclusion().strength(1.0F).sound(SoundType.AMETHYST).lightLevel(s -> 5)
                     )
             );
 
@@ -243,7 +352,7 @@ public class ModBlocks {
                                     .randomTicks()
                                     .strength(1.5F)
                                     .sound(SoundType.AMETHYST)
-                                    .noLootTable(),
+                            ,
                             budSmall::get, budMedium::get, budLarge::get, cluster::get,
                             5
                     )
@@ -251,7 +360,6 @@ public class ModBlocks {
 
             AMETHYST.put(dye, new AmethystSet(block, budding, budSmall, budMedium, budLarge, cluster));
 
-            // --- BlockItems ---
             AMETHYST_ITEMS.put(dye, new AmethystItemSet(
                     ModItems.ITEMS.registerSimpleBlockItem(solidPath,   block),
                     ModItems.ITEMS.registerSimpleBlockItem(buddingPath, budding),
@@ -261,7 +369,6 @@ public class ModBlocks {
                     ModItems.ITEMS.registerSimpleBlockItem(clusterPath, cluster)
             ));
 
-            // --- Lit cube variant ---
             String litPath = "lit_amethyst_block_" + color;
             DeferredBlock<Block> litBlock = BLOCKS.registerBlock(
                     litPath,
@@ -271,7 +378,7 @@ public class ModBlocks {
                                     .strength(1.5F, 6.0F)
                                     .requiresCorrectToolForDrops()
                                     .sound(SoundType.AMETHYST)
-                                    .noLootTable()
+
                                     .lightLevel(s -> 15)
                     )
             );
@@ -316,4 +423,22 @@ public class ModBlocks {
             ModItems.ITEMS.registerSimpleBlockItem("cosmic_mob_spawner", COSMIC_MOB_SPAWNER);
     public static final DeferredItem<BlockItem> COSMIC_RIFT_ITEM =
             ModItems.ITEMS.registerSimpleBlockItem("cosmic_rift", COSMIC_RIFT);
+
+    // ===== BlockItem for Class Selector Block =====
+    public static final DeferredItem<BlockItem> CLASS_SELECTOR_BLOCK_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("class_selector_block", CLASS_SELECTOR_BLOCK);
+
+    /* ---------- BlockItems for Spectral Blooms (for creative tab & pickup) ---------- */
+    public static final DeferredItem<BlockItem> BLOOM_OF_QUIET_ASSURANCE_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("bloom_of_quiet_assurance", BLOOM_OF_QUIET_ASSURANCE);
+    public static final DeferredItem<BlockItem> BLOOM_OF_GENTLE_LIES_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("bloom_of_gentle_lies", BLOOM_OF_GENTLE_LIES);
+    public static final DeferredItem<BlockItem> BLOOM_OF_WANING_MERCY_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("bloom_of_waning_mercy", BLOOM_OF_WANING_MERCY);
+    public static final DeferredItem<BlockItem> BLOOM_OF_CONSTRICTING_BONDS_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("bloom_of_constricting_bonds", BLOOM_OF_CONSTRICTING_BONDS);
+    public static final DeferredItem<BlockItem> BLOOM_OF_UNSPOKEN_RESIGNATION_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("bloom_of_unspoken_resignation", BLOOM_OF_UNSPOKEN_RESIGNATION);
+    public static final DeferredItem<BlockItem> BLOOM_OF_ELEGY_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("bloom_of_elegy", BLOOM_OF_ELEGY);
 }

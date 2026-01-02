@@ -53,4 +53,5 @@ public class CosmicMobSpawnerBlock extends Block implements EntityBlock {
         }
         return super.triggerEvent(state, level, pos, id, param);
     }
+
 }

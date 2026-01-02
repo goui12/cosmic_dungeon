@@ -55,7 +55,7 @@ public class ModCreativeModeTabs {
                                 output.accept(ModItems.SEISMIC_CORE_FRAGMENT);
                                 output.accept(ModItems.SHATTERED_REALITY_OF_SHUDDE_MELL);
                                 output.accept(ModItems.BROODING_FORK);
-
+                                output.accept(ModItems.REGION_WAND);
                                 // Dungeon blocks
                                 output.accept(ModBlocks.CHICKEN_BLOCK);
                                 output.accept(ModBlocks.PILE_OF_BOOKS);
@@ -66,6 +66,13 @@ public class ModCreativeModeTabs {
                                 // RF system
                                 output.accept(ModBlocks.REDSTONE_TRANSMITTER);
                                 output.accept(ModBlocks.REDSTONE_RECEIVER);
+                                output.accept(ModBlocks.BLOOM_OF_QUIET_ASSURANCE_ITEM.get());
+                                output.accept(ModBlocks.BLOOM_OF_GENTLE_LIES_ITEM.get());
+                                output.accept(ModBlocks.BLOOM_OF_WANING_MERCY_ITEM.get());
+                                output.accept(ModBlocks.BLOOM_OF_CONSTRICTING_BONDS_ITEM.get());
+                                output.accept(ModBlocks.BLOOM_OF_UNSPOKEN_RESIGNATION_ITEM.get());
+                                output.accept(ModBlocks.BLOOM_OF_ELEGY_ITEM.get());
+
                             }).build());
 
 

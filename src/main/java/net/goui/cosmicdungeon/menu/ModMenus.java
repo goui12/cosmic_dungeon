@@ -1,3 +1,4 @@
+// file: src/main/java/net/goui/cosmicdungeon/menu/ModMenus.java
 package net.goui.cosmicdungeon.menu;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
@@ -20,6 +21,11 @@ public final class ModMenus {
     public static final Supplier<MenuType<ExtraInventoryMenu>> METALMANCER_INVENTORY =
             MENUS.register("metalmancer_inventory",
                     () -> new MenuType<>(ExtraInventoryMenu::new, FeatureFlags.DEFAULT_FLAGS));
+
+    /** Class selector screen/menu */
+    public static final Supplier<MenuType<ClassSelectorMenu>> CLASS_SELECTOR =
+            MENUS.register("class_selector",
+                    () -> new MenuType<>(ClassSelectorMenu::new, FeatureFlags.DEFAULT_FLAGS));
 
     public static void register(IEventBus modBus) {
         MENUS.register(modBus);

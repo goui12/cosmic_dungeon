@@ -1,13 +1,15 @@
+// file: src/main/java/net/goui/cosmicdungeon/block/custom/CosmicRiftPlacerBlock.java
 package net.goui.cosmicdungeon.block.custom;
 
 import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import net.goui.cosmicdungeon.auth.Authority;
 import net.goui.cosmicdungeon.block.ModBlocks;
 import net.goui.cosmicdungeon.rift.RiftRegistryData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -19,11 +21,6 @@ import javax.annotation.Nullable;
 
 public class CosmicRiftPlacerBlock extends Block {
 
-    /**
-     * Caps:
-     * - If cavity width or length exceeds 64 => fallback to 4x4
-     * - If cavity count exceeds 4096 (64x64) => fallback to 4x4
-     */
     private static final int MAX_DIM = 64;
     private static final int MAX_TILES = MAX_DIM * MAX_DIM;
 
@@ -38,36 +35,36 @@ public class CosmicRiftPlacerBlock extends Block {
 
         if (level.isClientSide()) return;
 
+        // Permission gate: only Developer can place/form rifts
+        if (placer instanceof ServerPlayer sp && !Authority.isDeveloper(sp)) {
+            level.removeBlock(pos, false);
+            sp.displayClientMessage(Component.literal("You do not have permission to place a Cosmic Rift."), true);
+            return;
+        }
+
         FillResult cavity = findConnectedReplaceableCavity(level, pos);
 
-        if (!cavity.valid || cavity.tooLarge) {
+        // Note: your FillResult never sets valid=false. Keep behavior as you had it:
+        // "too large" => fallback 4x4, otherwise stamp full cavity.
+        if (cavity.tooLarge) {
             if (placer instanceof Player player) {
-                if (!cavity.valid) {
-                    player.displayClientMessage(
-                            Component.literal("Not enough space to form the Cosmic Rift."),
-                            true
-                    );
-                } else {
-                    player.displayClientMessage(
-                            Component.literal("Space is either wider or longer than 64 tiles. Defaulting to 4x4."),
-                            true
-                    );
-                }
+                player.displayClientMessage(
+                        Component.literal("Space is either wider or longer than 64 tiles. Defaulting to 4x4."),
+                        true
+                );
             }
-
             stampFallback4x4(level, pos);
             return;
         }
 
-        // Place tiles
         BlockState tile = ModBlocks.COSMIC_RIFT_TILE.get().defaultBlockState();
         for (long packed : cavity.positions) {
             BlockPos p = BlockPos.of(packed);
             level.setBlock(p, tile, Block.UPDATE_ALL);
         }
 
-        // Register server portal identity + children mapping
         if (level instanceof ServerLevel sl) {
+            // Anchor is the min corner in the cavity bounding box, same as your original.
             BlockPos anchor = new BlockPos(cavity.minX, pos.getY(), cavity.minZ);
             RiftRegistryData.get(sl).registerPortalWithTiles(anchor, cavity.positions);
         }
@@ -76,7 +73,7 @@ public class CosmicRiftPlacerBlock extends Block {
     private static void stampFallback4x4(Level level, BlockPos placerPos) {
         BlockPos origin = placerPos.offset(-1, 0, -1);
 
-        // Pre-check all 16 spots except the placer itself (which we will replace anyway)
+        // Validate area
         for (int row = 0; row < 4; row++) {
             for (int col = 0; col < 4; col++) {
                 BlockPos p = origin.offset(col, 0, row);
@@ -106,10 +103,6 @@ public class CosmicRiftPlacerBlock extends Block {
         }
     }
 
-    /**
-     * Flood fill of connected replaceable blocks on the same Y level as start.
-     * Replaceable includes air and other replaceables; we also treat the placer position as fillable.
-     */
     private static FillResult findConnectedReplaceableCavity(Level level, BlockPos start) {
         final int y = start.getY();
 
@@ -167,13 +160,11 @@ public class CosmicRiftPlacerBlock extends Block {
     }
 
     private static final class FillResult {
-        final boolean valid;
         final boolean tooLarge;
         final LongOpenHashSet positions;
         final int minX, maxX, minZ, maxZ;
 
-        private FillResult(boolean valid, boolean tooLarge, LongOpenHashSet positions, int minX, int maxX, int minZ, int maxZ) {
-            this.valid = valid;
+        private FillResult(boolean tooLarge, LongOpenHashSet positions, int minX, int maxX, int minZ, int maxZ) {
             this.tooLarge = tooLarge;
             this.positions = positions;
             this.minX = minX; this.maxX = maxX;
@@ -181,11 +172,11 @@ public class CosmicRiftPlacerBlock extends Block {
         }
 
         static FillResult ok(LongOpenHashSet positions, int minX, int maxX, int minZ, int maxZ) {
-            return new FillResult(true, false, positions, minX, maxX, minZ, maxZ);
+            return new FillResult(false, positions, minX, maxX, minZ, maxZ);
         }
 
         static FillResult tooLarge(LongOpenHashSet positions, int minX, int maxX, int minZ, int maxZ) {
-            return new FillResult(true, true, positions, minX, maxX, minZ, maxZ);
+            return new FillResult(true, positions, minX, maxX, minZ, maxZ);
         }
     }
 }

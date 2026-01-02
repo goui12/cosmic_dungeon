@@ -2,6 +2,7 @@ package net.goui.cosmicdungeon.redstone.rf;
 
 import io.netty.buffer.ByteBuf;
 import net.goui.cosmicdungeon.CosmicDungeonMod;
+import net.goui.cosmicdungeon.auth.AccessPolicy;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -70,49 +71,60 @@ public final class RfNet {
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 
-
     /* =====================  REGISTRATION (COMMON)  ===================== */
 
     @SubscribeEvent
     public static void register(final RegisterPayloadHandlersEvent event) {
-        // Use your mod id registrar channel; keep version/channel as you had it.
         final var registrar = event.registrar("1");
 
-        // C2S: set Hz
+        // C2S: set Hz (MUST be server-authoritative + permission-checked)
         registrar.playToServer(
                 C2S_SetHz.TYPE,
                 C2S_SetHz.STREAM_CODEC,
                 (payload, ctx) -> {
                     if (!(ctx.player() instanceof ServerPlayer sp)) return;
-                    final ServerLevel level = (ServerLevel) sp.level();
+                    if (!AccessPolicy.isDeveloper(sp)) {
+                        // silent drop = secure + no spam; DeviceAccessEvents already gives UX on click
+                        return;
+                    }
+
+                    if (!(sp.level() instanceof ServerLevel level)) return;
+
+                    // Optional proximity check: prevents remote edits from across the world.
+                    if (sp.blockPosition().distManhattan(payload.pos()) > 16) return;
+
                     final BlockEntity be = level.getBlockEntity(payload.pos());
 
-                    // Route to the correct BE; BE setters will broadcast to ALL tracking players.
                     if (be instanceof RedstoneTransmitterBE t) {
                         t.setHz(level, payload.hz());
                     } else if (be instanceof RedstoneReceiverBE r) {
                         r.setHz(level, payload.hz());
                     }
-
-                    // IMPORTANT: do NOT reply only to the sender here.
-                    // The BE#setHz() calls RfNet.broadcastHz(...) which sends to everyone tracking.
                 }
         );
 
-        // C2S: request current Hz (for GUI open)
+        // C2S: request current Hz (GUI open)
         registrar.playToServer(
                 C2S_RequestHz.TYPE,
                 C2S_RequestHz.STREAM_CODEC,
                 (payload, ctx) -> {
                     if (!(ctx.player() instanceof ServerPlayer sp)) return;
-                    final ServerLevel level = (ServerLevel) sp.level();
+
+                    // Viewing could be allowed for everyone, but your requirement is:
+                    // "dungeoneer shouldn't open GUI" → so lock this too.
+                    if (!AccessPolicy.isDeveloper(sp)) return;
+
+                    if (!(sp.level() instanceof ServerLevel level)) return;
+
+                    // Optional proximity check
+                    if (sp.blockPosition().distManhattan(payload.pos()) > 16) return;
+
                     final BlockEntity be = level.getBlockEntity(payload.pos());
 
                     int hz = -1; // -1 means "NULL" for client display
                     if (be instanceof RedstoneTransmitterBE t) hz = t.getHz();
                     else if (be instanceof RedstoneReceiverBE r) hz = r.getHz();
 
-                    // Reply ONLY to requester with the authoritative value.
                     ctx.reply(new S2C_HzSync(payload.pos(), hz));
                 }
         );
@@ -122,7 +134,6 @@ public final class RfNet {
                 S2C_HzSync.TYPE,
                 S2C_HzSync.STREAM_CODEC,
                 (payload, ctx) -> {
-                    // cache and update GUI live
                     RfNet.ClientCache.putHz(payload.pos(), payload.hz());
                     HzConfigScreen.onServerHz(payload.pos(), payload.hz());
                 }

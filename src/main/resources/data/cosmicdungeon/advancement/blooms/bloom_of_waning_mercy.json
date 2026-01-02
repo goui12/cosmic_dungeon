@@ -1,0 +1,17 @@
+{
+  "parent": "cosmicdungeon:blooms",
+  "display": {
+    "icon": { "id": "cosmicdungeon:bloom_of_waning_mercy" },
+    "title": { "translate": "advancements.cosmicdungeon.blooms.waning_mercy.title" },
+    "description": { "translate": "advancements.cosmicdungeon.blooms.waning_mercy.desc" },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false,
+    "x": 2,
+    "y": 0
+  },
+  "criteria": {
+    "shared": { "trigger": "minecraft:impossible" }
+  }
+}

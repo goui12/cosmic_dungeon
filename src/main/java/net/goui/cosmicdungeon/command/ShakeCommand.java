@@ -6,7 +6,8 @@ import net.goui.cosmicdungeon.network.ShakeScreenPayload;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.PacketDistributor;
+
+import static net.goui.cosmicdungeon.network.ModNetwork.sendTo;
 
 public final class ShakeCommand {
     private ShakeCommand() {}
@@ -17,7 +18,7 @@ public final class ShakeCommand {
                         .requires(source -> source.getEntity() instanceof ServerPlayer)
                         .executes(ctx -> {
                             ServerPlayer player = ctx.getSource().getPlayerOrException();
-                            PacketDistributor.sendToPlayer(player, new ShakeScreenPayload());
+                            sendTo(player, new ShakeScreenPayload());
                             return 1;
                         })
         );

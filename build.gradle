@@ -52,31 +52,44 @@ neoForge {
             client()
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
+
         server {
             server()
             programArgument '--nogui'
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
+
         gameTestServer {
             type = "gameTestServer"
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
-        // DATA: keep a clean dir so it won't load jars from run/mods
-        data {
+
+        // Client datagen -> assets/*
+        clientData {
             clientData()
             gameDirectory = project.file('run-data')
             programArguments.addAll '--mod', project.mod_id,
                     '--all',
-                    '--output', file('src/generated/resources/').getAbsolutePath(),
+                    '--output', file('src/generated/resources_client/').getAbsolutePath(),
                     '--existing', file('src/main/resources/').getAbsolutePath()
         }
 
-        // Applies to all run configs above
+        // Server datagen -> data/*
+        serverData {
+            serverData()
+            gameDirectory = project.file('run-data')
+            programArguments.addAll '--mod', project.mod_id,
+                    '--all',
+                    '--output', file('src/generated/resources_server/').getAbsolutePath(),
+                    '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+
         configureEach {
             systemProperty 'forge.logging.markers', 'REGISTRIES'
             logLevel = org.slf4j.event.Level.DEBUG
         }
     }
+
 
     mods {
         "${mod_id}" {
@@ -91,9 +104,9 @@ neoForge {
 sourceSets {
     main {
         resources {
-            // include data-gen output
-            srcDir 'src/generated/resources'
-            // do NOT let datagen overwrite your hand-authored shield models
+            srcDir 'src/generated/resources_client'
+            srcDir 'src/generated/resources_server'
+
             exclude 'assets/cosmicdungeon/models/item/vowkeeper.json'
             exclude 'assets/cosmicdungeon/models/item/aegis_of_truth.json'
             exclude 'assets/cosmicdungeon/models/item/reinforced_iron_slab.json'
@@ -103,6 +116,7 @@ sourceSets {
         }
     }
 }
+
 
 // Keep-first on duplicate resources
 tasks.processResources {

@@ -126,9 +126,26 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     @Override
     public void onLoad() {
         super.onLoad();
+
+        // Client: rebuild preview spawner state (rendered mob) whenever we load or receive updates.
         if (this.level != null && this.level.isClientSide()) {
             this.clientSpawnerDirty = true;
             ensureClientPreviewConfigured();
+            return;
+        }
+
+        // Server: after chunk load, re-apply the configured entity type into the BaseSpawner.
+        // We persist the chosen mob as a string (SpawnerEntityId) for commands/UI; BaseSpawner needs the actual EntityType.
+        if (this.level instanceof net.minecraft.server.level.ServerLevel sl) {
+            if (this.spawnerEntityId != null && !this.spawnerEntityId.equalsIgnoreCase("none")) {
+                ResourceLocation key = ResourceLocation.tryParse(this.spawnerEntityId);
+                if (key == null) return;
+
+                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getOptional(key).orElse(null);
+                if (type == null) return;
+
+                this.spawner.setEntityId(type, sl, sl.getRandom(), this.worldPosition);
+            }
         }
     }
 
@@ -206,20 +223,65 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     protected void loadAdditional(net.minecraft.world.level.storage.ValueInput input) {
         super.loadAdditional(input);
 
+        // Persisted "label" used by commands + serverTick guard + client preview bootstrap.
         this.spawnerEntityId = input.getString("SpawnerEntityId").orElse("none");
         this.clientSpawnerDirty = true;
 
-        Level level = this.level;
-        if (level != null) {
-            this.spawner.load(level, this.worldPosition, input);
-        }
+        // IMPORTANT:
+        // During chunk deserialization the BlockEntity may not yet have a non-null level.
+        // BaseSpawner#load requires a Level, so calling it here can silently skip (or crash) and your spawner resets after restart.
+        //
+        // Instead, we restore the numeric spawner parameters directly from the same keys BaseSpawner saves,
+        // and we re-apply the EntityType in onLoad() once the BE has a ServerLevel.
+        restoreSpawnerFieldsFromSavedNbt(input);
     }
 
     @Override
     protected void saveAdditional(net.minecraft.world.level.storage.ValueOutput output) {
-        output.putString("SpawnerEntityId", this.spawnerEntityId);
-        this.spawner.save(output);
         super.saveAdditional(output);
+
+        // Our own persisted field (commands/UI + serverTick guard)
+        output.putString("SpawnerEntityId", this.spawnerEntityId);
+
+        // Vanilla/BaseSpawner persisted fields (Delay/MinSpawnDelay/MaxSpawnDelay/SpawnCount/etc + SpawnData)
+        this.spawner.save(output);
+    }
+
+
+
+    /**
+     * Restores the numeric spawner knobs directly from the saved keys that {@link BaseSpawner#save} writes.
+     *
+     * We do this because {@link BaseSpawner#load} requires a non-null Level, but during chunk load
+     * this BlockEntity's level can still be null.
+     */
+    private void restoreSpawnerFieldsFromSavedNbt(ValueInput input) {
+        // If keys are missing, keep whatever the spawner currently has (vanilla defaults).
+        setIntRaw(F_SPAWN_DELAY, input.getInt("Delay").orElse(getIntRaw(F_SPAWN_DELAY)));
+        setIntRaw(F_MIN_SPAWN_DELAY, input.getInt("MinSpawnDelay").orElse(getIntRaw(F_MIN_SPAWN_DELAY)));
+        setIntRaw(F_MAX_SPAWN_DELAY, input.getInt("MaxSpawnDelay").orElse(getIntRaw(F_MAX_SPAWN_DELAY)));
+        setIntRaw(F_SPAWN_COUNT, input.getInt("SpawnCount").orElse(getIntRaw(F_SPAWN_COUNT)));
+        setIntRaw(F_MAX_NEARBY_ENTITIES, input.getInt("MaxNearbyEntities").orElse(getIntRaw(F_MAX_NEARBY_ENTITIES)));
+        setIntRaw(F_REQUIRED_PLAYER_RANGE, input.getInt("RequiredPlayerRange").orElse(getIntRaw(F_REQUIRED_PLAYER_RANGE)));
+        setIntRaw(F_SPAWN_RANGE, input.getInt("SpawnRange").orElse(getIntRaw(F_SPAWN_RANGE)));
+    }
+
+    private int getIntRaw(Field field) {
+        try {
+            return (int) field.get(this.spawner);
+        } catch (Exception e) {
+            LOGGER.warn("Failed to read spawner field {}", field.getName(), e);
+            return 0;
+        }
+    }
+
+    /** Sets a BaseSpawner int field without marking the chunk dirty (used only while loading). */
+    private void setIntRaw(Field field, int value) {
+        try {
+            field.setInt(this.spawner, value);
+        } catch (Exception e) {
+            LOGGER.warn("Failed to set spawner field {}", field.getName(), e);
+        }
     }
 
     // ----------------------------

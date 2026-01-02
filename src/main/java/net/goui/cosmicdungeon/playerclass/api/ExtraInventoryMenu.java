@@ -1,3 +1,4 @@
+// file: src/main/java/net/goui/cosmicdungeon/playerclass/api/ExtraInventoryMenu.java
 package net.goui.cosmicdungeon.playerclass.api;
 
 import net.goui.cosmicdungeon.menu.ModMenus;
@@ -69,7 +70,6 @@ public class ExtraInventoryMenu extends AbstractCraftingMenu {
 
     // Player main/hotbar split (within PLAYER_START..PLAYER_END_EXCL)
     private static final int PLAYER_MAIN_COUNT = 27;
-    private static final int PLAYER_HOTBAR_COUNT = 9;
 
     public ExtraInventoryMenu(int id, Inventory inv) {
         // NOTE: AbstractCraftingMenu(type, containerId, gridW, gridH)
@@ -123,6 +123,7 @@ public class ExtraInventoryMenu extends AbstractCraftingMenu {
     @Override
     public void slotsChanged(Container changed) {
         super.slotsChanged(changed);
+
         // Compute result server-side using a local copy of CraftingMenu's helper
         if (changed == this.craftSlots && this.player.level() instanceof ServerLevel sl) {
             updateCraftingResult(this, sl, this.player, this.craftSlots, this.resultSlots, null);
@@ -133,28 +134,30 @@ public class ExtraInventoryMenu extends AbstractCraftingMenu {
     public void removed(Player player) {
         super.removed(player);
 
-        // return crafting inputs like vanilla
+        // Vanilla: return crafting inputs (server-side only)
         if (!player.level().isClientSide()) {
             this.clearContainer(player, this.craftSlots);
+
+            // Persist your 3 extra slots (server-side only; client must never write PD)
+            NonNullList<ItemStack> list = NonNullList.withSize(extra.getContainerSize(), ItemStack.EMPTY);
+            for (int i = 0; i < extra.getContainerSize(); i++) {
+                list.set(i, extra.getItem(i));
+            }
+
+            TagValueOutput out = TagValueOutput.createWithoutContext(ProblemReporter.DISCARDING);
+            ContainerHelper.saveAllItems(out, list);
+            CompoundTag extraTag = out.buildResult();
+
+            CompoundTag root = player.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).copy();
+            root.put(ClassData.KEY_EXTRA, extraTag);
+            player.getPersistentData().put(ClassData.ROOT_TAG, root);
         }
-
-        // persist your 3 extra slots
-        NonNullList<ItemStack> list = NonNullList.withSize(extra.getContainerSize(), ItemStack.EMPTY);
-        for (int i = 0; i < extra.getContainerSize(); i++) {
-            list.set(i, extra.getItem(i));
-        }
-
-        var out = TagValueOutput.createWithoutContext(ProblemReporter.DISCARDING);
-        ContainerHelper.saveAllItems(out, list);
-        CompoundTag extraTag = out.buildResult();
-
-        CompoundTag root = player.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).copy();
-        root.put(ClassData.KEY_EXTRA, extraTag);
-        player.getPersistentData().put(ClassData.ROOT_TAG, root);
     }
 
     @Override
-    public boolean stillValid(Player p) { return true; }
+    public boolean stillValid(Player p) {
+        return true;
+    }
 
     @Override
     public ItemStack quickMoveStack(Player p, int idx) {
@@ -377,7 +380,7 @@ public class ExtraInventoryMenu extends AbstractCraftingMenu {
     }
 
     // Give SatchelApi a safe way to reach the live extra slots while the menu is open.
-    public net.minecraft.world.SimpleContainer getExtraContainer() {
+    public SimpleContainer getExtraContainer() {
         return this.extra;
     }
 

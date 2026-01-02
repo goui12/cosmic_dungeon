@@ -1,12 +1,33 @@
 {
 
+  "advancements.cosmicdungeon.blooms.root.title": "Spectral Blooms",
+  "advancements.cosmicdungeon.blooms.root.desc": "Six petals. Six truths. Shared by every witness.",
+  "menu.cosmicdungeon.class_selector": "Choose Your Class",
+  "advancements.cosmicdungeon.blooms.quiet_assurance.title": "Bloom of Quiet Assurance",
+  "advancements.cosmicdungeon.blooms.quiet_assurance.desc": "When one is taken, all remember.",
+
+  "advancements.cosmicdungeon.blooms.gentle_lies.title": "Bloom of Gentle Lies",
+  "advancements.cosmicdungeon.blooms.gentle_lies.desc": "A comfort that doesn’t survive daylight.",
+
+  "advancements.cosmicdungeon.blooms.waning_mercy.title": "Bloom of Waning Mercy",
+  "advancements.cosmicdungeon.blooms.waning_mercy.desc": "Mercy offered — and withdrawn.",
+
+  "advancements.cosmicdungeon.blooms.constricting_bonds.title": "Bloom of Constricting Bonds",
+  "advancements.cosmicdungeon.blooms.constricting_bonds.desc": "Promises tighten when you pull away.",
+
+  "advancements.cosmicdungeon.blooms.unspoken_resignation.title": "Bloom of Unspoken Resignation",
+  "advancements.cosmicdungeon.blooms.unspoken_resignation.desc": "Acceptance without forgiveness.",
+
+  "advancements.cosmicdungeon.blooms.elegy.title": "Bloom of Elegy",
+  "advancements.cosmicdungeon.blooms.elegy.desc": "A farewell written in living color.",
+
   "item.cosmicdungeon.bent_rod_of_melted_shavings": "Bent Rod of Melted Shavings",
   "tooltip.cosmicdungeon.bent_rod_of_melted_shavings.codex": "New Weapon \u2014 Staff (Bent Rod of Melted Shavings)",
   "tooltip.cosmicdungeon.bent_rod_of_melted_shavings.definition": "A rough rod of fused scrap and cooled slag, humming faintly in time with its bearer.",
   "tooltip.cosmicdungeon.bent_rod_of_melted_shavings.lore": "The first crude conductor of resonance, binding a bronze golem through patience and imperfection.",
 
   "hud.cosmicdungeon.spawner": "Spawner: %s",
-
+  "item.cosmicdungeon.region_wand": "Region Wand",
 
   "item.cosmicdungeon.erzfuehler": "Erzfühler",
   "tooltip.cosmicdungeon.erzfuehler.codex": "New Weapon \u2014 Staff (Erzfühler) (Ore-Feeler)",
@@ -19,6 +40,21 @@
   "entity.cosmicdungeon.stone_warden": "Stone Warden",
   "item.cosmicdungeon.stone_warden_spawn_egg": "Stone Warden Spawn Egg",
 
+  "block.cosmicdungeon.bloom_of_quiet_assurance": "Bloom of Quiet Assurance",
+  "block.cosmicdungeon.bloom_of_gentle_lies": "Bloom of Gentle Lies",
+  "block.cosmicdungeon.bloom_of_waning_mercy": "Bloom of Waning Mercy",
+  "block.cosmicdungeon.bloom_of_constricting_bonds": "Bloom of Constricting Bonds",
+  "block.cosmicdungeon.bloom_of_unspoken_resignation": "Bloom of Unspoken Resignation",
+  "block.cosmicdungeon.bloom_of_elegy": "Bloom of Elegy",
+
+  "block.cosmicdungeon.potted_bloom_of_quiet_assurance": "Potted Bloom of Quiet Assurance",
+  "block.cosmicdungeon.potted_bloom_of_gentle_lies": "Potted Bloom of Gentle Lies",
+  "block.cosmicdungeon.potted_bloom_of_waning_mercy": "Potted Bloom of Waning Mercy",
+  "block.cosmicdungeon.potted_bloom_of_constricting_bonds": "Potted Bloom of Constricting Bonds",
+  "block.cosmicdungeon.potted_bloom_of_unspoken_resignation": "Potted Bloom of Unspoken Resignation",
+  "block.cosmicdungeon.potted_bloom_of_elegy": "Potted Bloom of Elegy",
+
+
   "block.cosmicdungeon.cosmic_mob_spawner": "Cosmic Mob Spawner",
   "tooltip.cosmicdungeon.cosmic_mob_spawner": "Spawns mobs in any light level.",
   "block.cosmicdungeon.cosmic_rift": "Cosmic Rift",
@@ -26,7 +62,7 @@
   "block.cosmicdungeon.rift_top2": "Rift Tile (Top 2)",
   "block.cosmicdungeon.rift_top3": "Rift Tile (Top 3)",
   "block.cosmicdungeon.rift_top4": "Rift Tile (Top 4)",
-
+  "block.cosmicdungeon.region_ghost_glass": "Region Ghost Glass",
   "block.cosmicdungeon.rift_mid_top1": "Rift Tile (Mid Top 1)",
   "block.cosmicdungeon.rift_mid_top2": "Rift Tile (Mid Top 2)",
   "block.cosmicdungeon.rift_mid_top3": "Rift Tile (Mid Top 3)",

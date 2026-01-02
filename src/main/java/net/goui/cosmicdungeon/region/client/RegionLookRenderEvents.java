@@ -1,0 +1,122 @@
+// file: src/main/java/net/goui/cosmicdungeon/region/client/RegionLookRenderEvents.java
+package net.goui.cosmicdungeon.region.client;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.goui.cosmicdungeon.CosmicDungeonMod;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.ShapeRenderer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+
+@EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID, value = Dist.CLIENT)
+public final class RegionLookRenderEvents {
+    private RegionLookRenderEvents() {}
+
+    @SubscribeEvent
+    public static void onRenderLevel(RenderLevelStageEvent.AfterTranslucentBlocks event) {
+        if (!RegionLookClient.isEnabled() || !RegionLookClient.isInSameDimensionAsClient()) {
+            return;
+        }
+
+        Minecraft mc = Minecraft.getInstance();
+        Level level = mc.level;
+        if (level == null) return;
+
+        var regions = RegionLookClient.getRegionsToRender();
+        if (regions.isEmpty()) return;
+
+        PoseStack poseStack = event.getPoseStack();
+        MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
+
+        var camPos = mc.gameRenderer.getMainCamera().getPosition();
+        poseStack.pushPose();
+        poseStack.translate(-camPos.x, -camPos.y, -camPos.z);
+
+        var consumer = bufferSource.getBuffer(RenderType.lines());
+
+        for (var r : regions) {
+            AABB box = makeBox(r.min(), r.max());
+
+            float rf, gf, bf, af;
+
+            if (RegionLookClient.isSingleEnabled()) {
+                // Keep classic single-region look (black)
+                rf = 0.0F; gf = 0.0F; bf = 0.0F; af = 0.85F;
+
+                // If you want single mode to ALSO be colored by name, replace the 4 lines above with:
+                // int rgb = stableColorFromName(r.name());
+                // rf = ((rgb >> 16) & 0xFF) / 255.0F;
+                // gf = ((rgb >> 8) & 0xFF) / 255.0F;
+                // bf = (rgb & 0xFF) / 255.0F;
+                // af = 0.90F;
+            } else {
+                // All-mode: stable per-region color
+                int rgb = stableColorFromName(r.name());
+                rf = ((rgb >> 16) & 0xFF) / 255.0F;
+                gf = ((rgb >> 8) & 0xFF) / 255.0F;
+                bf = (rgb & 0xFF) / 255.0F;
+                af = 0.85F;
+            }
+
+            ShapeRenderer.renderLineBox(poseStack.last(), consumer, box, rf, gf, bf, af);
+        }
+
+        poseStack.popPose();
+        bufferSource.endLastBatch();
+    }
+
+    private static AABB makeBox(net.minecraft.core.BlockPos min, net.minecraft.core.BlockPos max) {
+        int minX = Math.min(min.getX(), max.getX());
+        int minY = Math.min(min.getY(), max.getY());
+        int minZ = Math.min(min.getZ(), max.getZ());
+        int maxX = Math.max(min.getX(), max.getX());
+        int maxY = Math.max(min.getY(), max.getY());
+        int maxZ = Math.max(min.getZ(), max.getZ());
+        return new AABB(minX, minY, minZ, maxX + 1, maxY + 1, maxZ + 1);
+    }
+
+    /**
+     * Cheap stable color: hash -> HSV-ish spread -> RGB
+     * (No allocations, deterministic across sessions)
+     */
+    private static int stableColorFromName(String name) {
+        int h = (name == null ? 0 : name.hashCode());
+        float hue = ((h & 0x7FFFFFFF) % 360) / 360.0F;
+        float sat = 0.75F;
+        float val = 0.95F;
+        return hsvToRgb(hue, sat, val);
+    }
+
+    // Minimal HSV->RGB (0..1 floats), returns 0xRRGGBB
+    private static int hsvToRgb(float h, float s, float v) {
+        float hh = (h - Mth.floor(h)) * 6.0F;
+        int i = (int) hh;
+        float f = hh - i;
+        float p = v * (1.0F - s);
+        float q = v * (1.0F - f * s);
+        float t = v * (1.0F - (1.0F - f) * s);
+
+        float r, g, b;
+        switch (i) {
+            case 0 -> { r = v; g = t; b = p; }
+            case 1 -> { r = q; g = v; b = p; }
+            case 2 -> { r = p; g = v; b = t; }
+            case 3 -> { r = p; g = q; b = v; }
+            case 4 -> { r = t; g = p; b = v; }
+            default -> { r = v; g = p; b = q; }
+        }
+
+        int ri = Mth.clamp((int)(r * 255.0F), 0, 255);
+        int gi = Mth.clamp((int)(g * 255.0F), 0, 255);
+        int bi = Mth.clamp((int)(b * 255.0F), 0, 255);
+
+        return (ri << 16) | (gi << 8) | bi;
+    }
+}

@@ -1,0 +1,15 @@
+{
+  "parent": "cosmicdungeon:root",
+  "display": {
+    "icon": { "id": "cosmicdungeon:bloom_of_quiet_assurance" },
+    "title": { "translate": "advancements.cosmicdungeon.blooms.root.title" },
+    "description": { "translate": "advancements.cosmicdungeon.blooms.root.desc" },
+    "frame": "task",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "tick": { "trigger": "minecraft:tick" }
+  }
+}

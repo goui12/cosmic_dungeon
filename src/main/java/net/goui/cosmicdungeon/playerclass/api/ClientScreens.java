@@ -1,10 +1,10 @@
+// file: src/main/java/net/goui/cosmicdungeon/playerclass/api/ClientScreens.java
 package net.goui.cosmicdungeon.playerclass.api;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
-import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -26,12 +26,8 @@ public final class ClientScreens {
         // Only override vanilla inventory if the player is currently Metalmancer
         if (!ClassNbtUtil.isMetalmancer(p)) return;
 
-        // cancel vanilla inv and ask the server to open our menu
+        // Cancel vanilla inv and ask the server to open our menu
         e.setCanceled(true);
-
-        var conn = mc.getConnection();
-        if (conn == null) return;
-
-        conn.send(new ServerboundCustomPayloadPacket(new ClassNet.C2S_OpenMetalmancerInventory()));
+        ClassNet.requestOpenMetalmancerInventory();
     }
 }

@@ -1,0 +1,15 @@
+{
+  "parent": "cosmicdungeon:root",
+  "display": {
+    "icon": { "id": "cosmicdungeon:tidal_mace" },
+    "title": { "translate": "Monster Compendium" },
+    "description": { "translate": "Can you kill them all?" },
+    "frame": "task",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "tick": { "trigger": "minecraft:tick" }
+  }
+}
