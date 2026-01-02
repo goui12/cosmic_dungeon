@@ -20,12 +20,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.Objects;
 
@@ -33,7 +31,7 @@ import java.util.Objects;
 public final class ClassNet {
     private ClassNet() {}
 
-    /* ---------- ids & keys ---------- */
+    /* ---------- ids ---------- */
 
     private static ResourceLocation id(String path) {
         return ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, path);
@@ -58,20 +56,12 @@ public final class ClassNet {
     }
 
     private static CompoundTag readServerExtraNbt(ServerPlayer sp) {
-        // Always read from the same place ExtraInventoryMenu / SatchelApi expect:
-        // cosmicdungeon -> extra
         CompoundTag root = sp.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG);
         return root.getCompound(ClassData.KEY_EXTRA).orElseGet(CompoundTag::new);
     }
 
     /* ---------- seeding (server-side) ---------- */
 
-    /**
-     * Seeds the player's 3-slot extra-hotbar under cosmicdungeon.extra in PD.
-     * - Only fills empty slots (no overwrite).
-     * - Puts cosmicdungeon:satchel_of_samples in slot index 1 (the "second" slot).
-     * Uses ValueInput/ValueOutput (via TagValue* factories) to match 1.21.9/1.21.10 signatures.
-     */
     public static void seedMetalmancerExtra(ServerPlayer sp) {
         CompoundTag root     = sp.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG);
         CompoundTag extraTag = root.getCompound(ClassData.KEY_EXTRA).orElseGet(CompoundTag::new);
@@ -92,9 +82,6 @@ public final class ClassNet {
         ContainerHelper.saveAllItems(out, list);
         CompoundTag newExtra = out.buildResult();
 
-
-
-
         CompoundTag newRoot = sp.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).copy();
         newRoot.put(ClassData.KEY_EXTRA, newExtra);
         sp.getPersistentData().put(ClassData.ROOT_TAG, newRoot);
@@ -105,18 +92,23 @@ public final class ClassNet {
     public static void enableMetalmancer(ServerPlayer sp) {
         setActiveClass(sp, ClassKeys.CLASS_ID_METALMANCER);
         seedMetalmancerExtra(sp);
+        PacketDistributor.sendToPlayer(sp, new S2C_ClassSync(ClassKeys.CLASS_ID_METALMANCER, readServerExtraNbt(sp)));
     }
+
     public static void disableMetalmancer(ServerPlayer sp) {
         setActiveClass(sp, ClassKeys.CLASS_ID_NONE);
 
-        // remove extra tag from cosmicdungeon root
         CompoundTag pd = sp.getPersistentData();
         CompoundTag root = pd.getCompoundOrEmpty(ClassData.ROOT_TAG).copy();
         root.remove(ClassData.KEY_EXTRA);
         pd.put(ClassData.ROOT_TAG, root);
 
-        // sync to client
         PacketDistributor.sendToPlayer(sp, new S2C_ClassSync(ClassKeys.CLASS_ID_NONE, new CompoundTag()));
+    }
+
+    public static void sendFullTo(ServerPlayer sp) {
+        String cls = getActiveClass(sp);
+        PacketDistributor.sendToPlayer(sp, new S2C_ClassSync(cls, readServerExtraNbt(sp)));
     }
 
     /* ---------- payloads ---------- */
@@ -163,22 +155,18 @@ public final class ClassNet {
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 
-    /* ---------- registration (SERVER-SAFE ONLY) ---------- */
+    /* ---------- registration (runs on BOTH sides; safe) ---------- */
 
     @SubscribeEvent
     public static void register(final RegisterPayloadHandlersEvent e) {
         var reg = e.registrar(CosmicDungeonMod.MOD_ID);
-// Clientbound sync payload MUST be registered on BOTH sides.
-// The handler only ever runs on the receiving side (client).
+
+        // Register S2C type on both sides. Handler will only run client-side (because it's playToClient).
         reg.playToClient(S2C_ClassSync.TYPE, S2C_ClassSync.STREAM_CODEC, (pkt, ctx) -> {
-            // No client-only classes here. Use Player.
             var player = ctx.player();
             if (player == null) return;
 
-            // Keep it simple: mirror the class id + extra tag into PD.
-            // (This runs on client when received.)
             String cls = Objects.requireNonNullElse(pkt.classId(), ClassKeys.CLASS_ID_NONE);
-
             setActiveClass(player, cls);
 
             CompoundTag pd = player.getPersistentData();
@@ -193,14 +181,12 @@ public final class ClassNet {
             pd.put(ClassData.ROOT_TAG, root);
         });
 
-        // Set/clear class (C2S)
+        // C2S: Set/clear class
         reg.playToServer(C2S_SetClass.TYPE, C2S_SetClass.STREAM_CODEC, (pkt, ctx) -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
 
             String cls = Objects.requireNonNullElse(pkt.classId(), ClassKeys.CLASS_ID_NONE);
-            if (!ClassKeys.CLASS_ID_METALMANCER.equals(cls)) {
-                cls = ClassKeys.CLASS_ID_NONE;
-            }
+            if (!ClassKeys.CLASS_ID_METALMANCER.equals(cls)) cls = ClassKeys.CLASS_ID_NONE;
 
             setActiveClass(sp, cls);
 
@@ -216,37 +202,83 @@ public final class ClassNet {
             PacketDistributor.sendToPlayer(sp, new S2C_ClassSync(cls, readServerExtraNbt(sp)));
         });
 
-        // Actions while Metalmancer (C2S)
+        // C2S: Metalmancer actions
         reg.playToServer(C2S_Action.TYPE, C2S_Action.STREAM_CODEC, (pkt, ctx) -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
             if (!isMetalmancer(sp)) return;
             MetalmancerActions.handleAction(sp, pkt.actionId());
         });
 
-        // Client asks for current class + extra (C2S)
+        // C2S: Client asks for current class + extra
         reg.playToServer(C2S_RequestClass.TYPE, C2S_RequestClass.STREAM_CODEC, (pkt, ctx) -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
             String cls = getActiveClass(sp);
             PacketDistributor.sendToPlayer(sp, new S2C_ClassSync(cls, readServerExtraNbt(sp)));
         });
 
-        // Open MM inventory (C2S)
+        // C2S: Open MM inventory
         reg.playToServer(C2S_OpenMetalmancerInventory.TYPE, C2S_OpenMetalmancerInventory.STREAM_CODEC, (pkt, ctx) -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
             if (!isMetalmancer(sp)) return;
             ExtraInventoryMenu.open(sp);
         });
-
-        // NOTE:
-        // The S2C handler registration is intentionally moved to a Dist.CLIENT-only subscriber:
-        // ClassNetClientSubscriber (see new file below).
     }
 
+    /* ---------- client send helpers (safe: implemented in nested client-only class) ---------- */
 
-    /* ---------- server helper ---------- */
+    public static void requestOpenMetalmancerInventory() {
+        Client.sendOpenMetalmancerInventory();
+    }
 
-    public static void sendFullTo(ServerPlayer sp) {
-        String cls = getActiveClass(sp);
-        PacketDistributor.sendToPlayer(sp, new S2C_ClassSync(cls, readServerExtraNbt(sp)));
+    public static void sendActionToServer(String actionId) {
+        Client.sendAction(actionId);
+    }
+
+    public static void requestSetClass(String classId) {
+        Client.sendSetClass(classId);
+    }
+
+    public static void requestClassSync() {
+        Client.sendRequestClass();
+    }
+
+    /**
+     * This nested class only loads when those methods are called on the client.
+     * Dedicated servers will not touch it.
+     */
+    private static final class Client {
+        private Client() {}
+
+        private static void sendOpenMetalmancerInventory() {
+            sendToServer(new C2S_OpenMetalmancerInventory());
+        }
+
+        private static void sendAction(String actionId) {
+            if (actionId == null) return;
+            sendToServer(new C2S_Action(actionId));
+        }
+
+        private static void sendSetClass(String classId) {
+            sendToServer(new C2S_SetClass(classId));
+        }
+
+        private static void sendRequestClass() {
+            sendToServer(new C2S_RequestClass());
+        }
+
+        private static void sendToServer(CustomPacketPayload payload) {
+            // No PacketDistributor.sendToServer in this NeoForge version.
+            // Use the vanilla connection packet.
+            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+            if (mc == null) return;
+
+            net.minecraft.client.multiplayer.ClientPacketListener listener = mc.getConnection();
+            if (listener == null) return;
+
+            net.minecraft.network.Connection connection = listener.getConnection();
+            if (connection == null) return;
+
+            connection.send(new net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket(payload));
+        }
     }
 }
