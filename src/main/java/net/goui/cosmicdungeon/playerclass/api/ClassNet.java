@@ -168,6 +168,30 @@ public final class ClassNet {
     @SubscribeEvent
     public static void register(final RegisterPayloadHandlersEvent e) {
         var reg = e.registrar(CosmicDungeonMod.MOD_ID);
+// Clientbound sync payload MUST be registered on BOTH sides.
+// The handler only ever runs on the receiving side (client).
+        reg.playToClient(S2C_ClassSync.TYPE, S2C_ClassSync.STREAM_CODEC, (pkt, ctx) -> {
+            // No client-only classes here. Use Player.
+            var player = ctx.player();
+            if (player == null) return;
+
+            // Keep it simple: mirror the class id + extra tag into PD.
+            // (This runs on client when received.)
+            String cls = Objects.requireNonNullElse(pkt.classId(), ClassKeys.CLASS_ID_NONE);
+
+            setActiveClass(player, cls);
+
+            CompoundTag pd = player.getPersistentData();
+            CompoundTag root = pd.getCompoundOrEmpty(ClassData.ROOT_TAG).copy();
+
+            if (ClassKeys.CLASS_ID_METALMANCER.equals(cls)) {
+                root.put(ClassData.KEY_EXTRA, pkt.extraNbt() == null ? new CompoundTag() : pkt.extraNbt());
+            } else {
+                root.remove(ClassData.KEY_EXTRA);
+            }
+
+            pd.put(ClassData.ROOT_TAG, root);
+        });
 
         // Set/clear class (C2S)
         reg.playToServer(C2S_SetClass.TYPE, C2S_SetClass.STREAM_CODEC, (pkt, ctx) -> {

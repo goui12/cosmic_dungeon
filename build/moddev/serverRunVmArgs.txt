@@ -1,0 +1,8 @@
+--add-opens
+java.base/java.lang.invoke=ALL-UNNAMED
+--add-exports
+jdk.naming.dns/com.sun.jndi.dns=java.naming
+-Dlog4j2.configurationFile=C:\\Users\\Cameron\\Documents\\mod_development\\cosmic_dungeon\\build\\moddev\\serverLog4j2.xml
+-Djava.net.preferIPv6Addresses=system
+-Dneoforge.enabledGameTestNamespaces=cosmicdungeon
+-Dforge.logging.markers=REGISTRIES
