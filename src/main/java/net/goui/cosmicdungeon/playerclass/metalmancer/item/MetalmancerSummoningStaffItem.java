@@ -13,6 +13,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
+import net.goui.cosmicdungeon.playerclass.api.ClassNet;
 
 import java.util.function.Consumer;
 
@@ -107,7 +110,11 @@ public class MetalmancerSummoningStaffItem extends MetalmancerOnlyItem {
                     ? MetalmancerActions.ACTION_STAFF_REFORGE
                     : MetalmancerActions.ACTION_STAFF_SUMMON;
 
-            ClassNet.sendActionToServer(actionId);
+            var conn = Minecraft.getInstance().getConnection();
+            if (conn != null) {
+                conn.send(new ServerboundCustomPayloadPacket(new ClassNet.C2S_Action(actionId)));
+            }
+
         }
 
         // Let the swing / use animation play and mark as handled

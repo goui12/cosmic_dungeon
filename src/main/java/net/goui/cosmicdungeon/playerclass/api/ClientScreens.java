@@ -4,6 +4,7 @@ import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -18,7 +19,8 @@ public final class ClientScreens {
         Screen s = e.getScreen();
         if (!(s instanceof InventoryScreen)) return;
 
-        var p = Minecraft.getInstance().player;
+        var mc = Minecraft.getInstance();
+        var p = mc.player;
         if (p == null) return;
 
         // Only override vanilla inventory if the player is currently Metalmancer
@@ -26,6 +28,10 @@ public final class ClientScreens {
 
         // cancel vanilla inv and ask the server to open our menu
         e.setCanceled(true);
-        ClassNet.requestOpenMetalmancerInventory();
+
+        var conn = mc.getConnection();
+        if (conn == null) return;
+
+        conn.send(new ServerboundCustomPayloadPacket(new ClassNet.C2S_OpenMetalmancerInventory()));
     }
 }
