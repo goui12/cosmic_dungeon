@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "cosmicdungeon:block/cosmic_rift_tile"
+    }
+  }
+}

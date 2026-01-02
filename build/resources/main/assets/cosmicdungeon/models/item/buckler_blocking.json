@@ -1,0 +1,49 @@
+{
+  "parent": "cosmicdungeon:item/buckler_item",
+  "textures": {
+    "0": "cosmicdungeon:item/buckler_base",
+    "particle": "cosmicdungeon:item/buckler_base"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [20, -2, -70],
+      "translation": [-2, -4.5, 4.25]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [-90, -90, -180],
+      "translation": [-4, -2, 1]
+    },
+    "firstperson_righthand": {
+      "translation": [11, -9, 1]
+    },
+    "firstperson_lefthand": {
+      "translation": [11, -9, 1]
+    },
+    "ground": {
+      "rotation": [51, 0, 114]
+    },
+    "gui": {
+      "rotation": [136, 28, 19],
+      "translation": [3.25, -3.5, 0],
+      "scale": [0.9, 0.9, 0.9]
+    },
+    "fixed": {
+      "translation": [0, -1, 7],
+      "scale": [0.95, 0.95, 0.95]
+    }
+  },
+  "groups": [
+    {
+      "name": "plate",
+      "origin": [0, 0, 0],
+      "color": 0,
+      "children": [0, 1, 2, 3, 4, 5, 6, 7, 8]
+    },
+    {
+      "name": "handle",
+      "origin": [0, 0, 0],
+      "color": 0,
+      "children": [9, 10, 11, 12]
+    }
+  ]
+}

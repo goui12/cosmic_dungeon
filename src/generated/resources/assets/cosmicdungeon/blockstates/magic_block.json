@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "cosmicdungeon:block/magic_block"
+    }
+  }
+}

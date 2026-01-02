@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld_mace",
+  "textures": {
+    "layer0": "cosmicdungeon:item/abyssal_mace"
+  }
+}

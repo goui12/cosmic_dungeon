@@ -1,0 +1,26 @@
+{
+  "chicken_sound_1": { "category": "block", "sounds": ["cosmicdungeon:chicken_sound_1"] },
+  "chicken_sound_2": { "category": "block", "sounds": ["cosmicdungeon:chicken_sound_2"] },
+  "chicken_sound_3": { "category": "block", "sounds": ["cosmicdungeon:chicken_sound_3"] },
+  "chicken_sound_4": { "category": "block", "sounds": ["cosmicdungeon:chicken_sound_4"] },
+  "chicken_sound_5": { "category": "block", "sounds": ["cosmicdungeon:chicken_sound_5"] },
+  "chicken_sound_6": { "category": "block", "sounds": ["cosmicdungeon:chicken_sound_6"] },
+  "chicken_sound_7": { "category": "block", "sounds": ["cosmicdungeon:chicken_sound_7"] },
+  "blowdart": { "category": "hostile", "sounds": ["cosmicdungeon:blowdart"] },
+
+  "rift_hum": {
+    "category": "ambient",
+    "sounds": [
+      { "name": "cosmicdungeon:rift_hum", "stream": false }
+    ] },
+  "rift_scream": {
+    "category": "ambient",
+    "sounds": [
+      { "name": "cosmicdungeon:rift_scream", "stream": false }
+    ] },
+  "rift_teleport": {
+    "category": "ambient",
+    "sounds": [
+      { "name": "cosmicdungeon:rift_teleport", "stream": false }
+    ] }
+}
