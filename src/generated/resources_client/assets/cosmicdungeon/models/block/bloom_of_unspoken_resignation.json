@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cross",
+  "render_type": "cutout",
+  "textures": {
+    "cross": "cosmicdungeon:block/bloom_of_unspoken_resignation",
+    "particle": "cosmicdungeon:block/bloom_of_unspoken_resignation"
+  }
+}

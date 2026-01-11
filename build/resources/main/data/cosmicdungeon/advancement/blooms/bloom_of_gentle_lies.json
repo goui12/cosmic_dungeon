@@ -1,0 +1,17 @@
+{
+  "parent": "cosmicdungeon:blooms",
+  "display": {
+    "icon": { "id": "cosmicdungeon:bloom_of_gentle_lies" },
+    "title": { "translate": "advancements.cosmicdungeon.blooms.gentle_lies.title" },
+    "description": { "translate": "advancements.cosmicdungeon.blooms.gentle_lies.desc" },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false,
+    "x": 0,
+    "y": 0
+  },
+  "criteria": {
+    "shared": { "trigger": "minecraft:impossible" }
+  }
+}

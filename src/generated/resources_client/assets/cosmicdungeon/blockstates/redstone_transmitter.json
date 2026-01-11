@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "powered=false": {
+      "model": "cosmicdungeon:block/redstone_transmitter_off"
+    },
+    "powered=true": {
+      "model": "cosmicdungeon:block/redstone_transmitter_on"
+    }
+  }
+}
