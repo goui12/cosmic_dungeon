@@ -17,26 +17,30 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * Goals:
  * - Zero client-only imports in common sources
- * - Dedicated server jar never tries to load client classes
+ * - Dedicated server never tries to load client classes
  * - Fail closed + log once if something is missing/miswired
  */
 public final class ClientNetworkDispatch {
     private static final Logger LOGGER = LoggerFactory.getLogger("CosmicDungeon|NetDispatch");
 
-    // Must match your actual client class
-    private static final String CLIENT_IMPL = "net.goui.cosmicdungeon.client.network.ModNetworkClient";
+    // MUST match the actual class path present in the client jar.
+    private static final String CLIENT_IMPL = "net.goui.cosmicdungeon.client.ModNetworkClient";
 
     private static final Map<String, Method> METHOD_CACHE = new ConcurrentHashMap<>();
     private static final Map<String, AtomicBoolean> LOG_ONCE = new ConcurrentHashMap<>();
+
+    private static volatile Class<?> CACHED_CLIENT_CLASS;
 
     private ClientNetworkDispatch() {}
 
     public static void dispatch(String methodName, Object payload) {
         if (!isClient()) return;
         if (methodName == null || methodName.isBlank()) return;
+        if (payload == null) return;
 
         try {
-            Method m = METHOD_CACHE.computeIfAbsent("dispatch:" + methodName, k -> findDispatchMethod(methodName));
+            String cacheKey = "dispatch:" + methodName + ":" + payload.getClass().getName();
+            Method m = METHOD_CACHE.computeIfAbsent(cacheKey, k -> findDispatchMethod(methodName, payload.getClass()));
             if (m == null) return;
             m.invoke(null, payload);
         } catch (Throwable t) {
@@ -59,18 +63,60 @@ public final class ClientNetworkDispatch {
 
     private static boolean isClient() {
         try {
-            // NeoForge: FMLEnvironment exposes getDist(), not a public dist field.
             return FMLEnvironment.getDist() == Dist.CLIENT;
         } catch (Throwable ignored) {
             return false;
         }
     }
 
-    private static Method findDispatchMethod(String methodName) {
-        try {
-            Class<?> cls = Class.forName(CLIENT_IMPL, false, ClientNetworkDispatch.class.getClassLoader());
+    private static Class<?> loadClientImplClass() throws ClassNotFoundException {
+        Class<?> cached = CACHED_CLIENT_CLASS;
+        if (cached != null) return cached;
 
-            // Expect: public static void <methodName>(<SomePayloadType>)
+        ClassNotFoundException last = null;
+
+        // 1) Context class loader (often correct under module classloading)
+        ClassLoader ctx = Thread.currentThread().getContextClassLoader();
+        if (ctx != null) {
+            try {
+                Class<?> c = Class.forName(CLIENT_IMPL, false, ctx);
+                CACHED_CLIENT_CLASS = c;
+                return c;
+            } catch (ClassNotFoundException e) {
+                last = e;
+            }
+        }
+
+        // 2) This class's loader
+        ClassLoader own = ClientNetworkDispatch.class.getClassLoader();
+        if (own != null) {
+            try {
+                Class<?> c = Class.forName(CLIENT_IMPL, false, own);
+                CACHED_CLIENT_CLASS = c;
+                return c;
+            } catch (ClassNotFoundException e) {
+                last = e;
+            }
+        }
+
+        // 3) Default loader
+        try {
+            Class<?> c = Class.forName(CLIENT_IMPL);
+            CACHED_CLIENT_CLASS = c;
+            return c;
+        } catch (ClassNotFoundException e) {
+            last = e;
+        }
+
+        throw last;
+    }
+
+    private static Method findDispatchMethod(String methodName, Class<?> payloadClass) {
+        try {
+            Class<?> cls = loadClientImplClass();
+
+            Method best = null;
+
             for (Method m : cls.getDeclaredMethods()) {
                 if (!m.getName().equals(methodName)) continue;
                 if (!Modifier.isStatic(m.getModifiers())) continue;
@@ -78,13 +124,23 @@ public final class ClientNetworkDispatch {
                 Class<?>[] p = m.getParameterTypes();
                 if (p.length != 1) continue;
 
-                m.setAccessible(true);
-                return m;
+                // Must be compatible with the actual payload type being passed.
+                if (!p[0].isAssignableFrom(payloadClass)) continue;
+
+                // Prefer the most specific parameter type (closest to payloadClass)
+                if (best == null || best.getParameterTypes()[0].isAssignableFrom(p[0])) {
+                    best = m;
+                }
             }
 
-            logOnce("missingMethod:" + methodName,
-                    new NoSuchMethodException(CLIENT_IMPL + "#" + methodName + "(payload)"));
-            return null;
+            if (best == null) {
+                logOnce("missingMethod:" + methodName + ":" + payloadClass.getName(),
+                        new NoSuchMethodException(CLIENT_IMPL + "#" + methodName + "(" + payloadClass.getName() + ")"));
+                return null;
+            }
+
+            best.setAccessible(true);
+            return best;
 
         } catch (Throwable t) {
             logOnce("loadClientImplFor:" + methodName, t);
@@ -94,7 +150,7 @@ public final class ClientNetworkDispatch {
 
     private static Method findSendToServerMethod(String ignoredKey) {
         try {
-            Class<?> cls = Class.forName(CLIENT_IMPL, false, ClientNetworkDispatch.class.getClassLoader());
+            Class<?> cls = loadClientImplClass();
             Method m = cls.getDeclaredMethod("sendToServer", CustomPacketPayload.class);
             m.setAccessible(true);
             return m;

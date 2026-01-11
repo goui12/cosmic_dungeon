@@ -1,4 +1,3 @@
-// file: src/main/java/net/goui/cosmicdungeon/network/ModNetwork.java
 package net.goui.cosmicdungeon.network;
 
 import net.goui.cosmicdungeon.auth.AccessPolicy;
@@ -14,20 +13,18 @@ import net.goui.cosmicdungeon.playerclass.api.ClassNet;
 import net.goui.cosmicdungeon.playerclass.api.ClassNbtUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
+import java.util.List;
 import java.util.Objects;
 
 public final class ModNetwork {
     private ModNetwork() {}
 
-    /**
-     * Wired from CosmicDungeonMod constructor with:
-     * modEventBus.addListener(ModNetwork::registerPayloadHandlers)
-     */
     public static void registerPayloadHandlers(final RegisterPayloadHandlersEvent event) {
         final PayloadRegistrar registrar = event.registrar("1");
 
@@ -47,15 +44,36 @@ public final class ModNetwork {
                 RiftPayloads.C2S_RequestRiftConfig.TYPE,
                 RiftPayloads.C2S_RequestRiftConfig.STREAM_CODEC,
                 (payload, ctx) -> {
-                    if (!(ctx.player() instanceof net.minecraft.server.level.ServerPlayer sp)) return;
-                    if (!(sp.level() instanceof net.minecraft.server.level.ServerLevel level)) return;
-
-                    if (!AccessPolicy.isDeveloper(sp)) return;
+                    if (!(ctx.player() instanceof ServerPlayer sp)) return;
+                    if (!(sp.level() instanceof ServerLevel level)) return;
 
                     var data = net.goui.cosmicdungeon.rift.RiftRegistryData.get(level);
                     var clicked = payload.clickedTilePos();
 
-                    if (sp.blockPosition().distManhattan(clicked) > 16) return;
+                    // Always return a config response (never silent), so client UI never "hangs".
+                    List<String> destinations = data.listDestinationNamesSorted();
+
+                    if (!AccessPolicy.isDeveloper(sp)) {
+                        ctx.reply(new RiftPayloads.S2C_RiftConfig(
+                                clicked,
+                                clicked,
+                                "NO PERMISSION",
+                                "",
+                                destinations
+                        ));
+                        return;
+                    }
+
+                    if (sp.blockPosition().distManhattan(clicked) > 16) {
+                        ctx.reply(new RiftPayloads.S2C_RiftConfig(
+                                clicked,
+                                clicked,
+                                "TOO FAR",
+                                "",
+                                destinations
+                        ));
+                        return;
+                    }
 
                     var anchorOpt = data.getAnchorForTile(clicked);
 
@@ -65,7 +83,7 @@ public final class ModNetwork {
                                 clicked,
                                 "",
                                 "",
-                                data.listDestinationNamesSorted()
+                                destinations
                         ));
                         return;
                     }
@@ -81,7 +99,7 @@ public final class ModNetwork {
                             anchor,
                             name == null ? "" : name,
                             dest == null ? "" : dest,
-                            data.listDestinationNamesSorted()
+                            destinations
                     ));
                 }
         );
@@ -90,8 +108,8 @@ public final class ModNetwork {
                 RiftPayloads.C2S_SaveRiftConfig.TYPE,
                 RiftPayloads.C2S_SaveRiftConfig.STREAM_CODEC,
                 (payload, ctx) -> {
-                    if (!(ctx.player() instanceof net.minecraft.server.level.ServerPlayer sp)) return;
-                    if (!(sp.level() instanceof net.minecraft.server.level.ServerLevel level)) return;
+                    if (!(ctx.player() instanceof ServerPlayer sp)) return;
+                    if (!(sp.level() instanceof ServerLevel level)) return;
 
                     if (!AccessPolicy.isDeveloper(sp)) {
                         ctx.reply(new RiftPayloads.S2C_SaveResult(payload.anchorPos(), false, "No permission."));
@@ -127,14 +145,6 @@ public final class ModNetwork {
         );
 
         registrar.playToClient(
-                RiftPayloads.S2C_OpenRiftConfig.TYPE,
-                RiftPayloads.S2C_OpenRiftConfig.STREAM_CODEC,
-                (payload, ctx) -> ctx.enqueueWork(() ->
-                        ClientNetworkDispatch.dispatch("onOpenRiftConfig", payload)
-                )
-        );
-
-        registrar.playToClient(
                 RiftPayloads.S2C_SaveResult.TYPE,
                 RiftPayloads.S2C_SaveResult.STREAM_CODEC,
                 (payload, ctx) -> ctx.enqueueWork(() ->
@@ -144,7 +154,6 @@ public final class ModNetwork {
 
         /* ===================== CLASS (SERVER-AUTHORITATIVE) ===================== */
 
-        // S2C: class sync applies on client (common-safe)
         registrar.playToClient(
                 ClassPayloads.S2C_ClassSync.TYPE,
                 ClassPayloads.S2C_ClassSync.STREAM_CODEC,
@@ -168,7 +177,6 @@ public final class ModNetwork {
                 })
         );
 
-        // C2S: request current class sync
         registrar.playToServer(
                 ClassPayloads.C2S_RequestClass.TYPE,
                 ClassPayloads.C2S_RequestClass.STREAM_CODEC,
@@ -178,7 +186,6 @@ public final class ModNetwork {
                 }
         );
 
-        // C2S: metalmancer action
         registrar.playToServer(
                 ClassPayloads.C2S_Action.TYPE,
                 ClassPayloads.C2S_Action.STREAM_CODEC,
@@ -188,7 +195,6 @@ public final class ModNetwork {
                 }
         );
 
-        // C2S: open metalmancer inventory
         registrar.playToServer(
                 ClassPayloads.C2S_OpenMetalmancerInventory.TYPE,
                 ClassPayloads.C2S_OpenMetalmancerInventory.STREAM_CODEC,
@@ -198,7 +204,6 @@ public final class ModNetwork {
                 }
         );
 
-        // C2S: selector data
         registrar.playToServer(
                 ClassPayloads.C2S_RequestSelectorData.TYPE,
                 ClassPayloads.C2S_RequestSelectorData.STREAM_CODEC,
@@ -211,7 +216,6 @@ public final class ModNetwork {
                 }
         );
 
-        // C2S: select class
         registrar.playToServer(
                 ClassPayloads.C2S_SelectClass.TYPE,
                 ClassPayloads.C2S_SelectClass.STREAM_CODEC,
@@ -225,13 +229,10 @@ public final class ModNetwork {
 
                     String now = Objects.requireNonNullElse(ClassNbtUtil.getClassId(sp), ClassKeys.CLASS_ID_NONE);
                     ctx.reply(new ClassPayloads.S2C_SelectResult(true, "Class selected: " + now, now));
-
-                    // Also push updated selector data (nice UX)
                     ctx.reply(new ClassPayloads.S2C_SelectorData(now, ClassNet.getSelectableClasses(sp)));
                 }
         );
 
-        // S2C: selector screen data (client-only screen handled via dispatch)
         registrar.playToClient(
                 ClassPayloads.S2C_SelectorData.TYPE,
                 ClassPayloads.S2C_SelectorData.STREAM_CODEC,
@@ -240,7 +241,6 @@ public final class ModNetwork {
                 )
         );
 
-        // S2C: selection result (client-only screen handled via dispatch)
         registrar.playToClient(
                 ClassPayloads.S2C_SelectResult.TYPE,
                 ClassPayloads.S2C_SelectResult.STREAM_CODEC,
@@ -270,10 +270,6 @@ public final class ModNetwork {
         );
     }
 
-    /**
-     * Common-safe. On client it will send; on dedicated server it becomes a safe no-op.
-     * (You should only call this from client code, but this makes mistakes non-fatal.)
-     */
     public static void sendToServer(CustomPacketPayload payload) {
         ClientNetworkDispatch.sendToServer(payload);
     }

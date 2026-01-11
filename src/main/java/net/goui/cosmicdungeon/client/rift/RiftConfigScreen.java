@@ -21,15 +21,18 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Server-authoritative config screen:
- *  - Always requests data from server on open
+ * Server-authoritative rift config screen:
+ *  - Requests data from server on open (or uses pendingConfig if it arrived first)
  *  - Never uses client cache
  *  - Save waits for server result
  *
- * Destination is an inline "spinner" dropdown (NOT a new screen).
+ * Destination is an inline dropdown (NOT a new screen).
  */
 public final class RiftConfigScreen extends Screen {
     private static BlockPos pendingClickedTile;
+
+    // If the server config arrives before init() builds widgets, stash it.
+    private static RiftPayloads.S2C_RiftConfig pendingConfig;
 
     public static void openForClickedTile(BlockPos clickedTilePos) {
         pendingClickedTile = clickedTilePos;
@@ -45,7 +48,7 @@ public final class RiftConfigScreen extends Screen {
     private static final int SAVE_X = 38, SAVE_Y = 176, SAVE_W = 78, SAVE_H = 32;
     private static final int CANCEL_X = 124, CANCEL_Y = 176, CANCEL_W = 78, CANCEL_H = 32;
 
-    // Destination box (GUI-relative coords you gave)
+    // Destination box (GUI-relative coords)
     private static final int DEST_BOX_X1 = 20;
     private static final int DEST_BOX_Y1 = 105;
     private static final int DEST_BOX_X2 = 210;
@@ -76,7 +79,6 @@ public final class RiftConfigScreen extends Screen {
 
     private String currentDestination = "";
 
-    // Server-provided destination list
     private final List<String> allDestinations = new ArrayList<>();
     private final List<String> filteredDestinations = new ArrayList<>();
 
@@ -89,10 +91,7 @@ public final class RiftConfigScreen extends Screen {
 
     /**
      * Button that refuses hover while the dropdown is open.
-     * This prevents:
-     *  - highlight animation
-     *  - "not allowed" cursor when inactive
-     *  - any mouse-over affordances
+     * Prevents hover animation / weird cursor affordances behind overlay.
      */
     private final class NoHoverWhenDropdownButton extends Button {
         private NoHoverWhenDropdownButton(int x, int y, int w, int h, Component msg, OnPress onPress) {
@@ -116,7 +115,7 @@ public final class RiftConfigScreen extends Screen {
         this.clickedTile = pendingClickedTile;
         this.anchorPos = pendingClickedTile; // placeholder until server returns
 
-        // Name field
+        // -------- Name field --------
         int fieldH = 20;
         int nameFieldY = guiTop + NAME_Y + (NAME_H - fieldH) / 2;
 
@@ -133,7 +132,7 @@ public final class RiftConfigScreen extends Screen {
         this.nameField.setEditable(false);
         addRenderableWidget(this.nameField);
 
-        // Destination field (inline "spinner")
+        // -------- Destination field + dropdown button --------
         int destFieldH = 20;
         int destBoxX = guiLeft + DEST_BOX_X1;
         int destBoxY = guiTop + DEST_BOX_Y1;
@@ -164,7 +163,6 @@ public final class RiftConfigScreen extends Screen {
         });
         addRenderableWidget(this.destinationField);
 
-        // Dropdown button
         int btnX = destFieldX + destFieldW;
         int btnY = destFieldY;
 
@@ -181,7 +179,7 @@ public final class RiftConfigScreen extends Screen {
                 .build();
         addRenderableWidget(this.destinationDropdownBtn);
 
-        // Save / Cancel (no-hover while dropdown open)
+        // -------- Save / Cancel --------
         this.saveBtn = addRenderableWidget(new NoHoverWhenDropdownButton(
                 guiLeft + SAVE_X, guiTop + SAVE_Y, SAVE_W, SAVE_H,
                 Component.literal("Save"),
@@ -195,7 +193,20 @@ public final class RiftConfigScreen extends Screen {
                 b -> onClose()
         ));
 
-        requestConfigFromServer();
+        // ===== IMPORTANT FIX: discard stale pendingConfig (prevents "ghost" UI state) =====
+        if (pendingConfig != null && (this.clickedTile == null || !this.clickedTile.equals(pendingConfig.clickedTilePos()))) {
+            pendingConfig = null;
+        }
+
+        // If config already arrived, apply it now. Otherwise request it.
+        if (pendingConfig != null
+                && this.clickedTile != null
+                && this.clickedTile.equals(pendingConfig.clickedTilePos())) {
+            applyServerConfig(pendingConfig);
+            pendingConfig = null;
+        } else {
+            requestConfigFromServer();
+        }
     }
 
     private void requestConfigFromServer() {
@@ -226,6 +237,29 @@ public final class RiftConfigScreen extends Screen {
         ModNetwork.sendToServer(new RiftPayloads.C2S_SaveRiftConfig(this.anchorPos, name, dest));
     }
 
+    private void applyServerConfig(RiftPayloads.S2C_RiftConfig payload) {
+        // Called only on main thread.
+        this.loading = false;
+        this.saving = false;
+
+        this.anchorPos = payload.anchorPos();
+
+        String riftName = payload.riftName() == null ? "" : payload.riftName();
+        this.nameField.setValue(riftName);
+        this.nameField.setEditable(true);
+
+        String dest = payload.destinationName() == null ? "" : payload.destinationName();
+        this.currentDestination = dest;
+        this.destinationField.setValue(dest);
+        this.destinationField.setEditable(true);
+
+        this.allDestinations.clear();
+        if (payload.allDestinations() != null) this.allDestinations.addAll(payload.allDestinations());
+
+        rebuildDestinationFilter(this.destinationField.getValue());
+        this.saveBtn.active = true;
+    }
+
     private void rebuildDestinationFilter(String typed) {
         String q = typed == null ? "" : typed.trim().toLowerCase(Locale.ROOT);
 
@@ -233,9 +267,7 @@ public final class RiftConfigScreen extends Screen {
         for (String s : this.allDestinations) {
             if (s == null) continue;
             String sl = s.toLowerCase(Locale.ROOT);
-            if (q.isEmpty() || sl.contains(q)) {
-                this.filteredDestinations.add(s);
-            }
+            if (q.isEmpty() || sl.contains(q)) this.filteredDestinations.add(s);
         }
 
         int maxScroll = Math.max(0, this.filteredDestinations.size() - MAX_ROWS);
@@ -273,16 +305,14 @@ public final class RiftConfigScreen extends Screen {
         g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
                 GUI_TEX, guiLeft, guiTop, 0, 0, GUI_W, GUI_H, GUI_W, GUI_H);
 
-        // Server-authoritative: lock while loading/saving
+        // Lock while loading/saving
         this.nameField.setEditable(!loading && !saving);
         this.destinationField.setEditable(!loading && !saving);
 
-        // Keep buttons logically usable, but prevent hover by isMouseOver override.
-        // Also: while dropdown is open, don’t allow Save click-through by disabling it.
+        // Prevent click-through while dropdown open
         this.saveBtn.active = !loading && !saving && !this.destinationDropdownOpen;
-        this.cancelBtn.active = !this.destinationDropdownOpen; // still clickable when not dropdown
+        this.cancelBtn.active = !this.destinationDropdownOpen;
 
-        // Footer status
         if (saving) {
             g.drawString(this.font, "Saving…", guiLeft + 12, guiTop + GUI_H - 14, 0xFF444444, false);
         } else if (loading) {
@@ -300,21 +330,25 @@ public final class RiftConfigScreen extends Screen {
             int total = this.filteredDestinations.size();
             int visible = Math.min(MAX_ROWS, total);
 
-            g.fill(listX, listY, listX + listW, listY + (visible * ROW_H) + 4, 0xAA000000);
+            // Draw panel even if empty (helps debugging)
+            int listH = (Math.max(1, visible) * ROW_H) + 4;
+            g.fill(listX, listY, listX + listW, listY + listH, 0xAA000000);
 
-            for (int i = 0; i < visible; i++) {
-                int idx = i + this.destinationDropdownScroll;
-                if (idx < 0 || idx >= total) continue;
+            if (total == 0) {
+                g.drawString(this.font, "(no destinations)", listX + 4, listY + 2, 0xFFCCCCCC, false);
+            } else {
+                for (int i = 0; i < visible; i++) {
+                    int idx = i + this.destinationDropdownScroll;
+                    if (idx < 0 || idx >= total) continue;
 
-                int ry1 = listY + 2 + (i * ROW_H);
-                int ry2 = ry1 + ROW_H;
+                    int ry1 = listY + 2 + (i * ROW_H);
+                    int ry2 = ry1 + ROW_H;
 
-                boolean hovered = (mouseX >= listX && mouseX < listX + listW && mouseY >= ry1 && mouseY < ry2);
-                if (hovered) {
-                    g.fill(listX + 1, ry1, listX + listW - 1, ry2, 0xAA333333);
+                    boolean hovered = (mouseX >= listX && mouseX < listX + listW && mouseY >= ry1 && mouseY < ry2);
+                    if (hovered) g.fill(listX + 1, ry1, listX + listW - 1, ry2, 0xAA333333);
+
+                    g.drawString(this.font, this.filteredDestinations.get(idx), listX + 4, ry1 + 2, 0xFFFFFFFF, false);
                 }
-
-                g.drawString(this.font, this.filteredDestinations.get(idx), listX + 4, ry1 + 2, 0xFFFFFFFF, false);
             }
         }
     }
@@ -333,7 +367,7 @@ public final class RiftConfigScreen extends Screen {
         if (button == 0) {
             if (this.destinationDropdownOpen) {
                 // Click inside dropdown selects.
-                if (isMouseOverDropdown(mouseX, mouseY)) {
+                if (isMouseOverDropdown(mouseX, mouseY) && !this.filteredDestinations.isEmpty()) {
                     int listY = dropdownListY();
 
                     int total = this.filteredDestinations.size();
@@ -354,7 +388,7 @@ public final class RiftConfigScreen extends Screen {
                     return true; // eat clicks in panel
                 }
 
-                // Click outside dropdown: close it unless click is on destination box/button.
+                // Click outside dropdown: close it unless click is on destination field/button.
                 if (!isMouseOverDestinationField(mouseX, mouseY) && !this.destinationDropdownBtn.isMouseOver(mouseX, mouseY)) {
                     this.destinationDropdownOpen = false;
                     return true; // eat so Save/Cancel don't get clicked through
@@ -420,36 +454,25 @@ public final class RiftConfigScreen extends Screen {
     public static void onServerConfig(RiftPayloads.S2C_RiftConfig payload) {
         Minecraft mc = Minecraft.getInstance();
 
-        mc.execute(() -> {
-            if (!(mc.screen instanceof RiftConfigScreen)) {
-                RiftConfigScreen.openForClickedTile(payload.clickedTilePos());
-            }
+        // ModNetwork already does ctx.enqueueWork, so we are on main thread here.
+        if (!(mc.screen instanceof RiftConfigScreen)) {
+            pendingConfig = payload;
+            openForClickedTile(payload.clickedTilePos());
+            return;
+        }
 
-            if (!(mc.screen instanceof RiftConfigScreen screen)) return;
-            if (screen.clickedTile == null || !screen.clickedTile.equals(payload.clickedTilePos())) return;
+        RiftConfigScreen screen = (RiftConfigScreen) mc.screen;
 
-            screen.loading = false;
-            screen.saving = false;
+        // If init hasn't built widgets yet, stash.
+        if (screen.nameField == null || screen.destinationField == null || screen.saveBtn == null) {
+            pendingConfig = payload;
+            return;
+        }
 
-            screen.anchorPos = payload.anchorPos();
+        if (screen.clickedTile == null || !screen.clickedTile.equals(payload.clickedTilePos())) return;
 
-            String riftName = payload.riftName() == null ? "" : payload.riftName();
-            screen.nameField.setValue(riftName);
-            screen.nameField.setEditable(true);
-
-            String dest = payload.destinationName() == null ? "" : payload.destinationName();
-            screen.currentDestination = dest;
-            screen.destinationField.setValue(dest);
-            screen.destinationField.setEditable(true);
-
-            screen.allDestinations.clear();
-            if (payload.allDestinations() != null) screen.allDestinations.addAll(payload.allDestinations());
-
-            screen.rebuildDestinationFilter(screen.destinationField.getValue());
-            screen.saveBtn.active = true;
-        });
+        screen.applyServerConfig(payload);
     }
-
 
     public static void onServerSaveResult(RiftPayloads.S2C_SaveResult payload) {
         Minecraft mc = Minecraft.getInstance();
