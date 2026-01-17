@@ -1,0 +1,8 @@
+{
+  "parent": "block/cross",
+  "render_type": "cutout",
+  "textures": {
+    "cross": "cosmicdungeon:block/large_amethyst_bud_purple",
+    "particle": "cosmicdungeon:block/large_amethyst_bud_purple"
+  }
+}
