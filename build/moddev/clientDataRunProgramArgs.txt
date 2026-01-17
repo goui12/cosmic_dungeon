@@ -1,0 +1,23 @@
+# Main Class
+net.neoforged.fml.startup.DataClient
+
+# NeoForge Run-Type Program Arguments
+--assetIndex
+27
+--assetsDir
+C:\\Users\\Cameron\\gradle-home\\caches\\neoformruntime\\assets
+--fml.mcVersion
+1.21.10
+--fml.neoForgeVersion
+21.10.64
+--fml.neoFormVersion
+20251010.172816
+
+# User Supplied Program Arguments
+--mod
+cosmicdungeon
+--all
+--output
+C:\\Users\\Cameron\\Documents\\mod_development\\cosmic_dungeon\\src\\generated\\resources_client
+--existing
+C:\\Users\\Cameron\\Documents\\mod_development\\cosmic_dungeon\\src\\main\\resources

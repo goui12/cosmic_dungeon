@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "cosmicdungeon:block/ber_dummy"
+    },
+    "facing=north": {
+      "model": "cosmicdungeon:block/ber_dummy"
+    },
+    "facing=south": {
+      "model": "cosmicdungeon:block/ber_dummy"
+    },
+    "facing=west": {
+      "model": "cosmicdungeon:block/ber_dummy"
+    }
+  }
+}

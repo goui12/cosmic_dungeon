@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "cosmicdungeon:block/class_selector_block"
+    }
+  }
+}
