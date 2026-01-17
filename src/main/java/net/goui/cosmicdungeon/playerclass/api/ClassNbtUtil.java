@@ -15,14 +15,12 @@ public final class ClassNbtUtil {
 
     public static String getClassId(Player player) {
         CompoundTag root = getOrCreateRoot(player);
-        return root.getStringOr(ClassData.KEY_CLASS_ID, DungeoneerClassIds.NONE);
+        return root.getStringOr(ClassData.KEY_CLASS_ID, ClassKeys.CLASS_ID_NONE);
     }
 
     public static void setClassId(Player player, String classId) {
-        if (classId == null || classId.isBlank()) classId = DungeoneerClassIds.NONE;
-
-        // Clamp to known values (prevents typos, hacked packets, future drift)
-        classId = DungeoneerClassRegistry.clamp(classId);
+        // Normalize + clamp to known values (prevents typos, hacked packets, future drift)
+        classId = ClassKeys.clamp(classId);
 
         CompoundTag root = getOrCreateRoot(player);
         root.putString(ClassData.KEY_CLASS_ID, classId);
@@ -33,7 +31,7 @@ public final class ClassNbtUtil {
     }
 
     public static boolean isMetalmancer(Player player) {
-        return hasClass(player, DungeoneerClassIds.METALMANCER);
+        return hasClass(player, ClassKeys.CLASS_ID_METALMANCER);
     }
 
     public static CompoundTag getOrCreateExtra(Player player) {

@@ -1,4 +1,3 @@
-// file: src/main/java/net/goui/cosmicdungeon/playerclass/api/ClassNet.java
 package net.goui.cosmicdungeon.playerclass.api;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
@@ -51,11 +50,9 @@ public final class ClassNet {
     /* ---------- selectable classes ---------- */
 
     public static List<String> getSelectableClasses(ServerPlayer sp) {
-        // Expand later to all 8 when ready-room rules exist.
-        return List.of(
-                ClassKeys.CLASS_ID_NONE,
-                ClassKeys.CLASS_ID_METALMANCER
-        );
+        // Server-authoritative list the selector UI will display.
+        // Expand/lock down later with ready-room rules if desired.
+        return ClassKeys.ORDERED;
     }
 
     /* ---------- seeding (server-side) ---------- */
@@ -87,26 +84,47 @@ public final class ClassNet {
 
     /* ---------- apply helpers ---------- */
 
-    public static void enableMetalmancer(ServerPlayer sp) {
-        setActiveClass(sp, ClassKeys.CLASS_ID_METALMANCER);
-        seedMetalmancerExtra(sp);
-        ModNetwork.sendTo(sp, new ClassPayloads.S2C_ClassSync(ClassKeys.CLASS_ID_METALMANCER, readServerExtraNbt(sp)));
+    private static void sendSync(ServerPlayer sp, String classId) {
+        String cls = Objects.requireNonNullElse(classId, ClassKeys.CLASS_ID_NONE);
+        CompoundTag extra = ClassKeys.CLASS_ID_METALMANCER.equals(cls) ? readServerExtraNbt(sp) : new CompoundTag();
+        ModNetwork.sendTo(sp, new ClassPayloads.S2C_ClassSync(cls, extra));
     }
 
-    public static void disableMetalmancer(ServerPlayer sp) {
-        setActiveClass(sp, ClassKeys.CLASS_ID_NONE);
-
+    private static void clearExtra(ServerPlayer sp) {
         CompoundTag pd = sp.getPersistentData();
         CompoundTag root = pd.getCompoundOrEmpty(ClassData.ROOT_TAG).copy();
         root.remove(ClassData.KEY_EXTRA);
         pd.put(ClassData.ROOT_TAG, root);
+    }
 
-        ModNetwork.sendTo(sp, new ClassPayloads.S2C_ClassSync(ClassKeys.CLASS_ID_NONE, new CompoundTag()));
+    public static void enableMetalmancer(ServerPlayer sp) {
+        setActiveClass(sp, ClassKeys.CLASS_ID_METALMANCER);
+        seedMetalmancerExtra(sp);
+        sendSync(sp, ClassKeys.CLASS_ID_METALMANCER);
+    }
+
+    public static void disableMetalmancer(ServerPlayer sp) {
+        setActiveClass(sp, ClassKeys.CLASS_ID_NONE);
+        clearExtra(sp);
+        sendSync(sp, ClassKeys.CLASS_ID_NONE);
+    }
+
+    /** Generic class set (no special inventory systems). */
+    public static void setGenericClass(ServerPlayer sp, String classId) {
+        String cls = ClassKeys.clamp(classId);
+        setActiveClass(sp, cls);
+
+        // If we are leaving Metalmancer, strip its extra tag so you don't carry it across classes.
+        if (!ClassKeys.CLASS_ID_METALMANCER.equals(cls)) {
+            clearExtra(sp);
+        }
+
+        sendSync(sp, cls);
     }
 
     public static void sendFullTo(ServerPlayer sp) {
         String cls = Objects.requireNonNullElse(getActiveClass(sp), ClassKeys.CLASS_ID_NONE);
-        ModNetwork.sendTo(sp, new ClassPayloads.S2C_ClassSync(cls, readServerExtraNbt(sp)));
+        sendSync(sp, cls);
     }
 
     public static void sendSelectorDataTo(ServerPlayer sp) {
@@ -116,14 +134,21 @@ public final class ClassNet {
 
     public static String normalizeRequestedClass(ServerPlayer sp, String requested) {
         String cls = Objects.requireNonNullElse(requested, ClassKeys.CLASS_ID_NONE);
+        cls = ClassKeys.clamp(cls);
         if (!getSelectableClasses(sp).contains(cls)) return ClassKeys.CLASS_ID_NONE;
         return cls;
     }
 
     public static void applySelectedClass(ServerPlayer sp, String requested) {
         String cls = normalizeRequestedClass(sp, requested);
-        if (ClassKeys.CLASS_ID_METALMANCER.equals(cls)) enableMetalmancer(sp);
-        else disableMetalmancer(sp);
+
+        if (ClassKeys.CLASS_ID_METALMANCER.equals(cls)) {
+            enableMetalmancer(sp);
+        } else if (ClassKeys.CLASS_ID_NONE.equals(cls)) {
+            disableMetalmancer(sp);
+        } else {
+            setGenericClass(sp, cls);
+        }
     }
 
     /* ---------- server-side action entry ---------- */

@@ -1,3 +1,4 @@
+// file: src/main/java/net/goui/cosmicdungeon/datagen/DataGenerators.java
 package net.goui.cosmicdungeon.datagen;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
@@ -25,6 +26,9 @@ public final class DataGenerators {
 
         // Client datagen (models, lang, etc.)
         generator.addProvider(true, new ModModelProvider(packOutput));
+
+        // NEW: 1.21+ item definition JSONs (assets/<modid>/items/*.json)
+        generator.addProvider(true, new ModItemDefinitionsProvider(packOutput));
     }
 
     @SubscribeEvent

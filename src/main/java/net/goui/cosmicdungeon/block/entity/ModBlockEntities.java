@@ -33,7 +33,23 @@ public final class ModBlockEntities {
             )
     );
 
-
+    /** One BE type used by all 8 class-locked chest block variants. */
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ClassLockedChestBlockEntity>>
+            CLASS_LOCKED_CHEST = BLOCK_ENTITY_TYPES.register(
+            "class_locked_chest",
+            () -> new BlockEntityType<>(
+                    ClassLockedChestBlockEntity::new,
+                    false,
+                    ModBlocks.BOGATYR_CHEST.get(),
+                    ModBlocks.DEADEYE_CHEST.get(),
+                    ModBlocks.DRAGOON_CHEST.get(),
+                    ModBlocks.JUDICATOR_CHEST.get(),
+                    ModBlocks.METALMANCER_CHEST.get(),
+                    ModBlocks.PYROCLAST_CHEST.get(),
+                    ModBlocks.THEURGIST_CHEST.get(),
+                    ModBlocks.VENEFEX_CHEST.get()
+            )
+    );
 
     public static void register(IEventBus bus) {
         BLOCK_ENTITY_TYPES.register(bus);

@@ -5,6 +5,7 @@ import net.goui.cosmicdungeon.block.ModBlocks;
 import net.goui.cosmicdungeon.block.entity.ModBlockEntities;
 import net.goui.cosmicdungeon.client.model.*;
 import net.goui.cosmicdungeon.client.render.*;
+import net.goui.cosmicdungeon.client.render.blockentity.ClassLockedChestRenderer;
 import net.goui.cosmicdungeon.client.render.blockentity.CosmicSpawnerRenderer;
 import net.goui.cosmicdungeon.client.rift.RiftAmbienceClient;
 import net.goui.cosmicdungeon.client.screen.ClassSelectorScreen;
@@ -24,15 +25,18 @@ public final class CosmicDungeonClient {
     private CosmicDungeonClient() {}
 
     public static void init(IEventBus modEventBus) {
+        // Layer definitions (models)
         modEventBus.addListener(CosmicDungeonClient::registerLayers);
+
+        // Renderers (BERs + entity renderers)
         modEventBus.addListener(CosmicDungeonClient::registerRenderers);
+
+        // Client setup (render layers, etc.)
         modEventBus.addListener(CosmicDungeonClient::onClientSetup);
 
+        // Screens
         modEventBus.addListener((RegisterMenuScreensEvent e) -> {
-            // Metalmancer extra inventory screen
             e.register(ModMenus.METALMANCER_INVENTORY.get(), ExtraInventoryScreen::new);
-
-            // Class selector screen
             e.register(ModMenus.CLASS_SELECTOR.get(), ClassSelectorScreen::new);
         });
 
@@ -48,10 +52,9 @@ public final class CosmicDungeonClient {
             // Spawner visuals
             ItemBlockRenderTypes.setRenderLayer(ModBlocks.COSMIC_MOB_SPAWNER.get(), ChunkSectionLayer.TRANSLUCENT);
 
-            // Region look ghost glass
+            // Region look ghost glass + selector block
             ItemBlockRenderTypes.setRenderLayer(ModBlocks.REGION_GHOST_GLASS.get(), ChunkSectionLayer.TRANSLUCENT);
             ItemBlockRenderTypes.setRenderLayer(ModBlocks.CLASS_SELECTOR_BLOCK.get(), ChunkSectionLayer.CUTOUT);
-
         });
     }
 
@@ -64,14 +67,17 @@ public final class CosmicDungeonClient {
         // Metalmancer Golem
         e.registerLayerDefinition(MetalmancerGolemModel.LAYER_LOCATION, MetalmancerGolemModel::createBodyLayer);
         e.registerLayerDefinition(CrystalCreeperModel.LAYER_LOCATION, CrystalCreeperModel::createBodyLayer);
+
+        // === Class-locked chest model layer (custom, NOT vanilla chest atlas) ===
+        e.registerLayerDefinition(ClassLockedChestModel.LAYER_LOCATION, ClassLockedChestModel::createBodyLayer);
     }
 
     private static void registerRenderers(EntityRenderersEvent.RegisterRenderers e) {
         // Block entities
-        e.registerBlockEntityRenderer(
-                ModBlockEntities.COSMIC_SPAWNER.get(),
-                CosmicSpawnerRenderer::new
-        );
+        e.registerBlockEntityRenderer(ModBlockEntities.COSMIC_SPAWNER.get(), CosmicSpawnerRenderer::new);
+
+        // === Custom chest renderer (replaces ChestRenderer::new) ===
+        e.registerBlockEntityRenderer(ModBlockEntities.CLASS_LOCKED_CHEST.get(), ClassLockedChestRenderer::new);
 
         // Existing mobs
         e.registerEntityRenderer(ModEntities.MAGMA_GLOB.get(), MagmaGlobRenderer::new);

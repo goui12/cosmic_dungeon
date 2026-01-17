@@ -62,6 +62,15 @@ public class ModCreativeModeTabs {
                                 output.accept(ModBlocks.INFINITE_DISPENSER);
                                 output.accept(ModBlocks.COSMIC_MOB_SPAWNER);
                                output.accept(ModBlocks.COSMIC_RIFT);
+                                // Class locked chests
+                                output.accept(ModBlocks.BOGATYR_CHEST);
+                                output.accept(ModBlocks.DEADEYE_CHEST);
+                                output.accept(ModBlocks.DRAGOON_CHEST);
+                                output.accept(ModBlocks.JUDICATOR_CHEST);
+                                output.accept(ModBlocks.METALMANCER_CHEST);
+                                output.accept(ModBlocks.PYROCLAST_CHEST);
+                                output.accept(ModBlocks.THEURGIST_CHEST);
+                                output.accept(ModBlocks.VENEFEX_CHEST);
 
                                 // RF system
                                 output.accept(ModBlocks.REDSTONE_TRANSMITTER);

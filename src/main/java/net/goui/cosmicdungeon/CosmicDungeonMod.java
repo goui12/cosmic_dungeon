@@ -48,6 +48,7 @@ public class CosmicDungeonMod {
         // networking payloads
         modEventBus.addListener(ModNetwork::registerPayloadHandlers);
 
+
         // forge bus listeners (commands, etc.)
         NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.addListener(this::onRegisterCommands);
@@ -57,18 +58,18 @@ public class CosmicDungeonMod {
 
 
         // registries
-        ModRfBlockEntities.register(modEventBus);
+
         ModCreativeModeTabs.register(modEventBus);
         ModItems.register(modEventBus);
         ModDataComponents.register(modEventBus);
-        ModBlockEntities.register(modEventBus);
+
         MetalmancerItems.register(modEventBus);
         ModMenus.register(modEventBus);
         ModEntities.register(modEventBus);
         ModBlocks.register(modEventBus);
         ModSounds.registerSounds(modEventBus);
-
-
+        ModBlockEntities.register(modEventBus);
+        ModRfBlockEntities.register(modEventBus);
 
         // client-only init — call this ONCE
         if (FMLLoader.getCurrent().getDist() == Dist.CLIENT) {

@@ -19,6 +19,6 @@ public final class ClassData {
 
     public static String getClassId(Player player) {
         CompoundTag root = player.getPersistentData().getCompoundOrEmpty(ROOT_TAG);
-        return root.getStringOr(KEY_CLASS_ID, DungeoneerClassIds.NONE);
+        return root.getStringOr(KEY_CLASS_ID, ClassKeys.CLASS_ID_NONE);
     }
 }

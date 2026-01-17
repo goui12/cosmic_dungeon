@@ -7,7 +7,6 @@ import net.goui.cosmicdungeon.block.ModBlocks;
 import net.goui.cosmicdungeon.common.color.AmethystColor;
 import net.goui.cosmicdungeon.item.ModItems;
 import net.goui.cosmicdungeon.playerclass.metalmancer.MetalmancerItems;
-
 import net.minecraft.client.data.models.BlockModelGenerators;
 import net.minecraft.client.data.models.ItemModelGenerators;
 import net.minecraft.client.data.models.ModelProvider;
@@ -40,6 +39,24 @@ public class ModModelProvider extends ModelProvider {
         java.util.function.Consumer<Item> FLAT = i -> itemModels.generateFlatItem(i, ModelTemplates.FLAT_ITEM);
         java.util.function.Consumer<Item> MACE = i -> itemModels.generateFlatItem(i, ModelTemplates.FLAT_HANDHELD_MACE_ITEM);
         java.util.function.Consumer<Item> ROD  = i -> itemModels.generateFlatItem(i, ModelTemplates.FLAT_HANDHELD_ROD_ITEM);
+
+        // ============================================================
+        // Class Locked Chests
+        // - Blockstate points at dummy model (datagen validation)
+        // - Item definitions are handled by ModItemDefinitionsProvider
+        // - Chest BlockItems are excluded from getKnownItems() to avoid
+        //   model generation overwriting your intended pipeline.
+        // ============================================================
+        generateBerDummyModel(blockModels);
+
+        chestLikeBlockstate(blockModels, ModBlocks.BOGATYR_CHEST.get());
+        chestLikeBlockstate(blockModels, ModBlocks.DEADEYE_CHEST.get());
+        chestLikeBlockstate(blockModels, ModBlocks.DRAGOON_CHEST.get());
+        chestLikeBlockstate(blockModels, ModBlocks.JUDICATOR_CHEST.get());
+        chestLikeBlockstate(blockModels, ModBlocks.METALMANCER_CHEST.get());
+        chestLikeBlockstate(blockModels, ModBlocks.PYROCLAST_CHEST.get());
+        chestLikeBlockstate(blockModels, ModBlocks.THEURGIST_CHEST.get());
+        chestLikeBlockstate(blockModels, ModBlocks.VENEFEX_CHEST.get());
 
         // ===== Dungeon 1: Spectral Blooms (vanilla flower-style cross model) =====
         simpleCrossPlant(blockModels, itemModels, ModBlocks.BLOOM_OF_QUIET_ASSURANCE.get());
@@ -79,8 +96,6 @@ public class ModModelProvider extends ModelProvider {
 
         // ===== Judicator — D1 T3 (Diamond) =====
         MACE.accept(ModItems.EDICT_OF_SILENCE.get());
-
-        // Vowkeeper uses hand-authored custom-geometry JSONs (no generation here)
         registerExternalItem(itemModels, ModItems.VOWKEEPER.get(), rlMod("item/vowkeeper"));
 
         FLAT.accept(ModItems.VIELPIERCER.get());
@@ -136,8 +151,6 @@ public class ModModelProvider extends ModelProvider {
 
         // ===== Metalmancer =====
         FLAT.accept(MetalmancerItems.SATCHEL_OF_SAMPLES.get());
-
-        // New: Summoning staffs (rod models)
         ROD.accept(MetalmancerItems.BENT_ROD_OF_MELTED_SHAVINGS.get());
         ROD.accept(MetalmancerItems.ERZFUEHLER.get());
 
@@ -154,14 +167,13 @@ public class ModModelProvider extends ModelProvider {
         // ===== Cosmic Rift (placer) =====
         {
             var b = ModBlocks.COSMIC_RIFT.get();
-            blockModels.createTrivialCube(b); // uses block/cosmic_rift texture
-            // Ensure item points to block model
+            blockModels.createTrivialCube(b);
             registerExternalItem(itemModels, b.asItem(), rlMod("block/cosmic_rift"));
         }
 
         registerRiftTile_BlockbenchStyle(blockModels, ModBlocks.COSMIC_RIFT_TILE.get(), rlMod("block/rift/cosmic_rift_tile"));
 
-        // ===== Pile of Books (points at external hand-authored model) =====
+        // ===== Pile of Books =====
         {
             var b = ModBlocks.PILE_OF_BOOKS.get();
             var blockModel = rlMod("block/pile_of_books");
@@ -171,7 +183,7 @@ public class ModModelProvider extends ModelProvider {
             FLAT.accept(b.asItem());
         }
 
-        // ===== Class Selector Block (points at external hand-authored Blockbench model) =====
+        // ===== Class Selector Block =====
         {
             var b = ModBlocks.CLASS_SELECTOR_BLOCK.get();
             var blockModel = rlMod("block/class_selector_block");
@@ -180,11 +192,10 @@ public class ModModelProvider extends ModelProvider {
                     MultiVariantGenerator.dispatch(b, new MultiVariant(WeightedList.of(new Variant(blockModel))))
             );
 
-            // Item should be the 3D block model (not flat) so it looks like the placed model.
             registerExternalItem(itemModels, b.asItem(), blockModel);
         }
 
-        // ===== Infinite Dispenser (uses vanilla parents) =====
+        // ===== Infinite Dispenser =====
         {
             var b = ModBlocks.INFINITE_DISPENSER.get();
 
@@ -215,12 +226,12 @@ public class ModModelProvider extends ModelProvider {
             registerExternalItem(itemModels, b.asItem(), horiz);
         }
 
-        // ===== Cosmic Mob Spawner (fully custom model, no vanilla spawner parent) =====
+        // ===== Cosmic Mob Spawner =====
         blockModels.createTrivialCube(ModBlocks.COSMIC_MOB_SPAWNER.get());
 
-        // ===== Redstone: Transmitter & Receiver (point at external Blockbench JSONs) =====
+        // ===== Redstone Transmitter & Receiver =====
         {
-            // --- Transmitter: POWERED -> on/off
+            // Transmitter
             {
                 var b = ModBlocks.REDSTONE_TRANSMITTER.get();
                 ResourceLocation modelOff = rlMod("block/redstone_transmitter_off");
@@ -231,11 +242,10 @@ public class ModModelProvider extends ModelProvider {
                 pd.select(Boolean.FALSE, new MultiVariant(WeightedList.of(new Variant(modelOff))));
 
                 blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(b).with(pd));
-
                 registerExternalItem(itemModels, b.asItem(), modelOff);
             }
 
-            // --- Receiver: FACING x POWERED -> rotated on/off
+            // Receiver
             {
                 var b = ModBlocks.REDSTONE_RECEIVER.get();
                 ResourceLocation modelOff = rlMod("block/redstone_receiver_off");
@@ -246,23 +256,22 @@ public class ModModelProvider extends ModelProvider {
                 pd.select(Direction.NORTH, Boolean.TRUE,  new MultiVariant(WeightedList.of(new Variant(modelOn))));
                 pd.select(Direction.NORTH, Boolean.FALSE, new MultiVariant(WeightedList.of(new Variant(modelOff))));
 
-                pd.select(Direction.SOUTH, Boolean.TRUE,  new MultiVariant(WeightedList.of(new Variant(modelOn ).withYRot(Quadrant.R180))));
+                pd.select(Direction.SOUTH, Boolean.TRUE,  new MultiVariant(WeightedList.of(new Variant(modelOn).withYRot(Quadrant.R180))));
                 pd.select(Direction.SOUTH, Boolean.FALSE, new MultiVariant(WeightedList.of(new Variant(modelOff).withYRot(Quadrant.R180))));
 
-                pd.select(Direction.WEST,  Boolean.TRUE,  new MultiVariant(WeightedList.of(new Variant(modelOn ).withYRot(Quadrant.R270))));
+                pd.select(Direction.WEST,  Boolean.TRUE,  new MultiVariant(WeightedList.of(new Variant(modelOn).withYRot(Quadrant.R270))));
                 pd.select(Direction.WEST,  Boolean.FALSE, new MultiVariant(WeightedList.of(new Variant(modelOff).withYRot(Quadrant.R270))));
 
-                pd.select(Direction.EAST,  Boolean.TRUE,  new MultiVariant(WeightedList.of(new Variant(modelOn ).withYRot(Quadrant.R90))));
+                pd.select(Direction.EAST,  Boolean.TRUE,  new MultiVariant(WeightedList.of(new Variant(modelOn).withYRot(Quadrant.R90))));
                 pd.select(Direction.EAST,  Boolean.FALSE, new MultiVariant(WeightedList.of(new Variant(modelOff).withYRot(Quadrant.R90))));
 
-                pd.select(Direction.UP,    Boolean.TRUE,  new MultiVariant(WeightedList.of(new Variant(modelOn ).withXRot(Quadrant.R270))));
+                pd.select(Direction.UP,    Boolean.TRUE,  new MultiVariant(WeightedList.of(new Variant(modelOn).withXRot(Quadrant.R270))));
                 pd.select(Direction.UP,    Boolean.FALSE, new MultiVariant(WeightedList.of(new Variant(modelOff).withXRot(Quadrant.R270))));
 
-                pd.select(Direction.DOWN,  Boolean.TRUE,  new MultiVariant(WeightedList.of(new Variant(modelOn ).withXRot(Quadrant.R90))));
+                pd.select(Direction.DOWN,  Boolean.TRUE,  new MultiVariant(WeightedList.of(new Variant(modelOn).withXRot(Quadrant.R90))));
                 pd.select(Direction.DOWN,  Boolean.FALSE, new MultiVariant(WeightedList.of(new Variant(modelOff).withXRot(Quadrant.R90))));
 
                 blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(b).with(pd));
-
                 registerExternalItem(itemModels, b.asItem(), modelOff);
             }
         }
@@ -304,18 +313,83 @@ public class ModModelProvider extends ModelProvider {
         }
     }
 
+    // ---------------------------------------------------------------------
+    // Dummy model for BER-only blocks: block/ber_dummy.json
+    // ---------------------------------------------------------------------
+    private void generateBerDummyModel(BlockModelGenerators blockModels) {
+        ResourceLocation modelLoc = rlMod("block/ber_dummy");
+        blockModels.modelOutput.accept(modelLoc, () -> {
+            var root = new com.google.gson.JsonObject();
+            root.addProperty("parent", "minecraft:block/block");
+
+            var tex = new com.google.gson.JsonObject();
+            tex.addProperty("particle", ResourceLocation.withDefaultNamespace("block/air").toString());
+            root.add("textures", tex);
+
+            return root;
+        });
+    }
+
+    // ---------------------------------------------------------------------
+// Chest blockstate generation (points to dummy model)
+// ---------------------------------------------------------------------
+    private void chestLikeBlockstate(BlockModelGenerators blockModels, Block b) {
+        ResourceLocation dummy = rlMod("block/ber_dummy");
+
+        var pd = PropertyDispatch.initial(BlockStateProperties.HORIZONTAL_FACING)
+                .generate(facing -> new MultiVariant(WeightedList.of(new Variant(dummy))));
+
+        blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(b).with(pd));
+    }
+
+
+
+    // points <item> to an existing model at <model>, without generating that model file
+    private static void registerExternalItem(ItemModelGenerators itemModels, Item item, ResourceLocation model) {
+        itemModels.itemModelOutput.accept(item, ItemModelUtils.plainModel(model));
+    }
+
+    // === Helpers ===
+    private static ResourceLocation rlMod(String path) {
+        return ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, path);
+    }
+
     /**
-     * Vanilla flower-style model:
-     * - block model: parent minecraft:block/cross
-     * - blockstate: single variant -> that model (no properties)
-     * - item model: parent -> block model
+     * IMPORTANT: Exclude specific items from auto item model generation.
+     *
+     * - Keep shield/external-model exclusions.
+     * - ALSO exclude the 8 chest BlockItems, since their rendering pipeline is
+     *   controlled by assets/<modid>/items/*.json + your own intended models.
      */
+    @Override
+    protected Stream<? extends Holder<Item>> getKnownItems() {
+        return ModItems.ITEMS.getEntries().stream()
+                // Existing exclusions (your shield/external models)
+                .filter(x -> !x.is(ModItems.VOWKEEPER))
+                .filter(x -> !x.is(ModItems.AEGIS_OF_TRUTH))
+                .filter(x -> !x.is(ModItems.REINFORCED_IRON_SLAB))
+                .filter(x -> !x.is(ModItems.SHIELD_OF_THE_DEEP))
+                .filter(x -> !x.is(ModItems.SHIELD_OF_TIDAL_FORCE))
+                .filter(x -> !x.is(ModItems.WORKED_PLANK))
+
+                // NEW: exclude chest items (special handling via items/*.json provider)
+                .filter(x -> !x.is(ModBlocks.BOGATYR_CHEST_ITEM))
+                .filter(x -> !x.is(ModBlocks.DEADEYE_CHEST_ITEM))
+                .filter(x -> !x.is(ModBlocks.DRAGOON_CHEST_ITEM))
+                .filter(x -> !x.is(ModBlocks.JUDICATOR_CHEST_ITEM))
+                .filter(x -> !x.is(ModBlocks.METALMANCER_CHEST_ITEM))
+                .filter(x -> !x.is(ModBlocks.PYROCLAST_CHEST_ITEM))
+                .filter(x -> !x.is(ModBlocks.THEURGIST_CHEST_ITEM))
+                .filter(x -> !x.is(ModBlocks.VENEFEX_CHEST_ITEM));
+    }
+
+    // === Existing helpers from your file (unchanged) ===
+
     private void simpleCrossPlant(BlockModelGenerators blockModels, ItemModelGenerators itemModels, Block b) {
         String id = b.builtInRegistryHolder().key().location().getPath();
         ResourceLocation modelLoc = rlMod("block/" + id);
         ResourceLocation tex = rlMod("block/" + id);
 
-        // block/<id>.json
         blockModels.modelOutput.accept(modelLoc, () -> {
             var root = new com.google.gson.JsonObject();
             root.addProperty("parent", "minecraft:block/cross");
@@ -329,28 +403,16 @@ public class ModModelProvider extends ModelProvider {
             return root;
         });
 
-        // blockstates/<id>.json  (single variant)
         blockModels.blockStateOutput.accept(
                 MultiVariantGenerator.dispatch(b, new MultiVariant(WeightedList.of(new Variant(modelLoc))))
         );
 
-        // item/<id>.json -> parent is the block model
         ResourceLocation itemLoc = rlMod("item/" + id);
         itemModels.modelOutput.accept(itemLoc, () -> {
             var root = new com.google.gson.JsonObject();
             root.addProperty("parent", modelLoc.toString());
             return root;
         });
-    }
-
-    // points <item> to an existing model at <model>, without generating that model file
-    private static void registerExternalItem(ItemModelGenerators itemModels, Item item, ResourceLocation model) {
-        itemModels.itemModelOutput.accept(item, ItemModelUtils.plainModel(model));
-    }
-
-    // === Helpers ===
-    private static ResourceLocation rlMod(String path) {
-        return ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, path);
     }
 
     private void crossFacing(BlockModelGenerators blockModels, ItemModelGenerators itemModels, Block b) {
@@ -388,18 +450,6 @@ public class ModModelProvider extends ModelProvider {
         });
     }
 
-    // === IMPORTANT: Exclude specific items from auto item model generation ===
-    @Override
-    protected Stream<? extends Holder<Item>> getKnownItems() {
-        return ModItems.ITEMS.getEntries().stream()
-                .filter(x -> !x.is(ModItems.VOWKEEPER))
-                .filter(x -> !x.is(ModItems.AEGIS_OF_TRUTH))
-                .filter(x -> !x.is(ModItems.REINFORCED_IRON_SLAB))
-                .filter(x -> !x.is(ModItems.SHIELD_OF_THE_DEEP))
-                .filter(x -> !x.is(ModItems.SHIELD_OF_TIDAL_FORCE))
-                .filter(x -> !x.is(ModItems.WORKED_PLANK));
-    }
-
     private void ghostCube(BlockModelGenerators blockModels, ItemModelGenerators itemModels, Block b, boolean translucent) {
         String id = b.builtInRegistryHolder().key().location().getPath();
         ResourceLocation modelLoc = rlMod("block/" + id);
@@ -422,7 +472,6 @@ public class ModModelProvider extends ModelProvider {
                 MultiVariantGenerator.dispatch(b, new MultiVariant(WeightedList.of(new Variant(modelLoc))))
         );
 
-        // Item points at the block model
         registerExternalItem(itemModels, b.asItem(), modelLoc);
     }
 

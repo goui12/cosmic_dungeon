@@ -1,5 +1,7 @@
 // file: src/main/java/net/goui/cosmicdungeon/block/ModBlocks.java
 package net.goui.cosmicdungeon.block;
+// add this import near the top:
+import net.minecraft.sounds.SoundEvents;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.block.amethyst.ColoredAmethystBlock;
@@ -30,6 +32,9 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
+import net.goui.cosmicdungeon.block.custom.ClassLockedChestBlock;
+import net.goui.cosmicdungeon.block.entity.ModBlockEntities;
+import net.goui.cosmicdungeon.playerclass.api.ClassKeys;
 
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
@@ -115,6 +120,56 @@ public class ModBlocks {
                     props.strength(0.8F).sound(SoundType.WOOD).noOcclusion()
             )
     );
+    /* ---------- Class Locked Chests (8 class variants) ---------- */
+
+    private static BlockBehaviour.Properties classChestProps(BlockBehaviour.Properties props) {
+        return props
+                .mapColor(MapColor.WOOD)
+                .strength(2.5F)
+                .sound(SoundType.WOOD)
+                .noOcclusion();
+    }
+
+    public static final DeferredBlock<Block> BOGATYR_CHEST = BLOCKS.registerBlock(
+            "bogatyr_chest",
+            props -> new ClassLockedChestBlock(classChestProps(props), ClassKeys.CLASS_ID_BOGATYR, SoundEvents.CHEST_OPEN, SoundEvents.CHEST_CLOSE)
+    );
+
+    public static final DeferredBlock<Block> DEADEYE_CHEST = BLOCKS.registerBlock(
+            "deadeye_chest",
+            props -> new ClassLockedChestBlock(classChestProps(props), ClassKeys.CLASS_ID_DEADEYE, SoundEvents.CHEST_OPEN, SoundEvents.CHEST_CLOSE)
+    );
+
+    public static final DeferredBlock<Block> DRAGOON_CHEST = BLOCKS.registerBlock(
+            "dragoon_chest",
+            props -> new ClassLockedChestBlock(classChestProps(props), ClassKeys.CLASS_ID_DRAGOON, SoundEvents.CHEST_OPEN, SoundEvents.CHEST_CLOSE)
+    );
+
+    public static final DeferredBlock<Block> JUDICATOR_CHEST = BLOCKS.registerBlock(
+            "judicator_chest",
+            props -> new ClassLockedChestBlock(classChestProps(props), ClassKeys.CLASS_ID_JUDICATOR, SoundEvents.CHEST_OPEN, SoundEvents.CHEST_CLOSE)
+    );
+
+    public static final DeferredBlock<Block> METALMANCER_CHEST = BLOCKS.registerBlock(
+            "metalmancer_chest",
+            props -> new ClassLockedChestBlock(classChestProps(props), ClassKeys.CLASS_ID_METALMANCER, SoundEvents.CHEST_OPEN, SoundEvents.CHEST_CLOSE)
+    );
+
+    public static final DeferredBlock<Block> PYROCLAST_CHEST = BLOCKS.registerBlock(
+            "pyroclast_chest",
+            props -> new ClassLockedChestBlock(classChestProps(props), ClassKeys.CLASS_ID_PYROCLAST, SoundEvents.CHEST_OPEN, SoundEvents.CHEST_CLOSE)
+    );
+
+    public static final DeferredBlock<Block> THEURGIST_CHEST = BLOCKS.registerBlock(
+            "theurgist_chest",
+            props -> new ClassLockedChestBlock(classChestProps(props), ClassKeys.CLASS_ID_THEURGIST, SoundEvents.CHEST_OPEN, SoundEvents.CHEST_CLOSE)
+    );
+
+    public static final DeferredBlock<Block> VENEFEX_CHEST = BLOCKS.registerBlock(
+            "venefex_chest",
+            props -> new ClassLockedChestBlock(classChestProps(props), ClassKeys.CLASS_ID_VENEFEX, SoundEvents.CHEST_OPEN, SoundEvents.CHEST_CLOSE)
+    );
+
 
     public static final DeferredBlock<Block> INFINITE_DISPENSER = BLOCKS.registerBlock(
             "infinite_dispenser",
@@ -232,7 +287,7 @@ public class ModBlocks {
     );
 
     public static final DeferredBlock<Block> POTTED_BLOOM_OF_WANING_MERCY = BLOCKS.registerBlock(
-            "potted_bloom_of_waning_merry",
+            "potted_bloom_of_waning_mercy",
             props -> new FlowerPotBlock(() -> (FlowerPotBlock) Blocks.FLOWER_POT, BLOOM_OF_WANING_MERCY, props)
     );
 
@@ -427,6 +482,24 @@ public class ModBlocks {
     // ===== BlockItem for Class Selector Block =====
     public static final DeferredItem<BlockItem> CLASS_SELECTOR_BLOCK_ITEM =
             ModItems.ITEMS.registerSimpleBlockItem("class_selector_block", CLASS_SELECTOR_BLOCK);
+
+    // == BlockItem for Speical Chests ==
+    public static final DeferredItem<BlockItem> BOGATYR_CHEST_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("bogatyr_chest", BOGATYR_CHEST);
+    public static final DeferredItem<BlockItem> DEADEYE_CHEST_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("deadeye_chest", DEADEYE_CHEST);
+    public static final DeferredItem<BlockItem> DRAGOON_CHEST_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("dragoon_chest", DRAGOON_CHEST);
+    public static final DeferredItem<BlockItem> JUDICATOR_CHEST_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("judicator_chest", JUDICATOR_CHEST);
+    public static final DeferredItem<BlockItem> METALMANCER_CHEST_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("metalmancer_chest", METALMANCER_CHEST);
+    public static final DeferredItem<BlockItem> PYROCLAST_CHEST_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("pyroclast_chest", PYROCLAST_CHEST);
+    public static final DeferredItem<BlockItem> THEURGIST_CHEST_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("theurgist_chest", THEURGIST_CHEST);
+    public static final DeferredItem<BlockItem> VENEFEX_CHEST_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("venefex_chest", VENEFEX_CHEST);
 
     /* ---------- BlockItems for Spectral Blooms (for creative tab & pickup) ---------- */
     public static final DeferredItem<BlockItem> BLOOM_OF_QUIET_ASSURANCE_ITEM =
