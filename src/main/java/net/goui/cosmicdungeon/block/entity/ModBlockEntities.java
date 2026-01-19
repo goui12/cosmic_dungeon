@@ -51,6 +51,17 @@ public final class ModBlockEntities {
             )
     );
 
+    /** Class selector destination storage. */
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ClassSelectorBlockEntity>>
+            CLASS_SELECTOR = BLOCK_ENTITY_TYPES.register(
+            "class_selector",
+            () -> new BlockEntityType<>(
+                    ClassSelectorBlockEntity::new,
+                    false,
+                    ModBlocks.CLASS_SELECTOR_BLOCK.get()
+            )
+    );
+
     public static void register(IEventBus bus) {
         BLOCK_ENTITY_TYPES.register(bus);
     }

@@ -230,6 +230,10 @@ public final class ModNetwork {
                     String now = Objects.requireNonNullElse(ClassNbtUtil.getClassId(sp), ClassKeys.CLASS_ID_NONE);
                     ctx.reply(new ClassPayloads.S2C_SelectResult(true, "Class selected: " + now, now));
                     ctx.reply(new ClassPayloads.S2C_SelectorData(now, ClassNet.getSelectableClasses(sp)));
+
+                    // ✅ NEW: mark "ready" for the selector block this menu came from.
+                    // Teleport happens automatically when ready count reaches max for that selector.
+                    net.goui.cosmicdungeon.block.custom.ClassSelectorTeleportUtil.onClassSelected(sp, now);
                 }
         );
 

@@ -1,3 +1,4 @@
+// file: src/main/java/net/goui/cosmicdungeon/auth/AccessPolicy.java
 package net.goui.cosmicdungeon.auth;
 
 import net.goui.cosmicdungeon.block.ModBlocks;
@@ -14,11 +15,9 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Canonical Cosmic Dungeon permission policy.
  *
- * Goals:
- * - One place to change rules
- * - Reusable checks for events, packets, commands
- * - Rate-limited denial messages (no spam on dimension swap / click-hold)
- * - Server-authoritative (RankStore/Authority is truth)
+ * Separation of concerns:
+ * - use-protected devices: cannot be interacted with by dungeoneers
+ * - break-protected devices: cannot be broken by dungeoneers
  */
 public final class AccessPolicy {
     private AccessPolicy() {}
@@ -46,17 +45,15 @@ public final class AccessPolicy {
 
     /**
      * Brigadier-friendly predicate:
-     * - allows console/command block/RCON (no player)
+     * - allows console / command block / rcon
      * - allows Developer
-     * - shows a failure message only to players
+     * - shows failure message only to players
      */
     public static boolean requireDeveloperOrConsole(CommandSourceStack src) {
-
-
         if (src == null) return false;
 
         ServerPlayer p = src.getPlayer();
-        if (p == null) return true; // console/CB/rcon
+        if (p == null) return true; // console / CB / rcon
 
         if (isDeveloper(p)) return true;
 
@@ -65,13 +62,12 @@ public final class AccessPolicy {
         return false;
     }
 
-    /* -------------------- Protected devices -------------------- */
+    /* -------------------- Device protection -------------------- */
 
     /**
-     * Central list of protected blocks. When you add new devices, add them here
-     * (or later, swap this to a block tag for zero-code expansion).
+     * Devices that cannot be USED (right-clicked) by dungeoneers.
      */
-    public static boolean isProtectedDevice(Block b) {
+    public static boolean isUseProtectedDevice(Block b) {
         if (b == null) return false;
 
         return     b == ModBlocks.COSMIC_RIFT.get()
@@ -82,8 +78,16 @@ public final class AccessPolicy {
     }
 
     /**
-     * Standard rule: protected devices are Developer-only.
+     * Devices that cannot be BROKEN by dungeoneers.
+     * (Includes class selector.)
      */
+    public static boolean isBreakProtectedDevice(Block b) {
+        if (b == null) return false;
+
+        return     isUseProtectedDevice(b)
+                || b == ModBlocks.CLASS_SELECTOR_BLOCK.get();
+    }
+
     public static boolean canUseProtectedDevices(ServerPlayer sp) {
         return isDeveloper(sp);
     }
@@ -91,6 +95,7 @@ public final class AccessPolicy {
     public static boolean canBreakProtectedDevices(ServerPlayer sp) {
         return isDeveloper(sp);
     }
+
     /* -------------------- Class predicates -------------------- */
 
     public static boolean hasClass(ServerPlayer sp, String classId) {
@@ -112,5 +117,4 @@ public final class AccessPolicy {
         deny(sp, denyMsg != null ? denyMsg : "You are not the correct class.");
         return false;
     }
-
 }

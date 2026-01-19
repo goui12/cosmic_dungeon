@@ -118,6 +118,7 @@ public class CosmicDungeonMod {
         RankCommand.register(event.getDispatcher());
         DeveloperCommand.register(event.getDispatcher());
         DungeoneerCommand.register(event.getDispatcher());
+        ClassSelectorDestinationCommand.register(event.getDispatcher());
 
     }
 
