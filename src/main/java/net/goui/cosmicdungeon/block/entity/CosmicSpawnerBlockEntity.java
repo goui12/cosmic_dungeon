@@ -10,6 +10,7 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.BaseSpawner;
 import net.minecraft.world.level.Level;
@@ -47,6 +48,14 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     private static final Field F_MAX_NEARBY_ENTITIES;
     private static final Field F_REQUIRED_PLAYER_RANGE;
 
+    /**
+     * BaseSpawner caches a "display" entity instance for the spinning mob preview.
+     *
+     * If this cache isn't invalidated when the mob is changed, the spawner can keep rendering the OLD mob
+     * even though it correctly spawns the NEW mob on the server.
+     */
+    private static final @Nullable Field F_DISPLAY_ENTITY;
+
     static {
         try {
             F_SPAWN_DELAY = BaseSpawner.class.getDeclaredField("spawnDelay");
@@ -56,6 +65,9 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
             F_SPAWN_RANGE = BaseSpawner.class.getDeclaredField("spawnRange");
             F_MAX_NEARBY_ENTITIES = BaseSpawner.class.getDeclaredField("maxNearbyEntities");
             F_REQUIRED_PLAYER_RANGE = BaseSpawner.class.getDeclaredField("requiredPlayerRange");
+
+            // Mojang name is typically "displayEntity" but we fall back to a type scan to be resilient.
+            F_DISPLAY_ENTITY = findDisplayEntityField();
 
             F_SPAWN_DELAY.setAccessible(true);
             F_MIN_SPAWN_DELAY.setAccessible(true);
@@ -67,6 +79,55 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException("Failed to reflect BaseSpawner fields (NeoForge mappings changed?)", e);
         }
+    }
+
+    /**
+     * Forces the BaseSpawner to rebuild its client-side preview entity.
+     *
+     * This is a best-effort fix for cases where BaseSpawner retains the previously-created display entity
+     * even after setEntityId / nextSpawnData changes.
+     */
+    private void invalidatePreviewEntityCache() {
+        if (F_DISPLAY_ENTITY == null) return;
+        try {
+            // Mojang mappings: Entity displayEntity; set to null so getOrCreateDisplayEntity() recreates it.
+            // Some versions may wrap the cache in Optional; in that case set Optional.empty().
+            if (F_DISPLAY_ENTITY.getType() == Optional.class) {
+                F_DISPLAY_ENTITY.set(this.spawner, Optional.empty());
+            } else {
+                F_DISPLAY_ENTITY.set(this.spawner, null);
+            }
+        } catch (Exception e) {
+            // Don't crash the game if mappings differ; just log once per failure.
+            LOGGER.debug("Failed to invalidate BaseSpawner preview entity cache", e);
+        }
+    }
+
+    @Nullable
+    private static Field findDisplayEntityField() {
+        try {
+            Field f = BaseSpawner.class.getDeclaredField("displayEntity");
+            f.setAccessible(true);
+            return f;
+        } catch (ReflectiveOperationException ignored) {
+            // fall through
+        }
+
+        // Fallback: find the first field that can hold an Entity reference.
+        // (This is intentionally defensive against mapping/name drift.)
+        for (Field f : BaseSpawner.class.getDeclaredFields()) {
+            Class<?> t = f.getType();
+            if (Entity.class.isAssignableFrom(t)) {
+                f.setAccessible(true);
+                return f;
+            }
+            if (t == Optional.class) {
+                // Some versions wrap the cached entity in Optional.
+                f.setAccessible(true);
+                return f;
+            }
+        }
+        return null;
     }
 
     private final BaseSpawner spawner = new BaseSpawner() {
@@ -101,6 +162,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     public void setSpawnerEntityId(String id) {
         this.spawnerEntityId = (id == null || id.isBlank()) ? "none" : id.trim();
         this.clientSpawnerDirty = true;
+        invalidatePreviewEntityCache();
         this.setChanged();
     }
 
@@ -118,6 +180,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
             this.spawner.setEntityId(type, level, random, this.worldPosition);
             this.spawnerEntityId = String.valueOf(BuiltInRegistries.ENTITY_TYPE.getKey(type));
             this.clientSpawnerDirty = true;
+            invalidatePreviewEntityCache();
             this.setChanged();
             if (!level.isClientSide()) markUpdated();
         }
@@ -145,6 +208,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
                 if (type == null) return;
 
                 this.spawner.setEntityId(type, sl, sl.getRandom(), this.worldPosition);
+                invalidatePreviewEntityCache();
             }
         }
     }
@@ -247,8 +311,6 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         this.spawner.save(output);
     }
 
-
-
     /**
      * Restores the numeric spawner knobs directly from the saved keys that {@link BaseSpawner#save} writes.
      *
@@ -345,6 +407,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         }
 
         this.spawner.setEntityId(typeOpt.get(), this.level, this.level.getRandom(), this.worldPosition);
+        invalidatePreviewEntityCache();
         this.clientSpawnerDirty = false;
     }
 
@@ -376,6 +439,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         this.spawner.setEntityId(type, level, level.getRandom(), this.worldPosition);
         this.spawnerEntityId = String.valueOf(BuiltInRegistries.ENTITY_TYPE.getKey(type));
         this.clientSpawnerDirty = true;
+        invalidatePreviewEntityCache();
         this.setChanged();
         if (!level.isClientSide()) markUpdated();
     }
@@ -383,6 +447,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     public void clearSpawnerEntity(Level level) {
         this.spawnerEntityId = "none";
         this.clientSpawnerDirty = true;
+        invalidatePreviewEntityCache();
         this.setChanged();
         if (!level.isClientSide()) markUpdated();
     }

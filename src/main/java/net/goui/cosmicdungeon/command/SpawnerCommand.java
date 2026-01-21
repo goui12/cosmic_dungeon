@@ -3,11 +3,14 @@ package net.goui.cosmicdungeon.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.goui.cosmicdungeon.block.custom.CosmicMobSpawnerBlock;
 import net.goui.cosmicdungeon.block.entity.CosmicSpawnerBlockEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -18,6 +21,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
 public final class SpawnerCommand {
     private SpawnerCommand() {}
 
@@ -26,7 +33,11 @@ public final class SpawnerCommand {
                 Commands.literal("spawner")
                         .then(Commands.literal("set")
                                 .requires(src -> src.hasPermission(0))
-                                .then(Commands.argument("mob", StringArgumentType.string())
+                                // IMPORTANT:
+                                // greedyString() allows values like "cosmicdungeon:crystal_creeper"
+                                // without Brigadier treating the ':' portion as "trailing data".
+                                .then(Commands.argument("mob", StringArgumentType.greedyString())
+                                        .suggests(SpawnerCommand::suggestEntityTypes)
                                         .executes(ctx -> {
                                             final CommandSourceStack src = ctx.getSource();
                                             final ServerPlayer player = src.getPlayerOrException();
@@ -46,9 +57,16 @@ public final class SpawnerCommand {
                                                 return 1;
                                             }
 
-                                            ResourceLocation rl = ResourceLocation.tryParse(raw);
+                                            // ONLY default to minecraft:<id> when shorthand (no namespace) is provided.
+                                            final ResourceLocation rl;
+                                            if (raw.contains(":")) {
+                                                rl = ResourceLocation.tryParse(raw);
+                                            } else {
+                                                rl = ResourceLocation.fromNamespaceAndPath("minecraft", raw);
+                                            }
+
                                             if (rl == null) {
-                                                src.sendFailure(Component.literal("Invalid mob id: " + raw + " (expected namespace:path)"));
+                                                src.sendFailure(Component.literal("Invalid entity id: " + raw + " (expected namespace:path, e.g. cosmicdungeon:crystal_creeper)"));
                                                 return 0;
                                             }
 
@@ -256,6 +274,41 @@ public final class SpawnerCommand {
                                 })
                         )
         );
+    }
+
+    /**
+     * Autocomplete for /spawner set <mob>
+     *
+     * Behavior:
+     * - Always suggests "none"
+     * - If user hasn't typed a namespace (no ':'):
+     *     - suggests vanilla mobs as short names (zombie, skeleton, ...)
+     *     - suggests non-vanilla mobs as full ids (cosmicdungeon:..., othermod:...)
+     * - If user typed a namespace (contains ':'):
+     *     - suggests full ids for everything
+     */
+    private static CompletableFuture<Suggestions> suggestEntityTypes(com.mojang.brigadier.context.CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
+        final String remaining = builder.getRemaining().toLowerCase();
+
+        builder.suggest("none");
+
+        final boolean wantsFullIds = remaining.contains(":");
+
+        List<String> ids = new ArrayList<>(BuiltInRegistries.ENTITY_TYPE.keySet().size());
+        for (ResourceLocation rl : BuiltInRegistries.ENTITY_TYPE.keySet()) {
+            if (wantsFullIds) {
+                ids.add(rl.toString());
+            } else {
+                if ("minecraft".equals(rl.getNamespace())) {
+                    ids.add(rl.getPath());
+                } else {
+                    ids.add(rl.toString());
+                }
+            }
+        }
+
+        ids.sort(String::compareTo);
+        return SharedSuggestionProvider.suggest(ids, builder);
     }
 
     private static CosmicSpawnerBlockEntity getTargetSpawnerBE(CommandSourceStack src, ServerPlayer player, Level level) {
