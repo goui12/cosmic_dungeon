@@ -78,6 +78,11 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                         .map(v -> v.cluster().get())
                         .toArray(Block[]::new)
         );
+        // ===== Dungeon protection tags =====
+        // These start empty so you can define policy per-dungeon without my guessing.
+        this.tag(ModTags.Blocks.DUNGEONEER_BREAKABLE);
+        this.tag(ModTags.Blocks.DUNGEONEER_PLACEABLE);
+        this.tag(ModTags.Blocks.DUNGEONEER_INTERACTABLE);
     }
 
     /** Helper: all colored amethyst blocks (any stage) as a flat array for tag().add(...) */

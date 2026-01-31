@@ -30,6 +30,22 @@ public final class ModTags {
         public static final TagKey<Block> AMETHYST_BUDS_MEDIUM = create("amethyst_buds_medium");
         public static final TagKey<Block> AMETHYST_BUDS_LARGE  = create("amethyst_buds_large");
         public static final TagKey<Block> AMETHYST_CLUSTERS    = create("amethyst_clusters");
+        // ===== Dungeon protection tags =====
+        // These are ONLY consulted when a player is inside a protected region.
+        // Use tags so dungeon designers can control allowed actions per dungeon pack.
+        public static final TagKey<Block> DUNGEONEER_BREAKABLE     = create("dungeoneer_breakable");
+        public static final TagKey<Block> DUNGEONEER_PLACEABLE     = create("dungeoneer_placeable");
+        public static final TagKey<Block> DUNGEONEER_INTERACTABLE  = create("dungeoneer_interactable");
+// ===== Region exception tags =====
+// These define WHAT qualifies for an exception.
+// Whether they are allowed is controlled by region flags.
+
+        public static final TagKey<Block> EX_PLACE_TORCH   = create("ex/place/torch");
+        public static final TagKey<Block> EX_PLACE_LADDER  = create("ex/place/ladder");
+        public static final TagKey<Block> EX_PLACE_WATER   = create("ex/place/water");
+
+        public static final TagKey<Block> EX_BREAK_TORCH   = create("ex/break/torch");
+        public static final TagKey<Block> EX_BREAK_LADDER  = create("ex/break/ladder");
 
         private static TagKey<Block> create(String path) {
             return BlockTags.create(ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, path));

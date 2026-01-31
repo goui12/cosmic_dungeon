@@ -7,7 +7,7 @@ net.neoforged.fml.startup.Client
 --assetIndex
 27
 --assetsDir
-C:\\Users\\lcech\\.gradle\\caches\\neoformruntime\\assets
+C:\\Users\\Cameron\\gradle-home\\caches\\neoformruntime\\assets
 --fml.mcVersion
 1.21.10
 --fml.neoForgeVersion

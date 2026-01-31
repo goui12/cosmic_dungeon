@@ -7,6 +7,10 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Block;
+import net.goui.cosmicdungeon.playerclass.api.ClassKeys;
+import net.goui.cosmicdungeon.playerclass.api.ClassNbtUtil;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.block.Blocks;
 
 import java.util.Map;
 import java.util.UUID;
@@ -117,4 +121,33 @@ public final class AccessPolicy {
         deny(sp, denyMsg != null ? denyMsg : "You are not the correct class.");
         return false;
     }
+    // add near the bottom of AccessPolicy (or wherever you prefer)
+
+    public static boolean allowClassGatedVanillaUse(ServerPlayer sp, Block clickedBlock) {
+        if (sp == null || clickedBlock == null) return true;
+
+        // Developer bypass (keeps your existing “dev can do anything” philosophy)
+        if (isDeveloper(sp)) return true;
+
+        String have = ClassNbtUtil.getClassId(sp);
+
+        // Only Judicators can use anvils (covers anvil + chipped + damaged)
+        if (clickedBlock.defaultBlockState().is(BlockTags.ANVIL)) {
+            if (!ClassKeys.CLASS_ID_JUDICATOR.equals(have)) {
+                deny(sp, "Only Judicators can use anvils.");
+                return false;
+            }
+        }
+
+        // Only Theurgists can use brewing stands
+        if (clickedBlock == Blocks.BREWING_STAND) {
+            if (!ClassKeys.CLASS_ID_THEURGIST.equals(have)) {
+                deny(sp, "Only Theurgists can use brewing stands.");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
 }

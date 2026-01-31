@@ -58,8 +58,8 @@ public final class RegionLookServer {
             return;
         }
 
-        final BlockPos min = new BlockPos(r.minX(), r.minY(), r.minZ());
-        final BlockPos max = new BlockPos(r.maxX(), r.maxY(), r.maxZ());
+        final BlockPos min = r.min();
+        final BlockPos max = r.max();
 
         final boolean enabled = flipSingle(player.getUUID(), regionName);
 
@@ -77,7 +77,7 @@ public final class RegionLookServer {
 
         UUID id = player.getUUID();
 
-        // Turning on "all" should disable any single toggles (client will switch modes anyway)
+        // Turning on "all" should disable any single toggles
         ACTIVE_SINGLE.remove(id);
 
         if (ACTIVE_ALL.remove(id)) {
@@ -89,32 +89,28 @@ public final class RegionLookServer {
 
         ACTIVE_ALL.add(id);
 
-        // Snapshot using player's current chunk + a conservative radius (client will also request refreshes)
+        // Snapshot using player's current chunk + a conservative radius (client will request exact refresh)
         int cx = player.chunkPosition().x;
         int cz = player.chunkPosition().z;
-        int radius = 12; // safe default; client will send an exact request next
+        int radius = 12;
         sendAllSnapshot(player, player.level(), player.level().dimension(), cx, cz, radius);
 
         player.displayClientMessage(Component.literal("Showing all nearby regions (rendered area)"), false);
     }
 
-    /**
-     * Called by the server payload handler when the client wants a refresh based on its render distance.
-     * This does NOT load chunks; it just filters stored region AABBs.
-     */
+    /** Called by server payload handler when client wants refresh based on render distance. */
     public static void refreshAllFor(ServerPlayer player, RegionLookAllRequestPayload req) {
         if (player == null) return;
         if (player.level().isClientSide()) return;
 
         UUID id = player.getUUID();
         if (!ACTIVE_ALL.contains(id)) {
-            // ignore refresh if not in "all" mode
-            return;
+            return; // ignore refresh if not in "all" mode
         }
 
         ServerLevel level = player.level();
 
-        // Sanity: ensure same dimension
+        // Ensure same dimension
         if (!level.dimension().equals(req.dimension())) {
             ModNetwork.sendTo(player, new RegionLookAllPayload(true, level.dimension(), java.util.List.of()));
             return;
@@ -124,7 +120,9 @@ public final class RegionLookServer {
         sendAllSnapshot(player, level, req.dimension(), req.centerChunkX(), req.centerChunkZ(), radius);
     }
 
-    private static void sendAllSnapshot(ServerPlayer player, ServerLevel level, ResourceKey<Level> dim, int centerChunkX, int centerChunkZ, int radiusChunks) {
+    private static void sendAllSnapshot(ServerPlayer player, ServerLevel level, ResourceKey<Level> dim,
+                                        int centerChunkX, int centerChunkZ, int radiusChunks) {
+
         RegionRegistryData data = RegionRegistryData.get(level);
 
         // Convert chunk radius into block bounds (inclusive)
@@ -133,7 +131,7 @@ public final class RegionLookServer {
         int minBlockZ = (centerChunkZ - radiusChunks) << 4;
         int maxBlockZ = ((centerChunkZ + radiusChunks) << 4) + 15;
 
-        // Y: keep wide so we don’t miss tall regions; still intersect properly.
+        // Y: wide so we don’t miss tall regions; still intersect properly
         int minY = -2048;
         int maxY = 2048;
 
@@ -144,12 +142,15 @@ public final class RegionLookServer {
             if (rDim == null) continue;
             if (!rDim.equals(dim)) continue;
 
-            int rMinX = Math.min(r.minX(), r.maxX());
-            int rMaxX = Math.max(r.minX(), r.maxX());
-            int rMinY = Math.min(r.minY(), r.maxY());
-            int rMaxY = Math.max(r.minY(), r.maxY());
-            int rMinZ = Math.min(r.minZ(), r.maxZ());
-            int rMaxZ = Math.max(r.minZ(), r.maxZ());
+            BlockPos rMinP = r.min();
+            BlockPos rMaxP = r.max();
+
+            int rMinX = Math.min(rMinP.getX(), rMaxP.getX());
+            int rMaxX = Math.max(rMinP.getX(), rMaxP.getX());
+            int rMinY = Math.min(rMinP.getY(), rMaxP.getY());
+            int rMaxY = Math.max(rMinP.getY(), rMaxP.getY());
+            int rMinZ = Math.min(rMinP.getZ(), rMaxP.getZ());
+            int rMaxZ = Math.max(rMinP.getZ(), rMaxP.getZ());
 
             if (!intersects(rMinX, rMaxX, minBlockX, maxBlockX)) continue;
             if (!intersects(rMinZ, rMaxZ, minBlockZ, maxBlockZ)) continue;
