@@ -248,10 +248,31 @@ public final class RegionRegistryData extends SavedData {
     /**
      * Resolve effective region at a position using parenting.
      * Deepest child wins; ties -> smallest volume then newest createdOrder.
+     *
+     * NOTE: This now delegates to the new single-scan helper.
      */
     public Region effectiveRegionAt(ServerLevel level, BlockPos pos) {
         List<Region> regions = regionsAt(level, pos);
         if (regions.isEmpty()) throw new IllegalArgumentException("No region at pos");
+        return effectiveRegionFromList(regions);
+    }
+
+    /**
+     * NEW API (additive, no behavior change):
+     * Compute the effective region from an already-computed regionsAt(...) list.
+     *
+     * This is the key to eliminating double scans in hot-path event handlers.
+     */
+    public Region effectiveRegionFromList(List<Region> regionsAtPos) {
+        if (regionsAtPos == null || regionsAtPos.isEmpty()) {
+            throw new IllegalArgumentException("No region candidates");
+        }
+
+        // Preserve original semantics:
+        // "Deepest child wins" = remove any candidate that is an ancestor of another candidate.
+        ArrayList<Region> regions = (regionsAtPos instanceof ArrayList<Region> al)
+                ? new ArrayList<>(al)
+                : new ArrayList<>(regionsAtPos);
 
         ArrayList<Region> candidates = new ArrayList<>(regions);
         candidates.removeIf(r -> {
@@ -282,6 +303,18 @@ public final class RegionRegistryData extends SavedData {
         }
 
         return best;
+    }
+
+    /**
+     * NEW API (additive convenience):
+     * If a caller already has the regions list, this avoids any chance of rescanning.
+     */
+    public Region effectiveRegionAt(ServerLevel level, BlockPos pos, List<Region> regionsAtPos) {
+        if (regionsAtPos == null || regionsAtPos.isEmpty()) {
+            throw new IllegalArgumentException("No region at pos");
+        }
+        // We intentionally ignore (level,pos) here — they’re only present for call-site clarity.
+        return effectiveRegionFromList(regionsAtPos);
     }
 
     private boolean isAncestorOf(String maybeAncestor, String maybeDescendant) {

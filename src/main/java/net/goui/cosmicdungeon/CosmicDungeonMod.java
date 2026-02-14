@@ -63,13 +63,11 @@ public class CosmicDungeonMod {
         ModItems.register(modEventBus);
         ModDataComponents.register(modEventBus);
 
-        MetalmancerItems.register(modEventBus);
         ModMenus.register(modEventBus);
         ModEntities.register(modEventBus);
         ModBlocks.register(modEventBus);
         ModSounds.registerSounds(modEventBus);
         ModBlockEntities.register(modEventBus);
-        ModRfBlockEntities.register(modEventBus);
 
         // client-only init — call this ONCE
         if (FMLLoader.getCurrent().getDist() == Dist.CLIENT) {
@@ -115,7 +113,6 @@ public class CosmicDungeonMod {
         RegionCommand.register(event.getDispatcher());
         RankCommand.register(event.getDispatcher());
         PasswordCommand.register(event.getDispatcher());
-        RankCommand.register(event.getDispatcher());
         DeveloperCommand.register(event.getDispatcher());
         DungeoneerCommand.register(event.getDispatcher());
         ClassSelectorDestinationCommand.register(event.getDispatcher());

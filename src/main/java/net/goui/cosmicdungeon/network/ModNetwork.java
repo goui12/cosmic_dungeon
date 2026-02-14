@@ -11,6 +11,7 @@ import net.goui.cosmicdungeon.playerclass.api.ClassData;
 import net.goui.cosmicdungeon.playerclass.api.ClassKeys;
 import net.goui.cosmicdungeon.playerclass.api.ClassNet;
 import net.goui.cosmicdungeon.playerclass.api.ClassNbtUtil;
+import net.goui.cosmicdungeon.redstone.rf.RfNet;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerLevel;
@@ -27,6 +28,11 @@ public final class ModNetwork {
 
     public static void registerPayloadHandlers(final RegisterPayloadHandlersEvent event) {
         final PayloadRegistrar registrar = event.registrar("1");
+
+        /* =====================================================================================
+         * RF (central registration; feature-local packet definitions)
+         * ===================================================================================== */
+        RfNet.register(registrar);
 
         /* ===================== SHAKE ===================== */
 
@@ -50,7 +56,6 @@ public final class ModNetwork {
                     var data = net.goui.cosmicdungeon.rift.RiftRegistryData.get(level);
                     var clicked = payload.clickedTilePos();
 
-                    // Always return a config response (never silent), so client UI never "hangs".
                     List<String> destinations = data.listDestinationNamesSorted();
 
                     if (!AccessPolicy.isDeveloper(sp)) {
@@ -231,8 +236,6 @@ public final class ModNetwork {
                     ctx.reply(new ClassPayloads.S2C_SelectResult(true, "Class selected: " + now, now));
                     ctx.reply(new ClassPayloads.S2C_SelectorData(now, ClassNet.getSelectableClasses(sp)));
 
-                    // ✅ NEW: mark "ready" for the selector block this menu came from.
-                    // Teleport happens automatically when ready count reaches max for that selector.
                     net.goui.cosmicdungeon.block.custom.ClassSelectorTeleportUtil.onClassSelected(sp, now);
                 }
         );

@@ -32,12 +32,10 @@ import java.util.concurrent.CompletableFuture;
 public final class RegionCommand {
     private RegionCommand() {}
 
-    // Base flags shown on main UI
     private static final String[] KNOWN_FLAGS = new String[] {
             "place", "break", "interact", "explode", "mobgrief", "spread", "burn"
     };
 
-    // Exceptions
     private static final String[] PLACE_EXCEPTIONS = new String[] { "torch", "ladder", "water" };
     private static final String[] BREAK_EXCEPTIONS = new String[] { "torch", "ladder" };
 
@@ -52,22 +50,21 @@ public final class RegionCommand {
                     return AccessPolicy.isDeveloper(p);
                 });
 
-        // Keep the root clean: attach subtrees.
         root.then(buildWandCommand());
-        root.then(buildCreateCommands());   // /region new + /region create
+        root.then(buildNewCommand());
+        root.then(buildCreateCommand());
+
         root.then(buildLookCommand());
         root.then(buildInfoCommand());
         root.then(buildParentCommand());
         root.then(buildDeleteCommand());
         root.then(buildListCommand());
-        root.then(buildFlagsCommand());     // the “big one”
-        root.then(buildFlagCommand());      // effective region at player
+        root.then(buildFlagsCommand());
+        root.then(buildFlagCommand());
 
         dispatcher.register(root);
     }
 
-    /* ====================================================================== */
-    /*  Subtrees                                                              */
     /* ====================================================================== */
 
     private static LiteralArgumentBuilder<CommandSourceStack> buildWandCommand() {
@@ -91,23 +88,16 @@ public final class RegionCommand {
                 });
     }
 
-    private static LiteralArgumentBuilder<CommandSourceStack> buildCreateCommands() {
-        LiteralArgumentBuilder<CommandSourceStack> newCmd =
-                Commands.literal("new")
-                        .then(Commands.argument("name", StringArgumentType.greedyString())
-                                .executes(ctx -> cmdCreateFromSelection(ctx.getSource(), StringArgumentType.getString(ctx, "name"))));
+    private static LiteralArgumentBuilder<CommandSourceStack> buildNewCommand() {
+        return Commands.literal("new")
+                .then(Commands.argument("name", StringArgumentType.greedyString())
+                        .executes(ctx -> cmdCreateFromSelection(ctx.getSource(), StringArgumentType.getString(ctx, "name"))));
+    }
 
-        LiteralArgumentBuilder<CommandSourceStack> createCmd =
-                Commands.literal("create")
-                        .then(Commands.argument("name", StringArgumentType.greedyString())
-                                .executes(ctx -> cmdCreateFromSelection(ctx.getSource(), StringArgumentType.getString(ctx, "name"))));
-
-        // We return a dummy literal that never registers; we attach both in register().
-        // But Brigadier wants a single builder returned, so we fold them under a container literal.
-        // NOTE: This container literal is never invoked directly.
-        return Commands.literal("_create_container_")
-                .then(newCmd)
-                .then(createCmd);
+    private static LiteralArgumentBuilder<CommandSourceStack> buildCreateCommand() {
+        return Commands.literal("create")
+                .then(Commands.argument("name", StringArgumentType.greedyString())
+                        .executes(ctx -> cmdCreateFromSelection(ctx.getSource(), StringArgumentType.getString(ctx, "name"))));
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> buildLookCommand() {
@@ -122,7 +112,7 @@ public final class RegionCommand {
                         .suggests(RegionCommand::suggestRegionNames)
                         .executes(ctx -> {
                             ServerPlayer player = ctx.getSource().getPlayerOrException();
-                            String name = StringArgumentType.getString(ctx, "name").trim();
+                            String name = normalizeName(StringArgumentType.getString(ctx, "name"));
                             RegionLookServer.toggle(player, name);
                             return 1;
                         }));
@@ -133,8 +123,8 @@ public final class RegionCommand {
                 .then(Commands.argument("name", StringArgumentType.greedyString())
                         .suggests(RegionCommand::suggestRegionNames)
                         .executes(ctx -> {
-                            ServerLevel level = (ServerLevel) ctx.getSource().getLevel();
-                            String name = StringArgumentType.getString(ctx, "name").trim();
+                            ServerLevel level = ctx.getSource().getLevel();
+                            String name = normalizeName(StringArgumentType.getString(ctx, "name"));
 
                             RegionRegistryData data = RegionRegistryData.get(level);
                             var opt = data.get(name);
@@ -192,8 +182,8 @@ public final class RegionCommand {
                                 .suggests(RegionCommand::suggestParentTargets)
                                 .executes(ctx -> {
                                     ServerLevel level = ctx.getSource().getLevel();
-                                    String region = StringArgumentType.getString(ctx, "region");
-                                    String parent = StringArgumentType.getString(ctx, "newParent");
+                                    String region = normalizeName(StringArgumentType.getString(ctx, "region"));
+                                    String parent = normalizeName(StringArgumentType.getString(ctx, "newParent"));
 
                                     RegionRegistryData data = RegionRegistryData.get(level);
 
@@ -228,8 +218,8 @@ public final class RegionCommand {
                 .then(Commands.argument("name", StringArgumentType.greedyString())
                         .suggests(RegionCommand::suggestRegionNames)
                         .executes(ctx -> {
-                            ServerLevel level = (ServerLevel) ctx.getSource().getLevel();
-                            String name = StringArgumentType.getString(ctx, "name").trim();
+                            ServerLevel level = ctx.getSource().getLevel();
+                            String name = normalizeName(StringArgumentType.getString(ctx, "name"));
 
                             RegionRegistryData data = RegionRegistryData.get(level);
                             boolean ok = data.delete(name);
@@ -250,7 +240,7 @@ public final class RegionCommand {
     private static LiteralArgumentBuilder<CommandSourceStack> buildListCommand() {
         return Commands.literal("list")
                 .executes(ctx -> {
-                    ServerLevel level = (ServerLevel) ctx.getSource().getLevel();
+                    ServerLevel level = ctx.getSource().getLevel();
                     RegionRegistryData data = RegionRegistryData.get(level);
 
                     var list = data.listSorted();
@@ -287,15 +277,17 @@ public final class RegionCommand {
                 });
     }
 
+    /* ====================================================================== */
+    /* flags UI + setters                                                      */
+    /* ====================================================================== */
+
     private static LiteralArgumentBuilder<CommandSourceStack> buildFlagsCommand() {
-        // /region flags <name> ...
         LiteralArgumentBuilder<CommandSourceStack> flags = Commands.literal("flags");
 
         var nameArg = Commands.argument("name", StringArgumentType.word())
                 .suggests(RegionCommand::suggestRegionNames)
                 .executes(ctx -> uiFlagListForNamedRegion(ctx.getSource(), StringArgumentType.getString(ctx, "name")));
 
-        // inherit subtree: /region flags <name> inherit <flags|exceptions> <on|off>
         var inherit = Commands.literal("inherit");
         var whichArg = Commands.argument("which", StringArgumentType.word())
                 .suggests((c, b) -> { b.suggest("flags"); b.suggest("exceptions"); return b.buildFuture(); });
@@ -306,7 +298,7 @@ public final class RegionCommand {
                     CommandSourceStack src = ctx.getSource();
                     ServerLevel level = src.getLevel();
 
-                    String regionName = StringArgumentType.getString(ctx, "name");
+                    String regionName = normalizeName(StringArgumentType.getString(ctx, "name"));
                     String which = StringArgumentType.getString(ctx, "which").toLowerCase(Locale.ROOT);
                     String mode = StringArgumentType.getString(ctx, "mode").toLowerCase(Locale.ROOT);
 
@@ -341,7 +333,6 @@ public final class RegionCommand {
         inherit.then(whichArg);
         nameArg.then(inherit);
 
-        // exceptions subtree: /region flags <name> exceptions <place|break> [<ex> <allow|deny|clear>]
         var exceptions = Commands.literal("exceptions");
         var scopeArg = Commands.argument("scope", StringArgumentType.word())
                 .suggests((c, b) -> { b.suggest("place"); b.suggest("break"); return b.buildFuture(); })
@@ -360,7 +351,7 @@ public final class RegionCommand {
                     CommandSourceStack src = ctx.getSource();
                     ServerLevel level = src.getLevel();
 
-                    String regionName = StringArgumentType.getString(ctx, "name");
+                    String regionName = normalizeName(StringArgumentType.getString(ctx, "name"));
                     String scope = StringArgumentType.getString(ctx, "scope").toLowerCase(Locale.ROOT);
                     String ex = StringArgumentType.getString(ctx, "ex").toLowerCase(Locale.ROOT);
                     String mode = StringArgumentType.getString(ctx, "mode").toLowerCase(Locale.ROOT);
@@ -402,7 +393,6 @@ public final class RegionCommand {
         exceptions.then(scopeArg);
         nameArg.then(exceptions);
 
-        // set flag subtree: /region flags <name> <flag> <allow|deny|clear>
         var flagArg = Commands.argument("flag", StringArgumentType.word())
                 .suggests(RegionCommand::suggestFlagKeys);
 
@@ -412,7 +402,7 @@ public final class RegionCommand {
                     CommandSourceStack src = ctx.getSource();
                     ServerLevel level = src.getLevel();
 
-                    String regionName = StringArgumentType.getString(ctx, "name");
+                    String regionName = normalizeName(StringArgumentType.getString(ctx, "name"));
                     String key = StringArgumentType.getString(ctx, "flag");
                     String mode = StringArgumentType.getString(ctx, "mode").toLowerCase(Locale.ROOT);
 
@@ -455,8 +445,6 @@ public final class RegionCommand {
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> buildFlagCommand() {
-        // /region flag list
-        // /region flag <flag> <allow|deny>  (for effective region at player)
         LiteralArgumentBuilder<CommandSourceStack> flag = Commands.literal("flag");
 
         flag.then(Commands.literal("list")
@@ -488,7 +476,7 @@ public final class RegionCommand {
                         return 0;
                     }
 
-                    RegionRegistryData.Region r = data.effectiveRegionAt(level, pos);
+                    RegionRegistryData.Region r = data.effectiveRegionFromList(regions);
 
                     String value;
                     if ("allow".equals(mode)) value = "true";
@@ -519,7 +507,7 @@ public final class RegionCommand {
     }
 
     /* ====================================================================== */
-    /*  Create: from wand selection                                            */
+    /* Create from wand selection                                              */
     /* ====================================================================== */
 
     private static int cmdCreateFromSelection(CommandSourceStack src, String rawName) {
@@ -530,7 +518,8 @@ public final class RegionCommand {
         }
 
         ServerLevel level = (ServerLevel) player.level();
-        String name = rawName == null ? "" : rawName.trim();
+
+        String name = normalizeName(rawName);
         if (name.isBlank()) {
             src.sendFailure(Component.literal("Region name cannot be empty.").withStyle(ChatFormatting.RED));
             return 0;
@@ -581,7 +570,7 @@ public final class RegionCommand {
     }
 
     /* ====================================================================== */
-    /*  UI: flags at player                                                    */
+    /* UI: flags at player                                                     */
     /* ====================================================================== */
 
     private static int uiFlagListAtPlayer(CommandSourceStack src) {
@@ -601,13 +590,9 @@ public final class RegionCommand {
             return 0;
         }
 
-        RegionRegistryData.Region r = data.effectiveRegionAt(level, pos);
+        RegionRegistryData.Region r = data.effectiveRegionFromList(regions);
         return uiFlagListForRegion(src, data, r, "/region flag list", true);
     }
-
-    /* ====================================================================== */
-    /*  UI: flags for a named region                                           */
-    /* ====================================================================== */
 
     private static int uiFlagListForNamedRegion(CommandSourceStack src, String regionNameRaw) {
         ServerPlayer p = src.getPlayer();
@@ -617,7 +602,7 @@ public final class RegionCommand {
         }
 
         ServerLevel level = src.getLevel();
-        String regionName = regionNameRaw == null ? "" : regionNameRaw.trim();
+        String regionName = normalizeName(regionNameRaw);
         if (regionName.isBlank()) {
             src.sendFailure(Component.literal("Region name cannot be empty.").withStyle(ChatFormatting.RED));
             return 0;
@@ -720,10 +705,6 @@ public final class RegionCommand {
         return 1;
     }
 
-    /* ====================================================================== */
-    /*  UI: exceptions submenu                                                 */
-    /* ====================================================================== */
-
     private static int uiExceptionList(CommandSourceStack src, String regionNameRaw, String scopeRaw) {
         ServerPlayer p = src.getPlayer();
         if (p == null) {
@@ -732,7 +713,7 @@ public final class RegionCommand {
         }
         ServerLevel level = src.getLevel();
 
-        String regionName = regionNameRaw == null ? "" : regionNameRaw.trim();
+        String regionName = normalizeName(regionNameRaw);
         if (regionName.isBlank()) {
             src.sendFailure(Component.literal("Region name cannot be empty.").withStyle(ChatFormatting.RED));
             return 0;
@@ -804,8 +785,11 @@ public final class RegionCommand {
     }
 
     /* ====================================================================== */
-    /*  helpers                                                                */
-    /* ====================================================================== */
+
+    private static String normalizeName(String raw) {
+        if (raw == null) return "";
+        return raw.trim();
+    }
 
     private static MutableComponent sourcePill(RegionRegistryData.ValueSource src) {
         return switch (src) {
@@ -842,7 +826,7 @@ public final class RegionCommand {
     }
 
     /* ====================================================================== */
-    /*  Suggestions                                                            */
+    /* Suggestions                                                             */
     /* ====================================================================== */
 
     private static CompletableFuture<Suggestions> suggestRegionNames(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
@@ -872,6 +856,22 @@ public final class RegionCommand {
     }
 
     private static CompletableFuture<Suggestions> suggestExceptionKeys(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
+        String scope = null;
+        try {
+            scope = StringArgumentType.getString(ctx, "scope").toLowerCase(Locale.ROOT);
+        } catch (Exception ignored) {}
+
+        if ("break".equals(scope)) {
+            for (String k : BREAK_EXCEPTIONS) builder.suggest(k);
+            return builder.buildFuture();
+        }
+
+        if ("place".equals(scope)) {
+            for (String k : PLACE_EXCEPTIONS) builder.suggest(k);
+            return builder.buildFuture();
+        }
+
+        // Fallback (scope not yet present) – suggest all unique
         for (String k : PLACE_EXCEPTIONS) builder.suggest(k);
         for (String k : BREAK_EXCEPTIONS) builder.suggest(k);
         return builder.buildFuture();

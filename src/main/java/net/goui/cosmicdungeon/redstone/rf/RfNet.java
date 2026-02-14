@@ -12,15 +12,12 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.PacketDistributor;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID)
 public final class RfNet {
     private RfNet() {}
 
@@ -71,26 +68,19 @@ public final class RfNet {
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 
-    /* =====================  REGISTRATION (COMMON)  ===================== */
+    /* =====================  REGISTRATION (CALLED FROM ModNetwork)  ===================== */
 
-    @SubscribeEvent
-    public static void register(final RegisterPayloadHandlersEvent event) {
-        final var registrar = event.registrar("1");
-
+    public static void register(final PayloadRegistrar registrar) {
         // C2S: set Hz (MUST be server-authoritative + permission-checked)
         registrar.playToServer(
                 C2S_SetHz.TYPE,
                 C2S_SetHz.STREAM_CODEC,
                 (payload, ctx) -> {
                     if (!(ctx.player() instanceof ServerPlayer sp)) return;
-                    if (!AccessPolicy.isDeveloper(sp)) {
-                        // silent drop = secure + no spam; DeviceAccessEvents already gives UX on click
-                        return;
-                    }
-
+                    if (!AccessPolicy.isDeveloper(sp)) return;
                     if (!(sp.level() instanceof ServerLevel level)) return;
 
-                    // Optional proximity check: prevents remote edits from across the world.
+                    // Prevent remote edits
                     if (sp.blockPosition().distManhattan(payload.pos()) > 16) return;
 
                     final BlockEntity be = level.getBlockEntity(payload.pos());
@@ -109,14 +99,9 @@ public final class RfNet {
                 C2S_RequestHz.STREAM_CODEC,
                 (payload, ctx) -> {
                     if (!(ctx.player() instanceof ServerPlayer sp)) return;
-
-                    // Viewing could be allowed for everyone, but your requirement is:
-                    // "dungeoneer shouldn't open GUI" → so lock this too.
                     if (!AccessPolicy.isDeveloper(sp)) return;
-
                     if (!(sp.level() instanceof ServerLevel level)) return;
 
-                    // Optional proximity check
                     if (sp.blockPosition().distManhattan(payload.pos()) > 16) return;
 
                     final BlockEntity be = level.getBlockEntity(payload.pos());
@@ -134,7 +119,7 @@ public final class RfNet {
                 S2C_HzSync.TYPE,
                 S2C_HzSync.STREAM_CODEC,
                 (payload, ctx) -> {
-                    RfNet.ClientCache.putHz(payload.pos(), payload.hz());
+                    ClientCache.putHz(payload.pos(), payload.hz());
                     HzConfigScreen.onServerHz(payload.pos(), payload.hz());
                 }
         );

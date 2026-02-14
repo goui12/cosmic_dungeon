@@ -2,11 +2,13 @@ package net.goui.cosmicdungeon.block.entity;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.block.ModBlocks;
+import net.goui.cosmicdungeon.redstone.rf.RedstoneReceiverBE;
+import net.goui.cosmicdungeon.redstone.rf.RedstoneTransmitterBE;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
 public final class ModBlockEntities {
 
@@ -59,6 +61,30 @@ public final class ModBlockEntities {
                     ClassSelectorBlockEntity::new,
                     false,
                     ModBlocks.CLASS_SELECTOR_BLOCK.get()
+            )
+    );
+
+    /* =========================================================================================
+     * RF / Redstone Frequency (moved here to keep ONE BlockEntityType registry)
+     * ========================================================================================= */
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<RedstoneTransmitterBE>>
+            REDSTONE_TRANSMITTER_BE = BLOCK_ENTITY_TYPES.register(
+            "redstone_transmitter",
+            () -> new BlockEntityType<>(
+                    RedstoneTransmitterBE::new,
+                    false,
+                    ModBlocks.REDSTONE_TRANSMITTER.get()
+            )
+    );
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<RedstoneReceiverBE>>
+            REDSTONE_RECEIVER_BE = BLOCK_ENTITY_TYPES.register(
+            "redstone_receiver",
+            () -> new BlockEntityType<>(
+                    RedstoneReceiverBE::new,
+                    false,
+                    ModBlocks.REDSTONE_RECEIVER.get()
             )
     );
 

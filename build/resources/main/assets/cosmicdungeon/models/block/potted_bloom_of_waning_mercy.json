@@ -1,9 +1,0 @@
-{
-  "parent": "minecraft:block/flower_pot_cross",
-  "render_type": "cutout",
-  "textures": {
-    "dirt": "minecraft:block/dirt",
-    "particle": "cosmicdungeon:block/bloom_of_waning_mercy",
-    "plant": "cosmicdungeon:block/bloom_of_waning_mercy"
-  }
-}

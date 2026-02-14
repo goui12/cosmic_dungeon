@@ -1,11 +1,6 @@
 {
   "replace": false,
   "values": [
-    "minecraft:torch",
-    "minecraft:wall_torch",
-    "minecraft:redstone_torch",
-    "minecraft:redstone_wall_torch",
-    "minecraft:soul_torch",
-    "minecraft:soul_wall_torch"
+    "#cosmicdungeon:region_ex_torch_blocks"
   ]
 }

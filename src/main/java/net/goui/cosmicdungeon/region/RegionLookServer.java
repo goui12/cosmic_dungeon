@@ -22,10 +22,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class RegionLookServer {
     private RegionLookServer() {}
 
-    // Per-player toggles for single-region look
-    private static final ConcurrentHashMap<UUID, Set<String>> ACTIVE_SINGLE = new ConcurrentHashMap<>();
+    /**
+     * Single look is truly single: player -> regionName (or null if off)
+     */
+    private static final ConcurrentHashMap<UUID, String> ACTIVE_SINGLE = new ConcurrentHashMap<>();
 
-    // Per-player toggle for "all"
+    /**
+     * All look is a simple toggle.
+     */
     private static final Set<UUID> ACTIVE_ALL = ConcurrentHashMap.newKeySet();
 
     public static void toggle(ServerPlayer player, String regionNameRaw) {
@@ -58,17 +62,18 @@ public final class RegionLookServer {
             return;
         }
 
-        final BlockPos min = r.min();
-        final BlockPos max = r.max();
+        final boolean enabled = flipSingle(player.getUUID(), r.name());
 
-        final boolean enabled = flipSingle(player.getUUID(), regionName);
+        // If we just disabled, tell client to turn off single look.
+        // Otherwise, send the region bounds to render.
+        if (!enabled) {
+            ModNetwork.sendTo(player, new RegionLookPayload(false, r.name(), dimKey, r.min(), r.max()));
+            player.displayClientMessage(Component.literal("Hiding " + r.name()), false);
+            return;
+        }
 
-        ModNetwork.sendTo(player, new RegionLookPayload(enabled, regionName, dimKey, min, max));
-
-        player.displayClientMessage(
-                Component.literal((enabled ? "Showing " : "Hiding ") + regionName),
-                false
-        );
+        ModNetwork.sendTo(player, new RegionLookPayload(true, r.name(), dimKey, r.min(), r.max()));
+        player.displayClientMessage(Component.literal("Showing " + r.name()), false);
     }
 
     public static void toggleAll(ServerPlayer player) {
@@ -77,7 +82,7 @@ public final class RegionLookServer {
 
         UUID id = player.getUUID();
 
-        // Turning on "all" should disable any single toggles
+        // Turning on "all" should disable single
         ACTIVE_SINGLE.remove(id);
 
         if (ACTIVE_ALL.remove(id)) {
@@ -93,6 +98,7 @@ public final class RegionLookServer {
         int cx = player.chunkPosition().x;
         int cz = player.chunkPosition().z;
         int radius = 12;
+
         sendAllSnapshot(player, player.level(), player.level().dimension(), cx, cz, radius);
 
         player.displayClientMessage(Component.literal("Showing all nearby regions (rendered area)"), false);
@@ -131,7 +137,7 @@ public final class RegionLookServer {
         int minBlockZ = (centerChunkZ - radiusChunks) << 4;
         int maxBlockZ = ((centerChunkZ + radiusChunks) << 4) + 15;
 
-        // Y: wide so we don’t miss tall regions; still intersect properly
+        // Wide Y bounds; region Y intersection still done properly
         int minY = -2048;
         int maxY = 2048;
 
@@ -183,13 +189,20 @@ public final class RegionLookServer {
         }
     }
 
+    /**
+     * @return true if enabled after flip, false if disabled
+     */
     private static boolean flipSingle(UUID playerId, String regionName) {
-        Set<String> set = ACTIVE_SINGLE.computeIfAbsent(playerId, k -> ConcurrentHashMap.newKeySet());
-        if (set.remove(regionName)) {
+        String cur = ACTIVE_SINGLE.get(playerId);
+
+        // same region toggles off
+        if (cur != null && cur.equals(regionName)) {
+            ACTIVE_SINGLE.remove(playerId);
             return false;
-        } else {
-            set.add(regionName);
-            return true;
         }
+
+        // different region switches
+        ACTIVE_SINGLE.put(playerId, regionName);
+        return true;
     }
 }

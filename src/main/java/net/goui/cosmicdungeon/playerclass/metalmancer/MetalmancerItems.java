@@ -1,32 +1,28 @@
 package net.goui.cosmicdungeon.playerclass.metalmancer;
 
-import net.goui.cosmicdungeon.CosmicDungeonMod;
+import net.goui.cosmicdungeon.item.ModItems;
 import net.goui.cosmicdungeon.playerclass.metalmancer.item.MetalmancerSummoningStaffItem;
 import net.goui.cosmicdungeon.playerclass.ore.SatchelOfSamplesItem;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
-import net.neoforged.neoforge.registries.DeferredRegister;
 
+/**
+ * Compatibility wrapper: Metalmancer items now live in {@link ModItems} to keep ONE Items registry.
+ */
 public final class MetalmancerItems {
     private MetalmancerItems() {}
 
-    public static final DeferredRegister.Items ITEMS =
-            DeferredRegister.createItems(CosmicDungeonMod.MOD_ID);
-
-    // Satchel of Samples (ore storage)
     public static final DeferredItem<SatchelOfSamplesItem> SATCHEL_OF_SAMPLES =
-            ITEMS.registerItem("satchel_of_samples", SatchelOfSamplesItem::new);
+            ModItems.SATCHEL_OF_SAMPLES;
 
-    // Bent Rod of Melted Shavings — D2 T1
     public static final DeferredItem<MetalmancerSummoningStaffItem> BENT_ROD_OF_MELTED_SHAVINGS =
-            ITEMS.registerItem("bent_rod_of_melted_shavings",
-                    props -> new MetalmancerSummoningStaffItem(props, 1));
+            ModItems.BENT_ROD_OF_MELTED_SHAVINGS;
 
-    // Erzfühler (Ore-Feeler) — D2 T2
     public static final DeferredItem<MetalmancerSummoningStaffItem> ERZFUEHLER =
-            ITEMS.registerItem("erzfuehler",
-                    props -> new MetalmancerSummoningStaffItem(props, 2));
+            ModItems.ERZFUEHLER;
 
-    public static void register(net.neoforged.bus.api.IEventBus bus) {
-        ITEMS.register(bus);
+    /** No-op: registrations are centralized in ModItems now. */
+    public static void register(IEventBus bus) {
+        // intentionally empty
     }
 }

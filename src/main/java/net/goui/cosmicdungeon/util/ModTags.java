@@ -30,22 +30,25 @@ public final class ModTags {
         public static final TagKey<Block> AMETHYST_BUDS_MEDIUM = create("amethyst_buds_medium");
         public static final TagKey<Block> AMETHYST_BUDS_LARGE  = create("amethyst_buds_large");
         public static final TagKey<Block> AMETHYST_CLUSTERS    = create("amethyst_clusters");
-        // ===== Dungeon protection tags =====
-        // These are ONLY consulted when a player is inside a protected region.
-        // Use tags so dungeon designers can control allowed actions per dungeon pack.
+
+        // ===== Dungeon protection allowlists =====
+        // ONLY consulted when a player is inside a protected region.
         public static final TagKey<Block> DUNGEONEER_BREAKABLE     = create("dungeoneer_breakable");
         public static final TagKey<Block> DUNGEONEER_PLACEABLE     = create("dungeoneer_placeable");
         public static final TagKey<Block> DUNGEONEER_INTERACTABLE  = create("dungeoneer_interactable");
-// ===== Region exception tags =====
-// These define WHAT qualifies for an exception.
-// Whether they are allowed is controlled by region flags.
 
+        // ===== Region exception block-sets =====
+        // These define WHAT qualifies for an exception; whether allowed is controlled by region flags.
         public static final TagKey<Block> EX_PLACE_TORCH   = create("ex/place/torch");
         public static final TagKey<Block> EX_PLACE_LADDER  = create("ex/place/ladder");
         public static final TagKey<Block> EX_PLACE_WATER   = create("ex/place/water");
 
         public static final TagKey<Block> EX_BREAK_TORCH   = create("ex/break/torch");
         public static final TagKey<Block> EX_BREAK_LADDER  = create("ex/break/ladder");
+
+        // Legacy/aggregate tags (optional to keep; harmless if present)
+        public static final TagKey<Block> REGION_EX_TORCH_BLOCKS   = create("region_ex_torch_blocks");
+        public static final TagKey<Block> REGION_EX_LADDER_BLOCKS  = create("region_ex_ladder_blocks");
 
         private static TagKey<Block> create(String path) {
             return BlockTags.create(ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, path));
@@ -65,14 +68,7 @@ public final class ModTags {
         public static final TagKey<Item> INFINITE_SHOOTABLES =
                 ItemTags.create(ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "infinite_shootables"));
 
-        // ===== Class restriction tags (data-driven enforcement) =====
-        // Items in these tags should be restricted to that class for USE and (eventually) PICKUP.
-        //
-        // Path layout:
-        //   data/cosmicdungeon/tags/items/class_restricted/<class>.json
-        //
-        // Example:
-        //   class_restricted/metalmancer
+        // ===== Class restriction tags =====
         public static final TagKey<Item> CLASS_RESTRICTED_METALMANCER = create("class_restricted/metalmancer");
         public static final TagKey<Item> CLASS_RESTRICTED_JUDICATOR   = create("class_restricted/judicator");
         public static final TagKey<Item> CLASS_RESTRICTED_DRAGOON     = create("class_restricted/dragoon");
