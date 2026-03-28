@@ -15,32 +15,26 @@ import net.goui.cosmicdungeon.block.custom.CosmicMobSpawnerBlock;
 import net.goui.cosmicdungeon.block.custom.CosmicRiftPlacerBlock;
 import net.goui.cosmicdungeon.block.custom.CosmicRiftTileBlock;
 import net.goui.cosmicdungeon.block.custom.InfiniteDispenserBlock;
-import net.goui.cosmicdungeon.block.custom.MagicBlock;
+
 import net.goui.cosmicdungeon.block.custom.SpectralBloomBlock;
 import net.goui.cosmicdungeon.item.ModItems;
 import net.goui.cosmicdungeon.redstone.rf.RedstoneReceiverBlock;
 import net.goui.cosmicdungeon.redstone.rf.RedstoneTransmitterBlock;
 import net.goui.cosmicdungeon.sound.ModSoundTypes;
-
-import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.DropExperienceBlock;
 import net.minecraft.world.level.block.FlowerPotBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.goui.cosmicdungeon.block.custom.ClassLockedChestBlock;
-import net.goui.cosmicdungeon.block.entity.ModBlockEntities;
 import net.goui.cosmicdungeon.playerclass.api.ClassKeys;
-
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
-
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -53,23 +47,6 @@ public class ModBlocks {
         BLOCKS.register(eventBus);
     }
 
-    /* ---------- Regular blocks ---------- */
-
-    public static final DeferredBlock<Block> BISMUTH_BLOCK = BLOCKS.registerBlock(
-            "bismuth_block",
-            (BlockBehaviour.Properties props) -> new Block(
-                    props.strength(4f).requiresCorrectToolForDrops().sound(SoundType.AMETHYST)
-            )
-    );
-
-    public static final DeferredBlock<Block> BISMUTH_ORE = BLOCKS.registerBlock(
-            "bismuth_ore",
-            (BlockBehaviour.Properties props) -> new DropExperienceBlock(
-                    UniformInt.of(2, 4),
-                    props.strength(3f).requiresCorrectToolForDrops().sound(SoundType.STONE)
-            )
-    );
-
     // ===== Region Look: Ghost block for client-side rendering =====
     // No BlockItem on purpose: this is a visual-only helper block.
     public static final DeferredBlock<Block> REGION_GHOST_GLASS = BLOCKS.registerBlock(
@@ -81,21 +58,6 @@ public class ModBlocks {
                             .noCollision()
                             .isViewBlocking((state, level, pos) -> false)
                             .mapColor(MapColor.COLOR_LIGHT_BLUE)
-            )
-    );
-
-    public static final DeferredBlock<Block> BISMUTH_DEEPSLATE_ORE = BLOCKS.registerBlock(
-            "bismuth_deepslate_ore",
-            (BlockBehaviour.Properties props) -> new DropExperienceBlock(
-                    UniformInt.of(3, 6),
-                    props.strength(4f).requiresCorrectToolForDrops().sound(SoundType.DEEPSLATE)
-            )
-    );
-
-    public static final DeferredBlock<Block> MAGIC_BLOCK = BLOCKS.registerBlock(
-            "magic_block",
-            (BlockBehaviour.Properties props) -> new MagicBlock(
-                    props.strength(2f)
             )
     );
 
@@ -457,15 +419,7 @@ public class ModBlocks {
         return LIT_AMETHYST_BLOCKS.values().stream();
     }
 
-    /* ---------- BlockItems for non-amethyst misc ---------- */
-    public static final DeferredItem<BlockItem> BISMUTH_BLOCK_ITEM =
-            ModItems.ITEMS.registerSimpleBlockItem("bismuth_block", BISMUTH_BLOCK);
-    public static final DeferredItem<BlockItem> BISMUTH_ORE_ITEM =
-            ModItems.ITEMS.registerSimpleBlockItem("bismuth_ore", BISMUTH_ORE);
-    public static final DeferredItem<BlockItem> BISMUTH_DEEPSLATE_ORE_ITEM =
-            ModItems.ITEMS.registerSimpleBlockItem("bismuth_deepslate_ore", BISMUTH_DEEPSLATE_ORE);
-    public static final DeferredItem<BlockItem> MAGIC_BLOCK_ITEM =
-            ModItems.ITEMS.registerSimpleBlockItem("magic_block", MAGIC_BLOCK);
+    /* ---------- BlockItems---------- */
     public static final DeferredItem<BlockItem> CHICKEN_BLOCK_ITEM =
             ModItems.ITEMS.registerSimpleBlockItem("chicken_block", CHICKEN_BLOCK);
     public static final DeferredItem<BlockItem> INFINITE_DISPENSER_ITEM =

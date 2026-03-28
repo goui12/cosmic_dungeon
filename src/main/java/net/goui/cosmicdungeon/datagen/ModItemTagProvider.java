@@ -26,8 +26,6 @@ public class ModItemTagProvider extends BlockTagCopyingItemTagProvider {
     @Override
     protected void addTags(HolderLookup.Provider provider) {
         this.tag(ModTags.Items.TRANSFORMABLE_ITEMS)
-                .add(ModItems.BISMUTH.get())
-                .add(ModItems.RAW_BISMUTH.get())
                 .add(Items.COAL)
                 .add(Items.STICK)
                 .add(Items.COMPASS);

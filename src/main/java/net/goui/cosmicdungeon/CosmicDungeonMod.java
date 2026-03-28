@@ -42,7 +42,6 @@ public class CosmicDungeonMod {
 
     public CosmicDungeonMod(IEventBus modEventBus, ModContainer modContainer) {
         // lifecycle
-        modEventBus.addListener(this::addCreative);
         modEventBus.addListener(this::commonSetup);
 
         // networking payloads
@@ -122,17 +121,6 @@ public class CosmicDungeonMod {
     private void commonSetup(final FMLCommonSetupEvent event) {
         event.enqueueWork(ModBlocks::registerFlowerPots);
 
-    }
-
-    private void addCreative(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.INGREDIENTS) {
-            event.accept(ModItems.BISMUTH);
-            event.accept(ModItems.RAW_BISMUTH);
-        }
-        if (event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS) {
-            event.accept(ModBlocks.BISMUTH_BLOCK);
-            event.accept(ModBlocks.BISMUTH_ORE);
-        }
     }
 
     @SubscribeEvent

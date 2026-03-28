@@ -17,33 +17,6 @@ public class ModCreativeModeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TAB =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CosmicDungeonMod.MOD_ID);
 
-    public static final Supplier<CreativeModeTab> BISMUTH_ITEMS_TAB = CREATIVE_MODE_TAB.register("bismuth_items_tab",
-            () -> CreativeModeTab.builder().icon(() -> new ItemStack(ModItems.BISMUTH.get()))
-                    .title(Component.translatable("creativetab.cosmicdungeon.bismuth_items"))
-                    .displayItems((itemDisplayParameters, output) -> {
-                        output.accept(ModItems.BISMUTH);
-                        output.accept(ModItems.RAW_BISMUTH);
-
-                        output.accept(ModItems.CHISEL);
-                        output.accept(ModItems.RADISH);
-
-                        output.accept(ModItems.FROSTFIRE_ICE);
-                        output.accept(ModItems.STARLIGHT_ASHES);
-                    }).build());
-
-    public static final Supplier<CreativeModeTab> BISMUTH_BLOCK_TAB =
-            CREATIVE_MODE_TAB.register("bismuth_blocks_tab",
-                    () -> CreativeModeTab.builder()
-                            .icon(() -> new ItemStack(ModBlocks.BISMUTH_BLOCK.get())) // <-- .get()
-                            .withTabsBefore(ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "bismuth_items_tab"))
-                            .title(Component.translatable("creativetab.cosmicdungeon.bismuth_blocks"))
-                            .displayItems((p, out) -> {
-                                out.accept(ModBlocks.BISMUTH_BLOCK);
-                                out.accept(ModBlocks.BISMUTH_ORE);
-                                out.accept(ModBlocks.BISMUTH_DEEPSLATE_ORE);
-                                out.accept(ModBlocks.MAGIC_BLOCK);
-                            }).build());
-
     public static final Supplier<CreativeModeTab> DUNGEON_ITEM_TAB =
             CREATIVE_MODE_TAB.register("dungeon_items_tab",
                     () -> CreativeModeTab.builder()
@@ -56,6 +29,7 @@ public class ModCreativeModeTabs {
                                 output.accept(ModItems.SHATTERED_REALITY_OF_SHUDDE_MELL);
                                 output.accept(ModItems.BROODING_FORK);
                                 output.accept(ModItems.REGION_WAND);
+                                output.accept(ModBlocks.CLASS_SELECTOR_BLOCK);
                                 // Dungeon blocks
                                 output.accept(ModBlocks.CHICKEN_BLOCK);
                                 output.accept(ModBlocks.PILE_OF_BOOKS);
@@ -94,6 +68,9 @@ public class ModCreativeModeTabs {
                             .icon(() -> new ItemStack(ModItems.AZATHOTS_HAMMER_OF_FINAL_VERDICT.get()))
                             .title(Component.translatable("creativetab.cosmicdungeon.judicator_items"))
                             .displayItems((itemDisplayParameters, output) -> {
+
+                                /*
+                                DUNGEON 1 Judicator items should be generic Minecraft items, and not custom items
                                 // ===== Dungeon 1 — Tier 3 (Diamond) =====
                                 output.accept(ModItems.EDICT_OF_SILENCE.get());
                                 output.accept(ModItems.VOWKEEPER.get());
@@ -111,6 +88,7 @@ public class ModCreativeModeTabs {
                                 output.accept(ModItems.FANG_OF_THE_BRUTE.get());
                                 output.accept(ModItems.ENSIGN_OF_THE_JUDICATOR.get());
 
+                                */
                                 // ===== Dungeon 2 — Tier 1 (Chainmail) =====
                                 output.accept(ModItems.VISOR_OF_THE_RESOLUTE.get()); // Head
                                 output.accept(ModItems.CUIRASS_OF_PURPOSE.get());    // Body

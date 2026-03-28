@@ -24,6 +24,8 @@ repositories {
     maven { url = 'https://maven.parchmentmc.net' }
     // NeoForged artifacts
     maven { url = 'https://maven.neoforged.net/releases' }
+    // World Edit
+    maven { url = "https://maven.enginehub.org/repo/" }
     // General deps
     mavenCentral()
     // mavenLocal() // enable if you install local jars
@@ -132,10 +134,8 @@ configurations {
 }
 
 dependencies {
-    // Example optional mods (uncomment & set versions):
-    // compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
-    // compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
-    // localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
+    compileOnly "com.sk89q.worldedit:worldedit-core:7.3.17"
+    compileOnly "com.sk89q.worldedit:worldedit-neoforge-mc1.21.10:7.3.17"
 }
 
 /** ==========================================

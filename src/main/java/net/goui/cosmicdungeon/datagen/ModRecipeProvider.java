@@ -34,39 +34,11 @@ public class ModRecipeProvider extends RecipeProvider {
     @Override
     protected void buildRecipes() {
         // Smeltables list (use .get())
-        List<ItemLike> BISMUTH_SMELTABLES = List.of(
-                ModItems.RAW_BISMUTH.get(),
-                ModBlocks.BISMUTH_ORE.get(),
-                ModBlocks.BISMUTH_DEEPSLATE_ORE.get()
-        );
-
-        // Bismuth block
-        shaped(RecipeCategory.MISC, ModBlocks.BISMUTH_BLOCK.get())
-                .pattern("BBB").pattern("BBB").pattern("BBB")
-                .define('B', ModItems.BISMUTH.get())
-                .unlockedBy("has_bismuth", has(ModItems.BISMUTH.get()))
-                .save(output);
-
-        shapeless(RecipeCategory.MISC, ModItems.BISMUTH.get(), 9)
-                .requires(ModBlocks.BISMUTH_BLOCK.get())
-                .unlockedBy("has_bismuth_block", has(ModBlocks.BISMUTH_BLOCK.get()))
-                .save(output);
-
         // Chicken block -> eggs
         shapeless(RecipeCategory.MISC, Items.EGG, 10)
                 .requires(ModBlocks.CHICKEN_BLOCK.get())
                 .unlockedBy("has_chicken_block", has(ModBlocks.CHICKEN_BLOCK.get()))
                 .save(output, CosmicDungeonMod.MOD_ID + ":chicken_block");
-
-        // Magic block -> 18 bismuth
-        shapeless(RecipeCategory.MISC, ModItems.BISMUTH.get(), 18)
-                .requires(ModBlocks.MAGIC_BLOCK.get())
-                .unlockedBy("has_magic_block", has(ModBlocks.MAGIC_BLOCK.get()))
-                .save(output, CosmicDungeonMod.MOD_ID + ":bismuth_from_magic_block");
-
-        oreSmelting(output, BISMUTH_SMELTABLES, RecipeCategory.MISC, ModItems.BISMUTH.get(), 0.25f, 200, "bismuth");
-        oreBlasting(output, BISMUTH_SMELTABLES, RecipeCategory.MISC, ModItems.BISMUTH.get(), 0.25f, 100, "bismuth");
-
     }
 
     protected void oreSmelting(RecipeOutput out, List<ItemLike> ingredients, RecipeCategory cat, ItemLike result,

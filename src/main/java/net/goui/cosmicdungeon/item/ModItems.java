@@ -51,10 +51,6 @@ public class ModItems {
     }
 
     // === Core / Materials / Simple Items ===
-    public static final DeferredItem<Item> BISMUTH = ITEMS.registerSimpleItem("bismuth");
-    public static final DeferredItem<Item> RAW_BISMUTH = ITEMS.registerSimpleItem("raw_bismuth");
-    public static final DeferredItem<Item> FROSTFIRE_ICE = ITEMS.registerSimpleItem("frostfire_ice");
-    public static final DeferredItem<Item> STARLIGHT_ASHES = ITEMS.registerSimpleItem("starlight_ashes");
     public static final DeferredItem<Item> BARNACLED_PEARL = ITEMS.registerSimpleItem("barnacled_pearl");
     public static final DeferredItem<Item> SEISMIC_CORE_FRAGMENT = ITEMS.registerSimpleItem("seismic_core_fragment");
     public static final DeferredItem<Item> SHATTERED_REALITY_OF_SHUDDE_MELL = ITEMS.registerSimpleItem("shattered_reality_of_shudde_mell");
@@ -64,10 +60,7 @@ public class ModItems {
             "region_wand", props -> new RegionWandItem(props.stacksTo(1))
     );
 
-    // === Tools / Weapons / Utility (non-Judicator) ===
-    public static final DeferredItem<Item> CHISEL = ITEMS.registerItem(
-            "chisel", props -> new ChiselItem(props.durability(32))
-    );
+    // === Tools / Weapons / Utility ===
     public static final DeferredItem<Item> BROODING_FORK = ITEMS.registerItem(
             "brooding_fork", props -> new BroodingForkItem(props.stacksTo(1))
     );
@@ -86,20 +79,6 @@ public class ModItems {
     public static final DeferredItem<BlockItem> PILE_OF_BOOKS =
             ITEMS.registerSimpleBlockItem("pile_of_books", ModBlocks.PILE_OF_BOOKS);
 
-    // === Food ===
-    public static final DeferredItem<Item> RADISH = ITEMS.registerItem(
-            "radish",
-            props -> new Item(props.food(ModFoodProperties.RADISH)) {
-                @Override
-                public void appendHoverText(ItemStack stack,
-                                            Item.TooltipContext context,
-                                            TooltipDisplay display,
-                                            Consumer<Component> tooltipConsumer,
-                                            TooltipFlag tooltipFlag) {
-                    tooltipConsumer.accept(Component.translatable("tooltip.cosmicdungeon.radish.tooltip"));
-                }
-            }
-    );
 
     /* =========================================================================================
      * METALMANCER (kept)

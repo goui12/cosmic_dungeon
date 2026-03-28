@@ -1,18 +1,23 @@
+// file: src/main/java/net/goui/cosmicdungeon/command/SpawnerCommand.java
 package net.goui.cosmicdungeon.command;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import net.goui.cosmicdungeon.auth.AccessPolicy;
 import net.goui.cosmicdungeon.block.custom.CosmicMobSpawnerBlock;
 import net.goui.cosmicdungeon.block.entity.CosmicSpawnerBlockEntity;
-import net.minecraft.ChatFormatting;
+import net.goui.cosmicdungeon.network.ModNetwork;
+import net.goui.cosmicdungeon.network.payload.SpawnerLabelPayload;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -28,14 +33,36 @@ import java.util.concurrent.CompletableFuture;
 public final class SpawnerCommand {
     private SpawnerCommand() {}
 
+    private static final String PREF_ROOT = "cosmicdungeon_prefs";
+    private static final String KEY_SPAWNER_LABELS = "spawner_labels";
+
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
                 Commands.literal("spawner")
+
+                        // ===================== LABEL (DEV-ONLY, BUT OP IS ALLOWED) =====================
+                        .then(Commands.literal("label")
+                                // IMPORTANT: allow OP/host in singleplayer, while still supporting your developer rank
+                                .requires(src -> src.hasPermission(2) || AccessPolicy.requireDeveloperOrConsole(src))
+                                .then(Commands.literal("show").executes(ctx -> setLabels(ctx.getSource(), true)))
+                                .then(Commands.literal("hide").executes(ctx -> setLabels(ctx.getSource(), false)))
+                                .then(Commands.argument("enabled", BoolArgumentType.bool())
+                                        .executes(ctx -> setLabels(ctx.getSource(), BoolArgumentType.getBool(ctx, "enabled")))
+                                )
+                        )
+
+                        // ===================== BOSS (ONE-SHOT SELF-DESTRUCT) =====================
+                        .then(Commands.literal("boss")
+                                .requires(src -> src.hasPermission(2) || AccessPolicy.requireDeveloperOrConsole(src))
+                                .then(Commands.literal("on").executes(ctx -> setBoss(ctx.getSource(), true)))
+                                .then(Commands.literal("off").executes(ctx -> setBoss(ctx.getSource(), false)))
+                                .then(Commands.argument("enabled", BoolArgumentType.bool())
+                                        .executes(ctx -> setBoss(ctx.getSource(), BoolArgumentType.getBool(ctx, "enabled")))
+                                )
+                        )
+
                         .then(Commands.literal("set")
                                 .requires(src -> src.hasPermission(0))
-                                // IMPORTANT:
-                                // greedyString() allows values like "cosmicdungeon:crystal_creeper"
-                                // without Brigadier treating the ':' portion as "trailing data".
                                 .then(Commands.argument("mob", StringArgumentType.greedyString())
                                         .suggests(SpawnerCommand::suggestEntityTypes)
                                         .executes(ctx -> {
@@ -50,14 +77,11 @@ public final class SpawnerCommand {
                                             final String raw = StringArgumentType.getString(ctx, "mob").trim();
 
                                             if (raw.equalsIgnoreCase("none")) {
-                                                be.setSpawnerEntityId("none");
                                                 be.clearSpawnerEntity(level);
-                                                be.markUpdated();
                                                 src.sendSuccess(() -> Component.literal("Spawner at " + pos.toShortString() + " set to none."), false);
                                                 return 1;
                                             }
 
-                                            // ONLY default to minecraft:<id> when shorthand (no namespace) is provided.
                                             final ResourceLocation rl;
                                             if (raw.contains(":")) {
                                                 rl = ResourceLocation.tryParse(raw);
@@ -76,9 +100,7 @@ public final class SpawnerCommand {
                                                 return 0;
                                             }
 
-                                            be.setSpawnerEntityId(rl.toString());
                                             be.applySpawnerEntity(level, typeOpt.get());
-                                            be.markUpdated();
 
                                             src.sendSuccess(() ->
                                                     Component.literal("Spawner at " + pos.toShortString() + " set to " + rl), false);
@@ -87,7 +109,6 @@ public final class SpawnerCommand {
                                 )
                         )
 
-                        // /spawner delay <ticks>
                         .then(Commands.literal("delay")
                                 .requires(src -> src.hasPermission(0))
                                 .then(Commands.argument("ticks", IntegerArgumentType.integer(0, 72000))
@@ -107,7 +128,6 @@ public final class SpawnerCommand {
                                 )
                         )
 
-                        // /spawner delayrange <minTicks> <maxTicks>
                         .then(Commands.literal("delayrange")
                                 .requires(src -> src.hasPermission(0))
                                 .then(Commands.argument("minTicks", IntegerArgumentType.integer(0, 72000))
@@ -133,7 +153,6 @@ public final class SpawnerCommand {
                                 )
                         )
 
-                        // /spawner range <blocks>
                         .then(Commands.literal("range")
                                 .requires(src -> src.hasPermission(0))
                                 .then(Commands.argument("blocks", IntegerArgumentType.integer(1, 64))
@@ -153,7 +172,6 @@ public final class SpawnerCommand {
                                 )
                         )
 
-                        // /spawner count <n>
                         .then(Commands.literal("count")
                                 .requires(src -> src.hasPermission(0))
                                 .then(Commands.argument("count", IntegerArgumentType.integer(1, 64))
@@ -173,7 +191,6 @@ public final class SpawnerCommand {
                                 )
                         )
 
-                        // /spawner players <blocks>
                         .then(Commands.literal("players")
                                 .requires(src -> src.hasPermission(0))
                                 .then(Commands.argument("blocks", IntegerArgumentType.integer(1, 128))
@@ -193,7 +210,6 @@ public final class SpawnerCommand {
                                 )
                         )
 
-                        // /spawner cap <n>
                         .then(Commands.literal("cap")
                                 .requires(src -> src.hasPermission(0))
                                 .then(Commands.argument("count", IntegerArgumentType.integer(0, 128))
@@ -213,7 +229,6 @@ public final class SpawnerCommand {
                                 )
                         )
 
-                        // /spawner stats
                         .then(Commands.literal("stats")
                                 .requires(src -> src.hasPermission(0))
                                 .executes(ctx -> {
@@ -226,49 +241,20 @@ public final class SpawnerCommand {
 
                                     BlockPos pos = be.getBlockPos();
 
-                                    Component header = Component.literal("Cosmic Spawner @ " + pos.toShortString())
-                                            .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD);
+                                    src.sendSuccess(() -> Component.literal("Cosmic Spawner @ " + pos.toShortString()), false);
+                                    src.sendSuccess(() -> Component.literal("Mob: " + be.getSpawnerEntityId()), false);
+                                    src.sendSuccess(() -> Component.literal("Delay: " + be.getSpawnerDelayTicks() + " ticks"), false);
+                                    src.sendSuccess(() -> Component.literal("DelayRange: " + be.getSpawnerMinSpawnDelay() + ".." + be.getSpawnerMaxSpawnDelay() + " ticks"), false);
+                                    src.sendSuccess(() -> Component.literal("Count: " + be.getSpawnerSpawnCount()), false);
+                                    src.sendSuccess(() -> Component.literal("Range: " + be.getSpawnerSpawnRange() + " blocks"), false);
+                                    src.sendSuccess(() -> Component.literal("Players: " + be.getSpawnerRequiredPlayerRange() + " blocks"), false);
+                                    src.sendSuccess(() -> Component.literal("Cap: " + be.getSpawnerMaxNearbyEntities()), false);
 
-                                    Component mob = Component.literal("Mob: ")
-                                            .withStyle(ChatFormatting.GRAY)
-                                            .append(Component.literal(be.getSpawnerEntityId()).withStyle(ChatFormatting.WHITE));
+                                    boolean pref = getLabelsEnabled(player);
+                                    src.sendSuccess(() -> Component.literal("Labels: " + (pref ? "show" : "hide")), false);
 
-                                    Component delay = Component.literal("Delay: ")
-                                            .withStyle(ChatFormatting.GRAY)
-                                            .append(Component.literal(String.valueOf(be.getSpawnerDelayTicks())).withStyle(ChatFormatting.WHITE))
-                                            .append(Component.literal(" ticks").withStyle(ChatFormatting.DARK_GRAY));
-
-                                    Component rangeDelay = Component.literal("DelayRange: ")
-                                            .withStyle(ChatFormatting.GRAY)
-                                            .append(Component.literal(be.getSpawnerMinSpawnDelay() + ".." + be.getSpawnerMaxSpawnDelay()).withStyle(ChatFormatting.WHITE))
-                                            .append(Component.literal(" ticks").withStyle(ChatFormatting.DARK_GRAY));
-
-                                    Component spawnCount = Component.literal("Count: ")
-                                            .withStyle(ChatFormatting.GRAY)
-                                            .append(Component.literal(String.valueOf(be.getSpawnerSpawnCount())).withStyle(ChatFormatting.WHITE));
-
-                                    Component spawnRange = Component.literal("Range: ")
-                                            .withStyle(ChatFormatting.GRAY)
-                                            .append(Component.literal(String.valueOf(be.getSpawnerSpawnRange())).withStyle(ChatFormatting.WHITE))
-                                            .append(Component.literal(" blocks").withStyle(ChatFormatting.DARK_GRAY));
-
-                                    Component players = Component.literal("Players: ")
-                                            .withStyle(ChatFormatting.GRAY)
-                                            .append(Component.literal(String.valueOf(be.getSpawnerRequiredPlayerRange())).withStyle(ChatFormatting.WHITE))
-                                            .append(Component.literal(" blocks").withStyle(ChatFormatting.DARK_GRAY));
-
-                                    Component cap = Component.literal("Cap: ")
-                                            .withStyle(ChatFormatting.GRAY)
-                                            .append(Component.literal(String.valueOf(be.getSpawnerMaxNearbyEntities())).withStyle(ChatFormatting.WHITE));
-
-                                    src.sendSuccess(() -> header, false);
-                                    src.sendSuccess(() -> mob, false);
-                                    src.sendSuccess(() -> delay, false);
-                                    src.sendSuccess(() -> rangeDelay, false);
-                                    src.sendSuccess(() -> spawnCount, false);
-                                    src.sendSuccess(() -> spawnRange, false);
-                                    src.sendSuccess(() -> players, false);
-                                    src.sendSuccess(() -> cap, false);
+                                    src.sendSuccess(() -> Component.literal("BossOneShot: " + (be.isBossOneShot() ? "true" : "false")), false);
+                                    src.sendSuccess(() -> Component.literal("BossHasSpawned: " + (be.hasBossSpawned() ? "true" : "false")), false);
 
                                     return 1;
                                 })
@@ -276,17 +262,57 @@ public final class SpawnerCommand {
         );
     }
 
-    /**
-     * Autocomplete for /spawner set <mob>
-     *
-     * Behavior:
-     * - Always suggests "none"
-     * - If user hasn't typed a namespace (no ':'):
-     *     - suggests vanilla mobs as short names (zombie, skeleton, ...)
-     *     - suggests non-vanilla mobs as full ids (cosmicdungeon:..., othermod:...)
-     * - If user typed a namespace (contains ':'):
-     *     - suggests full ids for everything
-     */
+    private static int setBoss(CommandSourceStack src, boolean enabled) {
+        final ServerPlayer sp;
+        try {
+            sp = src.getPlayerOrException();
+        } catch (Exception ex) {
+            src.sendFailure(Component.literal("This command must be run by a player."));
+            return 0;
+        }
+
+        final Level level = sp.level();
+        final CosmicSpawnerBlockEntity be = getTargetSpawnerBE(src, sp, level);
+        if (be == null) return 0;
+
+        be.setBossOneShot(enabled);
+
+        src.sendSuccess(() -> Component.literal("Spawner boss one-shot: " + (enabled ? "ENABLED" : "DISABLED") + "."), false);
+        return 1;
+    }
+
+    private static int setLabels(CommandSourceStack src, boolean enabled) {
+        ServerPlayer sp;
+        try {
+            sp = src.getPlayerOrException();
+        } catch (Exception ex) {
+            src.sendFailure(Component.literal("This command must be run by a player (client toggle)."));
+            return 0;
+        }
+
+        setLabelsEnabled(sp, enabled);
+        ModNetwork.sendTo(sp, new SpawnerLabelPayload(enabled));
+
+        src.sendSuccess(() -> Component.literal("Spawner labels: " + (enabled ? "SHOW" : "HIDE") + " (client HUD)."), false);
+        return 1;
+    }
+
+    private static boolean getLabelsEnabled(ServerPlayer sp) {
+        if (sp == null) return false;
+        CompoundTag pd = sp.getPersistentData();
+        CompoundTag prefs = pd.getCompoundOrEmpty(PREF_ROOT);
+        return prefs.getBooleanOr(KEY_SPAWNER_LABELS, false);
+    }
+
+    private static void setLabelsEnabled(ServerPlayer sp, boolean enabled) {
+        if (sp == null) return;
+
+        CompoundTag pd = sp.getPersistentData();
+        CompoundTag prefs = pd.getCompoundOrEmpty(PREF_ROOT).copy();
+        prefs.putBoolean(KEY_SPAWNER_LABELS, enabled);
+        pd.put(PREF_ROOT, prefs);
+    }
+
     private static CompletableFuture<Suggestions> suggestEntityTypes(com.mojang.brigadier.context.CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
         final String remaining = builder.getRemaining().toLowerCase();
 

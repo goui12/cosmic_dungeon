@@ -1,13 +1,15 @@
-// file: src/main/java/net/goui/cosmicdungeon/block/custom/CosmicRiftTileBlock.java
 package net.goui.cosmicdungeon.block.custom;
 
 import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.goui.cosmicdungeon.auth.Authority;
 import net.goui.cosmicdungeon.block.ModBlocks;
+import net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData;
+import net.goui.cosmicdungeon.dungeon.DungeonWorldSnapshotService;
 import net.goui.cosmicdungeon.network.ModNetwork;
 import net.goui.cosmicdungeon.network.RiftPayloads;
 import net.goui.cosmicdungeon.rift.RiftRegistryData;
+import net.goui.cosmicdungeon.sound.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -15,6 +17,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.InsideBlockEffectApplier;
@@ -35,26 +39,14 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class CosmicRiftTileBlock extends Block {
-
     private static final VoxelShape SHAPE = Block.box(0, 0, 0, 16, 1, 16);
-
-    // BFS deletion cap
     private static final int MAX_BREAK_TILES = 64 * 64;
-
-    // Prevent recursion when we call destroyBlock() on many tiles
-    private static final ThreadLocal<Boolean> BREAKING_WHOLE =
-            ThreadLocal.withInitial(() -> Boolean.FALSE);
-
-    // Teleport throttle
-    private static final long TELEPORT_COOLDOWN_TICKS = 12;
+    private static final ThreadLocal<Boolean> BREAKING_WHOLE = ThreadLocal.withInitial(() -> Boolean.FALSE);
+    private static final long TELEPORT_COOLDOWN_TICKS = 12L;
     private static final Map<UUID, Long> NEXT_ALLOWED_TELEPORT = new ConcurrentHashMap<>();
-
-    // Safe landing search
     private static final int SAFE_SEARCH_RADIUS = 6;
     private static final int SAFE_SEARCH_UP = 4;
     private static final int SAFE_SEARCH_DOWN = 2;
-
-    // UI proximity (server-authoritative)
     private static final int CONFIG_MAX_DIST = 16;
 
     public CosmicRiftTileBlock(Properties props) {
@@ -73,7 +65,6 @@ public class CosmicRiftTileBlock extends Block {
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-        // Server-authoritative: NEVER open UI client-side.
         if (!(player instanceof ServerPlayer sp)) return InteractionResult.SUCCESS;
         if (!(level instanceof ServerLevel sl)) return InteractionResult.SUCCESS;
 
@@ -82,21 +73,18 @@ public class CosmicRiftTileBlock extends Block {
             return InteractionResult.SUCCESS;
         }
 
-        // Proximity guard so you can't configure from across the world.
         if (sp.blockPosition().distManhattan(pos) > CONFIG_MAX_DIST) {
             sp.displayClientMessage(Component.literal("Too far from rift to configure."), true);
             return InteractionResult.SUCCESS;
         }
 
-        // Robust pattern: send CONFIG directly (no separate "open" payload).
-        // Client opens screen when it receives S2C_RiftConfig (or if already open, it populates it).
         RiftRegistryData data = RiftRegistryData.get(sl);
-
         OptionalLong anchorOpt = data.getAnchorForTile(pos);
 
         BlockPos anchor;
         String name = "";
         String dest = "";
+        boolean resetTrigger = false;
 
         if (anchorOpt.isEmpty()) {
             anchor = pos;
@@ -106,6 +94,7 @@ public class CosmicRiftTileBlock extends Block {
             if (portal != null) {
                 name = portal.portalName() == null ? "" : portal.portalName();
                 dest = portal.destinationName() == null ? "" : portal.destinationName();
+                resetTrigger = portal.resetTrigger();
             }
         }
 
@@ -114,6 +103,7 @@ public class CosmicRiftTileBlock extends Block {
                 anchor,
                 name,
                 dest,
+                resetTrigger,
                 data.listDestinationNamesSorted()
         ));
 
@@ -157,7 +147,9 @@ public class CosmicRiftTileBlock extends Block {
         var portalOpt = data.getPortal(anchorOpt.getAsLong());
         if (portalOpt.isEmpty()) return;
 
-        String destinationName = portalOpt.get().destinationName();
+        RiftRegistryData.PortalRecord portal = portalOpt.get();
+
+        String destinationName = portal.destinationName();
         if (destinationName == null || destinationName.isBlank()) return;
 
         var destOpt = data.getDestination(destinationName);
@@ -177,8 +169,6 @@ public class CosmicRiftTileBlock extends Block {
         if (targetLevel == null) return;
 
         BlockPos rawTarget = dest.pos();
-
-        // Ensure chunk is loaded before we test collision/fluid
         targetLevel.getChunk(rawTarget);
 
         BlockPos safe = findSafeTeleportPos(targetLevel, rawTarget);
@@ -202,8 +192,8 @@ public class CosmicRiftTileBlock extends Block {
         currentLevel.playSound(
                 null,
                 steppedTile,
-                net.goui.cosmicdungeon.sound.ModSounds.RIFT_TELEPORT.get(),
-                net.minecraft.sounds.SoundSource.AMBIENT,
+                ModSounds.RIFT_TELEPORT.get(),
+                SoundSource.AMBIENT,
                 1.0F,
                 0.95F + currentLevel.getRandom().nextFloat() * 0.10F
         );
@@ -211,14 +201,52 @@ public class CosmicRiftTileBlock extends Block {
         targetLevel.playSound(
                 null,
                 safe,
-                net.goui.cosmicdungeon.sound.ModSounds.RIFT_TELEPORT.get(),
-                net.minecraft.sounds.SoundSource.AMBIENT,
+                ModSounds.RIFT_TELEPORT.get(),
+                SoundSource.AMBIENT,
                 1.0F,
                 0.95F + targetLevel.getRandom().nextFloat() * 0.10F
         );
 
-        // Use currentLevel time for cooldown (player UUID is global; keep it consistent)
         NEXT_ALLOWED_TELEPORT.put(id, now + TELEPORT_COOLDOWN_TICKS);
+
+        if (portal.resetTrigger()) {
+            var runs = DungeonRunRegistryData.get(currentLevel.getServer());
+            boolean shouldReset = runs.markPlayerExitedAndShouldReset(currentLevel.getServer(), currentLevel.dimension(), id);
+
+            if (shouldReset) {
+                var result = DungeonWorldSnapshotService.resetToLatest(currentLevel.getServer(), currentLevel.dimension());
+                if (result instanceof DungeonWorldSnapshotService.SnapshotResult.Ok okResult) {
+                    runs.clearRunsForDimension(currentLevel.dimension());
+
+                    var server = currentLevel.getServer();
+                    if (server != null) {
+                        for (ServerPlayer online : server.getPlayerList().getPlayers()) {
+                            if (Authority.isDeveloper(online)) {
+                                online.sendSystemMessage(Component.literal(
+                                        "Dungeon reset complete for " + currentLevel.dimension().location() +
+                                                " -> " + okResult.snapshotId()
+                                ));
+                            }
+                        }
+                    }
+                } else {
+                    DungeonWorldSnapshotService.SnapshotResult.Error err =
+                            (DungeonWorldSnapshotService.SnapshotResult.Error) result;
+
+                    var server = currentLevel.getServer();
+                    if (server != null) {
+                        for (ServerPlayer online : server.getPlayerList().getPlayers()) {
+                            if (Authority.isDeveloper(online)) {
+                                online.sendSystemMessage(Component.literal(
+                                        "Dungeon reset failed for " + currentLevel.dimension().location() +
+                                                ": " + err.message()
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private static BlockPos findSafeTeleportPos(ServerLevel level, BlockPos preferred) {
@@ -231,7 +259,6 @@ public class CosmicRiftTileBlock extends Block {
         for (int r = 1; r <= SAFE_SEARCH_RADIUS; r++) {
             for (int dx = -r; dx <= r; dx++) {
                 for (int dz = -r; dz <= r; dz++) {
-                    // Only perimeter at this radius (faster)
                     if (Math.abs(dx) != r && Math.abs(dz) != r) continue;
 
                     for (int dy = -SAFE_SEARCH_DOWN; dy <= SAFE_SEARCH_UP; dy++) {
@@ -250,17 +277,14 @@ public class CosmicRiftTileBlock extends Block {
         BlockState head = level.getBlockState(pos.above());
         BlockState floor = level.getBlockState(pos.below());
 
-        // Must have 2-block tall empty space
         if (!feet.getCollisionShape(level, pos).isEmpty()) return false;
         if (!head.getCollisionShape(level, pos.above()).isEmpty()) return false;
 
-        // No fluids at feet/head
         FluidState ff = feet.getFluidState();
         FluidState hf = head.getFluidState();
         if (!ff.isEmpty()) return false;
         if (!hf.isEmpty()) return false;
 
-        // Must have solid floor
         return !floor.getCollisionShape(level, pos.below()).isEmpty();
     }
 
@@ -293,37 +317,42 @@ public class CosmicRiftTileBlock extends Block {
         queue.enqueue(start);
 
         while (!queue.isEmpty() && visited.size() <= MAX_BREAK_TILES) {
-            long curKey = queue.dequeueLong();
-            BlockPos cur = BlockPos.of(curKey);
+            long packed = queue.dequeueLong();
+            BlockPos p = BlockPos.of(packed);
 
-            for (int i = 0; i < 4; i++) {
-                BlockPos next = switch (i) {
-                    case 0 -> cur.east();
-                    case 1 -> cur.west();
-                    case 2 -> cur.south();
-                    default -> cur.north();
-                };
+            if (p.getY() != y) continue;
+            if (!level.getBlockState(p).is(riftTile)) continue;
 
-                if (next.getY() != y) continue;
-
-                long nk = next.asLong();
-                if (visited.contains(nk)) continue;
-
-                if (level.getBlockState(next).getBlock() != riftTile) continue;
-
-                visited.add(nk);
-                queue.enqueue(nk);
-            }
+            tryEnqueueNeighbor(level, p.north(), y, riftTile, visited, queue);
+            tryEnqueueNeighbor(level, p.south(), y, riftTile, visited, queue);
+            tryEnqueueNeighbor(level, p.east(), y, riftTile, visited, queue);
+            tryEnqueueNeighbor(level, p.west(), y, riftTile, visited, queue);
         }
 
-        // Remove rift registry data for all tiles
-        RiftRegistryData.get(level).onRiftTilesBroken(visited);
+        if (!visited.isEmpty()) {
+            RiftRegistryData.get(level).onRiftTilesBroken(visited);
 
-        // Break blocks
-        for (long packed : visited) {
-            BlockPos p = BlockPos.of(packed);
-            boolean drop = p.equals(origin);
-            level.destroyBlock(p, drop, player);
+            for (long packed : visited) {
+                BlockPos p = BlockPos.of(packed);
+                if (level.getBlockState(p).is(riftTile)) {
+                    level.destroyBlock(p, false, player);
+                }
+            }
+        }
+    }
+
+    private static void tryEnqueueNeighbor(ServerLevel level,
+                                           BlockPos pos,
+                                           int fixedY,
+                                           Block riftTile,
+                                           LongOpenHashSet visited,
+                                           LongArrayFIFOQueue queue) {
+        if (pos.getY() != fixedY) return;
+        if (!level.getBlockState(pos).is(riftTile)) return;
+
+        long packed = pos.asLong();
+        if (visited.add(packed)) {
+            queue.enqueue(packed);
         }
     }
 }

@@ -1,3 +1,4 @@
+// file: src/main/java/net/goui/cosmicdungeon/client/ModNetworkClient.java
 package net.goui.cosmicdungeon.client;
 
 import net.goui.cosmicdungeon.client.rift.RiftConfigScreen;
@@ -7,6 +8,7 @@ import net.goui.cosmicdungeon.network.RiftPayloads;
 import net.goui.cosmicdungeon.network.ShakeScreenPayload;
 import net.goui.cosmicdungeon.network.payload.RegionLookAllPayload;
 import net.goui.cosmicdungeon.network.payload.RegionLookPayload;
+import net.goui.cosmicdungeon.network.payload.SpawnerLabelPayload;
 import net.goui.cosmicdungeon.region.client.RegionLookClient;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
@@ -48,6 +50,10 @@ public final class ModNetworkClient {
 
     public static void onRiftSaveResult(RiftPayloads.S2C_SaveResult payload) {
         RiftConfigScreen.onServerSaveResult(payload);
+    }
+
+    public static void onSpawnerLabel(SpawnerLabelPayload payload) {
+        CosmicSpawnerHoverOverlay.setEnabled(payload.enabled());
     }
 
     public static void sendToServer(CustomPacketPayload payload) {

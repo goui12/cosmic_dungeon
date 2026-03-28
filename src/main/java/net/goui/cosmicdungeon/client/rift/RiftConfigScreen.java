@@ -47,7 +47,14 @@ public final class RiftConfigScreen extends Screen {
     private static final int NAME_X = 22, NAME_Y = 46, NAME_W = 186, NAME_H = 36;
     private static final int SAVE_X = 38, SAVE_Y = 176, SAVE_W = 78, SAVE_H = 32;
     private static final int CANCEL_X = 124, CANCEL_Y = 176, CANCEL_W = 78, CANCEL_H = 32;
+// Reset Widget
+private Button resetTriggerBtn;
+    private boolean resetTrigger = false;
 
+    private static final int RESET_BTN_X = 38;
+    private static final int RESET_BTN_Y = 144;
+    private static final int RESET_BTN_W = 164;
+    private static final int RESET_BTN_H = 20;
     // Destination box (GUI-relative coords)
     private static final int DEST_BOX_X1 = 20;
     private static final int DEST_BOX_Y1 = 105;
@@ -179,6 +186,17 @@ public final class RiftConfigScreen extends Screen {
                 .build();
         addRenderableWidget(this.destinationDropdownBtn);
 
+        this.resetTriggerBtn = addRenderableWidget(Button.builder(
+                        Component.literal(buildResetButtonLabel()),
+                        b -> {
+                            if (loading || saving) return;
+                            this.resetTrigger = !this.resetTrigger;
+                            b.setMessage(Component.literal(buildResetButtonLabel()));
+                        }
+                )
+                .bounds(guiLeft + RESET_BTN_X, guiTop + RESET_BTN_Y, RESET_BTN_W, RESET_BTN_H)
+                .build());
+        this.resetTriggerBtn.active = false;
         // -------- Save / Cancel --------
         this.saveBtn = addRenderableWidget(new NoHoverWhenDropdownButton(
                 guiLeft + SAVE_X, guiTop + SAVE_Y, SAVE_W, SAVE_H,
@@ -222,6 +240,11 @@ public final class RiftConfigScreen extends Screen {
         this.filteredDestinations.clear();
 
         ModNetwork.sendToServer(new RiftPayloads.C2S_RequestRiftConfig(this.clickedTile));
+        this.resetTrigger = false;
+        if (this.resetTriggerBtn != null) {
+            this.resetTriggerBtn.active = false;
+            this.resetTriggerBtn.setMessage(Component.literal(buildResetButtonLabel()));
+        }
     }
 
     private void onSave() {
@@ -234,8 +257,7 @@ public final class RiftConfigScreen extends Screen {
         String name = this.nameField.getValue() == null ? "" : this.nameField.getValue();
         String dest = this.destinationField.getValue() == null ? "" : this.destinationField.getValue();
 
-        ModNetwork.sendToServer(new RiftPayloads.C2S_SaveRiftConfig(this.anchorPos, name, dest));
-    }
+        ModNetwork.sendToServer(new RiftPayloads.C2S_SaveRiftConfig(this.anchorPos, name, dest, this.resetTrigger));}
 
     private void applyServerConfig(RiftPayloads.S2C_RiftConfig payload) {
         // Called only on main thread.
@@ -258,6 +280,11 @@ public final class RiftConfigScreen extends Screen {
 
         rebuildDestinationFilter(this.destinationField.getValue());
         this.saveBtn.active = true;
+        this.resetTrigger = payload.resetTrigger();
+        if (this.resetTriggerBtn != null) {
+            this.resetTriggerBtn.active = true;
+            this.resetTriggerBtn.setMessage(Component.literal(buildResetButtonLabel()));
+        }
     }
 
     private void rebuildDestinationFilter(String typed) {
@@ -312,7 +339,9 @@ public final class RiftConfigScreen extends Screen {
         // Prevent click-through while dropdown open
         this.saveBtn.active = !loading && !saving && !this.destinationDropdownOpen;
         this.cancelBtn.active = !this.destinationDropdownOpen;
-
+        if (this.resetTriggerBtn != null) {
+            this.resetTriggerBtn.active = !loading && !saving && !this.destinationDropdownOpen;
+        }
         if (saving) {
             g.drawString(this.font, "Saving…", guiLeft + 12, guiTop + GUI_H - 14, 0xFF444444, false);
         } else if (loading) {
@@ -473,7 +502,9 @@ public final class RiftConfigScreen extends Screen {
 
         screen.applyServerConfig(payload);
     }
-
+    private String buildResetButtonLabel() {
+        return this.resetTrigger ? "Dungeon Reset Trigger: ON" : "Dungeon Reset Trigger: OFF";
+    }
     public static void onServerSaveResult(RiftPayloads.S2C_SaveResult payload) {
         Minecraft mc = Minecraft.getInstance();
         if (!(mc.screen instanceof RiftConfigScreen screen)) return;

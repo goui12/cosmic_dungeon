@@ -1,35 +1,41 @@
-// file: src/main/java/net/goui/cosmicdungeon/block/custom/ClassSelectorReadyManager.java
 package net.goui.cosmicdungeon.block.custom;
 
-import net.goui.cosmicdungeon.auth.AccessPolicy;
 import net.goui.cosmicdungeon.block.entity.ClassSelectorBlockEntity;
+import net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData;
+import net.goui.cosmicdungeon.dungeon.DungeonStarterRoomPaster;
 import net.goui.cosmicdungeon.rift.RiftRegistryData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.*;
 
 public final class ClassSelectorReadyManager {
     private ClassSelectorReadyManager() {}
 
-    /** 5 second countdown before teleport once party is full. */
     private static final int COUNTDOWN_SECONDS = 5;
     private static final long COUNTDOWN_TICKS = COUNTDOWN_SECONDS * 20L;
 
-    /** key = selector dimension + selector pos */
     public record SelectorKey(String dimId, long posLong) {}
 
     private static final Map<SelectorKey, ReadyState> STATES = new HashMap<>();
 
     private static final class ReadyState {
         final LinkedHashSet<UUID> ordered = new LinkedHashSet<>();
-        long countdownEndTick = -1L; // -1 = not started
+        final Map<UUID, String> classByPlayer = new HashMap<>();
+
+        long countdownEndTick = -1L;
         int lastAnnouncedSeconds = Integer.MIN_VALUE;
     }
+
+    private record TeleportTarget(ServerLevel level, BlockPos safePos) {}
 
     public static void clearFor(ServerLevel selectorLevel, BlockPos selectorPos) {
         if (selectorLevel == null || selectorPos == null) return;
@@ -37,8 +43,11 @@ public final class ClassSelectorReadyManager {
         STATES.remove(key);
     }
 
-    /** Returns the 1-based slot number for this player (existing if already ready). */
-    public static int markReady(ServerPlayer sp, ServerLevel selectorLevel, BlockPos selectorPos, ClassSelectorBlockEntity csbe, String classId) {
+    public static int markReady(ServerPlayer sp,
+                                ServerLevel selectorLevel,
+                                BlockPos selectorPos,
+                                ClassSelectorBlockEntity csbe,
+                                String classId) {
         MinecraftServer server = selectorLevel.getServer();
         if (server == null) return -1;
 
@@ -46,6 +55,7 @@ public final class ClassSelectorReadyManager {
         ReadyState st = STATES.computeIfAbsent(key, k -> new ReadyState());
 
         if (!st.ordered.contains(sp.getUUID())) st.ordered.add(sp.getUUID());
+        st.classByPlayer.put(sp.getUUID(), classId);
 
         int slot = 1;
         for (UUID id : st.ordered) {
@@ -56,10 +66,8 @@ public final class ClassSelectorReadyManager {
         int max = Math.max(1, Math.min(64, csbe.getMaxPlayers()));
         int ready = st.ordered.size();
 
-        // Close UI immediately when committed
         sp.closeContainer();
 
-        // "Player N, the <className> is ready!"
         var className = Component.translatable("playerclass.cosmicdungeon." + classId);
 
         var readyMsg = Component.literal("Player ").withStyle(ChatFormatting.GRAY)
@@ -72,7 +80,6 @@ public final class ClassSelectorReadyManager {
 
         broadcastReadyProgress(server, st, ready, max);
 
-        // Party full => start countdown (if not already started)
         if (ready >= max && st.countdownEndTick < 0L) {
             long nowTick = selectorLevel.getGameTime();
             st.countdownEndTick = nowTick + COUNTDOWN_TICKS;
@@ -92,7 +99,6 @@ public final class ClassSelectorReadyManager {
         return slot;
     }
 
-    /** Called from a ServerTickEvent hook. */
     public static void tick(MinecraftServer server) {
         if (server == null) return;
         if (STATES.isEmpty()) return;
@@ -108,8 +114,8 @@ public final class ClassSelectorReadyManager {
                 it.remove();
                 continue;
             }
-            BlockPos selectorPos = BlockPos.of(key.posLong());
 
+            BlockPos selectorPos = BlockPos.of(key.posLong());
             var be = selectorLevel.getBlockEntity(selectorPos);
             if (!(be instanceof ClassSelectorBlockEntity csbe)) {
                 it.remove();
@@ -126,19 +132,18 @@ public final class ClassSelectorReadyManager {
             int max = Math.max(1, Math.min(64, csbe.getMaxPlayers()));
             int ready = st.ordered.size();
 
-            // Countdown running but party no longer full => cancel countdown
             if (st.countdownEndTick >= 0L && ready < max) {
                 cancelCountdown(server, st, "Countdown canceled (party not full).");
                 continue;
             }
 
-            // Party full but countdown not running => start countdown
             if (ready >= max && st.countdownEndTick < 0L) {
                 long nowTick = selectorLevel.getGameTime();
                 st.countdownEndTick = nowTick + COUNTDOWN_TICKS;
                 st.lastAnnouncedSeconds = Integer.MIN_VALUE;
 
-                var msg = Component.literal("All players ready — teleporting in ").withStyle(ChatFormatting.AQUA)
+                var msg = Component.literal("All players ready — teleporting in ")
+                        .withStyle(ChatFormatting.AQUA)
                         .append(Component.literal(String.valueOf(COUNTDOWN_SECONDS)).withStyle(ChatFormatting.YELLOW))
                         .append(Component.literal("...").withStyle(ChatFormatting.AQUA));
 
@@ -148,7 +153,6 @@ public final class ClassSelectorReadyManager {
                 }
             }
 
-            // Countdown tick
             if (st.countdownEndTick >= 0L) {
                 long now = selectorLevel.getGameTime();
                 long remainingTicks = st.countdownEndTick - now;
@@ -156,26 +160,23 @@ public final class ClassSelectorReadyManager {
                 if (remainingTicks <= 0L) {
                     boolean ok = teleportAllReadyBySlot(server, selectorLevel, selectorPos, csbe, st);
                     if (ok) {
-                        it.remove(); // success clears state
+                        it.remove();
                     } else {
-                        // teleport failed due to config (missing slot destinations etc.)
-                        // cancel countdown but keep ready state so dev can fix without players re-selecting
-                        cancelCountdown(server, st, "Teleport aborted (missing/invalid slot destinations).");
+                        cancelCountdown(server, st, "Teleport aborted. Fix configuration and ready up again.");
                     }
-                    continue;
-                }
+                } else {
+                    int remainingSeconds = (int) Math.ceil(remainingTicks / 20.0D);
+                    if (remainingSeconds != st.lastAnnouncedSeconds) {
+                        st.lastAnnouncedSeconds = remainingSeconds;
 
-                int remainingSeconds = (int) ((remainingTicks + 19L) / 20L);
-                if (remainingSeconds != st.lastAnnouncedSeconds) {
-                    st.lastAnnouncedSeconds = remainingSeconds;
+                        var msg = Component.literal("Teleporting in ").withStyle(ChatFormatting.AQUA)
+                                .append(Component.literal(String.valueOf(remainingSeconds)).withStyle(ChatFormatting.YELLOW))
+                                .append(Component.literal("...").withStyle(ChatFormatting.AQUA));
 
-                    var msg = Component.literal("Teleporting in ").withStyle(ChatFormatting.AQUA)
-                            .append(Component.literal(String.valueOf(remainingSeconds)).withStyle(ChatFormatting.YELLOW))
-                            .append(Component.literal("...").withStyle(ChatFormatting.AQUA));
-
-                    for (UUID id : st.ordered) {
-                        ServerPlayer p = server.getPlayerList().getPlayer(id);
-                        if (p != null) p.sendSystemMessage(msg);
+                        for (UUID id : st.ordered) {
+                            ServerPlayer p = server.getPlayerList().getPlayer(id);
+                            if (p != null) p.sendSystemMessage(msg);
+                        }
                     }
                 }
             }
@@ -211,27 +212,25 @@ public final class ClassSelectorReadyManager {
         }
     }
 
-    /**
-     * Slot-based teleport:
-     * - player in slot i uses csbe.getSlotDestination(i)
-     * - if missing/invalid -> abort and message devs/players (no partial teleport)
-     */
-    private static boolean teleportAllReadyBySlot(MinecraftServer server, ServerLevel selectorLevel, BlockPos selectorPos, ClassSelectorBlockEntity csbe, ReadyState st) {
+    private static boolean teleportAllReadyBySlot(MinecraftServer server,
+                                                  ServerLevel selectorLevel,
+                                                  BlockPos selectorPos,
+                                                  ClassSelectorBlockEntity csbe,
+                                                  ReadyState st) {
         int max = Math.max(1, Math.min(64, csbe.getMaxPlayers()));
         int ready = st.ordered.size();
         if (ready < max) return false;
 
         RiftRegistryData data = RiftRegistryData.get(server);
 
-        // Resolve destinations for each slot first, abort if any missing/invalid.
         List<RiftRegistryData.DestinationRecord> resolved = new ArrayList<>(max);
         List<Integer> missingSlots = new ArrayList<>();
         List<Integer> invalidSlots = new ArrayList<>();
+        List<TeleportTarget> teleportTargets = new ArrayList<>(max);
 
         for (int slot = 1; slot <= max; slot++) {
             String name = csbe.getSlotDestination(slot);
 
-            // Optional fallback for older setups (keeps old behavior if you want)
             if (name == null || name.isBlank()) {
                 name = csbe.getDestinationName();
             }
@@ -239,6 +238,7 @@ public final class ClassSelectorReadyManager {
             if (name == null || name.isBlank()) {
                 missingSlots.add(slot);
                 resolved.add(null);
+                teleportTargets.add(null);
                 continue;
             }
 
@@ -246,14 +246,25 @@ public final class ClassSelectorReadyManager {
             if (destOpt.isEmpty()) {
                 invalidSlots.add(slot);
                 resolved.add(null);
+                teleportTargets.add(null);
                 continue;
             }
 
-            resolved.add(destOpt.get());
+            RiftRegistryData.DestinationRecord dest = destOpt.get();
+            resolved.add(dest);
+
+            ServerLevel targetLevel = ClassSelectorTeleportUtil.resolveLevel(server, dest.dimensionId());
+            if (targetLevel == null) {
+                invalidSlots.add(slot);
+                teleportTargets.add(null);
+                continue;
+            }
+
+            BlockPos safe = ensureStandable(targetLevel, dest.pos());
+            teleportTargets.add(new TeleportTarget(targetLevel, safe));
         }
 
         if (!missingSlots.isEmpty() || !invalidSlots.isEmpty()) {
-            // Tell ready players
             var m = Component.literal("Class Selector teleport not configured: ").withStyle(ChatFormatting.RED);
 
             if (!missingSlots.isEmpty()) {
@@ -269,62 +280,137 @@ public final class ClassSelectorReadyManager {
                 if (p != null) p.sendSystemMessage(m);
             }
 
-            // Tell devs (more context)
-            var devMsg = Component.literal("Teleport aborted: configure slot destinations for Class Selector @ ")
-                    .withStyle(ChatFormatting.RED)
-                    .append(Component.literal(selectorLevel.dimension().location().toString()).withStyle(ChatFormatting.AQUA))
-                    .append(Component.literal(" ").withStyle(ChatFormatting.RED))
-                    .append(Component.literal(selectorPos.toShortString()).withStyle(ChatFormatting.AQUA))
-                    .append(Component.literal(". Use: ").withStyle(ChatFormatting.RED))
-                    .append(Component.literal("/classselector ui dest " + selectorPos.getX() + " " + selectorPos.getY() + " " + selectorPos.getZ())
-                            .withStyle(ChatFormatting.YELLOW));
-
-            for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-                if (!AccessPolicy.isDeveloper(p)) continue;
-                p.sendSystemMessage(devMsg);
-            }
-
             return false;
         }
 
-        // Teleport (no partial failures)
-        var go = Component.literal("Teleporting!").withStyle(ChatFormatting.AQUA);
-
-        int slot = 1;
+        String[] slotClasses = new String[6];
+        int idx = 0;
         for (UUID id : st.ordered) {
-            if (slot > max) break; // safety
-            ServerPlayer p = server.getPlayerList().getPlayer(id);
-            if (p == null) { slot++; continue; }
+            if (idx >= 6) break;
+            slotClasses[idx] = st.classByPlayer.getOrDefault(id, "blankslot");
+            idx++;
+        }
+        for (; idx < 6; idx++) {
+            slotClasses[idx] = "blankslot";
+        }
 
-            RiftRegistryData.DestinationRecord dest = resolved.get(slot - 1);
-            ServerLevel target = ClassSelectorTeleportUtil.resolveLevel(server, dest.dimensionId());
-            if (target == null) {
-                // This should be very rare; abort similarly
-                p.sendSystemMessage(Component.literal("Teleport failed: target dimension not loaded.").withStyle(ChatFormatting.RED));
+        RiftRegistryData.DestinationRecord firstDest = resolved.get(0);
+        ServerLevel dungeonLevel = ClassSelectorTeleportUtil.resolveLevel(server, firstDest.dimensionId());
+        if (dungeonLevel == null) {
+            System.err.println("[CosmicDungeon] Failed to resolve dungeon level for first slot.");
+            return false;
+        }
+
+        ServerPlayer pasteActor = null;
+        for (UUID id : st.ordered) {
+            pasteActor = server.getPlayerList().getPlayer(id);
+            if (pasteActor != null) break;
+        }
+        if (pasteActor == null) {
+            System.err.println("[CosmicDungeon] No online paste actor found for room paste.");
+            return false;
+        }
+
+        try {
+            DungeonStarterRoomPaster.pasteRooms(dungeonLevel, pasteActor, slotClasses);
+        } catch (Exception e) {
+            System.err.println("[CosmicDungeon] Paste failed:");
+            e.printStackTrace();
+
+            for (UUID id : st.ordered) {
+                ServerPlayer p = server.getPlayerList().getPlayer(id);
+                if (p != null) {
+                    p.sendSystemMessage(Component.literal("Dungeon paste failed.").withStyle(ChatFormatting.RED));
+                }
+            }
+            return false;
+        }
+
+        int slotIndex = 0;
+        List<UUID> finalParty = new ArrayList<>();
+
+        for (UUID id : st.ordered) {
+            if (slotIndex >= max) break;
+
+            ServerPlayer p = server.getPlayerList().getPlayer(id);
+            if (p == null) {
+                slotIndex++;
+                continue;
+            }
+
+            TeleportTarget tp = teleportTargets.get(slotIndex);
+            if (tp == null || tp.level() == null || tp.safePos() == null) {
+                p.sendSystemMessage(Component.literal("Teleport target missing for your slot.").withStyle(ChatFormatting.RED));
                 return false;
             }
 
-            BlockPos tp = dest.pos();
-            target.getChunk(tp);
-
-            p.sendSystemMessage(go);
-            p.stopRiding();
-            p.fallDistance = 0;
-
-            p.teleportTo(
-                    target,
-                    tp.getX() + 0.5D,
-                    (double) tp.getY(),
-                    tp.getZ() + 0.5D,
+            BlockPos safe = tp.safePos();
+            boolean ok = p.teleportTo(
+                    tp.level(),
+                    safe.getX() + 0.5D,
+                    safe.getY(),
+                    safe.getZ() + 0.5D,
                     Set.of(),
                     p.getYRot(),
                     p.getXRot(),
-                    false
+                    true
             );
 
-            slot++;
+            if (!ok) {
+                p.sendSystemMessage(Component.literal("Teleport failed for your slot.").withStyle(ChatFormatting.RED));
+                return false;
+            }
+
+            finalParty.add(id);
+            slotIndex++;
+        }
+
+        if (!finalParty.isEmpty()) {
+            ResourceKey<Level> dungeonKey = dungeonLevel.dimension();
+            DungeonRunRegistryData.get(server).registerRun(
+                    selectorLevel.dimension(),
+                    selectorPos.asLong(),
+                    dungeonKey,
+                    finalParty
+            );
         }
 
         return true;
+    }
+
+    private static BlockPos ensureStandable(ServerLevel level, BlockPos pos) {
+        if (isStandable(level, pos)) return pos;
+
+        var m = pos.mutable();
+        int minY = level.getMinY();
+        int maxY = minY + level.getLogicalHeight() - 1;
+
+        for (int y = Math.max(minY + 1, m.getY()); y < maxY - 1; y++) {
+            m.setY(y);
+            if (isStandable(level, m)) return m.immutable();
+        }
+
+        int surfaceY = level.getHeight(Heightmap.Types.WORLD_SURFACE, pos.getX(), pos.getZ());
+        m.set(pos.getX(), Math.max(surfaceY, minY + 1), pos.getZ());
+
+        for (int y = m.getY(); y < Math.min(m.getY() + 8, maxY - 1); y++) {
+            m.setY(y);
+            if (isStandable(level, m)) return m.immutable();
+        }
+
+        return m.immutable();
+    }
+
+    private static boolean isStandable(ServerLevel level, BlockPos pos) {
+        var below = pos.below();
+        var feet = level.getBlockState(pos);
+        var head = level.getBlockState(pos.above());
+
+        boolean sturdyBelow = level.getBlockState(below).isFaceSturdy(level, below, net.minecraft.core.Direction.UP);
+        boolean noFluid = level.getFluidState(pos).isEmpty() && level.getFluidState(pos.above()).isEmpty();
+        boolean emptySpace = feet.getCollisionShape(level, pos).isEmpty()
+                && head.getCollisionShape(level, pos.above()).isEmpty();
+
+        return sturdyBelow && noFluid && emptySpace;
     }
 }

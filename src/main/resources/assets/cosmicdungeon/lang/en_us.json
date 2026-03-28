@@ -128,14 +128,8 @@
   "tooltip.cosmicdungeon.satchel.ore": "Ore: %1$s / %2$s",
   "tooltip.cosmicdungeon.satchel.hint": "The Metalmancer consumes/spends metal",
 
-  "item.cosmicdungeon.bismuth": "Bismuth",
-  "item.cosmicdungeon.raw_bismuth": "Raw Bismuth",
-  "item.cosmicdungeon.chisel": "Chisel",
   "item.cosmicdungeon.door_key": "Door Key",
 
-  "item.cosmicdungeon.radish": "Radish",
-  "item.cosmicdungeon.frostfire_ice": "Frostfire Ice",
-  "item.cosmicdungeon.starlight_ashes": "Starlight Ashes",
   "item.cosmicdungeon.brooding_fork": "Brooding Fork",
   "item.cosmicdungeon.seismic_core_fragment": "Seismic Core Fragment",
   "item.cosmicdungeon.shattered_reality_of_shudde_mell": "Shattered Reality of Shudde Mell",
@@ -327,15 +321,8 @@
   "block.cosmicdungeon.large_amethyst_bud_black": "Black Large Amethyst Bud",
   "block.cosmicdungeon.amethyst_cluster_black": "Black Amethyst Cluster",
 
-  "block.cosmicdungeon.bismuth_block": "Block of Bismuth",
-  "block.cosmicdungeon.bismuth_ore": "Bismuth Ore",
-  "block.cosmicdungeon.bismuth_deepslate_ore": "Bismuth Deepslate Ore",
   "block.cosmicdungeon.chicken_block": "Chicken Block",
 
-  "block.cosmicdungeon.magic_block": "Magic Block",
-
-  "creativetab.cosmicdungeon.bismuth_items": "Bismuth Items",
-  "creativetab.cosmicdungeon.bismuth_blocks": "Bismuth Blocks",
   "creativetab.cosmicdungeon.dungeon_items": "§eDungeon Items",
   "creativetab.cosmicdungeon.amethyst_items": "§dAmethyst Items",
   "creativetab.cosmicdungeon.judicator_items": "§eJudicator Items",
@@ -347,12 +334,8 @@
   "creativetab.cosmicdungeon.metalmancer_items": "§eMetalmancer Items",
   "creativetab.cosmicdungeon.deadeye_items": "§eDeadeye Items",
 
-  "tooltip.cosmicdungeon.magic_block.tooltip": "This Block is very §9MAGICAL§r",
-  "tooltip.cosmicdungeon.chisel.shift_down": "This Item can chisel Blocks into Bricks",
-  "tooltip.cosmicdungeon.chisel": "Press §eShift§r for more Information",
   "tooltip.cosmicdungeon.brooding_fork.shift_down": "Right click dirt for seeds, and right click grass for chickens!",
   "tooltip.cosmicdungeon.brooding_fork": "Press §eShift§r for more Information",
-  "tooltip.cosmicdungeon.radish.tooltip": "Tastes really great!",
 
   "block.cosmicdungeon.redstone_transmitter": "RF Transmitter",
   "block.cosmicdungeon.redstone_receiver": "RF Receiver",

@@ -33,7 +33,7 @@ public class CrystalCreeperEatAmethystGoal extends Goal {
                 this.creeper.getBoundingBox().inflate(radius),
                 item -> item.isAlive()
                         && !item.level().isClientSide()
-                        // TODO: Replace with your Cosmic Dungeon amethyst bud item
+                        // TODO: Replace with Custom Amethyst BlockItem. Item.Amethyst .NE. Block.Amethyst
                         && item.getItem().is(Items.AMETHYST_SHARD)
         );
 

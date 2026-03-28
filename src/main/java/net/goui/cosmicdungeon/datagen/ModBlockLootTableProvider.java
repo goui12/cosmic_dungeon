@@ -36,23 +36,11 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
     protected void generate() {
         // ===== Explicit loot rules =====
 
-        // --- Ores / blocks you already had
-        dropSelfHandled(ModBlocks.BISMUTH_BLOCK.get());
-
-        addHandled(ModBlocks.BISMUTH_ORE.get(),
-                block -> createOreDrop(ModBlocks.BISMUTH_ORE.get(), ModItems.RAW_BISMUTH.get()));
-
-        addHandled(ModBlocks.BISMUTH_DEEPSLATE_ORE.get(),
-                block -> createMultipleOreDrops(ModBlocks.BISMUTH_DEEPSLATE_ORE.get(), ModItems.RAW_BISMUTH.get(), 2, 5));
-
         dropSelfHandled(ModBlocks.PILE_OF_BOOKS.get());
 
 
         dropSelfHandled(ModBlocks.INFINITE_DISPENSER.get());
 
-        // --- If you want these to drop themselves, you MUST remove .noLootTable() from their block props
-        // dropSelfHandled(ModBlocks.MAGIC_BLOCK.get());
-        // dropSelfHandled(ModBlocks.CHICKEN_BLOCK.get());
 
         // --- Cosmic mob spawner: drop 3–5 XP bottles
         addHandled(ModBlocks.COSMIC_MOB_SPAWNER.get(), this::cosmicSpawnerLoot);

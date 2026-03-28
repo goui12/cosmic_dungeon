@@ -1,12 +1,15 @@
+// file: src/main/java/net/goui/cosmicdungeon/network/ModNetwork.java
 package net.goui.cosmicdungeon.network;
 
 import net.goui.cosmicdungeon.auth.AccessPolicy;
+import net.goui.cosmicdungeon.client.SpawnerLabelState;
 import net.goui.cosmicdungeon.network.handler.RegionLookAllClientPayloadHandler;
 import net.goui.cosmicdungeon.network.handler.RegionLookAllServerPayloadHandler;
 import net.goui.cosmicdungeon.network.handler.RegionLookClientPayloadHandler;
 import net.goui.cosmicdungeon.network.payload.RegionLookAllPayload;
 import net.goui.cosmicdungeon.network.payload.RegionLookAllRequestPayload;
 import net.goui.cosmicdungeon.network.payload.RegionLookPayload;
+import net.goui.cosmicdungeon.network.payload.SpawnerLabelPayload;
 import net.goui.cosmicdungeon.playerclass.api.ClassData;
 import net.goui.cosmicdungeon.playerclass.api.ClassKeys;
 import net.goui.cosmicdungeon.playerclass.api.ClassNet;
@@ -44,6 +47,20 @@ public final class ModNetwork {
                 )
         );
 
+        /* ===================== SPAWNER LABEL (CLIENT TOGGLE; SERVER-AUTHORITATIVE) ===================== */
+
+        registrar.playToClient(
+                SpawnerLabelPayload.TYPE,
+                SpawnerLabelPayload.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() -> {
+                    // Hard-set state directly (no reflection needed).
+                    SpawnerLabelState.setEnabled(payload.enabled());
+
+                    // Keep your reflective path too (harmless, and helps if you want extra behavior there later).
+                    ClientNetworkDispatch.dispatch("onSpawnerLabel", payload);
+                })
+        );
+
         /* ===================== RIFT (SERVER-AUTHORITATIVE) ===================== */
 
         registrar.playToServer(
@@ -64,6 +81,7 @@ public final class ModNetwork {
                                 clicked,
                                 "NO PERMISSION",
                                 "",
+                                false,
                                 destinations
                         ));
                         return;
@@ -75,6 +93,7 @@ public final class ModNetwork {
                                 clicked,
                                 "TOO FAR",
                                 "",
+                                false,
                                 destinations
                         ));
                         return;
@@ -88,6 +107,7 @@ public final class ModNetwork {
                                 clicked,
                                 "",
                                 "",
+                                false,
                                 destinations
                         ));
                         return;
@@ -98,12 +118,14 @@ public final class ModNetwork {
 
                     String name = portal == null ? "" : portal.portalName();
                     String dest = portal == null ? "" : portal.destinationName();
+                    boolean reset = portal != null && portal.resetTrigger();
 
                     ctx.reply(new RiftPayloads.S2C_RiftConfig(
                             clicked,
                             anchor,
                             name == null ? "" : name,
                             dest == null ? "" : dest,
+                            reset,
                             destinations
                     ));
                 }
@@ -129,7 +151,12 @@ public final class ModNetwork {
                         return;
                     }
 
-                    var result = data.setPortalConfig(anchor, payload.riftName(), payload.destinationName());
+                    var result = data.setPortalConfig(
+                            anchor,
+                            payload.riftName(),
+                            payload.destinationName(),
+                            payload.resetTrigger()
+                    );
 
                     if (result instanceof net.goui.cosmicdungeon.rift.RiftRegistryData.SaveResult.Ok) {
                         ctx.reply(new RiftPayloads.S2C_SaveResult(anchor, true, "Rift saved."));

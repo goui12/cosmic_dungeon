@@ -1,7 +1,11 @@
+// file: src/main/java/net/goui/cosmicdungeon/auth/RankEnforcementEvents.java
 package net.goui.cosmicdungeon.auth;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
+import net.goui.cosmicdungeon.network.ModNetwork;
+import net.goui.cosmicdungeon.network.payload.SpawnerLabelPayload;
 import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -23,6 +27,10 @@ public final class RankEnforcementEvents {
      * Resets on each server start.
      */
     private static final AtomicBoolean FIRST_JOIN_GRANTED = new AtomicBoolean(false);
+
+    // Persistent preference key (server stores; client receives on login)
+    private static final String PREF_ROOT = "cosmicdungeon_prefs";
+    private static final String KEY_SPAWNER_LABELS = "spawner_labels";
 
     @SubscribeEvent
     public static void onServerStarting(ServerStartingEvent e) {
@@ -52,6 +60,16 @@ public final class RankEnforcementEvents {
         }
 
         enforce(sp);
+
+        // Sync spawner-label preference on login (default false).
+        // Non-developers always get false (even if NBT somehow had true).
+        boolean enabled = false;
+        if (Authority.isDeveloper(sp)) {
+            CompoundTag pd = sp.getPersistentData();
+            CompoundTag prefs = pd.getCompoundOrEmpty(PREF_ROOT);
+            enabled = prefs.getBooleanOr(KEY_SPAWNER_LABELS, false);
+        }
+        ModNetwork.sendTo(sp, new SpawnerLabelPayload(enabled));
     }
 
     private static void enforce(ServerPlayer sp) {

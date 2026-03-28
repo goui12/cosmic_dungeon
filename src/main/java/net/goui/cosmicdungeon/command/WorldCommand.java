@@ -3,6 +3,7 @@ package net.goui.cosmicdungeon.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import net.goui.cosmicdungeon.dungeon.DungeonWorldSnapshotService;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -15,6 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,17 +24,14 @@ import java.util.List;
 public final class WorldCommand {
     private WorldCommand() {}
 
-    // Tab-complete: aliases + hard-coded dungeon dims
     private static final SuggestionProvider<CommandSourceStack> DIM_SUGGEST = (ctx, builder) -> {
         List<String> names = new ArrayList<>();
 
-        // Friendly aliases
         names.add("world");
         names.add("overworld");
         names.add("nether");
         names.add("end");
 
-        // Hard-coded dungeon dimensions
         names.add("dungeon_1");
         names.add("dungeon_2");
         names.add("dungeon_3");
@@ -42,9 +41,20 @@ public final class WorldCommand {
         return SharedSuggestionProvider.suggest(names, builder);
     };
 
+    private static final SuggestionProvider<CommandSourceStack> SNAPSHOT_SUGGEST = (ctx, builder) -> {
+        String worldArg = StringArgumentType.getString(ctx, "target");
+        ResourceKey<Level> dimKey = resolveDimensionKey(worldArg);
+        if (dimKey == null) return builder.buildFuture();
+
+        List<String> ids = DungeonWorldSnapshotService.listSnapshotIds(ctx.getSource().getServer(), dimKey);
+        return SharedSuggestionProvider.suggest(ids, builder);
+    };
+
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("world")
-                .requires(src -> src.hasPermission(2)) // OP-only
+                .requires(src -> src.hasPermission(2))
+
+                // Existing behavior: /world <target>
                 .then(Commands.argument("target", StringArgumentType.word())
                         .suggests(DIM_SUGGEST)
                         .executes(ctx -> {
@@ -64,20 +74,17 @@ public final class WorldCommand {
                                 return 0;
                             }
 
-                            var rd   = dest.getLevelData().getRespawnData();
+                            var rd = dest.getLevelData().getRespawnData();
                             BlockPos spawn = rd.pos();
-                            // Find a safe standable position near/at spawn
                             BlockPos safe = ensureStandable(dest, spawn);
 
-                            float    yaw   = rd.yaw();
-                            float    pitch = rd.pitch();
+                            float yaw = rd.yaw();
+                            float pitch = rd.pitch();
 
-                            // Center on block
                             double x = safe.getX() + 0.5;
                             double y = safe.getY();
                             double z = safe.getZ() + 0.5;
 
-                            // Cross-dimension teleport (absolute position/rotation)
                             player.teleportTo(dest, x, y, z, java.util.Set.of(), yaw, pitch, false);
 
                             source.sendSuccess(() -> Component.literal(
@@ -85,8 +92,107 @@ public final class WorldCommand {
                                             " spawn (" + safe.getX() + " " + safe.getY() + " " + safe.getZ() + ")"
                             ), false);
                             return 1;
-                        })
-                )
+                        }))
+
+                .then(Commands.literal("save")
+                        .then(Commands.argument("target", StringArgumentType.word())
+                                .suggests(DIM_SUGGEST)
+                                .executes(ctx -> {
+                                    CommandSourceStack source = ctx.getSource();
+                                    String arg = StringArgumentType.getString(ctx, "target");
+
+                                    ResourceKey<Level> dimKey = resolveDimensionKey(arg);
+                                    if (dimKey == null) {
+                                        source.sendFailure(Component.literal("Unknown dimension: " + arg));
+                                        return 0;
+                                    }
+
+                                    var result = DungeonWorldSnapshotService.saveSnapshot(source.getServer(), dimKey);
+                                    if (result instanceof DungeonWorldSnapshotService.SnapshotResult.Ok ok) {
+                                        source.sendSuccess(() -> Component.literal(
+                                                "Saved snapshot for " + dimKey.location() + ": " + ok.snapshotId()
+                                        ), true);
+                                        return 1;
+                                    }
+
+                                    DungeonWorldSnapshotService.SnapshotResult.Error err =
+                                            (DungeonWorldSnapshotService.SnapshotResult.Error) result;
+                                    source.sendFailure(Component.literal(err.message()));
+                                    return 0;
+                                })))
+
+                .then(Commands.literal("reset")
+                        .then(Commands.argument("target", StringArgumentType.word())
+                                .suggests(DIM_SUGGEST)
+                                .executes(ctx -> {
+                                    CommandSourceStack source = ctx.getSource();
+                                    String arg = StringArgumentType.getString(ctx, "target");
+
+                                    ResourceKey<Level> dimKey = resolveDimensionKey(arg);
+                                    if (dimKey == null) {
+                                        source.sendFailure(Component.literal("Unknown dimension: " + arg));
+                                        return 0;
+                                    }
+
+                                    var result = DungeonWorldSnapshotService.resetToLatest(source.getServer(), dimKey);
+                                    if (result instanceof DungeonWorldSnapshotService.SnapshotResult.Ok ok) {
+                                        source.sendSuccess(() -> Component.literal(
+                                                "Reset " + dimKey.location() + " to latest snapshot: " + ok.snapshotId()
+                                        ), true);
+                                        return 1;
+                                    }
+
+                                    DungeonWorldSnapshotService.SnapshotResult.Error err =
+                                            (DungeonWorldSnapshotService.SnapshotResult.Error) result;
+                                    source.sendFailure(Component.literal(err.message()));
+                                    return 0;
+                                })
+                                .then(Commands.argument("snapshot", StringArgumentType.word())
+                                        .suggests(SNAPSHOT_SUGGEST)
+                                        .executes(ctx -> {
+                                            CommandSourceStack source = ctx.getSource();
+                                            String arg = StringArgumentType.getString(ctx, "target");
+                                            String snapshot = StringArgumentType.getString(ctx, "snapshot");
+
+                                            ResourceKey<Level> dimKey = resolveDimensionKey(arg);
+                                            if (dimKey == null) {
+                                                source.sendFailure(Component.literal("Unknown dimension: " + arg));
+                                                return 0;
+                                            }
+
+                                            var result = DungeonWorldSnapshotService.resetToSnapshot(
+                                                    source.getServer(), dimKey, snapshot
+                                            );
+                                            if (result instanceof DungeonWorldSnapshotService.SnapshotResult.Ok ok) {
+                                                source.sendSuccess(() -> Component.literal(
+                                                        "Reset " + dimKey.location() + " to snapshot: " + ok.snapshotId()
+                                                ), true);
+                                                return 1;
+                                            }
+
+                                            DungeonWorldSnapshotService.SnapshotResult.Error err =
+                                                    (DungeonWorldSnapshotService.SnapshotResult.Error) result;
+                                            source.sendFailure(Component.literal(err.message()));
+                                            return 0;
+                                        }))))
+
+
+                .then(Commands.literal("saves")
+                        .then(Commands.argument("target", StringArgumentType.word())
+                                .suggests(DIM_SUGGEST)
+                                .executes(ctx -> {
+                                    CommandSourceStack source = ctx.getSource();
+                                    String arg = StringArgumentType.getString(ctx, "target");
+
+                                    ResourceKey<Level> dimKey = resolveDimensionKey(arg);
+                                    if (dimKey == null) {
+                                        source.sendFailure(Component.literal("Unknown dimension: " + arg));
+                                        return 0;
+                                    }
+
+                                    DungeonWorldSnapshotService.sendSnapshotListTo(source, dimKey);
+                                    return 1;
+                                })))
         );
     }
 
@@ -100,7 +206,7 @@ public final class WorldCommand {
             if (isStandable(level, m)) return m.immutable();
         }
 
-        int surfaceY = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE, pos.getX(), pos.getZ());
+        int surfaceY = level.getHeight(Heightmap.Types.WORLD_SURFACE, pos.getX(), pos.getZ());
         m.set(pos.getX(), Math.max(surfaceY, minY + 1), pos.getZ());
 
         for (int y = m.getY(); y < Math.min(m.getY() + 8, maxY - 1); y++) {
@@ -129,9 +235,11 @@ public final class WorldCommand {
         if (s.equals("nether")) return Level.NETHER;
         if (s.equals("end") || s.equals("the_end")) return Level.END;
 
-        ResourceLocation id = s.contains(":") ? ResourceLocation.tryParse(s) : ResourceLocation.tryBuild("cosmicdungeon", s);
-        if (id == null) return null;
+        ResourceLocation id = s.contains(":")
+                ? ResourceLocation.tryParse(s)
+                : ResourceLocation.tryBuild("cosmicdungeon", s);
 
+        if (id == null) return null;
         return ResourceKey.create(Registries.DIMENSION, id);
     }
 }

@@ -51,7 +51,6 @@ public final class DataGenerators {
         // ✅ FIX: register block+item tags together so item tags receive blockTags.contentsGetter()
         event.createBlockAndItemTags(ModBlockTagProvider::new, ModItemTagProvider::new);
 
-        // Data maps
-        generator.addProvider(true, new ModDataMapProvider(packOutput, lookupProvider));
+
     }
 }

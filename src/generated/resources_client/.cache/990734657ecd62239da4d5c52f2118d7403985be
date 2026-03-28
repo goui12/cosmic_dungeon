@@ -1,4 +1,4 @@
-// 1.21.10	2026-01-13T21:52:40.9871109	Model Definitions - cosmicdungeon
+// 1.21.10	2026-02-15T16:47:48.7288137	Model Definitions - cosmicdungeon
 5a66ffdd8a2e8eedf53f6dc3fde5516adf72264a assets/cosmicdungeon/blockstates/amethyst_block_black.json
 81517f0d786bda19404b187b856edfc244184b2e assets/cosmicdungeon/blockstates/amethyst_block_blue.json
 eeae820f52d0c1e216f1030b3821ae1d38be29e1 assets/cosmicdungeon/blockstates/amethyst_block_brown.json
@@ -396,7 +396,7 @@ a9fdfaa0db8caa4b1592c5b796cacff556dc9eae assets/cosmicdungeon/models/block/buddi
 12d79959296aef4685edd090942e37e1ad9adc97 assets/cosmicdungeon/models/block/budding_amethyst_white.json
 8c8285c94113e055b595b8c8fbae1be76f46edf8 assets/cosmicdungeon/models/block/budding_amethyst_yellow.json
 6a4de1faf2a76d7a689044c23adf60698e9ddd6e assets/cosmicdungeon/models/block/chicken_block.json
-bf6b93f75b38a69705ab19c449e1db23dc48d84c assets/cosmicdungeon/models/block/cosmic_mob_spawner.json
+a08a832c260252aa447ac9282782e4c3c2a19a35 assets/cosmicdungeon/models/block/cosmic_mob_spawner.json
 309dacfbc1aafb8df485481c9b34f27b0dec7b94 assets/cosmicdungeon/models/block/cosmic_rift.json
 f5308d83910ec1fcac18b42321891bf18f1071cf assets/cosmicdungeon/models/block/cosmic_rift_tile.json
 c033a2ad79c4e2d2c685ddefaab51710052fbee0 assets/cosmicdungeon/models/block/infinite_dispenser.json

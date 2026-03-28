@@ -1,5 +1,7 @@
+// file: src/main/java/net/goui/cosmicdungeon/block/custom/CosmicMobSpawnerBlock.java
 package net.goui.cosmicdungeon.block.custom;
 
+import com.mojang.logging.LogUtils;
 import net.goui.cosmicdungeon.block.entity.CosmicSpawnerBlockEntity;
 import net.goui.cosmicdungeon.block.entity.ModBlockEntities;
 import net.minecraft.core.BlockPos;
@@ -11,10 +13,19 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
 
 public class CosmicMobSpawnerBlock extends Block implements EntityBlock {
+
+    private static final Logger LOGGER = LogUtils.getLogger();
+
+    /**
+     * Toggle extra spawner debug logging with:
+     * -Dcosmicdungeon.debugSpawner=true
+     */
+    private static final boolean DEBUG = Boolean.getBoolean("cosmicdungeon.debugSpawner");
 
     public CosmicMobSpawnerBlock(Properties properties) {
         super(properties);
@@ -22,7 +33,9 @@ public class CosmicMobSpawnerBlock extends Block implements EntityBlock {
 
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        System.out.println("Creating CosmicSpawnerBlockEntity at " + pos);
+        if (DEBUG) {
+            LOGGER.debug("Creating CosmicSpawnerBlockEntity at {}", pos);
+        }
         return new CosmicSpawnerBlockEntity(pos, state);
     }
 
@@ -31,16 +44,20 @@ public class CosmicMobSpawnerBlock extends Block implements EntityBlock {
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(
             Level level, BlockState state, BlockEntityType<T> type
     ) {
+        // Only tick our own BE type
         if (type != ModBlockEntities.COSMIC_SPAWNER.get()) return null;
 
         if (level.isClientSide()) {
-            return (lvl, pos, st, be) ->
-                    CosmicSpawnerBlockEntity.clientTick(lvl, pos, st, (CosmicSpawnerBlockEntity) be);
+            return (lvl, pos, st, be) -> {
+                if (be instanceof CosmicSpawnerBlockEntity cosmic) {
+                    CosmicSpawnerBlockEntity.clientTick(lvl, pos, st, cosmic);
+                }
+            };
         }
 
         return (lvl, pos, st, be) -> {
-            if (lvl instanceof ServerLevel) {
-                CosmicSpawnerBlockEntity.serverTick(lvl, pos, st, (CosmicSpawnerBlockEntity) be);
+            if (be instanceof CosmicSpawnerBlockEntity cosmic && lvl instanceof ServerLevel) {
+                CosmicSpawnerBlockEntity.serverTick(lvl, pos, st, cosmic);
             }
         };
     }
@@ -53,5 +70,4 @@ public class CosmicMobSpawnerBlock extends Block implements EntityBlock {
         }
         return super.triggerEvent(state, level, pos, id, param);
     }
-
 }

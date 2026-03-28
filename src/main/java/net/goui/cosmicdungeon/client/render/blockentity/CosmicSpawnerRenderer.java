@@ -1,9 +1,10 @@
+// file: src/main/java/net/goui/cosmicdungeon/client/render/blockentity/CosmicSpawnerRenderer.java
 package net.goui.cosmicdungeon.client.render.blockentity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.goui.cosmicdungeon.block.entity.CosmicSpawnerBlockEntity;
-import net.minecraft.ChatFormatting;
+import net.goui.cosmicdungeon.client.SpawnerLabelState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -67,6 +68,13 @@ public class CosmicSpawnerRenderer implements BlockEntityRenderer<CosmicSpawnerB
         state.be = be;
         state.partialTick = partialTick;
 
+        // Default: don't render the nameplate unless explicitly enabled by the client toggle.
+        // (Keeps "default hide" behavior, and allows /spawner label show|hide to control it.)
+        if (!SpawnerLabelState.isEnabled()) {
+            state.renderName = false;
+            return;
+        }
+
         String id = be.getSpawnerEntityId();
         if (id == null) id = "";
         id = id.trim();
@@ -78,7 +86,6 @@ public class CosmicSpawnerRenderer implements BlockEntityRenderer<CosmicSpawnerB
 
         state.nameText = Component.literal(id)
                 .withStyle(style -> style.withColor(0x00FFD5)); // neon teal
-
 
         // World position: center of block + 2.0 up
         Vec3 labelWorld = Vec3.atCenterOf(be.getBlockPos()).add(0.0, LABEL_HEIGHT, 0.0);
@@ -110,7 +117,7 @@ public class CosmicSpawnerRenderer implements BlockEntityRenderer<CosmicSpawnerB
         CosmicSpawnerBlockEntity be = state.be;
         if (be == null) return;
 
-// 2) Render preview entity
+        // 2) Render preview entity
         Level level = be.getLevel();
         if (level != null) {
             Entity display = be.getSpawner().getOrCreateDisplayEntity(level, be.getBlockPos());
@@ -134,7 +141,6 @@ public class CosmicSpawnerRenderer implements BlockEntityRenderer<CosmicSpawnerB
                 poseStack.popPose();
             }
         }
-
 
         // 3) Static nameplate (vanilla behavior)
         if (state.renderName) {
