@@ -247,7 +247,8 @@ public final class DungeonLifecycleService {
         }
 
         evacuatePlayersInDungeon(server, def, "Dungeon reset queued. You were moved to safety.");
-        queueReset(server, def.id(), existing.map(DungeonRunRegistryData.RunRecord::runId).orElse(-1L), DungeonResetReason.MANUAL, snapshotIdOrNull);
+        long runId = existing.map(DungeonRunRegistryData.RunRecord::runId).orElse(-1L);
+        queueReset(server, def.id(), runId, DungeonResetReason.MANUAL, snapshotIdOrNull, 0L);
 
         notifyDevelopers(server, Component.literal(
                 "[DungeonLifecycle] Manual reset queued for " + def.id()
@@ -256,7 +257,16 @@ public final class DungeonLifecycleService {
                         : " (" + snapshotIdOrNull + ")")
         ).withStyle(ChatFormatting.YELLOW));
 
-        return new DungeonWorldSnapshotService.SnapshotResult.Ok("(queued)", null);
+        processPendingResets(server);
+        PendingReset pending = PENDING_RESETS.get(def.id());
+        if (pending != null) {
+            return new DungeonWorldSnapshotService.SnapshotResult.Error(
+                    "Reset is still pending for " + def.id()
+                            + " (attemptsRemaining=" + pending.attemptsRemaining() + ")."
+            );
+        }
+
+        return new DungeonWorldSnapshotService.SnapshotResult.Ok("(completed)", null);
     }
 
     public static void sendRunDiagnosticsTo(CommandSourceStack source, String dungeonIdOrNull) {
@@ -334,7 +344,7 @@ public final class DungeonLifecycleService {
         }
 
         evacuatePlayersInDungeon(server, def, "Dungeon run reset queued. You were moved to safety.");
-        queueReset(server, def.id(), resetting.runId(), reason, explicitSnapshotIdOrNull);
+        queueReset(server, def.id(), resetting.runId(), reason, explicitSnapshotIdOrNull, RESET_RETRY_DELAY_TICKS);
 
         notifyDevelopers(server, Component.literal(
                 "[DungeonLifecycle] " + reason + " reset queued for " + def.id()
@@ -716,7 +726,8 @@ public final class DungeonLifecycleService {
                                    String dungeonId,
                                    long runId,
                                    DungeonResetReason reason,
-                                   String snapshotIdOrNull) {
+                                   String snapshotIdOrNull,
+                                   long initialDelayTicks) {
         long nowTick = 0L;
         ServerLevel overworld = server.getLevel(Level.OVERWORLD);
         if (overworld != null) {
@@ -728,7 +739,7 @@ public final class DungeonLifecycleService {
                 runId,
                 reason,
                 snapshotIdOrNull,
-                nowTick + RESET_RETRY_DELAY_TICKS,
+                nowTick + Math.max(0L, initialDelayTicks),
                 RESET_MAX_ATTEMPTS
         ));
     }
