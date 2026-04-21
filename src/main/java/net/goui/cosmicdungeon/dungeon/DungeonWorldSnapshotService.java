@@ -132,8 +132,11 @@ public final class DungeonWorldSnapshotService {
     public static SnapshotResult resetToLatest(MinecraftServer server, String dungeonId) {
         Optional<String> latest = getLatestSnapshotId(server, dungeonId);
         if (latest.isEmpty()) {
+            System.out.println("[DUNGEON DEBUG] resetToLatest no snapshots found for dungeonId=" + dungeonId);
             return new SnapshotResult.Error("No snapshots found for " + dungeonId);
         }
+        System.out.println("[DUNGEON DEBUG] resetToLatest selected snapshotId=" + latest.get()
+                + " for dungeonId=" + dungeonId);
         return resetToSnapshot(server, dungeonId, latest.get());
     }
 
@@ -234,17 +237,33 @@ public final class DungeonWorldSnapshotService {
                 Path livePath = getDimensionFolder(server, level.dimension());
                 Path dimSnapshot = snapshotRoot.resolve(sanitizeDimensionId(level.dimension()));
 
+                System.out.println("[DUNGEON DEBUG] resetToSnapshot forcing chunk IO flush before filesystem restore for "
+                        + level.dimension().location());
+                flushChunkIoWorker(level);
+
                 System.out.println("[DUNGEON DEBUG] resetToSnapshot deleting live contents for "
                         + level.dimension().location() + " path=" + livePath);
+                logDirectoryDiagnostics("live-before-delete", livePath);
                 deleteDirectoryContents(livePath);
+                logDirectoryDiagnostics("live-after-delete", livePath);
 
                 System.out.println("[DUNGEON DEBUG] resetToSnapshot copying snapshot contents for "
                         + level.dimension().location() + " from " + dimSnapshot + " -> " + livePath);
+                logDirectoryDiagnostics("snapshot-source-before-copy", dimSnapshot);
                 copyDirectory(dimSnapshot, livePath);
+                logDirectoryDiagnostics("live-after-copy", livePath);
 
                 System.out.println("[DUNGEON DEBUG] resetToSnapshot clearing DimensionDataStorage cache for "
                         + level.dimension().location());
                 clearDimensionDataCache(level);
+
+                System.out.println("[DUNGEON DEBUG] resetToSnapshot invalidating chunk IO caches for "
+                        + level.dimension().location());
+                invalidateChunkIoCaches(level);
+
+                System.out.println("[DUNGEON DEBUG] resetToSnapshot clearing chunk holder maps for "
+                        + level.dimension().location());
+                clearChunkHolderMaps(level);
             }
 
             System.out.println("[DUNGEON DEBUG] resetToSnapshot SUCCESS dungeonId=" + dungeonId
@@ -586,6 +605,265 @@ public final class DungeonWorldSnapshotService {
 
         System.out.println("[DUNGEON DEBUG] findField could not find field " + name + " starting from " + startClass.getName());
         return null;
+    }
+
+    private static void flushChunkIoWorker(ServerLevel level) {
+        try {
+            ServerChunkCache chunkSource = level.getChunkSource();
+            Field chunkMapField = findField(ServerChunkCache.class, "chunkMap");
+            if (chunkMapField == null) {
+                System.out.println("[DUNGEON DEBUG] flushChunkIoWorker: chunkMap field not found");
+                return;
+            }
+
+            Object chunkMap = chunkMapField.get(chunkSource);
+            if (chunkMap == null) {
+                System.out.println("[DUNGEON DEBUG] flushChunkIoWorker: chunkMap was null");
+                return;
+            }
+
+            Method flushWorker = chunkMap.getClass().getMethod("flushWorker");
+            flushWorker.invoke(chunkMap);
+            System.out.println("[DUNGEON DEBUG] flushChunkIoWorker: flushWorker invoked for "
+                    + level.dimension().location());
+        } catch (Throwable t) {
+            System.out.println("[DUNGEON DEBUG] flushChunkIoWorker ERROR for "
+                    + level.dimension().location() + ": " + t);
+            t.printStackTrace();
+            throw new RuntimeException("Failed to flush chunk IO worker for " + level.dimension().location(), t);
+        }
+    }
+
+    private static void invalidateChunkIoCaches(ServerLevel level) {
+        try {
+            ServerChunkCache chunkSource = level.getChunkSource();
+
+            Field chunkMapField = findField(ServerChunkCache.class, "chunkMap");
+            if (chunkMapField == null) {
+                System.out.println("[DUNGEON DEBUG] invalidateChunkIoCaches: chunkMap field not found");
+                return;
+            }
+
+            Object chunkMap = chunkMapField.get(chunkSource);
+            if (chunkMap == null) {
+                System.out.println("[DUNGEON DEBUG] invalidateChunkIoCaches: chunkMap was null");
+                return;
+            }
+
+            Field workerField = findField(chunkMap.getClass(), "worker");
+            if (workerField == null) {
+                System.out.println("[DUNGEON DEBUG] invalidateChunkIoCaches: worker field not found");
+                return;
+            }
+
+            Object worker = workerField.get(chunkMap);
+            if (worker == null) {
+                System.out.println("[DUNGEON DEBUG] invalidateChunkIoCaches: worker was null");
+                return;
+            }
+
+            Field pendingWritesField = findField(worker.getClass(), "pendingWrites");
+            if (pendingWritesField != null) {
+                Object rawPending = pendingWritesField.get(worker);
+                if (rawPending instanceof Map<?, ?> pendingWrites) {
+                    int pendingCount = pendingWrites.size();
+                    ((Map<?, ?>) pendingWrites).clear();
+                    System.out.println("[DUNGEON DEBUG] invalidateChunkIoCaches: cleared pendingWrites="
+                            + pendingCount + " for " + level.dimension().location());
+                }
+            }
+
+            Field storageField = findField(worker.getClass(), "storage");
+            if (storageField == null) {
+                System.out.println("[DUNGEON DEBUG] invalidateChunkIoCaches: storage field not found");
+                return;
+            }
+
+            Object storage = storageField.get(worker);
+            if (storage == null) {
+                System.out.println("[DUNGEON DEBUG] invalidateChunkIoCaches: storage was null");
+                return;
+            }
+
+            Field regionCacheField = findField(storage.getClass(), "regionCache");
+            if (regionCacheField == null) {
+                System.out.println("[DUNGEON DEBUG] invalidateChunkIoCaches: regionCache field not found");
+                return;
+            }
+
+            Object rawRegionCache = regionCacheField.get(storage);
+            if (!(rawRegionCache instanceof Iterable<?> iterable)) {
+                System.out.println("[DUNGEON DEBUG] invalidateChunkIoCaches: regionCache was not Iterable: "
+                        + rawRegionCache);
+                return;
+            }
+
+            int closed = 0;
+            for (Object regionFile : iterable) {
+                if (regionFile == null) continue;
+                try {
+                    Method closeMethod = regionFile.getClass().getMethod("close");
+                    closeMethod.invoke(regionFile);
+                    closed++;
+                } catch (Throwable t) {
+                    System.out.println("[DUNGEON DEBUG] invalidateChunkIoCaches: failed closing region file "
+                            + regionFile.getClass().getName() + ": " + t);
+                    t.printStackTrace();
+                }
+            }
+
+            if (rawRegionCache instanceof Map<?, ?> regionMap) {
+                int before = regionMap.size();
+                ((Map<?, ?>) regionMap).clear();
+                System.out.println("[DUNGEON DEBUG] invalidateChunkIoCaches: closedRegionFiles=" + closed
+                        + " clearedRegionCacheEntries=" + before
+                        + " for " + level.dimension().location());
+            } else {
+                System.out.println("[DUNGEON DEBUG] invalidateChunkIoCaches: regionCache was Iterable but not Map");
+            }
+        } catch (Throwable t) {
+            System.out.println("[DUNGEON DEBUG] invalidateChunkIoCaches ERROR for "
+                    + level.dimension().location() + ": " + t);
+            t.printStackTrace();
+            throw new RuntimeException("Failed to invalidate chunk IO caches for " + level.dimension().location(), t);
+        }
+    }
+
+    private static void clearChunkHolderMaps(ServerLevel level) {
+        try {
+            ServerChunkCache chunkSource = level.getChunkSource();
+            Field chunkMapField = findField(ServerChunkCache.class, "chunkMap");
+            if (chunkMapField == null) {
+                System.out.println("[DUNGEON DEBUG] clearChunkHolderMaps: chunkMap field not found");
+                return;
+            }
+
+            Object chunkMap = chunkMapField.get(chunkSource);
+            if (chunkMap == null) {
+                System.out.println("[DUNGEON DEBUG] clearChunkHolderMaps: chunkMap was null");
+                return;
+            }
+
+            int clearedCollections = 0;
+            for (String fieldName : List.of(
+                    "updatingChunkMap",
+                    "visibleChunkMap",
+                    "pendingUnloads",
+                    "toDrop",
+                    "chunkTypeCache",
+                    "nextChunkSaveTime",
+                    "chunksToEagerlySave"
+            )) {
+                Field f = findField(chunkMap.getClass(), fieldName);
+                if (f == null) {
+                    continue;
+                }
+
+                Object raw = f.get(chunkMap);
+                if (raw == null) {
+                    continue;
+                }
+
+                boolean cleared = false;
+                if (raw instanceof Map<?, ?> map) {
+                    int before = map.size();
+                    ((Map<?, ?>) raw).clear();
+                    System.out.println("[DUNGEON DEBUG] clearChunkHolderMaps cleared Map field="
+                            + fieldName + " sizeBefore=" + before + " for " + level.dimension().location());
+                    cleared = true;
+                } else if (raw instanceof java.util.Collection<?> collection) {
+                    int before = collection.size();
+                    ((java.util.Collection<?>) raw).clear();
+                    System.out.println("[DUNGEON DEBUG] clearChunkHolderMaps cleared Collection field="
+                            + fieldName + " sizeBefore=" + before + " for " + level.dimension().location());
+                    cleared = true;
+                }
+
+                if (cleared) {
+                    clearedCollections++;
+                } else {
+                    System.out.println("[DUNGEON DEBUG] clearChunkHolderMaps field " + fieldName
+                            + " is not clearable collection type: " + raw.getClass().getName());
+                }
+            }
+
+            Method promoteChunkMap = findNoArgMethod(List.of(chunkMap), "promoteChunkMap");
+            if (promoteChunkMap != null) {
+                try {
+                    promoteChunkMap.invoke(chunkMap);
+                    System.out.println("[DUNGEON DEBUG] clearChunkHolderMaps invoked promoteChunkMap for "
+                            + level.dimension().location());
+                } catch (Throwable t) {
+                    System.out.println("[DUNGEON DEBUG] clearChunkHolderMaps failed invoking promoteChunkMap: " + t);
+                    t.printStackTrace();
+                }
+            }
+
+            Method clearCache = findNoArgMethod(List.of(chunkSource), "clearCache");
+            if (clearCache != null) {
+                try {
+                    clearCache.invoke(chunkSource);
+                    System.out.println("[DUNGEON DEBUG] clearChunkHolderMaps invoked clearCache on chunk source for "
+                            + level.dimension().location());
+                } catch (Throwable t) {
+                    System.out.println("[DUNGEON DEBUG] clearChunkHolderMaps failed invoking clearCache: " + t);
+                    t.printStackTrace();
+                }
+            }
+
+            System.out.println("[DUNGEON DEBUG] clearChunkHolderMaps done clearedCollections="
+                    + clearedCollections + " for " + level.dimension().location());
+        } catch (Throwable t) {
+            System.out.println("[DUNGEON DEBUG] clearChunkHolderMaps ERROR for "
+                    + level.dimension().location() + ": " + t);
+            t.printStackTrace();
+            throw new RuntimeException("Failed clearing chunk holder maps for " + level.dimension().location(), t);
+        }
+    }
+
+    private static void logDirectoryDiagnostics(String stage, Path dir) {
+        try {
+            if (dir == null) {
+                System.out.println("[DUNGEON DEBUG] logDirectoryDiagnostics stage=" + stage + " dir=<null>");
+                return;
+            }
+
+            if (!Files.exists(dir)) {
+                System.out.println("[DUNGEON DEBUG] logDirectoryDiagnostics stage=" + stage
+                        + " dir=" + dir + " exists=false");
+                return;
+            }
+
+            long fileCount = 0L;
+            long dirCount = 0L;
+            long totalBytes = 0L;
+
+            try (var walk = Files.walk(dir)) {
+                var it = walk.iterator();
+                while (it.hasNext()) {
+                    Path p = it.next();
+                    if (Files.isDirectory(p)) {
+                        dirCount++;
+                    } else {
+                        fileCount++;
+                        try {
+                            totalBytes += Files.size(p);
+                        } catch (IOException ignored) {
+                        }
+                    }
+                }
+            }
+
+            System.out.println("[DUNGEON DEBUG] logDirectoryDiagnostics stage=" + stage
+                    + " dir=" + dir
+                    + " files=" + fileCount
+                    + " dirs=" + dirCount
+                    + " totalBytes=" + totalBytes);
+        } catch (Throwable t) {
+            System.out.println("[DUNGEON DEBUG] logDirectoryDiagnostics FAILED stage=" + stage
+                    + " dir=" + dir + " error=" + t);
+            t.printStackTrace();
+        }
     }
 
     private static Method findNoArgMethod(Iterable<?> iterable, String methodName) {
