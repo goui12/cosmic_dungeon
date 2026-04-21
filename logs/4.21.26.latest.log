@@ -1,14 +1,14 @@
-[21Apr2026 15:03:49.448] [main/INFO] [net.neoforged.fml.startup.Entrypoint/]: JVM Uptime at startup: 76ms
-[21Apr2026 15:03:49.456] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Starting FancyModLoader version 10.0.32 (DEDICATED_SERVER in PROD)
-[21Apr2026 15:03:49.457] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Game directory: /home/503323/userdata/minecraft-neoforge
-[21Apr2026 15:03:49.499] [main/INFO] [net.neoforged.fml.loading.EarlyServiceDiscovery/]: Found 2 early service jars (out of 76) in 12ms
-[21Apr2026 15:03:49.499] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Loading FML Early Services:
-[21Apr2026 15:03:49.500] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]:  - libraries/net/neoforged/fancymodloader/earlydisplay/10.0.32/earlydisplay-10.0.32.jar
-[21Apr2026 15:03:49.500] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]:  - libraries/net/neoforged/fancymodloader/loader/10.0.32/loader-10.0.32.jar
-[21Apr2026 15:03:49.505] [main/INFO] [net.neoforged.fml.loading.ImmediateWindowHandler/]: Not loading early display in headless mode.
-[21Apr2026 15:03:49.520] [main/INFO] [net.neoforged.fml.loading.moddiscovery.locators.GameLocator/]: Failed to find common Minecraft classes and resources on the classpath. Assuming we're launching production.
-[21Apr2026 15:03:49.678] [main/INFO] [net.neoforged.fml.loading.moddiscovery.locators.JarInJarDependencyLocator/]: Found 3 dependencies adding them to mods collection
-[21Apr2026 15:03:49.680] [main/INFO] [net.neoforged.fml.loading.moddiscovery.ModDiscoverer/]: 
+[21Apr2026 17:57:16.870] [main/INFO] [net.neoforged.fml.startup.Entrypoint/]: JVM Uptime at startup: 58ms
+[21Apr2026 17:57:16.877] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Starting FancyModLoader version 10.0.32 (DEDICATED_SERVER in PROD)
+[21Apr2026 17:57:16.877] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Game directory: /home/503323/userdata/minecraft-neoforge
+[21Apr2026 17:57:16.918] [main/INFO] [net.neoforged.fml.loading.EarlyServiceDiscovery/]: Found 2 early service jars (out of 76) in 13ms
+[21Apr2026 17:57:16.919] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Loading FML Early Services:
+[21Apr2026 17:57:16.920] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]:  - libraries/net/neoforged/fancymodloader/earlydisplay/10.0.32/earlydisplay-10.0.32.jar
+[21Apr2026 17:57:16.920] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]:  - libraries/net/neoforged/fancymodloader/loader/10.0.32/loader-10.0.32.jar
+[21Apr2026 17:57:16.924] [main/INFO] [net.neoforged.fml.loading.ImmediateWindowHandler/]: Not loading early display in headless mode.
+[21Apr2026 17:57:16.936] [main/INFO] [net.neoforged.fml.loading.moddiscovery.locators.GameLocator/]: Failed to find common Minecraft classes and resources on the classpath. Assuming we're launching production.
+[21Apr2026 17:57:17.080] [main/INFO] [net.neoforged.fml.loading.moddiscovery.locators.JarInJarDependencyLocator/]: Found 3 dependencies adding them to mods collection
+[21Apr2026 17:57:17.082] [main/INFO] [net.neoforged.fml.loading.moddiscovery.ModDiscoverer/]: 
      Mod List:
 		Name Version (Mod Id)
 
@@ -18,10 +18,10 @@
 		NeoForge 21.10.64 (neoforge)
 		WorldEdit 7.3.17+7262-c7fbe08 (worldedit)
 		WorldEditCUI Protocol (NeoForge) 4.0.2 (worldeditcui_protocol)
-[21Apr2026 15:03:49.897] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/home/503323/userdata/minecraft-neoforge/libraries/net/fabricmc/sponge-mixin/0.16.5+mixin.0.8.7/sponge-mixin-0.16.5+mixin.0.8.7.jar Service=FML Env=SERVER
-[21Apr2026 15:03:49.915] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Loading FML Plugins:
-[21Apr2026 15:03:49.915] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]:  - ~libraries/net/neoforged/neoforge/21.10.64/neoforge-21.10.64-universal.jar > net.neoforged.neoforge-coremods-21.10.64.jar
-[21Apr2026 15:03:50.034] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Building game content classloader:
+[21Apr2026 17:57:17.284] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/home/503323/userdata/minecraft-neoforge/libraries/net/fabricmc/sponge-mixin/0.16.5+mixin.0.8.7/sponge-mixin-0.16.5+mixin.0.8.7.jar Service=FML Env=SERVER
+[21Apr2026 17:57:17.299] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Loading FML Plugins:
+[21Apr2026 17:57:17.299] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]:  - ~libraries/net/neoforged/neoforge/21.10.64/neoforge-21.10.64-universal.jar > net.neoforged.neoforge-coremods-21.10.64.jar
+[21Apr2026 17:57:17.396] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Building game content classloader:
  - cosmicdungeon (jar(mods/cosmicdungeon-1.4.5.jar))
  - minecraft (jar(~libraries/net/neoforged/minecraft-server-patched/21.10.64/minecraft-server-patched-21.10.64.jar))
  - mixinextras.neoforge (jar(~libraries/net/neoforged/neoforge/21.10.64/neoforge-21.10.64-universal.jar > mixinextras-neoforge-0.5.0.jar))
@@ -30,33 +30,34 @@
  - net.neoforged.fml.generated (empty(VirtualJar/net.neoforged.fml.generated))
  - worldedit (jar(mods/worldedit-mod-7.3.17.jar))
  - worldeditcui_protocol (jar(mods/worldedit-mod-7.3.17.jar > worldeditcui-protocol-neoforge-mc1.21.9-4.0.2.jar))
-[21Apr2026 15:03:50.074] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Built game content classloader in 46ms
-[21Apr2026 15:03:50.110] [main/WARN] [mixin/]: Reference map 'worldedit-neoforge.mixins.refmap.json' for worldedit-neoforge.mixins.json could not be read. If this is a development environment you can ignore this message
-[21Apr2026 15:03:50.520] [main/INFO] [MixinExtras|Service/]: Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.0).
-[21Apr2026 15:03:54.744] [modloading-worker-0/INFO] [net.neoforged.neoforge.common.NeoForgeMod/NEOFORGE-MOD]: NeoForge mod loading, version 21.10.64, for MC 1.21.10
-[21Apr2026 15:03:55.232] [modloading-worker-0/INFO] [com.sk89q.worldedit.extension.platform.PlatformManager/]: Got request to register class com.sk89q.worldedit.neoforge.NeoForgePlatform with WorldEdit [com.sk89q.worldedit.extension.platform.PlatformManager@300b6a87]
-[21Apr2026 15:03:55.233] [modloading-worker-0/INFO] [com.sk89q.worldedit.neoforge.NeoForgeWorldEdit/]: WorldEdit for NeoForge (version 7.3.17+7262-c7fbe08) is loaded
-[21Apr2026 15:03:55.301] [main/INFO] [com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService/]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[21Apr2026 15:03:56.594] [Worker-Main-1/INFO] [com.sk89q.worldedit.extension.platform.PlatformCommandManager/]: Registering commands with com.sk89q.worldedit.neoforge.NeoForgePlatform
-[21Apr2026 15:03:56.889] [main/INFO] [net.minecraft.world.item.crafting.RecipeManager/]: Loaded 1462 recipes
-[21Apr2026 15:03:56.898] [main/INFO] [net.minecraft.advancements.AdvancementTree/]: Loaded 1585 advancements
-[21Apr2026 15:03:56.899] [main/INFO] [net.neoforged.neoforge.common.crafting.RecipePriorityManager/]: Loaded 0 recipe priority overrides
-[21Apr2026 15:03:57.003] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Starting minecraft server version 1.21.10
-[21Apr2026 15:03:57.003] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Loading properties
-[21Apr2026 15:03:57.003] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Default game type: SURVIVAL
-[21Apr2026 15:03:57.004] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Generating keypair
-[21Apr2026 15:03:57.097] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Starting Minecraft server on 0.0.0.0:25565
-[21Apr2026 15:03:57.125] [Server thread/INFO] [net.minecraft.server.network.ServerConnectionListener/]: Using epoll channel type
-[21Apr2026 15:03:57.175] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Preparing level "world"
-[21Apr2026 15:03:57.785] [Server thread/INFO] [net.minecraft.server.level.progress.LoggingLevelLoadListener/]: Loading 0 persistent chunks...
-[21Apr2026 15:03:57.785] [Server thread/INFO] [net.minecraft.server.level.progress.LoggingLevelLoadListener/]: Preparing spawn area: 100%
-[21Apr2026 15:03:57.796] [Server thread/INFO] [net.minecraft.server.level.progress.LoggingLevelLoadListener/]: Time elapsed: 11 ms
-[21Apr2026 15:03:57.796] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (0.641s)! For help, type "help"
-[21Apr2026 15:03:57.796] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Starting GS4 status listener
-[21Apr2026 15:03:57.800] [Server thread/INFO] [net.minecraft.server.rcon.thread.GenericThread/]: Thread Query Listener started
-[21Apr2026 15:03:57.800] [Query Listener #1/INFO] [net.minecraft.server.rcon.thread.QueryThreadGs4/]: Query running on 0.0.0.0:25565
-[21Apr2026 15:03:57.819] [Server thread/INFO] [net.neoforged.neoforge.server.permission.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler
-[21Apr2026 15:04:17.688] [User Authenticator #1/INFO] [net.minecraft.server.network.ServerLoginPacketListenerImpl/]: UUID of player goui12 is b4971547-6bd0-4206-bc52-e3285bfbda36
-[21Apr2026 15:04:19.520] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: goui12[/73.240.199.5:50740] logged in with entity id 497 at (706.6999999880791, -59.0, 68.69999998807907)
-[21Apr2026 15:04:19.597] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: goui12 joined the game
-[21Apr2026 16:37:13.726] [Server thread/WARN] [net.minecraft.server.MinecraftServer/]: Can't keep up! Is the server overloaded? Running 4699ms or 93 ticks behind
+[21Apr2026 17:57:17.416] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Built game content classloader in 26ms
+[21Apr2026 17:57:17.482] [main/WARN] [mixin/]: Reference map 'worldedit-neoforge.mixins.refmap.json' for worldedit-neoforge.mixins.json could not be read. If this is a development environment you can ignore this message
+[21Apr2026 17:57:17.885] [main/INFO] [MixinExtras|Service/]: Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.0).
+[21Apr2026 17:57:22.115] [modloading-worker-0/INFO] [net.neoforged.neoforge.common.NeoForgeMod/NEOFORGE-MOD]: NeoForge mod loading, version 21.10.64, for MC 1.21.10
+[21Apr2026 17:57:22.620] [modloading-worker-0/INFO] [com.sk89q.worldedit.extension.platform.PlatformManager/]: Got request to register class com.sk89q.worldedit.neoforge.NeoForgePlatform with WorldEdit [com.sk89q.worldedit.extension.platform.PlatformManager@50b5b4b7]
+[21Apr2026 17:57:22.622] [modloading-worker-0/INFO] [com.sk89q.worldedit.neoforge.NeoForgeWorldEdit/]: WorldEdit for NeoForge (version 7.3.17+7262-c7fbe08) is loaded
+[21Apr2026 17:57:22.690] [main/INFO] [com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService/]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[21Apr2026 17:57:24.100] [Worker-Main-2/INFO] [com.sk89q.worldedit.extension.platform.PlatformCommandManager/]: Registering commands with com.sk89q.worldedit.neoforge.NeoForgePlatform
+[21Apr2026 17:57:24.437] [main/INFO] [net.minecraft.world.item.crafting.RecipeManager/]: Loaded 1462 recipes
+[21Apr2026 17:57:24.446] [main/INFO] [net.minecraft.advancements.AdvancementTree/]: Loaded 1585 advancements
+[21Apr2026 17:57:24.448] [main/INFO] [net.neoforged.neoforge.common.crafting.RecipePriorityManager/]: Loaded 0 recipe priority overrides
+[21Apr2026 17:57:24.563] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Starting minecraft server version 1.21.10
+[21Apr2026 17:57:24.563] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Loading properties
+[21Apr2026 17:57:24.564] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Default game type: SURVIVAL
+[21Apr2026 17:57:24.564] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Generating keypair
+[21Apr2026 17:57:24.614] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Starting Minecraft server on 0.0.0.0:25565
+[21Apr2026 17:57:24.641] [Server thread/INFO] [net.minecraft.server.network.ServerConnectionListener/]: Using epoll channel type
+[21Apr2026 17:57:24.692] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Preparing level "world"
+[21Apr2026 17:57:25.697] [Server thread/INFO] [net.minecraft.server.level.progress.LoggingLevelLoadListener/]: Loading 0 persistent chunks...
+[21Apr2026 17:57:25.698] [Server thread/INFO] [net.minecraft.server.level.progress.LoggingLevelLoadListener/]: Preparing spawn area: 100%
+[21Apr2026 17:57:25.708] [Server thread/INFO] [net.minecraft.server.level.progress.LoggingLevelLoadListener/]: Time elapsed: 11 ms
+[21Apr2026 17:57:25.708] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (1.034s)! For help, type "help"
+[21Apr2026 17:57:25.708] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Starting GS4 status listener
+[21Apr2026 17:57:25.714] [Server thread/INFO] [net.minecraft.server.rcon.thread.GenericThread/]: Thread Query Listener started
+[21Apr2026 17:57:25.714] [Query Listener #1/INFO] [net.minecraft.server.rcon.thread.QueryThreadGs4/]: Query running on 0.0.0.0:25565
+[21Apr2026 17:57:25.777] [Server thread/INFO] [net.neoforged.neoforge.server.permission.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler
+[21Apr2026 17:57:57.593] [User Authenticator #1/INFO] [net.minecraft.server.network.ServerLoginPacketListenerImpl/]: UUID of player goui12 is b4971547-6bd0-4206-bc52-e3285bfbda36
+[21Apr2026 17:57:59.556] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: goui12[/73.240.199.5:65348] logged in with entity id 477 at (693.4671702484598, -59.0, 67.4307823497997)
+[21Apr2026 17:57:59.628] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: goui12 joined the game
+[21Apr2026 17:58:20.982] [Server thread/WARN] [net.minecraft.server.MinecraftServer/]: Can't keep up! Is the server overloaded? Running 2667ms or 53 ticks behind
+[21Apr2026 17:58:51.724] [Server thread/WARN] [net.minecraft.server.MinecraftServer/]: Can't keep up! Is the server overloaded? Running 2359ms or 47 ticks behind
