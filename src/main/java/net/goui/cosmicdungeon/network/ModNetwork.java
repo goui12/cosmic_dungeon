@@ -99,7 +99,7 @@ public final class ModNetwork {
                         return;
                     }
 
-                    var anchorOpt = data.getAnchorForTile(clicked);
+                    var anchorOpt = data.getAnchorForTile(level, clicked);
 
                     if (anchorOpt.isEmpty()) {
                         ctx.reply(new RiftPayloads.S2C_RiftConfig(
@@ -114,7 +114,7 @@ public final class ModNetwork {
                     }
 
                     var anchor = net.minecraft.core.BlockPos.of(anchorOpt.getAsLong());
-                    var portal = data.getPortal(anchor.asLong()).orElse(null);
+                    var portal = data.getPortal(level, anchor).orElse(null);
 
                     String name = portal == null ? "" : portal.portalName();
                     String dest = portal == null ? "" : portal.destinationName();
@@ -152,6 +152,7 @@ public final class ModNetwork {
                     }
 
                     var result = data.setPortalConfig(
+                            level,
                             anchor,
                             payload.riftName(),
                             payload.destinationName(),

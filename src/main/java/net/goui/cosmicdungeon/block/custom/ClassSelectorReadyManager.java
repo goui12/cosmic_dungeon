@@ -1,18 +1,17 @@
 package net.goui.cosmicdungeon.block.custom;
 
 import net.goui.cosmicdungeon.block.entity.ClassSelectorBlockEntity;
-import net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData;
+import net.goui.cosmicdungeon.dungeon.DungeonDefinition;
+import net.goui.cosmicdungeon.dungeon.DungeonDefinitions;
+import net.goui.cosmicdungeon.dungeon.DungeonLifecycleService;
 import net.goui.cosmicdungeon.dungeon.DungeonStarterRoomPaster;
 import net.goui.cosmicdungeon.rift.RiftRegistryData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.*;
@@ -63,7 +62,7 @@ public final class ClassSelectorReadyManager {
             slot++;
         }
 
-        int max = Math.max(1, Math.min(64, csbe.getMaxPlayers()));
+        int max = Math.max(1, Math.min(6, csbe.getMaxPlayers()));
         int ready = st.ordered.size();
 
         sp.closeContainer();
@@ -129,7 +128,7 @@ public final class ClassSelectorReadyManager {
                 continue;
             }
 
-            int max = Math.max(1, Math.min(64, csbe.getMaxPlayers()));
+            int max = Math.max(1, Math.min(6, csbe.getMaxPlayers()));
             int ready = st.ordered.size();
 
             if (st.countdownEndTick >= 0L && ready < max) {
@@ -183,7 +182,7 @@ public final class ClassSelectorReadyManager {
         }
     }
 
-    private static void cancelCountdown(MinecraftServer server, ReadyState st, String msg) {
+    public static void cancelCountdown(MinecraftServer server, ReadyState st, String msg) {
         st.countdownEndTick = -1L;
         st.lastAnnouncedSeconds = Integer.MIN_VALUE;
 
@@ -194,7 +193,7 @@ public final class ClassSelectorReadyManager {
         }
     }
 
-    private static void pruneOffline(MinecraftServer server, ReadyState st) {
+    public static void pruneOffline(MinecraftServer server, ReadyState st) {
         Iterator<UUID> it = st.ordered.iterator();
         while (it.hasNext()) {
             UUID id = it.next();
@@ -202,7 +201,7 @@ public final class ClassSelectorReadyManager {
         }
     }
 
-    private static void broadcastReadyProgress(MinecraftServer server, ReadyState st, int ready, int max) {
+    public static void broadcastReadyProgress(MinecraftServer server, ReadyState st, int ready, int max) {
         var msg = Component.literal("Ready: ").withStyle(ChatFormatting.GRAY)
                 .append(Component.literal(ready + "/" + max).withStyle(ChatFormatting.GREEN));
 
@@ -217,7 +216,7 @@ public final class ClassSelectorReadyManager {
                                                   BlockPos selectorPos,
                                                   ClassSelectorBlockEntity csbe,
                                                   ReadyState st) {
-        int max = Math.max(1, Math.min(64, csbe.getMaxPlayers()));
+        int max = Math.max(1, Math.min(6, csbe.getMaxPlayers()));
         int ready = st.ordered.size();
         if (ready < max) return false;
 
@@ -283,6 +282,43 @@ public final class ClassSelectorReadyManager {
             return false;
         }
 
+        RiftRegistryData.DestinationRecord firstDest = resolved.get(0);
+        ServerLevel dungeonLevel = ClassSelectorTeleportUtil.resolveLevel(server, firstDest.dimensionId());
+        if (dungeonLevel == null) {
+            for (UUID id : st.ordered) {
+                ServerPlayer p = server.getPlayerList().getPlayer(id);
+                if (p != null) {
+                    p.sendSystemMessage(Component.literal("Failed to resolve dungeon dimension.").withStyle(ChatFormatting.RED));
+                }
+            }
+            return false;
+        }
+
+        List<ServerPlayer> finalParty = new ArrayList<>();
+        for (UUID id : st.ordered) {
+            if (finalParty.size() >= max) break;
+            ServerPlayer p = server.getPlayerList().getPlayer(id);
+            if (p != null) {
+                finalParty.add(p);
+            }
+        }
+
+        if (finalParty.size() < max) {
+            for (ServerPlayer p : finalParty) {
+                p.sendSystemMessage(Component.literal("Party changed before teleport. Ready up again.").withStyle(ChatFormatting.RED));
+            }
+            return false;
+        }
+
+        String lifecycleBlocker = DungeonLifecycleService.getStartRunBlocker(server, dungeonLevel.dimension(), st.ordered);
+        if (lifecycleBlocker != null) {
+            Component msg = Component.literal(lifecycleBlocker).withStyle(ChatFormatting.RED);
+            for (ServerPlayer p : finalParty) {
+                p.sendSystemMessage(msg);
+            }
+            return false;
+        }
+
         String[] slotClasses = new String[6];
         int idx = 0;
         for (UUID id : st.ordered) {
@@ -294,22 +330,7 @@ public final class ClassSelectorReadyManager {
             slotClasses[idx] = "blankslot";
         }
 
-        RiftRegistryData.DestinationRecord firstDest = resolved.get(0);
-        ServerLevel dungeonLevel = ClassSelectorTeleportUtil.resolveLevel(server, firstDest.dimensionId());
-        if (dungeonLevel == null) {
-            System.err.println("[CosmicDungeon] Failed to resolve dungeon level for first slot.");
-            return false;
-        }
-
-        ServerPlayer pasteActor = null;
-        for (UUID id : st.ordered) {
-            pasteActor = server.getPlayerList().getPlayer(id);
-            if (pasteActor != null) break;
-        }
-        if (pasteActor == null) {
-            System.err.println("[CosmicDungeon] No online paste actor found for room paste.");
-            return false;
-        }
+        ServerPlayer pasteActor = finalParty.getFirst();
 
         try {
             DungeonStarterRoomPaster.pasteRooms(dungeonLevel, pasteActor, slotClasses);
@@ -317,30 +338,34 @@ public final class ClassSelectorReadyManager {
             System.err.println("[CosmicDungeon] Paste failed:");
             e.printStackTrace();
 
-            for (UUID id : st.ordered) {
-                ServerPlayer p = server.getPlayerList().getPlayer(id);
-                if (p != null) {
-                    p.sendSystemMessage(Component.literal("Dungeon paste failed.").withStyle(ChatFormatting.RED));
-                }
+            for (ServerPlayer p : finalParty) {
+                p.sendSystemMessage(Component.literal("Dungeon paste failed.").withStyle(ChatFormatting.RED));
             }
             return false;
         }
 
-        int slotIndex = 0;
-        List<UUID> finalParty = new ArrayList<>();
+        String err = DungeonLifecycleService.startRun(
+                server,
+                selectorLevel.dimension(),
+                selectorPos.asLong(),
+                dungeonLevel.dimension(),
+                finalParty
+        );
 
-        for (UUID id : st.ordered) {
-            if (slotIndex >= max) break;
-
-            ServerPlayer p = server.getPlayerList().getPlayer(id);
-            if (p == null) {
-                slotIndex++;
-                continue;
+        if (err != null) {
+            Component msg = Component.literal(err).withStyle(ChatFormatting.RED);
+            for (ServerPlayer p : finalParty) {
+                p.sendSystemMessage(msg);
             }
+            return false;
+        }
 
+        for (int slotIndex = 0; slotIndex < finalParty.size(); slotIndex++) {
+            ServerPlayer p = finalParty.get(slotIndex);
             TeleportTarget tp = teleportTargets.get(slotIndex);
             if (tp == null || tp.level() == null || tp.safePos() == null) {
                 p.sendSystemMessage(Component.literal("Teleport target missing for your slot.").withStyle(ChatFormatting.RED));
+                DungeonLifecycleService.manualReset(server, DungeonDefinitions.byDimension(dungeonLevel.dimension()).map(DungeonDefinition::id).orElse(dungeonLevel.dimension().location().getPath()), null);
                 return false;
             }
 
@@ -358,21 +383,9 @@ public final class ClassSelectorReadyManager {
 
             if (!ok) {
                 p.sendSystemMessage(Component.literal("Teleport failed for your slot.").withStyle(ChatFormatting.RED));
+                DungeonLifecycleService.manualReset(server, DungeonDefinitions.byDimension(dungeonLevel.dimension()).map(DungeonDefinition::id).orElse(dungeonLevel.dimension().location().getPath()), null);
                 return false;
             }
-
-            finalParty.add(id);
-            slotIndex++;
-        }
-
-        if (!finalParty.isEmpty()) {
-            ResourceKey<Level> dungeonKey = dungeonLevel.dimension();
-            DungeonRunRegistryData.get(server).registerRun(
-                    selectorLevel.dimension(),
-                    selectorPos.asLong(),
-                    dungeonKey,
-                    finalParty
-            );
         }
 
         return true;

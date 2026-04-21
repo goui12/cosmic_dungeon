@@ -66,7 +66,7 @@ public class CosmicRiftPlacerBlock extends Block {
         if (level instanceof ServerLevel sl) {
             // Anchor is the min corner in the cavity bounding box, same as your original.
             BlockPos anchor = new BlockPos(cavity.minX, pos.getY(), cavity.minZ);
-            RiftRegistryData.get(sl).registerPortalWithTiles(anchor, cavity.positions);
+            RiftRegistryData.get(sl).registerPortalWithTiles(sl, anchor, cavity.positions);
         }
     }
 
@@ -99,7 +99,7 @@ public class CosmicRiftPlacerBlock extends Block {
         }
 
         if (level instanceof ServerLevel sl) {
-            RiftRegistryData.get(sl).registerPortalWithTiles(origin, placed);
+            RiftRegistryData.get(sl).registerPortalWithTiles(sl, origin, placed);
         }
     }
 

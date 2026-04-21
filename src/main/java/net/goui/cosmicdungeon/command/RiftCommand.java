@@ -273,7 +273,7 @@ public final class RiftCommand {
             }
         }
 
-        RiftRegistryData.get(level).onRiftTilesBroken(visited);
+        RiftRegistryData.get(level).onRiftTilesBroken(level, visited);
 
         LongIterator it = visited.iterator();
         while (it.hasNext()) {

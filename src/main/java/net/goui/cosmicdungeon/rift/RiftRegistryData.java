@@ -2,22 +2,47 @@ package net.goui.cosmicdungeon.rift;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import net.goui.cosmicdungeon.block.ModBlocks;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalLong;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class RiftRegistryData extends SavedData {
-    private static final String SAVE_ID = "cosmicdungeon_rifts";
+    private static final String SAVE_ID = "cosmicdungeon_rifts_v2";
+    private static final String LEGACY_NETHER_DIM = "minecraft:the_nether";
+    private static final String DUNGEON_1_LINKED_NETHER_DIM = "cosmicdungeon:dungeon_1_nether";
+
+    private record PosKey(String dimensionId, long posLong) {
+        PosKey {
+            dimensionId = normalizeDimensionId(dimensionId);
+        }
+
+        BlockPos pos() {
+            return BlockPos.of(posLong);
+        }
+    }
 
     public record DestinationRecord(String name, String dimensionId, long posLong) {
         public static final Codec<DestinationRecord> CODEC = RecordCodecBuilder.create(i -> i.group(
@@ -26,25 +51,47 @@ public final class RiftRegistryData extends SavedData {
                 Codec.LONG.fieldOf("pos").forGetter(DestinationRecord::posLong)
         ).apply(i, DestinationRecord::new));
 
-        public BlockPos pos() { return BlockPos.of(posLong); }
+        public DestinationRecord {
+            dimensionId = normalizeDimensionId(dimensionId);
+        }
+
+        public BlockPos pos() {
+            return BlockPos.of(posLong);
+        }
     }
 
-    public record PortalRecord(long anchorLong, String portalName, String destinationName, boolean resetTrigger) {
+    public record PortalRecord(String dimensionId, long anchorLong, String portalName, String destinationName, boolean resetTrigger) {
         public static final Codec<PortalRecord> CODEC = RecordCodecBuilder.create(i -> i.group(
+                Codec.STRING.optionalFieldOf("dimension", "").forGetter(PortalRecord::dimensionId),
                 Codec.LONG.fieldOf("anchor").forGetter(PortalRecord::anchorLong),
                 Codec.STRING.fieldOf("name").forGetter(PortalRecord::portalName),
                 Codec.STRING.fieldOf("dest").forGetter(PortalRecord::destinationName),
                 Codec.BOOL.optionalFieldOf("reset_trigger", false).forGetter(PortalRecord::resetTrigger)
         ).apply(i, PortalRecord::new));
 
-        public BlockPos anchorPos() { return BlockPos.of(anchorLong); }
+        public PortalRecord {
+            dimensionId = normalizeDimensionId(dimensionId);
+        }
+
+        public BlockPos anchorPos() {
+            return BlockPos.of(anchorLong);
+        }
+
+        public boolean hasDimension() {
+            return !dimensionId.isBlank();
+        }
     }
 
-    public record TileLink(long tileLong, long anchorLong) {
+    public record TileLink(String dimensionId, long tileLong, long anchorLong) {
         public static final Codec<TileLink> CODEC = RecordCodecBuilder.create(i -> i.group(
+                Codec.STRING.optionalFieldOf("dimension", "").forGetter(TileLink::dimensionId),
                 Codec.LONG.fieldOf("tile").forGetter(TileLink::tileLong),
                 Codec.LONG.fieldOf("anchor").forGetter(TileLink::anchorLong)
         ).apply(i, TileLink::new));
+
+        public TileLink {
+            dimensionId = normalizeDimensionId(dimensionId);
+        }
     }
 
     private record Persisted(
@@ -76,13 +123,17 @@ public final class RiftRegistryData extends SavedData {
         if (overworld == null) {
             throw new IllegalStateException("Overworld is not available; cannot load RiftRegistryData.");
         }
-        return overworld.getDataStorage().computeIfAbsent(TYPE);
+
+        RiftRegistryData data = overworld.getDataStorage().computeIfAbsent(TYPE);
+        data.applyPostLoadMigrations(server);
+        return data;
     }
 
     private final Map<String, DestinationRecord> destinations = new HashMap<>();
-    private final Long2ObjectOpenHashMap<PortalRecord> portals = new Long2ObjectOpenHashMap<>();
-    private final Long2LongOpenHashMap tileToAnchor = new Long2LongOpenHashMap();
-    private final Map<String, LongOpenHashSet> destinationToAnchors = new HashMap<>();
+    private final Map<PosKey, PortalRecord> portals = new HashMap<>();
+    private final Map<PosKey, PosKey> tileToAnchor = new HashMap<>();
+    private final Map<String, Set<PosKey>> destinationToAnchors = new HashMap<>();
+    private boolean needsPostLoadMigration = false;
 
     private RiftRegistryData() {
     }
@@ -90,16 +141,33 @@ public final class RiftRegistryData extends SavedData {
     private static RiftRegistryData fromPersisted(Persisted p) {
         RiftRegistryData d = new RiftRegistryData();
 
-        for (DestinationRecord r : p.destinations()) d.destinations.put(r.name(), r);
-        for (PortalRecord r : p.portals()) d.portals.put(r.anchorLong(), r);
-        for (TileLink l : p.tileLinks()) d.tileToAnchor.put(l.tileLong(), l.anchorLong());
-
-        for (PortalRecord pr : d.portals.values()) {
-            if (pr.destinationName() != null && !pr.destinationName().isBlank()) {
-                d.destinationToAnchors
-                        .computeIfAbsent(pr.destinationName(), k -> new LongOpenHashSet())
-                        .add(pr.anchorLong());
+        for (DestinationRecord r : p.destinations()) {
+            d.destinations.put(r.name(), r);
+            if (LEGACY_NETHER_DIM.equals(r.dimensionId())) {
+                d.needsPostLoadMigration = true;
             }
+        }
+
+        for (PortalRecord r : p.portals()) {
+            if (!r.hasDimension()) {
+                d.needsPostLoadMigration = true;
+                continue;
+            }
+
+            PosKey key = new PosKey(r.dimensionId(), r.anchorLong());
+            d.portals.put(key, r);
+            d.addDestinationAnchorIndex(r.destinationName(), key);
+        }
+
+        for (TileLink l : p.tileLinks()) {
+            if (normalizeDimensionId(l.dimensionId()).isBlank()) {
+                d.needsPostLoadMigration = true;
+                continue;
+            }
+
+            PosKey tileKey = new PosKey(l.dimensionId(), l.tileLong());
+            PosKey anchorKey = new PosKey(l.dimensionId(), l.anchorLong());
+            d.tileToAnchor.put(tileKey, anchorKey);
         }
 
         return d;
@@ -107,15 +175,20 @@ public final class RiftRegistryData extends SavedData {
 
     private Persisted toPersisted() {
         List<DestinationRecord> destList = new ArrayList<>(destinations.values());
-        List<PortalRecord> portalList = new ArrayList<>();
-        portals.values().forEach(portalList::add);
-
+        List<PortalRecord> portalList = new ArrayList<>(portals.values());
         List<TileLink> tileLinks = new ArrayList<>(tileToAnchor.size());
-        tileToAnchor.long2LongEntrySet().forEach(e -> tileLinks.add(new TileLink(e.getLongKey(), e.getLongValue())));
 
-        destList.sort(Comparator.comparing(DestinationRecord::name));
-        portalList.sort(Comparator.comparingLong(PortalRecord::anchorLong));
-        tileLinks.sort(Comparator.comparingLong(TileLink::tileLong));
+        for (Map.Entry<PosKey, PosKey> e : tileToAnchor.entrySet()) {
+            tileLinks.add(new TileLink(e.getKey().dimensionId(), e.getKey().posLong(), e.getValue().posLong()));
+        }
+
+        destList.sort(Comparator.comparing(DestinationRecord::name, String.CASE_INSENSITIVE_ORDER));
+        portalList.sort(Comparator
+                .comparing(PortalRecord::dimensionId, String.CASE_INSENSITIVE_ORDER)
+                .thenComparingLong(PortalRecord::anchorLong));
+        tileLinks.sort(Comparator
+                .comparing(TileLink::dimensionId, String.CASE_INSENSITIVE_ORDER)
+                .thenComparingLong(TileLink::tileLong));
 
         return new Persisted(destList, portalList, tileLinks);
     }
@@ -142,7 +215,7 @@ public final class RiftRegistryData extends SavedData {
     }
 
     public DeleteResult deleteDestination(String name) {
-        LongOpenHashSet users = destinationToAnchors.get(name);
+        Set<PosKey> users = destinationToAnchors.get(name);
         if (users != null && !users.isEmpty()) {
             return DeleteResult.inUse(users.size());
         }
@@ -162,85 +235,87 @@ public final class RiftRegistryData extends SavedData {
         static DeleteResult inUse(int c) { return new InUse(c); }
     }
 
-    public OptionalLong getAnchorForTile(BlockPos anyTile) {
-        long key = anyTile.asLong();
-        if (!tileToAnchor.containsKey(key)) return OptionalLong.empty();
-        return OptionalLong.of(tileToAnchor.get(key));
+    public OptionalLong getAnchorForTile(Level level, BlockPos anyTile) {
+        if (level == null || anyTile == null) return OptionalLong.empty();
+        PosKey key = tileKey(level, anyTile);
+        PosKey anchor = tileToAnchor.get(key);
+        return anchor == null ? OptionalLong.empty() : OptionalLong.of(anchor.posLong());
     }
 
-    public Optional<PortalRecord> getPortal(long anchorLong) {
-        return Optional.ofNullable(portals.get(anchorLong));
+    public Optional<PortalRecord> getPortal(Level level, BlockPos anchorPos) {
+        if (level == null || anchorPos == null) return Optional.empty();
+        return Optional.ofNullable(portals.get(anchorKey(level, anchorPos)));
     }
 
-    public void registerPortalWithTiles(BlockPos anchor, Collection<Long> tilePositionsPacked) {
-        long anchorLong = anchor.asLong();
+    public void registerPortalWithTiles(Level level, BlockPos anchor, Collection<Long> tilePositionsPacked) {
+        if (level == null || anchor == null) return;
 
-        portals.putIfAbsent(anchorLong, new PortalRecord(anchorLong, "", "", false));
+        PosKey anchorKey = anchorKey(level, anchor);
+        PortalRecord existing = portals.get(anchorKey);
+        if (existing == null) {
+            existing = new PortalRecord(anchorKey.dimensionId(), anchor.asLong(), "", "", false);
+            portals.put(anchorKey, existing);
+        }
 
-        for (long packed : tilePositionsPacked) {
-            tileToAnchor.put(packed, anchorLong);
+        if (tilePositionsPacked != null) {
+            for (long packed : tilePositionsPacked) {
+                tileToAnchor.put(new PosKey(anchorKey.dimensionId(), packed), anchorKey);
+            }
         }
 
         setDirty();
     }
 
-    public SaveResult setPortalConfig(BlockPos anchor, String portalName, String destinationName, boolean resetTrigger) {
-        long a = anchor.asLong();
-        PortalRecord prev = portals.get(a);
+    public SaveResult setPortalConfig(Level level, BlockPos anchor, String portalName, String destinationName, boolean resetTrigger) {
+        if (level == null || anchor == null) return SaveResult.notFound();
+
+        PosKey key = anchorKey(level, anchor);
+        PortalRecord prev = portals.get(key);
         if (prev == null) return SaveResult.notFound();
 
-        String nameClean = (portalName == null) ? "" : portalName.trim();
-        String destClean = (destinationName == null) ? "" : destinationName.trim();
+        String nameClean = portalName == null ? "" : portalName.trim();
+        String destClean = destinationName == null ? "" : destinationName.trim();
 
         if (!destClean.isBlank() && !destinations.containsKey(destClean)) {
             return SaveResult.badDestination(destClean);
         }
 
-        String oldDest = prev.destinationName() == null ? "" : prev.destinationName();
-        if (!oldDest.isBlank()) {
-            LongOpenHashSet set = destinationToAnchors.get(oldDest);
-            if (set != null) {
-                set.remove(a);
-                if (set.isEmpty()) destinationToAnchors.remove(oldDest);
-            }
-        }
+        removeDestinationAnchorIndex(prev.destinationName(), key);
 
-        if (!destClean.isBlank()) {
-            destinationToAnchors.computeIfAbsent(destClean, k -> new LongOpenHashSet()).add(a);
-        }
-
-        portals.put(a, new PortalRecord(a, nameClean, destClean, resetTrigger));
+        PortalRecord updated = new PortalRecord(key.dimensionId(), anchor.asLong(), nameClean, destClean, resetTrigger);
+        portals.put(key, updated);
+        addDestinationAnchorIndex(destClean, key);
         setDirty();
         return SaveResult.ok();
     }
 
-    public void onRiftTilesBroken(Collection<Long> tilesPacked) {
-        LongOpenHashSet anchors = new LongOpenHashSet();
-        for (long t : tilesPacked) {
-            if (tileToAnchor.containsKey(t)) anchors.add(tileToAnchor.get(t));
-        }
+    public void onRiftTilesBroken(Level level, Collection<Long> tilesPacked) {
+        if (level == null || tilesPacked == null || tilesPacked.isEmpty()) return;
+
+        String dimId = normalizeDimensionId(level.dimension().location().toString());
+        Set<PosKey> affectedAnchors = new HashSet<>();
 
         for (long t : tilesPacked) {
-            tileToAnchor.remove(t);
+            PosKey tileKey = new PosKey(dimId, t);
+            PosKey anchor = tileToAnchor.remove(tileKey);
+            if (anchor != null) {
+                affectedAnchors.add(anchor);
+            }
         }
 
-        for (long a : anchors) {
+        for (PosKey anchorKey : affectedAnchors) {
             boolean stillHasChild = false;
-            for (var e : tileToAnchor.long2LongEntrySet()) {
-                if (e.getLongValue() == a) {
+            for (PosKey linkedAnchor : tileToAnchor.values()) {
+                if (linkedAnchor.equals(anchorKey)) {
                     stillHasChild = true;
                     break;
                 }
             }
 
             if (!stillHasChild) {
-                PortalRecord pr = portals.remove(a);
-                if (pr != null && pr.destinationName() != null && !pr.destinationName().isBlank()) {
-                    LongOpenHashSet set = destinationToAnchors.get(pr.destinationName());
-                    if (set != null) {
-                        set.remove(a);
-                        if (set.isEmpty()) destinationToAnchors.remove(pr.destinationName());
-                    }
+                PortalRecord pr = portals.remove(anchorKey);
+                if (pr != null) {
+                    removeDestinationAnchorIndex(pr.destinationName(), anchorKey);
                 }
             }
         }
@@ -249,22 +324,25 @@ public final class RiftRegistryData extends SavedData {
     }
 
     public List<PortalRecord> listPortalsUsingDestination(String destinationName) {
-        LongOpenHashSet set = destinationToAnchors.get(destinationName);
+        Set<PosKey> set = destinationToAnchors.get(destinationName);
         if (set == null || set.isEmpty()) return List.of();
 
         List<PortalRecord> out = new ArrayList<>(set.size());
-        for (long a : set) {
-            PortalRecord pr = portals.get(a);
+        for (PosKey key : set) {
+            PortalRecord pr = portals.get(key);
             if (pr != null) out.add(pr);
         }
-        out.sort(Comparator.comparingLong(PortalRecord::anchorLong));
+        out.sort(Comparator
+                .comparing(PortalRecord::dimensionId, String.CASE_INSENSITIVE_ORDER)
+                .thenComparingLong(PortalRecord::anchorLong));
         return out;
     }
 
     public List<PortalRecord> listAllPortalsSorted() {
-        List<PortalRecord> out = new ArrayList<>();
-        portals.values().forEach(out::add);
-        out.sort(Comparator.comparingLong(PortalRecord::anchorLong));
+        List<PortalRecord> out = new ArrayList<>(portals.values());
+        out.sort(Comparator
+                .comparing(PortalRecord::dimensionId, String.CASE_INSENSITIVE_ORDER)
+                .thenComparingLong(PortalRecord::anchorLong));
         return out;
     }
 
@@ -276,5 +354,182 @@ public final class RiftRegistryData extends SavedData {
         static SaveResult ok() { return new Ok(); }
         static SaveResult notFound() { return new NotFound(); }
         static SaveResult badDestination(String n) { return new BadDestination(n); }
+    }
+
+    public void rebuildForDimensions(MinecraftServer server, Collection<String> dimensionIds) {
+        if (server == null || dimensionIds == null || dimensionIds.isEmpty()) return;
+
+        Set<String> targetDims = dimensionIds.stream()
+                .filter(Objects::nonNull)
+                .map(RiftRegistryData::normalizeDimensionId)
+                .filter(s -> !s.isBlank())
+                .collect(Collectors.toCollection(HashSet::new));
+        if (targetDims.isEmpty()) return;
+
+        Map<PosKey, PortalRecord> oldPortals = new HashMap<>();
+        for (Map.Entry<PosKey, PortalRecord> e : portals.entrySet()) {
+            if (targetDims.contains(e.getKey().dimensionId())) {
+                oldPortals.put(e.getKey(), e.getValue());
+            }
+        }
+
+        boolean changed = clearPortalStateForDimensions(targetDims);
+        changed |= rebuildFromLiveWorld(server, targetDims, oldPortals);
+
+        if (changed) {
+            setDirty();
+        }
+    }
+
+    private void applyPostLoadMigrations(MinecraftServer server) {
+        boolean changed = false;
+
+        for (Map.Entry<String, DestinationRecord> e : new ArrayList<>(destinations.entrySet())) {
+            DestinationRecord rec = e.getValue();
+            if (LEGACY_NETHER_DIM.equals(rec.dimensionId())) {
+                destinations.put(e.getKey(), new DestinationRecord(rec.name(), DUNGEON_1_LINKED_NETHER_DIM, rec.posLong()));
+                changed = true;
+            }
+        }
+
+        if (needsPostLoadMigration) {
+            // Legacy v1 portal/tile state had no dimension key, so it cannot be trusted after switching
+            // Dungeon 1 away from the shared vanilla Nether. Drop only the ambiguous linkage state and keep
+            // named destinations, then rebuild live rift linkage for currently loaded levels.
+            if (!portals.isEmpty() || !tileToAnchor.isEmpty()) {
+                portals.clear();
+                tileToAnchor.clear();
+                destinationToAnchors.clear();
+                changed = true;
+            }
+
+            for (ServerLevel level : server.getAllLevels()) {
+                rebuildFromLiveLevel(level, Map.of());
+            }
+
+            needsPostLoadMigration = false;
+            changed = true;
+        }
+
+        if (changed) {
+            setDirty();
+        }
+    }
+
+    private boolean rebuildFromLiveWorld(MinecraftServer server, Set<String> targetDims, Map<PosKey, PortalRecord> oldPortals) {
+        boolean changed = false;
+        for (String dimId : targetDims) {
+            ResourceLocation rl = ResourceLocation.tryParse(dimId);
+            if (rl == null) continue;
+            ResourceKey<Level> key = ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, rl);
+            ServerLevel level = server.getLevel(key);
+            if (level == null) continue;
+            changed |= rebuildFromLiveLevel(level, oldPortals);
+        }
+        return changed;
+    }
+
+    private boolean rebuildFromLiveLevel(ServerLevel level, Map<PosKey, PortalRecord> oldPortals) {
+        Block riftBlock = ModBlocks.COSMIC_RIFT_TILE.get();
+        String dimId = normalizeDimensionId(level.dimension().location().toString());
+        Set<Long> visited = new HashSet<>();
+        boolean changed = false;
+
+        for (PortalRecord old : oldPortals.values()) {
+            if (!dimId.equals(old.dimensionId())) continue;
+
+            long startLong = old.anchorLong();
+            if (!visited.add(startLong)) continue;
+
+            BlockPos start = BlockPos.of(startLong);
+            if (level.getBlockState(start).getBlock() != riftBlock) continue;
+
+            List<Long> component = collectConnectedTiles(level, start, visited, riftBlock);
+            if (component.isEmpty()) continue;
+
+            PosKey anchorKey = new PosKey(dimId, old.anchorLong());
+            portals.put(anchorKey, old);
+            if (old.destinationName() != null && !old.destinationName().isBlank()) {
+                addDestinationAnchorIndex(old.destinationName(), anchorKey);
+            }
+            for (long packed : component) {
+                tileToAnchor.put(new PosKey(dimId, packed), anchorKey);
+            }
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    private List<Long> collectConnectedTiles(ServerLevel level, BlockPos start, Set<Long> visited, Block riftBlock) {
+        ArrayDeque<BlockPos> queue = new ArrayDeque<>();
+        List<Long> out = new ArrayList<>();
+        int y = start.getY();
+
+        queue.add(start);
+        while (!queue.isEmpty()) {
+            BlockPos cur = queue.removeFirst();
+            if (level.getBlockState(cur).getBlock() != riftBlock) continue;
+
+            out.add(cur.asLong());
+            for (BlockPos next : new BlockPos[]{cur.north(), cur.south(), cur.east(), cur.west()}) {
+                if (next.getY() != y) continue;
+                long packed = next.asLong();
+                if (!visited.add(packed)) continue;
+                if (level.getBlockState(next).getBlock() != riftBlock) continue;
+                queue.add(next);
+            }
+        }
+
+        return out;
+    }
+
+    private boolean clearPortalStateForDimensions(Set<String> targetDims) {
+        boolean changed = false;
+
+        if (portals.entrySet().removeIf(e -> targetDims.contains(e.getKey().dimensionId()))) {
+            changed = true;
+        }
+        if (tileToAnchor.entrySet().removeIf(e -> targetDims.contains(e.getKey().dimensionId()))) {
+            changed = true;
+        }
+        if (destinationToAnchors.entrySet().removeIf(e -> {
+            e.getValue().removeIf(k -> targetDims.contains(k.dimensionId()));
+            return e.getValue().isEmpty();
+        })) {
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    private void addDestinationAnchorIndex(String destinationName, PosKey key) {
+        if (destinationName == null || destinationName.isBlank() || key == null) return;
+        destinationToAnchors.computeIfAbsent(destinationName, k -> new HashSet<>()).add(key);
+    }
+
+    private void removeDestinationAnchorIndex(String destinationName, PosKey key) {
+        if (destinationName == null || destinationName.isBlank() || key == null) return;
+        Set<PosKey> set = destinationToAnchors.get(destinationName);
+        if (set == null) return;
+        set.remove(key);
+        if (set.isEmpty()) {
+            destinationToAnchors.remove(destinationName);
+        }
+    }
+
+    private static PosKey tileKey(Level level, BlockPos pos) {
+        return new PosKey(level.dimension().location().toString(), pos.asLong());
+    }
+
+    private static PosKey anchorKey(Level level, BlockPos pos) {
+        return new PosKey(level.dimension().location().toString(), pos.asLong());
+    }
+
+    private static String normalizeDimensionId(String raw) {
+        if (raw == null) return "";
+        String clean = raw.trim();
+        if (clean.isEmpty()) return "";
+        return clean.toLowerCase(Locale.ROOT);
     }
 }

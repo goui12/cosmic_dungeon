@@ -52,7 +52,7 @@ public final class ClassSelectorBlockEntity extends BlockEntity {
     }
 
     public void setMaxPlayers(int count) {
-        this.maxPlayers = Math.max(1, Math.min(64, count));
+        this.maxPlayers = Math.max(1, Math.min(6, count));
         markChangedAndSync();
     }
 
@@ -127,7 +127,7 @@ public final class ClassSelectorBlockEntity extends BlockEntity {
         this.destinationName = input.getString(TAG_DEST).orElse("");
         this.maxPlayers = input.getIntOr(TAG_MAX_PLAYERS, 2);
         if (this.maxPlayers < 1) this.maxPlayers = 1;
-        if (this.maxPlayers > 64) this.maxPlayers = 64;
+        if (this.maxPlayers > 6) this.maxPlayers = 6;
 
         this.slotDestinations.clear();
         Map<String, String> loaded = input.read(TAG_SLOT_DESTS, SLOT_DESTS_CODEC).orElse(Map.of());

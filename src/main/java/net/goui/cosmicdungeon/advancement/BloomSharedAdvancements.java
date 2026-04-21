@@ -1,7 +1,10 @@
 package net.goui.cosmicdungeon.advancement;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
+import net.goui.cosmicdungeon.dungeon.DungeonLifecycleService;
+import net.goui.cosmicdungeon.dungeon.DungeonRunProgressData;
 import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -19,10 +22,6 @@ import java.util.UUID;
 public final class BloomSharedAdvancements {
     private BloomSharedAdvancements() {}
 
-    /**
-     * These MUST be ITEM ids (what appears in inventories).
-     * For normal blocks, the block id and the block-item id are usually identical.
-     */
     private enum Bloom {
         QUIET_ASSURANCE(
                 rl("bloom_of_quiet_assurance"),
@@ -58,10 +57,7 @@ public final class BloomSharedAdvancements {
         }
     }
 
-    // per-player bitmask of which blooms they had last time we checked
     private static final Map<UUID, Long> LAST_MASK = new HashMap<>();
-
-    // cache advancement holders (rebuilt lazily)
     private static final Map<Bloom, AdvancementHolder> ADV_CACHE = new EnumMap<>(Bloom.class);
 
     private static ResourceLocation rl(String path) {
@@ -72,27 +68,46 @@ public final class BloomSharedAdvancements {
     public static void onPlayerTick(PlayerTickEvent.Post e) {
         if (!(e.getEntity() instanceof ServerPlayer sp)) return;
         if (sp.level().isClientSide()) return;
-
-        // Throttle: check once per second per player.
         if ((sp.tickCount % 20) != 0) return;
 
-        long prev = LAST_MASK.getOrDefault(sp.getUUID(), 0L);
-        long curr = computeBloomMask(sp);
-
-        long newlyAcquired = curr & ~prev;
-        if (newlyAcquired != 0L) {
-            MinecraftServer server = sp.level().getServer();
-            if (server != null) {
-                for (Bloom bloom : Bloom.values()) {
-                    long bit = (1L << bloom.ordinal());
-                    if ((newlyAcquired & bit) != 0L) {
-                        awardToAllOnlinePlayers(server, bloom);
-                    }
-                }
-            }
+        var runOpt = DungeonLifecycleService.findActiveRunForPlayer(sp);
+        if (runOpt.isEmpty()) {
+            LAST_MASK.remove(sp.getUUID());
+            return;
         }
 
-        LAST_MASK.put(sp.getUUID(), curr);
+        var run = runOpt.get();
+        if (!run.containsDimension(sp.level().dimension())) {
+            LAST_MASK.remove(sp.getUUID());
+            return;
+        }
+
+        long curr = computeBloomMask(sp);
+        long prev = LAST_MASK.getOrDefault(sp.getUUID(), -1L);
+
+        if (curr != prev) {
+            MinecraftServer server = sp.level().getServer();
+            if (server != null) {
+                DungeonRunProgressData.get(server).setBloomMask(run.runId(), sp.getUUID(), curr);
+            }
+            LAST_MASK.put(sp.getUUID(), curr);
+        }
+    }
+
+    public static void clearTemporaryBloomProgress(MinecraftServer server, ServerPlayer sp) {
+        if (server == null || sp == null) return;
+
+        LAST_MASK.remove(sp.getUUID());
+
+        for (Bloom bloom : Bloom.values()) {
+            AdvancementHolder holder = getAdvancement(server, bloom);
+            if (holder == null) continue;
+
+            var progress = sp.getAdvancements().getOrStartProgress(holder);
+            if (!progress.isDone()) continue;
+
+            sp.getAdvancements().revoke(holder, "shared");
+        }
     }
 
     private static long computeBloomMask(ServerPlayer sp) {
@@ -111,23 +126,10 @@ public final class BloomSharedAdvancements {
             if (stack.isEmpty()) continue;
 
             Item item = stack.getItem();
-            ResourceLocation key = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item);
+            ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
             if (itemId.equals(key)) return true;
         }
         return false;
-    }
-
-    private static void awardToAllOnlinePlayers(MinecraftServer server, Bloom bloom) {
-        AdvancementHolder holder = getAdvancement(server, bloom);
-        if (holder == null) return;
-
-        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-            var progress = p.getAdvancements().getOrStartProgress(holder);
-            if (progress.isDone()) continue;
-
-            // Our JSON criteria name is "shared"
-            p.getAdvancements().award(holder, "shared");
-        }
     }
 
     private static AdvancementHolder getAdvancement(MinecraftServer server, Bloom bloom) {

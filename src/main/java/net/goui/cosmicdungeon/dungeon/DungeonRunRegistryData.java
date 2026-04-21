@@ -3,45 +3,118 @@ package net.goui.cosmicdungeon.dungeon;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 public final class DungeonRunRegistryData extends SavedData {
     private static final String SAVE_ID = "cosmicdungeon_dungeon_runs";
-
     private static final Codec<UUID> UUID_CODEC = Codec.STRING.xmap(UUID::fromString, UUID::toString);
 
     public record RunRecord(
             long runId,
+            String dungeonId,
             String selectorDimensionId,
             long selectorPosLong,
-            String dungeonDimensionId,
+            List<String> dungeonDimensionIds,
+            String state,
+            String resetReason,
+            long startedAtEpochMillis,
             List<UUID> orderedPlayers,
-            List<UUID> exitedPlayers
+            List<UUID> completionExitedPlayers,
+            List<DungeonPlayerRunSnapshot> playerSnapshots
     ) {
         public static final Codec<RunRecord> CODEC = RecordCodecBuilder.create(i -> i.group(
                 Codec.LONG.fieldOf("run_id").forGetter(RunRecord::runId),
+                Codec.STRING.fieldOf("dungeon_id").forGetter(RunRecord::dungeonId),
                 Codec.STRING.fieldOf("selector_dimension").forGetter(RunRecord::selectorDimensionId),
                 Codec.LONG.fieldOf("selector_pos").forGetter(RunRecord::selectorPosLong),
-                Codec.STRING.fieldOf("dungeon_dimension").forGetter(RunRecord::dungeonDimensionId),
+                Codec.STRING.listOf().fieldOf("dungeon_dimension_ids").forGetter(RunRecord::dungeonDimensionIds),
+                Codec.STRING.fieldOf("state").forGetter(RunRecord::state),
+                Codec.STRING.optionalFieldOf("reset_reason", "").forGetter(RunRecord::resetReason),
+                Codec.LONG.optionalFieldOf("started_at", 0L).forGetter(RunRecord::startedAtEpochMillis),
                 UUID_CODEC.listOf().fieldOf("ordered_players").forGetter(RunRecord::orderedPlayers),
-                UUID_CODEC.listOf().fieldOf("exited_players").forGetter(RunRecord::exitedPlayers)
+                UUID_CODEC.listOf().optionalFieldOf("completion_exited_players", List.of()).forGetter(RunRecord::completionExitedPlayers),
+                DungeonPlayerRunSnapshot.CODEC.listOf().optionalFieldOf("player_snapshots", List.of()).forGetter(RunRecord::playerSnapshots)
         ).apply(i, RunRecord::new));
 
-        public RunRecord withExited(UUID playerId) {
-            if (playerId == null) return this;
-            if (exitedPlayers.contains(playerId)) return this;
+        public DungeonRunState stateEnum() {
+            try {
+                return DungeonRunState.valueOf(state.toUpperCase(Locale.ROOT));
+            } catch (Exception ignored) {
+                return DungeonRunState.ACTIVE;
+            }
+        }
 
-            List<UUID> updated = new ArrayList<>(exitedPlayers);
+        public boolean containsDimension(ResourceKey<Level> dim) {
+            return dim != null && dungeonDimensionIds.contains(dim.location().toString());
+        }
+
+        public boolean containsPlayer(UUID playerId) {
+            return playerId != null && orderedPlayers.contains(playerId);
+        }
+
+        public boolean isCompletionExited(UUID playerId) {
+            return playerId != null && completionExitedPlayers.contains(playerId);
+        }
+
+        public Optional<DungeonPlayerRunSnapshot> snapshotFor(UUID playerId) {
+            if (playerId == null) return Optional.empty();
+            for (DungeonPlayerRunSnapshot snap : playerSnapshots) {
+                if (playerId.equals(snap.playerId())) {
+                    return Optional.of(snap);
+                }
+            }
+            return Optional.empty();
+        }
+
+        public RunRecord withCompletionExited(UUID playerId) {
+            if (playerId == null || completionExitedPlayers.contains(playerId)) return this;
+
+            List<UUID> updated = new ArrayList<>(completionExitedPlayers);
             updated.add(playerId);
-            return new RunRecord(runId, selectorDimensionId, selectorPosLong, dungeonDimensionId, orderedPlayers, updated);
+
+            return new RunRecord(
+                    runId,
+                    dungeonId,
+                    selectorDimensionId,
+                    selectorPosLong,
+                    dungeonDimensionIds,
+                    state,
+                    resetReason,
+                    startedAtEpochMillis,
+                    orderedPlayers,
+                    updated,
+                    playerSnapshots
+            );
+        }
+
+        public RunRecord withState(DungeonRunState newState, DungeonResetReason reason) {
+            return new RunRecord(
+                    runId,
+                    dungeonId,
+                    selectorDimensionId,
+                    selectorPosLong,
+                    dungeonDimensionIds,
+                    newState.name(),
+                    reason == null ? "" : reason.name(),
+                    startedAtEpochMillis,
+                    orderedPlayers,
+                    completionExitedPlayers,
+                    playerSnapshots
+            );
         }
     }
 
@@ -75,8 +148,7 @@ public final class DungeonRunRegistryData extends SavedData {
     private long nextRunId = 1L;
     private final Map<Long, RunRecord> runsById = new HashMap<>();
 
-    private DungeonRunRegistryData() {
-    }
+    private DungeonRunRegistryData() {}
 
     private static DungeonRunRegistryData fromPersisted(Persisted p) {
         DungeonRunRegistryData d = new DungeonRunRegistryData();
@@ -93,66 +165,43 @@ public final class DungeonRunRegistryData extends SavedData {
         return new Persisted(nextRunId, runs);
     }
 
-    public long registerRun(ResourceKey<Level> selectorDimension,
-                            long selectorPosLong,
-                            ResourceKey<Level> dungeonDimension,
-                            Collection<UUID> orderedPlayers) {
-        if (selectorDimension == null || dungeonDimension == null || orderedPlayers == null || orderedPlayers.isEmpty()) {
+    public long startRun(ResourceKey<Level> selectorDimension,
+                         long selectorPosLong,
+                         DungeonDefinition def,
+                         java.util.Collection<UUID> orderedPlayers,
+                         java.util.Collection<DungeonPlayerRunSnapshot> snapshots) {
+        if (selectorDimension == null || def == null || orderedPlayers == null || orderedPlayers.isEmpty()) {
             return -1L;
         }
 
-        String selectorDimId = selectorDimension.location().toString();
-        String dungeonDimId = dungeonDimension.location().toString();
-
-        // Remove older runs for this selector block.
-        runsById.entrySet().removeIf(e ->
-                e.getValue().selectorDimensionId().equals(selectorDimId)
-                        && e.getValue().selectorPosLong() == selectorPosLong
-        );
-
-        // Remove these players from any other active runs so one player cannot belong to two runs.
-        Set<UUID> incoming = new HashSet<>(orderedPlayers);
-        List<Map.Entry<Long, RunRecord>> updates = new ArrayList<>();
-
-        for (var e : runsById.entrySet()) {
-            RunRecord old = e.getValue();
-            List<UUID> filteredPlayers = old.orderedPlayers().stream()
-                    .filter(id -> !incoming.contains(id))
-                    .collect(Collectors.toCollection(ArrayList::new));
-
-            List<UUID> filteredExited = old.exitedPlayers().stream()
-                    .filter(filteredPlayers::contains)
-                    .collect(Collectors.toCollection(ArrayList::new));
-
-            if (filteredPlayers.size() != old.orderedPlayers().size()) {
-                if (filteredPlayers.isEmpty()) {
-                    updates.add(Map.entry(e.getKey(), null));
-                } else {
-                    updates.add(Map.entry(e.getKey(), new RunRecord(
-                            old.runId(),
-                            old.selectorDimensionId(),
-                            old.selectorPosLong(),
-                            old.dungeonDimensionId(),
-                            filteredPlayers,
-                            filteredExited
-                    )));
-                }
-            }
+        Optional<RunRecord> existing = findActiveOrResettingRun(def.id());
+        if (existing.isPresent()) {
+            return -1L;
         }
 
-        for (var up : updates) {
-            if (up.getValue() == null) runsById.remove(up.getKey());
-            else runsById.put(up.getKey(), up.getValue());
+        Set<UUID> incoming = Set.copyOf(orderedPlayers);
+        for (RunRecord old : runsById.values()) {
+            if (old.stateEnum() != DungeonRunState.ACTIVE && old.stateEnum() != DungeonRunState.RESETTING) continue;
+            for (UUID id : old.orderedPlayers()) {
+                if (incoming.contains(id)) {
+                    return -1L;
+                }
+            }
         }
 
         long runId = nextRunId++;
         RunRecord rec = new RunRecord(
                 runId,
-                selectorDimId,
+                def.id(),
+                selectorDimension.location().toString(),
                 selectorPosLong,
-                dungeonDimId,
+                def.dimensionIds(),
+                DungeonRunState.ACTIVE.name(),
+                "",
+                System.currentTimeMillis(),
                 new ArrayList<>(orderedPlayers),
-                new ArrayList<>()
+                new ArrayList<>(),
+                snapshots == null ? List.of() : new ArrayList<>(snapshots)
         );
 
         runsById.put(runId, rec);
@@ -160,80 +209,82 @@ public final class DungeonRunRegistryData extends SavedData {
         return runId;
     }
 
-    public boolean markPlayerExitedAndShouldReset(MinecraftServer server, ResourceKey<Level> dungeonDimension, UUID playerId) {
-        if (server == null || dungeonDimension == null || playerId == null) return false;
-
-        String dungeonId = dungeonDimension.location().toString();
-        boolean changed = false;
-
-        List<Long> relevantRunIds = new ArrayList<>();
-        for (var e : runsById.entrySet()) {
-            if (e.getValue().dungeonDimensionId().equals(dungeonId)) {
-                relevantRunIds.add(e.getKey());
-            }
-        }
-
-        if (relevantRunIds.isEmpty()) return false;
-
-        for (Long runId : relevantRunIds) {
-            RunRecord old = runsById.get(runId);
-            if (old == null) continue;
-            if (!old.orderedPlayers().contains(playerId)) continue;
-
-            RunRecord updated = old.withExited(playerId);
-            if (updated != old) {
-                runsById.put(runId, updated);
-                changed = true;
-            }
-        }
-
-        if (changed) setDirty();
-
-        // Reset only when ALL currently-online tracked players for this dungeon dimension are already exited.
-        int onlineTracked = 0;
-        int onlineStillInside = 0;
-
-        for (RunRecord run : runsById.values()) {
-            if (!run.dungeonDimensionId().equals(dungeonId)) continue;
-
-            Set<UUID> exited = new HashSet<>(run.exitedPlayers());
-
-            for (UUID uuid : run.orderedPlayers()) {
-                var player = server.getPlayerList().getPlayer(uuid);
-                if (player == null) continue; // offline players are ignored by design
-
-                onlineTracked++;
-                if (!exited.contains(uuid)) {
-                    onlineStillInside++;
-                }
-            }
-        }
-
-        return onlineTracked > 0 && onlineStillInside == 0;
+    public Optional<RunRecord> getRun(long runId) {
+        return Optional.ofNullable(runsById.get(runId));
     }
 
-    public void clearRunsForDimension(ResourceKey<Level> dungeonDimension) {
-        if (dungeonDimension == null) return;
-        String dungeonId = dungeonDimension.location().toString();
-        boolean changed = runsById.entrySet().removeIf(e -> e.getValue().dungeonDimensionId().equals(dungeonId));
-        if (changed) setDirty();
+    public Optional<RunRecord> findRunForPlayer(UUID playerId) {
+        if (playerId == null) return Optional.empty();
+
+        return runsById.values().stream()
+                .filter(r -> (r.stateEnum() == DungeonRunState.ACTIVE || r.stateEnum() == DungeonRunState.RESETTING)
+                        && r.containsPlayer(playerId))
+                .sorted(Comparator.comparingLong(RunRecord::runId))
+                .findFirst();
     }
 
-    public List<RunRecord> listRunsForDimension(ResourceKey<Level> dungeonDimension) {
-        if (dungeonDimension == null) return List.of();
-        String dungeonId = dungeonDimension.location().toString();
+    public Optional<RunRecord> findActiveOrResettingRun(String dungeonId) {
+        if (dungeonId == null || dungeonId.isBlank()) return Optional.empty();
+
+        return runsById.values().stream()
+                .filter(r -> r.dungeonId().equalsIgnoreCase(dungeonId)
+                        && (r.stateEnum() == DungeonRunState.ACTIVE || r.stateEnum() == DungeonRunState.RESETTING))
+                .sorted(Comparator.comparingLong(RunRecord::runId))
+                .findFirst();
+    }
+
+    public List<RunRecord> listRunsForDungeon(String dungeonId) {
+        if (dungeonId == null || dungeonId.isBlank()) return List.of();
 
         List<RunRecord> out = runsById.values().stream()
-                .filter(r -> r.dungeonDimensionId().equals(dungeonId))
+                .filter(r -> r.dungeonId().equalsIgnoreCase(dungeonId))
                 .sorted(Comparator.comparingLong(RunRecord::runId))
-                .collect(Collectors.toCollection(ArrayList::new));
+                .toList();
 
-        return Collections.unmodifiableList(out);
+        return List.copyOf(out);
     }
 
-    public boolean hasAnyRunsForDimension(ResourceKey<Level> dungeonDimension) {
-        if (dungeonDimension == null) return false;
-        String dungeonId = dungeonDimension.location().toString();
-        return runsById.values().stream().anyMatch(r -> r.dungeonDimensionId().equals(dungeonId));
+    public List<RunRecord> listAllRuns() {
+        List<RunRecord> out = runsById.values().stream()
+                .sorted(Comparator.comparingLong(RunRecord::runId))
+                .toList();
+        return List.copyOf(out);
+    }
+
+    public boolean hasActiveOrResettingRun(String dungeonId) {
+        return findActiveOrResettingRun(dungeonId).isPresent();
+    }
+
+    public boolean markCompletionExited(long runId, UUID playerId) {
+        if (runId <= 0L || playerId == null) return false;
+
+        RunRecord old = runsById.get(runId);
+        if (old == null) return false;
+
+        RunRecord updated = old.withCompletionExited(playerId);
+        if (updated == old) return false;
+
+        runsById.put(runId, updated);
+        setDirty();
+        return true;
+    }
+
+    public boolean setState(long runId, DungeonRunState state, DungeonResetReason reason) {
+        if (runId <= 0L || state == null) return false;
+
+        RunRecord old = runsById.get(runId);
+        if (old == null) return false;
+
+        RunRecord updated = old.withState(state, reason);
+        runsById.put(runId, updated);
+        setDirty();
+        return true;
+    }
+
+    public boolean removeRun(long runId) {
+        if (runId <= 0L) return false;
+        boolean changed = runsById.remove(runId) != null;
+        if (changed) setDirty();
+        return changed;
     }
 }

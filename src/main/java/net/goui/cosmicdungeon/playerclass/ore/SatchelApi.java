@@ -197,7 +197,6 @@ public final class SatchelApi {
     public static boolean trySpend(Player p, int cost) {
         if (cost <= 0) return true;
 
-        // Prefer main inventory
         ItemStack inInv = findSatchelInMainInv(p);
         if (!inInv.isEmpty()) {
             int have = SatchelOfSamplesItem.getOre(inInv);
@@ -208,21 +207,38 @@ public final class SatchelApi {
         }
 
         if (p instanceof ServerPlayer sp) {
-            // If menu open, mutate the live container
-            if (mutateSatchelInOpenMenu(sp, ore -> ore - cost, false, null)) return true;
+            ExtraInventoryMenu m = ExtraInventoryMenu.getOpen(sp);
+            if (m != null) {
+                var cont = m.getExtraContainer();
+                for (int i = 0; i < cont.getContainerSize(); i++) {
+                    ItemStack s = cont.getItem(i);
+                    if (s.isEmpty() || !(s.getItem() instanceof SatchelOfSamplesItem)) continue;
 
-            // Else PD mirror
+                    int have = SatchelOfSamplesItem.getOre(s);
+                    if (have < cost) return false;
+
+                    SatchelOfSamplesItem.setOre(s, have - cost);
+                    cont.setItem(i, s);
+                    sp.containerMenu.broadcastChanges();
+                    return true;
+                }
+                return false;
+            }
+
             var list = readExtraList(sp);
             int idx = indexOfSatchel(list);
             if (idx < 0) return false;
+
             ItemStack satchel = list.get(idx);
             int have = SatchelOfSamplesItem.getOre(satchel);
             if (have < cost) return false;
+
             SatchelOfSamplesItem.setOre(satchel, have - cost);
             list.set(idx, satchel);
             writeExtraList(sp, list);
             return true;
         }
+
         return false;
     }
 

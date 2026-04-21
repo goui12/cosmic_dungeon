@@ -3,6 +3,11 @@ package net.goui.cosmicdungeon.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import net.goui.cosmicdungeon.auth.AccessPolicy;
+import net.goui.cosmicdungeon.dungeon.DungeonDefinition;
+import net.goui.cosmicdungeon.dungeon.DungeonDefinitions;
+import net.goui.cosmicdungeon.dungeon.DungeonLifecycleService;
+import net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData;
 import net.goui.cosmicdungeon.dungeon.DungeonWorldSnapshotService;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -18,53 +23,49 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class WorldCommand {
     private WorldCommand() {}
 
-    private static final SuggestionProvider<CommandSourceStack> DIM_SUGGEST = (ctx, builder) -> {
-        List<String> names = new ArrayList<>();
-
+    private static final SuggestionProvider<CommandSourceStack> TELEPORT_TARGET_SUGGEST = (ctx, builder) -> {
+        Set<String> names = new LinkedHashSet<>();
         names.add("world");
         names.add("overworld");
         names.add("nether");
         names.add("end");
-
-        names.add("dungeon_1");
-        names.add("dungeon_2");
-        names.add("dungeon_3");
-        names.add("dungeon_4");
-        names.add("dungeon_5");
-
+        names.addAll(DungeonDefinitions.suggestedDungeonTargets());
         return SharedSuggestionProvider.suggest(names, builder);
     };
 
-    private static final SuggestionProvider<CommandSourceStack> SNAPSHOT_SUGGEST = (ctx, builder) -> {
-        String worldArg = StringArgumentType.getString(ctx, "target");
-        ResourceKey<Level> dimKey = resolveDimensionKey(worldArg);
-        if (dimKey == null) return builder.buildFuture();
+    private static final SuggestionProvider<CommandSourceStack> DUNGEON_TARGET_SUGGEST = (ctx, builder) ->
+            SharedSuggestionProvider.suggest(DungeonDefinitions.suggestedDungeonTargets(), builder);
 
-        List<String> ids = DungeonWorldSnapshotService.listSnapshotIds(ctx.getSource().getServer(), dimKey);
+    private static final SuggestionProvider<CommandSourceStack> SNAPSHOT_SUGGEST = (ctx, builder) -> {
+        String arg = StringArgumentType.getString(ctx, "target");
+        DungeonDefinition def = resolveDungeonTarget(arg);
+        if (def == null) return builder.buildFuture();
+
+        List<String> ids = DungeonWorldSnapshotService.listSnapshotIds(ctx.getSource().getServer(), def.id());
         return SharedSuggestionProvider.suggest(ids, builder);
     };
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("world")
-                .requires(src -> src.hasPermission(2))
+                .requires(AccessPolicy::requireDeveloperOrConsole)
 
-                // Existing behavior: /world <target>
                 .then(Commands.argument("target", StringArgumentType.word())
-                        .suggests(DIM_SUGGEST)
+                        .suggests(TELEPORT_TARGET_SUGGEST)
                         .executes(ctx -> {
                             String arg = StringArgumentType.getString(ctx, "target");
                             CommandSourceStack source = ctx.getSource();
                             ServerPlayer player = source.getPlayerOrException();
 
-                            ResourceKey<Level> dimKey = resolveDimensionKey(arg);
+                            ResourceKey<Level> dimKey = resolveTeleportDimensionKey(arg);
                             if (dimKey == null) {
-                                source.sendFailure(Component.literal("Unknown dimension: " + arg));
+                                source.sendFailure(Component.literal("Unknown dimension or dungeon target: " + arg));
                                 return 0;
                             }
 
@@ -78,39 +79,38 @@ public final class WorldCommand {
                             BlockPos spawn = rd.pos();
                             BlockPos safe = ensureStandable(dest, spawn);
 
-                            float yaw = rd.yaw();
-                            float pitch = rd.pitch();
-
-                            double x = safe.getX() + 0.5;
-                            double y = safe.getY();
-                            double z = safe.getZ() + 0.5;
-
-                            player.teleportTo(dest, x, y, z, java.util.Set.of(), yaw, pitch, false);
+                            player.teleportTo(dest, safe.getX() + 0.5D, safe.getY(), safe.getZ() + 0.5D, Set.of(), rd.yaw(), rd.pitch(), false);
 
                             source.sendSuccess(() -> Component.literal(
-                                    "Teleported to " + dimKey.location() +
-                                            " spawn (" + safe.getX() + " " + safe.getY() + " " + safe.getZ() + ")"
+                                    "Teleported to " + dimKey.location()
+                                            + " spawn (" + safe.getX() + " " + safe.getY() + " " + safe.getZ() + ")"
                             ), false);
                             return 1;
                         }))
 
                 .then(Commands.literal("save")
                         .then(Commands.argument("target", StringArgumentType.word())
-                                .suggests(DIM_SUGGEST)
+                                .suggests(DUNGEON_TARGET_SUGGEST)
                                 .executes(ctx -> {
                                     CommandSourceStack source = ctx.getSource();
-                                    String arg = StringArgumentType.getString(ctx, "target");
-
-                                    ResourceKey<Level> dimKey = resolveDimensionKey(arg);
-                                    if (dimKey == null) {
-                                        source.sendFailure(Component.literal("Unknown dimension: " + arg));
+                                    DungeonDefinition def = resolveDungeonTarget(StringArgumentType.getString(ctx, "target"));
+                                    if (def == null) {
+                                        source.sendFailure(Component.literal("Unknown dungeon target."));
                                         return 0;
                                     }
 
-                                    var result = DungeonWorldSnapshotService.saveSnapshot(source.getServer(), dimKey);
+                                    DungeonRunRegistryData runs = DungeonRunRegistryData.get(source.getServer());
+                                    if (runs.hasActiveOrResettingRun(def.id())) {
+                                        source.sendFailure(Component.literal(
+                                                "Cannot save a manual snapshot while " + def.id() + " has an active/resetting run."
+                                        ));
+                                        return 0;
+                                    }
+
+                                    var result = DungeonWorldSnapshotService.saveSnapshot(source.getServer(), def.id());
                                     if (result instanceof DungeonWorldSnapshotService.SnapshotResult.Ok ok) {
                                         source.sendSuccess(() -> Component.literal(
-                                                "Saved snapshot for " + dimKey.location() + ": " + ok.snapshotId()
+                                                "Saved snapshot for " + def.id() + ": " + ok.snapshotId()
                                         ), true);
                                         return 1;
                                     }
@@ -123,21 +123,19 @@ public final class WorldCommand {
 
                 .then(Commands.literal("reset")
                         .then(Commands.argument("target", StringArgumentType.word())
-                                .suggests(DIM_SUGGEST)
+                                .suggests(DUNGEON_TARGET_SUGGEST)
                                 .executes(ctx -> {
                                     CommandSourceStack source = ctx.getSource();
-                                    String arg = StringArgumentType.getString(ctx, "target");
-
-                                    ResourceKey<Level> dimKey = resolveDimensionKey(arg);
-                                    if (dimKey == null) {
-                                        source.sendFailure(Component.literal("Unknown dimension: " + arg));
+                                    DungeonDefinition def = resolveDungeonTarget(StringArgumentType.getString(ctx, "target"));
+                                    if (def == null) {
+                                        source.sendFailure(Component.literal("Unknown dungeon target."));
                                         return 0;
                                     }
 
-                                    var result = DungeonWorldSnapshotService.resetToLatest(source.getServer(), dimKey);
+                                    var result = DungeonLifecycleService.manualReset(source.getServer(), def.id(), null);
                                     if (result instanceof DungeonWorldSnapshotService.SnapshotResult.Ok ok) {
                                         source.sendSuccess(() -> Component.literal(
-                                                "Reset " + dimKey.location() + " to latest snapshot: " + ok.snapshotId()
+                                                "Reset " + def.id() + " to latest snapshot: " + ok.snapshotId()
                                         ), true);
                                         return 1;
                                     }
@@ -151,21 +149,18 @@ public final class WorldCommand {
                                         .suggests(SNAPSHOT_SUGGEST)
                                         .executes(ctx -> {
                                             CommandSourceStack source = ctx.getSource();
-                                            String arg = StringArgumentType.getString(ctx, "target");
+                                            DungeonDefinition def = resolveDungeonTarget(StringArgumentType.getString(ctx, "target"));
                                             String snapshot = StringArgumentType.getString(ctx, "snapshot");
 
-                                            ResourceKey<Level> dimKey = resolveDimensionKey(arg);
-                                            if (dimKey == null) {
-                                                source.sendFailure(Component.literal("Unknown dimension: " + arg));
+                                            if (def == null) {
+                                                source.sendFailure(Component.literal("Unknown dungeon target."));
                                                 return 0;
                                             }
 
-                                            var result = DungeonWorldSnapshotService.resetToSnapshot(
-                                                    source.getServer(), dimKey, snapshot
-                                            );
+                                            var result = DungeonLifecycleService.manualReset(source.getServer(), def.id(), snapshot);
                                             if (result instanceof DungeonWorldSnapshotService.SnapshotResult.Ok ok) {
                                                 source.sendSuccess(() -> Component.literal(
-                                                        "Reset " + dimKey.location() + " to snapshot: " + ok.snapshotId()
+                                                        "Reset " + def.id() + " to snapshot: " + ok.snapshotId()
                                                 ), true);
                                                 return 1;
                                             }
@@ -179,18 +174,34 @@ public final class WorldCommand {
 
                 .then(Commands.literal("saves")
                         .then(Commands.argument("target", StringArgumentType.word())
-                                .suggests(DIM_SUGGEST)
+                                .suggests(DUNGEON_TARGET_SUGGEST)
                                 .executes(ctx -> {
                                     CommandSourceStack source = ctx.getSource();
-                                    String arg = StringArgumentType.getString(ctx, "target");
-
-                                    ResourceKey<Level> dimKey = resolveDimensionKey(arg);
-                                    if (dimKey == null) {
-                                        source.sendFailure(Component.literal("Unknown dimension: " + arg));
+                                    DungeonDefinition def = resolveDungeonTarget(StringArgumentType.getString(ctx, "target"));
+                                    if (def == null) {
+                                        source.sendFailure(Component.literal("Unknown dungeon target."));
                                         return 0;
                                     }
 
-                                    DungeonWorldSnapshotService.sendSnapshotListTo(source, dimKey);
+                                    DungeonWorldSnapshotService.sendSnapshotListTo(source, def.id());
+                                    return 1;
+                                })))
+
+                .then(Commands.literal("runs")
+                        .executes(ctx -> {
+                            DungeonLifecycleService.sendRunDiagnosticsTo(ctx.getSource(), null);
+                            return 1;
+                        })
+                        .then(Commands.argument("target", StringArgumentType.word())
+                                .suggests(DUNGEON_TARGET_SUGGEST)
+                                .executes(ctx -> {
+                                    DungeonDefinition def = resolveDungeonTarget(StringArgumentType.getString(ctx, "target"));
+                                    if (def == null) {
+                                        ctx.getSource().sendFailure(Component.literal("Unknown dungeon target."));
+                                        return 0;
+                                    }
+
+                                    DungeonLifecycleService.sendRunDiagnosticsTo(ctx.getSource(), def.id());
                                     return 1;
                                 })))
         );
@@ -229,11 +240,38 @@ public final class WorldCommand {
         return sturdyBelow && noFluid && emptySpace;
     }
 
-    private static ResourceKey<Level> resolveDimensionKey(String input) {
+    private static DungeonDefinition resolveDungeonTarget(String input) {
+        return DungeonDefinitions.resolve(input).orElse(null);
+    }
+
+    private static ResourceKey<Level> resolveTeleportDimensionKey(String input) {
+        if (input == null || input.isBlank()) return null;
+
         String s = input.toLowerCase();
         if (s.equals("world") || s.equals("overworld") || s.equals("ow")) return Level.OVERWORLD;
         if (s.equals("nether")) return Level.NETHER;
         if (s.equals("end") || s.equals("the_end")) return Level.END;
+
+        DungeonDefinition def = resolveDungeonTarget(s);
+        if (def != null) {
+            if (def.id().equalsIgnoreCase(s)) {
+                return def.primaryDimension();
+            }
+
+            ResourceLocation rl = s.contains(":")
+                    ? ResourceLocation.tryParse(s)
+                    : ResourceLocation.tryBuild("cosmicdungeon", s);
+
+            if (rl != null) {
+                for (ResourceKey<Level> key : def.dimensions()) {
+                    if (key.location().equals(rl) || key.location().getPath().equalsIgnoreCase(s)) {
+                        return key;
+                    }
+                }
+            }
+
+            return def.primaryDimension();
+        }
 
         ResourceLocation id = s.contains(":")
                 ? ResourceLocation.tryParse(s)

@@ -4,8 +4,7 @@ import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.goui.cosmicdungeon.auth.Authority;
 import net.goui.cosmicdungeon.block.ModBlocks;
-import net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData;
-import net.goui.cosmicdungeon.dungeon.DungeonWorldSnapshotService;
+import net.goui.cosmicdungeon.dungeon.DungeonLifecycleService;
 import net.goui.cosmicdungeon.network.ModNetwork;
 import net.goui.cosmicdungeon.network.RiftPayloads;
 import net.goui.cosmicdungeon.rift.RiftRegistryData;
@@ -17,7 +16,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.players.PlayerList;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -79,7 +77,7 @@ public class CosmicRiftTileBlock extends Block {
         }
 
         RiftRegistryData data = RiftRegistryData.get(sl);
-        OptionalLong anchorOpt = data.getAnchorForTile(pos);
+        OptionalLong anchorOpt = data.getAnchorForTile(sl, pos);
 
         BlockPos anchor;
         String name = "";
@@ -90,7 +88,7 @@ public class CosmicRiftTileBlock extends Block {
             anchor = pos;
         } else {
             anchor = BlockPos.of(anchorOpt.getAsLong());
-            var portal = data.getPortal(anchor.asLong()).orElse(null);
+            var portal = data.getPortal(sl, anchor).orElse(null);
             if (portal != null) {
                 name = portal.portalName() == null ? "" : portal.portalName();
                 dest = portal.destinationName() == null ? "" : portal.destinationName();
@@ -141,10 +139,10 @@ public class CosmicRiftTileBlock extends Block {
 
         RiftRegistryData data = RiftRegistryData.get(currentLevel);
 
-        OptionalLong anchorOpt = data.getAnchorForTile(steppedTile);
+        OptionalLong anchorOpt = data.getAnchorForTile(currentLevel, steppedTile);
         if (anchorOpt.isEmpty()) return;
 
-        var portalOpt = data.getPortal(anchorOpt.getAsLong());
+        var portalOpt = data.getPortal(currentLevel, BlockPos.of(anchorOpt.getAsLong()));
         if (portalOpt.isEmpty()) return;
 
         RiftRegistryData.PortalRecord portal = portalOpt.get();
@@ -210,42 +208,7 @@ public class CosmicRiftTileBlock extends Block {
         NEXT_ALLOWED_TELEPORT.put(id, now + TELEPORT_COOLDOWN_TICKS);
 
         if (portal.resetTrigger()) {
-            var runs = DungeonRunRegistryData.get(currentLevel.getServer());
-            boolean shouldReset = runs.markPlayerExitedAndShouldReset(currentLevel.getServer(), currentLevel.dimension(), id);
-
-            if (shouldReset) {
-                var result = DungeonWorldSnapshotService.resetToLatest(currentLevel.getServer(), currentLevel.dimension());
-                if (result instanceof DungeonWorldSnapshotService.SnapshotResult.Ok okResult) {
-                    runs.clearRunsForDimension(currentLevel.dimension());
-
-                    var server = currentLevel.getServer();
-                    if (server != null) {
-                        for (ServerPlayer online : server.getPlayerList().getPlayers()) {
-                            if (Authority.isDeveloper(online)) {
-                                online.sendSystemMessage(Component.literal(
-                                        "Dungeon reset complete for " + currentLevel.dimension().location() +
-                                                " -> " + okResult.snapshotId()
-                                ));
-                            }
-                        }
-                    }
-                } else {
-                    DungeonWorldSnapshotService.SnapshotResult.Error err =
-                            (DungeonWorldSnapshotService.SnapshotResult.Error) result;
-
-                    var server = currentLevel.getServer();
-                    if (server != null) {
-                        for (ServerPlayer online : server.getPlayerList().getPlayers()) {
-                            if (Authority.isDeveloper(online)) {
-                                online.sendSystemMessage(Component.literal(
-                                        "Dungeon reset failed for " + currentLevel.dimension().location() +
-                                                ": " + err.message()
-                                ));
-                            }
-                        }
-                    }
-                }
-            }
+            DungeonLifecycleService.onPlayerExitedThroughResetRift(currentLevel, sp);
         }
     }
 
@@ -330,7 +293,7 @@ public class CosmicRiftTileBlock extends Block {
         }
 
         if (!visited.isEmpty()) {
-            RiftRegistryData.get(level).onRiftTilesBroken(visited);
+            RiftRegistryData.get(level).onRiftTilesBroken(level, visited);
 
             for (long packed : visited) {
                 BlockPos p = BlockPos.of(packed);

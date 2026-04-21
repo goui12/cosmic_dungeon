@@ -1,0 +1,59 @@
+package net.goui.cosmicdungeon.dungeon;
+
+import net.goui.cosmicdungeon.CosmicDungeonMod;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+
+@EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID)
+public final class DungeonLifecycleEvents {
+    private DungeonLifecycleEvents() {}
+
+    private static volatile boolean reevaluateSoon = false;
+
+    @SubscribeEvent
+    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent e) {
+        if (!(e.getEntity() instanceof ServerPlayer sp)) return;
+        if (sp.level().isClientSide()) return;
+
+        DungeonLifecycleService.performPendingRecoveryIfNeeded(sp);
+        reevaluateSoon = true;
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent e) {
+        if (!(e.getEntity() instanceof ServerPlayer)) return;
+        reevaluateSoon = true;
+    }
+
+    @SubscribeEvent
+    public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent e) {
+        if (!(e.getEntity() instanceof ServerPlayer)) return;
+        reevaluateSoon = true;
+    }
+
+    @SubscribeEvent
+    public static void onServerTick(ServerTickEvent.Post e) {
+        if (!e.hasTime()) return;
+
+        MinecraftServer server = e.getServer();
+        if (server == null) return;
+
+        boolean doPeriodic = false;
+        var overworld = server.getLevel(Level.OVERWORLD);
+        if (overworld != null) {
+            doPeriodic = (overworld.getGameTime() % 20L) == 0L;
+        }
+
+        DungeonLifecycleService.processPendingResets(server);
+
+        if (!reevaluateSoon && !doPeriodic) return;
+
+        reevaluateSoon = false;
+        DungeonLifecycleService.evaluateActiveRuns(server);
+    }
+}
