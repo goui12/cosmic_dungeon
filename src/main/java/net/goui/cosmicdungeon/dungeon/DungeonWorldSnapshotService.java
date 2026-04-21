@@ -265,17 +265,17 @@ public final class DungeonWorldSnapshotService {
                         + level.dimension().location());
                 invalidateChunkIoCaches(level);
 
-                debug("[DUNGEON DEBUG] resetToSnapshot clearing runtime chunk access caches for "
+                System.out.println("[DUNGEON DEBUG] resetToSnapshot clearing runtime chunk access caches for "
                         + level.dimension().location());
                 clearChunkSourceHotCaches(level);
 
-                debug("[DUNGEON DEBUG] resetToSnapshot forcing post-restore unload verification for "
+                System.out.println("[DUNGEON DEBUG] resetToSnapshot forcing post-restore unload verification for "
                         + level.dimension().location());
                 Optional<String> postRestoreBlocker = enforcePostRestoreChunkDrain(level);
                 if (postRestoreBlocker.isPresent()) {
-                    debug("[DUNGEON DEBUG] resetToSnapshot ABORT from enforcePostRestoreChunkDrain: "
+                    System.out.println("[DUNGEON DEBUG] resetToSnapshot ABORT from enforcePostRestoreChunkDrain: "
                             + postRestoreBlocker.get());
-                    debug("[DUNGEON DEBUG] ==================================================");
+                    System.out.println("[DUNGEON DEBUG] ==================================================");
                     return new SnapshotResult.Error(postRestoreBlocker.get());
                 }
             }
@@ -751,13 +751,13 @@ public final class DungeonWorldSnapshotService {
             ServerChunkCache chunkSource = level.getChunkSource();
             Field chunkMapField = findField(ServerChunkCache.class, "chunkMap");
             if (chunkMapField == null) {
-                debug("[DUNGEON DEBUG] clearChunkSourceHotCaches: chunkMap field not found");
+                System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches: chunkMap field not found");
                 return;
             }
 
             Object chunkMap = chunkMapField.get(chunkSource);
             if (chunkMap == null) {
-                debug("[DUNGEON DEBUG] clearChunkSourceHotCaches: chunkMap was null");
+                System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches: chunkMap was null");
                 return;
             }
 
@@ -784,13 +784,13 @@ public final class DungeonWorldSnapshotService {
                 if (raw instanceof Map<?, ?> map) {
                     int before = map.size();
                     ((Map<?, ?>) raw).clear();
-                    debug("[DUNGEON DEBUG] clearChunkSourceHotCaches cleared Map field="
+                    System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches cleared Map field="
                             + fieldName + " sizeBefore=" + before + " for " + level.dimension().location());
                     cleared = true;
                 } else if (raw instanceof java.util.Collection<?> collection) {
                     int before = collection.size();
                     ((java.util.Collection<?>) raw).clear();
-                    debug("[DUNGEON DEBUG] clearChunkSourceHotCaches cleared Collection field="
+                    System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches cleared Collection field="
                             + fieldName + " sizeBefore=" + before + " for " + level.dimension().location());
                     cleared = true;
                 }
@@ -798,7 +798,7 @@ public final class DungeonWorldSnapshotService {
                 if (cleared) {
                     clearedCollections++;
                 } else {
-                    debug("[DUNGEON DEBUG] clearChunkSourceHotCaches field " + fieldName
+                    System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches field " + fieldName
                             + " is not clearable collection type: " + raw.getClass().getName());
                 }
             }
@@ -807,30 +807,33 @@ public final class DungeonWorldSnapshotService {
             if (promoteChunkMap != null) {
                 try {
                     promoteChunkMap.invoke(chunkMap);
-                    debug("[DUNGEON DEBUG] clearChunkSourceHotCaches invoked promoteChunkMap for "
+                    System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches invoked promoteChunkMap for "
                             + level.dimension().location());
                 } catch (Throwable t) {
-                    debug("[DUNGEON DEBUG] clearChunkSourceHotCaches failed invoking promoteChunkMap: " + t);
-                                    }
+                    System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches failed invoking promoteChunkMap: " + t);
+                    t.printStackTrace();
+                }
             }
 
             Method clearCache = findNoArgMethod(List.of(chunkSource), "clearCache");
             if (clearCache != null) {
                 try {
                     clearCache.invoke(chunkSource);
-                    debug("[DUNGEON DEBUG] clearChunkSourceHotCaches invoked clearCache on chunk source for "
+                    System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches invoked clearCache on chunk source for "
                             + level.dimension().location());
                 } catch (Throwable t) {
-                    debug("[DUNGEON DEBUG] clearChunkSourceHotCaches failed invoking clearCache: " + t);
-                                    }
+                    System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches failed invoking clearCache: " + t);
+                    t.printStackTrace();
+                }
             }
 
-            debug("[DUNGEON DEBUG] clearChunkSourceHotCaches done clearedCollections="
+            System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches done clearedCollections="
                     + clearedCollections + " for " + level.dimension().location());
         } catch (Throwable t) {
-            debug("[DUNGEON DEBUG] clearChunkSourceHotCaches ERROR for "
+            System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches ERROR for "
                     + level.dimension().location() + ": " + t);
-                        throw new RuntimeException("Failed clearing chunk source caches for " + level.dimension().location(), t);
+            t.printStackTrace();
+            throw new RuntimeException("Failed clearing chunk source caches for " + level.dimension().location(), t);
         }
     }
 
@@ -848,12 +851,11 @@ public final class DungeonWorldSnapshotService {
         boolean activeTickets = chunkSource.hasActiveTickets();
         int forced = level.getForceLoadedChunks().size();
 
-        debug("[DUNGEON DEBUG] enforcePostRestoreChunkDrain summary dimension="
+        System.out.println("[DUNGEON DEBUG] enforcePostRestoreChunkDrain summary dimension="
                 + level.dimension().location()
                 + " loadedChunks=" + loaded
                 + " forcedChunks=" + forced
                 + " activeTickets=" + activeTickets);
-        logChunkSourceStats(level, "post-restore-drain");
 
         if (loaded > 0 || forced > 0 || activeTickets) {
             return Optional.of("Reset copied files but runtime chunks are still live in "
