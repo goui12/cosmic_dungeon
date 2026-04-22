@@ -1004,6 +1004,39 @@ public final class DungeonWorldSnapshotService {
         return null;
     }
 
+    private static Object invokeFirstNonNull(Object target, String[] accessorNames) {
+        if (target == null || accessorNames == null) {
+            return null;
+        }
+
+        for (String accessorName : accessorNames) {
+            if (accessorName == null || accessorName.isBlank()) {
+                continue;
+            }
+
+            Class<?> c = target.getClass();
+            while (c != null) {
+                try {
+                    Method m = c.getDeclaredMethod(accessorName);
+                    m.setAccessible(true);
+                    Object out = m.invoke(target);
+                    if (out != null) {
+                        return out;
+                    }
+                    break;
+                } catch (NoSuchMethodException ignored) {
+                    c = c.getSuperclass();
+                } catch (Throwable t) {
+                    debug("[DUNGEON DEBUG] invokeFirstNonNull failed invoking "
+                            + accessorName + " on " + target.getClass().getName() + ": " + t);
+                    break;
+                }
+            }
+        }
+
+        return null;
+    }
+
     private static Object invokeFirstNonNull(Object target, Method... methods) {
         for (Method method : methods) {
             if (method == null) {
