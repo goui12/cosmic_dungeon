@@ -232,7 +232,6 @@ public final class DungeonWorldSnapshotService {
                     debug("[DUNGEON DEBUG] resetToSnapshot ABORT from prepareLevelForFilesystemRestore: "
                             + blocker.get());
                     debug("[DUNGEON DEBUG] ==================================================");
-                    debug("[DUNGEON DEBUG] NEW BUILD MARKER 04-11-A");
                     return new SnapshotResult.Error(blocker.get());
                 }
             }
@@ -264,18 +263,19 @@ public final class DungeonWorldSnapshotService {
                 debug("[DUNGEON DEBUG] resetToSnapshot invalidating chunk IO caches for "
                         + level.dimension().location());
                 invalidateChunkIoCaches(level);
+                invalidateAuxiliaryIoCaches(level);
 
-                System.out.println("[DUNGEON DEBUG] resetToSnapshot clearing runtime chunk access caches for "
+                debug("[DUNGEON DEBUG] resetToSnapshot clearing runtime chunk access caches for "
                         + level.dimension().location());
                 clearChunkSourceHotCaches(level);
 
-                System.out.println("[DUNGEON DEBUG] resetToSnapshot forcing post-restore unload verification for "
+                debug("[DUNGEON DEBUG] resetToSnapshot forcing post-restore unload verification for "
                         + level.dimension().location());
                 Optional<String> postRestoreBlocker = enforcePostRestoreChunkDrain(level);
                 if (postRestoreBlocker.isPresent()) {
-                    System.out.println("[DUNGEON DEBUG] resetToSnapshot ABORT from enforcePostRestoreChunkDrain: "
+                    debug("[DUNGEON DEBUG] resetToSnapshot ABORT from enforcePostRestoreChunkDrain: "
                             + postRestoreBlocker.get());
-                    System.out.println("[DUNGEON DEBUG] ==================================================");
+                    debug("[DUNGEON DEBUG] ==================================================");
                     return new SnapshotResult.Error(postRestoreBlocker.get());
                 }
             }
@@ -661,88 +661,154 @@ public final class DungeonWorldSnapshotService {
                 return;
             }
 
-            Field workerField = findField(chunkMap.getClass(), "worker");
-            if (workerField == null) {
-                debug("[DUNGEON DEBUG] invalidateChunkIoCaches: worker field not found");
-                return;
-            }
-
-            Object worker = workerField.get(chunkMap);
-            if (worker == null) {
-                debug("[DUNGEON DEBUG] invalidateChunkIoCaches: worker was null");
-                return;
-            }
-
-            Field pendingWritesField = findField(worker.getClass(), "pendingWrites");
-            if (pendingWritesField != null) {
-                Object rawPending = pendingWritesField.get(worker);
-                if (rawPending instanceof Map<?, ?> pendingWrites) {
-                    int pendingCount = pendingWrites.size();
-                    ((Map<?, ?>) pendingWrites).clear();
-                    debug("[DUNGEON DEBUG] invalidateChunkIoCaches: cleared pendingWrites="
-                            + pendingCount + " for " + level.dimension().location());
-                }
-            }
-
-            Field storageField = findField(worker.getClass(), "storage");
-            if (storageField == null) {
-                debug("[DUNGEON DEBUG] invalidateChunkIoCaches: storage field not found");
-                return;
-            }
-
-            Object storage = storageField.get(worker);
-            if (storage == null) {
-                debug("[DUNGEON DEBUG] invalidateChunkIoCaches: storage was null");
-                return;
-            }
-
-            Field regionCacheField = findField(storage.getClass(), "regionCache");
-            if (regionCacheField == null) {
-                debug("[DUNGEON DEBUG] invalidateChunkIoCaches: regionCache field not found");
-                return;
-            }
-
-            Object rawRegionCache = regionCacheField.get(storage);
-            Iterable<?> closeIterable;
-            int entriesBeforeClear = -1;
-
-            if (rawRegionCache instanceof Map<?, ?> regionMap) {
-                closeIterable = regionMap.values();
-                entriesBeforeClear = regionMap.size();
-            } else if (rawRegionCache instanceof Iterable<?> iterable) {
-                closeIterable = iterable;
-            } else {
-                debug("[DUNGEON DEBUG] invalidateChunkIoCaches: regionCache unsupported type="
-                        + (rawRegionCache == null ? "null" : rawRegionCache.getClass().getName()));
-                return;
-            }
-
-            int closed = 0;
-            for (Object regionFile : closeIterable) {
-                if (regionFile == null) continue;
-                try {
-                    Method closeMethod = regionFile.getClass().getMethod("close");
-                    closeMethod.invoke(regionFile);
-                    closed++;
-                } catch (Throwable t) {
-                    debug("[DUNGEON DEBUG] invalidateChunkIoCaches: failed closing region file "
-                            + regionFile.getClass().getName() + ": " + t);
-                }
-            }
-
-            if (rawRegionCache instanceof Map<?, ?> regionMap) {
-                ((Map<?, ?>) regionMap).clear();
-                debug("[DUNGEON DEBUG] invalidateChunkIoCaches: closedRegionFiles=" + closed
-                        + " clearedRegionCacheEntries=" + entriesBeforeClear
-                        + " for " + level.dimension().location());
-            } else {
-                debug("[DUNGEON DEBUG] invalidateChunkIoCaches: closedRegionFiles=" + closed
-                        + " (non-map cache type) for " + level.dimension().location());
-            }
+            invalidateWorkerAndStorageCaches(chunkMap, "chunkMap", level);
         } catch (Throwable t) {
             debug("[DUNGEON DEBUG] invalidateChunkIoCaches ERROR for "
                     + level.dimension().location() + ": " + t);
             throw new RuntimeException("Failed to invalidate chunk IO caches for " + level.dimension().location(), t);
+        }
+    }
+
+    private static void invalidateAuxiliaryIoCaches(ServerLevel level) {
+        try {
+            Field poiManagerField = findField(ServerLevel.class, "poiManager");
+            if (poiManagerField != null) {
+                Object poiManager = poiManagerField.get(level);
+                if (poiManager != null) {
+                    invalidateWorkerAndStorageCaches(poiManager, "poiManager", level);
+                } else {
+                    debug("[DUNGEON DEBUG] invalidateAuxiliaryIoCaches: poiManager was null for "
+                            + level.dimension().location());
+                }
+            } else {
+                debug("[DUNGEON DEBUG] invalidateAuxiliaryIoCaches: poiManager field not found");
+            }
+
+            Field entityManagerField = findField(ServerLevel.class, "entityManager");
+            if (entityManagerField != null) {
+                Object entityManager = entityManagerField.get(level);
+                if (entityManager != null) {
+                    invalidateWorkerAndStorageCaches(entityManager, "entityManager", level);
+
+                    Object permanentStorage = invokeFirstNonNull(
+                            entityManager,
+                            new String[]{"permanentStorage", "entityStorage"}
+                    );
+                    if (permanentStorage != null) {
+                        invalidateWorkerAndStorageCaches(permanentStorage, "entityManager.permanentStorage", level);
+                    } else {
+                        debug("[DUNGEON DEBUG] invalidateAuxiliaryIoCaches: no permanentStorage/entityStorage accessor on entityManager for "
+                                + level.dimension().location());
+                    }
+                } else {
+                    debug("[DUNGEON DEBUG] invalidateAuxiliaryIoCaches: entityManager was null for "
+                            + level.dimension().location());
+                }
+            } else {
+                debug("[DUNGEON DEBUG] invalidateAuxiliaryIoCaches: entityManager field not found");
+            }
+        } catch (Throwable t) {
+            debug("[DUNGEON DEBUG] invalidateAuxiliaryIoCaches ERROR for "
+                    + level.dimension().location() + ": " + t);
+        }
+    }
+
+    private static void invalidateWorkerAndStorageCaches(Object owner, String ownerLabel, ServerLevel level) throws Exception {
+        if (owner == null) return;
+
+        Object worker = null;
+        Field workerField = findField(owner.getClass(), "worker");
+        if (workerField != null) {
+            worker = workerField.get(owner);
+        }
+
+        if (worker == null) {
+            Object possibleStorage = invokeFirstNonNull(owner, new String[]{"storage"});
+            if (possibleStorage != null) {
+                clearRegionCacheOnStorage(possibleStorage, ownerLabel + ".storage", level);
+                return;
+            }
+
+            debug("[DUNGEON DEBUG] invalidateWorkerAndStorageCaches: no worker/storage on "
+                    + ownerLabel + " (" + owner.getClass().getName() + ") for " + level.dimension().location());
+            return;
+        }
+
+        Field pendingWritesField = findField(worker.getClass(), "pendingWrites");
+        if (pendingWritesField != null) {
+            Object rawPending = pendingWritesField.get(worker);
+            if (rawPending instanceof Map<?, ?> pendingWrites) {
+                int pendingCount = pendingWrites.size();
+                ((Map<?, ?>) pendingWrites).clear();
+                debug("[DUNGEON DEBUG] invalidateWorkerAndStorageCaches: cleared pendingWrites="
+                        + pendingCount + " on " + ownerLabel + " for " + level.dimension().location());
+            }
+        }
+
+        Field storageField = findField(worker.getClass(), "storage");
+        if (storageField == null) {
+            debug("[DUNGEON DEBUG] invalidateWorkerAndStorageCaches: storage field missing on worker for "
+                    + ownerLabel + " in " + level.dimension().location());
+            return;
+        }
+
+        Object storage = storageField.get(worker);
+        if (storage == null) {
+            debug("[DUNGEON DEBUG] invalidateWorkerAndStorageCaches: storage was null on "
+                    + ownerLabel + " in " + level.dimension().location());
+            return;
+        }
+
+        clearRegionCacheOnStorage(storage, ownerLabel + ".worker.storage", level);
+    }
+
+    private static void clearRegionCacheOnStorage(Object storage, String storageLabel, ServerLevel level) throws Exception {
+        if (storage == null) return;
+
+        Field regionCacheField = findField(storage.getClass(), "regionCache");
+        if (regionCacheField == null) {
+            debug("[DUNGEON DEBUG] clearRegionCacheOnStorage: regionCache field not found on "
+                    + storageLabel + " (" + storage.getClass().getName() + ") for " + level.dimension().location());
+            return;
+        }
+
+        Object rawRegionCache = regionCacheField.get(storage);
+        Iterable<?> closeIterable;
+        int entriesBeforeClear = -1;
+
+        if (rawRegionCache instanceof Map<?, ?> regionMap) {
+            closeIterable = regionMap.values();
+            entriesBeforeClear = regionMap.size();
+        } else if (rawRegionCache instanceof Iterable<?> iterable) {
+            closeIterable = iterable;
+        } else {
+            debug("[DUNGEON DEBUG] clearRegionCacheOnStorage: unsupported regionCache type="
+                    + (rawRegionCache == null ? "null" : rawRegionCache.getClass().getName())
+                    + " on " + storageLabel + " for " + level.dimension().location());
+            return;
+        }
+
+        int closed = 0;
+        for (Object regionFile : closeIterable) {
+            if (regionFile == null) continue;
+            try {
+                Method closeMethod = regionFile.getClass().getMethod("close");
+                closeMethod.invoke(regionFile);
+                closed++;
+            } catch (Throwable t) {
+                debug("[DUNGEON DEBUG] clearRegionCacheOnStorage: failed closing region file "
+                        + regionFile.getClass().getName() + " on " + storageLabel + ": " + t);
+            }
+        }
+
+        if (rawRegionCache instanceof Map<?, ?> regionMap) {
+            ((Map<?, ?>) regionMap).clear();
+            debug("[DUNGEON DEBUG] clearRegionCacheOnStorage: closedRegionFiles=" + closed
+                    + " clearedRegionCacheEntries=" + entriesBeforeClear
+                    + " on " + storageLabel + " for " + level.dimension().location());
+        } else {
+            debug("[DUNGEON DEBUG] clearRegionCacheOnStorage: closedRegionFiles=" + closed
+                    + " (non-map cache type) on " + storageLabel + " for " + level.dimension().location());
         }
     }
 
@@ -751,13 +817,13 @@ public final class DungeonWorldSnapshotService {
             ServerChunkCache chunkSource = level.getChunkSource();
             Field chunkMapField = findField(ServerChunkCache.class, "chunkMap");
             if (chunkMapField == null) {
-                System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches: chunkMap field not found");
+                debug("[DUNGEON DEBUG] clearChunkSourceHotCaches: chunkMap field not found");
                 return;
             }
 
             Object chunkMap = chunkMapField.get(chunkSource);
             if (chunkMap == null) {
-                System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches: chunkMap was null");
+                debug("[DUNGEON DEBUG] clearChunkSourceHotCaches: chunkMap was null");
                 return;
             }
 
@@ -784,13 +850,13 @@ public final class DungeonWorldSnapshotService {
                 if (raw instanceof Map<?, ?> map) {
                     int before = map.size();
                     ((Map<?, ?>) raw).clear();
-                    System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches cleared Map field="
+                    debug("[DUNGEON DEBUG] clearChunkSourceHotCaches cleared Map field="
                             + fieldName + " sizeBefore=" + before + " for " + level.dimension().location());
                     cleared = true;
                 } else if (raw instanceof java.util.Collection<?> collection) {
                     int before = collection.size();
                     ((java.util.Collection<?>) raw).clear();
-                    System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches cleared Collection field="
+                    debug("[DUNGEON DEBUG] clearChunkSourceHotCaches cleared Collection field="
                             + fieldName + " sizeBefore=" + before + " for " + level.dimension().location());
                     cleared = true;
                 }
@@ -798,7 +864,7 @@ public final class DungeonWorldSnapshotService {
                 if (cleared) {
                     clearedCollections++;
                 } else {
-                    System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches field " + fieldName
+                    debug("[DUNGEON DEBUG] clearChunkSourceHotCaches field " + fieldName
                             + " is not clearable collection type: " + raw.getClass().getName());
                 }
             }
@@ -807,33 +873,30 @@ public final class DungeonWorldSnapshotService {
             if (promoteChunkMap != null) {
                 try {
                     promoteChunkMap.invoke(chunkMap);
-                    System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches invoked promoteChunkMap for "
+                    debug("[DUNGEON DEBUG] clearChunkSourceHotCaches invoked promoteChunkMap for "
                             + level.dimension().location());
                 } catch (Throwable t) {
-                    System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches failed invoking promoteChunkMap: " + t);
-                    t.printStackTrace();
-                }
+                    debug("[DUNGEON DEBUG] clearChunkSourceHotCaches failed invoking promoteChunkMap: " + t);
+                                    }
             }
 
             Method clearCache = findNoArgMethod(List.of(chunkSource), "clearCache");
             if (clearCache != null) {
                 try {
                     clearCache.invoke(chunkSource);
-                    System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches invoked clearCache on chunk source for "
+                    debug("[DUNGEON DEBUG] clearChunkSourceHotCaches invoked clearCache on chunk source for "
                             + level.dimension().location());
                 } catch (Throwable t) {
-                    System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches failed invoking clearCache: " + t);
-                    t.printStackTrace();
-                }
+                    debug("[DUNGEON DEBUG] clearChunkSourceHotCaches failed invoking clearCache: " + t);
+                                    }
             }
 
-            System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches done clearedCollections="
+            debug("[DUNGEON DEBUG] clearChunkSourceHotCaches done clearedCollections="
                     + clearedCollections + " for " + level.dimension().location());
         } catch (Throwable t) {
-            System.out.println("[DUNGEON DEBUG] clearChunkSourceHotCaches ERROR for "
+            debug("[DUNGEON DEBUG] clearChunkSourceHotCaches ERROR for "
                     + level.dimension().location() + ": " + t);
-            t.printStackTrace();
-            throw new RuntimeException("Failed clearing chunk source caches for " + level.dimension().location(), t);
+                        throw new RuntimeException("Failed clearing chunk source caches for " + level.dimension().location(), t);
         }
     }
 
@@ -851,11 +914,12 @@ public final class DungeonWorldSnapshotService {
         boolean activeTickets = chunkSource.hasActiveTickets();
         int forced = level.getForceLoadedChunks().size();
 
-        System.out.println("[DUNGEON DEBUG] enforcePostRestoreChunkDrain summary dimension="
+        debug("[DUNGEON DEBUG] enforcePostRestoreChunkDrain summary dimension="
                 + level.dimension().location()
                 + " loadedChunks=" + loaded
                 + " forcedChunks=" + forced
                 + " activeTickets=" + activeTickets);
+        logChunkSourceStats(level, "post-restore-drain");
 
         if (loaded > 0 || forced > 0 || activeTickets) {
             return Optional.of("Reset copied files but runtime chunks are still live in "
