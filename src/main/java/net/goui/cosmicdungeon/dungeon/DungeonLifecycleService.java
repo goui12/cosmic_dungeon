@@ -172,6 +172,9 @@ public final class DungeonLifecycleService {
         if (run.stateEnum() != DungeonRunState.ACTIVE) return;
         if (!run.containsDimension(sourceLevel.dimension())) return;
 
+        clearPlayerInventory(sp);
+        resetPlayerRespawnToOverworldSpawn(sp);
+
         runs.markCompletionExited(run.runId(), sp.getUUID());
 
         DungeonRunRegistryData.RunRecord updated = runs.getRun(run.runId()).orElse(run);
@@ -518,7 +521,13 @@ public final class DungeonLifecycleService {
 
         sp.closeContainer();
 
-        restoreInventoryFromSnapshot(sp, snapshot == null ? new CompoundTag() : snapshot.inventoryNbt());
+        boolean completedRun = DungeonResetReason.COMPLETED.name().equalsIgnoreCase(reasonText);
+        if (completedRun) {
+            clearPlayerInventory(sp);
+            resetPlayerRespawnToOverworldSpawn(sp);
+        } else {
+            restoreInventoryFromSnapshot(sp, snapshot == null ? new CompoundTag() : snapshot.inventoryNbt());
+        }
         clearTemporaryPlayerState(sp);
         BloomSharedAdvancements.clearTemporaryBloomProgress(server, sp);
         MetalmancerResonanceTracker.clearForPlayer(sp.getUUID());
@@ -552,6 +561,32 @@ public final class DungeonLifecycleService {
 
         sp.getInventory().setChanged();
         sp.containerMenu.broadcastChanges();
+    }
+
+    public static void clearPlayerInventory(ServerPlayer sp) {
+        if (sp == null) return;
+        sp.getInventory().clearContent();
+        sp.inventoryMenu.broadcastChanges();
+        sp.containerMenu.broadcastChanges();
+    }
+
+    public static void setPlayerRespawnTo(ServerPlayer sp, ServerLevel level, BlockPos pos, float angle) {
+        if (sp == null || level == null || pos == null) return;
+        sp.setRespawnPosition(level.dimension(), pos, angle, true, false);
+    }
+
+    public static void resetPlayerRespawnToOverworldSpawn(ServerPlayer sp) {
+        if (sp == null || !(sp.level() instanceof ServerLevel current)) return;
+
+        MinecraftServer server = current.getServer();
+        if (server == null) return;
+
+        ServerLevel overworld = server.getLevel(Level.OVERWORLD);
+        if (overworld == null) return;
+
+        var rd = overworld.getLevelData().getRespawnData();
+        BlockPos safe = ensureStandable(overworld, rd.pos());
+        setPlayerRespawnTo(sp, overworld, safe, rd.yaw());
     }
 
     private static void clearTemporaryPlayerState(ServerPlayer sp) {
