@@ -267,6 +267,7 @@ public final class DungeonWorldSnapshotService {
                         + level.dimension().location());
                 invalidateChunkIoCaches(level);
                 invalidateAuxiliaryIoCaches(level);
+                clearEntityManagerHotCaches(level);
 
                 debug("[DUNGEON DEBUG] resetToSnapshot clearing runtime chunk access caches for "
                         + level.dimension().location());
@@ -716,6 +717,86 @@ public final class DungeonWorldSnapshotService {
                     + " error=" + t);
             throw new RuntimeException("Failed purging loaded entities for " + level.dimension().location(), t);
         }
+    }
+
+    private static void clearEntityManagerHotCaches(ServerLevel level) {
+        try {
+            Field entityManagerField = findField(ServerLevel.class, "entityManager");
+            if (entityManagerField == null) {
+                debug("[DUNGEON DEBUG] clearEntityManagerHotCaches: entityManager field not found for "
+                        + level.dimension().location());
+                return;
+            }
+
+            Object entityManager = entityManagerField.get(level);
+            if (entityManager == null) {
+                debug("[DUNGEON DEBUG] clearEntityManagerHotCaches: entityManager was null for "
+                        + level.dimension().location());
+                return;
+            }
+
+            int cleared = 0;
+            cleared += clearNamedCollections(entityManager, level, "entityManager", List.of(
+                    "chunkLoadStatuses",
+                    "loadingInbox",
+                    "chunksToUnload",
+                    "knownUuids",
+                    "visibleEntityStorage",
+                    "sectionStorage"
+            ));
+
+            Object permanentStorage = invokeFirstNonNull(entityManager, new String[]{"permanentStorage", "entityStorage"});
+            if (permanentStorage != null) {
+                cleared += clearNamedCollections(permanentStorage, level, "entityManager.permanentStorage", List.of(
+                        "emptyChunks",
+                        "chunkLoadStatuses",
+                        "pendingLoads",
+                        "pendingSaves",
+                        "chunksToUnload",
+                        "loadedChunks"
+                ));
+            }
+
+            debug("[DUNGEON DEBUG] clearEntityManagerHotCaches clearedCollections="
+                    + cleared + " for " + level.dimension().location());
+        } catch (Throwable t) {
+            debug("[DUNGEON DEBUG] clearEntityManagerHotCaches ERROR for "
+                    + level.dimension().location() + ": " + t);
+            throw new RuntimeException("Failed to clear entity manager caches for " + level.dimension().location(), t);
+        }
+    }
+
+    private static int clearNamedCollections(Object owner,
+                                             ServerLevel level,
+                                             String ownerLabel,
+                                             List<String> fieldNames) throws IllegalAccessException {
+        int cleared = 0;
+        for (String fieldName : fieldNames) {
+            Field f = findField(owner.getClass(), fieldName);
+            if (f == null) continue;
+
+            Object raw = f.get(owner);
+            if (raw == null) continue;
+
+            if (raw instanceof Map<?, ?> map) {
+                int before = map.size();
+                ((Map<?, ?>) raw).clear();
+                cleared++;
+                debug("[DUNGEON DEBUG] clearEntityManagerHotCaches cleared Map "
+                        + ownerLabel + "." + fieldName
+                        + " sizeBefore=" + before
+                        + " for " + level.dimension().location());
+            } else if (raw instanceof java.util.Collection<?> collection) {
+                int before = collection.size();
+                ((java.util.Collection<?>) raw).clear();
+                cleared++;
+                debug("[DUNGEON DEBUG] clearEntityManagerHotCaches cleared Collection "
+                        + ownerLabel + "." + fieldName
+                        + " sizeBefore=" + before
+                        + " for " + level.dimension().location());
+            }
+        }
+        return cleared;
     }
 
     private static void invalidateAuxiliaryIoCaches(ServerLevel level) {
