@@ -8,6 +8,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.AnimationState;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -22,8 +23,8 @@ import net.minecraft.world.level.Level;
 
 public class GoblinAmbusherEntity extends Monster {
 
-    /** Renderer handles model forward; keep this 0 so rotations don't stack. */
-    private static final float MODEL_FORWARD_OFFSET_DEG = 0.0F;
+    /** Model has a 180° forward mismatch, so account for it in logical facing. */
+    private static final float MODEL_FORWARD_OFFSET_DEG = 180.0F;
 
     public final AnimationState walkLoop = new AnimationState();
     public final AnimationState attackAnimation = new AnimationState();
@@ -52,7 +53,7 @@ public class GoblinAmbusherEntity extends Monster {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new FloatGoal(this));
-        this.goalSelector.addGoal(2, new GoblinAmbusherAttackGoal(this, 1.6, true));
+        this.goalSelector.addGoal(2, new GoblinAmbusherAttackGoal(this, 1.2, true));
         this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 1.0));
         this.goalSelector.addGoal(4, new LookAtPlayerGoal(this, net.minecraft.world.entity.player.Player.class, 12.0f));
         this.goalSelector.addGoal(5, new RandomLookAroundGoal(this));
@@ -114,8 +115,14 @@ public class GoblinAmbusherEntity extends Monster {
         }
     }
 
-    protected float getEyeHeight(Pose pose, EntityDimensions size) { return 1.05F; }
-    protected float getStandingEyeHeight(Pose pose, EntityDimensions size) { return 1.05F; }
+    protected float getEyeHeight(Pose pose, EntityDimensions size) { return 1.28F; }
+    protected float getStandingEyeHeight(Pose pose, EntityDimensions size) { return 1.28F; }
+
+    public void snapFaceTarget(LivingEntity target) {
+        if (target != null) {
+            faceTargetInstant(target.getX(), target.getZ());
+        }
+    }
 
     /** Instantly rotate body + head to face a world X/Z and also update 'old' fields to stop interpolation. */
     private void faceTargetInstant(double targetX, double targetZ) {
