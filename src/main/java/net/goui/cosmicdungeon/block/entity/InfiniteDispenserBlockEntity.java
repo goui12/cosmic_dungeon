@@ -10,6 +10,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -17,6 +18,7 @@ import net.minecraft.world.inventory.DispenserMenu;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -105,10 +107,24 @@ public class InfiniteDispenserBlockEntity extends BaseContainerBlockEntity imple
                 ItemStack pickup = stack.copyWithCount(1);
                 Arrow arrow = new Arrow(level, origin.x, origin.y, origin.z, pickup, FAKE_BOW);
                 arrow.pickup = AbstractArrow.Pickup.DISALLOWED;
-                arrow.setDeltaMovement(dir.scale(power));
+                arrow.shoot(dir.x, dir.y, dir.z, (float) power, 6.0F);
                 level.addFreshEntity(arrow);
                 playShoot(level, pos);
                 return;
+            }
+
+            if (stack.getItem() instanceof SpawnEggItem eggItem && level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                BlockPos spawnPos = pos.relative(facing);
+                var type = eggItem.getType(stack);
+                if (type == null) {
+                    playFail(level, pos);
+                    return;
+                }
+                var entity = type.spawn(serverLevel, stack, null, spawnPos, EntitySpawnReason.DISPENSER, facing != net.minecraft.core.Direction.UP, false);
+                if (entity != null) {
+                    playShoot(level, pos);
+                    return;
+                }
             }
         } catch (Throwable ignored) {}
 
@@ -145,6 +161,9 @@ public class InfiniteDispenserBlockEntity extends BaseContainerBlockEntity imple
                 return s.is(ModTags.Items.INFINITE_SHOOTABLES);
             }
         } catch (Throwable ignored) {}
-        return s.is(Items.ARROW) || s.is(Items.TIPPED_ARROW) || s.is(Items.SPECTRAL_ARROW);
+        return s.is(Items.ARROW)
+                || s.is(Items.TIPPED_ARROW)
+                || s.is(Items.SPECTRAL_ARROW)
+                || s.getItem() instanceof SpawnEggItem;
     }
 }
