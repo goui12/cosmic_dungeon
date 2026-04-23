@@ -164,6 +164,7 @@ public final class RiftRegistryData extends SavedData {
 
     private final Map<String, DestinationRecord> destinations = new HashMap<>();
     private final Map<PosKey, PortalRecord> portals = new HashMap<>();
+    private final Map<Long, PortalRecord> legacyPortalsNoDimension = new HashMap<>();
     private final Map<PosKey, PosKey> tileToAnchor = new HashMap<>();
     private final Map<String, Set<PosKey>> destinationToAnchors = new HashMap<>();
     private boolean needsPostLoadMigration = false;
@@ -184,6 +185,7 @@ public final class RiftRegistryData extends SavedData {
         for (PortalRecord r : p.portals()) {
             if (!r.hasDimension()) {
                 d.needsPostLoadMigration = true;
+                d.legacyPortalsNoDimension.put(r.anchorLong(), r);
                 continue;
             }
 
@@ -429,17 +431,21 @@ public final class RiftRegistryData extends SavedData {
             // Legacy v1 portal/tile state had no dimension key, so it cannot be trusted after switching
             // Dungeon 1 away from the shared vanilla Nether. Drop only the ambiguous linkage state and keep
             // named destinations, then rebuild live rift linkage for currently loaded levels.
-            if (!portals.isEmpty() || !tileToAnchor.isEmpty()) {
+            if (!portals.isEmpty() || !tileToAnchor.isEmpty() || !destinationToAnchors.isEmpty()) {
                 portals.clear();
                 tileToAnchor.clear();
                 destinationToAnchors.clear();
                 changed = true;
             }
 
-            for (ServerLevel level : server.getAllLevels()) {
-                rebuildFromLiveLevel(level, Map.of());
+            Map<PosKey, PortalRecord> migratedLegacy = inferLegacyPortalDimensions(server);
+            if (!migratedLegacy.isEmpty()) {
+                changed |= rebuildFromLiveWorld(server, migratedLegacy.keySet().stream()
+                        .map(PosKey::dimensionId)
+                        .collect(Collectors.toSet()), migratedLegacy);
             }
 
+            legacyPortalsNoDimension.clear();
             needsPostLoadMigration = false;
             changed = true;
         }
@@ -447,6 +453,34 @@ public final class RiftRegistryData extends SavedData {
         if (changed) {
             setDirty();
         }
+    }
+
+
+    private Map<PosKey, PortalRecord> inferLegacyPortalDimensions(MinecraftServer server) {
+        if (legacyPortalsNoDimension.isEmpty()) {
+            return Map.of();
+        }
+
+        Block riftBlock = ModBlocks.COSMIC_RIFT_TILE.get();
+        List<ServerLevel> levels = new ArrayList<>();
+        for (ServerLevel level : server.getAllLevels()) {
+            levels.add(level);
+        }
+        levels.sort(Comparator.comparing(l -> l.dimension().location().toString(), String.CASE_INSENSITIVE_ORDER));
+
+        Map<PosKey, PortalRecord> out = new HashMap<>();
+        for (PortalRecord legacy : legacyPortalsNoDimension.values()) {
+            BlockPos anchorPos = legacy.anchorPos();
+            for (ServerLevel level : levels) {
+                if (level.getBlockState(anchorPos).getBlock() != riftBlock) continue;
+
+                PosKey key = new PosKey(level.dimension().location().toString(), legacy.anchorLong());
+                out.put(key, new PortalRecord(key.dimensionId(), legacy.anchorLong(), legacy.portalName(), legacy.destinationName(), legacy.resetTrigger()));
+                break;
+            }
+        }
+
+        return out;
     }
 
     private boolean rebuildFromLiveWorld(MinecraftServer server, Set<String> targetDims, Map<PosKey, PortalRecord> oldPortals) {
