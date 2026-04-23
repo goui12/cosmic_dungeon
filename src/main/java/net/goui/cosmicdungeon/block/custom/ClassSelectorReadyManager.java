@@ -388,7 +388,7 @@ public final class ClassSelectorReadyManager {
             }
 
             DungeonLifecycleService.clearPlayerInventory(p);
-            DungeonLifecycleService.setPlayerRespawnTo(p, tp.level(), safe, p.getYRot());
+            DungeonLifecycleService.setPlayerRespawnTo(p, tp.level(), safe, p.getYRot(), p.getXRot());
         }
 
         return true;
