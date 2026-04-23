@@ -51,6 +51,7 @@ public final class CosmicDungeonClient {
         e.enqueueWork(() -> {
             // Spawner visuals
             ItemBlockRenderTypes.setRenderLayer(ModBlocks.COSMIC_MOB_SPAWNER.get(), ChunkSectionLayer.TRANSLUCENT);
+            ItemBlockRenderTypes.setRenderLayer(ModBlocks.BARRIER_BLOCK.get(), ChunkSectionLayer.TRANSLUCENT);
 
             // Region look ghost glass + selector block
             ItemBlockRenderTypes.setRenderLayer(ModBlocks.REGION_GHOST_GLASS.get(), ChunkSectionLayer.TRANSLUCENT);
