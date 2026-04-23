@@ -69,6 +69,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
 
         // --- Utility / helper blocks that should never drop:
         noDropHandled(ModBlocks.REGION_GHOST_GLASS.get());
+        handledWithoutLootTable(ModBlocks.BARRIER_BLOCK.get());
         noDropHandled(ModBlocks.COSMIC_RIFT.get());
         noDropHandled(ModBlocks.COSMIC_RIFT_TILE.get());
         noDropHandled(ModBlocks.REDSTONE_TRANSMITTER.get());
@@ -98,6 +99,14 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
     private void noDropHandled(Block b) {
         explicitlyHandled.add(b);
         this.add(b, noDrop());
+    }
+
+    /**
+     * Marks a block as handled without attempting to register a loot table.
+     * Use this for blocks registered with .noLootTable().
+     */
+    private void handledWithoutLootTable(Block b) {
+        explicitlyHandled.add(b);
     }
 
     private void addHandled(Block b, java.util.function.Function<Block, LootTable.Builder> table) {

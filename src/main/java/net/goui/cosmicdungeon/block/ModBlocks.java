@@ -69,6 +69,7 @@ public class ModBlocks {
                             .strength(-1.0F, 3_600_000.0F)
                             .sound(SoundType.STONE)
                             .mapColor(MapColor.NONE)
+                            .noOcclusion()
                             .noLootTable()
             )
     );
