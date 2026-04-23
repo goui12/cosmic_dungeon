@@ -69,6 +69,7 @@ public class GoblinAmbusherAttackGoal extends Goal {
         final boolean snapLook = (windupTicks >= 0) || (cooldownTicks > 0 && distSq <= MAX_SHOOT_RANGE_SQR);
         float lookSpeed = snapLook ? 180.0F : 60.0F;
         mob.getLookControl().setLookAt(target, lookSpeed, lookSpeed);
+        mob.snapFaceTarget(target);
 
         if (cooldownTicks > 0) cooldownTicks--;
 
@@ -82,6 +83,7 @@ public class GoblinAmbusherAttackGoal extends Goal {
                 // Fire on the server if still valid: in range and (re)has line-of-sight.
                 if (!mob.level().isClientSide() && target.isAlive()
                         && distSq <= MAX_SHOOT_RANGE_SQR && mob.getSensing().hasLineOfSight(target)) {
+                    mob.snapFaceTarget(target);
 
                     float dmg = (float) mob.getAttributeValue(Attributes.ATTACK_DAMAGE);
                     // Hitscan "dart" damage; swap for a real projectile later if you add one.

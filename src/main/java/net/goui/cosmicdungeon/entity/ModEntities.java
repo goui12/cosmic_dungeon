@@ -52,7 +52,7 @@ public final class ModEntities {
                 ResourceKey<EntityType<?>> key = ResourceKey.create(Registries.ENTITY_TYPE, id);
                 return EntityType.Builder
                         .of(GoblinAmbusherEntity::new, MobCategory.MONSTER)
-                        .sized(0.6f, 1.3f)
+                        .sized(0.7f, 1.6f)
                         .build(key);
             });
 
