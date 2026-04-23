@@ -272,6 +272,10 @@ public final class DungeonWorldSnapshotService {
                         + level.dimension().location());
                 clearChunkSourceHotCaches(level);
 
+                debug("[DUNGEON DEBUG] resetToSnapshot purging loaded non-player entities after restore for "
+                        + level.dimension().location());
+                purgeLoadedNonPlayerEntities(level, "post-restore");
+
                 debug("[DUNGEON DEBUG] resetToSnapshot forcing post-restore unload verification for "
                         + level.dimension().location());
                 Optional<String> postRestoreBlocker = enforcePostRestoreChunkDrain(level);
@@ -405,6 +409,9 @@ public final class DungeonWorldSnapshotService {
                             + ": " + describePlayers(level)
             );
         }
+
+        debug("[DUNGEON DEBUG] purging loaded non-player entities before restore prep for " + dimId);
+        purgeLoadedNonPlayerEntities(level, "prepare-before-unload");
 
         debug("[DUNGEON DEBUG] clearing forced chunks for " + dimId);
         clearForcedChunks(level);
@@ -669,6 +676,45 @@ public final class DungeonWorldSnapshotService {
             debug("[DUNGEON DEBUG] invalidateChunkIoCaches ERROR for "
                     + level.dimension().location() + ": " + t);
             throw new RuntimeException("Failed to invalidate chunk IO caches for " + level.dimension().location(), t);
+        }
+    }
+
+    private static void purgeLoadedNonPlayerEntities(ServerLevel level, String stage) {
+        int seen = 0;
+        int purged = 0;
+        try {
+            List<Entity> all = new ArrayList<>();
+            for (Entity entity : level.getEntities().getAll()) {
+                all.add(entity);
+            }
+
+            for (Entity entity : all) {
+                if (entity == null) continue;
+                seen++;
+                if (entity instanceof net.minecraft.server.level.ServerPlayer) continue;
+                if (entity.isRemoved()) continue;
+
+                try {
+                    entity.discard();
+                    purged++;
+                } catch (Throwable t) {
+                    debug("[DUNGEON DEBUG] purgeLoadedNonPlayerEntities failed stage=" + stage
+                            + " dim=" + level.dimension().location()
+                            + " entityType=" + entity.getType()
+                            + " uuid=" + entity.getUUID()
+                            + " error=" + t);
+                }
+            }
+
+            debug("[DUNGEON DEBUG] purgeLoadedNonPlayerEntities stage=" + stage
+                    + " dim=" + level.dimension().location()
+                    + " seen=" + seen
+                    + " purged=" + purged);
+        } catch (Throwable t) {
+            debug("[DUNGEON DEBUG] purgeLoadedNonPlayerEntities ERROR stage=" + stage
+                    + " dim=" + level.dimension().location()
+                    + " error=" + t);
+            throw new RuntimeException("Failed purging loaded entities for " + level.dimension().location(), t);
         }
     }
 
