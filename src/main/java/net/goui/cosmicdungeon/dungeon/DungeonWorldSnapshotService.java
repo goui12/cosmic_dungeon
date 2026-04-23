@@ -103,6 +103,8 @@ public final class DungeonWorldSnapshotService {
                 debug("[DUNGEON DEBUG] saveSnapshot saving level " + level.dimension().location());
                 level.save(null, true, false);
                 level.getChunkSource().save(true);
+                flushChunkIoWorker(level);
+                flushAuxiliaryIoWorkers(level);
             }
 
             for (ServerLevel level : levels) {
@@ -243,6 +245,7 @@ public final class DungeonWorldSnapshotService {
                 debug("[DUNGEON DEBUG] resetToSnapshot forcing chunk IO flush before filesystem restore for "
                         + level.dimension().location());
                 flushChunkIoWorker(level);
+                flushAuxiliaryIoWorkers(level);
 
                 debug("[DUNGEON DEBUG] resetToSnapshot deleting live contents for "
                         + level.dimension().location() + " path=" + livePath);
@@ -264,10 +267,15 @@ public final class DungeonWorldSnapshotService {
                         + level.dimension().location());
                 invalidateChunkIoCaches(level);
                 invalidateAuxiliaryIoCaches(level);
+                clearEntityManagerHotCaches(level);
 
                 debug("[DUNGEON DEBUG] resetToSnapshot clearing runtime chunk access caches for "
                         + level.dimension().location());
                 clearChunkSourceHotCaches(level);
+
+                debug("[DUNGEON DEBUG] resetToSnapshot purging loaded non-player entities after restore for "
+                        + level.dimension().location());
+                purgeLoadedNonPlayerEntities(level, "post-restore");
 
                 debug("[DUNGEON DEBUG] resetToSnapshot forcing post-restore unload verification for "
                         + level.dimension().location());
@@ -402,6 +410,9 @@ public final class DungeonWorldSnapshotService {
                             + ": " + describePlayers(level)
             );
         }
+
+        debug("[DUNGEON DEBUG] purging loaded non-player entities before restore prep for " + dimId);
+        purgeLoadedNonPlayerEntities(level, "prepare-before-unload");
 
         debug("[DUNGEON DEBUG] clearing forced chunks for " + dimId);
         clearForcedChunks(level);
@@ -669,6 +680,125 @@ public final class DungeonWorldSnapshotService {
         }
     }
 
+    private static void purgeLoadedNonPlayerEntities(ServerLevel level, String stage) {
+        int seen = 0;
+        int purged = 0;
+        try {
+            List<Entity> all = new ArrayList<>();
+            for (Entity entity : level.getEntities().getAll()) {
+                all.add(entity);
+            }
+
+            for (Entity entity : all) {
+                if (entity == null) continue;
+                seen++;
+                if (entity instanceof net.minecraft.server.level.ServerPlayer) continue;
+                if (entity.isRemoved()) continue;
+
+                try {
+                    entity.discard();
+                    purged++;
+                } catch (Throwable t) {
+                    debug("[DUNGEON DEBUG] purgeLoadedNonPlayerEntities failed stage=" + stage
+                            + " dim=" + level.dimension().location()
+                            + " entityType=" + entity.getType()
+                            + " uuid=" + entity.getUUID()
+                            + " error=" + t);
+                }
+            }
+
+            debug("[DUNGEON DEBUG] purgeLoadedNonPlayerEntities stage=" + stage
+                    + " dim=" + level.dimension().location()
+                    + " seen=" + seen
+                    + " purged=" + purged);
+        } catch (Throwable t) {
+            debug("[DUNGEON DEBUG] purgeLoadedNonPlayerEntities ERROR stage=" + stage
+                    + " dim=" + level.dimension().location()
+                    + " error=" + t);
+            throw new RuntimeException("Failed purging loaded entities for " + level.dimension().location(), t);
+        }
+    }
+
+    private static void clearEntityManagerHotCaches(ServerLevel level) {
+        try {
+            Field entityManagerField = findField(ServerLevel.class, "entityManager");
+            if (entityManagerField == null) {
+                debug("[DUNGEON DEBUG] clearEntityManagerHotCaches: entityManager field not found for "
+                        + level.dimension().location());
+                return;
+            }
+
+            Object entityManager = entityManagerField.get(level);
+            if (entityManager == null) {
+                debug("[DUNGEON DEBUG] clearEntityManagerHotCaches: entityManager was null for "
+                        + level.dimension().location());
+                return;
+            }
+
+            int cleared = 0;
+            cleared += clearNamedCollections(entityManager, level, "entityManager", List.of(
+                    "chunkLoadStatuses",
+                    "loadingInbox",
+                    "chunksToUnload",
+                    "knownUuids",
+                    "visibleEntityStorage",
+                    "sectionStorage"
+            ));
+
+            Object permanentStorage = invokeFirstNonNull(entityManager, new String[]{"permanentStorage", "entityStorage"});
+            if (permanentStorage != null) {
+                cleared += clearNamedCollections(permanentStorage, level, "entityManager.permanentStorage", List.of(
+                        "emptyChunks",
+                        "chunkLoadStatuses",
+                        "pendingLoads",
+                        "pendingSaves",
+                        "chunksToUnload",
+                        "loadedChunks"
+                ));
+            }
+
+            debug("[DUNGEON DEBUG] clearEntityManagerHotCaches clearedCollections="
+                    + cleared + " for " + level.dimension().location());
+        } catch (Throwable t) {
+            debug("[DUNGEON DEBUG] clearEntityManagerHotCaches ERROR for "
+                    + level.dimension().location() + ": " + t);
+            throw new RuntimeException("Failed to clear entity manager caches for " + level.dimension().location(), t);
+        }
+    }
+
+    private static int clearNamedCollections(Object owner,
+                                             ServerLevel level,
+                                             String ownerLabel,
+                                             List<String> fieldNames) throws IllegalAccessException {
+        int cleared = 0;
+        for (String fieldName : fieldNames) {
+            Field f = findField(owner.getClass(), fieldName);
+            if (f == null) continue;
+
+            Object raw = f.get(owner);
+            if (raw == null) continue;
+
+            if (raw instanceof Map<?, ?> map) {
+                int before = map.size();
+                ((Map<?, ?>) raw).clear();
+                cleared++;
+                debug("[DUNGEON DEBUG] clearEntityManagerHotCaches cleared Map "
+                        + ownerLabel + "." + fieldName
+                        + " sizeBefore=" + before
+                        + " for " + level.dimension().location());
+            } else if (raw instanceof java.util.Collection<?> collection) {
+                int before = collection.size();
+                ((java.util.Collection<?>) raw).clear();
+                cleared++;
+                debug("[DUNGEON DEBUG] clearEntityManagerHotCaches cleared Collection "
+                        + ownerLabel + "." + fieldName
+                        + " sizeBefore=" + before
+                        + " for " + level.dimension().location());
+            }
+        }
+        return cleared;
+    }
+
     private static void invalidateAuxiliaryIoCaches(ServerLevel level) {
         try {
             Field poiManagerField = findField(ServerLevel.class, "poiManager");
@@ -710,6 +840,95 @@ public final class DungeonWorldSnapshotService {
         } catch (Throwable t) {
             debug("[DUNGEON DEBUG] invalidateAuxiliaryIoCaches ERROR for "
                     + level.dimension().location() + ": " + t);
+        }
+    }
+
+    private static void flushAuxiliaryIoWorkers(ServerLevel level) {
+        try {
+            Field poiManagerField = findField(ServerLevel.class, "poiManager");
+            if (poiManagerField != null) {
+                Object poiManager = poiManagerField.get(level);
+                flushWorkerOnOwner(poiManager, "poiManager", level);
+            }
+
+            Field entityManagerField = findField(ServerLevel.class, "entityManager");
+            if (entityManagerField == null) {
+                debug("[DUNGEON DEBUG] flushAuxiliaryIoWorkers: entityManager field not found for "
+                        + level.dimension().location());
+                return;
+            }
+
+            Object entityManager = entityManagerField.get(level);
+            flushWorkerOnOwner(entityManager, "entityManager", level);
+
+            Object permanentStorage = invokeFirstNonNull(entityManager, new String[]{"permanentStorage", "entityStorage"});
+            if (permanentStorage != null) {
+                flushWorkerOnOwner(permanentStorage, "entityManager.permanentStorage", level);
+            } else {
+                debug("[DUNGEON DEBUG] flushAuxiliaryIoWorkers: no permanentStorage/entityStorage accessor on entityManager for "
+                        + level.dimension().location());
+            }
+        } catch (Throwable t) {
+            debug("[DUNGEON DEBUG] flushAuxiliaryIoWorkers ERROR for "
+                    + level.dimension().location() + ": " + t);
+            throw new RuntimeException("Failed to flush auxiliary IO workers for " + level.dimension().location(), t);
+        }
+    }
+
+    private static void flushWorkerOnOwner(Object owner, String ownerLabel, ServerLevel level) {
+        if (owner == null) {
+            debug("[DUNGEON DEBUG] flushWorkerOnOwner: " + ownerLabel + " was null for "
+                    + level.dimension().location());
+            return;
+        }
+
+        try {
+            Object worker = null;
+            Field workerField = findField(owner.getClass(), "worker");
+            if (workerField != null) {
+                worker = workerField.get(owner);
+            }
+
+            if (worker == null) {
+                Method directFlush = findNoArgMethod(List.of(owner), "flushWorker");
+                if (directFlush != null) {
+                    directFlush.invoke(owner);
+                    debug("[DUNGEON DEBUG] flushWorkerOnOwner invoked direct flushWorker on "
+                            + ownerLabel + " for " + level.dimension().location());
+                }
+                return;
+            }
+
+            Method flushWorker = findNoArgMethod(List.of(worker), "flushWorker");
+            if (flushWorker != null) {
+                flushWorker.invoke(worker);
+                debug("[DUNGEON DEBUG] flushWorkerOnOwner invoked worker.flushWorker on "
+                        + ownerLabel + " for " + level.dimension().location());
+                return;
+            }
+
+            Method synchronize = findNoArgMethod(List.of(worker), "synchronize");
+            if (synchronize != null) {
+                synchronize.invoke(worker);
+                debug("[DUNGEON DEBUG] flushWorkerOnOwner invoked worker.synchronize on "
+                        + ownerLabel + " for " + level.dimension().location());
+                return;
+            }
+
+            Method completeAll = findNoArgMethod(List.of(worker), "completeAll");
+            if (completeAll != null) {
+                completeAll.invoke(worker);
+                debug("[DUNGEON DEBUG] flushWorkerOnOwner invoked worker.completeAll on "
+                        + ownerLabel + " for " + level.dimension().location());
+                return;
+            }
+
+            debug("[DUNGEON DEBUG] flushWorkerOnOwner: no supported flush method found on worker for "
+                    + ownerLabel + " in " + level.dimension().location());
+        } catch (Throwable t) {
+            debug("[DUNGEON DEBUG] flushWorkerOnOwner FAILED owner=" + ownerLabel
+                    + " dim=" + level.dimension().location() + " error=" + t);
+            throw new RuntimeException("Failed flushing worker on " + ownerLabel + " for " + level.dimension().location(), t);
         }
     }
 
