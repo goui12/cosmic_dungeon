@@ -69,6 +69,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
 
         // --- Utility / helper blocks that should never drop:
         noDropHandled(ModBlocks.REGION_GHOST_GLASS.get());
+        noDropHandled(ModBlocks.BARRIER_BLOCK.get());
         noDropHandled(ModBlocks.COSMIC_RIFT.get());
         noDropHandled(ModBlocks.COSMIC_RIFT_TILE.get());
         noDropHandled(ModBlocks.REDSTONE_TRANSMITTER.get());
