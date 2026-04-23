@@ -1,0 +1,1 @@
+UNIX_ARGS=@libraries/net/neoforged/neoforge/21.10.64/unix_args.txt
