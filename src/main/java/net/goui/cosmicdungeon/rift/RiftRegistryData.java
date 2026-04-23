@@ -1,5 +1,6 @@
 package net.goui.cosmicdungeon.rift;
 
+import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -13,7 +14,12 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
+import net.minecraft.world.level.storage.LevelResource;
+import org.slf4j.Logger;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,7 +36,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class RiftRegistryData extends SavedData {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final String SAVE_ID = "cosmicdungeon_rifts_v2";
+    private static final String LEGACY_SAVE_ID = "cosmicdungeon_rifts";
     private static final String LEGACY_NETHER_DIM = "minecraft:the_nether";
     private static final String DUNGEON_1_LINKED_NETHER_DIM = "cosmicdungeon:dungeon_1_nether";
 
@@ -124,9 +132,34 @@ public final class RiftRegistryData extends SavedData {
             throw new IllegalStateException("Overworld is not available; cannot load RiftRegistryData.");
         }
 
+        migrateLegacySaveFileIfNeeded(server);
+
         RiftRegistryData data = overworld.getDataStorage().computeIfAbsent(TYPE);
         data.applyPostLoadMigrations(server);
         return data;
+    }
+
+    private static void migrateLegacySaveFileIfNeeded(MinecraftServer server) {
+        Path dataDir = server.getWorldPath(LevelResource.ROOT).resolve("data");
+        Path currentFile = dataDir.resolve(SAVE_ID + ".dat");
+        Path legacyFile = dataDir.resolve(LEGACY_SAVE_ID + ".dat");
+
+        if (Files.exists(currentFile) || !Files.exists(legacyFile)) {
+            return;
+        }
+
+        try {
+            Files.createDirectories(dataDir);
+            Files.copy(legacyFile, currentFile);
+            LOGGER.info("[CosmicDungeon] Migrated legacy rift save {} -> {} (legacy file retained).",
+                    legacyFile.getFileName(),
+                    currentFile.getFileName());
+        } catch (IOException e) {
+            LOGGER.error("[CosmicDungeon] Failed to migrate legacy rift save file {} -> {}.",
+                    legacyFile,
+                    currentFile,
+                    e);
+        }
     }
 
     private final Map<String, DestinationRecord> destinations = new HashMap<>();
