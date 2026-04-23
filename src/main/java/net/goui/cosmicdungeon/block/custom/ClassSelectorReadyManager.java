@@ -386,6 +386,9 @@ public final class ClassSelectorReadyManager {
                 DungeonLifecycleService.manualReset(server, DungeonDefinitions.byDimension(dungeonLevel.dimension()).map(DungeonDefinition::id).orElse(dungeonLevel.dimension().location().getPath()), null);
                 return false;
             }
+
+            DungeonLifecycleService.clearPlayerInventory(p);
+            DungeonLifecycleService.setPlayerRespawnTo(p, tp.level(), safe, p.getYRot(), p.getXRot());
         }
 
         return true;
