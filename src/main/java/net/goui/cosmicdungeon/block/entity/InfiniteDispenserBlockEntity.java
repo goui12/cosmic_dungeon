@@ -115,7 +115,11 @@ public class InfiniteDispenserBlockEntity extends BaseContainerBlockEntity imple
 
             if (stack.getItem() instanceof SpawnEggItem eggItem && level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
                 BlockPos spawnPos = pos.relative(facing);
-                var type = eggItem.getType(serverLevel.registryAccess(), stack);
+                var type = eggItem.getType(stack);
+                if (type == null) {
+                    playFail(level, pos);
+                    return;
+                }
                 var entity = type.spawn(serverLevel, stack, null, spawnPos, EntitySpawnReason.DISPENSER, facing != net.minecraft.core.Direction.UP, false);
                 if (entity != null) {
                     playShoot(level, pos);
