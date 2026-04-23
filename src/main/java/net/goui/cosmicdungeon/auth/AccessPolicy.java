@@ -48,22 +48,12 @@ public final class AccessPolicy {
     }
 
     /**
-     * Brigadier-friendly predicate:
-     * - allows console / command block / rcon
-     * - allows Developer
-     * - shows failure message only to players
+     * Brigadier-friendly predicate used by .requires(...).
+     * Must stay side-effect free (no chat) because Brigadier may evaluate this frequently
+     * during command tree sync/rebuild, including world/rank transitions.
      */
     public static boolean requireDeveloperOrConsole(CommandSourceStack src) {
-        if (src == null) return false;
-
-        ServerPlayer p = src.getPlayer();
-        if (p == null) return true; // console / CB / rcon
-
-        if (isDeveloper(p)) return true;
-
-        src.sendFailure(Component.literal("You do not have permission to use this command.")
-                .withStyle(ChatFormatting.RED));
-        return false;
+        return Authority.isDeveloperOrConsole(src);
     }
 
     /* -------------------- Device protection -------------------- */
