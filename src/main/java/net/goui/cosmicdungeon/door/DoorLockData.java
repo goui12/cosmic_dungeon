@@ -15,7 +15,8 @@ import static net.goui.cosmicdungeon.component.ModDataComponents.UUID_STRING_COD
 
 /**
  * Persists lock info per-door (vanilla doors only).
- * File: world/data/cosmicdungeon_door_locks_v1.dat
+ * Stored per-dimension in that dimension's data storage so snapshot resets restore
+ * lock state exactly as it existed when the snapshot was taken.
  * Keys are normalized to the LOWER-half blockpos of the door.
  */
 public final class DoorLockData extends SavedData {
