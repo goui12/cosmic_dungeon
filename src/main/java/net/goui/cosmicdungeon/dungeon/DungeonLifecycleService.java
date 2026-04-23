@@ -25,6 +25,7 @@ import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.level.storage.ValueInput;
@@ -570,9 +571,12 @@ public final class DungeonLifecycleService {
         sp.containerMenu.broadcastChanges();
     }
 
-    public static void setPlayerRespawnTo(ServerPlayer sp, ServerLevel level, BlockPos pos, float angle) {
+    public static void setPlayerRespawnTo(ServerPlayer sp, ServerLevel level, BlockPos pos, float yaw, float pitch) {
         if (sp == null || level == null || pos == null) return;
-        sp.setRespawnPosition(level.dimension(), pos, angle, true, false);
+        sp.setRespawnPosition(
+                new ServerPlayer.RespawnConfig(LevelData.RespawnData.of(level.dimension(), pos, yaw, pitch), true),
+                false
+        );
     }
 
     public static void resetPlayerRespawnToOverworldSpawn(ServerPlayer sp) {
@@ -586,7 +590,7 @@ public final class DungeonLifecycleService {
 
         var rd = overworld.getLevelData().getRespawnData();
         BlockPos safe = ensureStandable(overworld, rd.pos());
-        setPlayerRespawnTo(sp, overworld, safe, rd.yaw());
+        setPlayerRespawnTo(sp, overworld, safe, rd.yaw(), rd.pitch());
     }
 
     private static void clearTemporaryPlayerState(ServerPlayer sp) {
