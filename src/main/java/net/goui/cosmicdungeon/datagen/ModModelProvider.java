@@ -147,6 +147,9 @@ public class ModModelProvider extends ModelProvider {
         // ===== Ghost Block =====
         ghostCube(blockModels, itemModels, ModBlocks.REGION_GHOST_GLASS.get(), true);
 
+        // ===== Barrier Block =====
+        barrierCube(blockModels, itemModels, ModBlocks.BARRIER_BLOCK.get());
+
         // ===== Cosmic Rift (placer) =====
         {
             var b = ModBlocks.COSMIC_RIFT.get();
@@ -454,6 +457,47 @@ public class ModModelProvider extends ModelProvider {
             root.addProperty("parent", modelLoc.toString());
             return root;
         });
+    }
+
+
+    private void barrierCube(BlockModelGenerators blockModels, ItemModelGenerators itemModels, Block b) {
+        String id = b.builtInRegistryHolder().key().location().getPath();
+
+        ResourceLocation devModel = rlMod("block/" + id + "_dev");
+        ResourceLocation dunModel = rlMod("block/" + id + "_dun");
+
+        blockModels.modelOutput.accept(devModel, () -> {
+            var root = new com.google.gson.JsonObject();
+            root.addProperty("parent", "block/cube_all");
+
+            var textures = new com.google.gson.JsonObject();
+            textures.addProperty("all", rlMod("block/barrier_dev").toString());
+            textures.addProperty("particle", rlMod("block/barrier_dev").toString());
+            root.add("textures", textures);
+
+            root.addProperty("render_type", "translucent");
+            return root;
+        });
+
+        blockModels.modelOutput.accept(dunModel, () -> {
+            var root = new com.google.gson.JsonObject();
+            root.addProperty("parent", "block/cube_all");
+
+            var textures = new com.google.gson.JsonObject();
+            textures.addProperty("all", rlMod("block/barrier_dun").toString());
+            textures.addProperty("particle", rlMod("block/barrier_dun").toString());
+            root.add("textures", textures);
+
+            root.addProperty("render_type", "translucent");
+            return root;
+        });
+
+        // The block class controls visibility per-client rank.
+        blockModels.blockStateOutput.accept(
+                MultiVariantGenerator.dispatch(b, new MultiVariant(WeightedList.of(new Variant(devModel))))
+        );
+
+        registerExternalItem(itemModels, b.asItem(), devModel);
     }
 
     private void ghostCube(BlockModelGenerators blockModels, ItemModelGenerators itemModels, Block b, boolean translucent) {

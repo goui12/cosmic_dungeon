@@ -9,6 +9,7 @@ import net.goui.cosmicdungeon.block.amethyst.ColoredBudBlock;
 import net.goui.cosmicdungeon.block.amethyst.ColoredBuddingAmethystBlock;
 import net.goui.cosmicdungeon.block.amethyst.ColoredClusterBlock;
 import net.goui.cosmicdungeon.block.amethyst.LitColoredAmethystBlock;
+import net.goui.cosmicdungeon.block.custom.BarrierBlock;
 import net.goui.cosmicdungeon.block.custom.ChickenBlock;
 import net.goui.cosmicdungeon.block.custom.ClassSelectorBlock;
 import net.goui.cosmicdungeon.block.custom.CosmicMobSpawnerBlock;
@@ -58,6 +59,17 @@ public class ModBlocks {
                             .noCollision()
                             .isViewBlocking((state, level, pos) -> false)
                             .mapColor(MapColor.COLOR_LIGHT_BLUE)
+            )
+    );
+
+    public static final DeferredBlock<Block> BARRIER_BLOCK = BLOCKS.registerBlock(
+            "barrier_block",
+            (BlockBehaviour.Properties props) -> new BarrierBlock(
+                    props
+                            .strength(-1.0F, 3_600_000.0F)
+                            .sound(SoundType.STONE)
+                            .mapColor(MapColor.NONE)
+                            .noLootTable()
             )
     );
 
@@ -420,6 +432,8 @@ public class ModBlocks {
     }
 
     /* ---------- BlockItems---------- */
+    public static final DeferredItem<BlockItem> BARRIER_BLOCK_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("barrier_block", BARRIER_BLOCK);
     public static final DeferredItem<BlockItem> CHICKEN_BLOCK_ITEM =
             ModItems.ITEMS.registerSimpleBlockItem("chicken_block", CHICKEN_BLOCK);
     public static final DeferredItem<BlockItem> INFINITE_DISPENSER_ITEM =

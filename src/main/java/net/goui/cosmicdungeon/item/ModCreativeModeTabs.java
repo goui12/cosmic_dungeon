@@ -31,6 +31,7 @@ public class ModCreativeModeTabs {
                                 output.accept(ModItems.REGION_WAND);
                                 output.accept(ModBlocks.CLASS_SELECTOR_BLOCK);
                                 // Dungeon blocks
+                                output.accept(ModBlocks.BARRIER_BLOCK);
                                 output.accept(ModBlocks.CHICKEN_BLOCK);
                                 output.accept(ModBlocks.PILE_OF_BOOKS);
                                 output.accept(ModBlocks.INFINITE_DISPENSER);
