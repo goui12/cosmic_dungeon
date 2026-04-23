@@ -103,6 +103,8 @@ public final class DungeonWorldSnapshotService {
                 debug("[DUNGEON DEBUG] saveSnapshot saving level " + level.dimension().location());
                 level.save(null, true, false);
                 level.getChunkSource().save(true);
+                flushChunkIoWorker(level);
+                flushAuxiliaryIoWorkers(level);
             }
 
             for (ServerLevel level : levels) {
@@ -243,6 +245,7 @@ public final class DungeonWorldSnapshotService {
                 debug("[DUNGEON DEBUG] resetToSnapshot forcing chunk IO flush before filesystem restore for "
                         + level.dimension().location());
                 flushChunkIoWorker(level);
+                flushAuxiliaryIoWorkers(level);
 
                 debug("[DUNGEON DEBUG] resetToSnapshot deleting live contents for "
                         + level.dimension().location() + " path=" + livePath);
@@ -710,6 +713,95 @@ public final class DungeonWorldSnapshotService {
         } catch (Throwable t) {
             debug("[DUNGEON DEBUG] invalidateAuxiliaryIoCaches ERROR for "
                     + level.dimension().location() + ": " + t);
+        }
+    }
+
+    private static void flushAuxiliaryIoWorkers(ServerLevel level) {
+        try {
+            Field poiManagerField = findField(ServerLevel.class, "poiManager");
+            if (poiManagerField != null) {
+                Object poiManager = poiManagerField.get(level);
+                flushWorkerOnOwner(poiManager, "poiManager", level);
+            }
+
+            Field entityManagerField = findField(ServerLevel.class, "entityManager");
+            if (entityManagerField == null) {
+                debug("[DUNGEON DEBUG] flushAuxiliaryIoWorkers: entityManager field not found for "
+                        + level.dimension().location());
+                return;
+            }
+
+            Object entityManager = entityManagerField.get(level);
+            flushWorkerOnOwner(entityManager, "entityManager", level);
+
+            Object permanentStorage = invokeFirstNonNull(entityManager, new String[]{"permanentStorage", "entityStorage"});
+            if (permanentStorage != null) {
+                flushWorkerOnOwner(permanentStorage, "entityManager.permanentStorage", level);
+            } else {
+                debug("[DUNGEON DEBUG] flushAuxiliaryIoWorkers: no permanentStorage/entityStorage accessor on entityManager for "
+                        + level.dimension().location());
+            }
+        } catch (Throwable t) {
+            debug("[DUNGEON DEBUG] flushAuxiliaryIoWorkers ERROR for "
+                    + level.dimension().location() + ": " + t);
+            throw new RuntimeException("Failed to flush auxiliary IO workers for " + level.dimension().location(), t);
+        }
+    }
+
+    private static void flushWorkerOnOwner(Object owner, String ownerLabel, ServerLevel level) {
+        if (owner == null) {
+            debug("[DUNGEON DEBUG] flushWorkerOnOwner: " + ownerLabel + " was null for "
+                    + level.dimension().location());
+            return;
+        }
+
+        try {
+            Object worker = null;
+            Field workerField = findField(owner.getClass(), "worker");
+            if (workerField != null) {
+                worker = workerField.get(owner);
+            }
+
+            if (worker == null) {
+                Method directFlush = findNoArgMethod(List.of(owner), "flushWorker");
+                if (directFlush != null) {
+                    directFlush.invoke(owner);
+                    debug("[DUNGEON DEBUG] flushWorkerOnOwner invoked direct flushWorker on "
+                            + ownerLabel + " for " + level.dimension().location());
+                }
+                return;
+            }
+
+            Method flushWorker = findNoArgMethod(List.of(worker), "flushWorker");
+            if (flushWorker != null) {
+                flushWorker.invoke(worker);
+                debug("[DUNGEON DEBUG] flushWorkerOnOwner invoked worker.flushWorker on "
+                        + ownerLabel + " for " + level.dimension().location());
+                return;
+            }
+
+            Method synchronize = findNoArgMethod(List.of(worker), "synchronize");
+            if (synchronize != null) {
+                synchronize.invoke(worker);
+                debug("[DUNGEON DEBUG] flushWorkerOnOwner invoked worker.synchronize on "
+                        + ownerLabel + " for " + level.dimension().location());
+                return;
+            }
+
+            Method completeAll = findNoArgMethod(List.of(worker), "completeAll");
+            if (completeAll != null) {
+                completeAll.invoke(worker);
+                debug("[DUNGEON DEBUG] flushWorkerOnOwner invoked worker.completeAll on "
+                        + ownerLabel + " for " + level.dimension().location());
+                return;
+            }
+
+            debug("[DUNGEON DEBUG] flushWorkerOnOwner: no supported flush method found on worker for "
+                    + ownerLabel + " in " + level.dimension().location());
+        } catch (Throwable t) {
+            debug("[DUNGEON DEBUG] flushWorkerOnOwner FAILED owner=" + ownerLabel
+                    + " dim=" + level.dimension().location() + " error=" + t);
+            throw new RuntimeException("Failed flushing worker on " + ownerLabel + " for " + level.dimension().location(), t);
         }
     }
 
