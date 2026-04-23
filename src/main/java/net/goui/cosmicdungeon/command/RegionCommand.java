@@ -215,7 +215,7 @@ public final class RegionCommand {
 
     private static LiteralArgumentBuilder<CommandSourceStack> buildDeleteCommand() {
         return Commands.literal("delete")
-                .then(Commands.argument("name", StringArgumentType.greedyString())
+                .then(Commands.argument("name", StringArgumentType.string())
                         .suggests(RegionCommand::suggestRegionNames)
                         .executes(ctx -> {
                             ServerLevel level = ctx.getSource().getLevel();
@@ -524,6 +524,10 @@ public final class RegionCommand {
             src.sendFailure(Component.literal("Region name cannot be empty.").withStyle(ChatFormatting.RED));
             return 0;
         }
+        if (containsSpace(name)) {
+            src.sendFailure(Component.literal("Name cannot contain spaces").withStyle(ChatFormatting.RED));
+            return 0;
+        }
 
         Optional<RegionSelectionStore.Selection> selOpt = RegionSelectionStore.get(player);
         if (selOpt.isEmpty()) {
@@ -789,6 +793,11 @@ public final class RegionCommand {
     private static String normalizeName(String raw) {
         if (raw == null) return "";
         return raw.trim();
+    }
+
+    private static boolean containsSpace(String raw) {
+        if (raw == null) return false;
+        return raw.indexOf(' ') >= 0;
     }
 
     private static MutableComponent sourcePill(RegionRegistryData.ValueSource src) {
