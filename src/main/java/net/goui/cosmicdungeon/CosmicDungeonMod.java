@@ -111,7 +111,6 @@ public class CosmicDungeonMod {
         RiftCommand.register(event.getDispatcher());
         RegionCommand.register(event.getDispatcher());
         RankCommand.register(event.getDispatcher());
-        PasswordCommand.register(event.getDispatcher());
         DeveloperCommand.register(event.getDispatcher());
         DungeoneerCommand.register(event.getDispatcher());
         ClassSelectorDestinationCommand.register(event.getDispatcher());
