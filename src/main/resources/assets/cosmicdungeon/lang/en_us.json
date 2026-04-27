@@ -346,5 +346,6 @@
   "screen.cosmicdungeon.rf_config.title_receiver": "Redstone Receiver",
   "screen.cosmicdungeon.rf_config.hz": "Hz:",
   "screen.cosmicdungeon.rf_config.save": "Save",
-  "screen.cosmicdungeon.rf_config.close": "Close"
+  "screen.cosmicdungeon.rf_config.close": "Close",
+  "entity.cosmicdungeon.cthonian_gnawling": "Cthonian Gnawling"
 }

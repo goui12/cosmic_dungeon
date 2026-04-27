@@ -64,6 +64,7 @@ public final class CosmicDungeonClient {
         e.registerLayerDefinition(Magma_Glob.LAYER_LOCATION, Magma_Glob::createBodyLayer);
         e.registerLayerDefinition(StoneWardenModel.LAYER_LOCATION, StoneWardenModel::createBodyLayer);
         e.registerLayerDefinition(GoblinAmbusherModel.LAYER_LOCATION, GoblinAmbusherModel::createBodyLayer);
+        e.registerLayerDefinition(CthonianGnawlingModel.LAYER_LOCATION, CthonianGnawlingModel::createBodyLayer);
 
         // Metalmancer Golem
         e.registerLayerDefinition(MetalmancerGolemModel.LAYER_LOCATION, MetalmancerGolemModel::createBodyLayer);
@@ -84,6 +85,7 @@ public final class CosmicDungeonClient {
         e.registerEntityRenderer(ModEntities.MAGMA_GLOB.get(), MagmaGlobRenderer::new);
         e.registerEntityRenderer(ModEntities.STONE_WARDEN.get(), StoneWardenRenderer::new);
         e.registerEntityRenderer(ModEntities.GOBLIN_AMBUSHER.get(), GoblinAmbusherRenderer::new);
+        e.registerEntityRenderer(ModEntities.CTHONIAN_GNAWLING.get(), CthonianGnawlingRenderer::new);
 
         // Metalmancer Golem
         e.registerEntityRenderer(ModEntities.METALMANCER_GOLEM.get(), MetalmancerGolemRenderer::new);
