@@ -82,6 +82,19 @@ public final class ModEntities {
                         .build(key);
             });
 
+    // -------------------------
+    // CTHONIAN GNAWLING
+    // -------------------------
+    public static final DeferredHolder<EntityType<?>, EntityType<CthonianGnawlingEntity>> CTHONIAN_GNAWLING =
+            ENTITIES.register("cthonian_gnawling", () -> {
+                ResourceLocation id = ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "cthonian_gnawling");
+                ResourceKey<EntityType<?>> key = ResourceKey.create(Registries.ENTITY_TYPE, id);
+                return EntityType.Builder
+                        .of(CthonianGnawlingEntity::new, MobCategory.MONSTER)
+                        .sized(1.9f, 1.0f)
+                        .build(key);
+            });
+
 
     private ModEntities() {}
 
