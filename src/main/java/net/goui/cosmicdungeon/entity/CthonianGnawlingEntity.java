@@ -8,7 +8,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.MoveControl;
@@ -135,7 +134,8 @@ public class CthonianGnawlingEntity extends Monster {
         if (--this.damageTickTimer > 0) return;
         this.damageTickTimer = DAMAGE_INTERVAL_TICKS;
 
-        boolean damaged = target.hurt(this.damageSources().mobAttack(this), 2.0F);
+        if (!(this.level() instanceof ServerLevel serverLevel)) return;
+        boolean damaged = target.hurtServer(serverLevel, this.damageSources().mobAttack(this), 2.0F);
         if (damaged && this.random.nextBoolean()) {
             applyArmorGouge(target, 2);
         }
@@ -183,17 +183,6 @@ public class CthonianGnawlingEntity extends Monster {
     @Override
     public boolean hurtServer(ServerLevel level, DamageSource damageSource, float amount) {
         return super.hurtServer(level, damageSource, amount);
-    }
-
-    @Override
-    public void travel(Vec3 travelVector) {
-        if (this.isControlledByLocalInstance()) {
-            this.moveRelative(0.05F, travelVector);
-            this.move(MoverType.SELF, this.getDeltaMovement());
-            this.setDeltaMovement(this.getDeltaMovement().scale(0.91D));
-        } else {
-            super.travel(travelVector);
-        }
     }
 
     private static class GnawlingMoveControl extends MoveControl {
