@@ -80,6 +80,7 @@ public class CosmicDungeonMod {
             e.put(ModEntities.GOBLIN_AMBUSHER.get(),  GoblinAmbusherEntity.createAttributes().build());
             e.put(ModEntities.METALMANCER_GOLEM.get(), MetalmancerGolemEntity.createAttributes().build());
             e.put(ModEntities.CRYSTAL_CREEPER.get(),   CrystalCreeperEntity.createAttributes().build());
+            e.put(ModEntities.CTHONIAN_GNAWLING.get(), CthonianGnawlingEntity.createAttributes().build());
         });
 
         // config
