@@ -90,14 +90,25 @@ public final class RegionCommand {
 
     private static LiteralArgumentBuilder<CommandSourceStack> buildNewCommand() {
         return Commands.literal("new")
-                .then(Commands.argument("name", StringArgumentType.greedyString())
-                        .executes(ctx -> cmdCreateFromSelection(ctx.getSource(), StringArgumentType.getString(ctx, "name"))));
+                .then(buildCreateArgs());
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> buildCreateCommand() {
         return Commands.literal("create")
-                .then(Commands.argument("name", StringArgumentType.greedyString())
-                        .executes(ctx -> cmdCreateFromSelection(ctx.getSource(), StringArgumentType.getString(ctx, "name"))));
+                .then(buildCreateArgs());
+    }
+
+    private static com.mojang.brigadier.builder.RequiredArgumentBuilder<CommandSourceStack, String> buildCreateArgs() {
+        return Commands.argument("name", StringArgumentType.word())
+                .executes(ctx -> cmdCreateFromSelection(ctx.getSource(), StringArgumentType.getString(ctx, "name"), null))
+                .then(Commands.literal("copy")
+                        .then(Commands.argument("source", StringArgumentType.word())
+                                .suggests(RegionCommand::suggestRegionNames)
+                                .executes(ctx -> cmdCreateFromSelection(
+                                        ctx.getSource(),
+                                        StringArgumentType.getString(ctx, "name"),
+                                        StringArgumentType.getString(ctx, "source")
+                                ))));
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> buildLookCommand() {
@@ -510,7 +521,7 @@ public final class RegionCommand {
     /* Create from wand selection                                              */
     /* ====================================================================== */
 
-    private static int cmdCreateFromSelection(CommandSourceStack src, String rawName) {
+    private static int cmdCreateFromSelection(CommandSourceStack src, String rawName, String rawCopySource) {
         ServerPlayer player = src.getPlayer();
         if (player == null) {
             src.sendFailure(Component.literal("Player-only command.").withStyle(ChatFormatting.RED));
@@ -562,12 +573,25 @@ public final class RegionCommand {
             return 0;
         }
 
+        String copiedFrom = null;
+        if (rawCopySource != null && !rawCopySource.isBlank()) {
+            copiedFrom = normalizeName(rawCopySource);
+            if (!data.exists(copiedFrom)) {
+                src.sendFailure(Component.literal("Source region not found for copy: " + copiedFrom).withStyle(ChatFormatting.RED));
+                src.sendFailure(Component.literal("Region '" + name + "' was still created without copied flags.").withStyle(ChatFormatting.YELLOW));
+            } else if (!data.copyFlags(name, copiedFrom)) {
+                src.sendFailure(Component.literal("Failed to copy flags from '" + copiedFrom + "'.").withStyle(ChatFormatting.RED));
+            }
+        }
+
         String parent = data.getParentName(name);
+        String copiedSuffix = copiedFrom == null ? "" : (" (flags copied from: " + copiedFrom + ")");
         src.sendSuccess(
                 () -> Component.literal("Created region ")
                         .append(Component.literal(name).withStyle(ChatFormatting.AQUA))
                         .append(Component.literal(" in " + selDim).withStyle(ChatFormatting.GRAY))
-                        .append(Component.literal(parent == null ? "" : (" (parent: " + parent + ")")).withStyle(ChatFormatting.DARK_GRAY)),
+                        .append(Component.literal(parent == null ? "" : (" (parent: " + parent + ")")).withStyle(ChatFormatting.DARK_GRAY))
+                        .append(Component.literal(copiedSuffix).withStyle(ChatFormatting.DARK_AQUA)),
                 true
         );
         return 1;
