@@ -8,6 +8,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.AnimationState;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.MoveControl;
@@ -26,17 +27,17 @@ import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nullable;
 import java.util.EnumSet;
-import java.util.UUID;
 
 public class CthonianGnawlingEntity extends Monster {
     private static final int DAMAGE_INTERVAL_TICKS = 40;
     private static final EntityDataAccessor<Boolean> DATA_LATCHED =
             SynchedEntityData.defineId(CthonianGnawlingEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Integer> DATA_LATCHED_TARGET_ID =
+            SynchedEntityData.defineId(CthonianGnawlingEntity.class, EntityDataSerializers.INT);
 
-    @Nullable private UUID latchedTargetId;
-    private Vec3 latchOffset = new Vec3(0.0D, 0.0D, 0.0D);
     private int damageTickTimer = DAMAGE_INTERVAL_TICKS;
     private float clientCrawlAmount;
+    public final AnimationState chompAnimation = new AnimationState();
 
     public CthonianGnawlingEntity(EntityType<? extends Monster> type, Level level) {
         super(type, level);
@@ -48,7 +49,7 @@ public class CthonianGnawlingEntity extends Monster {
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 14.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.38D)
+                .add(Attributes.MOVEMENT_SPEED, 0.23D)
                 .add(Attributes.FOLLOW_RANGE, 24.0D)
                 .add(Attributes.ATTACK_DAMAGE, 2.0D)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.2D);
@@ -58,6 +59,7 @@ public class CthonianGnawlingEntity extends Monster {
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(DATA_LATCHED, false);
+        builder.define(DATA_LATCHED_TARGET_ID, -1);
     }
 
     @Override
@@ -78,8 +80,8 @@ public class CthonianGnawlingEntity extends Monster {
         super.tick();
 
         if (this.isLatched()) {
+            maintainLatch();
             if (!this.level().isClientSide()) {
-                maintainLatch();
                 tickLatchedDamage();
             }
         }
@@ -96,12 +98,7 @@ public class CthonianGnawlingEntity extends Monster {
 
     public void latchTo(LivingEntity target) {
         if (!target.isAlive()) return;
-        this.latchedTargetId = target.getUUID();
-
-        Vec3 look = target.getViewVector(0.0F).normalize();
-        Vec3 right = look.cross(new Vec3(0.0D, 1.0D, 0.0D)).normalize();
-        double side = this.random.nextBoolean() ? 0.35D : -0.35D;
-        this.latchOffset = right.scale(side).add(0.0D, target.getBbHeight() * 0.35D, 0.0D);
+        this.entityData.set(DATA_LATCHED_TARGET_ID, target.getId());
         this.damageTickTimer = DAMAGE_INTERVAL_TICKS;
         this.entityData.set(DATA_LATCHED, true);
 
@@ -115,7 +112,10 @@ public class CthonianGnawlingEntity extends Monster {
             return;
         }
 
-        Vec3 attachPos = target.position().add(this.latchOffset);
+        float yawRad = target.getYRot() * net.minecraft.util.Mth.DEG_TO_RAD;
+        Vec3 right = new Vec3(-net.minecraft.util.Mth.sin(yawRad), 0.0D, net.minecraft.util.Mth.cos(yawRad));
+        Vec3 latchOffset = right.scale(0.35D).add(0.0D, target.getBbHeight() * 0.35D, 0.0D);
+        Vec3 attachPos = target.position().add(latchOffset);
         this.setPos(attachPos.x, attachPos.y, attachPos.z);
         this.setDeltaMovement(Vec3.ZERO);
 
@@ -139,6 +139,7 @@ public class CthonianGnawlingEntity extends Monster {
         if (damaged && this.random.nextBoolean()) {
             applyArmorGouge(target, 2);
         }
+        this.level().broadcastEntityEvent(this, (byte) 61);
     }
 
     private void applyArmorGouge(LivingEntity target, int bonusDurabilityDamage) {
@@ -152,18 +153,28 @@ public class CthonianGnawlingEntity extends Monster {
 
     @Nullable
     private LivingEntity getLatchedTarget() {
-        if (this.latchedTargetId == null || !(this.level() instanceof ServerLevel serverLevel)) {
+        int targetId = this.entityData.get(DATA_LATCHED_TARGET_ID);
+        if (targetId == -1) {
             return null;
         }
-        if (!(serverLevel.getEntity(this.latchedTargetId) instanceof LivingEntity livingEntity)) {
+        if (!(this.level().getEntity(targetId) instanceof LivingEntity livingEntity)) {
             return null;
         }
         return livingEntity;
     }
 
     private void releaseLatch() {
-        this.latchedTargetId = null;
+        this.entityData.set(DATA_LATCHED_TARGET_ID, -1);
         this.entityData.set(DATA_LATCHED, false);
+    }
+
+    @Override
+    public void handleEntityEvent(byte id) {
+        if (id == 61) {
+            this.chompAnimation.start(this.tickCount);
+            return;
+        }
+        super.handleEntityEvent(id);
     }
 
     public float getClientCrawlAmount(float partialTick) {

@@ -29,6 +29,7 @@ public class CthonianGnawlingRenderer
         state.ageInTicks = entity.tickCount + partialTick;
         state.walkAmount = entity.getClientCrawlAmount(partialTick);
         state.isLatched = entity.isLatched();
+        state.chompAnimation = entity.chompAnimation;
     }
 
     @Override

@@ -8,19 +8,11 @@ import net.minecraft.client.animation.KeyframeAnimations;
 public final class CthonianGnawlingAnimation {
     private CthonianGnawlingAnimation() {}
 
-    public static final AnimationDefinition WALKING;
+    public static final AnimationDefinition WALKING_BODY;
+    public static final AnimationDefinition CHOMP;
 
     static {
         AnimationDefinition.Builder builder = AnimationDefinition.Builder.withLength(1.0F).looping();
-
-        addToothChomp(builder, "Tooth_1", -25.0F);
-        addToothChomp(builder, "Tooth_2", -17.5F);
-        addToothChomp(builder, "Tooth_3", -47.5F);
-        addToothChomp(builder, "Tooth_4", -10.0F);
-        addToothChomp(builder, "Tooth_5", -12.5F);
-        addToothChomp(builder, "Tooth_6", -12.5F);
-        addToothChomp(builder, "Tooth_7", -20.0F);
-        addToothChomp(builder, "Tooth_8", -25.0F);
 
         addWave(builder, "Head_Seg", 2.5F);
         addZeroPosition(builder, "Head_Seg");
@@ -47,7 +39,18 @@ public final class CthonianGnawlingAnimation {
         addWave(builder, "Body_9_Seg", -2.5F);
         addWave(builder, "Body_10", -2.5F);
 
-        WALKING = builder.build();
+        WALKING_BODY = builder.build();
+
+        AnimationDefinition.Builder chompBuilder = AnimationDefinition.Builder.withLength(0.2F);
+        addToothChompStep(chompBuilder, "Tooth_1", -25.0F);
+        addToothChompStep(chompBuilder, "Tooth_2", -17.5F);
+        addToothChompStep(chompBuilder, "Tooth_3", -47.5F);
+        addToothChompStep(chompBuilder, "Tooth_4", -10.0F);
+        addToothChompStep(chompBuilder, "Tooth_5", -12.5F);
+        addToothChompStep(chompBuilder, "Tooth_6", -12.5F);
+        addToothChompStep(chompBuilder, "Tooth_7", -20.0F);
+        addToothChompStep(chompBuilder, "Tooth_8", -25.0F);
+        CHOMP = chompBuilder.build();
     }
 
     private static void addToothChomp(AnimationDefinition.Builder builder, String bone, float yawDegrees) {
@@ -58,6 +61,17 @@ public final class CthonianGnawlingAnimation {
                 new Keyframe(0.5F, KeyframeAnimations.degreeVec(0.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR),
                 new Keyframe(0.75F, KeyframeAnimations.degreeVec(0.0F, yawDegrees, 0.0F), AnimationChannel.Interpolations.LINEAR),
                 new Keyframe(1.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
+        ));
+    }
+
+    private static void addToothChompStep(AnimationDefinition.Builder builder, String bone, float yawDegrees) {
+        builder.addAnimation(bone, new AnimationChannel(
+                AnimationChannel.Targets.ROTATION,
+                new Keyframe(0.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR),
+                new Keyframe(0.01F, KeyframeAnimations.degreeVec(0.0F, yawDegrees, 0.0F), AnimationChannel.Interpolations.LINEAR),
+                new Keyframe(0.1F, KeyframeAnimations.degreeVec(0.0F, yawDegrees, 0.0F), AnimationChannel.Interpolations.LINEAR),
+                new Keyframe(0.11F, KeyframeAnimations.degreeVec(0.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR),
+                new Keyframe(0.2F, KeyframeAnimations.degreeVec(0.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
         ));
     }
 

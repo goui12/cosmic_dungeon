@@ -71,11 +71,13 @@ public class CthonianGnawlingModel extends EntityModel<CthonianGnawlingRenderSta
 	private final ModelPart Body_10;
 	private final ModelPart Body10;
 	private final KeyframeAnimation walkingAnimation;
+	private final KeyframeAnimation chompAnimation;
 
 	public CthonianGnawlingModel(ModelPart root) {
 		super(root);
 		this.root = root;
-		this.walkingAnimation = CthonianGnawlingAnimation.WALKING.bake(root);
+		this.walkingAnimation = CthonianGnawlingAnimation.WALKING_BODY.bake(root);
+		this.chompAnimation = CthonianGnawlingAnimation.CHOMP.bake(root);
 		this.Main_Bone = root.getChild("Main_Bone");
 		this.Head_Main = this.Main_Bone.getChild("Head_Main");
 		this.Head_1 = this.Head_Main.getChild("Head_1");
@@ -476,15 +478,49 @@ public class CthonianGnawlingModel extends EntityModel<CthonianGnawlingRenderSta
 	@Override
 	public void setupAnim(CthonianGnawlingRenderState state) {
 		this.root.getAllParts().forEach(ModelPart::resetPose);
+		applyRestingTailCurlPose();
 
 		// Keep model facing movement direction from spawn orientation.
 		this.Main_Bone.yRot = (float)Math.PI;
-		float speedMultiplier = state.isLatched ? 2.0F : 1.0F;
-		this.walkingAnimation.applyWalk(
-				state.walkAnimationPos * speedMultiplier,
-				Math.min(state.walkAnimationSpeed * speedMultiplier, 2.0F),
-				1.0F,
-				1.0F
-		);
+
+		boolean isWalking = state.walkAmount > 0.05F;
+		boolean updateWalkThisFrame = ((int) state.ageInTicks) % 3 == 0;
+		if (isWalking && updateWalkThisFrame) {
+			float speedMultiplier = state.isLatched ? 2.0F : 1.0F;
+			this.walkingAnimation.applyWalk(
+					state.walkAnimationPos * speedMultiplier,
+					Math.min(state.walkAnimationSpeed * speedMultiplier, 2.0F),
+					1.0F,
+					1.0F
+			);
+		}
+
+		if (state.chompAnimation != null) {
+			this.chompAnimation.apply(state.chompAnimation, state.ageInTicks, 1.0F);
+		}
+	}
+
+	private void applyRestingTailCurlPose() {
+		this.Head_Seg.yRot = 2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+		this.Body_1.yRot = 2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+		this.Body_1_Seg.yRot = 2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+		this.Body_2.yRot = 2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+		this.Body_2_Seg.yRot = 2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+		this.Body_3.yRot = 2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+		this.Body_3_Seg.yRot = 2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+		this.Body_4.yRot = 2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+		this.Body_4_Seg.yRot = 2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+
+		this.Body_5.yRot = -2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+		this.Body_5_Seg.yRot = -2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+		this.Body_6.yRot = -2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+		this.Body_6_Seg.yRot = -2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+		this.Body_7.yRot = -2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+		this.Body_7_Seg.yRot = -2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+		this.Body_8.yRot = -2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+		this.Body_8_Seg.yRot = -2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+		this.Body_9.yRot = -2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+		this.Body_9_Seg.yRot = -2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
+		this.Body_10.yRot = -2.5F * net.minecraft.util.Mth.DEG_TO_RAD;
 	}
 }
