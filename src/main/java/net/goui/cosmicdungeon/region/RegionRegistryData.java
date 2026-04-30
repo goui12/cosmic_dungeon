@@ -146,6 +146,32 @@ public final class RegionRegistryData extends SavedData {
         return true;
     }
 
+    public boolean copyFlags(String targetRegionName, String sourceRegionName) {
+        if (targetRegionName == null || targetRegionName.isBlank()) return false;
+        if (sourceRegionName == null || sourceRegionName.isBlank()) return false;
+        Region target = regionsByName.get(targetRegionName);
+        Region source = regionsByName.get(sourceRegionName);
+        if (target == null || source == null) return false;
+
+        Map<String, String> copied = new HashMap<>();
+        if (source.flags() != null) copied.putAll(source.flags());
+
+        regionsByName.put(
+                targetRegionName,
+                new Region(
+                        target.name(),
+                        target.dimensionId(),
+                        target.min(),
+                        target.max(),
+                        copied,
+                        target.parent(),
+                        target.createdOrder()
+                )
+        );
+        this.setDirty();
+        return true;
+    }
+
     /* -------------------- Parenting -------------------- */
 
     public boolean setParent(String regionName, @Nullable String newParentName) {

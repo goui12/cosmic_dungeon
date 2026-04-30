@@ -56,6 +56,8 @@ This document lists every command registered by the mod at server command regist
 - `/region wand`
 - `/region new <name>`
 - `/region create <name>`
+- `/region new <name> copy <sourceRegion>`
+- `/region create <name> copy <sourceRegion>`
 - `/region look all`
 - `/region look <name>`
 - `/region info <name>`
