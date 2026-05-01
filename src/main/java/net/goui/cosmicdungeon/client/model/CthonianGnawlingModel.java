@@ -480,24 +480,8 @@ public class CthonianGnawlingModel extends EntityModel<CthonianGnawlingRenderSta
 		this.root.getAllParts().forEach(ModelPart::resetPose);
 		applyRestingTailCurlPose();
 
-		// Keep model facing movement direction from spawn orientation.
-		this.Main_Bone.yRot = (float)Math.PI;
-
-		boolean isWalking = state.walkAmount > 0.05F;
-		boolean updateWalkThisFrame = ((int) state.ageInTicks) % 3 == 0;
-		if (isWalking && updateWalkThisFrame) {
-			float speedMultiplier = state.isLatched ? 2.0F : 1.0F;
-			this.walkingAnimation.applyWalk(
-					state.walkAnimationPos * speedMultiplier,
-					Math.min(state.walkAnimationSpeed * speedMultiplier, 2.0F),
-					1.0F,
-					1.0F
-			);
-		}
-
-		if (state.chompAnimation != null) {
-			this.chompAnimation.apply(state.chompAnimation, state.ageInTicks, 1.0F);
-		}
+		// Temporary crash-debug bypass: keep gnawling in a static, non-animated pose.
+		this.Main_Bone.yRot = (float) Math.PI;
 	}
 
 	private void applyRestingTailCurlPose() {

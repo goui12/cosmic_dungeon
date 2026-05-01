@@ -1,9 +1,6 @@
 package net.goui.cosmicdungeon.entity;
 
-import net.goui.cosmicdungeon.entity.ai.goal.CthonianGnawlingLatchGoal;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -13,11 +10,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.MoveControl;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
-import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -26,7 +19,6 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nullable;
-import java.util.EnumSet;
 
 public class CthonianGnawlingEntity extends Monster {
     private static final int DAMAGE_INTERVAL_TICKS = 40;
@@ -64,12 +56,7 @@ public class CthonianGnawlingEntity extends Monster {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new CthonianGnawlingLatchGoal(this));
-        this.goalSelector.addGoal(5, new RandomPhaseWanderGoal(this));
-        this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
-
-        this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+        // Temporary crash-debug bypass: keep gnawling idle with no AI behaviors.
     }
 
     @Override
@@ -79,17 +66,12 @@ public class CthonianGnawlingEntity extends Monster {
 
         super.tick();
 
+        // Temporary crash-debug bypass: keep gnawling fully stationary.
         if (this.isLatched()) {
-            maintainLatch();
-            if (!this.level().isClientSide()) {
-                tickLatchedDamage();
-            }
+            this.releaseLatch();
         }
-
-        Vec3 motion = this.getDeltaMovement();
-        float targetCrawl = (float) Mth.clamp(motion.horizontalDistance() * 2.2D, 0.12D, 1.0D);
-        if (this.isLatched()) targetCrawl = 0.9F;
-        this.clientCrawlAmount = Mth.lerp(0.2F, this.clientCrawlAmount, targetCrawl);
+        this.setDeltaMovement(Vec3.ZERO);
+        this.clientCrawlAmount = 0.0F;
     }
 
     public boolean isLatched() {
