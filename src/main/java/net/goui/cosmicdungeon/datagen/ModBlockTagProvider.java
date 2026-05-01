@@ -24,10 +24,12 @@ public class ModBlockTagProvider extends BlockTagsProvider {
         this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(
                 ModBlocks.COSMIC_MOB_SPAWNER.get()
         );
+        this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.DUNGEON_BUILDING_BLOCKS.values().stream().map(DeferredBlock::get).toArray(Block[]::new));
 
         this.tag(BlockTags.NEEDS_IRON_TOOL).add(
                 ModBlocks.COSMIC_MOB_SPAWNER.get()
         );
+        this.tag(BlockTags.NEEDS_IRON_TOOL).add(ModBlocks.DUNGEON_BUILDING_BLOCKS.values().stream().map(DeferredBlock::get).toArray(Block[]::new));
 
         this.tag(BlockTags.MINEABLE_WITH_AXE).add(
                 ModBlocks.PILE_OF_BOOKS.get()

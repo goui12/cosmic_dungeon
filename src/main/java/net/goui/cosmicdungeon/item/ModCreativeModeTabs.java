@@ -62,6 +62,14 @@ public class ModCreativeModeTabs {
 
 
 
+    public static final Supplier<CreativeModeTab> DUNGEON_BUILDING_TAB =
+            CREATIVE_MODE_TAB.register("dungeon_building_tab",
+                    () -> CreativeModeTab.builder()
+                            .icon(() -> new ItemStack(ModBlocks.DUNGEON_BUILDING_BLOCKS.get("grave_mold_bricks").get()))
+                            .title(Component.translatable("creativetab.cosmicdungeon.dungeon_building"))
+                            .displayItems((p, output) -> ModBlocks.DUNGEON_BUILDING_BLOCKS.values().forEach(output::accept))
+                            .build());
+
     //~~~~~~~~~~~~~~~ Judicator Item Tab ~~~~~~~~~~~~~~~
     public static final Supplier<CreativeModeTab> JUDICATOR_ITEM_TAB =
             CREATIVE_MODE_TAB.register("judicator_items_tab",

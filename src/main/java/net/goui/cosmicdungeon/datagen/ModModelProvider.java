@@ -143,6 +143,7 @@ public class ModModelProvider extends ModelProvider {
 
         // ===== Simple cubes =====
         blockModels.createTrivialCube(ModBlocks.CHICKEN_BLOCK.get());
+        ModBlocks.DUNGEON_BUILDING_BLOCKS.values().forEach(b -> blockModels.createTrivialCube(b.get()));
 
         // ===== Ghost Block =====
         ghostCube(blockModels, itemModels, ModBlocks.REGION_GHOST_GLASS.get(), true);
