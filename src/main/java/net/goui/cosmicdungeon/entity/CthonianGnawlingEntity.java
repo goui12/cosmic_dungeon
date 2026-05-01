@@ -220,7 +220,12 @@ public class CthonianGnawlingEntity extends Monster {
             }
 
             Vec3 accel = vec3.scale(this.speedModifier * 0.06D / dist);
-            this.gnawling.setDeltaMovement(this.gnawling.getDeltaMovement().add(accel));
+            Vec3 nextMotion = this.gnawling.getDeltaMovement().add(accel).scale(0.96D);
+            double maxSpeed = 0.45D;
+            if (nextMotion.lengthSqr() > maxSpeed * maxSpeed) {
+                nextMotion = nextMotion.normalize().scale(maxSpeed);
+            }
+            this.gnawling.setDeltaMovement(nextMotion);
 
             Vec3 motion = this.gnawling.getDeltaMovement();
             if (motion.horizontalDistanceSqr() > 1.0E-5D) {
