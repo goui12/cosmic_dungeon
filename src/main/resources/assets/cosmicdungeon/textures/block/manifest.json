@@ -1,0 +1,2016 @@
+{
+  "generated_count": 182,
+  "base_paths": [
+    "/mnt/data/Deepslate_Tiles_(texture)_JE2.png",
+    "/mnt/data/Polished_Blackstone_Bricks_(texture)_JE2_BE2.png",
+    "/mnt/data/Polished_Blackstone_(texture)_JE1_BE1.png",
+    "/mnt/data/Blackstone_(top_texture)_JE1_BE1.png",
+    "/mnt/data/Polished_Deepslate_(texture)_JE2.png",
+    "/mnt/data/Deepslate_Bricks_(texture)_JE2_BE1.png",
+    "/mnt/data/Cobbled_Deepslate_(texture)_JE2.png"
+  ],
+  "files": [
+    {
+      "filename": "old_blood_smear_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "old_blood_smear",
+      "seed": 42000,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "fresh_splatter_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "fresh_splatter",
+      "seed": 42037,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "rust_scabbed_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "rust_scabbed",
+      "seed": 42074,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "ashen_bone_dust_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "ashen_bone_dust",
+      "seed": 42111,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "lichen_crawl_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "lichen_crawl",
+      "seed": 42148,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "yellow_mold_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "yellow_mold",
+      "seed": 42185,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "tar_seams_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "tar_seams",
+      "seed": 42222,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "void_stars_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "void_stars",
+      "seed": 42259,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "black_eye_knots_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "black_eye_knots",
+      "seed": 42296,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "scratch_runes_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "scratch_runes",
+      "seed": 42333,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "purple_bruise_bloom_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "purple_bruise_bloom",
+      "seed": 42370,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "pus_bubbled_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "pus_bubbled",
+      "seed": 42407,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "thread_sinew_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "thread_sinew",
+      "seed": 42444,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "pale_handprint_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "pale_handprint",
+      "seed": 42481,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "chitin_splintered_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "chitin_splintered",
+      "seed": 42518,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "cold_blue_curse_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "cold_blue_curse",
+      "seed": 42555,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "necrotic_edges_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "necrotic_edges",
+      "seed": 42592,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "ritual_chalk_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "ritual_chalk",
+      "seed": 42629,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "fly_egg_cluster_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "fly_egg_cluster",
+      "seed": 42666,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "dark_matter_rift_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "dark_matter_rift",
+      "seed": 42703,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "infected_waterline_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "infected_waterline",
+      "seed": 42740,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "old_blood_smear_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "old_blood_smear",
+      "seed": 43000,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "fresh_splatter_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "fresh_splatter",
+      "seed": 43037,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "rust_scabbed_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "rust_scabbed",
+      "seed": 43074,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "ashen_bone_dust_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "ashen_bone_dust",
+      "seed": 43111,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "lichen_crawl_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "lichen_crawl",
+      "seed": 43148,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "yellow_mold_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "yellow_mold",
+      "seed": 43185,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "tar_seams_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "tar_seams",
+      "seed": 43222,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "void_stars_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "void_stars",
+      "seed": 43259,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "black_eye_knots_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "black_eye_knots",
+      "seed": 43296,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "scratch_runes_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "scratch_runes",
+      "seed": 43333,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "purple_bruise_bloom_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "purple_bruise_bloom",
+      "seed": 43370,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "pus_bubbled_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "pus_bubbled",
+      "seed": 43407,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "thread_sinew_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "thread_sinew",
+      "seed": 43444,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "pale_handprint_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "pale_handprint",
+      "seed": 43481,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "chitin_splintered_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "chitin_splintered",
+      "seed": 43518,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "cold_blue_curse_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "cold_blue_curse",
+      "seed": 43555,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "necrotic_edges_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "necrotic_edges",
+      "seed": 43592,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "ritual_chalk_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "ritual_chalk",
+      "seed": 43629,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "fly_egg_cluster_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "fly_egg_cluster",
+      "seed": 43666,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "dark_matter_rift_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "dark_matter_rift",
+      "seed": 43703,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "infected_waterline_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "infected_waterline",
+      "seed": 43740,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "old_blood_smear_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "old_blood_smear",
+      "seed": 44000,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "fresh_splatter_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "fresh_splatter",
+      "seed": 44037,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "rust_scabbed_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "rust_scabbed",
+      "seed": 44074,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "ashen_bone_dust_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "ashen_bone_dust",
+      "seed": 44111,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "lichen_crawl_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "lichen_crawl",
+      "seed": 44148,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "yellow_mold_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "yellow_mold",
+      "seed": 44185,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "tar_seams_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "tar_seams",
+      "seed": 44222,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "void_stars_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "void_stars",
+      "seed": 44259,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "black_eye_knots_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "black_eye_knots",
+      "seed": 44296,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "scratch_runes_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "scratch_runes",
+      "seed": 44333,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "purple_bruise_bloom_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "purple_bruise_bloom",
+      "seed": 44370,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "pus_bubbled_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "pus_bubbled",
+      "seed": 44407,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "thread_sinew_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "thread_sinew",
+      "seed": 44444,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "pale_handprint_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "pale_handprint",
+      "seed": 44481,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "chitin_splintered_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "chitin_splintered",
+      "seed": 44518,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "cold_blue_curse_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "cold_blue_curse",
+      "seed": 44555,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "necrotic_edges_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "necrotic_edges",
+      "seed": 44592,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "ritual_chalk_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "ritual_chalk",
+      "seed": 44629,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "fly_egg_cluster_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "fly_egg_cluster",
+      "seed": 44666,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "dark_matter_rift_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "dark_matter_rift",
+      "seed": 44703,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "infected_waterline_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "infected_waterline",
+      "seed": 44740,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "old_blood_smear_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "old_blood_smear",
+      "seed": 45000,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "fresh_splatter_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "fresh_splatter",
+      "seed": 45037,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "rust_scabbed_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "rust_scabbed",
+      "seed": 45074,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "ashen_bone_dust_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "ashen_bone_dust",
+      "seed": 45111,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "lichen_crawl_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "lichen_crawl",
+      "seed": 45148,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "yellow_mold_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "yellow_mold",
+      "seed": 45185,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "tar_seams_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "tar_seams",
+      "seed": 45222,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "void_stars_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "void_stars",
+      "seed": 45259,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "black_eye_knots_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "black_eye_knots",
+      "seed": 45296,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "scratch_runes_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "scratch_runes",
+      "seed": 45333,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "purple_bruise_bloom_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "purple_bruise_bloom",
+      "seed": 45370,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "pus_bubbled_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "pus_bubbled",
+      "seed": 45407,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "thread_sinew_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "thread_sinew",
+      "seed": 45444,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "pale_handprint_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "pale_handprint",
+      "seed": 45481,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "chitin_splintered_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "chitin_splintered",
+      "seed": 45518,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "cold_blue_curse_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "cold_blue_curse",
+      "seed": 45555,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "necrotic_edges_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "necrotic_edges",
+      "seed": 45592,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "ritual_chalk_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "ritual_chalk",
+      "seed": 45629,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "fly_egg_cluster_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "fly_egg_cluster",
+      "seed": 45666,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "dark_matter_rift_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "dark_matter_rift",
+      "seed": 45703,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "infected_waterline_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "infected_waterline",
+      "seed": 45740,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "old_blood_smear_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "old_blood_smear",
+      "seed": 46000,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "fresh_splatter_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "fresh_splatter",
+      "seed": 46037,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "rust_scabbed_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "rust_scabbed",
+      "seed": 46074,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "ashen_bone_dust_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "ashen_bone_dust",
+      "seed": 46111,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "lichen_crawl_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "lichen_crawl",
+      "seed": 46148,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "yellow_mold_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "yellow_mold",
+      "seed": 46185,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "tar_seams_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "tar_seams",
+      "seed": 46222,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "void_stars_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "void_stars",
+      "seed": 46259,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "black_eye_knots_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "black_eye_knots",
+      "seed": 46296,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "scratch_runes_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "scratch_runes",
+      "seed": 46333,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "purple_bruise_bloom_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "purple_bruise_bloom",
+      "seed": 46370,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "pus_bubbled_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "pus_bubbled",
+      "seed": 46407,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "thread_sinew_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "thread_sinew",
+      "seed": 46444,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "pale_handprint_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "pale_handprint",
+      "seed": 46481,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "chitin_splintered_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "chitin_splintered",
+      "seed": 46518,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "cold_blue_curse_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "cold_blue_curse",
+      "seed": 46555,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "necrotic_edges_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "necrotic_edges",
+      "seed": 46592,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "ritual_chalk_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "ritual_chalk",
+      "seed": 46629,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "fly_egg_cluster_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "fly_egg_cluster",
+      "seed": 46666,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "dark_matter_rift_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "dark_matter_rift",
+      "seed": 46703,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "infected_waterline_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "infected_waterline",
+      "seed": 46740,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "old_blood_smear_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "old_blood_smear",
+      "seed": 47000,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "fresh_splatter_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "fresh_splatter",
+      "seed": 47037,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "rust_scabbed_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "rust_scabbed",
+      "seed": 47074,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "ashen_bone_dust_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "ashen_bone_dust",
+      "seed": 47111,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "lichen_crawl_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "lichen_crawl",
+      "seed": 47148,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "yellow_mold_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "yellow_mold",
+      "seed": 47185,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "tar_seams_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "tar_seams",
+      "seed": 47222,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "void_stars_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "void_stars",
+      "seed": 47259,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "black_eye_knots_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "black_eye_knots",
+      "seed": 47296,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "scratch_runes_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "scratch_runes",
+      "seed": 47333,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "purple_bruise_bloom_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "purple_bruise_bloom",
+      "seed": 47370,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "pus_bubbled_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "pus_bubbled",
+      "seed": 47407,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "thread_sinew_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "thread_sinew",
+      "seed": 47444,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "pale_handprint_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "pale_handprint",
+      "seed": 47481,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "chitin_splintered_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "chitin_splintered",
+      "seed": 47518,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "cold_blue_curse_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "cold_blue_curse",
+      "seed": 47555,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "necrotic_edges_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "necrotic_edges",
+      "seed": 47592,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "ritual_chalk_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "ritual_chalk",
+      "seed": 47629,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "fly_egg_cluster_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "fly_egg_cluster",
+      "seed": 47666,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "dark_matter_rift_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "dark_matter_rift",
+      "seed": 47703,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "infected_waterline_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "infected_waterline",
+      "seed": 47740,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "old_blood_smear_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "old_blood_smear",
+      "seed": 48000,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "fresh_splatter_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "fresh_splatter",
+      "seed": 48037,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "rust_scabbed_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "rust_scabbed",
+      "seed": 48074,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "ashen_bone_dust_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "ashen_bone_dust",
+      "seed": 48111,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "lichen_crawl_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "lichen_crawl",
+      "seed": 48148,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "yellow_mold_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "yellow_mold",
+      "seed": 48185,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "tar_seams_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "tar_seams",
+      "seed": 48222,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "void_stars_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "void_stars",
+      "seed": 48259,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "black_eye_knots_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "black_eye_knots",
+      "seed": 48296,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "scratch_runes_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "scratch_runes",
+      "seed": 48333,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "purple_bruise_bloom_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "purple_bruise_bloom",
+      "seed": 48370,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "pus_bubbled_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "pus_bubbled",
+      "seed": 48407,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "thread_sinew_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "thread_sinew",
+      "seed": 48444,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "pale_handprint_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "pale_handprint",
+      "seed": 48481,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "chitin_splintered_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "chitin_splintered",
+      "seed": 48518,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "cold_blue_curse_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "cold_blue_curse",
+      "seed": 48555,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "necrotic_edges_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "necrotic_edges",
+      "seed": 48592,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "ritual_chalk_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "ritual_chalk",
+      "seed": 48629,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "fly_egg_cluster_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "fly_egg_cluster",
+      "seed": 48666,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "dark_matter_rift_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "dark_matter_rift",
+      "seed": 48703,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "infected_waterline_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "infected_waterline",
+      "seed": 48740,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "slaughter_lichen_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "slaughter_lichen",
+      "seed": 88000,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "starrot_gore_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "starrot_gore",
+      "seed": 88101,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "tarred_bone_rites_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "tarred_bone_rites",
+      "seed": 88202,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "seeping_watcher_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "seeping_watcher",
+      "seed": 88303,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "maggot_waterline_deepslate_tiles.png",
+      "base": "deepslate_tiles",
+      "recipe": "maggot_waterline",
+      "seed": 88404,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "slaughter_lichen_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "slaughter_lichen",
+      "seed": 89000,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "starrot_gore_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "starrot_gore",
+      "seed": 89101,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "tarred_bone_rites_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "tarred_bone_rites",
+      "seed": 89202,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "seeping_watcher_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "seeping_watcher",
+      "seed": 89303,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "maggot_waterline_blackstone_bricks.png",
+      "base": "blackstone_bricks",
+      "recipe": "maggot_waterline",
+      "seed": 89404,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "slaughter_lichen_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "slaughter_lichen",
+      "seed": 90000,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "starrot_gore_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "starrot_gore",
+      "seed": 90101,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "tarred_bone_rites_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "tarred_bone_rites",
+      "seed": 90202,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "seeping_watcher_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "seeping_watcher",
+      "seed": 90303,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "maggot_waterline_polished_blackstone.png",
+      "base": "polished_blackstone",
+      "recipe": "maggot_waterline",
+      "seed": 90404,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "slaughter_lichen_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "slaughter_lichen",
+      "seed": 91000,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "starrot_gore_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "starrot_gore",
+      "seed": 91101,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "tarred_bone_rites_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "tarred_bone_rites",
+      "seed": 91202,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "seeping_watcher_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "seeping_watcher",
+      "seed": 91303,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "maggot_waterline_blackstone_top.png",
+      "base": "blackstone_top",
+      "recipe": "maggot_waterline",
+      "seed": 91404,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "slaughter_lichen_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "slaughter_lichen",
+      "seed": 92000,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "starrot_gore_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "starrot_gore",
+      "seed": 92101,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "tarred_bone_rites_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "tarred_bone_rites",
+      "seed": 92202,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "seeping_watcher_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "seeping_watcher",
+      "seed": 92303,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "maggot_waterline_polished_deepslate.png",
+      "base": "polished_deepslate",
+      "recipe": "maggot_waterline",
+      "seed": 92404,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "slaughter_lichen_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "slaughter_lichen",
+      "seed": 93000,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "starrot_gore_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "starrot_gore",
+      "seed": 93101,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "tarred_bone_rites_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "tarred_bone_rites",
+      "seed": 93202,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "seeping_watcher_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "seeping_watcher",
+      "seed": 93303,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "maggot_waterline_deepslate_bricks.png",
+      "base": "deepslate_bricks",
+      "recipe": "maggot_waterline",
+      "seed": 93404,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "slaughter_lichen_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "slaughter_lichen",
+      "seed": 94000,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "starrot_gore_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "starrot_gore",
+      "seed": 94101,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "tarred_bone_rites_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "tarred_bone_rites",
+      "seed": 94202,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "seeping_watcher_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "seeping_watcher",
+      "seed": 94303,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "filename": "maggot_waterline_cobbled_deepslate.png",
+      "base": "cobbled_deepslate",
+      "recipe": "maggot_waterline",
+      "seed": 94404,
+      "size": [
+        16,
+        16
+      ],
+      "mode": "RGBA"
+    }
+  ]
+}
