@@ -6,6 +6,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
@@ -25,6 +27,7 @@ import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Optional;
 
 public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
@@ -57,6 +60,9 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
 
     // Coalesce server->client block updates (avoid spamming within same tick)
     private long lastUpdateGameTime = Long.MIN_VALUE;
+
+    // One-shot spawn detection cache (tag-filtered, not total entities).
+    private int oneShotTaggedCount = -1;
 
     // -------- Reflection access to BaseSpawner private config fields --------
     // These are mapping-sensitive. We treat missing fields as "feature disabled" instead of hard-crashing.
@@ -213,6 +219,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
             // Rearm on enable so you can turn it on after setting mob/delay.
             this.bossHasSpawned = false;
         }
+        this.oneShotTaggedCount = -1;
         this.setChanged();
         if (this.level != null && !this.level.isClientSide()) {
             markUpdated();
@@ -484,7 +491,36 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         this.clientSpawnerDirty = false;
     }
 
-    // ----------------------------
+    
+    private String oneShotSpawnTag() {
+        return "cosmic_spawner_" + this.worldPosition.getX() + "_" + this.worldPosition.getY() + "_" + this.worldPosition.getZ();
+    }
+
+    private void applySpawnTagToSpawnerData() {
+        CompoundTag base = this.spawner.getOrCreateNextSpawnData(this.level, this.worldPosition).getEntityToSpawn().copy();
+        List<String> tags = new java.util.ArrayList<>();
+        if (base.contains("Tags", Tag.TAG_LIST)) {
+            ListTag in = base.getList("Tags", Tag.TAG_STRING);
+            for (int i = 0; i < in.size(); i++) tags.add(in.getString(i));
+        }
+        String marker = oneShotSpawnTag();
+        if (!tags.contains(marker)) {
+            var out = new ListTag();
+            for (String t : tags) out.add(net.minecraft.nbt.StringTag.valueOf(t));
+            out.add(net.minecraft.nbt.StringTag.valueOf(marker));
+            base.put("Tags", out);
+            this.spawner.setNextSpawnData(this.level, this.worldPosition, forceFullBrightRules(new SpawnData(base, Optional.empty(), Optional.empty())));
+        }
+    }
+
+    private int countTaggedEntities(net.minecraft.server.level.ServerLevel sl) {
+        int r = Math.max(1, this.getSpawnerSpawnRange());
+        double pad = r + 3.0D;
+        AABB detectBox = new AABB(this.worldPosition).inflate(pad, 8.0D, pad);
+        String marker = oneShotSpawnTag();
+        return sl.getEntities((Entity) null, detectBox, e -> e.getTags().contains(marker)).size();
+    }
+// ----------------------------
     // Tick hooks
     // ----------------------------
 
@@ -507,31 +543,25 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
             return;
         }
 
-        // Boss one-shot: lightweight, mapping-stable spawn detection via nearby-entity delta.
-        int before = -1;
-        AABB detectBox = null;
-
+        // Boss one-shot: tag-filtered detection (ignores unrelated entities entering/leaving volume).
         if (be.bossOneShot) {
-            int r = Math.max(1, be.getSpawnerSpawnRange());
-            // Slightly larger than spawn range to catch edge spawns.
-            double pad = r + 2.0D;
-            // Spawns tend to be near the spawner and within a few blocks vertically.
-            detectBox = new AABB(pos).inflate(pad, 6.0D, pad);
-            before = sl.getEntities((Entity) null, detectBox, e -> true).size();
+            be.applySpawnTagToSpawnerData();
+            if (be.oneShotTaggedCount < 0) be.oneShotTaggedCount = be.countTaggedEntities(sl);
         }
 
         be.spawner.serverTick(sl, pos);
 
-        if (be.bossOneShot && detectBox != null && before >= 0) {
-            int after = sl.getEntities((Entity) null, detectBox, e -> true).size();
-            if (after > before) {
+        if (be.bossOneShot) {
+            int after = be.countTaggedEntities(sl);
+            if (after > Math.max(0, be.oneShotTaggedCount)) {
                 be.bossHasSpawned = true;
                 be.setChanged();
                 be.markUpdated();
 
                 // Self-destruct after the first successful spawn.
-                // Use setBlock to ensure neighbors update properly.
                 sl.removeBlock(pos, false);
+            } else {
+                be.oneShotTaggedCount = after;
             }
         }
     }
