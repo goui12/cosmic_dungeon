@@ -110,13 +110,14 @@ public class RedstoneReceiverBlock extends Block implements EntityBlock {
 
     @Override
     public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction toSide) {
-        if (!state.getValue(POWERED)) return 0;
-        return (toSide == state.getValue(FACING)) ? 15 : 0;
+        return state.getValue(POWERED) ? 15 : 0;
     }
 
     @Override
     public int getDirectSignal(BlockState state, BlockGetter level, BlockPos pos, Direction toSide) {
-        return getSignal(state, level, pos, toSide);
+        if (!state.getValue(POWERED)) return 0;
+        // Match button/lever-like behavior: strongly power the block this receiver is attached to.
+        return toSide == state.getValue(FACING).getOpposite() ? 15 : 0;
     }
 
     void setPowered(Level level, BlockPos pos, BlockState state, boolean powered) {
@@ -124,10 +125,13 @@ public class RedstoneReceiverBlock extends Block implements EntityBlock {
 
         level.setBlock(pos, state.setValue(POWERED, powered), Block.UPDATE_ALL);
 
-        Direction toward = state.getValue(FACING);
-        BlockPos target = pos.relative(toward);
+        Direction outward = state.getValue(FACING);
+        BlockPos outwardPos = pos.relative(outward);
+        BlockPos attachedPos = pos.relative(outward.getOpposite());
 
-        level.updateNeighborsAt(target, this);
+        // Notify both front and attached blocks so vanilla redstone reevaluates like a lever/button update.
+        level.updateNeighborsAt(outwardPos, this);
+        level.updateNeighborsAt(attachedPos, this);
         level.updateNeighborsAt(pos, this);
         level.updateNeighbourForOutputSignal(pos, this);
         level.gameEvent(GameEvent.BLOCK_CHANGE, pos, GameEvent.Context.of(state));
