@@ -229,6 +229,20 @@ public final class SpawnerCommand {
                                 )
                         )
 
+
+                        .then(Commands.literal("preset")
+                                .requires(src -> src.hasPermission(0))
+                                .then(Commands.argument("profile", StringArgumentType.word())
+                                        .suggests((ctx,b)->SharedSuggestionProvider.suggest(List.of("trash","elite","boss"), b))
+                                        .executes(ctx -> applyPreset(ctx.getSource(), StringArgumentType.getString(ctx, "profile")))
+                                )
+                        )
+
+                        .then(Commands.literal("validate")
+                                .requires(src -> src.hasPermission(0))
+                                .executes(ctx -> validateSpawner(ctx.getSource()))
+                        )
+
                         .then(Commands.literal("stats")
                                 .requires(src -> src.hasPermission(0))
                                 .executes(ctx -> {
@@ -260,6 +274,46 @@ public final class SpawnerCommand {
                                 })
                         )
         );
+    }
+
+
+    private static int applyPreset(CommandSourceStack src, String profileRaw) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        var player = src.getPlayerOrException();
+        var level = player.level();
+        var be = getTargetSpawnerBE(src, player, level);
+        if (be == null) return 0;
+        String profile = profileRaw.toLowerCase();
+        switch (profile) {
+            case "trash" -> { be.setSpawnerDelayRange(40, 100); be.setSpawnerSpawnCount(4); be.setSpawnerMaxNearbyEntities(24); be.setSpawnerSpawnRange(6); }
+            case "elite" -> { be.setSpawnerDelayRange(120, 220); be.setSpawnerSpawnCount(2); be.setSpawnerMaxNearbyEntities(8); be.setSpawnerSpawnRange(4); }
+            case "boss" -> { be.setSpawnerDelayRange(200, 200); be.setSpawnerSpawnCount(1); be.setSpawnerMaxNearbyEntities(2); be.setSpawnerSpawnRange(2); be.setBossOneShot(true); }
+            default -> { src.sendFailure(Component.literal("Unknown profile: " + profileRaw)); return 0; }
+        }
+        src.sendSuccess(() -> Component.literal("Applied spawner preset: " + profile), false);
+        return 1;
+    }
+
+    private static int validateSpawner(CommandSourceStack src) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        var player = src.getPlayerOrException();
+        var level = player.level();
+        var be = getTargetSpawnerBE(src, player, level);
+        if (be == null) return 0;
+        int issues = 0;
+        ResourceLocation rl = ResourceLocation.tryParse(be.getSpawnerEntityId());
+        if (rl == null || BuiltInRegistries.ENTITY_TYPE.getOptional(rl).isEmpty()) {
+            src.sendFailure(Component.literal("[Invalid Entity ID] " + be.getSpawnerEntityId())); issues++;
+        }
+        if (be.getSpawnerMinSpawnDelay() > be.getSpawnerMaxSpawnDelay()) {
+            src.sendFailure(Component.literal("[Delay Range] minDelay is greater than maxDelay.")); issues++;
+        }
+        if (be.getSpawnerMaxNearbyEntities() > 0 && be.getSpawnerSpawnCount() > be.getSpawnerMaxNearbyEntities()) {
+            src.sendFailure(Component.literal("[Cap Mismatch] spawn count exceeds nearby cap.")); issues++;
+        }
+        if (be.getSpawnerRequiredPlayerRange() < be.getSpawnerSpawnRange()) {
+            src.sendFailure(Component.literal("[Range Mismatch] player range is smaller than spawn range.")); issues++;
+        }
+        if (issues == 0) src.sendSuccess(() -> Component.literal("Spawner validation passed."), false);
+        return issues == 0 ? 1 : 0;
     }
 
     private static int setBoss(CommandSourceStack src, boolean enabled) {
