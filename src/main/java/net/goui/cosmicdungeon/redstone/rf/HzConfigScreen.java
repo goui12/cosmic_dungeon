@@ -57,6 +57,7 @@ public class HzConfigScreen extends Screen {
     private EditBox newHzField;
     private int guiLeft, guiTop;
     private int currentHz = 1;
+    private static final int MAX_HZ = 1_000_000;
 
     public HzConfigScreen() {
         super(Component.literal("Redstone RF Config"));
@@ -100,8 +101,8 @@ public class HzConfigScreen extends Screen {
                 NEW_W - (INSET_X * 2),
                 fieldH,
                 Component.literal("Hz"));
-        newHzField.setMaxLength(3);
-        newHzField.setFilter(s -> s.matches("\\d{0,3}"));
+        newHzField.setMaxLength(7);
+        newHzField.setFilter(s -> s.matches("\\d{0,7}"));
         newHzField.setValue(currentHz > 0 ? String.valueOf(currentHz) : "");
         addRenderableWidget(newHzField);
         setInitialFocus(newHzField);
@@ -125,7 +126,7 @@ public class HzConfigScreen extends Screen {
 
 
     private static int clampHz(int v) {
-        return v < 1 ? 1 : Math.min(v, 999);
+        return v < 1 ? 1 : Math.min(v, MAX_HZ);
     }
 
 
@@ -219,6 +220,9 @@ public class HzConfigScreen extends Screen {
         Minecraft mc = Minecraft.getInstance();
         if (mc.screen instanceof HzConfigScreen screen && screen.isForPos(pos)) {
             screen.currentHz = hz > 0 ? hz : -1; // -1 means NULL
+            if (screen.newHzField != null && !screen.newHzField.isFocused()) {
+                screen.newHzField.setValue(screen.currentHz > 0 ? String.valueOf(screen.currentHz) : "");
+            }
         }
     }
 

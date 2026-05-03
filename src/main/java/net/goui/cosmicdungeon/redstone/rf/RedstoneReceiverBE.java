@@ -26,7 +26,7 @@ public class RedstoneReceiverBE extends BlockEntity {
 
     /** Authoritative setter (server-only): re-index, persist, update powered, vanilla update, broadcast. */
     public void setHz(ServerLevel level, int newHz) {
-        int clamped = Mth.clamp(newHz, 1, 999);
+        int clamped = Mth.clamp(newHz, 1, RedstoneTransmitterBE.MAX_HZ);
         if (clamped == this.hz) return;
 
         int old = this.hz;
@@ -40,7 +40,7 @@ public class RedstoneReceiverBE extends BlockEntity {
 
         // Update powered state from the bus (if server still running)
         if (!level.getServer().isStopped()) {
-            boolean active = RfBusManager.get(level).isActive(this.hz);
+            boolean active = RfBusManager.get(level).getSignal(this.hz) > 0;
             BlockState st = level.getBlockState(worldPosition);
             if (st.getBlock() instanceof RedstoneReceiverBlock block) {
                 block.setPowered(level, worldPosition, st, active);
@@ -56,7 +56,7 @@ public class RedstoneReceiverBE extends BlockEntity {
     void register(ServerLevel level) {
         RfBusManager.ReceiverIndex.get(level).add(hz, worldPosition);
         if (!level.getServer().isStopped()) {
-            boolean active = RfBusManager.get(level).isActive(hz);
+            boolean active = RfBusManager.get(level).getSignal(hz) > 0;
             BlockState st = level.getBlockState(worldPosition);
             if (st.getBlock() instanceof RedstoneReceiverBlock block) {
                 block.setPowered(level, worldPosition, st, active);
@@ -92,6 +92,6 @@ public class RedstoneReceiverBE extends BlockEntity {
     @Override
     protected void loadAdditional(ValueInput in) {
         int loaded = in.read("Hz", Codec.INT).orElse(hz);
-        this.hz = Mth.clamp(loaded, 1, 999);
+        this.hz = Mth.clamp(loaded, 1, RedstoneTransmitterBE.MAX_HZ);
     }
 }

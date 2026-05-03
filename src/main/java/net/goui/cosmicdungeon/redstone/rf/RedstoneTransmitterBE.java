@@ -10,6 +10,7 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
 public class RedstoneTransmitterBE extends BlockEntity {
+    public static final int MAX_HZ = 1_000_000;
     private int hz = 1;
 
     public RedstoneTransmitterBE(BlockPos pos, BlockState state) {
@@ -22,7 +23,7 @@ public class RedstoneTransmitterBE extends BlockEntity {
 
     /** Authoritative setter (server-only): persist, update bus, vanilla update, broadcast to clients. */
     public void setHz(ServerLevel level, int newHz) {
-        int clamped = Mth.clamp(newHz, 1, 999);
+        int clamped = Mth.clamp(newHz, 1, MAX_HZ);
         if (clamped == this.hz) return;
 
         int old = this.hz;
@@ -36,8 +37,8 @@ public class RedstoneTransmitterBE extends BlockEntity {
 
         if (powered && !level.getServer().isStopped()) {
             RfBusManager bus = RfBusManager.get(level);
-            bus.removeActive(level, old);
-            bus.addActive(level, this.hz);
+            bus.removeActive(level, this.worldPosition, old, getSignalStrength(level));
+            bus.addActive(level, this.worldPosition, this.hz, getSignalStrength(level));
         }
 
         // Nudge vanilla client sync (comparators/models watching this BE)
@@ -50,8 +51,8 @@ public class RedstoneTransmitterBE extends BlockEntity {
     void onPowerChanged(ServerLevel level, boolean nowPowered) {
         if (level.getServer().isStopped()) return;
         RfBusManager bus = RfBusManager.get(level);
-        if (nowPowered) bus.addActive(level, hz);
-        else bus.removeActive(level, hz);
+        int strength = nowPowered ? getSignalStrength(level) : 0;
+        bus.updateActive(level, worldPosition, hz, strength);
     }
 
     @Override
@@ -61,7 +62,7 @@ public class RedstoneTransmitterBE extends BlockEntity {
             boolean powered = st.hasProperty(RedstoneTransmitterBlock.POWERED)
                     && st.getValue(RedstoneTransmitterBlock.POWERED);
             if (powered) {
-                RfBusManager.get(sl).addActive(sl, hz);
+                RfBusManager.get(sl).addActive(sl, worldPosition, hz, getSignalStrength(sl));
             }
         }
     }
@@ -73,7 +74,7 @@ public class RedstoneTransmitterBE extends BlockEntity {
             boolean powered = st.hasProperty(RedstoneTransmitterBlock.POWERED)
                     && st.getValue(RedstoneTransmitterBlock.POWERED);
             if (powered) {
-                RfBusManager.get(sl).removeActive(sl, hz);
+                RfBusManager.get(sl).removeActive(sl, worldPosition, hz, getSignalStrength(sl));
             }
         }
         super.setRemoved();
@@ -88,6 +89,10 @@ public class RedstoneTransmitterBE extends BlockEntity {
     @Override
     protected void loadAdditional(ValueInput in) {
         int loaded = in.read("Hz", Codec.INT).orElse(hz);
-        this.hz = Mth.clamp(loaded, 1, 999);
+        this.hz = Mth.clamp(loaded, 1, MAX_HZ);
+    }
+
+    private int getSignalStrength(ServerLevel level) {
+        return Mth.clamp(level.getBestNeighborSignal(worldPosition), 0, 15);
     }
 }

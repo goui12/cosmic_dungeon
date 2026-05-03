@@ -2,9 +2,11 @@ package net.goui.cosmicdungeon.redstone.rf;
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import com.mojang.serialization.Codec;
@@ -25,7 +27,8 @@ final class RfBusManager extends SavedData {
     static final SavedDataType<RfBusManager> TYPE =
             new SavedDataType<>(SAVE_ID, RfBusManager::new, Codec.unit(new RfBusManager()));
 
-    private final Int2IntOpenHashMap activeCounts = new Int2IntOpenHashMap();
+    private final Int2ObjectOpenHashMap<Long2IntOpenHashMap> transmittersByHz = new Int2ObjectOpenHashMap<>();
+    private final Int2IntOpenHashMap maxSignalByHz = new Int2IntOpenHashMap();
 
     private RfBusManager() {}
 
@@ -33,39 +36,45 @@ final class RfBusManager extends SavedData {
         return level.getDataStorage().computeIfAbsent(TYPE);
     }
 
-    boolean isActive(int hz) {
-        return activeCounts.getOrDefault(hz, 0) > 0;
+    int getSignal(int hz) {
+        return maxSignalByHz.getOrDefault(hz, 0);
     }
 
-    void addActive(ServerLevel level, int hz) {
-        int c = activeCounts.getOrDefault(hz, 0) + 1;
-        activeCounts.put(hz, c);
-        setDirty();
+    void addActive(ServerLevel level, BlockPos transmitterPos, int hz, int signal) {
+        updateActive(level, transmitterPos, hz, signal);
+    }
 
-        // Only activate receivers when the first transmitter appears
-        if (c == 1 && !isServerStopping(level)) {
-            level.getServer().execute(() -> {
-                if (!isServerStopping(level)) {
-                    notifyReceivers(level, hz, true);
-                }
-            });
+    void removeActive(ServerLevel level, BlockPos transmitterPos, int hz, int signal) {
+        updateActive(level, transmitterPos, hz, 0);
+    }
+
+    void updateActive(ServerLevel level, BlockPos transmitterPos, int hz, int signal) {
+        Long2IntOpenHashMap txMap = transmittersByHz.computeIfAbsent(hz, k -> new Long2IntOpenHashMap());
+        long key = transmitterPos.asLong();
+        int clamped = Math.max(0, Math.min(signal, 15));
+
+        if (clamped <= 0) txMap.remove(key);
+        else txMap.put(key, clamped);
+
+        if (txMap.isEmpty()) {
+            transmittersByHz.remove(hz);
         }
-    }
 
-    void removeActive(ServerLevel level, int hz) {
-        int old = activeCounts.getOrDefault(hz, 0);
-        if (old <= 0) return;
-
-        int c = old - 1;
-        if (c == 0) activeCounts.remove(hz);
-        else activeCounts.put(hz, c);
+        int previous = maxSignalByHz.getOrDefault(hz, 0);
+        int updated = 0;
+        if (!txMap.isEmpty()) {
+            for (int value : txMap.values()) {
+                if (value > updated) updated = value;
+            }
+        }
+        if (updated == 0) maxSignalByHz.remove(hz);
+        else maxSignalByHz.put(hz, updated);
         setDirty();
 
-        // Only deactivate receivers when the last transmitter disappears
-        if (c == 0 && !isServerStopping(level)) {
+        if (previous != updated && !isServerStopping(level)) {
             level.getServer().execute(() -> {
                 if (!isServerStopping(level)) {
-                    notifyReceivers(level, hz, false);
+                    notifyReceivers(level, hz, updated > 0);
                 }
             });
         }
@@ -79,11 +88,21 @@ final class RfBusManager extends SavedData {
         ReceiverIndex idx = ReceiverIndex.get(level);
         Set<BlockPos> positions = idx.positionsFor(hz);
         if (positions.isEmpty()) return;
+        Set<BlockPos> stale = null;
 
         for (BlockPos pos : positions) {
             BlockState st = level.getBlockState(pos);
             if (st.getBlock() instanceof RedstoneReceiverBlock block) {
                 block.setPowered(level, pos, st, active);
+            } else {
+                if (stale == null) stale = new HashSet<>();
+                stale.add(pos);
+            }
+        }
+
+        if (stale != null) {
+            for (BlockPos pos : stale) {
+                idx.remove(hz, pos);
             }
         }
     }
