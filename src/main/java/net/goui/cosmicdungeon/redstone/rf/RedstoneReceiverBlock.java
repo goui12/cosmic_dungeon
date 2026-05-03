@@ -152,6 +152,18 @@ public class RedstoneReceiverBlock extends Block implements EntityBlock {
         if (be instanceof RedstoneReceiverBE rbe) {
             rbe.unregister(level);
         }
+        super.affectNeighborsAfterRemoval(state, level, pos, moved);
+    }
+
+    @Override
+    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+        if (!level.isClientSide()) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof RedstoneReceiverBE rbe) {
+                rbe.unregister((net.minecraft.server.level.ServerLevel) level);
+            }
+        }
+        return super.playerWillDestroy(level, pos, state, player);
     }
 
     @Override

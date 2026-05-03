@@ -110,7 +110,7 @@ public class RedstoneTransmitterBlock extends Block implements EntityBlock {
                 boolean wasPowered = state.hasProperty(POWERED) && state.getValue(POWERED);
                 if (wasPowered) {
                     RfBusManager.get((net.minecraft.server.level.ServerLevel) level)
-                            .removeActive((net.minecraft.server.level.ServerLevel) level, tbe.getHz());
+                            .removeActive((net.minecraft.server.level.ServerLevel) level, pos, tbe.getHz(), 0);
                 }
             }
         }
@@ -125,7 +125,7 @@ public class RedstoneTransmitterBlock extends Block implements EntityBlock {
         var be = level.getBlockEntity(pos);
         if (be instanceof RedstoneTransmitterBE tbe) {
             boolean wasPowered = state.hasProperty(POWERED) && state.getValue(POWERED);
-            if (wasPowered) RfBusManager.get(level).removeActive(level, tbe.getHz());
+            if (wasPowered) RfBusManager.get(level).removeActive(level, pos, tbe.getHz(), 0);
         }
         super.affectNeighborsAfterRemoval(state, level, pos, moved);
     }
