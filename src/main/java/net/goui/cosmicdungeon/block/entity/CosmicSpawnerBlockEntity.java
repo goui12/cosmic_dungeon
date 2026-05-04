@@ -161,7 +161,9 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         return null;
     }
 
-    private final BaseSpawner spawner = new BaseSpawner() {
+    private final CosmicBaseSpawner spawner = new CosmicBaseSpawner();
+
+    private final class CosmicBaseSpawner extends BaseSpawner {
         @Override
         public void broadcastEvent(Level level, BlockPos pos, int id) {
             level.blockEvent(pos, CosmicSpawnerBlockEntity.this.getBlockState().getBlock(), id, 0);
@@ -172,7 +174,10 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
             // Force Cosmic spawner to ignore vanilla spawn placement rules (including light)
             super.setNextSpawnData(level, pos, forceFullBrightRules(nextSpawnData));
         }
-    };
+        public void setNextSpawnDataPublic(@Nullable Level level, BlockPos pos, SpawnData nextSpawnData) {
+            this.setNextSpawnData(level, pos, nextSpawnData);
+        }
+    }
 
     public CosmicSpawnerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.COSMIC_SPAWNER.get(), pos, state);
@@ -497,19 +502,22 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     }
 
     private void applySpawnTagToSpawnerData() {
-        CompoundTag base = this.spawner.getOrCreateNextSpawnData(this.level, this.worldPosition).getEntityToSpawn().copy();
+        CompoundTag base = new CompoundTag();
+        EntityType.byString(this.spawnerEntityId).ifPresent(type -> base.putString("id", BuiltInRegistries.ENTITY_TYPE.getKey(type).toString()));
+
         List<String> tags = new java.util.ArrayList<>();
-        if (base.contains("Tags", Tag.TAG_LIST)) {
-            ListTag in = base.getList("Tags", Tag.TAG_STRING);
-            for (int i = 0; i < in.size(); i++) tags.add(in.getString(i));
-        }
+        base.getList("Tags").ifPresent(in -> {
+            for (int i = 0; i < in.size(); i++) {
+                in.getString(i).ifPresent(tags::add);
+            }
+        });
         String marker = oneShotSpawnTag();
         if (!tags.contains(marker)) {
             var out = new ListTag();
             for (String t : tags) out.add(net.minecraft.nbt.StringTag.valueOf(t));
             out.add(net.minecraft.nbt.StringTag.valueOf(marker));
             base.put("Tags", out);
-            this.spawner.setNextSpawnData(this.level, this.worldPosition, forceFullBrightRules(new SpawnData(base, Optional.empty(), Optional.empty())));
+            this.spawner.setNextSpawnDataPublic(this.level, this.worldPosition, forceFullBrightRules(new SpawnData(base, Optional.empty(), Optional.empty())));
         }
     }
 
