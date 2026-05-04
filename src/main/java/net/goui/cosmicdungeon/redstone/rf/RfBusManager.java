@@ -71,10 +71,11 @@ final class RfBusManager extends SavedData {
         else maxSignalByHz.put(hz, updated);
         setDirty();
 
+        boolean activeNow = updated > 0;
         if (previous != updated && !isServerStopping(level)) {
             level.getServer().execute(() -> {
                 if (!isServerStopping(level)) {
-                    notifyReceivers(level, hz, updated > 0);
+                    notifyReceivers(level, hz, activeNow);
                 }
             });
         }
