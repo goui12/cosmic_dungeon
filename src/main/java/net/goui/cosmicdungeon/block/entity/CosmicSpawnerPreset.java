@@ -2,142 +2,53 @@ package net.goui.cosmicdungeon.block.entity;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import java.util.EnumMap;
-import java.util.Map;
-import java.util.Optional;
 
 public final class CosmicSpawnerPreset {
     public static final int PRESET_VERSION = 1;
-
-    public enum Slot {
-        MAINHAND(EquipmentSlot.MAINHAND, "mainhand", 0, true),
-        OFFHAND(EquipmentSlot.OFFHAND, "offhand", 1, true),
-        HEAD(EquipmentSlot.HEAD, "head", 0, false),
-        CHEST(EquipmentSlot.CHEST, "chest", 1, false),
-        LEGS(EquipmentSlot.LEGS, "legs", 2, false),
-        FEET(EquipmentSlot.FEET, "feet", 3, false);
-
-        public final EquipmentSlot equipmentSlot;
-        public final String id;
-        public final int dropIndex;
-        public final boolean hand;
-
-        Slot(EquipmentSlot equipmentSlot, String id, int dropIndex, boolean hand) {
-            this.equipmentSlot = equipmentSlot;
-            this.id = id;
-            this.dropIndex = dropIndex;
-            this.hand = hand;
-        }
-
-        public static Slot fromId(String id) {
-            for (Slot slot : values()) if (slot.id.equals(id)) return slot;
-            return null;
-        }
-    }
-
+    public enum Slot { MAINHAND(EquipmentSlot.MAINHAND,"mainhand"),OFFHAND(EquipmentSlot.OFFHAND,"offhand"),HEAD(EquipmentSlot.HEAD,"head"),CHEST(EquipmentSlot.CHEST,"chest"),LEGS(EquipmentSlot.LEGS,"legs"),FEET(EquipmentSlot.FEET,"feet");
+        public final EquipmentSlot equipmentSlot; public final String id; Slot(EquipmentSlot s,String id){this.equipmentSlot=s;this.id=id;} public static Slot fromId(String id){for(var s:values()) if(s.id.equals(id)) return s; return null;}}
     private ResourceLocation entityTypeId = ResourceLocation.withDefaultNamespace("pig");
-    private Component customName;
-    private boolean customNameVisible;
-    private boolean persistent;
-    private boolean silent;
-    private boolean glowing;
-    private boolean noAi;
-    private boolean noGravity;
+    private Component customName; private boolean customNameVisible,persistent,silent,glowing,noAi,noGravity;
+    private final EnumMap<Slot, ItemStack> equipment = new EnumMap<>(Slot.class); private final EnumMap<Slot, Float> dropChances = new EnumMap<>(Slot.class);
+    public CosmicSpawnerPreset(){for(var s:Slot.values()){equipment.put(s,ItemStack.EMPTY); dropChances.put(s,0.085F);}}
+    public ResourceLocation getEntityTypeId(){return entityTypeId;} public void setEntityTypeId(ResourceLocation id){this.entityTypeId=id;}
+    public void setCustomName(Component n){this.customName=n;} public Component getCustomName(){return customName;} public void setCustomNameVisible(boolean v){this.customNameVisible=v;} public void setPersistent(boolean v){this.persistent=v;} public void setSilent(boolean v){this.silent=v;} public void setGlowing(boolean v){this.glowing=v;} public void setNoAi(boolean v){this.noAi=v;} public void setNoGravity(boolean v){this.noGravity=v;}
+    public ItemStack getEquipment(Slot s){return equipment.get(s);} public void setEquipment(Slot s, ItemStack st){equipment.put(s,st.copy());} public float getDropChance(Slot s){return dropChances.get(s);} public void setDropChance(Slot s,float f){dropChances.put(s,Math.max(0f,Math.min(1f,f)));}
 
-    private final EnumMap<Slot, ItemStack> equipment = new EnumMap<>(Slot.class);
-    private final EnumMap<Slot, Float> dropChances = new EnumMap<>(Slot.class);
-
-    public CosmicSpawnerPreset() {
-        for (Slot slot : Slot.values()) {
-            equipment.put(slot, ItemStack.EMPTY);
-            dropChances.put(slot, 0.085F);
+    public void save(ValueOutput out){
+        out.putInt("presetVersion", PRESET_VERSION); out.putString("entityType", entityTypeId.toString());
+        if(customName!=null) out.store("customName", ComponentSerialization.FLAT_CODEC, customName);
+        out.putBoolean("customNameVisible", customNameVisible); out.putBoolean("persistent", persistent); out.putBoolean("silent", silent); out.putBoolean("glowing", glowing); out.putBoolean("noAi", noAi); out.putBoolean("noGravity", noGravity);
+        for (var s: Slot.values()) {
+            ItemStack st=equipment.get(s); if(!st.isEmpty()) out.store("eq_"+s.id, ItemStack.CODEC, st);
+            out.putFloat("drop_"+s.id, dropChances.get(s));
         }
     }
-    public ResourceLocation getEntityTypeId() { return entityTypeId; }
-    public void setEntityTypeId(ResourceLocation entityTypeId) { this.entityTypeId = entityTypeId; }
-    public Component getCustomName() { return customName; }
-    public void setCustomName(Component customName) { this.customName = customName; }
-    public boolean isCustomNameVisible() { return customNameVisible; }
-    public void setCustomNameVisible(boolean customNameVisible) { this.customNameVisible = customNameVisible; }
-    public boolean isPersistent() { return persistent; }
-    public void setPersistent(boolean persistent) { this.persistent = persistent; }
-    public boolean isSilent() { return silent; }
-    public void setSilent(boolean silent) { this.silent = silent; }
-    public boolean isGlowing() { return glowing; }
-    public void setGlowing(boolean glowing) { this.glowing = glowing; }
-    public boolean isNoAi() { return noAi; }
-    public void setNoAi(boolean noAi) { this.noAi = noAi; }
-    public boolean isNoGravity() { return noGravity; }
-    public void setNoGravity(boolean noGravity) { this.noGravity = noGravity; }
-    public ItemStack getEquipment(Slot slot) { return equipment.get(slot); }
-    public void setEquipment(Slot slot, ItemStack stack) { equipment.put(slot, stack.copy()); }
-    public float getDropChance(Slot slot) { return dropChances.get(slot); }
-    public void setDropChance(Slot slot, float chance) { dropChances.put(slot, Math.max(0F, Math.min(1F, chance))); }
-
-    public CompoundTag save(HolderLookup.Provider registries) {
-        CompoundTag tag = new CompoundTag();
-        tag.putInt("presetVersion", PRESET_VERSION);
-        tag.putString("entityType", entityTypeId.toString());
-        if (customName != null) tag.putString("customName", Component.Serializer.toJson(customName, registries));
-        tag.putBoolean("customNameVisible", customNameVisible);
-        tag.putBoolean("persistent", persistent);
-        tag.putBoolean("silent", silent);
-        tag.putBoolean("glowing", glowing);
-        tag.putBoolean("noAi", noAi);
-        tag.putBoolean("noGravity", noGravity);
-        CompoundTag equipTag = new CompoundTag();
-        CompoundTag dropTag = new CompoundTag();
-        for (Map.Entry<Slot, ItemStack> e : equipment.entrySet()) if (!e.getValue().isEmpty()) equipTag.put(e.getKey().id, e.getValue().save(registries));
-        for (Map.Entry<Slot, Float> e : dropChances.entrySet()) dropTag.putFloat(e.getKey().id, e.getValue());
-        tag.put("equipment", equipTag);
-        tag.put("dropChances", dropTag);
-        return tag;
-    }
-
-    public static Optional<CosmicSpawnerPreset> load(CompoundTag tag, HolderLookup.Provider registries) {
-        if (tag.isEmpty()) return Optional.empty();
-        CosmicSpawnerPreset preset = new CosmicSpawnerPreset();
-        ResourceLocation typeId = ResourceLocation.tryParse(tag.getStringOr("entityType", "minecraft:pig"));
-        if (typeId == null || !BuiltInRegistries.ENTITY_TYPE.containsKey(typeId)) typeId = ResourceLocation.withDefaultNamespace("pig");
-        preset.entityTypeId = typeId;
-        String customNameJson = tag.getStringOr("customName", "");
-        if (!customNameJson.isBlank()) preset.customName = Component.Serializer.fromJson(customNameJson, registries);
-        preset.customNameVisible = tag.getBooleanOr("customNameVisible", false);
-        preset.persistent = tag.getBooleanOr("persistent", false);
-        preset.silent = tag.getBooleanOr("silent", false);
-        preset.glowing = tag.getBooleanOr("glowing", false);
-        preset.noAi = tag.getBooleanOr("noAi", false);
-        preset.noGravity = tag.getBooleanOr("noGravity", false);
-        var equipTag = tag.getCompoundOrEmpty("equipment");
-        var dropTag = tag.getCompoundOrEmpty("dropChances");
-        for (Slot slot : Slot.values()) {
-            equipTag.getCompound(slot.id).ifPresent(c -> preset.equipment.put(slot, ItemStack.parse(registries, c).orElse(ItemStack.EMPTY)));
-            preset.dropChances.put(slot, Math.max(0F, Math.min(1F, dropTag.getFloatOr(slot.id, preset.dropChances.get(slot)))));
+    public static CosmicSpawnerPreset load(ValueInput in){
+        CosmicSpawnerPreset p=new CosmicSpawnerPreset();
+        ResourceLocation rl=ResourceLocation.tryParse(in.getStringOr("entityType","minecraft:pig")); if(rl!=null) p.entityTypeId=rl;
+        p.customName=in.read("customName", ComponentSerialization.FLAT_CODEC).orElse(null);
+        p.customNameVisible=in.getBooleanOr("customNameVisible",false); p.persistent=in.getBooleanOr("persistent",false); p.silent=in.getBooleanOr("silent",false); p.glowing=in.getBooleanOr("glowing",false); p.noAi=in.getBooleanOr("noAi",false); p.noGravity=in.getBooleanOr("noGravity",false);
+        HolderLookup.Provider lookup=in.lookup();
+        for (var s: Slot.values()) {
+            p.equipment.put(s, in.read("eq_"+s.id, ItemStack.CODEC).orElse(ItemStack.EMPTY));
+            p.dropChances.put(s, Math.max(0f,Math.min(1f,in.getFloatOr("drop_"+s.id,0.085f))));
         }
-        return Optional.of(preset);
+        return p;
     }
-
-    public void applyToEntity(Entity entity) {
-        if (customName != null) entity.setCustomName(customName);
-        entity.setCustomNameVisible(customNameVisible);
-        entity.setSilent(silent);
-        entity.setGlowingTag(glowing);
-        entity.setNoGravity(noGravity);
-        if (entity instanceof LivingEntity living) {
-            if (persistent) living.setPersistenceRequired();
-            living.setNoAi(noAi);
-            for (Slot slot : Slot.values()) {
-                living.setItemSlot(slot.equipmentSlot, equipment.get(slot).copy());
-                living.setDropChance(slot.equipmentSlot, getDropChance(slot));
-            }
-        }
+    public void applyToEntity(Entity entity){ if(customName!=null) entity.setCustomName(customName); entity.setCustomNameVisible(customNameVisible); entity.setSilent(silent); entity.setGlowingTag(glowing); entity.setNoGravity(noGravity);
+        if(entity instanceof Mob mob){ if(persistent) mob.setPersistenceRequired(); mob.setNoAi(noAi); for(var s:Slot.values()){mob.setItemSlot(s.equipmentSlot, equipment.get(s).copy()); mob.setDropChance(s.equipmentSlot,getDropChance(s));}}
     }
 }

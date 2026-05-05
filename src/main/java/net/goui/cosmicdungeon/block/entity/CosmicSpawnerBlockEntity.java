@@ -379,7 +379,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
 
         this.spawnerEntityId = input.getString("SpawnerEntityId").orElse("none");
 
-        input.getCompound("SpawnerPreset").flatMap(tag -> CosmicSpawnerPreset.load(tag, this.registryAccess())).ifPresent(this::setSpawnerPresetInternal);
+        input.child("SpawnerPreset").ifPresent(child -> this.setSpawnerPresetInternal(CosmicSpawnerPreset.load(child)));
 
         // Boss one-shot persisted flags
 // Boss one-shot persisted flags
@@ -396,7 +396,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
 
         output.putString("SpawnerEntityId", this.spawnerEntityId);
         if (this.spawnerPreset != null) {
-            output.store("SpawnerPreset", net.minecraft.nbt.CompoundTag.CODEC, this.spawnerPreset.save(this.registryAccess()));
+            this.spawnerPreset.save(output.child("SpawnerPreset"));
         }
 
         // Boss one-shot persisted flags
