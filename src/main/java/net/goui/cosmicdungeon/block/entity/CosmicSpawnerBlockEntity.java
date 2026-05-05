@@ -22,6 +22,7 @@ import net.minecraft.world.level.Spawner;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.AABB;
 import org.slf4j.Logger;
 
@@ -41,6 +42,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
 
     // Persisted: what this spawner is set to spawn (label + commands + client preview bootstrap)
     private String spawnerEntityId = "none";
+    private CosmicSpawnerPreset spawnerPreset;
 
     // Persisted: if true, this spawner self-destructs after it successfully spawns once.
     // Default: false
@@ -377,6 +379,8 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
 
         this.spawnerEntityId = input.getString("SpawnerEntityId").orElse("none");
 
+        input.child("SpawnerPreset").ifPresent(child -> this.setSpawnerPresetInternal(CosmicSpawnerPreset.load(child)));
+
         // Boss one-shot persisted flags
 // Boss one-shot persisted flags
         this.bossOneShot = input.getBooleanOr("BossOneShot", false);
@@ -391,6 +395,9 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         super.saveAdditional(output);
 
         output.putString("SpawnerEntityId", this.spawnerEntityId);
+        if (this.spawnerPreset != null) {
+            this.spawnerPreset.save(output.child("SpawnerPreset"));
+        }
 
         // Boss one-shot persisted flags
         output.putBoolean("BossOneShot", this.bossOneShot);
@@ -559,6 +566,17 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
 
         be.spawner.serverTick(sl, pos);
 
+        if (be.spawnerPreset != null) {
+            int r = Math.max(1, be.getSpawnerSpawnRange());
+            var box = new AABB(pos).inflate(r + 1.5D, 6.0D, r + 1.5D);
+            ResourceLocation rl = be.spawnerPreset.getEntityTypeId();
+            for (Entity e : sl.getEntities((Entity) null, box, ent -> BuiltInRegistries.ENTITY_TYPE.getKey(ent.getType()).equals(rl))) {
+                if (e instanceof LivingEntity || !(be.spawnerPreset == null)) {
+                    be.spawnerPreset.applyToEntity(e);
+                }
+            }
+        }
+
         if (be.bossOneShot) {
             int after = be.countTaggedEntities(sl);
             if (after > Math.max(0, be.oneShotTaggedCount)) {
@@ -607,6 +625,30 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         if (!level.isClientSide()) markUpdated();
     }
 
+
+    public CosmicSpawnerPreset getSpawnerPreset() { return this.spawnerPreset; }
+
+    public void setSpawnerPreset(CosmicSpawnerPreset preset) {
+        setSpawnerPresetInternal(preset);
+        this.setChanged();
+        if (this.level != null && !this.level.isClientSide()) markUpdated();
+    }
+
+    private void setSpawnerPresetInternal(CosmicSpawnerPreset preset) {
+        this.spawnerPreset = preset;
+        this.spawnerEntityId = preset.getEntityTypeId().toString();
+        if (this.level != null) {
+            BuiltInRegistries.ENTITY_TYPE.getOptional(preset.getEntityTypeId()).ifPresent(type -> this.spawner.setEntityId(type, this.level, this.level.getRandom(), this.worldPosition));
+        }
+        this.clientSpawnerDirty = true;
+        invalidatePreviewEntityCache();
+    }
+
+    public void clearSpawnerPreset() {
+        this.spawnerPreset = null;
+        this.setChanged();
+        if (this.level != null && !this.level.isClientSide()) markUpdated();
+    }
     private static SpawnData forceFullBrightRules(SpawnData original) {
         CompoundTag entityCopy = original.getEntityToSpawn().copy();
         var anyLight = new net.minecraft.util.InclusiveRange<>(0, 15);
