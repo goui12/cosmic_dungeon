@@ -2,7 +2,6 @@ package net.goui.cosmicdungeon.block.entity;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.resources.ResourceLocation;
@@ -29,7 +28,7 @@ public final class CosmicSpawnerPreset {
 
     public void save(ValueOutput out){
         out.putInt("presetVersion", PRESET_VERSION); out.putString("entityType", entityTypeId.toString());
-        if(customName!=null) out.store("customName", ComponentSerialization.FLAT_CODEC, customName);
+        if(customName!=null) out.store("customName", ComponentSerialization.flatRestrictedCodec(8192), customName);
         out.putBoolean("customNameVisible", customNameVisible); out.putBoolean("persistent", persistent); out.putBoolean("silent", silent); out.putBoolean("glowing", glowing); out.putBoolean("noAi", noAi); out.putBoolean("noGravity", noGravity);
         for (var s: Slot.values()) {
             ItemStack st=equipment.get(s); if(!st.isEmpty()) out.store("eq_"+s.id, ItemStack.CODEC, st);
@@ -39,9 +38,8 @@ public final class CosmicSpawnerPreset {
     public static CosmicSpawnerPreset load(ValueInput in){
         CosmicSpawnerPreset p=new CosmicSpawnerPreset();
         ResourceLocation rl=ResourceLocation.tryParse(in.getStringOr("entityType","minecraft:pig")); if(rl!=null) p.entityTypeId=rl;
-        p.customName=in.read("customName", ComponentSerialization.FLAT_CODEC).orElse(null);
+        p.customName=in.read("customName", ComponentSerialization.flatRestrictedCodec(8192)).orElse(null);
         p.customNameVisible=in.getBooleanOr("customNameVisible",false); p.persistent=in.getBooleanOr("persistent",false); p.silent=in.getBooleanOr("silent",false); p.glowing=in.getBooleanOr("glowing",false); p.noAi=in.getBooleanOr("noAi",false); p.noGravity=in.getBooleanOr("noGravity",false);
-        HolderLookup.Provider lookup=in.lookup();
         for (var s: Slot.values()) {
             p.equipment.put(s, in.read("eq_"+s.id, ItemStack.CODEC).orElse(ItemStack.EMPTY));
             p.dropChances.put(s, Math.max(0f,Math.min(1f,in.getFloatOr("drop_"+s.id,0.085f))));
