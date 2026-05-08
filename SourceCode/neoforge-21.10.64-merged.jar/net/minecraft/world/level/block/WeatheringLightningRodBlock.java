@@ -1,0 +1,47 @@
+package net.minecraft.world.level.block;
+
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+
+public class WeatheringLightningRodBlock extends LightningRodBlock implements WeatheringCopper {
+    public static final MapCodec<WeatheringLightningRodBlock> CODEC = RecordCodecBuilder.mapCodec(
+        p_432802_ -> p_432802_.group(
+                WeatheringCopper.WeatherState.CODEC.fieldOf("weathering_state").forGetter(WeatheringLightningRodBlock::getAge), propertiesCodec()
+            )
+            .apply(p_432802_, WeatheringLightningRodBlock::new)
+    );
+    private final WeatheringCopper.WeatherState weatherState;
+
+    @Override
+    public MapCodec<WeatheringLightningRodBlock> codec() {
+        return CODEC;
+    }
+
+    public WeatheringLightningRodBlock(WeatheringCopper.WeatherState weatherState, BlockBehaviour.Properties properties) {
+        super(properties);
+        this.weatherState = weatherState;
+    }
+
+    /**
+     * Performs a random tick on a block.
+     */
+    @Override
+    protected void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        this.changeOverTime(state, level, pos, random);
+    }
+
+    @Override
+    protected boolean isRandomlyTicking(BlockState state) {
+        return WeatheringCopper.getNext(state.getBlock()).isPresent();
+    }
+
+    public WeatheringCopper.WeatherState getAge() {
+        return this.weatherState;
+    }
+}

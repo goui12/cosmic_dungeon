@@ -1,0 +1,32 @@
+package net.minecraft.util.datafix.fixes;
+
+import com.mojang.datafixers.schemas.Schema;
+import com.mojang.serialization.Dynamic;
+import java.util.function.UnaryOperator;
+
+public class BlockPropertyRenameAndFix extends AbstractBlockPropertyFix {
+    private final String blockId;
+    private final String oldPropertyName;
+    private final String newPropertyName;
+    private final UnaryOperator<String> valueFixer;
+
+    public BlockPropertyRenameAndFix(Schema outputSchema, String name, String blockId, String oldPropertyName, String newPropertyName, UnaryOperator<String> valueFixer) {
+        super(outputSchema, name);
+        this.blockId = blockId;
+        this.oldPropertyName = oldPropertyName;
+        this.newPropertyName = newPropertyName;
+        this.valueFixer = valueFixer;
+    }
+
+    @Override
+    protected boolean shouldFix(String name) {
+        return name.equals(this.blockId);
+    }
+
+    @Override
+    protected <T> Dynamic<T> fixProperties(String name, Dynamic<T> properties) {
+        return properties.renameAndFixField(
+            this.oldPropertyName, this.newPropertyName, p_394078_ -> p_394078_.createString(this.valueFixer.apply(p_394078_.asString("")))
+        );
+    }
+}
