@@ -46,7 +46,42 @@ public final class CosmicSpawnerPreset {
         }
         return p;
     }
-    public void applyToEntity(Entity entity){ if(customName!=null) entity.setCustomName(customName); entity.setCustomNameVisible(customNameVisible); entity.setSilent(silent); entity.setGlowingTag(glowing); entity.setNoGravity(noGravity);
-        if(entity instanceof Mob mob){ if(persistent) mob.setPersistenceRequired(); mob.setNoAi(noAi); for(var s:Slot.values()){mob.setItemSlot(s.equipmentSlot, equipment.get(s).copy()); mob.setDropChance(s.equipmentSlot,getDropChance(s));}}
+    public void applyToEntity(Entity entity) {
+        if (customName != null) entity.setCustomName(customName);
+        entity.setCustomNameVisible(customNameVisible);
+        entity.setSilent(silent);
+        entity.setGlowingTag(glowing);
+        entity.setNoGravity(noGravity);
+
+        if (entity instanceof Mob mob) {
+            if (persistent) mob.setPersistenceRequired();
+            mob.setNoAi(noAi);
+
+            boolean handEquipmentChanged = false;
+            for (var s : Slot.values()) {
+                ItemStack desired = equipment.get(s);
+                if (!ItemStack.matches(mob.getItemBySlot(s.equipmentSlot), desired)) {
+                    mob.setItemSlot(s.equipmentSlot, desired.copy());
+                    if (s == Slot.MAINHAND || s == Slot.OFFHAND) {
+                        handEquipmentChanged = true;
+                    }
+                }
+                mob.setDropChance(s.equipmentSlot, getDropChance(s));
+            }
+
+            if (handEquipmentChanged) {
+                reassessWeaponGoalIfPresent(mob);
+            }
+        }
+    }
+
+    private static void reassessWeaponGoalIfPresent(Mob mob) {
+        try {
+            var method = mob.getClass().getMethod("reassessWeaponGoal");
+            method.invoke(mob);
+        } catch (ReflectiveOperationException ignored) {
+            // Most mobs do not swap AI goals when weapons change. Skeleton-family mobs do,
+            // and their public reassessWeaponGoal method is called here when available.
+        }
     }
 }
