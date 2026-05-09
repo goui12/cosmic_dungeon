@@ -46,8 +46,12 @@ public final class SpawnerCommand {
                                 })))) )
                 .then(Commands.literal("name").then(Commands.literal("set").then(Commands.argument("name", StringArgumentType.greedyString()).executes(c -> withPreset(c.getSource(), p -> p.setCustomName(Component.literal(StringArgumentType.getString(c, "name")))))))
                         .then(Commands.literal("clear").executes(c -> withPreset(c.getSource(), p -> p.setCustomName(null)))))
-                .then(Commands.literal("flag").then(Commands.argument("flag", StringArgumentType.word()).suggests((c,b)->SharedSuggestionProvider.suggest(Arrays.asList("persistent","name_visible","silent","glowing","no_ai","no_gravity"),b))
-                        .then(Commands.argument("value", BoolArgumentType.bool()).executes(c -> withPreset(c.getSource(), p -> applyFlag(p, StringArgumentType.getString(c,"flag"), BoolArgumentType.getBool(c,"value")))))))
+                .then(Commands.literal("flag")
+                        .then(Commands.literal("boss").executes(c -> setBossFlag(c.getSource(), true))
+                                .then(Commands.argument("value", BoolArgumentType.bool()).executes(c -> setBossFlag(c.getSource(), BoolArgumentType.getBool(c, "value")))))
+                        .then(Commands.literal("cap").then(Commands.argument("amount", IntegerArgumentType.integer(0)).executes(c -> setCapFlag(c.getSource(), IntegerArgumentType.getInteger(c, "amount")))))
+                        .then(Commands.argument("flag", StringArgumentType.word()).suggests((c,b)->SharedSuggestionProvider.suggest(Arrays.asList("persistent","name_visible","silent","glowing","no_ai","no_gravity"),b))
+                                .then(Commands.argument("value", BoolArgumentType.bool()).executes(c -> withPreset(c.getSource(), p -> applyFlag(p, StringArgumentType.getString(c,"flag"), BoolArgumentType.getBool(c,"value")))))))
                 .then(Commands.literal("equip").then(Commands.argument("slot", StringArgumentType.word()).suggests(SpawnerCommand::suggestSlots)
                                 .then(Commands.argument("item", ResourceLocationArgument.id()).suggests(SpawnerCommand::suggestItems).executes(c -> withPreset(c.getSource(), p -> p.setEquipment(slot(c), BuiltInRegistries.ITEM.get(ResourceLocationArgument.getId(c,"item")).map(ItemStack::new).orElse(ItemStack.EMPTY)))))
                                 .then(Commands.literal("fromhand").executes(c -> equipFromHand(c.getSource(), slot(c)))))
@@ -71,6 +75,7 @@ public final class SpawnerCommand {
                         .then(Commands.literal("armor").then(Commands.argument("chance", FloatArgumentType.floatArg(0f,1f)).executes(c -> withPreset(c.getSource(), p -> {float f=FloatArgumentType.getFloat(c,"chance"); p.setDropChance(CosmicSpawnerPreset.Slot.HEAD,f);p.setDropChance(CosmicSpawnerPreset.Slot.CHEST,f);p.setDropChance(CosmicSpawnerPreset.Slot.LEGS,f);p.setDropChance(CosmicSpawnerPreset.Slot.FEET,f);}))))
                         .then(Commands.literal("hands").then(Commands.argument("chance", FloatArgumentType.floatArg(0f,1f)).executes(c -> withPreset(c.getSource(), p -> {float f=FloatArgumentType.getFloat(c,"chance"); p.setDropChance(CosmicSpawnerPreset.Slot.MAINHAND,f);p.setDropChance(CosmicSpawnerPreset.Slot.OFFHAND,f);}))))
                         .then(Commands.literal("all").then(Commands.argument("chance", FloatArgumentType.floatArg(0f,1f)).executes(c -> withPreset(c.getSource(), p -> {float f=FloatArgumentType.getFloat(c,"chance"); for (var s: CosmicSpawnerPreset.Slot.values()) p.setDropChance(s,f);})))) )
+                .then(Commands.literal("delay").then(Commands.argument("ticks", IntegerArgumentType.integer(1)).executes(c -> setDelay(c.getSource(), IntegerArgumentType.getInteger(c, "ticks")))))
                 .then(Commands.literal("info").executes(c -> info(c.getSource())))
                 .then(Commands.literal("reset").executes(c -> reset(c.getSource())))
         );
@@ -97,10 +102,56 @@ public final class SpawnerCommand {
         EnchantmentHelper.updateEnchantments(stack, enchantments -> enchantments.removeIf(enchantment -> true));
         p.setEquipment(slot, stack);
     });}
+    private static int setBossFlag(CommandSourceStack src, boolean enabled) {
+        try {
+            var player = src.getPlayerOrException();
+            var be = getTargetSpawnerBE(src, player, player.level());
+            if (be == null) return 0;
+            be.setBossOneShot(enabled);
+            src.sendSuccess(() -> Component.literal("Spawner boss one-shot flag " + (enabled ? "enabled." : "disabled.")), false);
+            return 1;
+        } catch (Exception e) {
+            src.sendFailure(Component.literal("Failed: " + e.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int setCapFlag(CommandSourceStack src, int cap) {
+        try {
+            var player = src.getPlayerOrException();
+            var be = getTargetSpawnerBE(src, player, player.level());
+            if (be == null) return 0;
+            be.setSpawnerMobCap(cap);
+            src.sendSuccess(() -> Component.literal(cap <= 0 ? "Spawner mob cap disabled." : "Spawner mob cap set to " + cap + "."), false);
+            return 1;
+        } catch (Exception e) {
+            src.sendFailure(Component.literal("Failed: " + e.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int setDelay(CommandSourceStack src, int ticks) {
+        try {
+            var player = src.getPlayerOrException();
+            var be = getTargetSpawnerBE(src, player, player.level());
+            if (be == null) return 0;
+            int deadband = Math.max(1, ticks / 2);
+            int min = Math.max(1, ticks - deadband);
+            int max = Math.max(min, ticks + deadband);
+            be.setSpawnerDelayRange(min, max);
+            be.setSpawnerDelayTicks(ticks);
+            src.sendSuccess(() -> Component.literal("Spawner delay set to " + ticks + " ticks (range " + min + "-" + max + ")."), false);
+            return 1;
+        } catch (Exception e) {
+            src.sendFailure(Component.literal("Failed: " + e.getMessage()));
+            return 0;
+        }
+    }
+
     private static void applyFlag(CosmicSpawnerPreset p, String f, boolean v){ switch (f){case"persistent"->p.setPersistent(v);case"name_visible"->p.setCustomNameVisible(v);case"silent"->p.setSilent(v);case"glowing"->p.setGlowing(v);case"no_ai"->p.setNoAi(v);case"no_gravity"->p.setNoGravity(v);} }
     private static CosmicSpawnerPreset.Slot slot(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c){ return CosmicSpawnerPreset.Slot.fromId(StringArgumentType.getString(c,"slot")); }
     private static int withPreset(CommandSourceStack src, java.util.function.Consumer<CosmicSpawnerPreset> op) { try { var be=getTargetSpawnerBE(src,src.getPlayerOrException(),src.getPlayerOrException().level()); if(be==null)return 0; var p=be.getSpawnerPreset(); if(p==null){ p=new CosmicSpawnerPreset(); ResourceLocation rl = ResourceLocation.tryParse(be.getSpawnerEntityId()); if(rl!=null)p.setEntityTypeId(rl);} op.accept(p); be.setSpawnerPreset(p); src.sendSuccess(()->Component.literal("Spawner preset updated."),false); return 1;} catch(Exception e){ src.sendFailure(Component.literal("Failed: "+e.getMessage())); return 0; } }
-    private static int info(CommandSourceStack src){ try{ var be=getTargetSpawnerBE(src,src.getPlayerOrException(),src.getPlayerOrException().level()); if(be==null)return 0; var p=be.getSpawnerPreset(); if(p==null){ src.sendSuccess(()->Component.literal("No preset set."),false); return 1;} src.sendSuccess(()->Component.literal("Preset entity: "+p.getEntityTypeId()),false); for(var s: CosmicSpawnerPreset.Slot.values()) src.sendSuccess(()->Component.literal(s.id+" drop="+p.getDropChance(s)+" item="+p.getEquipment(s)),false); return 1;}catch(Exception e){return 0;}}
+    private static int info(CommandSourceStack src){ try{ var be=getTargetSpawnerBE(src,src.getPlayerOrException(),src.getPlayerOrException().level()); if(be==null)return 0; src.sendSuccess(()->Component.literal("Spawner entity: "+be.getSpawnerEntityId()+", boss="+be.isBossOneShot()+", cap="+be.getSpawnerMobCap()+", delay="+be.getSpawnerDelayTicks()+" ("+be.getSpawnerMinSpawnDelay()+"-"+be.getSpawnerMaxSpawnDelay()+")"),false); var p=be.getSpawnerPreset(); if(p==null){ src.sendSuccess(()->Component.literal("No preset set."),false); return 1;} src.sendSuccess(()->Component.literal("Preset entity: "+p.getEntityTypeId()),false); for(var s: CosmicSpawnerPreset.Slot.values()) src.sendSuccess(()->Component.literal(s.id+" drop="+p.getDropChance(s)+" item="+p.getEquipment(s)),false); return 1;}catch(Exception e){return 0;}}
     private static int reset(CommandSourceStack src){ try{ var be=getTargetSpawnerBE(src,src.getPlayerOrException(),src.getPlayerOrException().level()); if(be==null)return 0; be.clearSpawnerPreset(); src.sendSuccess(()->Component.literal("Spawner preset reset."),false); return 1;}catch(Exception e){return 0;}}
     private static java.util.stream.Stream<ResourceLocation> srcRegistryEnchantments(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c){ return c.getSource().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).listElementIds().map(k->k.location()); }
     private static CompletableFuture<Suggestions> suggestEntities(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){return SharedSuggestionProvider.suggestResource(BuiltInRegistries.ENTITY_TYPE.keySet(),b);}    private static CompletableFuture<Suggestions> suggestItems(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){return SharedSuggestionProvider.suggestResource(BuiltInRegistries.ITEM.keySet(),b);}    private static CompletableFuture<Suggestions> suggestEnchantments(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){return SharedSuggestionProvider.suggestResource(srcRegistryEnchantments(c),b);}    private static CompletableFuture<Suggestions> suggestSlots(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){return SharedSuggestionProvider.suggest(Arrays.stream(CosmicSpawnerPreset.Slot.values()).map(s->s.id),b);}    

@@ -122,6 +122,9 @@ public class CosmicSpawnerRenderer implements BlockEntityRenderer<CosmicSpawnerB
         if (level != null) {
             Entity display = be.getSpawner().getOrCreateDisplayEntity(level, be.getBlockPos());
             if (display != null) {
+                if (be.getSpawnerPreset() != null) {
+                    be.getSpawnerPreset().applyToEntity(display);
+                }
                 EntityRenderState ers = this.dispatcher.extractEntity(display, state.partialTick);
 
                 // Force fullbright for the preview entity (ignores world light)

@@ -22,8 +22,6 @@ import net.minecraft.world.level.Spawner;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.phys.AABB;
 import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
@@ -51,6 +49,10 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     // Persisted: whether the one-shot spawner has already successfully spawned.
     // Default: false
     private boolean bossHasSpawned = false;
+
+    // Persisted: max living mobs that this individual spawner may have active at one time.
+    // A value <= 0 means uncapped. Spawned mobs are tracked with this spawner's unique entity tag.
+    private int spawnerMobCap = 0;
 
     // Client-side spin
     private float renderSpin;
@@ -216,6 +218,23 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         return bossHasSpawned;
     }
 
+    public int getSpawnerMobCap() {
+        return spawnerMobCap;
+    }
+
+    public void setSpawnerMobCap(int cap) {
+        this.spawnerMobCap = Math.max(0, cap);
+        if (this.spawnerMobCap > 0) {
+            // Disable vanilla's nearby-entity cap so only this spawner's tag-based count controls spawning.
+            this.setSpawnerMaxNearbyEntities(Short.MAX_VALUE);
+        }
+        this.oneShotTaggedCount = -1;
+        this.setChanged();
+        if (this.level != null && !this.level.isClientSide()) {
+            markUpdated();
+        }
+    }
+
     /**
      * Enables/disables one-shot self-destruct behavior.
      * Enabling also rearms the spawner (BossHasSpawned=false).
@@ -225,6 +244,8 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         if (enabled) {
             // Rearm on enable so you can turn it on after setting mob/delay.
             this.bossHasSpawned = false;
+            // Boss spawns should not be blocked by unrelated nearby mobs of the same class.
+            this.setSpawnerMaxNearbyEntities(Short.MAX_VALUE);
         }
         this.oneShotTaggedCount = -1;
         this.setChanged();
@@ -385,6 +406,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
 // Boss one-shot persisted flags
         this.bossOneShot = input.getBooleanOr("BossOneShot", false);
         this.bossHasSpawned = input.getBooleanOr("BossHasSpawned", false);
+        this.spawnerMobCap = Math.max(0, input.getIntOr("SpawnerMobCap", 0));
         this.clientSpawnerDirty = true;
 
         restoreSpawnerFieldsFromSavedNbt(input);
@@ -402,6 +424,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         // Boss one-shot persisted flags
         output.putBoolean("BossOneShot", this.bossOneShot);
         output.putBoolean("BossHasSpawned", this.bossHasSpawned);
+        output.putInt("SpawnerMobCap", this.spawnerMobCap);
 
         // Vanilla/BaseSpawner persisted fields (Delay/MinSpawnDelay/MaxSpawnDelay/SpawnCount/etc + SpawnData)
         this.spawner.save(output);
@@ -510,7 +533,10 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
 
     private void applySpawnTagToSpawnerData() {
         CompoundTag base = new CompoundTag();
-        EntityType.byString(this.spawnerEntityId).ifPresent(type -> base.putString("id", BuiltInRegistries.ENTITY_TYPE.getKey(type).toString()));
+        ResourceLocation entityId = this.spawnerPreset != null ? this.spawnerPreset.getEntityTypeId() : ResourceLocation.tryParse(this.spawnerEntityId);
+        if (entityId != null) {
+            base.putString("id", entityId.toString());
+        }
 
         List<String> tags = new java.util.ArrayList<>();
         base.getList("Tags").ifPresent(in -> {
@@ -524,16 +550,32 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
             for (String t : tags) out.add(net.minecraft.nbt.StringTag.valueOf(t));
             out.add(net.minecraft.nbt.StringTag.valueOf(marker));
             base.put("Tags", out);
-            this.spawner.setNextSpawnDataPublic(this.level, this.worldPosition, forceFullBrightRules(new SpawnData(base, Optional.empty(), Optional.empty())));
         }
+
+        this.spawner.setNextSpawnDataPublic(this.level, this.worldPosition, forceFullBrightRules(new SpawnData(base, Optional.empty(), Optional.empty())));
+        invalidatePreviewEntityCache();
     }
 
     private int countTaggedEntities(net.minecraft.server.level.ServerLevel sl) {
-        int r = Math.max(1, this.getSpawnerSpawnRange());
-        double pad = r + 3.0D;
-        AABB detectBox = new AABB(this.worldPosition).inflate(pad, 8.0D, pad);
         String marker = oneShotSpawnTag();
-        return sl.getEntities((Entity) null, detectBox, e -> e.getTags().contains(marker)).size();
+        int count = 0;
+        for (Entity e : sl.getAllEntities()) {
+            if (e.getTags().contains(marker) && e.isAlive()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private void applyPresetToTaggedEntities(net.minecraft.server.level.ServerLevel sl) {
+        if (this.spawnerPreset == null) return;
+        String marker = oneShotSpawnTag();
+        ResourceLocation rl = this.spawnerPreset.getEntityTypeId();
+        for (Entity e : sl.getAllEntities()) {
+            if (e.getTags().contains(marker) && BuiltInRegistries.ENTITY_TYPE.getKey(e.getType()).equals(rl)) {
+                this.spawnerPreset.applyToEntity(e);
+            }
+        }
     }
 // ----------------------------
     // Tick hooks
@@ -558,24 +600,44 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
             return;
         }
 
-        // Boss one-shot: tag-filtered detection (ignores unrelated entities entering/leaving volume).
-        if (be.bossOneShot) {
+        // Tag all Cosmic Spawner mobs so boss/cap logic counts only mobs born from this block.
+        if (be.bossOneShot || be.spawnerMobCap > 0 || be.spawnerPreset != null) {
             be.applySpawnTagToSpawnerData();
             if (be.oneShotTaggedCount < 0) be.oneShotTaggedCount = be.countTaggedEntities(sl);
         }
 
+        int before = be.countTaggedEntities(sl);
+        if (be.spawnerMobCap > 0 && before >= be.spawnerMobCap) {
+            be.applyPresetToTaggedEntities(sl);
+            return;
+        }
+
+        int originalSpawnCount = be.getSpawnerSpawnCount();
+        boolean limitedSpawnCount = false;
+        int spawnLimit = originalSpawnCount;
+        if (be.bossOneShot) {
+            spawnLimit = Math.min(spawnLimit, 1);
+        }
+        if (be.spawnerMobCap > 0 && originalSpawnCount > 0) {
+            int remaining = Math.max(0, be.spawnerMobCap - before);
+            if (remaining <= 0) {
+                be.applyPresetToTaggedEntities(sl);
+                return;
+            }
+            spawnLimit = Math.min(spawnLimit, remaining);
+        }
+        if (spawnLimit > 0 && spawnLimit < originalSpawnCount) {
+            be.setSpawnerSpawnCount(spawnLimit);
+            limitedSpawnCount = true;
+        }
+
         be.spawner.serverTick(sl, pos);
 
-        if (be.spawnerPreset != null) {
-            int r = Math.max(1, be.getSpawnerSpawnRange());
-            var box = new AABB(pos).inflate(r + 1.5D, 6.0D, r + 1.5D);
-            ResourceLocation rl = be.spawnerPreset.getEntityTypeId();
-            for (Entity e : sl.getEntities((Entity) null, box, ent -> BuiltInRegistries.ENTITY_TYPE.getKey(ent.getType()).equals(rl))) {
-                if (e instanceof LivingEntity || !(be.spawnerPreset == null)) {
-                    be.spawnerPreset.applyToEntity(e);
-                }
-            }
+        if (limitedSpawnCount) {
+            be.setSpawnerSpawnCount(originalSpawnCount);
         }
+
+        be.applyPresetToTaggedEntities(sl);
 
         if (be.bossOneShot) {
             int after = be.countTaggedEntities(sl);
