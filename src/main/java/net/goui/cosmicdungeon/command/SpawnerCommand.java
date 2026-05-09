@@ -50,15 +50,23 @@ public final class SpawnerCommand {
                         .then(Commands.argument("value", BoolArgumentType.bool()).executes(c -> withPreset(c.getSource(), p -> applyFlag(p, StringArgumentType.getString(c,"flag"), BoolArgumentType.getBool(c,"value")))))))
                 .then(Commands.literal("equip").then(Commands.argument("slot", StringArgumentType.word()).suggests(SpawnerCommand::suggestSlots)
                                 .then(Commands.argument("item", ResourceLocationArgument.id()).suggests(SpawnerCommand::suggestItems).executes(c -> withPreset(c.getSource(), p -> p.setEquipment(slot(c), BuiltInRegistries.ITEM.get(ResourceLocationArgument.getId(c,"item")).map(ItemStack::new).orElse(ItemStack.EMPTY)))))
-                                .then(Commands.literal("fromhand").executes(c -> withPreset(c.getSource(), p -> p.setEquipment(slot(c), c.getSource().getPlayerOrException().getMainHandItem().copy())))))
+                                .then(Commands.literal("fromhand").executes(c -> equipFromHand(c.getSource(), slot(c)))))
                         .then(Commands.literal("clear").then(Commands.argument("slot", StringArgumentType.word()).suggests(SpawnerCommand::suggestSlots).executes(c -> withPreset(c.getSource(), p -> p.setEquipment(slot(c), ItemStack.EMPTY))))
                                 .then(Commands.literal("all").executes(c -> withPreset(c.getSource(), p -> { for (var s : CosmicSpawnerPreset.Slot.values()) p.setEquipment(s, ItemStack.EMPTY);})))) )
-                .then(Commands.literal("enchant").then(Commands.argument("slot", StringArgumentType.word()).suggests(SpawnerCommand::suggestSlots)
-                        .then(Commands.argument("enchantment", ResourceLocationArgument.id()).suggests(SpawnerCommand::suggestEnchantments)
-                                .then(Commands.argument("level", IntegerArgumentType.integer(1, 255)).executes(c -> enchant(c.getSource(), slot(c), ResourceLocationArgument.getId(c,"enchantment"), IntegerArgumentType.getInteger(c,"level"), false))
-                                        .then(Commands.argument("allowUnsafe", BoolArgumentType.bool()).executes(c -> enchant(c.getSource(), slot(c), ResourceLocationArgument.getId(c,"enchantment"), IntegerArgumentType.getInteger(c,"level"), BoolArgumentType.getBool(c,"allowUnsafe")))))))
-                        .then(Commands.literal("remove").then(Commands.argument("slot", StringArgumentType.word()).suggests(SpawnerCommand::suggestSlots).then(Commands.argument("enchantment", ResourceLocationArgument.id()).suggests(SpawnerCommand::suggestEnchantments).executes(c -> removeEnchant(c.getSource(), slot(c), ResourceLocationArgument.getId(c, "enchantment")))))
-                        .then(Commands.literal("clear").then(Commands.argument("slot", StringArgumentType.word()).suggests(SpawnerCommand::suggestSlots).executes(c -> clearEnchantments(c.getSource(), slot(c))))))
+                .then(Commands.literal("enchant")
+                        .then(Commands.argument("slot", StringArgumentType.word()).suggests(SpawnerCommand::suggestSlots)
+                                .then(Commands.argument("enchantment", ResourceLocationArgument.id()).suggests(SpawnerCommand::suggestEnchantments)
+                                        .then(Commands.argument("level", IntegerArgumentType.integer(1, 255))
+                                                .executes(c -> enchant(c.getSource(), slot(c), ResourceLocationArgument.getId(c, "enchantment"), IntegerArgumentType.getInteger(c, "level"), false))
+                                                .then(Commands.argument("allowUnsafe", BoolArgumentType.bool())
+                                                        .executes(c -> enchant(c.getSource(), slot(c), ResourceLocationArgument.getId(c, "enchantment"), IntegerArgumentType.getInteger(c, "level"), BoolArgumentType.getBool(c, "allowUnsafe")))))))
+                        .then(Commands.literal("remove")
+                                .then(Commands.argument("slot", StringArgumentType.word()).suggests(SpawnerCommand::suggestSlots)
+                                        .then(Commands.argument("enchantment", ResourceLocationArgument.id()).suggests(SpawnerCommand::suggestEnchantments)
+                                                .executes(c -> removeEnchant(c.getSource(), slot(c), ResourceLocationArgument.getId(c, "enchantment"))))))
+                        .then(Commands.literal("clear")
+                                .then(Commands.argument("slot", StringArgumentType.word()).suggests(SpawnerCommand::suggestSlots)
+                                        .executes(c -> clearEnchantments(c.getSource(), slot(c))))))
                 .then(Commands.literal("drop").then(Commands.argument("slot", StringArgumentType.word()).suggests(SpawnerCommand::suggestSlots).then(Commands.argument("chance", FloatArgumentType.floatArg(0f,1f)).executes(c -> withPreset(c.getSource(), p -> p.setDropChance(slot(c), FloatArgumentType.getFloat(c,"chance"))))))
                         .then(Commands.literal("armor").then(Commands.argument("chance", FloatArgumentType.floatArg(0f,1f)).executes(c -> withPreset(c.getSource(), p -> {float f=FloatArgumentType.getFloat(c,"chance"); p.setDropChance(CosmicSpawnerPreset.Slot.HEAD,f);p.setDropChance(CosmicSpawnerPreset.Slot.CHEST,f);p.setDropChance(CosmicSpawnerPreset.Slot.LEGS,f);p.setDropChance(CosmicSpawnerPreset.Slot.FEET,f);}))))
                         .then(Commands.literal("hands").then(Commands.argument("chance", FloatArgumentType.floatArg(0f,1f)).executes(c -> withPreset(c.getSource(), p -> {float f=FloatArgumentType.getFloat(c,"chance"); p.setDropChance(CosmicSpawnerPreset.Slot.MAINHAND,f);p.setDropChance(CosmicSpawnerPreset.Slot.OFFHAND,f);}))))
@@ -68,6 +76,10 @@ public final class SpawnerCommand {
         );
     }
 
+    private static int equipFromHand(CommandSourceStack src, CosmicSpawnerPreset.Slot slot) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ItemStack stack = src.getPlayerOrException().getMainHandItem().copy();
+        return withPreset(src, p -> p.setEquipment(slot, stack));
+    }
     private static int enchant(CommandSourceStack src, CosmicSpawnerPreset.Slot slot, ResourceLocation enchId, int level, boolean allowUnsafe) { return withPreset(src, p -> {
         ItemStack stack = p.getEquipment(slot).copy(); if (stack.isEmpty()) stack = new ItemStack(Items.STICK);
         var enchOpt = src.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).get(enchId);
