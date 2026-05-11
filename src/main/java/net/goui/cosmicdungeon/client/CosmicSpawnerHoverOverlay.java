@@ -44,7 +44,7 @@ public final class CosmicSpawnerHoverOverlay {
 
         if (!(mc.level.getBlockEntity(bhr.getBlockPos()) instanceof CosmicSpawnerBlockEntity be)) return;
 
-        Component text = Component.translatable("hud.cosmicdungeon.spawner", be.getSpawnerEntityId());
+        Component text = Component.translatable("hud.cosmicdungeon.spawner", be.getSpawnerDisplayEntityId());
 
         int w = mc.getWindow().getGuiScaledWidth();
         int h = mc.getWindow().getGuiScaledHeight();

@@ -199,6 +199,10 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         return spawnerEntityId;
     }
 
+    public String getSpawnerDisplayEntityId() {
+        return this.spawnerPreset != null ? this.spawnerPreset.getDisplayEntityTypeId().toString() : spawnerEntityId;
+    }
+
     public void setSpawnerEntityId(String id) {
         this.spawnerEntityId = (id == null || id.isBlank()) ? "none" : id.trim();
         this.clientSpawnerDirty = true;
