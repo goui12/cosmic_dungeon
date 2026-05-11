@@ -75,7 +75,7 @@ public class CosmicSpawnerRenderer implements BlockEntityRenderer<CosmicSpawnerB
             return;
         }
 
-        String id = be.getSpawnerEntityId();
+        String id = be.getSpawnerDisplayEntityId();
         if (id == null) id = "";
         id = id.trim();
 
