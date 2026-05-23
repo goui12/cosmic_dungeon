@@ -17,6 +17,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 public final class CosmicSpawnerPreset {
     public static final int PRESET_VERSION = 2;
@@ -59,14 +60,23 @@ public final class CosmicSpawnerPreset {
             p.equipment.put(s, in.read("eq_"+s.id, ItemStack.CODEC).orElse(ItemStack.EMPTY));
             p.dropChances.put(s, Math.max(0f,Math.min(1f,in.getFloatOr("drop_"+s.id,0.085f))));
         }
-        in.child("intrinsicDrops").ifPresent(child -> {
-            for (String key : child.keySet()) {
-                ResourceLocation id = ResourceLocation.tryParse(key);
-                if (id != null) p.intrinsicDropChances.put(id, Math.max(0f, Math.min(1f, child.getFloatOr(key, 1.0f))));
-            }
-        });
+        in.child("intrinsicDrops").ifPresent(child -> loadIntrinsicDrops(child, p));
         return p;
     }
+    private static void loadIntrinsicDrops(ValueInput child, CosmicSpawnerPreset preset) {
+        try {
+            for (String key : child.keySet()) {
+                ResourceLocation id = ResourceLocation.tryParse(key);
+                if (id != null) {
+                    preset.intrinsicDropChances.put(id, Math.max(0f, Math.min(1f, child.getFloatOr(key, 1.0f))));
+                }
+            }
+        } catch (NoSuchElementException ignored) {
+            // Malformed or non-compound intrinsicDrops data can appear in older/edited saves.
+            // Ignore it so a bad tag cannot crash client/server when syncing block entity data.
+        }
+    }
+
     public void applyToEntity(Entity entity) {
         if (customName != null) entity.setCustomName(customName);
         entity.setCustomNameVisible(customNameVisible);
