@@ -1,6 +1,7 @@
 package net.goui.cosmicdungeon;
 
 import net.goui.cosmicdungeon.block.ModBlocks;
+import net.goui.cosmicdungeon.block.entity.CosmicSpawnerIntrinsicDropEvents;
 import net.goui.cosmicdungeon.block.entity.ModBlockEntities;
 import net.goui.cosmicdungeon.client.CosmicDungeonClient;
 import net.goui.cosmicdungeon.command.*;
@@ -54,6 +55,7 @@ public class CosmicDungeonMod {
 
         // Region wand selection (LeftClickBlock handler)
         NeoForge.EVENT_BUS.register(new RegionWandEvents());
+        NeoForge.EVENT_BUS.register(CosmicSpawnerIntrinsicDropEvents.class);
 
 
         // registries

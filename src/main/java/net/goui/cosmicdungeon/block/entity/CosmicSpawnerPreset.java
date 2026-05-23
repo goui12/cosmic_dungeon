@@ -15,6 +15,8 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
 import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
 
 public final class CosmicSpawnerPreset {
     public static final int PRESET_VERSION = 2;
@@ -25,6 +27,7 @@ public final class CosmicSpawnerPreset {
     private ResourceLocation entityTypeId = ResourceLocation.withDefaultNamespace("pig");
     private Component customName; private boolean customNameVisible,persistent,silent,glowing,noAi,noGravity,illagerCaptainVariant;
     private final EnumMap<Slot, ItemStack> equipment = new EnumMap<>(Slot.class); private final EnumMap<Slot, Float> dropChances = new EnumMap<>(Slot.class);
+    private final Map<ResourceLocation, Float> intrinsicDropChances = new HashMap<>();
     public CosmicSpawnerPreset(){for(var s:Slot.values()){equipment.put(s,ItemStack.EMPTY); dropChances.put(s,0.085F);}}
     public ResourceLocation getEntityTypeId(){return entityTypeId;} public void setEntityTypeId(ResourceLocation id){this.entityTypeId=id; this.illagerCaptainVariant = false;}
     public boolean isIllagerCaptainVariant(){return illagerCaptainVariant;}
@@ -32,6 +35,9 @@ public final class CosmicSpawnerPreset {
     public void setIllagerCaptainVariant(){this.entityTypeId=ResourceLocation.withDefaultNamespace("pillager"); this.illagerCaptainVariant=true;}
     public void setCustomName(Component n){this.customName=n;} public Component getCustomName(){return customName;} public void setCustomNameVisible(boolean v){this.customNameVisible=v;} public void setPersistent(boolean v){this.persistent=v;} public void setSilent(boolean v){this.silent=v;} public void setGlowing(boolean v){this.glowing=v;} public void setNoAi(boolean v){this.noAi=v;} public void setNoGravity(boolean v){this.noGravity=v;}
     public ItemStack getEquipment(Slot s){return equipment.get(s);} public void setEquipment(Slot s, ItemStack st){equipment.put(s,st.copy());} public float getDropChance(Slot s){return dropChances.get(s);} public void setDropChance(Slot s,float f){dropChances.put(s,Math.max(0f,Math.min(1f,f)));}
+    public Map<ResourceLocation, Float> getIntrinsicDropChances(){ return java.util.Collections.unmodifiableMap(intrinsicDropChances); }
+    public void setIntrinsicDropChance(ResourceLocation itemId, float chance){ intrinsicDropChances.put(itemId, Math.max(0f, Math.min(1f, chance))); }
+    public void clearIntrinsicDropChance(ResourceLocation itemId){ intrinsicDropChances.remove(itemId); }
 
     public void save(ValueOutput out){
         out.putInt("presetVersion", PRESET_VERSION); out.putString("entityType", entityTypeId.toString());
@@ -41,6 +47,8 @@ public final class CosmicSpawnerPreset {
             ItemStack st=equipment.get(s); if(!st.isEmpty()) out.store("eq_"+s.id, ItemStack.CODEC, st);
             out.putFloat("drop_"+s.id, dropChances.get(s));
         }
+        var intrinsic = out.child("intrinsicDrops");
+        for (var e : intrinsicDropChances.entrySet()) intrinsic.putFloat(e.getKey().toString(), e.getValue());
     }
     public static CosmicSpawnerPreset load(ValueInput in){
         CosmicSpawnerPreset p=new CosmicSpawnerPreset();
@@ -51,6 +59,12 @@ public final class CosmicSpawnerPreset {
             p.equipment.put(s, in.read("eq_"+s.id, ItemStack.CODEC).orElse(ItemStack.EMPTY));
             p.dropChances.put(s, Math.max(0f,Math.min(1f,in.getFloatOr("drop_"+s.id,0.085f))));
         }
+        in.child("intrinsicDrops").ifPresent(child -> {
+            for (String key : child.keys()) {
+                ResourceLocation id = ResourceLocation.tryParse(key);
+                if (id != null) p.intrinsicDropChances.put(id, Math.max(0f, Math.min(1f, child.getFloatOr(key, 1.0f))));
+            }
+        });
         return p;
     }
     public void applyToEntity(Entity entity) {
