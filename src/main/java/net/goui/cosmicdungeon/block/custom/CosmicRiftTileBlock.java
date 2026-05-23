@@ -208,6 +208,7 @@ public class CosmicRiftTileBlock extends Block {
         NEXT_ALLOWED_TELEPORT.put(id, now + TELEPORT_COOLDOWN_TICKS);
 
         if (portal.resetTrigger()) {
+            DungeonLifecycleService.setPlayerRespawnTo(sp, targetLevel, safe, sp.getYRot(), sp.getXRot());
             DungeonLifecycleService.onPlayerExitedThroughResetRift(currentLevel, sp);
         }
     }
