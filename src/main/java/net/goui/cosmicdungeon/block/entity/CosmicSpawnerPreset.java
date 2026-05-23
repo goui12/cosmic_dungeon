@@ -60,7 +60,7 @@ public final class CosmicSpawnerPreset {
             p.dropChances.put(s, Math.max(0f,Math.min(1f,in.getFloatOr("drop_"+s.id,0.085f))));
         }
         in.child("intrinsicDrops").ifPresent(child -> {
-            for (String key : child.keys()) {
+            for (String key : child.keySet()) {
                 ResourceLocation id = ResourceLocation.tryParse(key);
                 if (id != null) p.intrinsicDropChances.put(id, Math.max(0f, Math.min(1f, child.getFloatOr(key, 1.0f))));
             }
