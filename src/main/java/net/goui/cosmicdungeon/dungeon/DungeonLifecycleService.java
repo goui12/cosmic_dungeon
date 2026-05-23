@@ -174,7 +174,6 @@ public final class DungeonLifecycleService {
         if (!run.containsDimension(sourceLevel.dimension())) return;
 
         clearPlayerInventory(sp);
-        resetPlayerRespawnToOverworldSpawn(sp);
 
         runs.markCompletionExited(run.runId(), sp.getUUID());
 
