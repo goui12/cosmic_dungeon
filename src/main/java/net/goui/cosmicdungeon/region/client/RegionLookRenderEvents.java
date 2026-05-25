@@ -1,17 +1,18 @@
 // file: src/main/java/net/goui/cosmicdungeon/region/client/RegionLookRenderEvents.java
 package net.goui.cosmicdungeon.region.client;
 
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.DepthTestFunction;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.minecraft.client.Minecraft;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShapeRenderer;
-
-import java.util.OptionalDouble;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -20,32 +21,76 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 
+import java.util.OptionalDouble;
+
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID, value = Dist.CLIENT)
 public final class RegionLookRenderEvents {
     private RegionLookRenderEvents() {}
 
     /**
-     * X-ray line pass for region outlines: keeps vanilla line distance behavior while
-     * skipping depth tests so buried edges are still visible through blocks.
+     * X-ray line pass for region outlines.
+     *
+     * NeoForge/Minecraft 1.21.10 moved shader/depth/blend/cull/write settings
+     * out of RenderStateShard builder calls and into RenderPipeline.
+     *
+     * This clones the vanilla line pipeline's shader/uniform/sampler setup,
+     * then changes only the behavior we need for the x-ray overlay:
+     * - translucent blending
+     * - no culling
+     * - color write enabled
+     * - depth write disabled
+     * - depth test disabled
      */
+    private static final RenderPipeline REGION_LOOK_LINES_XRAY_PIPELINE =
+            makeRegionLookLinesXrayPipeline();
+
     private static final RenderType REGION_LOOK_LINES_XRAY = RenderType.create(
             "cosmicdungeon_region_look_lines_xray",
-            DefaultVertexFormat.POSITION_COLOR_NORMAL,
-            VertexFormat.Mode.LINES,
             1536,
             false,
             false,
+            REGION_LOOK_LINES_XRAY_PIPELINE,
             RenderType.CompositeState.builder()
-                    .setShaderState(RenderStateShard.RENDERTYPE_LINES_SHADER)
                     .setLineState(new RenderStateShard.LineStateShard(OptionalDouble.empty()))
                     .setLayeringState(RenderStateShard.VIEW_OFFSET_Z_LAYERING)
-                    .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
                     .setOutputState(RenderStateShard.ITEM_ENTITY_TARGET)
-                    .setWriteMaskState(RenderStateShard.COLOR_WRITE)
-                    .setCullState(RenderStateShard.NO_CULL)
-                    .setDepthTestState(RenderStateShard.NO_DEPTH_TEST)
                     .createCompositeState(false)
     );
+
+    private static RenderPipeline makeRegionLookLinesXrayPipeline() {
+        RenderPipeline base = RenderPipelines.LINES;
+
+        RenderPipeline.Builder builder = RenderPipeline.builder()
+                .withLocation(ResourceLocation.fromNamespaceAndPath(
+                        CosmicDungeonMod.MOD_ID,
+                        "pipeline/region_look_lines_xray"
+                ))
+                .withVertexShader(base.getVertexShader())
+                .withFragmentShader(base.getFragmentShader())
+                .withVertexFormat(base.getVertexFormat(), base.getVertexFormatMode())
+                .withPolygonMode(base.getPolygonMode())
+                .withCull(false)
+                .withBlend(BlendFunction.TRANSLUCENT)
+                .withColorWrite(true, true)
+                .withDepthWrite(false)
+                .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+                .withColorLogic(base.getColorLogic())
+                .withDepthBias(base.getDepthBiasScaleFactor(), base.getDepthBiasConstant());
+
+        for (String sampler : base.getSamplers()) {
+            builder.withSampler(sampler);
+        }
+
+        for (RenderPipeline.UniformDescription uniform : base.getUniforms()) {
+            if (uniform.textureFormat() == null) {
+                builder.withUniform(uniform.name(), uniform.type());
+            } else {
+                builder.withUniform(uniform.name(), uniform.type(), uniform.textureFormat());
+            }
+        }
+
+        return builder.build();
+    }
 
     @SubscribeEvent
     public static void onRenderLevel(RenderLevelStageEvent.AfterTranslucentBlocks event) {
@@ -77,7 +122,10 @@ public final class RegionLookRenderEvents {
 
             if (RegionLookClient.isSingleEnabled()) {
                 // Keep classic single-region look (black)
-                rf = 0.0F; gf = 0.0F; bf = 0.0F; af = 0.85F;
+                rf = 0.0F;
+                gf = 0.0F;
+                bf = 0.0F;
+                af = 0.85F;
 
                 // If you want single mode to ALSO be colored by name, replace the 4 lines above with:
                 // int rgb = stableColorFromName(r.name());
@@ -96,6 +144,7 @@ public final class RegionLookRenderEvents {
 
             // First pass: standard depth-tested line rendering.
             ShapeRenderer.renderLineBox(poseStack.last(), depthConsumer, box, rf, gf, bf, af);
+
             // Second pass: depth-disabled overlay so hidden edges are visible through walls.
             ShapeRenderer.renderLineBox(poseStack.last(), xrayConsumer, box, rf, gf, bf, af);
         }
@@ -137,17 +186,41 @@ public final class RegionLookRenderEvents {
 
         float r, g, b;
         switch (i) {
-            case 0 -> { r = v; g = t; b = p; }
-            case 1 -> { r = q; g = v; b = p; }
-            case 2 -> { r = p; g = v; b = t; }
-            case 3 -> { r = p; g = q; b = v; }
-            case 4 -> { r = t; g = p; b = v; }
-            default -> { r = v; g = p; b = q; }
+            case 0 -> {
+                r = v;
+                g = t;
+                b = p;
+            }
+            case 1 -> {
+                r = q;
+                g = v;
+                b = p;
+            }
+            case 2 -> {
+                r = p;
+                g = v;
+                b = t;
+            }
+            case 3 -> {
+                r = p;
+                g = q;
+                b = v;
+            }
+            case 4 -> {
+                r = t;
+                g = p;
+                b = v;
+            }
+            default -> {
+                r = v;
+                g = p;
+                b = q;
+            }
         }
 
-        int ri = Mth.clamp((int)(r * 255.0F), 0, 255);
-        int gi = Mth.clamp((int)(g * 255.0F), 0, 255);
-        int bi = Mth.clamp((int)(b * 255.0F), 0, 255);
+        int ri = Mth.clamp((int) (r * 255.0F), 0, 255);
+        int gi = Mth.clamp((int) (g * 255.0F), 0, 255);
+        int bi = Mth.clamp((int) (b * 255.0F), 0, 255);
 
         return (ri << 16) | (gi << 8) | bi;
     }

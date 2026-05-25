@@ -40,14 +40,22 @@ public final class CosmicDungeonClient {
             e.register(ModMenus.CLASS_SELECTOR.get(), ClassSelectorScreen::new);
         });
 
+        /*
+         * Spawner preset hotkey registration is a MOD BUS event.
+         * Do not register SpawnerPresetKeybindClient.class on NeoForge.EVENT_BUS,
+         * because that class also contains RegisterKeyMappingsEvent, which is not
+         * allowed on the common/game event bus.
+         */
+        modEventBus.addListener(SpawnerPresetKeybindClient::registerKeyMappings);
+
         // Existing overlay
         NeoForge.EVENT_BUS.register(CosmicSpawnerHoverOverlay.class);
 
         // Rift ambience (client tick)
         NeoForge.EVENT_BUS.register(new RiftAmbienceClient());
 
-        // Spawner preset hotkey bindings
-        NeoForge.EVENT_BUS.register(SpawnerPresetKeybindClient.class);
+        // Spawner preset hotkey ticking is a NeoForge/game/client tick event.
+        NeoForge.EVENT_BUS.addListener(SpawnerPresetKeybindClient::onClientTick);
     }
 
     private static void onClientSetup(FMLClientSetupEvent e) {

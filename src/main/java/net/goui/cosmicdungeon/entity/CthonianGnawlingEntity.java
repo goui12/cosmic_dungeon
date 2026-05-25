@@ -1,6 +1,8 @@
 package net.goui.cosmicdungeon.entity;
 
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -19,6 +21,7 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nullable;
+import java.util.EnumSet;
 
 public class CthonianGnawlingEntity extends Monster {
     private static final int DAMAGE_INTERVAL_TICKS = 40;
