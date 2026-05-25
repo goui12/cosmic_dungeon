@@ -13,9 +13,9 @@ This document covers the full `/spawner` command surface for Cosmic Dungeon oper
 - `/spawner set <namespace:entity>`
 - `/spawner name set <display name>`
 - `/spawner name clear`
-- `/spawner flag boss [true|false]`
+- `/spawner boss [true|false]`
 - `/spawner cap <amount>`
-- `/spawner flag <persistent|name_visible|silent|glowing|no_ai|no_gravity> <true|false>`
+
 - `/spawner equip <slot> <namespace:item>`
 - `/spawner equip <slot> fromhand`
 - `/spawner equip clear <slot>`
