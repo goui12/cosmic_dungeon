@@ -1,4 +1,4 @@
-# In-Game Commands (Developer Reference) — 1.4.8
+# In-Game Commands (Developer Reference) — 1.4.9
 
 ## Command roots registered by the mod
 
@@ -29,8 +29,28 @@
 ### Spawner
 `/spawner help|set|name|boss|cap|equip|enchant|drop|drops|showlabels|delay|preset|info|reset`
 
-### Region
-`/region ...` supports selection, ownership, permissions, inspect/look tooling, and interaction flag management.
+### Region (actual command tree)
+
+- `/region wand`
+- `/region new <name>`
+- `/region create <name>`
+- `/region new <name> copy <source>`
+- `/region create <name> copy <source>`
+- `/region look <name>`
+- `/region look all`
+- `/region info <name>`
+- `/region parent <region> <newParent>` (`none`/`null` clears parent)
+- `/region delete <name>`
+- `/region list`
+- `/region flags <name>`
+- `/region flags <name> <flag> <allow|deny|clear>`
+- `/region flags <name> inherit <flags|exceptions> <on|off>`
+- `/region flags <name> exceptions <place|break>`
+- `/region flags <name> exceptions <place|break> <torch|ladder|water> <allow|deny|clear>` (`water` only for `place`)
+- `/region flag list`
+- `/region flag <flag> <allow|deny>` (applies to effective region at your location)
+
+**Default behavior note:** newly created regions now default `interact=allow`.
 
 ### Door/Key
 `/door lock|info|count|pass_limit|reset_count|key info|key duplicate`
