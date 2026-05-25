@@ -40,6 +40,7 @@
 - `/region look <name>`
 - `/region look all`
 - `/region info <name>`
+- `/region here` (shows `/region info`-style output for all regions at your current position)
 - `/region parent <region> <newParent>` (`none`/`null` clears parent)
 - `/region delete <name>`
 - `/region list`

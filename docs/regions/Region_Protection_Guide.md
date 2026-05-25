@@ -56,6 +56,8 @@ This means `/region flag interact allow` is now the default state for newly crea
 
 ### Inspection / structure
 - `/region info <name>`
+- `/region here`
+  - Shows `/region info`-style output for all region(s) at your current player position.
 - `/region list`
 - `/region delete <name>`
 - `/region parent <region> <newParent>`
