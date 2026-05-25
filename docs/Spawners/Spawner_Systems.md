@@ -31,6 +31,7 @@ Spawner behavior is driven by `cosmic_mob_spawner` block entities and optional p
 - `/spawner enchant ...`
 - `/spawner drop <slot> <0..1>`
 - `/spawner drops`
+- `/spawner showlabels`
 - `/spawner delay <ticks>`
 - `/spawner info`
 - `/spawner reset`

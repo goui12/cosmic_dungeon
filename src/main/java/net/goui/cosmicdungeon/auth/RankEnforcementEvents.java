@@ -5,7 +5,6 @@ import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.network.ModNetwork;
 import net.goui.cosmicdungeon.network.payload.SpawnerLabelPayload;
 import net.minecraft.ChatFormatting;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -17,6 +16,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import net.goui.cosmicdungeon.command.SpawnerCommand;
 
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID)
 public final class RankEnforcementEvents {
@@ -28,9 +28,6 @@ public final class RankEnforcementEvents {
      */
     private static final AtomicBoolean FIRST_JOIN_GRANTED = new AtomicBoolean(false);
 
-    // Persistent preference key (server stores; client receives on login)
-    private static final String PREF_ROOT = "cosmicdungeon_prefs";
-    private static final String KEY_SPAWNER_LABELS = "spawner_labels";
 
     @SubscribeEvent
     public static void onServerStarting(ServerStartingEvent e) {
@@ -61,14 +58,8 @@ public final class RankEnforcementEvents {
 
         enforce(sp);
 
-        // Sync spawner-label preference on login (default false).
-        // Non-developers always get false (even if NBT somehow had true).
-        boolean enabled = false;
-        if (Authority.isDeveloper(sp)) {
-            CompoundTag pd = sp.getPersistentData();
-            CompoundTag prefs = pd.getCompoundOrEmpty(PREF_ROOT);
-            enabled = prefs.getBooleanOr(KEY_SPAWNER_LABELS, false);
-        }
+        // Sync global spawner-label toggle on login (developers only).
+        boolean enabled = Authority.isDeveloper(sp) && SpawnerCommand.isShowLabelsEnabled();
         ModNetwork.sendTo(sp, new SpawnerLabelPayload(enabled));
     }
 

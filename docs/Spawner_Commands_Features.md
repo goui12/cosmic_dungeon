@@ -29,6 +29,7 @@ This document covers the full `/spawner` command surface for Cosmic Dungeon oper
 - `/spawner drop all <0.0-1.0>`
 - `/spawner drops`
 - `/spawner delay <ticks>`
+- `/spawner showlabels`
 - `/spawner info`
 - `/spawner preset save <preset_name>`
 - `/spawner preset load <preset_name>`
@@ -63,3 +64,10 @@ This document covers the full `/spawner` command surface for Cosmic Dungeon oper
 - `/spawner preset reload` ensures the directory exists and seeds examples if empty.
 - If the directory is empty, three examples are auto-generated: `Skeleton_Master.json`, `Warden_Trial.json`, and `Pillager_Captain_Elite.json`.
 - Dev reminder: when future cosmic spawner fields are added/removed, update preset read/write parsing to keep files in sync.
+
+
+## `/spawner showlabels`
+- Developer-only global toggle.
+- `/spawner showlabels` switches whether the cyan/teal spawner entity label above Cosmic Spawners is visible.
+- When enabled, labels are shown to all online developers and to developers who join later.
+- Non-developers never receive this label view mode.
