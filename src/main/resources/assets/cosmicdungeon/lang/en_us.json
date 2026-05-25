@@ -554,5 +554,6 @@
   "block.cosmicdungeon.yellow_mold_deepslate_bricks": "Yellow Mold Deepslate Bricks",
   "block.cosmicdungeon.yellow_mold_deepslate_tiles": "Yellow Mold Deepslate Tiles",
   "block.cosmicdungeon.yellow_mold_polished_blackstone": "Yellow Mold Polished Blackstone",
-  "block.cosmicdungeon.yellow_mold_polished_deepslate": "Yellow Mold Polished Deepslate"
+  "block.cosmicdungeon.yellow_mold_polished_deepslate": "Yellow Mold Polished Deepslate",
+  "key.category.cosmicdungeon.cosmicdungeon": "Cosmic Dungeon"
 }

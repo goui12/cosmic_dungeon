@@ -1,18 +1,21 @@
 package net.goui.cosmicdungeon.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.network.payload.SpawnerPresetKeybindPayload;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
 public final class SpawnerPresetKeybindClient {
     private SpawnerPresetKeybindClient() {}
 
-    private static final String CATEGORY = "key.categories.cosmicdungeon";
+    private static final KeyMapping.Category CATEGORY =
+            new KeyMapping.Category(ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "cosmicdungeon"));
     private static final KeyMapping[] KEYBINDS = new KeyMapping[]{
             new KeyMapping("key.cosmicdungeon.spawner_preset_1", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_KP_1, CATEGORY),
             new KeyMapping("key.cosmicdungeon.spawner_preset_2", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_KP_2, CATEGORY),
@@ -23,6 +26,7 @@ public final class SpawnerPresetKeybindClient {
 
     @SubscribeEvent
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
+        event.registerCategory(CATEGORY);
         for (KeyMapping km : KEYBINDS) event.register(km);
     }
 
@@ -30,7 +34,7 @@ public final class SpawnerPresetKeybindClient {
     public static void onClientTick(ClientTickEvent.Post event) {
         for (int i = 0; i < KEYBINDS.length; i++) {
             while (KEYBINDS[i].consumeClick()) {
-                PacketDistributor.sendToServer(new SpawnerPresetKeybindPayload(i + 1));
+                ClientPacketDistributor.sendToServer(new SpawnerPresetKeybindPayload(i + 1));
             }
         }
     }
