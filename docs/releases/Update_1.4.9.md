@@ -19,3 +19,12 @@
 - `/spawner info` has been expanded into the primary readable inspector: colored sections, mob identity, coordinates, runtime properties, full equipment listing, and enchantment/NBT-derived item naming details.
 - Drop tuning is now in-chat via clickable `[+]` / `[-]` controls directly inside `/spawner info`, and each click immediately refreshes the info panel for rapid incremental editing.
 - Intrinsic drop overrides now show exact values stored in spawner NBT (no placeholder/default text), with clickable `[+]` / `[-]` controls in the same info panel.
+
+
+- Added file-based preset commands for Cosmic Spawner authoring:
+  - `/spawner preset save <preset_name>`
+  - `/spawner preset load <preset_name>`
+  - `/spawner preset delete <preset_name>`
+  - `/spawner preset reload`
+- Preset files are JSON under `<server_root>/cosmicdungeon/spawner_presets/` and can be edited offline for developer workflows.
+- Added auto-generated sample presets to help reverse-engineer the schema (`Skeleton_Master`, `Warden_Trial`, `Pillager_Captain_Elite`).

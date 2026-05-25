@@ -36,6 +36,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 
 import java.util.Arrays;
+import java.util.regex.Pattern;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -95,6 +96,16 @@ public final class SpawnerCommand {
                 .then(Commands.literal("adjustdrop").then(Commands.argument("slot", StringArgumentType.word()).suggests(SpawnerCommand::suggestSlots).then(Commands.argument("delta", FloatArgumentType.floatArg(-1f,1f)).executes(c -> adjustDrop(c.getSource(), slot(c), FloatArgumentType.getFloat(c, "delta"))))))
                 .then(Commands.literal("adjustintrinsic").then(Commands.argument("item", ResourceLocationArgument.id()).suggests(SpawnerCommand::suggestItems).then(Commands.argument("delta", FloatArgumentType.floatArg(-1f,1f)).executes(c -> adjustIntrinsic(c.getSource(), ResourceLocationArgument.getId(c, "item"), FloatArgumentType.getFloat(c, "delta"))))))
                 .then(Commands.literal("info").executes(c -> info(c.getSource())))
+
+                .then(Commands.literal("preset").executes(c -> helpPreset(c.getSource()))
+                        .then(Commands.literal("save").executes(c -> helpPresetSave(c.getSource()))
+                                .then(Commands.argument("preset_name", StringArgumentType.word()).executes(c -> savePreset(c.getSource(), StringArgumentType.getString(c, "preset_name")))))
+                        .then(Commands.literal("load").executes(c -> helpPresetLoad(c.getSource()))
+                                .then(Commands.argument("preset_name", StringArgumentType.word()).executes(c -> loadPreset(c.getSource(), StringArgumentType.getString(c, "preset_name")))))
+                        .then(Commands.literal("delete").executes(c -> helpPresetDelete(c.getSource()))
+                                .then(Commands.argument("preset_name", StringArgumentType.word()).executes(c -> deletePreset(c.getSource(), StringArgumentType.getString(c, "preset_name")))))
+                        .then(Commands.literal("reload").executes(c -> reloadPresets(c.getSource()))))
+
                 .then(Commands.literal("reset").executes(c -> reset(c.getSource())))
                 .then(Commands.argument("invalid", StringArgumentType.greedyString()).suggests(SpawnerCommand::suggestRoot).executes(c -> invalid(c.getSource(), StringArgumentType.getString(c, "invalid"))))
         );
@@ -102,13 +113,17 @@ public final class SpawnerCommand {
 
     private static int help(CommandSourceStack src) { return syntax(src, "Spawner command guide", new String[]{
             "/spawner set <namespace:entity>", "/spawner equip <slot> <namespace:item>", "/spawner drop <slot> <0.0-1.0>",
-            "/spawner drops", "/spawner info", "/spawner reset", "/spawner help"
+            "/spawner drops", "/spawner preset save <preset_name>", "/spawner preset load <preset_name>", "/spawner preset delete <preset_name>", "/spawner preset reload", "/spawner info", "/spawner reset", "/spawner help"
     }); }
     private static int helpSet(CommandSourceStack src){ return syntax(src, "Set syntax", new String[]{"/spawner set <namespace:entity>","Tip: Use TAB to browse entities."}); }
     private static int helpName(CommandSourceStack src){ return syntax(src, "Name syntax", new String[]{"/spawner name set <display name>","/spawner name clear"}); }
     private static int helpFlag(CommandSourceStack src){ return syntax(src, "Flag syntax", new String[]{"/spawner flag boss [true|false]","/spawner cap <0+>","/spawner flag <persistent|name_visible|silent|glowing|no_ai|no_gravity> <true|false>"}); }
     private static int helpEquip(CommandSourceStack src){ return syntax(src, "Equip syntax", new String[]{"/spawner equip <slot> <namespace:item>","/spawner equip <slot> fromhand","/spawner equip clear <slot>","/spawner equip clear all"}); }
     private static int helpDrop(CommandSourceStack src){ return syntax(src, "Drop syntax", new String[]{"/spawner drop <slot> <0.0-1.0>","/spawner drop armor <0.0-1.0>","/spawner drop hands <0.0-1.0>","/spawner drop all <0.0-1.0>","/spawner drop intrinsic <namespace:item> <0.0-1.0>","/spawner drop intrinsic clear <namespace:item>","Drop controls are also clickable in /spawner info"}); }
+    private static int helpPreset(CommandSourceStack src){ return syntax(src, "Preset syntax", new String[]{"/spawner preset save <preset_name>","/spawner preset load <preset_name>","/spawner preset delete <preset_name>","/spawner preset reload","Example: /spawner preset save Skeleton_Master","Preset names must not contain spaces."}); }
+    private static int helpPresetSave(CommandSourceStack src){ return syntax(src, "Preset save syntax", new String[]{"/spawner preset save <preset_name>","Example: /spawner preset save Skeleton_Master","Look at a Cosmic Spawner within 5 blocks."}); }
+    private static int helpPresetLoad(CommandSourceStack src){ return syntax(src, "Preset load syntax", new String[]{"/spawner preset load <preset_name>","Example: /spawner preset load Skeleton_Master","Look at a Cosmic Spawner within 5 blocks."}); }
+    private static int helpPresetDelete(CommandSourceStack src){ return syntax(src, "Preset delete syntax", new String[]{"/spawner preset delete <preset_name>","Example: /spawner preset delete Skeleton_Master","Preset names must not contain spaces."}); }
     private static int invalid(CommandSourceStack src, String invalid){ src.sendFailure(Component.literal("Unknown /spawner syntax: " + invalid)); return help(src); }
     private static int syntax(CommandSourceStack src, String title, String[] lines){
         src.sendSuccess(() -> Component.literal(title).withStyle(ChatFormatting.GOLD), false);
@@ -180,7 +195,7 @@ public final class SpawnerCommand {
     private static CompletableFuture<Suggestions> suggestItems(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){return SharedSuggestionProvider.suggestResource(BuiltInRegistries.ITEM.keySet(),b);}
     private static CompletableFuture<Suggestions> suggestEnchantments(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){return SharedSuggestionProvider.suggestResource(srcRegistryEnchantments(c),b);}
     private static CompletableFuture<Suggestions> suggestSlots(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){return SharedSuggestionProvider.suggest(Arrays.stream(CosmicSpawnerPreset.Slot.values()).map(s->s.id),b);}
-    private static CompletableFuture<Suggestions> suggestRoot(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){ return SharedSuggestionProvider.suggest(Arrays.asList("help","set","name","flag","equip","enchant","drop","drops","delay","info","reset"), b); }
+    private static CompletableFuture<Suggestions> suggestRoot(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){ return SharedSuggestionProvider.suggest(Arrays.asList("help","set","name","flag","equip","enchant","drop","drops","delay","preset","info","reset"), b); }
     private static void sendEquipmentInfo(CommandSourceStack src, CosmicSpawnerPreset p, CosmicSpawnerPreset.Slot slot, String title) {
         ItemStack st = p.getEquipment(slot);
         src.sendSuccess(() -> Component.literal(title + ":").withStyle(ChatFormatting.BLUE), false);
@@ -220,6 +235,20 @@ public final class SpawnerCommand {
     private static MutableComponent intrinsicChanceButton(ResourceLocation itemId, float delta, String symbol) { String cmd = "/spawner adjustintrinsic " + itemId + " " + String.format(java.util.Locale.ROOT, "%.2f", delta); return Component.literal("["+symbol+"]").withStyle(style -> style.withColor(delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED).withClickEvent(new ClickEvent.RunCommand(cmd)).withHoverEvent(new HoverEvent.ShowText(Component.literal("Adjust " + itemId + " by " + Math.round(delta*100f) + "% and refresh info")))); }
 
     private static MutableComponent chanceButton(CosmicSpawnerPreset.Slot slot, float delta, String symbol) { String cmd = "/spawner adjustdrop " + slot.id + " " + String.format(java.util.Locale.ROOT, "%.2f", delta); return Component.literal("["+symbol+"]").withStyle(style -> style.withColor(delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED).withClickEvent(new ClickEvent.RunCommand(cmd)).withHoverEvent(new HoverEvent.ShowText(Component.literal("Adjust "+slot.id+" by "+Math.round(delta*100f)+"% and refresh info")))); }
+
+    private static final Pattern PRESET_NAME_PATTERN = Pattern.compile("^[A-Za-z0-9_-]+$");
+    private static boolean validPresetName(CommandSourceStack src, String name, String commandHelp){
+        if (!PRESET_NAME_PATTERN.matcher(name).matches()) {
+            src.sendFailure(Component.literal("Invalid preset name: '"+name+"'. Names may only use letters, numbers, '_' or '-'. No spaces."));
+            syntax(src, "Preset command tutorial", new String[]{commandHelp, "Example: "+commandHelp.replace("<preset_name>", "Skeleton_Master")});
+            return false;
+        }
+        return true;
+    }
+    private static int savePreset(CommandSourceStack src, String name){ try { if (!validPresetName(src, name, "/spawner preset save <preset_name>")) return 0; var be=getTargetSpawnerBE(src,src.getPlayerOrException(),src.getPlayerOrException().level()); if(be==null)return 0; SpawnerPresetFileStore.ensureExamplePresets(src.getServer()); SpawnerPresetFileStore.writePreset(src.getServer(), name, be); src.sendSuccess(()->Component.literal("Saved spawner preset '"+name+"' to " + SpawnerPresetFileStore.presetPath(src.getServer(), name)), false); return 1; } catch(Exception e){ src.sendFailure(Component.literal("Failed to save preset: "+e.getMessage())); return 0; } }
+    private static int loadPreset(CommandSourceStack src, String name){ try { if (!validPresetName(src, name, "/spawner preset load <preset_name>")) return 0; var be=getTargetSpawnerBE(src,src.getPlayerOrException(),src.getPlayerOrException().level()); if(be==null)return 0; var loaded=SpawnerPresetFileStore.readPreset(src.getServer(), name); ResourceLocation rl=ResourceLocation.tryParse(loaded.entityTypeId); if(rl!=null) be.setSpawnerEntityId(rl); if(loaded.preset!=null) be.setSpawnerPreset(loaded.preset); be.setBossOneShot(loaded.bossOneShot); be.setSpawnerMobCap(loaded.spawnerMobCap); be.setSpawnerDelayRange(loaded.minSpawnDelay, loaded.maxSpawnDelay); src.sendSuccess(()->Component.literal("Loaded spawner preset '"+name+"' from " + SpawnerPresetFileStore.presetPath(src.getServer(), name)), false); return 1; } catch(Exception e){ src.sendFailure(Component.literal("Failed to load preset: "+e.getMessage())); return 0; } }
+    private static int deletePreset(CommandSourceStack src, String name){ try { if (!validPresetName(src, name, "/spawner preset delete <preset_name>")) return 0; boolean deleted=SpawnerPresetFileStore.deletePreset(src.getServer(), name); if(!deleted){ src.sendFailure(Component.literal("Preset not found: "+name)); return 0; } src.sendSuccess(()->Component.literal("Deleted spawner preset '"+name+"'."), false); return 1; } catch(Exception e){ src.sendFailure(Component.literal("Failed to delete preset: "+e.getMessage())); return 0; } }
+    private static int reloadPresets(CommandSourceStack src){ try { SpawnerPresetFileStore.ensureExamplePresets(src.getServer()); src.sendSuccess(()->Component.literal("Preset files are loaded on-demand; reload complete. Preset directory: " + SpawnerPresetFileStore.presetDirectory(src.getServer())), false); return 1; } catch(Exception e){ src.sendFailure(Component.literal("Failed to reload presets: "+e.getMessage())); return 0; } }
 
     private static CosmicSpawnerBlockEntity getTargetSpawnerBE(CommandSourceStack src, ServerPlayer player, Level level) { final BlockHitResult hit = raycast(player, 5.0D); if (hit == null || hit.getType() == HitResult.Type.MISS) { src.sendFailure(Component.literal("Look at a Cosmic Spawner within 5 blocks.")); return null; } final BlockPos pos = hit.getBlockPos(); if (!(level.getBlockState(pos).getBlock() instanceof CosmicMobSpawnerBlock)) { src.sendFailure(Component.literal("Target block is not a Cosmic Spawner.")); return null; } if (!(level.getBlockEntity(pos) instanceof CosmicSpawnerBlockEntity be)) { src.sendFailure(Component.literal("Cosmic Spawner block entity missing at target.")); return null; } return be; }
     private static BlockHitResult raycast(ServerPlayer p, double range) { ClipContext ctx = new ClipContext(p.getEyePosition(), p.getEyePosition().add(p.getLookAngle().scale(range)), ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, p); HitResult hr = p.level().clip(ctx); return hr instanceof BlockHitResult bhr ? bhr : null; }

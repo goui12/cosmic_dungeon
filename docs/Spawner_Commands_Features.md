@@ -30,6 +30,10 @@ This document covers the full `/spawner` command surface for Cosmic Dungeon oper
 - `/spawner drops`
 - `/spawner delay <ticks>`
 - `/spawner info`
+- `/spawner preset save <preset_name>`
+- `/spawner preset load <preset_name>`
+- `/spawner preset delete <preset_name>`
+- `/spawner preset reload`
 - `/spawner reset`
 
 ## Auto-complete and syntax tips
@@ -48,3 +52,14 @@ This document covers the full `/spawner` command surface for Cosmic Dungeon oper
 
 ## `/spawner drops`
 - Kept as a compatibility alias that opens the same `/spawner info` panel.
+
+
+## Preset file workflow
+- Presets are stored as editable JSON files in `<server_root>/cosmicdungeon/spawner_presets/`.
+- `preset_name` becomes the file name, e.g. `/spawner preset save Skeleton_Master` writes `Skeleton_Master.json`.
+- Names cannot contain spaces; only `A-Z`, `a-z`, `0-9`, `_`, and `-` are accepted.
+- `/spawner preset load <preset_name>` applies entity, boss one-shot, cap, delay, and nested `spawnerPresetNbt` data to the targeted spawner.
+- `/spawner preset delete <preset_name>` removes that JSON file.
+- `/spawner preset reload` ensures the directory exists and seeds examples if empty.
+- If the directory is empty, three examples are auto-generated: `Skeleton_Master.json`, `Warden_Trial.json`, and `Pillager_Captain_Elite.json`.
+- Dev reminder: when future cosmic spawner fields are added/removed, update preset read/write parsing to keep files in sync.
