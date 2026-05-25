@@ -15,3 +15,7 @@
 - Simplified Cosmic Mob Spawner command aliases: `/spawner flag cap <amount>` is now `/spawner cap <amount>`, and `/spawner set entity <namespace:entity>` is now `/spawner set <namespace:entity>`.
 - Cosmic Mob Spawner now supports direct equipment authoring by right-click: right-click the spawner with any equippable item (armor, mainhand weapon/tool, or offhand-compatible item) to copy that exact custom item stack into the spawner preset equipment slot.
 - This preserves custom names, enchantments, and other item components/NBT without requiring separate `/spawner enchant ...` steps.
+
+- `/spawner info` has been expanded into the primary readable inspector: colored sections, mob identity, coordinates, runtime properties, full equipment listing, and enchantment/NBT-derived item naming details.
+- Drop tuning is now in-chat via clickable `[+]` / `[-]` controls directly inside `/spawner info`, and each click immediately refreshes the info panel for rapid incremental editing.
+- Intrinsic drop overrides now show exact values stored in spawner NBT (no placeholder/default text), with clickable `[+]` / `[-]` controls in the same info panel.
