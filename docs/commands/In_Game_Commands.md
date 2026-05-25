@@ -38,7 +38,7 @@
 - `/region new <name> copy <source>`
 - `/region create <name> copy <source>`
 - `/region look <name>`
-- `/region look all`
+- `/region look all` (nearby-region outline toggle; outlines include an x-ray overlay so hidden edges remain visible through walls while still respecting normal nearby/render-distance behavior)
 - `/region info <name>`
 - `/region here` (shows `/region info`-style output for all regions at your current position)
 - `/region parent <region> <newParent>` (`none`/`null` clears parent)
