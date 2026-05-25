@@ -12,5 +12,6 @@
 
 ## Features
 
+- Simplified Cosmic Mob Spawner command aliases: `/spawner flag cap <amount>` is now `/spawner cap <amount>`, and `/spawner set entity <namespace:entity>` is now `/spawner set <namespace:entity>`.
 - Cosmic Mob Spawner now supports direct equipment authoring by right-click: right-click the spawner with any equippable item (armor, mainhand weapon/tool, or offhand-compatible item) to copy that exact custom item stack into the spawner preset equipment slot.
 - This preserves custom names, enchantments, and other item components/NBT without requiring separate `/spawner enchant ...` steps.
