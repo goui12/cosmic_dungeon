@@ -56,6 +56,7 @@ public final class RegionCommand {
 
         root.then(buildLookCommand());
         root.then(buildInfoCommand());
+        root.then(buildHereCommand());
         root.then(buildParentCommand());
         root.then(buildDeleteCommand());
         root.then(buildListCommand());
@@ -143,46 +144,34 @@ public final class RegionCommand {
                                 ctx.getSource().sendFailure(Component.literal("Unknown region: " + name).withStyle(ChatFormatting.RED));
                                 return 0;
                             }
-
-                            var r = opt.get();
-                            BlockPos min = r.min();
-                            BlockPos max = r.max();
-
-                            ctx.getSource().sendSuccess(
-                                    () -> Component.literal("Region ")
-                                            .append(Component.literal(r.name()).withStyle(ChatFormatting.AQUA)),
-                                    false
-                            );
-
-                            String parent = r.parent() == null ? "(none)" : r.parent();
-                            ctx.getSource().sendSuccess(
-                                    () -> Component.literal("  Parent: ").withStyle(ChatFormatting.GRAY)
-                                            .append(Component.literal(parent).withStyle(ChatFormatting.DARK_GRAY)),
-                                    false
-                            );
-
-                            ctx.getSource().sendSuccess(
-                                    () -> Component.literal("  Dimension: ").withStyle(ChatFormatting.GRAY)
-                                            .append(Component.literal(r.dimensionId()).withStyle(ChatFormatting.DARK_GRAY)),
-                                    false
-                            );
-                            ctx.getSource().sendSuccess(
-                                    () -> Component.literal("  Min: ").withStyle(ChatFormatting.GRAY)
-                                            .append(Component.literal(min.getX() + " " + min.getY() + " " + min.getZ()).withStyle(ChatFormatting.DARK_GRAY)),
-                                    false
-                            );
-                            ctx.getSource().sendSuccess(
-                                    () -> Component.literal("  Max: ").withStyle(ChatFormatting.GRAY)
-                                            .append(Component.literal(max.getX() + " " + max.getY() + " " + max.getZ()).withStyle(ChatFormatting.DARK_GRAY)),
-                                    false
-                            );
-                            ctx.getSource().sendSuccess(
-                                    () -> Component.literal("  Flags: ").withStyle(ChatFormatting.GRAY)
-                                            .append(Component.literal(String.valueOf(r.flags() == null ? 0 : r.flags().size())).withStyle(ChatFormatting.DARK_GRAY)),
-                                    false
-                            );
+                            sendRegionInfo(ctx.getSource(), opt.get());
                             return 1;
                         }));
+    }
+
+    private static LiteralArgumentBuilder<CommandSourceStack> buildHereCommand() {
+        return Commands.literal("here")
+                .executes(ctx -> {
+                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                    ServerLevel level = ctx.getSource().getLevel();
+                    BlockPos pos = player.blockPosition();
+
+                    RegionRegistryData data = RegionRegistryData.get(level);
+                    List<RegionRegistryData.Region> regions = data.regionsAt(level, pos);
+                    if (regions.isEmpty()) {
+                        ctx.getSource().sendFailure(Component.literal("You are not inside any region.").withStyle(ChatFormatting.RED));
+                        return 0;
+                    }
+
+                    ctx.getSource().sendSuccess(
+                            () -> Component.literal("Regions at your position (" + regions.size() + "):").withStyle(ChatFormatting.GRAY),
+                            false
+                    );
+                    for (RegionRegistryData.Region r : regions) {
+                        sendRegionInfo(ctx.getSource(), r);
+                    }
+                    return 1;
+                });
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> buildParentCommand() {
@@ -813,6 +802,45 @@ public final class RegionCommand {
     }
 
     /* ====================================================================== */
+
+    private static void sendRegionInfo(CommandSourceStack src, RegionRegistryData.Region r) {
+        BlockPos min = r.min();
+        BlockPos max = r.max();
+
+        src.sendSuccess(
+                () -> Component.literal("Region ")
+                        .append(Component.literal(r.name()).withStyle(ChatFormatting.AQUA)),
+                false
+        );
+
+        String parent = r.parent() == null ? "(none)" : r.parent();
+        src.sendSuccess(
+                () -> Component.literal("  Parent: ").withStyle(ChatFormatting.GRAY)
+                        .append(Component.literal(parent).withStyle(ChatFormatting.DARK_GRAY)),
+                false
+        );
+
+        src.sendSuccess(
+                () -> Component.literal("  Dimension: ").withStyle(ChatFormatting.GRAY)
+                        .append(Component.literal(r.dimensionId()).withStyle(ChatFormatting.DARK_GRAY)),
+                false
+        );
+        src.sendSuccess(
+                () -> Component.literal("  Min: ").withStyle(ChatFormatting.GRAY)
+                        .append(Component.literal(min.getX() + " " + min.getY() + " " + min.getZ()).withStyle(ChatFormatting.DARK_GRAY)),
+                false
+        );
+        src.sendSuccess(
+                () -> Component.literal("  Max: ").withStyle(ChatFormatting.GRAY)
+                        .append(Component.literal(max.getX() + " " + max.getY() + " " + max.getZ()).withStyle(ChatFormatting.DARK_GRAY)),
+                false
+        );
+        src.sendSuccess(
+                () -> Component.literal("  Flags: ").withStyle(ChatFormatting.GRAY)
+                        .append(Component.literal(String.valueOf(r.flags() == null ? 0 : r.flags().size())).withStyle(ChatFormatting.DARK_GRAY)),
+                false
+        );
+    }
 
     private static String normalizeName(String raw) {
         if (raw == null) return "";
