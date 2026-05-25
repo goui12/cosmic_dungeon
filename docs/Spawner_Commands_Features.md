@@ -3,6 +3,7 @@
 This document covers the full `/spawner` command surface for Cosmic Dungeon operators.
 
 ## Core behavior
+- Right-clicking a Cosmic Mob Spawner with an equippable item now applies that exact `ItemStack` (name, lore, enchantments, components/NBT) to the matching mob equipment slot in the spawner preset.
 - Commands target the **Cosmic Mob Spawner block you are currently looking at** (within 5 blocks).
 - Existing spawners placed before this feature update are supported.
 - Default preset equipment drop chance is `0.0` for all armor and hand slots (unless explicitly changed with `/spawner drop ...`).
