@@ -38,6 +38,7 @@
 - New region creation now seeds `/region` flag `interact` to **allow** by default (`interact=true`), so fresh regions are immediately interaction-permissive unless you override them.
 - Added `/region here` to inspect the region(s) at your current position using the same output format as `/region info`.
 - Region documentation has been rewritten to match the implemented command tree and behavior model.
+- Region look outlines now render with an additional depth-disabled overlay pass, so region edges remain visible through walls without changing the existing nearby/render-distance behavior of `/region look all`.
 - Corrected docs now describe the real `/region` subcommands (`wand`, `create/new`, `look`, `info`, `here`, `parent`, `delete`, `list`, `flags`, `flag`) and remove outdated priority/mode-era command references.
 
 - Added five configurable Cosmic Dungeon keybinds for Cosmic Spawner preset loading (Controls category: **Cosmic Dungeon**).

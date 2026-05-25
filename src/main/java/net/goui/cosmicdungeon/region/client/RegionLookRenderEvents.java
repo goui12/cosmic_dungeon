@@ -4,9 +4,14 @@ package net.goui.cosmicdungeon.region.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShapeRenderer;
+
+import java.util.OptionalDouble;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -18,6 +23,29 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID, value = Dist.CLIENT)
 public final class RegionLookRenderEvents {
     private RegionLookRenderEvents() {}
+
+    /**
+     * X-ray line pass for region outlines: keeps vanilla line distance behavior while
+     * skipping depth tests so buried edges are still visible through blocks.
+     */
+    private static final RenderType REGION_LOOK_LINES_XRAY = RenderType.create(
+            "cosmicdungeon_region_look_lines_xray",
+            DefaultVertexFormat.POSITION_COLOR_NORMAL,
+            VertexFormat.Mode.LINES,
+            1536,
+            false,
+            false,
+            RenderType.CompositeState.builder()
+                    .setShaderState(RenderStateShard.RENDERTYPE_LINES_SHADER)
+                    .setLineState(new RenderStateShard.LineStateShard(OptionalDouble.empty()))
+                    .setLayeringState(RenderStateShard.VIEW_OFFSET_Z_LAYERING)
+                    .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+                    .setOutputState(RenderStateShard.ITEM_ENTITY_TARGET)
+                    .setWriteMaskState(RenderStateShard.COLOR_WRITE)
+                    .setCullState(RenderStateShard.NO_CULL)
+                    .setDepthTestState(RenderStateShard.NO_DEPTH_TEST)
+                    .createCompositeState(false)
+    );
 
     @SubscribeEvent
     public static void onRenderLevel(RenderLevelStageEvent.AfterTranslucentBlocks event) {
@@ -39,7 +67,8 @@ public final class RegionLookRenderEvents {
         poseStack.pushPose();
         poseStack.translate(-camPos.x, -camPos.y, -camPos.z);
 
-        var consumer = bufferSource.getBuffer(RenderType.lines());
+        var depthConsumer = bufferSource.getBuffer(RenderType.lines());
+        var xrayConsumer = bufferSource.getBuffer(REGION_LOOK_LINES_XRAY);
 
         for (var r : regions) {
             AABB box = makeBox(r.min(), r.max());
@@ -65,7 +94,10 @@ public final class RegionLookRenderEvents {
                 af = 0.85F;
             }
 
-            ShapeRenderer.renderLineBox(poseStack.last(), consumer, box, rf, gf, bf, af);
+            // First pass: standard depth-tested line rendering.
+            ShapeRenderer.renderLineBox(poseStack.last(), depthConsumer, box, rf, gf, bf, af);
+            // Second pass: depth-disabled overlay so hidden edges are visible through walls.
+            ShapeRenderer.renderLineBox(poseStack.last(), xrayConsumer, box, rf, gf, bf, af);
         }
 
         poseStack.popPose();

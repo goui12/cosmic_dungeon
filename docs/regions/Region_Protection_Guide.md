@@ -53,6 +53,7 @@ This means `/region flag interact allow` is now the default state for newly crea
   - Toggle rendering for one named region.
 - `/region look all`
   - Toggle rendering for nearby regions.
+  - Region outlines now render in an x-ray overlay pass so edges remain visible even when buried behind solid blocks, while still using normal nearby/render-distance filtering for large or far-away regions.
 
 ### Inspection / structure
 - `/region info <name>`
