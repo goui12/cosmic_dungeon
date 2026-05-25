@@ -80,7 +80,7 @@ public final class SpawnerCommand {
                         .then(Commands.literal("clear")
                                 .then(Commands.argument("slot", StringArgumentType.word()).suggests(SpawnerCommand::suggestSlots)
                                         .executes(c -> clearEnchantments(c.getSource(), slot(c))))))
-                .then(Commands.literal("drop").executes(c -> helpDrop(c.getSource())).then(Commands.argument("slot", StringArgumentType.word()).suggests(SpawnerCommand::suggestSlots).then(Commands.argument("chance", FloatArgumentType.floatArg(0f,1f)).executes(c -> withPreset(c.getSource(), p -> p.setDropChance(slot(c), FloatArgumentType.getFloat(c,"chance"))))))
+                 .then(Commands.literal("drop").executes(c -> helpDrop(c.getSource())).then(Commands.argument("slot", StringArgumentType.word()).suggests(SpawnerCommand::suggestSlots).then(Commands.argument("chance", FloatArgumentType.floatArg(0f,1f)).executes(c -> withPreset(c.getSource(), p -> p.setDropChance(slot(c), FloatArgumentType.getFloat(c,"chance"))))))
                         .then(Commands.literal("armor").then(Commands.argument("chance", FloatArgumentType.floatArg(0f,1f)).executes(c -> withPreset(c.getSource(), p -> {float f=FloatArgumentType.getFloat(c,"chance"); p.setDropChance(CosmicSpawnerPreset.Slot.HEAD,f);p.setDropChance(CosmicSpawnerPreset.Slot.CHEST,f);p.setDropChance(CosmicSpawnerPreset.Slot.LEGS,f);p.setDropChance(CosmicSpawnerPreset.Slot.FEET,f);}))))
                         .then(Commands.literal("hands").then(Commands.argument("chance", FloatArgumentType.floatArg(0f,1f)).executes(c -> withPreset(c.getSource(), p -> {float f=FloatArgumentType.getFloat(c,"chance"); p.setDropChance(CosmicSpawnerPreset.Slot.MAINHAND,f);p.setDropChance(CosmicSpawnerPreset.Slot.OFFHAND,f);}))))
                         .then(Commands.literal("all").then(Commands.argument("chance", FloatArgumentType.floatArg(0f,1f)).executes(c -> withPreset(c.getSource(), p -> {float f=FloatArgumentType.getFloat(c,"chance"); for (var s: CosmicSpawnerPreset.Slot.values()) p.setDropChance(s,f);}))))
@@ -90,8 +90,10 @@ public final class SpawnerCommand {
                                 .then(Commands.literal("clear")
                                         .then(Commands.argument("item", ResourceLocationArgument.id()).suggests(SpawnerCommand::suggestItems).executes(c -> withPreset(c.getSource(), p -> p.clearIntrinsicDropChance(ResourceLocationArgument.getId(c, "item")))))))
                 )
-                .then(Commands.literal("drops").executes(c -> drops(c.getSource())))
+                                .then(Commands.literal("drops").executes(c -> info(c.getSource())))
                 .then(Commands.literal("delay").then(Commands.argument("ticks", IntegerArgumentType.integer(1)).executes(c -> setDelay(c.getSource(), IntegerArgumentType.getInteger(c, "ticks")))))
+                .then(Commands.literal("adjustdrop").then(Commands.argument("slot", StringArgumentType.word()).suggests(SpawnerCommand::suggestSlots).then(Commands.argument("delta", FloatArgumentType.floatArg(-1f,1f)).executes(c -> adjustDrop(c.getSource(), slot(c), FloatArgumentType.getFloat(c, "delta"))))))
+                .then(Commands.literal("adjustintrinsic").then(Commands.argument("item", ResourceLocationArgument.id()).suggests(SpawnerCommand::suggestItems).then(Commands.argument("delta", FloatArgumentType.floatArg(-1f,1f)).executes(c -> adjustIntrinsic(c.getSource(), ResourceLocationArgument.getId(c, "item"), FloatArgumentType.getFloat(c, "delta"))))))
                 .then(Commands.literal("info").executes(c -> info(c.getSource())))
                 .then(Commands.literal("reset").executes(c -> reset(c.getSource())))
                 .then(Commands.argument("invalid", StringArgumentType.greedyString()).suggests(SpawnerCommand::suggestRoot).executes(c -> invalid(c.getSource(), StringArgumentType.getString(c, "invalid"))))
@@ -106,7 +108,7 @@ public final class SpawnerCommand {
     private static int helpName(CommandSourceStack src){ return syntax(src, "Name syntax", new String[]{"/spawner name set <display name>","/spawner name clear"}); }
     private static int helpFlag(CommandSourceStack src){ return syntax(src, "Flag syntax", new String[]{"/spawner flag boss [true|false]","/spawner cap <0+>","/spawner flag <persistent|name_visible|silent|glowing|no_ai|no_gravity> <true|false>"}); }
     private static int helpEquip(CommandSourceStack src){ return syntax(src, "Equip syntax", new String[]{"/spawner equip <slot> <namespace:item>","/spawner equip <slot> fromhand","/spawner equip clear <slot>","/spawner equip clear all"}); }
-    private static int helpDrop(CommandSourceStack src){ return syntax(src, "Drop syntax", new String[]{"/spawner drop <slot> <0.0-1.0>","/spawner drop armor <0.0-1.0>","/spawner drop hands <0.0-1.0>","/spawner drop all <0.0-1.0>","/spawner drop intrinsic <namespace:item> <0.0-1.0>","/spawner drop intrinsic clear <namespace:item>","/spawner drops"}); }
+    private static int helpDrop(CommandSourceStack src){ return syntax(src, "Drop syntax", new String[]{"/spawner drop <slot> <0.0-1.0>","/spawner drop armor <0.0-1.0>","/spawner drop hands <0.0-1.0>","/spawner drop all <0.0-1.0>","/spawner drop intrinsic <namespace:item> <0.0-1.0>","/spawner drop intrinsic clear <namespace:item>","Drop controls are also clickable in /spawner info"}); }
     private static int invalid(CommandSourceStack src, String invalid){ src.sendFailure(Component.literal("Unknown /spawner syntax: " + invalid)); return help(src); }
     private static int syntax(CommandSourceStack src, String title, String[] lines){
         src.sendSuccess(() -> Component.literal(title).withStyle(ChatFormatting.GOLD), false);
@@ -124,8 +126,54 @@ public final class SpawnerCommand {
 
     private static void applyFlag(CosmicSpawnerPreset p, String f, boolean v){ switch (f){case"persistent"->p.setPersistent(v);case"name_visible"->p.setCustomNameVisible(v);case"silent"->p.setSilent(v);case"glowing"->p.setGlowing(v);case"no_ai"->p.setNoAi(v);case"no_gravity"->p.setNoGravity(v);} }
     private static CosmicSpawnerPreset.Slot slot(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c){ return CosmicSpawnerPreset.Slot.fromId(StringArgumentType.getString(c,"slot")); }
-    private static int withPreset(CommandSourceStack src, java.util.function.Consumer<CosmicSpawnerPreset> op) { try { var be=getTargetSpawnerBE(src,src.getPlayerOrException(),src.getPlayerOrException().level()); if(be==null)return 0; var p=be.getSpawnerPreset(); if(p==null){ p=new CosmicSpawnerPreset(); ResourceLocation rl = ResourceLocation.tryParse(be.getSpawnerEntityId()); if(rl!=null)p.setEntityTypeId(rl);} op.accept(p); be.setSpawnerPreset(p); src.sendSuccess(()->Component.literal("Spawner preset updated."),false); return 1;} catch(Exception e){ src.sendFailure(Component.literal("Failed: "+e.getMessage())); return 0; } }
-    private static int info(CommandSourceStack src){ try{ var be=getTargetSpawnerBE(src,src.getPlayerOrException(),src.getPlayerOrException().level()); if(be==null)return 0; src.sendSuccess(()->Component.literal("Spawner entity: "+be.getSpawnerEntityId()+", boss="+be.isBossOneShot()+", cap="+be.getSpawnerMobCap()+", delay="+be.getSpawnerDelayTicks()+" ("+be.getSpawnerMinSpawnDelay()+"-"+be.getSpawnerMaxSpawnDelay()+")"),false); var p=be.getSpawnerPreset(); if(p==null){ src.sendSuccess(()->Component.literal("No preset set."),false); return 1;} src.sendSuccess(()->Component.literal("Preset entity: "+p.getDisplayEntityTypeId()+" (base "+p.getEntityTypeId()+")"),false); for(var s: CosmicSpawnerPreset.Slot.values()) src.sendSuccess(()->Component.literal(s.id+" drop="+p.getDropChance(s)+" item="+p.getEquipment(s)),false); return 1;}catch(Exception e){return 0;}}
+    private static int withPreset(CommandSourceStack src, java.util.function.Consumer<CosmicSpawnerPreset> op) { return withPreset(src, op, true, false); }
+    private static int withPreset(CommandSourceStack src, java.util.function.Consumer<CosmicSpawnerPreset> op, boolean confirm, boolean refreshInfo) { try { var be=getTargetSpawnerBE(src,src.getPlayerOrException(),src.getPlayerOrException().level()); if(be==null)return 0; var p=be.getSpawnerPreset(); if(p==null){ p=new CosmicSpawnerPreset(); ResourceLocation rl = ResourceLocation.tryParse(be.getSpawnerEntityId()); if(rl!=null)p.setEntityTypeId(rl);} op.accept(p); be.setSpawnerPreset(p); if (confirm) src.sendSuccess(()->Component.literal("Spawner preset updated."),false); if (refreshInfo) info(src); return 1;} catch(Exception e){ src.sendFailure(Component.literal("Failed: "+e.getMessage())); return 0; } }
+    private static int info(CommandSourceStack src) {
+        try {
+            var be = getTargetSpawnerBE(src, src.getPlayerOrException(), src.getPlayerOrException().level());
+            if (be == null) return 0;
+            var p = be.getSpawnerPreset();
+            if (p == null) {
+                src.sendSuccess(() -> Component.literal("No preset set. Use /spawner set <entity_type> first.").withStyle(ChatFormatting.RED), false);
+                return 1;
+            }
+            src.sendSuccess(() -> Component.literal("=== Cosmic Spawner Info ===").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+            src.sendSuccess(() -> Component.literal("Mob: ").withStyle(ChatFormatting.YELLOW).append(Component.literal(p.getDisplayEntityTypeId().toString()).withStyle(ChatFormatting.WHITE)), false);
+            src.sendSuccess(() -> Component.literal("Spawner Coordinates: ").withStyle(ChatFormatting.YELLOW).append(Component.literal(be.getBlockPos().getX()+", "+be.getBlockPos().getY()+", "+be.getBlockPos().getZ()+" <x,y,z>").withStyle(ChatFormatting.AQUA)), false);
+
+            sendEquipmentInfo(src, p, CosmicSpawnerPreset.Slot.HEAD, "Armor: Helmet");
+            sendEquipmentInfo(src, p, CosmicSpawnerPreset.Slot.CHEST, "Armor: Chestplate");
+            sendEquipmentInfo(src, p, CosmicSpawnerPreset.Slot.LEGS, "Armor: Leggings");
+            sendEquipmentInfo(src, p, CosmicSpawnerPreset.Slot.FEET, "Armor: Boots");
+            sendEquipmentInfo(src, p, CosmicSpawnerPreset.Slot.MAINHAND, "Mainhand");
+            sendEquipmentInfo(src, p, CosmicSpawnerPreset.Slot.OFFHAND, "Offhand");
+
+            src.sendSuccess(() -> Component.literal("Spawner Properties:").withStyle(ChatFormatting.LIGHT_PURPLE), false);
+            src.sendSuccess(() -> Component.literal("  Boss: ").withStyle(ChatFormatting.GRAY).append(Component.literal(Boolean.toString(be.isBossOneShot())).withStyle(ChatFormatting.WHITE)), false);
+            src.sendSuccess(() -> Component.literal("  Cap: ").withStyle(ChatFormatting.GRAY).append(Component.literal(Integer.toString(be.getSpawnerMobCap())).withStyle(ChatFormatting.WHITE)), false);
+            src.sendSuccess(() -> Component.literal("  Delay: ").withStyle(ChatFormatting.GRAY).append(Component.literal(be.getSpawnerMinSpawnDelay()+"-"+be.getSpawnerMaxSpawnDelay()).withStyle(ChatFormatting.WHITE)), false);
+
+            src.sendSuccess(() -> Component.literal("Drops:").withStyle(ChatFormatting.GREEN), false);
+            for (var s : CosmicSpawnerPreset.Slot.values()) src.sendSuccess(() -> dropRow(p, s), false);
+
+            src.sendSuccess(() -> Component.literal("Intrinsic Drops (from NBT overrides):").withStyle(ChatFormatting.AQUA), false);
+            if (p.getIntrinsicDropChances().isEmpty()) src.sendSuccess(() -> Component.literal("  None set in spawner NBT.").withStyle(ChatFormatting.DARK_GRAY), false);
+            else p.getIntrinsicDropChances().entrySet().stream().sorted(java.util.Map.Entry.comparingByKey()).forEach(e -> src.sendSuccess(() -> intrinsicDropRow(e.getKey(), e.getValue()), false));
+            return 1;
+        } catch (Exception e) {
+            src.sendFailure(Component.literal("Failed: " + e.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int adjustDrop(CommandSourceStack src, CosmicSpawnerPreset.Slot slot, float delta) {
+        return withPreset(src, p -> p.setDropChance(slot, p.getDropChance(slot) + delta), false, true);
+    }
+
+    private static int adjustIntrinsic(CommandSourceStack src, ResourceLocation itemId, float delta) {
+        return withPreset(src, p -> p.setIntrinsicDropChance(itemId, p.getIntrinsicDropChances().getOrDefault(itemId, 0f) + delta), false, true);
+    }
+
     private static int reset(CommandSourceStack src){ try{ var be=getTargetSpawnerBE(src,src.getPlayerOrException(),src.getPlayerOrException().level()); if(be==null)return 0; be.clearSpawnerPreset(); src.sendSuccess(()->Component.literal("Spawner preset reset."),false); return 1;}catch(Exception e){return 0;}}
     private static java.util.stream.Stream<ResourceLocation> srcRegistryEnchantments(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c){ return c.getSource().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).listElementIds().map(k->k.location()); }
     private static CompletableFuture<Suggestions> suggestEntities(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){return SharedSuggestionProvider.suggestResource(Stream.concat(BuiltInRegistries.ENTITY_TYPE.keySet().stream(), Stream.of(CosmicSpawnerPreset.ILLAGER_CAPTAIN_ID)),b);}
@@ -133,9 +181,45 @@ public final class SpawnerCommand {
     private static CompletableFuture<Suggestions> suggestEnchantments(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){return SharedSuggestionProvider.suggestResource(srcRegistryEnchantments(c),b);}
     private static CompletableFuture<Suggestions> suggestSlots(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){return SharedSuggestionProvider.suggest(Arrays.stream(CosmicSpawnerPreset.Slot.values()).map(s->s.id),b);}
     private static CompletableFuture<Suggestions> suggestRoot(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){ return SharedSuggestionProvider.suggest(Arrays.asList("help","set","name","flag","equip","enchant","drop","drops","delay","info","reset"), b); }
+    private static void sendEquipmentInfo(CommandSourceStack src, CosmicSpawnerPreset p, CosmicSpawnerPreset.Slot slot, String title) {
+        ItemStack st = p.getEquipment(slot);
+        src.sendSuccess(() -> Component.literal(title + ":").withStyle(ChatFormatting.BLUE), false);
+        if (st.isEmpty()) {
+            src.sendSuccess(() -> Component.literal("  (empty)").withStyle(ChatFormatting.DARK_GRAY), false);
+            return;
+        }
+        String custom = st.hasCustomHoverName() ? st.getHoverName().getString() : "unnamed";
+        src.sendSuccess(() -> Component.literal("  " + st.getItemHolder().unwrapKey().map(k -> k.location().toString()).orElse(st.getDisplayName().getString()) + " (" + custom + ")").withStyle(ChatFormatting.WHITE), false);
+        var enchMap = EnchantmentHelper.getEnchantmentsForCrafting(st);
+        if (enchMap.isEmpty()) {
+            src.sendSuccess(() -> Component.literal("    No enchantments").withStyle(ChatFormatting.DARK_GRAY), false);
+        } else {
+            String enchLine = enchMap.entrySet().stream()
+                    .map(e -> e.getKey().value().description().getString() + " " + e.getIntValue())
+                    .sorted()
+                    .reduce((a, b) -> a + ", " + b).orElse("");
+            src.sendSuccess(() -> Component.literal("    " + enchLine).withStyle(ChatFormatting.AQUA), false);
+        }
+    }
 
-    private static int drops(CommandSourceStack src) { try { var be = getTargetSpawnerBE(src, src.getPlayerOrException(), src.getPlayerOrException().level()); if (be == null) return 0; var p = be.getSpawnerPreset(); if (p == null) { src.sendSuccess(() -> Component.literal("No preset set. Use /spawner set <entity_type> first."), false); return 1; } src.sendSuccess(() -> Component.literal("Drops for "+p.getDisplayEntityTypeId()+":").withStyle(ChatFormatting.GOLD), false); for (var s : CosmicSpawnerPreset.Slot.values()) { ItemStack st = p.getEquipment(s); if (st.isEmpty()) continue; float chance = p.getDropChance(s); MutableComponent row = Component.literal(s.id+": "+st.getDisplayName().getString()+" "+Math.round(chance*100f)+"% chance "); row.append(chanceButton(s, chance, 0.05f, "+")); row.append(Component.literal(" ")); row.append(chanceButton(s, chance, -0.05f, "-")); row.append(Component.literal(" [Count locked]").withStyle(ChatFormatting.DARK_GRAY)); src.sendSuccess(() -> row, false); } if (p.getIntrinsicDropChances().isEmpty()) src.sendSuccess(() -> Component.literal("Intrinsic mob drops: vanilla loot table defaults (no overrides set).").withStyle(ChatFormatting.GRAY), false); else { src.sendSuccess(() -> Component.literal("Intrinsic overrides (applies only to mobs from this spawner):").withStyle(ChatFormatting.AQUA), false); p.getIntrinsicDropChances().entrySet().stream().sorted(java.util.Map.Entry.comparingByKey()).forEach(e -> src.sendSuccess(() -> Component.literal(" - "+e.getKey()+" => "+Math.round(e.getValue()*100f)+"%"), false)); } return 1; } catch (Exception e) { src.sendFailure(Component.literal("Failed: " + e.getMessage())); return 0; } }
-    private static MutableComponent chanceButton(CosmicSpawnerPreset.Slot slot, float current, float delta, String symbol) { float next = Math.max(0f, Math.min(1f, current + delta)); String cmd = "/spawner drop " + slot.id + " " + String.format(java.util.Locale.ROOT, "%.2f", next); return Component.literal("["+symbol+"]").withStyle(style -> style.withColor(delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED).withClickEvent(new ClickEvent.RunCommand(cmd)).withHoverEvent(new HoverEvent.ShowText(Component.literal("Set "+slot.id+" to "+Math.round(next*100f)+"%")))); }
+    private static MutableComponent dropRow(CosmicSpawnerPreset p, CosmicSpawnerPreset.Slot slot) {
+        float chance = p.getDropChance(slot);
+        MutableComponent row = Component.literal("  " + slot.id + ": ").withStyle(ChatFormatting.GRAY)
+                .append(Component.literal(Math.round(chance * 100f) + "% ").withStyle(ChatFormatting.WHITE));
+        row.append(chanceButton(slot, 0.05f, "+")).append(Component.literal(" ")).append(chanceButton(slot, -0.05f, "-"));
+        return row;
+    }
+
+    private static MutableComponent intrinsicDropRow(ResourceLocation itemId, float current) {
+        float pct = Math.round(current * 100f);
+        MutableComponent row = Component.literal("  " + itemId + ": ").withStyle(ChatFormatting.GRAY).append(Component.literal((int) pct + "% ").withStyle(ChatFormatting.WHITE));
+        row.append(intrinsicChanceButton(itemId, 0.05f, "+")).append(Component.literal(" ")).append(intrinsicChanceButton(itemId, -0.05f, "-"));
+        return row;
+    }
+
+    private static MutableComponent intrinsicChanceButton(ResourceLocation itemId, float delta, String symbol) { String cmd = "/spawner adjustintrinsic " + itemId + " " + String.format(java.util.Locale.ROOT, "%.2f", delta); return Component.literal("["+symbol+"]").withStyle(style -> style.withColor(delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED).withClickEvent(new ClickEvent.RunCommand(cmd)).withHoverEvent(new HoverEvent.ShowText(Component.literal("Adjust " + itemId + " by " + Math.round(delta*100f) + "% and refresh info")))); }
+
+    private static MutableComponent chanceButton(CosmicSpawnerPreset.Slot slot, float delta, String symbol) { String cmd = "/spawner adjustdrop " + slot.id + " " + String.format(java.util.Locale.ROOT, "%.2f", delta); return Component.literal("["+symbol+"]").withStyle(style -> style.withColor(delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED).withClickEvent(new ClickEvent.RunCommand(cmd)).withHoverEvent(new HoverEvent.ShowText(Component.literal("Adjust "+slot.id+" by "+Math.round(delta*100f)+"% and refresh info")))); }
 
     private static CosmicSpawnerBlockEntity getTargetSpawnerBE(CommandSourceStack src, ServerPlayer player, Level level) { final BlockHitResult hit = raycast(player, 5.0D); if (hit == null || hit.getType() == HitResult.Type.MISS) { src.sendFailure(Component.literal("Look at a Cosmic Spawner within 5 blocks.")); return null; } final BlockPos pos = hit.getBlockPos(); if (!(level.getBlockState(pos).getBlock() instanceof CosmicMobSpawnerBlock)) { src.sendFailure(Component.literal("Target block is not a Cosmic Spawner.")); return null; } if (!(level.getBlockEntity(pos) instanceof CosmicSpawnerBlockEntity be)) { src.sendFailure(Component.literal("Cosmic Spawner block entity missing at target.")); return null; } return be; }
     private static BlockHitResult raycast(ServerPlayer p, double range) { ClipContext ctx = new ClipContext(p.getEyePosition(), p.getEyePosition().add(p.getLookAngle().scale(range)), ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, p); HitResult hr = p.level().clip(ctx); return hr instanceof BlockHitResult bhr ? bhr : null; }

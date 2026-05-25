@@ -40,8 +40,11 @@ This document covers the full `/spawner` command surface for Cosmic Dungeon oper
 - Running a partial parent command such as `/spawner drop` or `/spawner equip` prints command-specific syntax hints.
 - Unknown subcommand text (example: `/spawner dropp`) now shows an error plus the full syntax guide in chat.
 
-## `/spawner drops` display
-- Shows **equipment drops configured by spawner commands**.
-- Shows **intrinsic mob drops** (currently includes skeleton-focused intrinsic rows).
-- Equipment entries include clickable `[+]`/`[-]` controls for chance tuning.
-- Intrinsic rows are displayed as informational rows with non-mutating controls.
+## `/spawner info` display
+- Primary operator panel with color-coded sections for mob, equipment, coordinates, runtime properties, and drops.
+- Equipment rows now display item identifier, custom-name state, and enchantment list (from real item NBT/components).
+- Drop entries include clickable `[+]`/`[-]` controls for each equipment slot. Clicking adjusts the value and immediately re-runs the info panel.
+- Intrinsic drops are shown from values present in spawner preset NBT overrides (no fake defaults), with clickable `[+]`/`[-]` controls that also refresh the panel.
+
+## `/spawner drops`
+- Kept as a compatibility alias that opens the same `/spawner info` panel.
