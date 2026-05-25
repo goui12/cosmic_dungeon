@@ -15,6 +15,7 @@
 - Removed unsupported mob-behavior toggle flags from `/spawner`: `persistent`, `silent`, `glowing`, `no_ai`, `no_gravity`, and `name_visible` are no longer accepted.
 - Boss toggle moved to `/spawner boss [true|false]` (replacing `/spawner flag boss ...`).
 - Preset structured data load/save now strips those removed behavior flags so stale values are cleaned on rewrite.
+- Added `/spawner showlabels` as a developer-only global toggle for the cyan/teal spawner label text above Cosmic Spawners.
 
 - Simplified Cosmic Mob Spawner command aliases: `/spawner flag cap <amount>` is now `/spawner cap <amount>`, and `/spawner set entity <namespace:entity>` is now `/spawner set <namespace:entity>`.
 - Cosmic Mob Spawner now supports direct equipment authoring by right-click: right-click the spawner with any equippable item (armor, mainhand weapon/tool, or offhand-compatible item) to copy that exact custom item stack into the spawner preset equipment slot.

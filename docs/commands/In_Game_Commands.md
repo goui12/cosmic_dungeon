@@ -27,7 +27,7 @@
 ## High-use command groups
 
 ### Spawner
-`/spawner help|set|name|flag|cap|equip|enchant|drop|drops|delay|info|reset`
+`/spawner help|set|name|boss|cap|equip|enchant|drop|drops|showlabels|delay|preset|info|reset`
 
 ### Region
 `/region ...` supports selection, ownership, permissions, inspect/look tooling, and interaction flag management.
