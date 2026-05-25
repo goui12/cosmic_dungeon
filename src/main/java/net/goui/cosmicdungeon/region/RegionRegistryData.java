@@ -126,7 +126,10 @@ public final class RegionRegistryData extends SavedData {
         long order = nextOrder++;
         String parent = pickDefaultParentForNewRegion(dimensionId, min, max);
 
-        regionsByName.put(name, new Region(name, dimensionId, min, max, new HashMap<>(), parent, order));
+        Map<String, String> initialFlags = new HashMap<>();
+        initialFlags.put("interact", "true"); // default: /region flag interact allow on new regions
+
+        regionsByName.put(name, new Region(name, dimensionId, min, max, initialFlags, parent, order));
         this.setDirty();
         return true;
     }

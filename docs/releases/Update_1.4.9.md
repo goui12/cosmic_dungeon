@@ -32,3 +32,9 @@
   - `/spawner preset reload`
 - Preset files are JSON under `<server_root>/cosmicdungeon/spawner_presets/` and can be edited offline for developer workflows.
 - Added auto-generated sample presets to help reverse-engineer the schema (`Skeleton_Master`, `Warden_Trial`, `Pillager_Captain_Elite`).
+
+## Region updates
+
+- New region creation now seeds `/region` flag `interact` to **allow** by default (`interact=true`), so fresh regions are immediately interaction-permissive unless you override them.
+- Region documentation has been rewritten to match the implemented command tree and behavior model.
+- Corrected docs now describe the real `/region` subcommands (`wand`, `create/new`, `look`, `info`, `parent`, `delete`, `list`, `flags`, `flag`) and remove outdated priority/mode-era command references.
