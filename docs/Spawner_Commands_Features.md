@@ -5,6 +5,7 @@ This document covers the full `/spawner` command surface for Cosmic Dungeon oper
 ## Core behavior
 - Commands target the **Cosmic Mob Spawner block you are currently looking at** (within 5 blocks).
 - Existing spawners placed before this feature update are supported.
+- Default preset equipment drop chance is `0.0` for all armor and hand slots (unless explicitly changed with `/spawner drop ...`).
 
 ## Full command syntax
 - `/spawner help`

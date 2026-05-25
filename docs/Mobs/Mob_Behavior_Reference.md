@@ -21,6 +21,6 @@ Each mob uses custom goal stacks and render/model pipelines. Encounter authors s
 
 ## Spawner integration notes
 
-- Cosmic spawner presets can equip entities by slot and configure per-slot drop chance.
+- Cosmic spawner presets can equip entities by slot and configure per-slot drop chance (default `0.0` on new presets).
 - Boss one-shot and mob cap flags alter encounter repetition behavior.
 - Delay controls affect cadence and should be tuned with progression gates.
