@@ -45,6 +45,9 @@ public final class CosmicDungeonClient {
 
         // Rift ambience (client tick)
         NeoForge.EVENT_BUS.register(new RiftAmbienceClient());
+
+        // Spawner preset hotkey bindings
+        NeoForge.EVENT_BUS.register(SpawnerPresetKeybindClient.class);
     }
 
     private static void onClientSetup(FMLClientSetupEvent e) {

@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 final class SpawnerPresetFileStore {
@@ -97,6 +98,18 @@ final class SpawnerPresetFileStore {
 
     static boolean deletePreset(MinecraftServer server, String name) throws IOException {
         return Files.deleteIfExists(presetPath(server, name));
+    }
+
+    static java.util.List<String> listPresetNames(MinecraftServer server) throws IOException {
+        Files.createDirectories(presetDirectory(server));
+        try (Stream<Path> stream = Files.list(presetDirectory(server))) {
+            return stream
+                    .filter(p -> p.getFileName().toString().endsWith(".json"))
+                    .map(p -> p.getFileName().toString())
+                    .map(n -> n.substring(0, n.length() - 5))
+                    .sorted(String.CASE_INSENSITIVE_ORDER)
+                    .collect(Collectors.toList());
+        }
     }
 
     static void ensureExamplePresets(MinecraftServer server) throws IOException {

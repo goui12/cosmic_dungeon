@@ -102,10 +102,15 @@ public final class SpawnerCommand {
                         .then(Commands.literal("save").executes(c -> helpPresetSave(c.getSource()))
                                 .then(Commands.argument("preset_name", StringArgumentType.word()).executes(c -> savePreset(c.getSource(), StringArgumentType.getString(c, "preset_name")))))
                         .then(Commands.literal("load").executes(c -> helpPresetLoad(c.getSource()))
-                                .then(Commands.argument("preset_name", StringArgumentType.word()).executes(c -> loadPreset(c.getSource(), StringArgumentType.getString(c, "preset_name")))))
+                                .then(Commands.argument("preset_name", StringArgumentType.word()).suggests(SpawnerCommand::suggestPresetNames).executes(c -> loadPreset(c.getSource(), StringArgumentType.getString(c, "preset_name")))))
                         .then(Commands.literal("delete").executes(c -> helpPresetDelete(c.getSource()))
-                                .then(Commands.argument("preset_name", StringArgumentType.word()).executes(c -> deletePreset(c.getSource(), StringArgumentType.getString(c, "preset_name")))))
+                                .then(Commands.argument("preset_name", StringArgumentType.word()).suggests(SpawnerCommand::suggestPresetNames).executes(c -> deletePreset(c.getSource(), StringArgumentType.getString(c, "preset_name")))))
                         .then(Commands.literal("reload").executes(c -> reloadPresets(c.getSource()))))
+
+                .then(Commands.literal("keybind")
+                        .then(Commands.argument("keybind_number", IntegerArgumentType.integer(1, 5))
+                                .then(Commands.argument("preset_name", StringArgumentType.word()).suggests(SpawnerCommand::suggestPresetNames)
+                                        .executes(c -> assignPresetKeybind(c.getSource(), IntegerArgumentType.getInteger(c, "keybind_number"), StringArgumentType.getString(c, "preset_name"))))))
 
                 .then(Commands.literal("reset").executes(c -> reset(c.getSource())))
                 .then(Commands.argument("invalid", StringArgumentType.greedyString()).suggests(SpawnerCommand::suggestRoot).executes(c -> invalid(c.getSource(), StringArgumentType.getString(c, "invalid"))))
@@ -114,7 +119,7 @@ public final class SpawnerCommand {
 
     private static int help(CommandSourceStack src) { return syntax(src, "Spawner command guide", new String[]{
             "/spawner set <namespace:entity>", "/spawner boss [true|false]", "/spawner equip <slot> <namespace:item>", "/spawner drop <slot> <0.0-1.0>",
-            "/spawner drops", "/spawner showlabels", "/spawner preset save <preset_name>", "/spawner preset load <preset_name>", "/spawner preset delete <preset_name>", "/spawner preset reload", "/spawner info", "/spawner reset", "/spawner help"
+            "/spawner drops", "/spawner showlabels", "/spawner preset save <preset_name>", "/spawner preset load <preset_name>", "/spawner preset delete <preset_name>", "/spawner preset reload", "/spawner keybind <1-5> <preset_name>", "/spawner info", "/spawner reset", "/spawner help"
     }); }
 
     private static volatile boolean showLabelsEnabled = false;
@@ -276,6 +281,55 @@ public final class SpawnerCommand {
     private static int loadPreset(CommandSourceStack src, String name){ try { if (!validPresetName(src, name, "/spawner preset load <preset_name>")) return 0; var be=getTargetSpawnerBE(src,src.getPlayerOrException(),src.getPlayerOrException().level()); if(be==null)return 0; var loaded=SpawnerPresetFileStore.readPreset(src.getServer(), name); ResourceLocation rl=ResourceLocation.tryParse(loaded.entityTypeId); if(rl!=null) be.setSpawnerEntityId(rl.toString()); if(loaded.preset!=null) be.setSpawnerPreset(loaded.preset); be.setBossOneShot(loaded.bossOneShot); be.setSpawnerMobCap(loaded.spawnerMobCap); be.setSpawnerDelayRange(loaded.minSpawnDelay, loaded.maxSpawnDelay); src.sendSuccess(()->Component.literal("Loaded spawner preset '"+name+"' from " + SpawnerPresetFileStore.presetPath(src.getServer(), name)), false); return 1; } catch(Exception e){ src.sendFailure(Component.literal("Failed to load preset: "+e.getMessage())); return 0; } }
     private static int deletePreset(CommandSourceStack src, String name){ try { if (!validPresetName(src, name, "/spawner preset delete <preset_name>")) return 0; boolean deleted=SpawnerPresetFileStore.deletePreset(src.getServer(), name); if(!deleted){ src.sendFailure(Component.literal("Preset not found: "+name)); return 0; } src.sendSuccess(()->Component.literal("Deleted spawner preset '"+name+"'."), false); return 1; } catch(Exception e){ src.sendFailure(Component.literal("Failed to delete preset: "+e.getMessage())); return 0; } }
     private static int reloadPresets(CommandSourceStack src){ try { SpawnerPresetFileStore.ensureExamplePresets(src.getServer()); src.sendSuccess(()->Component.literal("Preset files are loaded on-demand; reload complete. Preset directory: " + SpawnerPresetFileStore.presetDirectory(src.getServer())), false); return 1; } catch(Exception e){ src.sendFailure(Component.literal("Failed to reload presets: "+e.getMessage())); return 0; } }
+
+    private static final String PD_ROOT = "cosmicdungeon";
+    private static final String PD_SPAWNER_KEYBINDS = "spawner_preset_keybinds";
+
+    private static int assignPresetKeybind(CommandSourceStack src, int slot, String presetName) {
+        try {
+            if (!validPresetName(src, presetName, "/spawner keybind <1-5> <preset_name>")) return 0;
+            var player = src.getPlayerOrException();
+            SpawnerPresetFileStore.readPreset(src.getServer(), presetName);
+            var root = player.getPersistentData().getCompoundOrEmpty(PD_ROOT).copy();
+            var keybinds = root.getCompoundOrEmpty(PD_SPAWNER_KEYBINDS).copy();
+            keybinds.putString(Integer.toString(slot), presetName);
+            root.put(PD_SPAWNER_KEYBINDS, keybinds);
+            player.getPersistentData().put(PD_ROOT, root);
+            src.sendSuccess(() -> Component.literal("Assigned spawner keybind slot " + slot + " to preset '" + presetName + "'."), false);
+            return 1;
+        } catch (Exception e) {
+            src.sendFailure(Component.literal("Failed to assign keybind: " + e.getMessage()));
+            return 0;
+        }
+    }
+
+    public static int loadPresetFromKeybind(ServerPlayer player, int slot) {
+        if (slot < 1 || slot > 5) {
+            player.sendSystemMessage(Component.literal("Invalid spawner keybind slot."));
+            return 0;
+        }
+        var root = player.getPersistentData().getCompoundOrEmpty(PD_ROOT);
+        var keybinds = root.getCompoundOrEmpty(PD_SPAWNER_KEYBINDS);
+        String presetName = keybinds.getStringOr(slot + "", "");
+        if (presetName.isBlank()) {
+            player.sendSystemMessage(Component.literal("No spawner preset assigned to keybind " + slot + "."));
+            return 0;
+        }
+        CommandSourceStack src = player.createCommandSourceStack();
+        if (!src.hasPermission(2)) {
+            player.sendSystemMessage(Component.literal("You do not have permission to use /spawner preset load."));
+            return 0;
+        }
+        return loadPreset(src, presetName);
+    }
+
+    private static CompletableFuture<Suggestions> suggestPresetNames(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){
+        try {
+            return SharedSuggestionProvider.suggest(SpawnerPresetFileStore.listPresetNames(c.getSource().getServer()), b);
+        } catch (Exception e) {
+            return Suggestions.empty();
+        }
+    }
 
     private static CosmicSpawnerBlockEntity getTargetSpawnerBE(CommandSourceStack src, ServerPlayer player, Level level) { final BlockHitResult hit = raycast(player, 5.0D); if (hit == null || hit.getType() == HitResult.Type.MISS) { src.sendFailure(Component.literal("Look at a Cosmic Spawner within 5 blocks.")); return null; } final BlockPos pos = hit.getBlockPos(); if (!(level.getBlockState(pos).getBlock() instanceof CosmicMobSpawnerBlock)) { src.sendFailure(Component.literal("Target block is not a Cosmic Spawner.")); return null; } if (!(level.getBlockEntity(pos) instanceof CosmicSpawnerBlockEntity be)) { src.sendFailure(Component.literal("Cosmic Spawner block entity missing at target.")); return null; } return be; }
     private static BlockHitResult raycast(ServerPlayer p, double range) { ClipContext ctx = new ClipContext(p.getEyePosition(), p.getEyePosition().add(p.getLookAngle().scale(range)), ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, p); HitResult hr = p.level().clip(ctx); return hr instanceof BlockHitResult bhr ? bhr : null; }
