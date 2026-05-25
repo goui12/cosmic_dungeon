@@ -71,3 +71,11 @@ This document covers the full `/spawner` command surface for Cosmic Dungeon oper
 - `/spawner showlabels` switches whether the cyan/teal spawner entity label above Cosmic Spawners is visible.
 - When enabled, labels are shown to all online developers and to developers who join later.
 - Non-developers never receive this label view mode.
+
+
+## Spawner preset hotkeys
+- Five client keybinds are available under **Cosmic Dungeon** in Controls.
+- Defaults: `NUMPAD 1`..`NUMPAD 5`.
+- Assign each slot with `/spawner keybind <1-5> <preset_name>`.
+- Pressing the matching key loads the assigned preset onto the Cosmic Spawner you are currently looking at (within 5 blocks).
+- `/spawner preset load <preset_name>` is unchanged and still supported.

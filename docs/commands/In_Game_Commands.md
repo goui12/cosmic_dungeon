@@ -17,6 +17,7 @@
 - `/riftdestination`
 - `/shake`
 - `/spawner`
+- includes `/spawner keybind <1-5> <preset_name>` for preset hotkey assignment
 - `/rift`
 - `/region`
 - `/rank`

@@ -2,6 +2,7 @@
 package net.goui.cosmicdungeon.network;
 
 import net.goui.cosmicdungeon.auth.AccessPolicy;
+import net.goui.cosmicdungeon.command.SpawnerCommand;
 import net.goui.cosmicdungeon.client.SpawnerLabelState;
 import net.goui.cosmicdungeon.network.handler.RegionLookAllClientPayloadHandler;
 import net.goui.cosmicdungeon.network.handler.RegionLookAllServerPayloadHandler;
@@ -10,6 +11,7 @@ import net.goui.cosmicdungeon.network.payload.RegionLookAllPayload;
 import net.goui.cosmicdungeon.network.payload.RegionLookAllRequestPayload;
 import net.goui.cosmicdungeon.network.payload.RegionLookPayload;
 import net.goui.cosmicdungeon.network.payload.SpawnerLabelPayload;
+import net.goui.cosmicdungeon.network.payload.SpawnerPresetKeybindPayload;
 import net.goui.cosmicdungeon.playerclass.api.ClassData;
 import net.goui.cosmicdungeon.playerclass.api.ClassKeys;
 import net.goui.cosmicdungeon.playerclass.api.ClassNet;
@@ -61,7 +63,19 @@ public final class ModNetwork {
                 })
         );
 
-        /* ===================== RIFT (SERVER-AUTHORITATIVE) ===================== */
+        
+        registrar.playToServer(
+                SpawnerPresetKeybindPayload.TYPE,
+                SpawnerPresetKeybindPayload.STREAM_CODEC,
+                (payload, ctx) -> {
+                    if (!(ctx.player() instanceof ServerPlayer sp)) return;
+                    int slot = payload.slot();
+                    if (slot < 1 || slot > 5) return;
+                    SpawnerCommand.loadPresetFromKeybind(sp, slot);
+                }
+        );
+
+/* ===================== RIFT (SERVER-AUTHORITATIVE) ===================== */
 
         registrar.playToServer(
                 RiftPayloads.C2S_RequestRiftConfig.TYPE,
