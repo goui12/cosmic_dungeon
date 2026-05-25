@@ -5,6 +5,7 @@ import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.DepthTestFunction;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -21,6 +22,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 
+import java.util.ArrayList;
 import java.util.OptionalDouble;
 
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID, value = Dist.CLIENT)
@@ -102,55 +104,99 @@ public final class RegionLookRenderEvents {
         Level level = mc.level;
         if (level == null) return;
 
-        var regions = RegionLookClient.getRegionsToRender();
+        var liveRegions = RegionLookClient.getRegionsToRender();
+        if (liveRegions.isEmpty()) return;
+
+        /*
+         * Snapshot the list before rendering.
+         *
+         * All-mode can refresh periodically from the server while the client is running.
+         * Copying avoids rendering directly from the mutable allRegions list.
+         */
+        var regions = new ArrayList<>(liveRegions);
         if (regions.isEmpty()) return;
+
+        boolean singleMode = RegionLookClient.isSingleEnabled();
 
         PoseStack poseStack = event.getPoseStack();
         MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
 
         var camPos = mc.gameRenderer.getMainCamera().getPosition();
+
         poseStack.pushPose();
-        poseStack.translate(-camPos.x, -camPos.y, -camPos.z);
+        try {
+            poseStack.translate(-camPos.x, -camPos.y, -camPos.z);
 
-        var depthConsumer = bufferSource.getBuffer(RenderType.lines());
-        var xrayConsumer = bufferSource.getBuffer(REGION_LOOK_LINES_XRAY);
+            /*
+             * IMPORTANT:
+             *
+             * Do NOT grab both VertexConsumers before drawing.
+             *
+             * In 1.21.x, BufferSource uses shared buffers for many RenderTypes.
+             * Requesting another shared RenderType can end/switch the previous one.
+             * If we keep the old VertexConsumer and write to it after the switch,
+             * BufferBuilder throws:
+             *
+             *   java.lang.IllegalStateException: Not building!
+             *
+             * So we render in two clean batches:
+             * 1. all normal depth-tested lines
+             * 2. all x-ray lines
+             */
 
-        for (var r : regions) {
-            AABB box = makeBox(r.min(), r.max());
-
-            float rf, gf, bf, af;
-
-            if (RegionLookClient.isSingleEnabled()) {
-                // Keep classic single-region look (black)
-                rf = 0.0F;
-                gf = 0.0F;
-                bf = 0.0F;
-                af = 0.85F;
-
-                // If you want single mode to ALSO be colored by name, replace the 4 lines above with:
-                // int rgb = stableColorFromName(r.name());
-                // rf = ((rgb >> 16) & 0xFF) / 255.0F;
-                // gf = ((rgb >> 8) & 0xFF) / 255.0F;
-                // bf = (rgb & 0xFF) / 255.0F;
-                // af = 0.90F;
-            } else {
-                // All-mode: stable per-region color
-                int rgb = stableColorFromName(r.name());
-                rf = ((rgb >> 16) & 0xFF) / 255.0F;
-                gf = ((rgb >> 8) & 0xFF) / 255.0F;
-                bf = (rgb & 0xFF) / 255.0F;
-                af = 0.85F;
+            RenderType depthRenderType = RenderType.lines();
+            VertexConsumer depthConsumer = bufferSource.getBuffer(depthRenderType);
+            for (var r : regions) {
+                renderRegionBox(poseStack, depthConsumer, r, singleMode);
             }
+            bufferSource.endBatch(depthRenderType);
 
-            // First pass: standard depth-tested line rendering.
-            ShapeRenderer.renderLineBox(poseStack.last(), depthConsumer, box, rf, gf, bf, af);
+            VertexConsumer xrayConsumer = bufferSource.getBuffer(REGION_LOOK_LINES_XRAY);
+            for (var r : regions) {
+                renderRegionBox(poseStack, xrayConsumer, r, singleMode);
+            }
+            bufferSource.endBatch(REGION_LOOK_LINES_XRAY);
+        } finally {
+            poseStack.popPose();
+        }
+    }
 
-            // Second pass: depth-disabled overlay so hidden edges are visible through walls.
-            ShapeRenderer.renderLineBox(poseStack.last(), xrayConsumer, box, rf, gf, bf, af);
+    private static void renderRegionBox(
+            PoseStack poseStack,
+            VertexConsumer consumer,
+            RegionLookClient.RenderRegion region,
+            boolean singleMode
+    ) {
+        AABB box = makeBox(region.min(), region.max());
+
+        float rf;
+        float gf;
+        float bf;
+        float af;
+
+        if (singleMode) {
+            // Keep classic single-region look (black)
+            rf = 0.0F;
+            gf = 0.0F;
+            bf = 0.0F;
+            af = 0.85F;
+
+            // If you want single mode to ALSO be colored by name, replace the 4 lines above with:
+            // int rgb = stableColorFromName(region.name());
+            // rf = ((rgb >> 16) & 0xFF) / 255.0F;
+            // gf = ((rgb >> 8) & 0xFF) / 255.0F;
+            // bf = (rgb & 0xFF) / 255.0F;
+            // af = 0.90F;
+        } else {
+            // All-mode: stable per-region color
+            int rgb = stableColorFromName(region.name());
+            rf = ((rgb >> 16) & 0xFF) / 255.0F;
+            gf = ((rgb >> 8) & 0xFF) / 255.0F;
+            bf = (rgb & 0xFF) / 255.0F;
+            af = 0.85F;
         }
 
-        poseStack.popPose();
-        bufferSource.endLastBatch();
+        ShapeRenderer.renderLineBox(poseStack.last(), consumer, box, rf, gf, bf, af);
     }
 
     private static AABB makeBox(net.minecraft.core.BlockPos min, net.minecraft.core.BlockPos max) {
@@ -184,7 +230,10 @@ public final class RegionLookRenderEvents {
         float q = v * (1.0F - f * s);
         float t = v * (1.0F - (1.0F - f) * s);
 
-        float r, g, b;
+        float r;
+        float g;
+        float b;
+
         switch (i) {
             case 0 -> {
                 r = v;
