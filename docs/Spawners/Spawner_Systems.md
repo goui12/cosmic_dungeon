@@ -22,10 +22,10 @@ Spawner behavior is driven by `cosmic_mob_spawner` block entities and optional p
 ## Command subset
 
 - `/spawner help`
-- `/spawner set entity <entity_type>`
+- `/spawner set <entity_type>`
 - `/spawner name set <name>` / `clear`
 - `/spawner flag boss on|off`
-- `/spawner flag cap <amount>`
+- `/spawner cap <amount>`
 - `/spawner equip <slot> fromhand`
 - `/spawner equip clear <slot>|all`
 - `/spawner enchant ...`
