@@ -29,7 +29,7 @@ public final class CosmicSpawnerPreset {
     private Component customName; private boolean customNameVisible,persistent,silent,glowing,noAi,noGravity,illagerCaptainVariant;
     private final EnumMap<Slot, ItemStack> equipment = new EnumMap<>(Slot.class); private final EnumMap<Slot, Float> dropChances = new EnumMap<>(Slot.class);
     private final Map<ResourceLocation, Float> intrinsicDropChances = new HashMap<>();
-    public CosmicSpawnerPreset(){for(var s:Slot.values()){equipment.put(s,ItemStack.EMPTY); dropChances.put(s,0.085F);}}
+    public CosmicSpawnerPreset(){for(var s:Slot.values()){equipment.put(s,ItemStack.EMPTY); dropChances.put(s,0.0F);}}
     public ResourceLocation getEntityTypeId(){return entityTypeId;} public void setEntityTypeId(ResourceLocation id){this.entityTypeId=id; this.illagerCaptainVariant = false;}
     public boolean isIllagerCaptainVariant(){return illagerCaptainVariant;}
     public ResourceLocation getDisplayEntityTypeId(){return illagerCaptainVariant ? ILLAGER_CAPTAIN_ID : entityTypeId;}
@@ -58,7 +58,7 @@ public final class CosmicSpawnerPreset {
         p.customNameVisible=in.getBooleanOr("customNameVisible",false); p.persistent=in.getBooleanOr("persistent",false); p.silent=in.getBooleanOr("silent",false); p.glowing=in.getBooleanOr("glowing",false); p.noAi=in.getBooleanOr("noAi",false); p.noGravity=in.getBooleanOr("noGravity",false); p.illagerCaptainVariant=in.getBooleanOr("illagerCaptainVariant",false);
         for (var s: Slot.values()) {
             p.equipment.put(s, in.read("eq_"+s.id, ItemStack.CODEC).orElse(ItemStack.EMPTY));
-            p.dropChances.put(s, Math.max(0f,Math.min(1f,in.getFloatOr("drop_"+s.id,0.085f))));
+            p.dropChances.put(s, Math.max(0f,Math.min(1f,in.getFloatOr("drop_"+s.id,0.0f))));
         }
         in.child("intrinsicDrops").ifPresent(child -> loadIntrinsicDrops(child, p));
         return p;

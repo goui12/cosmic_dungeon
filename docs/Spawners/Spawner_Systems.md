@@ -6,7 +6,7 @@ Spawner behavior is driven by `cosmic_mob_spawner` block entities and optional p
 
 - Base entity type can be changed by command.
 - Presets can define equipment by slot.
-- Per-slot drop chances are configurable.
+- Per-slot drop chances are configurable and default to `0.0` for all slots on new presets.
 - Delay includes tick target and generated min/max range.
 - Optional boss one-shot flag and per-spawner mob cap are available.
 
