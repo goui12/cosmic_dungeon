@@ -6,6 +6,12 @@ import net.goui.cosmicdungeon.client.screen.ClassSelectorScreen;
 import net.goui.cosmicdungeon.network.ClassPayloads;
 import net.goui.cosmicdungeon.network.RiftPayloads;
 import net.goui.cosmicdungeon.network.ShakeScreenPayload;
+import net.goui.cosmicdungeon.network.VendorPayloads;
+import net.goui.cosmicdungeon.client.screen.VendorScreen.VendorClientState;
+import net.goui.cosmicdungeon.vendor.VendorProfileManager;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.goui.cosmicdungeon.network.payload.RegionLookAllPayload;
 import net.goui.cosmicdungeon.network.payload.RegionLookPayload;
 import net.goui.cosmicdungeon.network.payload.SpawnerLabelPayload;
@@ -54,6 +60,30 @@ public final class ModNetworkClient {
 
     public static void onSpawnerLabel(SpawnerLabelPayload payload) {
         CosmicSpawnerHoverOverlay.setEnabled(payload.enabled());
+    }
+
+    public static void onOpenVendor(VendorPayloads.S2C_OpenVendor payload) {
+        var profileId = ResourceLocation.tryParse(payload.profileId());
+        var profile = profileId == null ? null : VendorProfileManager.INSTANCE.get(profileId);
+        VendorClientState.set(new VendorClientState.VendorView(
+                payload.vendorEntityId(),
+                profileId,
+                payload.displayName(),
+                profile,
+                payload.balanceTrace(),
+                new java.util.HashSet<>(payload.unlockedOffers())
+        ));
+        var mc = Minecraft.getInstance();
+        if (mc.player != null && mc.player.containerMenu != null) {
+            mc.player.containerMenu.setTitle(Component.literal(payload.displayName()));
+        }
+    }
+
+    public static void onVendorPurchaseResult(VendorPayloads.S2C_VendorPurchaseResult payload) {
+        var current = VendorClientState.current();
+        if (current != null) {
+            VendorClientState.set(new VendorClientState.VendorView(current.vendorEntityId(), current.profileId(), current.title(), current.profile(), payload.newBalanceTrace(), current.unlockedOffers()));
+        }
     }
 
     public static void sendToServer(CustomPacketPayload payload) {

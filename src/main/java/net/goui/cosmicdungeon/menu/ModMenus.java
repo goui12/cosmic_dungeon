@@ -27,6 +27,10 @@ public final class ModMenus {
             MENUS.register("class_selector",
                     () -> new MenuType<>(ClassSelectorMenu::new, FeatureFlags.DEFAULT_FLAGS));
 
+    public static final Supplier<MenuType<VendorMenu>> VENDOR =
+            MENUS.register("vendor",
+                    () -> new MenuType<>(VendorMenu::new, FeatureFlags.DEFAULT_FLAGS));
+
     public static void register(IEventBus modBus) {
         MENUS.register(modBus);
     }

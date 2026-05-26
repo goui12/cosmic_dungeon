@@ -9,6 +9,7 @@ import net.goui.cosmicdungeon.client.render.blockentity.ClassLockedChestRenderer
 import net.goui.cosmicdungeon.client.render.blockentity.CosmicSpawnerRenderer;
 import net.goui.cosmicdungeon.client.rift.RiftAmbienceClient;
 import net.goui.cosmicdungeon.client.screen.ClassSelectorScreen;
+import net.goui.cosmicdungeon.client.screen.VendorScreen;
 import net.goui.cosmicdungeon.entity.ModEntities;
 import net.goui.cosmicdungeon.menu.ModMenus;
 import net.goui.cosmicdungeon.playerclass.api.ExtraInventoryScreen;
@@ -38,6 +39,7 @@ public final class CosmicDungeonClient {
         modEventBus.addListener((RegisterMenuScreensEvent e) -> {
             e.register(ModMenus.METALMANCER_INVENTORY.get(), ExtraInventoryScreen::new);
             e.register(ModMenus.CLASS_SELECTOR.get(), ClassSelectorScreen::new);
+            e.register(ModMenus.VENDOR.get(), VendorScreen::new);
         });
 
         /*

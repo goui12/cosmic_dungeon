@@ -1,19 +1,25 @@
 package net.goui.cosmicdungeon.vendor;
 
 import net.goui.cosmicdungeon.economy.CurrencyService;
-import net.goui.cosmicdungeon.faction.FactionService;
-import net.goui.cosmicdungeon.faction.FactionTier;
-import net.goui.cosmicdungeon.progression.ProgressionService;
+import net.goui.cosmicdungeon.menu.VendorMenu;
+import net.goui.cosmicdungeon.network.VendorPayloads;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 public final class VendorInteractionEvents {
     @SubscribeEvent
     public void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
+        if (event.getHand() != InteractionHand.MAIN_HAND) return;
         if (!(event.getTarget() instanceof Villager villager)) return;
         ResourceLocation profileId = VendorAssignmentService.getProfileId(villager);
         if (profileId == null) return;
@@ -27,42 +33,22 @@ public final class VendorInteractionEvents {
             return;
         }
 
-        boolean unlocked = isUnlocked(sp, profile);
-        String balance = CurrencyService.getFormattedBalance(sp);
-        sp.sendSystemMessage(Component.literal("Vendor: " + profile.displayName()
-                + " | profile=" + profile.id()
-                + " | balance=" + balance
-                + " | status=" + (unlocked ? "unlocked" : "locked")));
+        VendorMenuState.UnlockResult unlockResult = VendorMenuState.unlockState(sp, profile);
+        if (!unlockResult.unlocked()) {
+            sp.sendSystemMessage(Component.literal("Vendor locked: " + unlockResult.reason()));
+            return;
+        }
+
+        VendorPayloads.S2C_OpenVendor open = VendorService.buildOpenPayload(sp, villager, profile);
+        sp.connection.send(open);
+
+        sp.openMenu(new VendorProvider(profile.displayName()));
     }
 
-    private static boolean isUnlocked(ServerPlayer sp, VendorProfile profile) {
-        boolean factionOk = true;
-        if (profile.requiredFactionId() != null && profile.requiredFactionTier() != null) {
-            FactionTier need = factionTierFromOrdinal(profile.requiredFactionTier());
-            factionOk = need != null && FactionService.hasAtLeast(sp, profile.requiredFactionId(), need);
-        }
-
-        boolean villageOk = true;
-        if (profile.requiredProgressionFlag() != null && profile.requiredProgressionFlag().equalsIgnoreCase("village_access")) {
-            villageOk = ProgressionService.hasVillageAccess(sp);
-        } else if (profile.requiredProgressionFlag() != null) {
-            // TODO: map additional requiredProgressionFlag values to concrete ProgressionService checks.
-            villageOk = false;
-        }
-
-        boolean npcTierOk = true;
-        if (profile.requiredNpcTier() != null) {
-            int d1Tier = ProgressionService.getD1NpcUnlockTier(sp);
-            int d2Tier = ProgressionService.getD2NpcUnlockTier(sp);
-            npcTierOk = Math.max(d1Tier, d2Tier) >= profile.requiredNpcTier();
-        }
-
-        return factionOk && villageOk && npcTierOk;
-    }
-
-    private static FactionTier factionTierFromOrdinal(int ordinal) {
-        FactionTier[] values = FactionTier.values();
-        return ordinal >= 0 && ordinal < values.length ? values[ordinal] : null;
+    private record VendorProvider(String title) implements MenuProvider {
+        @Override public Component getDisplayName() { return Component.literal(title); }
+        @Override public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) { return new VendorMenu(id, inv); }
+        @Override public void writeClientSideData(AbstractContainerMenu menu, net.minecraft.network.RegistryFriendlyByteBuf buf) {}
+        @Override public boolean shouldTriggerClientSideContainerClosingOnOpen() { return true; }
     }
 }
-

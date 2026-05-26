@@ -298,6 +298,33 @@ public final class ModNetwork {
                 )
         );
 
+
+        /* ===================== VENDOR ===================== */
+
+        registrar.playToServer(
+                VendorPayloads.C2S_RequestVendorPurchase.TYPE,
+                VendorPayloads.C2S_RequestVendorPurchase.STREAM_CODEC,
+                (payload, ctx) -> {
+                    if (!(ctx.player() instanceof ServerPlayer sp)) return;
+                    ctx.reply(net.goui.cosmicdungeon.vendor.VendorService.tryPurchase(sp, payload.vendorEntityId(), payload.offerId()));
+                }
+        );
+
+        registrar.playToClient(
+                VendorPayloads.S2C_OpenVendor.TYPE,
+                VendorPayloads.S2C_OpenVendor.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() ->
+                        ClientNetworkDispatch.dispatch("onOpenVendor", payload)
+                )
+        );
+
+        registrar.playToClient(
+                VendorPayloads.S2C_VendorPurchaseResult.TYPE,
+                VendorPayloads.S2C_VendorPurchaseResult.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() ->
+                        ClientNetworkDispatch.dispatch("onVendorPurchaseResult", payload)
+                )
+        );
         /* ===================== REGION LOOK ===================== */
 
         registrar.playToClient(
