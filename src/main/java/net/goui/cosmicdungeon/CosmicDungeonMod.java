@@ -33,6 +33,7 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.goui.cosmicdungeon.vendor.VendorInteractionEvents;
 import net.goui.cosmicdungeon.vendor.VendorProfileManager;
 import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
@@ -58,6 +59,7 @@ public class CosmicDungeonMod {
         // Region wand selection (LeftClickBlock handler)
         NeoForge.EVENT_BUS.register(new RegionWandEvents());
         NeoForge.EVENT_BUS.register(CosmicSpawnerIntrinsicDropEvents.class);
+        NeoForge.EVENT_BUS.register(new VendorInteractionEvents());
 
 
         // registries

@@ -240,3 +240,31 @@ Default region keys expected by the trackers:
 Scope boundary remains explicit:
 - no villager/NPC vendor assignment in this pass
 - no vendor GUI/menu/screens in this pass
+
+## 1.5.0 Follow-up: Vanilla villager vendor shell assignment + interaction lockout
+
+- Added `VendorAssignmentService` to persistently attach a vendor profile id to vanilla villagers using entity persistent NBT (`cosmicdungeon.vendor_profile_id`).
+- Added `/vendor` developer/console subcommands for shell lifecycle management:
+  - `/vendor assign <profileId>`: assigns profile to looked-at villager (6-block range)
+  - `/vendor clear`: clears assignment from looked-at villager
+  - `/vendor info`: reports assignment on looked-at villager
+  - `/vendor spawn <profileId>`: spawns villager at player location and assigns profile
+- Assignment behavior now applies vendor shell setup:
+  - custom name from `VendorProfile.displayName`
+  - `setPersistenceRequired()`
+  - `setNoAi(true)`
+  - `setInvulnerable(true)`
+- Added `VendorInteractionEvents` for right-click handling:
+  - assigned vendor shells cancel vanilla villager trading interaction
+  - normal (unassigned) villagers remain unchanged
+  - right-click feedback now shows vendor name, profile id, player currency balance, and locked/unlocked status
+- Added progression/faction gating checks for interaction status evaluation:
+  - faction tier checks through `FactionService` + `FactionTier`
+  - village access check through `ProgressionService.hasVillageAccess`
+  - NPC tier checks through `ProgressionService` D1/D2 unlock tiers
+- Included explicit TODO guard for unknown `requiredProgressionFlag` mappings instead of faking progression logic.
+
+Scope boundary for this pass:
+- no vendor GUI/menu opening yet
+- no buy/sell execution yet
+- this pass is assignment + interaction interception only
