@@ -101,3 +101,31 @@ These are planned for future 1.5.x follow-up work.
   - reading or mutating other players requires developer/console authority
 
 Scope boundary: this pass does not add vendors, NPC interactions, achievement triggers, atonement dungeons, or hostile behavior hooks.
+
+
+## 1.5.0 Follow-up: Long-term progression foundation (D1/D2 unlock data only)
+
+- Added persistent long-term progression package: `net.goui.cosmicdungeon.progression`.
+- Added `PlayerProgressionData` SavedData keyed by player UUID with:
+  - D1 Torch Flower best count (0-6)
+  - D1 completion flag for >=3 Torch Flowers
+  - Lesser Blooms total
+  - Cavern Residue total
+  - Village access unlock flag
+  - D1 NPC unlock tier (0-4)
+  - D2 NPC unlock tier (0-4, reserved for future hooks)
+  - generic string progression flags set for future expansion unlocks
+- Added `ProgressionService` API for reads/writes and derived calculations.
+- D1 NPC unlock tiers now derive from Lesser Blooms:
+  - 0-4 => tier 0
+  - 5-9 => tier 1
+  - 10-14 => tier 2
+  - 15-19 => tier 3
+  - 20+ => tier 4
+- Village access unlocks once D1 is completed with at least 3 Torch Flowers.
+- Added `/progression` command root for debug/admin mutation workflows.
+- Permission model keeps AccessPolicy as central authority:
+  - self-read allowed
+  - reading others or mutating progression requires developer/console
+
+Scope boundary: this pass does not wire dungeon completion events, collection events, NPC vendor logic, or any gameplay trigger hooks yet.

@@ -119,6 +119,7 @@ public class CosmicDungeonMod {
         ClassSelectorDestinationCommand.register(event.getDispatcher());
         CurrencyCommand.register(event.getDispatcher());
         FactionCommand.register(event.getDispatcher());
+        ProgressionCommand.register(event.getDispatcher());
 
     }
 
