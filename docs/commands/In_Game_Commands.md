@@ -24,6 +24,7 @@
 - `/developer`
 - `/dungeoneer`
 - `/classselectordestination`
+- `/currency`
 
 ## High-use command groups
 
@@ -71,3 +72,14 @@
 - Many workflows require a player source (console-only invocations can fail for player-targeted UIs).
 - Several commands are look-target dependent within short range.
 - Failed syntax for `/spawner` falls back to help output with unknown syntax warning.
+
+
+### Currency (Attunement Fragment economy foundation)
+`/currency balance [player]`
+`/currency add <player> <trace|mark|seal|crown|anchor> <amount>`
+`/currency remove <player> <trace|mark|seal|crown|anchor> <amount>`
+`/currency set <player> <trace|mark|seal|crown|anchor> <amount>`
+`/currency clear <player>`
+`/currency capacity <player> <traceAmount>`
+
+Authority: self-balance is open to players; other-player/admin mutations require developer or console authority through AccessPolicy.
