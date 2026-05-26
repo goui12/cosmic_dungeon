@@ -1,0 +1,26 @@
+{
+  "id": "cosmicdungeon:d1/general_supply_vendor",
+  "displayName": "D1 General Supply",
+  "vendorType": "general_supply",
+  "buyOffers": [
+    {
+      "offerId": "bread",
+      "result": { "item": "minecraft:bread", "count": 1 },
+      "cost": { "amount": 6, "denomination": "trace" }
+    },
+    {
+      "offerId": "torch",
+      "result": { "item": "minecraft:torch", "count": 1 },
+      "cost": { "amount": 2, "denomination": "trace" }
+    },
+    {
+      "offerId": "arrows",
+      "result": { "item": "minecraft:arrow", "count": 8 },
+      "cost": { "amount": 3, "denomination": "trace" }
+    }
+  ],
+  "buyback": {
+    "pricingGroup": "default",
+    "rules": []
+  }
+}

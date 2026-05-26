@@ -29,6 +29,7 @@
 - `/progression`
 - `/achievement`
 - `/plantflags`
+- `/vendor`
 
 ## High-use command groups
 
@@ -142,3 +143,16 @@ Authority: `status` is public. `reset`, `setregion`, and `complete-debug` requir
 Notes:
 - Tracks per-run/session planting state and a 5-minute disconnect cooldown before completion can resolve.
 - Completion grants `cosmicdungeon:achievements/plant_flags` to online eligible players and broadcasts placeholder JHW summon text.
+
+
+### Vendor (1.5.0 profile loading foundation)
+`/vendor list`
+`/vendor reload`
+`/vendor profile <profileId>`
+
+Authority: developer or console only via `AccessPolicy.requireDeveloperOrConsole`.
+
+Scope boundary:
+- loads datapack vendor profiles from `data/cosmicdungeon/vendor_profiles/*.json`
+- no villager assignment yet
+- no vendor GUI/menu yet
