@@ -2,6 +2,7 @@ package net.goui.cosmicdungeon.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.goui.cosmicdungeon.achievement.AchievementCounterData;
+import net.goui.cosmicdungeon.achievement.BindingIdolAchievements;
 import net.goui.cosmicdungeon.achievement.CosmicAdvancementUtil;
 import net.goui.cosmicdungeon.auth.AccessPolicy;
 import net.minecraft.commands.CommandSourceStack;
@@ -27,7 +28,19 @@ public final class AchievementCommand {
                                 .executes(ctx -> counters(ctx.getSource(), EntityArgument.getPlayer(ctx, "player"))))
                         .then(Commands.literal("reset")
                                 .then(Commands.argument("player", EntityArgument.player())
-                                        .executes(ctx -> reset(ctx.getSource(), EntityArgument.getPlayer(ctx, "player")))))));
+                                        .executes(ctx -> reset(ctx.getSource(), EntityArgument.getPlayer(ctx, "player"))))))
+                .then(Commands.literal("idol")
+                        .then(Commands.literal("return")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .executes(ctx -> idolReturn(ctx.getSource(), EntityArgument.getPlayer(ctx, "player")))))
+                        .then(Commands.literal("provide")
+                                .then(Commands.argument("provider", EntityArgument.player())
+                                        .then(Commands.argument("receiver", EntityArgument.player())
+                                                .executes(ctx -> idolProvide(
+                                                        ctx.getSource(),
+                                                        EntityArgument.getPlayer(ctx, "provider"),
+                                                        EntityArgument.getPlayer(ctx, "receiver")
+                                                )))))));
     }
 
     private static int grant(CommandSourceStack src, ServerPlayer target, ResourceLocation id) {
@@ -45,6 +58,18 @@ public final class AchievementCommand {
         src.sendSuccess(() -> Component.literal(" - d1MusicDiscMask: " + rec.d1MusicDiscMask()), false);
         src.sendSuccess(() -> Component.literal(" - genericCounter1: " + rec.genericCounter1()), false);
         src.sendSuccess(() -> Component.literal(" - genericCounter2: " + rec.genericCounter2()), false);
+        return 1;
+    }
+
+    private static int idolReturn(CommandSourceStack src, ServerPlayer revivedPlayer) {
+        BindingIdolAchievements.recordReturnedThroughBindingIdol(revivedPlayer);
+        src.sendSuccess(() -> Component.literal("Recorded binding idol return for " + revivedPlayer.getName().getString() + "."), true);
+        return 1;
+    }
+
+    private static int idolProvide(CommandSourceStack src, ServerPlayer provider, ServerPlayer receiver) {
+        BindingIdolAchievements.recordProvidedBindingIdol(provider, receiver);
+        src.sendSuccess(() -> Component.literal("Recorded binding idol provision from " + provider.getName().getString() + " to " + receiver.getName().getString() + "."), true);
         return 1;
     }
 
