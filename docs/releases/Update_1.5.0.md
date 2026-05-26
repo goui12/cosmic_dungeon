@@ -200,3 +200,24 @@ Scope boundary: this pass provides framework + tooling only; gameplay/event trig
   - `/achievement vitalexchange <provider> <receiver> <item>`
 
 Scope boundary: this pass does not add a full player trade HUD/system; it only adds achievement service + debug trigger wiring for safe incremental integration.
+
+## D1 Environmental Achievement Trackers
+
+Added isolated D1 tracker services under `net.goui.cosmicdungeon.achievement.d1`:
+- `TiredNotBrokenTracker`
+- `SixfoldVigilTracker`
+- `CycleOfRecordedSoundTracker`
+- `SynchronousPealTracker`
+
+Added `/achievement d1regions` tooling:
+- `/achievement d1regions status`
+- `/achievement d1regions set <regionName> pos1`
+- `/achievement d1regions set <regionName> pos2`
+
+Added debug grant command:
+- `/achievement d1 debug <achievementName> <player>`
+
+Default region keys expected by the trackers:
+- `d1_woodland_manor`
+- `d1_wither_room`
+- `d1_camp_5`
