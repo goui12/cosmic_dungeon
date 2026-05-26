@@ -3,7 +3,7 @@
 ## Attunement Fragment economy account foundation
 
 This is the first 1.5.0 implementation pass and introduces backend account plumbing only.
-No vendors, purchase GUI, pickup hooks, or gameplay sinks/sources are included in this update.
+No vendors, purchase GUI, or gameplay sinks/sources are included in this update.
 
 ### Currency model
 
@@ -54,7 +54,15 @@ This update intentionally does **not** include:
 
 - vendors
 - economy GUI/menu screens
-- currency item pickup handlers
-- world drops or sinks
+- world sinks/sources beyond pickup auto-storage
 
 These are planned for future 1.5.x follow-up work.
+
+
+## 1.5.0 Follow-up: Attunement fragment item tender + auto-storage
+
+- Added five legal-tender item forms: `attunement_trace`, `attunement_mark`, `attunement_seal`, `attunement_crown`, and `attunement_anchor`.
+- These items are drop-compatible as world entities but auto-deposit into player currency balance on successful pickup.
+- Pickup uses all-or-nothing capacity checks: if full capacity blocks the full stack value, no partial deposit occurs and the entity remains in-world.
+- Capacity-denied pickup sends a short, rate-limited actionbar denial message.
+- No crafting recipes were added for these tender items.

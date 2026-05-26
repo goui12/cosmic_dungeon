@@ -38,6 +38,13 @@ public class ModItemTagProvider extends BlockTagCopyingItemTagProvider {
                 .add(ModItems.SHIELD_OF_TIDAL_FORCE.get())
                 .add(ModItems.SHIELD_OF_THE_DEEP.get());
 
+        this.tag(ModTags.Items.ATTUNEMENT_CURRENCY)
+                .add(ModItems.ATTUNEMENT_TRACE.get())
+                .add(ModItems.ATTUNEMENT_MARK.get())
+                .add(ModItems.ATTUNEMENT_SEAL.get())
+                .add(ModItems.ATTUNEMENT_CROWN.get())
+                .add(ModItems.ATTUNEMENT_ANCHOR.get());
+
         this.tag(ModTags.Items.INFINITE_SHOOTABLES)
                 .add(Items.ARROW)
                 .add(Items.SPECTRAL_ARROW)
