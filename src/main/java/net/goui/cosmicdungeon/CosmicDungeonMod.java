@@ -32,6 +32,8 @@ import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.goui.cosmicdungeon.vendor.VendorProfileManager;
 import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 
@@ -122,6 +124,7 @@ public class CosmicDungeonMod {
         ProgressionCommand.register(event.getDispatcher());
         AchievementCommand.register(event.getDispatcher());
         PlantFlagsCommand.register(event.getDispatcher());
+        VendorCommand.register(event.getDispatcher());
 
     }
 
@@ -133,5 +136,10 @@ public class CosmicDungeonMod {
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         // server starting hook if needed
+    }
+
+    @SubscribeEvent
+    public void onAddReloadListeners(AddReloadListenerEvent event) {
+        event.addListener(VendorProfileManager.INSTANCE);
     }
 }

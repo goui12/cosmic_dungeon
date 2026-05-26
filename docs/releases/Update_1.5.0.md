@@ -221,3 +221,22 @@ Default region keys expected by the trackers:
 - `d1_woodland_manor`
 - `d1_wither_room`
 - `d1_camp_5`
+
+
+## 1.5.0 Follow-up: Vendor profile loading foundation (no NPC assignment, no GUI)
+
+- Added package `net.goui.cosmicdungeon.vendor` with `VendorProfile`, `VendorOffer`, and `VendorProfileManager`.
+- Vendor profiles now load from datapack JSON under: `data/cosmicdungeon/vendor_profiles/<path>.json`.
+- Added JSON validation for profile IDs and item IDs, with clear log errors for invalid entries without hard-crashing the server.
+- Added `/vendor` command root for developer/console diagnostics:
+  - `/vendor list`
+  - `/vendor reload`
+  - `/vendor profile <profileId>`
+- Added sample profile: `data/cosmicdungeon/vendor_profiles/d1/general_supply_vendor.json` with starter offers:
+  - bread for 6 Trace
+  - torch for 2 Trace
+  - arrows for 3 Trace
+
+Scope boundary remains explicit:
+- no villager/NPC vendor assignment in this pass
+- no vendor GUI/menu/screens in this pass
