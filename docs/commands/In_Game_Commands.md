@@ -120,6 +120,7 @@ Authority: players can read their own progression. Reading another player's prog
 `/achievement counters reset <player>`
 `/achievement idol return <player>`
 `/achievement idol provide <provider> <receiver>`
+`/achievement vitalexchange <provider> <receiver> <item>`
 
 Authority: developer or console only through `AccessPolicy.requireDeveloperOrConsole`.
 

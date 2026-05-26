@@ -4,14 +4,18 @@ import com.mojang.brigadier.CommandDispatcher;
 import net.goui.cosmicdungeon.achievement.AchievementCounterData;
 import net.goui.cosmicdungeon.achievement.BindingIdolAchievements;
 import net.goui.cosmicdungeon.achievement.CosmicAdvancementUtil;
+import net.goui.cosmicdungeon.achievement.VitalExchangeAchievements;
 import net.goui.cosmicdungeon.auth.AccessPolicy;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.arguments.item.ItemArgument;
+import net.minecraft.commands.arguments.item.ItemInput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 
 public final class AchievementCommand {
     private AchievementCommand() {}
@@ -29,6 +33,16 @@ public final class AchievementCommand {
                         .then(Commands.literal("reset")
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .executes(ctx -> reset(ctx.getSource(), EntityArgument.getPlayer(ctx, "player"))))))
+                .then(Commands.literal("vitalexchange")
+                        .then(Commands.argument("provider", EntityArgument.player())
+                                .then(Commands.argument("receiver", EntityArgument.player())
+                                        .then(Commands.argument("item", ItemArgument.item())
+                                                .executes(ctx -> vitalExchange(
+                                                        ctx.getSource(),
+                                                        EntityArgument.getPlayer(ctx, "provider"),
+                                                        EntityArgument.getPlayer(ctx, "receiver"),
+                                                        ItemArgument.getItem(ctx, "item")
+                                                ))))))
                 .then(Commands.literal("idol")
                         .then(Commands.literal("return")
                                 .then(Commands.argument("player", EntityArgument.player())
@@ -70,6 +84,13 @@ public final class AchievementCommand {
     private static int idolProvide(CommandSourceStack src, ServerPlayer provider, ServerPlayer receiver) {
         BindingIdolAchievements.recordProvidedBindingIdol(provider, receiver);
         src.sendSuccess(() -> Component.literal("Recorded binding idol provision from " + provider.getName().getString() + " to " + receiver.getName().getString() + "."), true);
+        return 1;
+    }
+
+    private static int vitalExchange(CommandSourceStack src, ServerPlayer provider, ServerPlayer receiver, ItemInput itemInput) {
+        ItemStack stack = itemInput.createItemStack(1, false);
+        VitalExchangeAchievements.recordVitalExchange(provider, receiver, stack);
+        src.sendSuccess(() -> Component.literal("Recorded vital exchange from " + provider.getName().getString() + " to " + receiver.getName().getString() + " using " + itemInput.getItemName() + "."), true);
         return 1;
     }
 
