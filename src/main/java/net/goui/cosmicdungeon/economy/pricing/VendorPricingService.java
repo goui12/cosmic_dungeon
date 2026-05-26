@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public final class VendorPricingService {
@@ -92,4 +93,12 @@ public final class VendorPricingService {
     }
 
     public record CompleteSetValue(String setId, long traceValue, int pieceCount) {}
+
+    public static Optional<GearSetDefinition> findSetDefinition(String vendorType, String setId) {
+        if (setId == null || setId.isBlank()) return Optional.empty();
+        return setDefinitionsFor(vendorType).stream().filter(def -> def.id().equals(setId)).findFirst();
+    }
+
+    public static record GearSetDefinition(String id, Set<String> pieceItemIds, long fullSetTraceValue, long individualPieceTraceValue) {}
+
 }

@@ -310,6 +310,24 @@ public final class ModNetwork {
                 }
         );
 
+        registrar.playToServer(
+                VendorPayloads.C2S_RequestVendorSellSlot.TYPE,
+                VendorPayloads.C2S_RequestVendorSellSlot.STREAM_CODEC,
+                (payload, ctx) -> {
+                    if (!(ctx.player() instanceof ServerPlayer sp)) return;
+                    ctx.reply(net.goui.cosmicdungeon.vendor.VendorService.trySellSlot(sp, payload.vendorEntityId(), payload.slotIndex()));
+                }
+        );
+
+        registrar.playToServer(
+                VendorPayloads.C2S_RequestVendorSellDetectedSet.TYPE,
+                VendorPayloads.C2S_RequestVendorSellDetectedSet.STREAM_CODEC,
+                (payload, ctx) -> {
+                    if (!(ctx.player() instanceof ServerPlayer sp)) return;
+                    ctx.reply(net.goui.cosmicdungeon.vendor.VendorService.trySellDetectedSet(sp, payload.vendorEntityId(), payload.setId()));
+                }
+        );
+
         registrar.playToClient(
                 VendorPayloads.S2C_OpenVendor.TYPE,
                 VendorPayloads.S2C_OpenVendor.STREAM_CODEC,
