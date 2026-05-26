@@ -343,6 +343,24 @@ public final class ModNetwork {
                         ClientNetworkDispatch.dispatch("onVendorPurchaseResult", payload)
                 )
         );
+
+        registrar.playToServer(TradePayloads.C2S_RequestTrade.TYPE, TradePayloads.C2S_RequestTrade.STREAM_CODEC, (payload, ctx) -> {
+            if (!(ctx.player() instanceof ServerPlayer sp)) return;
+            var target = sp.server.getPlayerList().getPlayerByName(payload.targetName());
+            if (target == null || target == sp) return;
+            net.goui.cosmicdungeon.trade.TradeSessionData.invite(sp, target);
+        });
+        registrar.playToServer(TradePayloads.C2S_AcceptTrade.TYPE, TradePayloads.C2S_AcceptTrade.STREAM_CODEC, (payload, ctx) -> {
+            if (!(ctx.player() instanceof ServerPlayer sp)) return;
+            var inviter = sp.server.getPlayerList().getPlayerByName(payload.inviterName());
+            if (inviter == null) return;
+            net.goui.cosmicdungeon.trade.TradeSessionData.acceptInvite(sp, inviter);
+        });
+        registrar.playToServer(TradePayloads.C2S_UpdateCurrencyOffer.TYPE, TradePayloads.C2S_UpdateCurrencyOffer.STREAM_CODEC, (payload, ctx) -> { if (ctx.player() instanceof ServerPlayer sp) { var s0=net.goui.cosmicdungeon.trade.TradeSessionData.get(sp); if (s0!=null) s0.setCurrency(sp, payload.traceAmount()); } });
+        registrar.playToServer(TradePayloads.C2S_Ready.TYPE, TradePayloads.C2S_Ready.STREAM_CODEC, (payload, ctx) -> { if (ctx.player() instanceof ServerPlayer sp) { var s0=net.goui.cosmicdungeon.trade.TradeSessionData.get(sp); if (s0!=null) s0.setReady(sp, payload.ready()); } });
+        registrar.playToServer(TradePayloads.C2S_Confirm.TYPE, TradePayloads.C2S_Confirm.STREAM_CODEC, (payload, ctx) -> { if (ctx.player() instanceof ServerPlayer sp) { var s0=net.goui.cosmicdungeon.trade.TradeSessionData.get(sp); if (s0!=null) s0.setConfirm(sp, payload.confirm()); } });
+        registrar.playToServer(TradePayloads.C2S_Cancel.TYPE, TradePayloads.C2S_Cancel.STREAM_CODEC, (payload, ctx) -> { if (ctx.player() instanceof ServerPlayer sp) net.goui.cosmicdungeon.trade.TradeSessionData.cancel(sp, "Cancelled"); });
+
         /* ===================== REGION LOOK ===================== */
 
         registrar.playToClient(

@@ -3,6 +3,7 @@ package net.goui.cosmicdungeon.menu;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.playerclass.api.ExtraInventoryMenu;
+import net.goui.cosmicdungeon.trade.TradeMenu;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
@@ -30,6 +31,10 @@ public final class ModMenus {
     public static final Supplier<MenuType<VendorMenu>> VENDOR =
             MENUS.register("vendor",
                     () -> new MenuType<>(VendorMenu::new, FeatureFlags.DEFAULT_FLAGS));
+
+    public static final Supplier<MenuType<TradeMenu>> TRADE =
+            MENUS.register("trade",
+                    () -> new MenuType<>((id, inv) -> new TradeMenu(id, inv, net.goui.cosmicdungeon.trade.TradeSessionData.get((net.minecraft.server.level.ServerPlayer) inv.player)), FeatureFlags.DEFAULT_FLAGS));
 
     public static void register(IEventBus modBus) {
         MENUS.register(modBus);
