@@ -163,3 +163,18 @@ Scope boundary: this pass provides framework + tooling only; gameplay/event trig
 - Completion behavior currently grants `cosmicdungeon:achievements/plant_flags` and broadcasts:
   - `"The planted banners stir. JHW answers."`
 - Scope boundary preserved: no new JHW entity was introduced in this pass. A TODO marker is included where physical JHW summon/NPC interaction flow will later replace the placeholder broadcast.
+
+
+## 1.5.0 Follow-up: Binding Idol achievement tracking hooks + debug commands
+
+- Implemented `net.goui.cosmicdungeon.achievement.BindingIdolAchievements` as the central tracker for Binding Idol achievement counters and threshold grants.
+- Added API hooks:
+  - `recordReturnedThroughBindingIdol(ServerPlayer revivedPlayer)`
+  - `recordProvidedBindingIdol(ServerPlayer provider, ServerPlayer receiver)`
+- Both hooks update `AchievementCounterData` and grant threshold achievements for:
+  - returns from death through a binding idol: 1/5/10/50/100
+  - provides binding idol to a dungeoneer: 1/5/10/50/100
+- Added developer/console debug commands under `/achievement`:
+  - `/achievement idol return <player>`
+  - `/achievement idol provide <provider> <receiver>`
+- Scope note: no standalone Binding Idol gameplay system was introduced in this pass; only achievement API hooks and debug wiring were added for safe incremental integration.

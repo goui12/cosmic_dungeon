@@ -118,12 +118,15 @@ Authority: players can read their own progression. Reading another player's prog
 `/achievement grant <player> <achievementId>`
 `/achievement counters <player>`
 `/achievement counters reset <player>`
+`/achievement idol return <player>`
+`/achievement idol provide <provider> <receiver>`
 
 Authority: developer or console only through `AccessPolicy.requireDeveloperOrConsole`.
 
 Notes:
 - Uses `CosmicAdvancementUtil` with default criterion `triggered`.
 - Intended as debug/admin tooling while gameplay triggers are implemented incrementally.
+- Binding Idol debug hooks: use `idol return` and `idol provide` to increment idol counters and validate threshold advancement grants.
 
 
 ### Plant Flags (1.5.0 D1 foundation)
