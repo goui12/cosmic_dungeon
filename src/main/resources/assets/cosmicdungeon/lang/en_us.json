@@ -555,5 +555,11 @@
   "block.cosmicdungeon.yellow_mold_deepslate_tiles": "Yellow Mold Deepslate Tiles",
   "block.cosmicdungeon.yellow_mold_polished_blackstone": "Yellow Mold Polished Blackstone",
   "block.cosmicdungeon.yellow_mold_polished_deepslate": "Yellow Mold Polished Deepslate",
-  "key.category.cosmicdungeon.cosmicdungeon": "Cosmic Dungeon"
+  "key.category.cosmicdungeon.cosmicdungeon": "Cosmic Dungeon",
+  "item.cosmicdungeon.attunement_trace": "Attunement Trace",
+  "item.cosmicdungeon.attunement_mark": "Attunement Mark",
+  "item.cosmicdungeon.attunement_seal": "Attunement Seal",
+  "item.cosmicdungeon.attunement_crown": "Attunement Crown",
+  "item.cosmicdungeon.attunement_anchor": "Attunement Anchor",
+  "message.cosmicdungeon.currency_pickup_denied_capacity": "Attunement capacity full."
 }

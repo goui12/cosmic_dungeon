@@ -87,6 +87,12 @@ public class ModModelProvider extends ModelProvider {
         FLAT.accept(ModItems.TOTEM_OF_DOG_WHISPERING.get());
         FLAT.accept(ModItems.DOOR_KEY.get());
 
+        FLAT.accept(ModItems.ATTUNEMENT_TRACE.get());
+        FLAT.accept(ModItems.ATTUNEMENT_MARK.get());
+        FLAT.accept(ModItems.ATTUNEMENT_SEAL.get());
+        FLAT.accept(ModItems.ATTUNEMENT_CROWN.get());
+        FLAT.accept(ModItems.ATTUNEMENT_ANCHOR.get());
+
         // ===== Judicator / Metalmancer (unchanged) =====
         MACE.accept(ModItems.EDICT_OF_SILENCE.get());
         registerExternalItem(itemModels, ModItems.VOWKEEPER.get(), rlMod("item/vowkeeper"));

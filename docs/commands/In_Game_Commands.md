@@ -83,3 +83,5 @@
 `/currency capacity <player> <traceAmount>`
 
 Authority: self-balance is open to players; other-player/admin mutations require developer or console authority through AccessPolicy.
+
+Pickup behavior: Attunement currency item entities auto-store into balance on pickup, with all-or-nothing capacity checks (no partial deposit).

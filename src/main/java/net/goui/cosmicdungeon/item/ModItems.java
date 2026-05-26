@@ -55,6 +55,12 @@ public class ModItems {
     public static final DeferredItem<Item> SEISMIC_CORE_FRAGMENT = ITEMS.registerSimpleItem("seismic_core_fragment");
     public static final DeferredItem<Item> SHATTERED_REALITY_OF_SHUDDE_MELL = ITEMS.registerSimpleItem("shattered_reality_of_shudde_mell");
 
+    public static final DeferredItem<Item> ATTUNEMENT_TRACE = ITEMS.registerSimpleItem("attunement_trace");
+    public static final DeferredItem<Item> ATTUNEMENT_MARK = ITEMS.registerSimpleItem("attunement_mark");
+    public static final DeferredItem<Item> ATTUNEMENT_SEAL = ITEMS.registerSimpleItem("attunement_seal");
+    public static final DeferredItem<Item> ATTUNEMENT_CROWN = ITEMS.registerSimpleItem("attunement_crown");
+    public static final DeferredItem<Item> ATTUNEMENT_ANCHOR = ITEMS.registerSimpleItem("attunement_anchor");
+
     // REGION
     public static final DeferredItem<Item> REGION_WAND = ITEMS.registerItem(
             "region_wand", props -> new RegionWandItem(props.stacksTo(1))
