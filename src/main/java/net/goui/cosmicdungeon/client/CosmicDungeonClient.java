@@ -10,6 +10,7 @@ import net.goui.cosmicdungeon.client.render.blockentity.CosmicSpawnerRenderer;
 import net.goui.cosmicdungeon.client.rift.RiftAmbienceClient;
 import net.goui.cosmicdungeon.client.screen.ClassSelectorScreen;
 import net.goui.cosmicdungeon.client.screen.VendorScreen;
+import net.goui.cosmicdungeon.client.screen.TradeScreen;
 import net.goui.cosmicdungeon.entity.ModEntities;
 import net.goui.cosmicdungeon.menu.ModMenus;
 import net.goui.cosmicdungeon.playerclass.api.ExtraInventoryScreen;
@@ -40,6 +41,7 @@ public final class CosmicDungeonClient {
             e.register(ModMenus.METALMANCER_INVENTORY.get(), ExtraInventoryScreen::new);
             e.register(ModMenus.CLASS_SELECTOR.get(), ClassSelectorScreen::new);
             e.register(ModMenus.VENDOR.get(), VendorScreen::new);
+            e.register(ModMenus.TRADE.get(), TradeScreen::new);
         });
 
         /*

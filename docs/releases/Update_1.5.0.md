@@ -306,3 +306,10 @@ Scope boundary for this pass:
 - TODO:
   - Replace current string-based `requiredNpcSystem` with a typed enum/registry-backed id when D3+ systems are introduced.
   - Add localized translatable components for each denial reason and per-profile lock flavor text.
+
+
+## Trading Foundation (1.5.0)
+- Added direct player-to-player trading foundation with item offers plus Attunement Fragment (Trace) balance transfers via CurrencyService.
+- Added trade invite, accept, and cancel commands: `/trade <player>`, `/trade accept <player>`, `/trade cancel`.
+- Added server-authoritative double-confirm flow with ready + confirm states and cancellation item return behavior.
+- Added trade network payloads via ModNetwork for request/accept/currency/ready/confirm/cancel.
