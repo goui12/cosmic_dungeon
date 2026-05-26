@@ -8,10 +8,11 @@ public record VendorProfile(
         ResourceLocation id,
         String displayName,
         String vendorType,
+        boolean requiredVillageAccess,
+        String requiredNpcSystem,
+        Integer requiredNpcTier,
         ResourceLocation requiredFactionId,
         Integer requiredFactionTier,
-        String requiredProgressionFlag,
-        Integer requiredNpcTier,
         List<VendorOffer> buyOffers,
         BuybackConfig buyback
 ) {

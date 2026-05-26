@@ -2,6 +2,9 @@
   "id": "cosmicdungeon:d1/general_supply_vendor",
   "displayName": "D1 General Supply",
   "vendorType": "general_supply",
+  "requiredVillageAccess": true,
+  "requiredNpcSystem": "D1",
+  "requiredNpcTier": 1,
   "buyOffers": [
     {
       "offerId": "bread",

@@ -1,0 +1,10 @@
+{
+  "id": "cosmicdungeon:d1/save_teleport_npc",
+  "displayName": "D1 Save & Teleport NPC",
+  "vendorType": "save_teleport",
+  "requiredVillageAccess": true,
+  "requiredNpcSystem": "D1",
+  "requiredNpcTier": 4,
+  "buyOffers": [],
+  "buyback": { "pricingGroup": "default", "rules": [] }
+}

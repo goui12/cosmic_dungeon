@@ -1,0 +1,10 @@
+{
+  "id": "cosmicdungeon:d1/brewing_store",
+  "displayName": "D1 Brewing Store",
+  "vendorType": "brewing_store",
+  "requiredVillageAccess": true,
+  "requiredNpcSystem": "D1",
+  "requiredNpcTier": 3,
+  "buyOffers": [],
+  "buyback": { "pricingGroup": "default", "rules": [] }
+}
