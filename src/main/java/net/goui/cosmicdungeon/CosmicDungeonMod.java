@@ -120,6 +120,7 @@ public class CosmicDungeonMod {
         CurrencyCommand.register(event.getDispatcher());
         FactionCommand.register(event.getDispatcher());
         ProgressionCommand.register(event.getDispatcher());
+        AchievementCommand.register(event.getDispatcher());
 
     }
 

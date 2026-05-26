@@ -1,4 +1,4 @@
-# Cosmic Dungeon Developer Documentation (1.4.8)
+# Cosmic Dungeon Developer Documentation (1.5.0)
 
 Developer-facing reference for world builders, dungeon operators, and content integrators.
 
@@ -21,6 +21,7 @@ Developer-facing reference for world builders, dungeon operators, and content in
   - [Blocks & Interaction Contracts](./Blocks/Block_Interaction_Reference.md)
 - Release prep
   - [Update 1.4.8 Preparation](./releases/Update_1.4.8_Preparation.md)
+  - [Update 1.5.0 Notes](./releases/Update_1.5.0.md)
 
 ## Intended documentation usage order
 
