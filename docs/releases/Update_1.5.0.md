@@ -268,3 +268,11 @@ Scope boundary for this pass:
 - no vendor GUI/menu opening yet
 - no buy/sell execution yet
 - this pass is assignment + interaction interception only
+
+## Vendor Menu (1.5.0)
+- Added first custom server-authoritative vendor purchase flow for assigned vendor villagers.
+- Assigned vendor right-click now opens custom Vendor menu when unlocked; locked vendors return reason messages.
+- Purchase requests are validated server-side (vendor assignment/profile/offer/unlock/currency/range/inventory space).
+- Transactions are atomic: currency is never lost on failed delivery and item is never granted without deduction.
+- Added dedicated vendor network payloads under ModNetwork registration and client vendor screen integration.
+
