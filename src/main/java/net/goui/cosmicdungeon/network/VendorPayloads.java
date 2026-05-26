@@ -21,6 +21,28 @@ public final class VendorPayloads {
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 
+    public record C2S_RequestVendorSellSlot(int vendorEntityId, int slotIndex) implements CustomPacketPayload {
+        public static final Type<C2S_RequestVendorSellSlot> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "vendor_sell_slot_request"));
+        public static final StreamCodec<ByteBuf, C2S_RequestVendorSellSlot> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.INT, C2S_RequestVendorSellSlot::vendorEntityId,
+                ByteBufCodecs.INT, C2S_RequestVendorSellSlot::slotIndex,
+                C2S_RequestVendorSellSlot::new
+        );
+
+        @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    }
+
+    public record C2S_RequestVendorSellDetectedSet(int vendorEntityId, String setId) implements CustomPacketPayload {
+        public static final Type<C2S_RequestVendorSellDetectedSet> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "vendor_sell_set_request"));
+        public static final StreamCodec<ByteBuf, C2S_RequestVendorSellDetectedSet> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.INT, C2S_RequestVendorSellDetectedSet::vendorEntityId,
+                ByteBufCodecs.STRING_UTF8, C2S_RequestVendorSellDetectedSet::setId,
+                C2S_RequestVendorSellDetectedSet::new
+        );
+
+        @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    }
+
     public record S2C_OpenVendor(int vendorEntityId, String profileId, String displayName, long balanceTrace, List<String> unlockedOffers) implements CustomPacketPayload {
         public static final Type<S2C_OpenVendor> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "vendor_open"));
         public static final StreamCodec<ByteBuf, S2C_OpenVendor> STREAM_CODEC = StreamCodec.composite(

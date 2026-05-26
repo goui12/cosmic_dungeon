@@ -276,3 +276,15 @@ Scope boundary for this pass:
 - Transactions are atomic: currency is never lost on failed delivery and item is never granted without deduction.
 - Added dedicated vendor network payloads under ModNetwork registration and client vendor screen integration.
 
+
+## Vendor Buyback (Added May 26, 2026)
+- Added vendor buyback flow so assigned vendors can purchase eligible items and pay Attunement Fragment balance directly.
+- Added sell actions in vendor UI: **Sell Held** (main-hand selected hotbar slot) and **Sell Set** (first detected complete eligible set).
+- Added atomic server validation for sell requests: vendor assignment/range checks, buyback eligibility, positive value checks, and currency capacity checks before commit.
+- Added C2S payloads for selling inventory slots and detected sets.
+- Added starter pricing support for **D2 T1 Judicator set**:
+  - Full set payout: **100 Trace**
+  - Individual piece payout: **10 Trace**
+  - Pieces: `visor_of_the_resolute`, `cuirass_of_purpose`, `chausses_of_the_pledge`, `sabatons_of_the_unheard_oath`.
+- Added player feedback messages for success and common failures, including capacity/ineligible/incomplete set states.
+

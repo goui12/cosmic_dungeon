@@ -1,6 +1,7 @@
 package net.goui.cosmicdungeon.client.screen;
 
 import net.goui.cosmicdungeon.economy.CurrencyAmount;
+import net.goui.cosmicdungeon.economy.pricing.VendorPricingService;
 import net.goui.cosmicdungeon.menu.VendorMenu;
 import net.goui.cosmicdungeon.network.ModNetwork;
 import net.goui.cosmicdungeon.network.VendorPayloads;
@@ -46,6 +47,20 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             offerButtons.add(b);
             y += 22;
         }
+
+        addRenderableWidget(Button.builder(Component.literal("Sell Held"), btn -> {
+            if (minecraft == null || minecraft.player == null || view == null) return;
+            int selectedSlot = minecraft.player.getInventory().selected;
+            ModNetwork.sendToServer(new VendorPayloads.C2S_RequestVendorSellSlot(view.vendorEntityId(), selectedSlot));
+        }).bounds(x0, topPos + imageHeight - 44, 70, 20).build());
+
+        addRenderableWidget(Button.builder(Component.literal("Sell Set"), btn -> {
+            if (minecraft == null || minecraft.player == null || view == null || view.profile() == null) return;
+            String pricingGroup = view.profile().buyback() != null ? view.profile().buyback().pricingGroup() : "default";
+            var sets = VendorPricingService.detectCompleteSets(minecraft.player, pricingGroup);
+            if (sets.isEmpty()) return;
+            ModNetwork.sendToServer(new VendorPayloads.C2S_RequestVendorSellDetectedSet(view.vendorEntityId(), sets.getFirst().setId()));
+        }).bounds(x0 + 74, topPos + imageHeight - 44, 70, 20).build());
     }
 
     @Override
@@ -80,6 +95,19 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
                 g.drawString(font, Component.literal("LOCKED"), x0 + 160, y, 0xEF9A9A, false);
             }
             y += 22;
+        }
+
+        if (minecraft != null && minecraft.player != null) {
+            String pricingGroup = view.profile().buyback() != null ? view.profile().buyback().pricingGroup() : "default";
+            var heldPrice = VendorPricingService.getSellValue(minecraft.player.getMainHandItem(), pricingGroup);
+            g.drawString(font, Component.literal("Held sell value: " + heldPrice.traceValue() + " Trace"), x0, topPos + imageHeight - 66, 0x90CAF9, false);
+            var sets = VendorPricingService.detectCompleteSets(minecraft.player, pricingGroup);
+            if (sets.isEmpty()) {
+                g.drawString(font, Component.literal("No complete set detected"), x0 + 146, topPos + imageHeight - 38, 0xB0BEC5, false);
+            } else {
+                var set = sets.getFirst();
+                g.drawString(font, Component.literal("Set " + set.setId() + ": " + set.traceValue() + " Trace"), x0 + 146, topPos + imageHeight - 38, 0xC5E1A5, false);
+            }
         }
     }
 
