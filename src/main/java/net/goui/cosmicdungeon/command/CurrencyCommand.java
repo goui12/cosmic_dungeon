@@ -7,13 +7,15 @@ import net.goui.cosmicdungeon.auth.AccessPolicy;
 import net.goui.cosmicdungeon.economy.CurrencyAmount;
 import net.goui.cosmicdungeon.economy.CurrencyDenomination;
 import net.goui.cosmicdungeon.economy.CurrencyService;
-import net.goui.cosmicdungeon.economy.PlayerCurrencyData;
+import net.goui.cosmicdungeon.economy.pricing.VendorPrice;
+import net.goui.cosmicdungeon.economy.pricing.VendorPricingService;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.Arrays;
 
@@ -62,6 +64,10 @@ public final class CurrencyCommand {
                         .requires(AccessPolicy::requireDeveloperOrConsole)
                         .then(Commands.argument("player", EntityArgument.player())
                                 .executes(ctx -> clear(ctx.getSource(), EntityArgument.getPlayer(ctx, "player")))))
+                .then(Commands.literal("value")
+                        .executes(ctx -> valueMainHand(ctx.getSource()))
+                        .then(Commands.literal("inventory")
+                                .executes(ctx -> valueInventory(ctx.getSource()))))
                 .then(Commands.literal("capacity")
                         .requires(AccessPolicy::requireDeveloperOrConsole)
                         .then(Commands.argument("player", EntityArgument.player())
@@ -171,13 +177,50 @@ public final class CurrencyCommand {
         return 1;
     }
 
+
+    private static int valueMainHand(CommandSourceStack src) {
+        ServerPlayer sp = src.getPlayer();
+        if (sp == null) {
+            src.sendFailure(Component.literal("Console cannot evaluate held items."));
+            return 0;
+        }
+
+        VendorPrice price = VendorPricingService.getSellValue(sp.getMainHandItem(), "default");
+        src.sendSuccess(() -> Component.literal("Main hand sell value: " + price.traceValue() + " Trace (" + price.debugSource() + ")"), false);
+        return 1;
+    }
+
+    private static int valueInventory(CommandSourceStack src) {
+        ServerPlayer sp = src.getPlayer();
+        if (sp == null) {
+            src.sendFailure(Component.literal("Console cannot evaluate inventory values."));
+            return 0;
+        }
+
+        var completeSets = VendorPricingService.detectCompleteSets(sp, "default");
+        if (completeSets.isEmpty()) {
+            src.sendSuccess(() -> Component.literal("No complete gear sets detected."), false);
+        } else {
+            src.sendSuccess(() -> Component.literal("Complete gear sets:"), false);
+            for (var set : completeSets) {
+                src.sendSuccess(() -> Component.literal(" - " + set.setId() + ": " + set.traceValue() + " Trace (" + set.pieceCount() + " pieces)"), false);
+            }
+        }
+
+        ItemStack mainHand = sp.getMainHandItem();
+        if (!mainHand.isEmpty()) {
+            VendorPrice heldPrice = VendorPricingService.getSellValue(mainHand, "default");
+            src.sendSuccess(() -> Component.literal("Held item value: " + heldPrice.traceValue() + " Trace (" + heldPrice.debugSource() + ")"), false);
+        }
+        return 1;
+    }
     private static int failInvalidDenomination(CommandSourceStack src) {
         src.sendFailure(Component.literal("Invalid denomination. Use trace, mark, seal, crown, or anchor."));
         return 0;
     }
 
     private static int sendUsage(CommandSourceStack src) {
-        src.sendFailure(Component.literal("Usage: /currency balance|add|remove|set|clear|capacity"));
+        src.sendFailure(Component.literal("Usage: /currency balance|add|remove|set|clear|value|capacity"));
         return 0;
     }
 }

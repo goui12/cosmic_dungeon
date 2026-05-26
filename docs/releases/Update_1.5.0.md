@@ -42,6 +42,8 @@ Added `/currency` root command:
 - `/currency set <player> <denomination> <amount>`
 - `/currency clear <player>`
 - `/currency capacity <player> <traceAmount>`
+- `/currency value`
+- `/currency value inventory`
 
 Permission model:
 
@@ -66,3 +68,19 @@ These are planned for future 1.5.x follow-up work.
 - Pickup uses all-or-nothing capacity checks: if full capacity blocks the full stack value, no partial deposit occurs and the entity remains in-world.
 - Capacity-denied pickup sends a short, rate-limited actionbar denial message.
 - No crafting recipes were added for these tender items.
+
+
+## 1.5.0 Follow-up: Vendor pricing foundation (no vendors yet)
+
+- Added a new pricing package: `net.goui.cosmicdungeon.economy.pricing`.
+- Added foundational types: `VendorValueCategory`, `VendorPrice`, `GearSetDefinition`, and `VendorPricingService`.
+- Added starter isolated hardcoded set definitions (structured for later JSON migration under `data/cosmicdungeon/vendor_prices/*.json`).
+- Included starter pricing for the D2 T1 Judicator chainmail set:
+  - `visor_of_the_resolute`
+  - `cuirass_of_purpose`
+  - `chausses_of_the_pledge`
+  - `sabatons_of_the_unheard_oath`
+- Starter values: 10 Trace per individual piece, 100 Trace for complete set detection.
+- Added `/currency value` to report the held item sell value/debug source.
+- Added `/currency value inventory` to report detected complete sets and notable inventory values.
+- Scope boundary remains unchanged: no vendor NPCs, no vendor GUI, no item removal in pricing evaluation.

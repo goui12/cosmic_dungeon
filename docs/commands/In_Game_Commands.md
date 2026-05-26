@@ -81,7 +81,9 @@
 `/currency set <player> <trace|mark|seal|crown|anchor> <amount>`
 `/currency clear <player>`
 `/currency capacity <player> <traceAmount>`
+`/currency value`
+`/currency value inventory`
 
-Authority: self-balance is open to players; other-player/admin mutations require developer or console authority through AccessPolicy.
+Authority: self-balance and value-check commands are open to players; other-player/admin mutations require developer or console authority through AccessPolicy.
 
 Pickup behavior: Attunement currency item entities auto-store into balance on pickup, with all-or-nothing capacity checks (no partial deposit).
