@@ -28,6 +28,7 @@
 - `/faction`
 - `/progression`
 - `/achievement`
+- `/plantflags`
 
 ## High-use command groups
 
@@ -123,3 +124,17 @@ Authority: developer or console only through `AccessPolicy.requireDeveloperOrCon
 Notes:
 - Uses `CosmicAdvancementUtil` with default criterion `triggered`.
 - Intended as debug/admin tooling while gameplay triggers are implemented incrementally.
+
+
+### Plant Flags (1.5.0 D1 foundation)
+`/plantflags status`
+`/plantflags reset`
+`/plantflags setregion pos1`
+`/plantflags setregion pos2`
+`/plantflags complete-debug`
+
+Authority: `status` is public. `reset`, `setregion`, and `complete-debug` require developer or console authority via `AccessPolicy.requireDeveloperOrConsole`.
+
+Notes:
+- Tracks per-run/session planting state and a 5-minute disconnect cooldown before completion can resolve.
+- Completion grants `cosmicdungeon:achievements/plant_flags` to online eligible players and broadcasts placeholder JHW summon text.
