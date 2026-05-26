@@ -84,3 +84,20 @@ These are planned for future 1.5.x follow-up work.
 - Added `/currency value` to report the held item sell value/debug source.
 - Added `/currency value inventory` to report detected complete sets and notable inventory values.
 - Scope boundary remains unchanged: no vendor NPCs, no vendor GUI, no item removal in pricing evaluation.
+
+
+## 1.5.0 Follow-up: Faction foundation (JHW baseline only)
+
+- Added faction foundation package: `net.goui.cosmicdungeon.faction`.
+- Added `FactionTier` ladder: HOSTILE, SUSPICIOUS, INDIFFERENT, CORDIAL, FAVORABLE, WARMLY, ALLY.
+- Added faction definition registry with `cosmicdungeon:jhw` baseline:
+  - scale: 0-500
+  - default starting value: 80 (SUSPICIOUS)
+  - persisted per-player in overworld `SavedData`
+- Added service API for read/set/adjust/tier checks with min/max clamping.
+- Added `/faction` command root with get/set/add/list subcommands.
+- Permission model keeps AccessPolicy as central authority:
+  - self-read is public
+  - reading or mutating other players requires developer/console authority
+
+Scope boundary: this pass does not add vendors, NPC interactions, achievement triggers, atonement dungeons, or hostile behavior hooks.
