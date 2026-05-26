@@ -129,3 +129,19 @@ Scope boundary: this pass does not add vendors, NPC interactions, achievement tr
   - reading others or mutating progression requires developer/console
 
 Scope boundary: this pass does not wire dungeon completion events, collection events, NPC vendor logic, or any gameplay trigger hooks yet.
+
+
+## 1.5.0 Follow-up: Achievement + advancement foundation
+
+- Added new package: `net.goui.cosmicdungeon.achievement` with:
+  - `CosmicAchievementIds` for centralized advancement `ResourceLocation` ids.
+  - `CosmicAdvancementUtil` safe server-side grant helper (`triggered` default criterion).
+  - `AchievementCounterData` persisted per-player counters/bitmasks for incremental trigger implementation.
+- Added developer/console-only `/achievement` command root:
+  - `/achievement grant <player> <achievementId>`
+  - `/achievement counters <player>`
+  - `/achievement counters reset <player>`
+- Added advancement datagen provider (`ModAdvancementProvider`) and registered NeoForge `AdvancementProvider` in `DataGenerators` server datagen path.
+- Achievement advancements are now generated from datagen instead of manually maintained JSON files in `src/main/resources`.
+
+Scope boundary: this pass provides framework + tooling only; gameplay/event triggers for these achievements are intentionally not wired yet.

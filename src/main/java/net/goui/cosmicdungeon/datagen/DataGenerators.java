@@ -5,6 +5,7 @@ import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
+import net.minecraft.data.advancements.AdvancementProvider;
 import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -47,6 +48,9 @@ public final class DataGenerators {
 
         // Recipes
         generator.addProvider(true, new ModRecipeProvider.Runner(packOutput, lookupProvider));
+
+        // Advancements
+        generator.addProvider(true, new AdvancementProvider(packOutput, lookupProvider, List.of(new ModAdvancementProvider())));
 
         // ✅ FIX: register block+item tags together so item tags receive blockTags.contentsGetter()
         event.createBlockAndItemTags(ModBlockTagProvider::new, ModItemTagProvider::new);

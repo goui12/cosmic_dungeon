@@ -1,4 +1,4 @@
-# In-Game Commands (Developer Reference) — 1.4.9
+# In-Game Commands (Developer Reference) — 1.5.0
 
 ## Command roots registered by the mod
 
@@ -27,6 +27,7 @@
 - `/currency`
 - `/faction`
 - `/progression`
+- `/achievement`
 
 ## High-use command groups
 
@@ -110,3 +111,15 @@ Authority: players can read their own faction values. Reading or mutating anothe
 `/progression village <player> <true|false>`
 
 Authority: players can read their own progression. Reading another player's progression and all mutations require developer or console authority through AccessPolicy.
+
+
+### Achievement (1.5.0 advancement foundation)
+`/achievement grant <player> <achievementId>`
+`/achievement counters <player>`
+`/achievement counters reset <player>`
+
+Authority: developer or console only through `AccessPolicy.requireDeveloperOrConsole`.
+
+Notes:
+- Uses `CosmicAdvancementUtil` with default criterion `triggered`.
+- Intended as debug/admin tooling while gameplay triggers are implemented incrementally.
