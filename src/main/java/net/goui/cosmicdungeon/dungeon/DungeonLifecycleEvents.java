@@ -4,6 +4,7 @@ import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
+import net.goui.cosmicdungeon.achievement.plantflags.PlantFlagService;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -50,6 +51,7 @@ public final class DungeonLifecycleEvents {
         }
 
         DungeonLifecycleService.processPendingResets(server);
+        PlantFlagService.completeIfReady(server);
 
         if (!reevaluateSoon && !doPeriodic) return;
 

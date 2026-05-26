@@ -145,3 +145,21 @@ Scope boundary: this pass does not wire dungeon completion events, collection ev
 - Achievement advancements are now generated from datagen instead of manually maintained JSON files in `src/main/resources`.
 
 Scope boundary: this pass provides framework + tooling only; gameplay/event triggers for these achievements are intentionally not wired yet.
+
+
+## 1.5.0 Follow-up: D1 Plant Flags achievement foundation
+
+- Added package `net.goui.cosmicdungeon.achievement.plantflags` with persisted state machine foundation for D1 Plant Flags.
+- Added `PlantFlagData` SavedData including active run/session id, planted player UUID set, disconnect cooldown timestamp, completion flag, and configurable region bounds.
+- Added `PlantFlagService` with APIs to record banner planting, clear per-run state, compute online eligible players, evaluate cooldown/eligibility, and complete once ready.
+- Added event hooks for banner placement and disconnect handling:
+  - Banner placements only count when the placed block is a banner and inside configured Plant Flags region.
+  - Disconnects/link-dead events trigger a 5-minute cooldown lockout before completion can occur.
+- Added `/plantflags` command root:
+  - `/plantflags status` (public)
+  - `/plantflags reset` (developer/console)
+  - `/plantflags setregion pos1` and `/plantflags setregion pos2` (developer/console)
+  - `/plantflags complete-debug` (developer/console)
+- Completion behavior currently grants `cosmicdungeon:achievements/plant_flags` and broadcasts:
+  - `"The planted banners stir. JHW answers."`
+- Scope boundary preserved: no new JHW entity was introduced in this pass. A TODO marker is included where physical JHW summon/NPC interaction flow will later replace the placeholder broadcast.
