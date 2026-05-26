@@ -25,6 +25,7 @@
 - `/dungeoneer`
 - `/classselectordestination`
 - `/currency`
+- `/faction`
 
 ## High-use command groups
 
@@ -87,3 +88,12 @@
 Authority: self-balance and value-check commands are open to players; other-player/admin mutations require developer or console authority through AccessPolicy.
 
 Pickup behavior: Attunement currency item entities auto-store into balance on pickup, with all-or-nothing capacity checks (no partial deposit).
+
+### Faction (1.5.0 foundation)
+`/faction get <player> <faction>`
+`/faction set <player> <faction> <value>`
+`/faction add <player> <faction> <delta>`
+`/faction list <player>`
+
+Authority: players can read their own faction values. Reading or mutating another player's faction values requires developer or console authority through AccessPolicy.
+
