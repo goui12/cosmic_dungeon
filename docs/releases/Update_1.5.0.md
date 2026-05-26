@@ -178,3 +178,25 @@ Scope boundary: this pass provides framework + tooling only; gameplay/event trig
   - `/achievement idol return <player>`
   - `/achievement idol provide <provider> <receiver>`
 - Scope note: no standalone Binding Idol gameplay system was introduced in this pass; only achievement API hooks and debug wiring were added for safe incremental integration.
+
+
+## 1.5.0 Follow-up: Vital Exchange I-IV foundation
+
+- Added `net.goui.cosmicdungeon.achievement.VitalExchangeAchievements` as the central API for Vital Exchange grants:
+  - `recordVitalExchange(ServerPlayer provider, ServerPlayer receiver, ItemStack providedStack)`
+- Trigger eligibility rules implemented:
+  - provided stack quantity must be greater than 0
+  - receiver must currently be `Deadeye` (via `ClassNbtUtil` + `ClassKeys`)
+  - both provider and receiver receive the corresponding achievement grant
+- Item-to-achievement mapping implemented:
+  - `scintilla_vitalis` -> `vital_exchange_1`
+  - `lux_vitalis` -> `vital_exchange_2`
+  - `mending_sting` -> `vital_exchange_3`
+  - `verdant_jolt` -> `vital_exchange_4`
+- Current item registration status in `ModItems`:
+  - `scintilla_vitalis` and `lux_vitalis` are already registered
+  - `mending_sting` and `verdant_jolt` are not yet registered; this pass uses stable `ResourceLocation` TODO constants to avoid inventing item behavior
+- Added developer/console debug command wiring under `/achievement`:
+  - `/achievement vitalexchange <provider> <receiver> <item>`
+
+Scope boundary: this pass does not add a full player trade HUD/system; it only adds achievement service + debug trigger wiring for safe incremental integration.
