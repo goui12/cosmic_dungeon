@@ -145,14 +145,19 @@ Notes:
 - Completion grants `cosmicdungeon:achievements/plant_flags` to online eligible players and broadcasts placeholder JHW summon text.
 
 
-### Vendor (1.5.0 profile loading foundation)
+### Vendor (1.5.0 progression + faction access)
 `/vendor list`
 `/vendor reload`
 `/vendor profile <profileId>`
+`/vendor assign <profileId>`
+`/vendor clear`
+`/vendor info`
+`/vendor spawn <profileId>`
+`/vendor access <profileId>`
 
 Authority: developer or console only via `AccessPolicy.requireDeveloperOrConsole`.
 
 Scope boundary:
 - loads datapack vendor profiles from `data/cosmicdungeon/vendor_profiles/*.json`
-- no villager assignment yet
-- no vendor GUI/menu yet
+- supports villager vendor assignment + vendor menu
+- `/vendor access` explains whether the executing player can access a vendor profile and why

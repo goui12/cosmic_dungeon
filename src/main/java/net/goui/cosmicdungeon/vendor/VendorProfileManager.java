@@ -98,14 +98,15 @@ public final class VendorProfileManager extends SimplePreparableReloadListener<M
         }
 
         Integer requiredFactionTier = root.has("requiredFactionTier") ? GsonHelper.getAsInt(root, "requiredFactionTier") : null;
-        String requiredProgressionFlag = root.has("requiredProgressionFlag") ? GsonHelper.getAsString(root, "requiredProgressionFlag") : null;
+        boolean requiredVillageAccess = GsonHelper.getAsBoolean(root, "requiredVillageAccess", false);
+        String requiredNpcSystem = root.has("requiredNpcSystem") ? GsonHelper.getAsString(root, "requiredNpcSystem") : null;
         Integer requiredNpcTier = root.has("requiredNpcTier") ? GsonHelper.getAsInt(root, "requiredNpcTier") : null;
 
         List<VendorOffer> offers = parseOffers(id, GsonHelper.getAsJsonArray(root, "buyOffers", new JsonArray()));
 
         VendorProfile.BuybackConfig buyback = parseBuyback(root);
 
-        return new VendorProfile(id, displayName, vendorType, factionId, requiredFactionTier, requiredProgressionFlag, requiredNpcTier, List.copyOf(offers), buyback);
+        return new VendorProfile(id, displayName, vendorType, requiredVillageAccess, requiredNpcSystem, requiredNpcTier, factionId, requiredFactionTier, List.copyOf(offers), buyback);
     }
 
     private static List<VendorOffer> parseOffers(ResourceLocation profileId, JsonArray offersArray) {

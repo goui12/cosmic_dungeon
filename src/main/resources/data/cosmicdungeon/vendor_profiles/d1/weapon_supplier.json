@@ -1,0 +1,10 @@
+{
+  "id": "cosmicdungeon:d1/weapon_supplier",
+  "displayName": "D1 Weapon Supplier",
+  "vendorType": "weapon_supplier",
+  "requiredVillageAccess": true,
+  "requiredNpcSystem": "D1",
+  "requiredNpcTier": 2,
+  "buyOffers": [],
+  "buyback": { "pricingGroup": "default", "rules": [] }
+}

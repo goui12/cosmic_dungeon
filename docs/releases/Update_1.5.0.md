@@ -288,3 +288,21 @@ Scope boundary for this pass:
   - Pieces: `visor_of_the_resolute`, `cuirass_of_purpose`, `chausses_of_the_pledge`, `sabatons_of_the_unheard_oath`.
 - Added player feedback messages for success and common failures, including capacity/ineligible/incomplete set states.
 
+## Vendor Access Gating Integration (Added May 26, 2026)
+- Added `VendorAccessService` as the single evaluator for per-player vendor access outcomes and readable denial reasons.
+- Extended `VendorProfile` schema with:
+  - `requiredVillageAccess` (boolean)
+  - `requiredNpcSystem` (string, e.g. `D1` / `D2`)
+  - `requiredNpcTier` (int)
+  - `requiredFaction` / `requiredFactionTier` (existing faction gates retained)
+- Right-click vendor interaction now checks the centralized access evaluator before opening the menu.
+- Added `/vendor access <profileId>` developer/console command to verify access state for the executing player.
+- Added D1 sample vendor profiles and tiered unlock requirements:
+  - `cosmicdungeon:d1/general_supply_vendor` -> D1 tier 1 (5 Lesser Blooms)
+  - `cosmicdungeon:d1/weapon_supplier` -> D1 tier 2 (10 Lesser Blooms)
+  - `cosmicdungeon:d1/brewing_store` -> D1 tier 3 (15 Lesser Blooms)
+  - `cosmicdungeon:d1/save_teleport_npc` -> D1 tier 4 (20 Lesser Blooms)
+- Village gate requirement now enforced for these D1 vendors, including D1 completion expectation with at least 3 Torch Flowers.
+- TODO:
+  - Replace current string-based `requiredNpcSystem` with a typed enum/registry-backed id when D3+ systems are introduced.
+  - Add localized translatable components for each denial reason and per-profile lock flavor text.
