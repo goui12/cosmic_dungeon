@@ -34,7 +34,13 @@ public final class ModMenus {
 
     public static final Supplier<MenuType<TradeMenu>> TRADE =
             MENUS.register("trade",
-                    () -> new MenuType<>((id, inv) -> new TradeMenu(id, inv, net.goui.cosmicdungeon.trade.TradeSessionData.get((net.minecraft.server.level.ServerPlayer) inv.player)), FeatureFlags.DEFAULT_FLAGS));
+                    () -> new MenuType<>((id, inv) -> {
+                        net.goui.cosmicdungeon.trade.TradeSessionData.TradeSession session = null;
+                        if (inv.player instanceof net.minecraft.server.level.ServerPlayer sp) {
+                            session = net.goui.cosmicdungeon.trade.TradeSessionData.get(sp);
+                        }
+                        return new TradeMenu(id, inv, session);
+                    }, FeatureFlags.DEFAULT_FLAGS));
 
     public static void register(IEventBus modBus) {
         MENUS.register(modBus);
