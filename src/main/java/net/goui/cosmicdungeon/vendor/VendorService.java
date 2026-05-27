@@ -29,7 +29,7 @@ public final class VendorService {
     }
 
     public static VendorPayloads.S2C_VendorPurchaseResult tryPurchase(ServerPlayer sp, int vendorEntityId, String offerIdRaw) {
-        VendorContext context = validateVendor(sp, vendorEntityId);
+        VendorContext context = validateVendor(sp, vendorEntityId, false);
         if (!context.ok()) return fail(sp, context.failMessage());
         VendorProfile profile = context.profile();
 
@@ -39,7 +39,7 @@ public final class VendorService {
 
         if (!VendorMenuState.isOfferUnlocked(sp, offer)) return fail(sp, "Offer locked.");
 
-        long traceCost = CurrencyDenomination.toTrace(offer.cost().amount(), offer.cost().denomination());
+        long traceCost = offer.cost().denomination().toTrace(offer.cost().amount());
         if (traceCost <= 0L) return fail(sp, "Invalid offer cost.");
         if (CurrencyService.getBalanceTrace(sp) < traceCost) return fail(sp, "Not enough attunement fragments.");
 
@@ -62,7 +62,7 @@ public final class VendorService {
     }
 
     public static VendorPayloads.S2C_VendorPurchaseResult trySellSlot(ServerPlayer sp, int vendorEntityId, int slotIndex) {
-        VendorContext context = validateVendor(sp, vendorEntityId);
+        VendorContext context = validateVendor(sp, vendorEntityId, true);
         if (!context.ok()) return fail(sp, context.failMessage());
 
         if (slotIndex < 0 || slotIndex >= sp.getInventory().getContainerSize()) {
@@ -89,7 +89,7 @@ public final class VendorService {
     }
 
     public static VendorPayloads.S2C_VendorPurchaseResult trySellDetectedSet(ServerPlayer sp, int vendorEntityId, String setId) {
-        VendorContext context = validateVendor(sp, vendorEntityId);
+        VendorContext context = validateVendor(sp, vendorEntityId, true);
         if (!context.ok()) return fail(sp, context.failMessage());
 
         var setDefOpt = VendorPricingService.findSetDefinition(context.vendorType(), setId);
@@ -137,7 +137,7 @@ public final class VendorService {
         return -1;
     }
 
-    private static VendorContext validateVendor(ServerPlayer sp, int vendorEntityId) {
+    private static VendorContext validateVendor(ServerPlayer sp, int vendorEntityId, boolean requireBuyback) {
         if (!(sp.level().getEntity(vendorEntityId) instanceof Villager villager)) {
             return VendorContext.fail("Vendor no longer exists.");
         }
@@ -151,7 +151,7 @@ public final class VendorService {
 
         VendorMenuState.UnlockResult vendorUnlocked = VendorMenuState.unlockState(sp, profile);
         if (!vendorUnlocked.unlocked()) return VendorContext.fail("Vendor locked: " + vendorUnlocked.reason());
-        if (profile.buyback() == null) return VendorContext.fail("This vendor will not buy that.");
+        if (requireBuyback && profile.buyback() == null) return VendorContext.fail("This vendor will not buy that.");
 
         return VendorContext.ok(profile);
     }

@@ -40,15 +40,15 @@ public final class VendorPricingService {
         }
 
         String itemId = itemId(stack);
-        VendorValueCategory category = categorize(stack);
-        if (category == VendorValueCategory.CLASS_ISSUED_GEAR) {
-            return new VendorPrice(0L, "class_issued_tag:" + itemId);
-        }
-
         for (GearSetDefinition definition : setDefinitionsFor(vendorType)) {
             if (definition.pieceItemIds().contains(itemId)) {
                 return new VendorPrice(definition.individualPieceTraceValue(), "set_piece:" + definition.id());
             }
+        }
+
+        VendorValueCategory category = categorize(stack);
+        if (category == VendorValueCategory.CLASS_ISSUED_GEAR) {
+            return new VendorPrice(0L, "class_issued_tag:" + itemId);
         }
 
         return new VendorPrice(0L, "unsupported:" + category + ":" + itemId);
@@ -75,8 +75,12 @@ public final class VendorPricingService {
     private static VendorValueCategory categorize(ItemStack stack) {
         if (stack.is(ModTags.Items.CLASS_RESTRICTED_JUDICATOR)
                 || stack.is(ModTags.Items.CLASS_RESTRICTED_METALMANCER)
-                || stack.is(ModTags.Items.CLASS_RESTRICTED_BERSERKER)
-                || stack.is(ModTags.Items.CLASS_RESTRICTED_ALCHEMIST)) {
+                || stack.is(ModTags.Items.CLASS_RESTRICTED_BOGATYR)
+                || stack.is(ModTags.Items.CLASS_RESTRICTED_DEADEYE)
+                || stack.is(ModTags.Items.CLASS_RESTRICTED_DRAGOON)
+                || stack.is(ModTags.Items.CLASS_RESTRICTED_PYROCLAST)
+                || stack.is(ModTags.Items.CLASS_RESTRICTED_THEURGIST)
+                || stack.is(ModTags.Items.CLASS_RESTRICTED_VENEFEX)) {
             return VendorValueCategory.CLASS_ISSUED_GEAR;
         }
         return VendorValueCategory.UNSUPPORTED;
