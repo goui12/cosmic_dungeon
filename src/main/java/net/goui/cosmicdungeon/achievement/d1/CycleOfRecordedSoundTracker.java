@@ -20,9 +20,9 @@ public final class CycleOfRecordedSoundTracker {
     public static void onJukeboxUse(PlayerInteractEvent.RightClickBlock event) {
         if (!(event.getEntity() instanceof ServerPlayer sp)) return;
         if (sp.level().isClientSide()) return;
-        if (!D1AchievementRegionService.inRegion(sp.serverLevel(), event.getPos(), D1AchievementRegionService.WOODLAND_MANOR)) return;
+        if (!D1AchievementRegionService.inRegion(sp.level(), event.getPos(), D1AchievementRegionService.WOODLAND_MANOR)) return;
 
-        BlockState state = sp.serverLevel().getBlockState(event.getPos());
+        BlockState state = sp.level().getBlockState(event.getPos());
         if (!(state.getBlock() instanceof JukeboxBlock)) return;
         var held = sp.getItemInHand(event.getHand());
         int bit = discBit(held.getItem());

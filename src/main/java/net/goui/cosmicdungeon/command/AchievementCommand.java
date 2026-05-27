@@ -14,7 +14,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
-import net.minecraft.commands.arguments.StringArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.commands.arguments.item.ItemArgument;
 import net.minecraft.commands.arguments.item.ItemInput;
 import net.minecraft.network.chat.Component;
@@ -25,7 +25,7 @@ import net.minecraft.world.item.ItemStack;
 public final class AchievementCommand {
     private AchievementCommand() {}
 
-    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher, net.minecraft.commands.CommandBuildContext buildContext) {
         dispatcher.register(Commands.literal("achievement")
                 .requires(AccessPolicy::requireDeveloperOrConsole)
                 .then(Commands.literal("grant")
@@ -41,7 +41,7 @@ public final class AchievementCommand {
                 .then(Commands.literal("vitalexchange")
                         .then(Commands.argument("provider", EntityArgument.player())
                                 .then(Commands.argument("receiver", EntityArgument.player())
-                                        .then(Commands.argument("item", ItemArgument.item())
+                                        .then(Commands.argument("item", ItemArgument.item(buildContext))
                                                 .executes(ctx -> vitalExchange(
                                                         ctx.getSource(),
                                                         EntityArgument.getPlayer(ctx, "provider"),
@@ -103,10 +103,10 @@ public final class AchievementCommand {
         return 1;
     }
 
-    private static int vitalExchange(CommandSourceStack src, ServerPlayer provider, ServerPlayer receiver, ItemInput itemInput) {
+    private static int vitalExchange(CommandSourceStack src, ServerPlayer provider, ServerPlayer receiver, ItemInput itemInput) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ItemStack stack = itemInput.createItemStack(1, false);
         VitalExchangeAchievements.recordVitalExchange(provider, receiver, stack);
-        src.sendSuccess(() -> Component.literal("Recorded vital exchange from " + provider.getName().getString() + " to " + receiver.getName().getString() + " using " + itemInput.getItemName() + "."), true);
+        src.sendSuccess(() -> Component.literal("Recorded vital exchange from " + provider.getName().getString() + " to " + receiver.getName().getString() + " using " + stack.getHoverName().getString() + "."), true);
         return 1;
     }
 
@@ -155,7 +155,7 @@ public final class AchievementCommand {
         };
         if (id == null) { src.sendFailure(Component.literal("Unknown D1 achievement name.")); return 0; }
         CosmicAdvancementUtil.grant(player, id);
-        src.sendSuccess(() -> Component.literal("Granted " + id + " to " + player.getGameProfile().getName()), true);
+        src.sendSuccess(() -> Component.literal("Granted " + id + " to " + player.getName().getString()), true);
         return 1;
     }
 }

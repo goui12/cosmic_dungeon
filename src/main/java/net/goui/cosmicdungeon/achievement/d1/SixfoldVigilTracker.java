@@ -22,13 +22,13 @@ public final class SixfoldVigilTracker {
     @SubscribeEvent
     public static void onBlockChanged(BlockEvent.BlockToolModificationEvent event) {
         if (!(event.getPlayer() instanceof ServerPlayer sp)) return;
-        check(sp.serverLevel(), sp, event.getPos());
+        check(sp.level(), sp, event.getPos());
     }
 
     @SubscribeEvent
     public static void onPlace(BlockEvent.EntityPlaceEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer sp)) return;
-        check(sp.serverLevel(), sp, event.getPos());
+        check(sp.level(), sp, event.getPos());
     }
 
     private static void check(ServerLevel level, ServerPlayer trigger, BlockPos origin) {

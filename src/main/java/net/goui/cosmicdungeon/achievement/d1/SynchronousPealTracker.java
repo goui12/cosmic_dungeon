@@ -21,13 +21,13 @@ public final class SynchronousPealTracker {
     public static void onBellUse(PlayerInteractEvent.RightClickBlock event) {
         if (!(event.getEntity() instanceof ServerPlayer sp)) return;
         if (sp.level().isClientSide()) return;
-        if (!D1AchievementRegionService.inRegion(sp.serverLevel(), event.getPos(), D1AchievementRegionService.CAMP_5)) return;
-        BlockState state = sp.serverLevel().getBlockState(event.getPos());
+        if (!D1AchievementRegionService.inRegion(sp.level(), event.getPos(), D1AchievementRegionService.CAMP_5)) return;
+        BlockState state = sp.level().getBlockState(event.getPos());
         if (!(state.getBlock() instanceof BellBlock)) return;
 
         AchievementCounterData data = AchievementCounterData.get(sp.level().getServer());
         var rec = data.get(sp.getUUID());
-        int now = (int) sp.serverLevel().getGameTime();
+        int now = (int) sp.level().getGameTime();
         int start = rec.genericCounter2();
         int hits = rec.genericCounter1();
         if (start <= 0 || now - start > WINDOW_TICKS) {
