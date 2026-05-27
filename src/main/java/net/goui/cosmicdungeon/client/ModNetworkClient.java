@@ -10,7 +10,6 @@ import net.goui.cosmicdungeon.network.VendorPayloads;
 import net.goui.cosmicdungeon.client.screen.VendorScreen.VendorClientState;
 import net.goui.cosmicdungeon.vendor.VendorProfileManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.goui.cosmicdungeon.network.payload.RegionLookAllPayload;
 import net.goui.cosmicdungeon.network.payload.RegionLookPayload;
@@ -73,10 +72,6 @@ public final class ModNetworkClient {
                 payload.balanceTrace(),
                 new java.util.HashSet<>(payload.unlockedOffers())
         ));
-        var mc = Minecraft.getInstance();
-        if (mc.player != null && mc.player.containerMenu != null) {
-            mc.player.containerMenu.setTitle(Component.literal(payload.displayName()));
-        }
     }
 
     public static void onVendorPurchaseResult(VendorPayloads.S2C_VendorPurchaseResult payload) {

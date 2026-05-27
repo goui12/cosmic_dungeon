@@ -14,6 +14,7 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.phys.AABB;
@@ -93,10 +94,14 @@ public final class VendorCommand {
     private static int spawn(CommandSourceStack src, String profileIdRaw) {
         ServerPlayer sp = src.getPlayer(); if (sp == null) { src.sendFailure(Component.literal("Player context required.")); return 0; }
         ResourceLocation id = ResourceLocation.tryParse(profileIdRaw); if (id == null || VendorProfileManager.INSTANCE.get(id) == null) { src.sendFailure(Component.literal("Unknown profile: " + profileIdRaw)); return 0; }
-        Villager villager = EntityType.VILLAGER.create(sp.level()); if (villager == null) { src.sendFailure(Component.literal("Could not create villager.")); return 0; }
-        villager.moveTo(sp.getX(), sp.getY(), sp.getZ(), sp.getYRot(), sp.getXRot());
-        sp.level().addFreshEntity(villager);
-        VendorAssignmentService.assignProfile(villager, id);
+        Villager villager = EntityType.VILLAGER.create(sp.level(), EntitySpawnReason.COMMAND); if (villager == null) { src.sendFailure(Component.literal("Could not create villager.")); return 0; }
+        villager.snapTo(sp.getX(), sp.getY(), sp.getZ(), sp.getYRot(), sp.getXRot());
+        if (!sp.level().addFreshEntity(villager)) { src.sendFailure(Component.literal("Could not spawn villager entity.")); return 0; }
+        if (!VendorAssignmentService.assignProfile(villager, id)) {
+            villager.discard();
+            src.sendFailure(Component.literal("Failed assigning vendor profile."));
+            return 0;
+        }
         src.sendSuccess(() -> Component.literal("Spawned vendor villager with profile " + id), true); return 1;
     }
 

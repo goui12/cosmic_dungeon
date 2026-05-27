@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.GsonHelper;
+import net.minecraft.util.profiling.InactiveProfiler;
 import net.minecraft.util.profiling.ProfilerFiller;
 import org.slf4j.Logger;
 
@@ -64,8 +65,8 @@ public final class VendorProfileManager extends SimplePreparableReloadListener<M
     }
 
     public void reloadNow(ResourceManager manager) {
-        Map<ResourceLocation, VendorProfile> prepared = prepare(manager, ProfilerFiller.EMPTY);
-        apply(prepared, manager, ProfilerFiller.EMPTY);
+        Map<ResourceLocation, VendorProfile> prepared = prepare(manager, InactiveProfiler.INSTANCE);
+        apply(prepared, manager, InactiveProfiler.INSTANCE);
     }
 
     private static ResourceLocation parseProfileId(ResourceLocation resourceRl, JsonObject root) {
@@ -180,14 +181,18 @@ public final class VendorProfileManager extends SimplePreparableReloadListener<M
     }
 
     private static void validateItemExists(ResourceLocation itemId) {
-        if (!BuiltInRegistries.ITEM.containsKey(itemId)) {
+        if (BuiltInRegistries.ITEM.getValue(itemId) == null) {
             throw new JsonParseException("Unknown item id: " + itemId);
         }
     }
 
     private record ItemStackDef(ResourceLocation itemId, int count) {
         net.minecraft.world.item.ItemStack toStack() {
-            return new net.minecraft.world.item.ItemStack(BuiltInRegistries.ITEM.get(itemId), count);
+            var item = BuiltInRegistries.ITEM.getValue(itemId);
+            if (item == null) {
+                throw new JsonParseException("Unknown item id: " + itemId);
+            }
+            return new net.minecraft.world.item.ItemStack(item, count);
         }
     }
 }

@@ -32,7 +32,7 @@ import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
-import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.neoforged.neoforge.event.AddServerReloadListenersEvent;
 import net.goui.cosmicdungeon.vendor.VendorInteractionEvents;
 import net.goui.cosmicdungeon.vendor.VendorProfileManager;
 import org.slf4j.Logger;
@@ -142,7 +142,7 @@ public class CosmicDungeonMod {
     }
 
     @SubscribeEvent
-    public void onAddReloadListeners(AddReloadListenerEvent event) {
-        event.addListener(VendorProfileManager.INSTANCE);
+    public void onAddReloadListeners(AddServerReloadListenersEvent event) {
+        event.addListener(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(MOD_ID, "vendor_profiles"), VendorProfileManager.INSTANCE);
     }
 }

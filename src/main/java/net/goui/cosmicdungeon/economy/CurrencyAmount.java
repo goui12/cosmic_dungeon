@@ -9,6 +9,11 @@ public record CurrencyAmount(long totalTrace) {
         return new CurrencyAmount(totalTrace);
     }
 
+    public static CurrencyAmount of(long amount, CurrencyDenomination denomination) {
+        if (denomination == null) return new CurrencyAmount(0L);
+        return new CurrencyAmount(denomination.toTrace(amount));
+    }
+
     public CurrencyAmount addTrace(long delta) {
         if (delta <= 0L) return this;
         return new CurrencyAmount(Math.addExact(totalTrace, delta));

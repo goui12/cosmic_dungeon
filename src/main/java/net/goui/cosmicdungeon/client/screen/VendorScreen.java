@@ -50,7 +50,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
 
         addRenderableWidget(Button.builder(Component.literal("Sell Held"), btn -> {
             if (minecraft == null || minecraft.player == null || view == null) return;
-            int selectedSlot = minecraft.player.getInventory().selected;
+            int selectedSlot = minecraft.player.getInventory().getSelectedSlot();
             ModNetwork.sendToServer(new VendorPayloads.C2S_RequestVendorSellSlot(view.vendorEntityId(), selectedSlot));
         }).bounds(x0, topPos + imageHeight - 44, 70, 20).build());
 
