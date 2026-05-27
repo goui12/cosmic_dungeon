@@ -35,7 +35,7 @@ public final class ModAdvancementProvider implements AdvancementSubProvider {
                             true,
                             false
                     )
-                    .addCriterion("triggered", ImpossibleTrigger.TriggerInstance.simple())
+                    .addCriterion("triggered", new ImpossibleTrigger.TriggerInstance())
                     .requirements(AdvancementRequirements.allOf(List.of("triggered")))
                     .save(saver, id.toString());
         }

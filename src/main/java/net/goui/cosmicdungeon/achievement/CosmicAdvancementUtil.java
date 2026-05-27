@@ -24,7 +24,7 @@ public final class CosmicAdvancementUtil {
 
         AdvancementHolder holder = server.getAdvancements().get(advancementId);
         if (holder == null) {
-            LOGGER.debug("Advancement {} not found; cannot grant to {}", advancementId, sp.getGameProfile().getName());
+            LOGGER.debug("Advancement {} not found; cannot grant to {}", advancementId, sp.getName().getString());
             return;
         }
 

@@ -17,7 +17,7 @@ public final class PlayerProgressionData extends SavedData {
     public static final String SAVE_ID = "cosmicdungeon_player_progression_v1";
 
     private static final Codec<UUID> UUID_CODEC = Codec.STRING.xmap(UUID::fromString, UUID::toString);
-    private static final Codec<Set<String>> FLAG_SET_CODEC = Codec.STRING.listOf().xmap(HashSet::new, Set::copyOf);
+    private static final Codec<Set<String>> FLAG_SET_CODEC = Codec.STRING.listOf().xmap(HashSet::new, java.util.ArrayList::new);
 
     private record Entry(int d1TorchFlowersBest,
                          boolean d1CompletedWithAtLeast3TorchFlowers,

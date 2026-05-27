@@ -21,7 +21,7 @@ public final class TiredNotBrokenTracker {
         if (sp.level().isClientSide()) return;
         if (!(event.getSource().getEntity() instanceof Phantom)) return;
         if (sp.getStats().getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.TIME_SINCE_REST)) < THREE_NIGHTS_WITHOUT_REST_TICKS) return;
-        if (!D1AchievementRegionService.inRegion(sp.serverLevel(), sp.blockPosition(), D1AchievementRegionService.WOODLAND_MANOR)) return;
+        if (!D1AchievementRegionService.inRegion(sp.level(), sp.blockPosition(), D1AchievementRegionService.WOODLAND_MANOR)) return;
         CosmicAdvancementUtil.grant(sp, CosmicAchievementIds.TIRED_NOT_BROKEN);
     }
 }
