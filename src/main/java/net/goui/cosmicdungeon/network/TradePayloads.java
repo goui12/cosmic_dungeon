@@ -6,11 +6,26 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
+import java.util.UUID;
+
 public final class TradePayloads {
     private TradePayloads() {}
+
+    private static final StreamCodec<ByteBuf, UUID> UUID_STREAM_CODEC = StreamCodec.of(
+            (buf, uuid) -> {
+                buf.writeLong(uuid.getMostSignificantBits());
+                buf.writeLong(uuid.getLeastSignificantBits());
+            },
+            buf -> new UUID(buf.readLong(), buf.readLong())
+    );
     public record C2S_RequestTrade(String targetName) implements CustomPacketPayload {
         public static final Type<C2S_RequestTrade> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "trade_request"));
         public static final StreamCodec<ByteBuf, C2S_RequestTrade> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.STRING_UTF8, C2S_RequestTrade::targetName, C2S_RequestTrade::new);
+        @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    }
+    public record C2S_RequestLookTrade(UUID targetPlayerId) implements CustomPacketPayload {
+        public static final Type<C2S_RequestLookTrade> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "trade_request_look"));
+        public static final StreamCodec<ByteBuf, C2S_RequestLookTrade> STREAM_CODEC = StreamCodec.composite(UUID_STREAM_CODEC, C2S_RequestLookTrade::targetPlayerId, C2S_RequestLookTrade::new);
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
     public record C2S_AcceptTrade(String inviterName) implements CustomPacketPayload {

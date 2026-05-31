@@ -51,6 +51,7 @@ public final class CosmicDungeonClient {
          * allowed on the common/game event bus.
          */
         modEventBus.addListener(SpawnerPresetKeybindClient::registerKeyMappings);
+        modEventBus.addListener(TradeRequestKeybindClient::registerKeyMappings);
 
         // Existing overlay
         NeoForge.EVENT_BUS.register(CosmicSpawnerHoverOverlay.class);
@@ -60,6 +61,7 @@ public final class CosmicDungeonClient {
 
         // Spawner preset hotkey ticking is a NeoForge/game/client tick event.
         NeoForge.EVENT_BUS.addListener(SpawnerPresetKeybindClient::onClientTick);
+        NeoForge.EVENT_BUS.addListener(TradeRequestKeybindClient::onClientTick);
     }
 
     private static void onClientSetup(FMLClientSetupEvent e) {

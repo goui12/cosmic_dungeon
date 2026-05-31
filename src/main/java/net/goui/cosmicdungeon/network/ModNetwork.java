@@ -21,6 +21,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
@@ -355,6 +356,10 @@ public final class ModNetwork {
             }
             net.goui.cosmicdungeon.trade.TradeSessionData.invite(sp, target);
         });
+        registrar.playToServer(TradePayloads.C2S_RequestLookTrade.TYPE, TradePayloads.C2S_RequestLookTrade.STREAM_CODEC, (payload, ctx) -> {
+            if (!(ctx.player() instanceof ServerPlayer sp)) return;
+            handleLookTradeRequest(sp, payload.targetPlayerId());
+        });
         registrar.playToServer(TradePayloads.C2S_AcceptTrade.TYPE, TradePayloads.C2S_AcceptTrade.STREAM_CODEC, (payload, ctx) -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
             var server = sp.level().getServer();
@@ -390,6 +395,37 @@ public final class ModNetwork {
                 RegionLookAllPayload.STREAM_CODEC,
                 RegionLookAllClientPayloadHandler::handle
         );
+    }
+
+    private static void handleLookTradeRequest(ServerPlayer sender, java.util.UUID targetPlayerId) {
+        var server = sender.level().getServer();
+        if (server == null) return;
+
+        ServerPlayer target = server.getPlayerList().getPlayer(targetPlayerId);
+        if (target == null || target == sender) {
+            sender.sendSystemMessage(net.minecraft.network.chat.Component.literal("Unable to trade with that player right now."));
+            return;
+        }
+        if (!sender.level().dimension().equals(target.level().dimension())) {
+            sender.sendSystemMessage(net.minecraft.network.chat.Component.literal("Unable to trade with that player right now."));
+            return;
+        }
+        if (sender.distanceToSqr(target) > 3.25D * 3.25D) {
+            sender.sendSystemMessage(net.minecraft.network.chat.Component.literal("Look at a player within 3 blocks to request a trade."));
+            return;
+        }
+        if (!isApproximatelyLookingAt(sender, target)) {
+            sender.sendSystemMessage(net.minecraft.network.chat.Component.literal("Look at a player within 3 blocks to request a trade."));
+            return;
+        }
+
+        net.goui.cosmicdungeon.trade.TradeSessionData.invite(sender, target);
+    }
+
+    private static boolean isApproximatelyLookingAt(ServerPlayer sender, ServerPlayer target) {
+        Vec3 eye = sender.getEyePosition();
+        Vec3 end = eye.add(sender.getLookAngle().scale(3.25D));
+        return target.getBoundingBox().inflate(0.25D).clip(eye, end).isPresent();
     }
 
     public static void sendToServer(CustomPacketPayload payload) {
