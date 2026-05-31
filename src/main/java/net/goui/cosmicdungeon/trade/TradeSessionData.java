@@ -217,9 +217,10 @@ public final class TradeSessionData {
     public static final class TradeSession {
         private final UUID a;
         private final UUID b;
-        private final SimpleContainer aOffer = new SimpleContainer(6);
-        private final SimpleContainer bOffer = new SimpleContainer(6);
+        private final SimpleContainer aOffer = new SimpleContainer(TradeMenu.OFFER_SLOTS);
+        private final SimpleContainer bOffer = new SimpleContainer(TradeMenu.OFFER_SLOTS);
         private boolean ended;
+        private boolean finalizing;
         private long aCurrency;
         private long bCurrency;
         private boolean aReady;
@@ -235,6 +236,38 @@ public final class TradeSessionData {
         public boolean contains(net.minecraft.world.entity.player.Player p) {
             UUID u = p.getUUID();
             return !ended && (u.equals(a) || u.equals(b));
+        }
+
+        public boolean isValidFor(net.minecraft.world.entity.player.Player p) {
+            if (p == null || ended || !contains(p)) return false;
+            MinecraftServer srv = p.level().getServer();
+            if (srv == null) srv = server();
+            return srv != null
+                    && srv.getPlayerList().getPlayer(a) != null
+                    && srv.getPlayerList().getPlayer(b) != null;
+        }
+
+        public boolean canEditOffer(net.minecraft.world.entity.player.Player p) {
+            if (!isValidFor(p)) return false;
+            UUID u = p.getUUID();
+            if (u.equals(a)) return !aReady && !aConfirm && !finalizing;
+            if (u.equals(b)) return !bReady && !bConfirm && !finalizing;
+            return false;
+        }
+
+        public boolean canCancelFromMenuClose(ServerPlayer p) {
+            return p != null && !ended && !finalizing && sessions.get(p.getUUID()) == this && contains(p);
+        }
+
+        public void cancelFromMenuClose(ServerPlayer p) {
+            if (!canCancelFromMenuClose(p)) return;
+            UUID otherId = p.getUUID().equals(a) ? b : a;
+            cancel("Menu closed");
+            MinecraftServer srv = p.level().getServer();
+            ServerPlayer other = srv == null ? null : srv.getPlayerList().getPlayer(otherId);
+            if (other != null) {
+                other.sendSystemMessage(Component.literal("Trade cancelled: other player closed the menu"));
+            }
         }
 
         public SimpleContainer getContainerFor(net.minecraft.world.entity.player.Player p, boolean own) {
@@ -296,6 +329,8 @@ public final class TradeSessionData {
         }
 
         private void finalizeTrade() {
+            if (finalizing || ended) return;
+            finalizing = true;
             MinecraftServer srv = server();
             if (srv == null) {
                 cancel("Server unavailable");
