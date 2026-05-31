@@ -41,4 +41,59 @@ public final class TradePayloads {
     public record C2S_Ready(boolean ready) implements CustomPacketPayload { public static final Type<C2S_Ready> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "trade_ready")); public static final StreamCodec<ByteBuf, C2S_Ready> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.BOOL, C2S_Ready::ready, C2S_Ready::new); @Override public Type<? extends CustomPacketPayload> type(){return TYPE;}}
     public record C2S_Confirm(boolean confirm) implements CustomPacketPayload { public static final Type<C2S_Confirm> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "trade_confirm")); public static final StreamCodec<ByteBuf, C2S_Confirm> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.BOOL, C2S_Confirm::confirm, C2S_Confirm::new); @Override public Type<? extends CustomPacketPayload> type(){return TYPE;}}
     public record C2S_Cancel() implements CustomPacketPayload { public static final Type<C2S_Cancel> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "trade_cancel")); public static final StreamCodec<ByteBuf, C2S_Cancel> STREAM_CODEC = StreamCodec.unit(new C2S_Cancel()); @Override public Type<? extends CustomPacketPayload> type(){return TYPE;}}
+    public record S2C_TradeState(
+            int containerId,
+            UUID sessionId,
+            String selfName,
+            String otherName,
+            long selfBalanceTrace,
+            long otherBalanceTrace,
+            long selfOfferedTrace,
+            long otherOfferedTrace,
+            boolean selfReady,
+            boolean otherReady,
+            boolean selfConfirmed,
+            boolean otherConfirmed,
+            String statusMessage
+    ) implements CustomPacketPayload {
+        public static final Type<S2C_TradeState> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "trade_state"));
+        public static final StreamCodec<ByteBuf, S2C_TradeState> STREAM_CODEC = StreamCodec.of(
+                (buf, payload) -> {
+                    ByteBufCodecs.VAR_INT.encode(buf, payload.containerId());
+                    UUID_STREAM_CODEC.encode(buf, payload.sessionId());
+                    ByteBufCodecs.STRING_UTF8.encode(buf, payload.selfName());
+                    ByteBufCodecs.STRING_UTF8.encode(buf, payload.otherName());
+                    ByteBufCodecs.VAR_LONG.encode(buf, payload.selfBalanceTrace());
+                    ByteBufCodecs.VAR_LONG.encode(buf, payload.otherBalanceTrace());
+                    ByteBufCodecs.VAR_LONG.encode(buf, payload.selfOfferedTrace());
+                    ByteBufCodecs.VAR_LONG.encode(buf, payload.otherOfferedTrace());
+                    ByteBufCodecs.BOOL.encode(buf, payload.selfReady());
+                    ByteBufCodecs.BOOL.encode(buf, payload.otherReady());
+                    ByteBufCodecs.BOOL.encode(buf, payload.selfConfirmed());
+                    ByteBufCodecs.BOOL.encode(buf, payload.otherConfirmed());
+                    ByteBufCodecs.STRING_UTF8.encode(buf, payload.statusMessage());
+                },
+                buf -> new S2C_TradeState(
+                        ByteBufCodecs.VAR_INT.decode(buf),
+                        UUID_STREAM_CODEC.decode(buf),
+                        ByteBufCodecs.STRING_UTF8.decode(buf),
+                        ByteBufCodecs.STRING_UTF8.decode(buf),
+                        ByteBufCodecs.VAR_LONG.decode(buf),
+                        ByteBufCodecs.VAR_LONG.decode(buf),
+                        ByteBufCodecs.VAR_LONG.decode(buf),
+                        ByteBufCodecs.VAR_LONG.decode(buf),
+                        ByteBufCodecs.BOOL.decode(buf),
+                        ByteBufCodecs.BOOL.decode(buf),
+                        ByteBufCodecs.BOOL.decode(buf),
+                        ByteBufCodecs.BOOL.decode(buf),
+                        ByteBufCodecs.STRING_UTF8.decode(buf)
+                )
+        );
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
 }

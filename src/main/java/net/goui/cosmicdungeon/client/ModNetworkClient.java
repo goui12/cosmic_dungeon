@@ -6,8 +6,10 @@ import net.goui.cosmicdungeon.client.screen.ClassSelectorScreen;
 import net.goui.cosmicdungeon.network.ClassPayloads;
 import net.goui.cosmicdungeon.network.RiftPayloads;
 import net.goui.cosmicdungeon.network.ShakeScreenPayload;
+import net.goui.cosmicdungeon.network.TradePayloads;
 import net.goui.cosmicdungeon.network.VendorPayloads;
 import net.goui.cosmicdungeon.client.screen.VendorScreen.VendorClientState;
+import net.goui.cosmicdungeon.client.screen.TradeScreen.TradeClientState;
 import net.goui.cosmicdungeon.vendor.VendorProfileManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -79,6 +81,24 @@ public final class ModNetworkClient {
         if (current != null) {
             VendorClientState.set(new VendorClientState.VendorView(current.vendorEntityId(), current.profileId(), current.title(), current.profile(), payload.newBalanceTrace(), current.unlockedOffers()));
         }
+    }
+
+    public static void onTradeState(TradePayloads.S2C_TradeState payload) {
+        TradeClientState.set(new TradeClientState.TradeView(
+                payload.containerId(),
+                payload.sessionId(),
+                payload.selfName(),
+                payload.otherName(),
+                payload.selfBalanceTrace(),
+                payload.otherBalanceTrace(),
+                payload.selfOfferedTrace(),
+                payload.otherOfferedTrace(),
+                payload.selfReady(),
+                payload.otherReady(),
+                payload.selfConfirmed(),
+                payload.otherConfirmed(),
+                payload.statusMessage()
+        ));
     }
 
     public static void sendToServer(CustomPacketPayload payload) {
