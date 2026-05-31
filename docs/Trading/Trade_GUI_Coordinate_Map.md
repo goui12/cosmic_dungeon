@@ -120,15 +120,17 @@ Hotbar 9 slots:
 - deny hover border bounds: no separate hover texture found; button placement is not represented in the background PNG. The deny art itself is 16 x 16.
 - denomination hover border bounds: no separate denomination hover art found and no denomination region is represented in the background PNG.
 
-## 7. Implementation recommendation
+## 7. Current implementation
 
-- TradeMenu imageWidth/imageHeight: use 256 x 256 for this asset.
+- TradeMenu/TradeScreen imageWidth/imageHeight: 256 x 256 for this asset.
 - TradeMenu slot constants:
   - other offer start: x=56, y=28, spacing=18, count=9
   - own offer start: x=55, y=89, spacing=18, count=9
   - player inventory start: x=55, y=126, spacing=18, rows=3, cols=9
   - hotbar start: x=55, y=184, spacing=18, count=9
-  - if the menu uses custom trade slots before player inventory, a natural menu-index layout is other offer slots 0-8, own offer slots 9-17, player inventory slots 18-44, hotbar slots 45-53.
+  - implemented container-index layout: other offer slots 0-8, own offer slots 9-17, player inventory slots 18-44, hotbar slots 45-53.
+  - other offer slots are display-only; they reject placement, pickup, removal, and shift-click transfers.
+  - own offer slots reject placement/pickup while the local player's offer is ready/locked; item changes reset both players' ready/confirm state.
 - TradeScreen texture ResourceLocations:
   - background: `cosmicdungeon:textures/gui/Trade_Window.png`
   - accept button: `cosmicdungeon:textures/gui/gui_accept.png`
