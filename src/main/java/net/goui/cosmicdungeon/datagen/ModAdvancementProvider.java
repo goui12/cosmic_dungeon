@@ -12,6 +12,8 @@ import net.minecraft.data.advancements.AdvancementSubProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Items;
+import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.advancements.Criterion;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -35,7 +37,7 @@ public final class ModAdvancementProvider implements AdvancementSubProvider {
                             true,
                             false
                     )
-                    .addCriterion("triggered", new ImpossibleTrigger.TriggerInstance())
+                    .addCriterion("triggered", new Criterion<>(CriteriaTriggers.IMPOSSIBLE, new ImpossibleTrigger.TriggerInstance()))
                     .requirements(AdvancementRequirements.allOf(List.of("triggered")))
                     .save(saver, id.toString());
         }

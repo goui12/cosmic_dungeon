@@ -116,7 +116,7 @@ public final class AchievementCommand {
         return 1;
     }
 
-    private static int d1RegionSet(CommandSourceStack src, String regionName, boolean pos1) {
+    private static int d1RegionSet(CommandSourceStack src, String regionName, boolean pos1) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayer player = src.getPlayerOrException();
         RegionRegistryData data = RegionRegistryData.get(src.getLevel());
         String dim = src.getLevel().dimension().location().toString();
