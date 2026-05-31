@@ -6,6 +6,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
 public class TradeMenu extends AbstractContainerMenu {
@@ -35,6 +36,16 @@ public class TradeMenu extends AbstractContainerMenu {
                 public boolean mayPlace(ItemStack s) {
                     return false;
                 }
+
+                @Override
+                public boolean mayPickup(Player p) {
+                    return false;
+                }
+
+                @Override
+                public ItemStack remove(int amount) {
+                    return ItemStack.EMPTY;
+                }
             });
         }
         for (int row = 0; row < 3; row++) {
@@ -54,7 +65,26 @@ public class TradeMenu extends AbstractContainerMenu {
 
     @Override
     public ItemStack quickMoveStack(Player p, int idx) {
+        if (idx >= OFFER_SLOTS && idx < OFFER_SLOTS * 2) {
+            return ItemStack.EMPTY;
+        }
         return ItemStack.EMPTY;
+    }
+
+    @Override
+    public void clicked(int slotId, int button, net.minecraft.world.inventory.ClickType clickType, Player player) {
+        if (slotId >= OFFER_SLOTS && slotId < OFFER_SLOTS * 2) {
+            return;
+        }
+        super.clicked(slotId, button, clickType, player);
+    }
+
+    @Override
+    public void removed(Player player) {
+        super.removed(player);
+        if (session != null && player instanceof ServerPlayer && session.contains(player)) {
+            session.cancel("Menu closed");
+        }
     }
 
     @Override

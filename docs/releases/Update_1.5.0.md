@@ -310,7 +310,11 @@ Scope boundary for this pass:
 
 ## Trading Foundation (1.5.0)
 - Added direct player-to-player trading foundation with item offers plus Attunement Fragment (Trace) balance transfers via CurrencyService.
-- Added trade invite, accept, and cancel commands: `/trade <player>`, `/trade accept <player>`, `/trade cancel`.
-- Added server-authoritative double-confirm flow with ready + confirm states and cancellation item return behavior.
-- Added trade network payloads via ModNetwork for request/accept/currency/ready/confirm/cancel.
+- Added normal-player trade commands: `/trade <player>`, `/trade accept <player>`, `/trade deny <player>`, and `/trade cancel`.
+- Trade invites now store inviter/receiver metadata with game-time timestamps, expire after 30 seconds, and use a 3-second per-requester cooldown to reduce spam.
+- Incoming invite chat now includes clickable green `[Accept Trade]` and red `[Deny Trade]` buttons that run the matching `/trade accept <player>` or `/trade deny <player>` fallback commands.
+- Added validation to block self-trades, offline targets, dead/spectator participants, and new requests/accepts while either player is already in an active trade.
+- Added disconnect/menu-close lifecycle cleanup so pending invites involving the player are removed, active trades are cancelled once, offered items are returned, and the remaining player is notified when applicable.
+- Hardened trade finalization with preflight balance/currency-capacity/inventory-capacity validation, atomic currency rollback to original balances on failure, safe item returns on cancel/failure, and read-only other-player offer slots.
+- Added trade network payloads via ModNetwork for request/accept/currency/ready/confirm/cancel; typed `/trade <player>` remains the distance-free fallback while stricter hotkey validation is reserved for later work.
 - Recorded the current trade GUI PNG coordinate map in `docs/Trading/Trade_GUI_Coordinate_Map.md`. Current assets provide exact slot positions for the trade offer rows and vanilla inventory/hotbar, plus standalone accept/deny 16x16 icons. The PNGs do not currently encode text anchors, player preview bounds, currency denomination regions, button placement, or hover/disabled states, so those coordinates must not be treated as asset-derived until new art is provided.
