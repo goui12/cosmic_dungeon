@@ -1,6 +1,8 @@
 package net.goui.cosmicdungeon.trade;
 
 import net.goui.cosmicdungeon.economy.CurrencyService;
+import net.goui.cosmicdungeon.network.ModNetwork;
+import net.goui.cosmicdungeon.network.TradePayloads;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -215,6 +217,7 @@ public final class TradeSessionData {
     }
 
     public static final class TradeSession {
+        private final UUID sessionId = UUID.randomUUID();
         private final UUID a;
         private final UUID b;
         private final SimpleContainer aOffer = new SimpleContainer(TradeMenu.OFFER_SLOTS);
@@ -285,8 +288,9 @@ public final class TradeSessionData {
             if (sa == null || sb == null) {
                 return false;
             }
-            sa.openMenu(new SimpleMenuProvider((id, inv, pl) -> new TradeMenu(id, inv, this), Component.literal("Trade")));
-            sb.openMenu(new SimpleMenuProvider((id, inv, pl) -> new TradeMenu(id, inv, this), Component.literal("Trade")));
+            sa.openMenu(new SimpleMenuProvider((id, inv, pl) -> new TradeMenu(id, inv, this), Component.literal("Trading with: " + sb.getName().getString())));
+            sb.openMenu(new SimpleMenuProvider((id, inv, pl) -> new TradeMenu(id, inv, this), Component.literal("Trading with: " + sa.getName().getString())));
+            syncAll("");
             sa.sendSystemMessage(Component.literal("Trade opened with " + sb.getName().getString() + "."));
             sb.sendSystemMessage(Component.literal("Trade opened with " + sa.getName().getString() + "."));
             return true;
@@ -298,6 +302,7 @@ public final class TradeSessionData {
             bReady = false;
             aConfirm = false;
             bConfirm = false;
+            syncAll("");
         }
 
         public void setCurrency(ServerPlayer p, long amt) {
@@ -318,6 +323,7 @@ public final class TradeSessionData {
                 aConfirm = false;
                 bConfirm = false;
             }
+            syncAll("");
         }
 
         public void setConfirm(ServerPlayer p, boolean v) {
@@ -325,12 +331,17 @@ public final class TradeSessionData {
             if (p.getUUID().equals(a)) aConfirm = v;
             else if (p.getUUID().equals(b)) bConfirm = v;
             else return;
-            if (aConfirm && bConfirm) finalizeTrade();
+            if (aConfirm && bConfirm) {
+                finalizeTrade();
+            } else {
+                syncAll("");
+            }
         }
 
         private void finalizeTrade() {
             if (finalizing || ended) return;
             finalizing = true;
+            syncAll("Finalizing trade...");
             MinecraftServer srv = server();
             if (srv == null) {
                 cancel("Server unavailable");
@@ -392,10 +403,51 @@ public final class TradeSessionData {
 
             moveAll(aOffer, sb);
             moveAll(bOffer, sa);
+            syncAll("Trade completed.");
             sa.sendSystemMessage(Component.literal("Trade completed."));
             sb.sendSystemMessage(Component.literal("Trade completed."));
             end();
             closeMenus(sa, sb);
+        }
+
+        private void syncAll(String statusMessage) {
+            MinecraftServer srv = server();
+            if (srv == null || ended) return;
+            ServerPlayer sa = srv.getPlayerList().getPlayer(a);
+            ServerPlayer sb = srv.getPlayerList().getPlayer(b);
+            if (sa != null && sb != null) {
+                syncTo(sa, sb, aCurrency, bCurrency, aReady, bReady, aConfirm, bConfirm, statusMessage);
+                syncTo(sb, sa, bCurrency, aCurrency, bReady, aReady, bConfirm, aConfirm, statusMessage);
+            }
+        }
+
+        private void syncTo(
+                ServerPlayer self,
+                ServerPlayer other,
+                long selfOfferedTrace,
+                long otherOfferedTrace,
+                boolean selfReady,
+                boolean otherReady,
+                boolean selfConfirmed,
+                boolean otherConfirmed,
+                String statusMessage
+        ) {
+            if (!(self.containerMenu instanceof TradeMenu)) return;
+            ModNetwork.sendTo(self, new TradePayloads.S2C_TradeState(
+                    self.containerMenu.containerId,
+                    sessionId,
+                    self.getName().getString(),
+                    other.getName().getString(),
+                    CurrencyService.getBalanceTrace(self),
+                    CurrencyService.getBalanceTrace(other),
+                    selfOfferedTrace,
+                    otherOfferedTrace,
+                    selfReady,
+                    otherReady,
+                    selfConfirmed,
+                    otherConfirmed,
+                    statusMessage == null ? "" : statusMessage
+            ));
         }
 
         private void rollbackCurrency(ServerPlayer sa, ServerPlayer sb, long originalABalance, long originalBBalance) {
@@ -484,6 +536,7 @@ public final class TradeSessionData {
 
         public void cancel(String reason) {
             if (ended) return;
+            syncAll("Trade cancelled: " + reason);
             MinecraftServer srv = server();
             markEnded();
             if (srv == null) {

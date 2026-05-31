@@ -1,10 +1,10 @@
 # Trade GUI Coordinate Map
 
-Coordinate origin is the upper-left corner of `Trade_Window.png`. Coordinates are zero-based texture pixels. Slot `x`/`y` values are the 16x16 item-render anchor positions visible inside each 18x18 slot frame.
+Coordinate origin is the upper-left corner of `trade_window.png`. Coordinates are zero-based texture pixels. Slot `x`/`y` values are the 16x16 item-render anchor positions visible inside each 18x18 slot frame.
 
 ## 1. Asset inventory
 
-- trade background filename/path: `src/main/resources/assets/cosmicdungeon/textures/gui/Trade_Window.png`
+- trade background filename/path: `src/main/resources/assets/cosmicdungeon/textures/gui/trade_window.png`
   - texture width/height: 256 x 256
   - non-transparent drawn bounds: x=47, y=18, width=177, height=190; inclusive pixels x=47-223, y=18-207
 - accept button texture path(s): `src/main/resources/assets/cosmicdungeon/textures/gui/gui_accept.png`
@@ -131,8 +131,9 @@ Hotbar 9 slots:
   - implemented container-index layout: other offer slots 0-8, own offer slots 9-17, player inventory slots 18-44, hotbar slots 45-53.
   - other offer slots are display-only; they reject placement, pickup, removal, and shift-click transfers.
   - own offer slots reject placement/pickup while the local player's offer is ready/locked; item changes reset both players' ready/confirm state.
+  - server-to-client trade state sync drives names, Trace balances, Trace offers, ready/confirm status, and status text; item offers remain synchronized through the container slots.
 - TradeScreen texture ResourceLocations:
-  - background: `cosmicdungeon:textures/gui/Trade_Window.png`
+  - background: `cosmicdungeon:textures/gui/trade_window.png`
   - accept button: `cosmicdungeon:textures/gui/gui_accept.png`
   - deny button: `cosmicdungeon:textures/gui/gui_deny.png`
   - currency icons: render `ItemStack`s from `ModItems` rather than referencing item texture paths directly.

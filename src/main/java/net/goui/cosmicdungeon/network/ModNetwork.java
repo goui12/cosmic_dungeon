@@ -375,6 +375,13 @@ public final class ModNetwork {
         registrar.playToServer(TradePayloads.C2S_Ready.TYPE, TradePayloads.C2S_Ready.STREAM_CODEC, (payload, ctx) -> { if (ctx.player() instanceof ServerPlayer sp) { var s0=net.goui.cosmicdungeon.trade.TradeSessionData.get(sp); if (s0!=null) s0.setReady(sp, payload.ready()); } });
         registrar.playToServer(TradePayloads.C2S_Confirm.TYPE, TradePayloads.C2S_Confirm.STREAM_CODEC, (payload, ctx) -> { if (ctx.player() instanceof ServerPlayer sp) { var s0=net.goui.cosmicdungeon.trade.TradeSessionData.get(sp); if (s0!=null) s0.setConfirm(sp, payload.confirm()); } });
         registrar.playToServer(TradePayloads.C2S_Cancel.TYPE, TradePayloads.C2S_Cancel.STREAM_CODEC, (payload, ctx) -> { if (ctx.player() instanceof ServerPlayer sp) net.goui.cosmicdungeon.trade.TradeSessionData.cancel(sp, "Cancelled"); });
+        registrar.playToClient(
+                TradePayloads.S2C_TradeState.TYPE,
+                TradePayloads.S2C_TradeState.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() ->
+                        ClientNetworkDispatch.dispatch("onTradeState", payload)
+                )
+        );
 
         /* ===================== REGION LOOK ===================== */
 

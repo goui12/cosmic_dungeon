@@ -96,7 +96,8 @@ Notes:
 - Players cannot start or accept another trade while already in an active trade.
 - If the hotkey has no valid look target, the client shows: `Look at a player within 3 blocks to request a trade.`
 - Trade cancellation, menu close, and logout/disconnect return offered items safely. Other-player offer slots are read-only.
-- The trade menu uses the custom `Trade_Window.png` container layout: 9 read-only partner offer slots, 9 lockable own offer slots, 27 player inventory slots, and 9 hotbar slots. Shift-clicking never takes partner offer items and only moves real item stacks between the player's inventory/hotbar and their own offer slots.
+- The trade menu uses the custom `trade_window.png` container layout: 9 read-only partner offer slots, 9 lockable own offer slots, 27 player inventory slots, and 9 hotbar slots. Shift-clicking never takes partner offer items and only moves real item stacks between the player's inventory/hotbar and their own offer slots.
+- The trade screen receives server-authoritative, view-specific state sync for `Trading with: <name>`, each player's displayed name, Trace balances, Trace offers, ready/confirm status, and status messages; item offers still sync through the menu slots.
 
 ### Currency (Attunement Fragment economy foundation)
 `/currency balance [player]`
