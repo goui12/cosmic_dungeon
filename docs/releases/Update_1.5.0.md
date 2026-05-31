@@ -313,3 +313,4 @@ Scope boundary for this pass:
 - Added trade invite, accept, and cancel commands: `/trade <player>`, `/trade accept <player>`, `/trade cancel`.
 - Added server-authoritative double-confirm flow with ready + confirm states and cancellation item return behavior.
 - Added trade network payloads via ModNetwork for request/accept/currency/ready/confirm/cancel.
+- Recorded the current trade GUI PNG coordinate map in `docs/Trading/Trade_GUI_Coordinate_Map.md`. Current assets provide exact slot positions for the trade offer rows and vanilla inventory/hotbar, plus standalone accept/deny 16x16 icons. The PNGs do not currently encode text anchors, player preview bounds, currency denomination regions, button placement, or hover/disabled states, so those coordinates must not be treated as asset-derived until new art is provided.
