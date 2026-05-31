@@ -17,4 +17,4 @@ For command subsets embedded by system area:
 - Added normal-player trade commands: `/trade <player>`, `/trade accept <player>`, `/trade deny <player>`, `/trade cancel`.
 - Added pending invite metadata with 30-second expiration, 3-second requester cooldown, clickable accept/deny chat buttons, active-trade validation, logout/menu-close cleanup, safe item returns, and read-only other-player offer slots.
 - Added server-authoritative double-confirm flow with ready + confirm states and hardened atomic currency transfer rollback.
-- Added trade network payloads via ModNetwork for request/accept/currency/ready/confirm/cancel.
+- Added trade network payloads via ModNetwork for request/accept/currency/ready/confirm/cancel plus the CAPS LOCK look-target trade request hotkey payload. The hotkey uses the existing Cosmic Dungeon Controls category, does nothing while screens are open, and shares the same invite path/cooldown as `/trade <player>` after server range/dimension/look validation.

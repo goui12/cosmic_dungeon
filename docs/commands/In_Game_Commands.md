@@ -90,9 +90,11 @@ Authority: normal players can send, accept, deny, and cancel their own trades. N
 
 Notes:
 - `/trade <player>` sends a pending invite to an online target and remains the typed fallback without a distance requirement.
+- The **Trade Request** Controls keybind (default `CAPS LOCK`, category **Cosmic Dungeon**) sends the same invite path when the client is looking at another player within 3 blocks; the server revalidates online target, same dimension, close range, approximate look direction, active trade state, and cooldown before inviting.
 - Incoming invites include clickable `[Accept Trade]` and `[Deny Trade]` chat buttons that run the command fallbacks.
 - Pending invites expire after 30 seconds and requesters have a 3-second cooldown between successful invite sends.
 - Players cannot start or accept another trade while already in an active trade.
+- If the hotkey has no valid look target, the client shows: `Look at a player within 3 blocks to request a trade.`
 - Trade cancellation, menu close, and logout/disconnect return offered items safely. Other-player offer slots are read-only.
 
 ### Currency (Attunement Fragment economy foundation)
