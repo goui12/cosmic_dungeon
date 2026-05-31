@@ -1,5 +1,6 @@
 package net.goui.cosmicdungeon.trade;
 
+import net.goui.cosmicdungeon.economy.CurrencyDenomination;
 import net.goui.cosmicdungeon.economy.CurrencyService;
 import net.goui.cosmicdungeon.network.ModNetwork;
 import net.goui.cosmicdungeon.network.TradePayloads;
@@ -307,11 +308,38 @@ public final class TradeSessionData {
 
         public void setCurrency(ServerPlayer p, long amt) {
             if (ended) return;
-            if (amt < 0) amt = 0;
+            if (amt < 0L) amt = 0L;
+            long balance = CurrencyService.getBalanceTrace(p);
+            if (amt > balance) amt = balance;
             if (p.getUUID().equals(a)) aCurrency = amt;
             else if (p.getUUID().equals(b)) bCurrency = amt;
             else return;
             onOfferChanged(p);
+        }
+
+        public void adjustCurrency(ServerPlayer p, String denominationId, int deltaCount) {
+            if (ended || p == null || deltaCount == 0) return;
+            CurrencyDenomination denomination = CurrencyDenomination.fromId(denominationId);
+            if (denomination == null) return;
+            long current;
+            if (p.getUUID().equals(a)) current = aCurrency;
+            else if (p.getUUID().equals(b)) current = bCurrency;
+            else return;
+
+            long deltaTrace;
+            try {
+                deltaTrace = Math.multiplyExact((long) deltaCount, denomination.traceValue());
+            } catch (ArithmeticException ex) {
+                deltaTrace = deltaCount > 0 ? Long.MAX_VALUE : Long.MIN_VALUE;
+            }
+
+            long adjusted;
+            try {
+                adjusted = Math.addExact(current, deltaTrace);
+            } catch (ArithmeticException ex) {
+                adjusted = deltaTrace > 0L ? Long.MAX_VALUE : Long.MIN_VALUE;
+            }
+            setCurrency(p, adjusted);
         }
 
         public void setReady(ServerPlayer p, boolean v) {

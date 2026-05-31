@@ -38,6 +38,15 @@ public final class TradePayloads {
         public static final StreamCodec<ByteBuf, C2S_UpdateCurrencyOffer> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.VAR_LONG, C2S_UpdateCurrencyOffer::traceAmount, C2S_UpdateCurrencyOffer::new);
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
+    public record C2S_AdjustCurrencyOffer(String denominationId, int deltaCount) implements CustomPacketPayload {
+        public static final Type<C2S_AdjustCurrencyOffer> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "trade_currency_adjust"));
+        public static final StreamCodec<ByteBuf, C2S_AdjustCurrencyOffer> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.STRING_UTF8, C2S_AdjustCurrencyOffer::denominationId,
+                ByteBufCodecs.VAR_INT, C2S_AdjustCurrencyOffer::deltaCount,
+                C2S_AdjustCurrencyOffer::new
+        );
+        @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    }
     public record C2S_Ready(boolean ready) implements CustomPacketPayload { public static final Type<C2S_Ready> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "trade_ready")); public static final StreamCodec<ByteBuf, C2S_Ready> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.BOOL, C2S_Ready::ready, C2S_Ready::new); @Override public Type<? extends CustomPacketPayload> type(){return TYPE;}}
     public record C2S_Confirm(boolean confirm) implements CustomPacketPayload { public static final Type<C2S_Confirm> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "trade_confirm")); public static final StreamCodec<ByteBuf, C2S_Confirm> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.BOOL, C2S_Confirm::confirm, C2S_Confirm::new); @Override public Type<? extends CustomPacketPayload> type(){return TYPE;}}
     public record C2S_Cancel() implements CustomPacketPayload { public static final Type<C2S_Cancel> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "trade_cancel")); public static final StreamCodec<ByteBuf, C2S_Cancel> STREAM_CODEC = StreamCodec.unit(new C2S_Cancel()); @Override public Type<? extends CustomPacketPayload> type(){return TYPE;}}
