@@ -30,6 +30,7 @@
 - `/achievement`
 - `/plantflags`
 - `/vendor`
+- `/trade`
 
 ## High-use command groups
 
@@ -78,6 +79,21 @@
 - Several commands are look-target dependent within short range.
 - Failed syntax for `/spawner` falls back to help output with unknown syntax warning.
 
+
+### Trade (1.5.0 player-to-player foundation)
+`/trade <player>`
+`/trade accept <player>`
+`/trade deny <player>`
+`/trade cancel`
+
+Authority: normal players can send, accept, deny, and cancel their own trades. No developer/admin rank is required.
+
+Notes:
+- `/trade <player>` sends a pending invite to an online target and remains the typed fallback without a distance requirement.
+- Incoming invites include clickable `[Accept Trade]` and `[Deny Trade]` chat buttons that run the command fallbacks.
+- Pending invites expire after 30 seconds and requesters have a 3-second cooldown between successful invite sends.
+- Players cannot start or accept another trade while already in an active trade.
+- Trade cancellation, menu close, and logout/disconnect return offered items safely. Other-player offer slots are read-only.
 
 ### Currency (Attunement Fragment economy foundation)
 `/currency balance [player]`
