@@ -114,8 +114,8 @@ Hotbar 9 slots:
 
 ## 6. Hover/click regions
 
-- clickable own currency denomination bounds: not represented in the PNG; current procedural fallback renders five 16x16 fake `ItemStack` controls at x=8,26,44,62,80 and y=76 relative to the screen origin, ordered Anchor, Crown, Seal, Mark, Trace.
-- read-only other currency denomination bounds: not represented in the PNG; current procedural fallback renders five 16x16 fake `ItemStack` displays at x=8,26,44,62,80 and y=17 relative to the screen origin, ordered Anchor, Crown, Seal, Mark, Trace.
+- clickable own currency denomination bounds: not represented in the PNG; current procedural fallback renders five 16x16 fake `ItemStack` controls in a vertical left-gutter column at x=8 and y=76,94,112,130,148 relative to the screen origin, ordered Anchor, Crown, Seal, Mark, Trace.
+- read-only other currency denomination bounds: not represented in the PNG; current procedural fallback renders five 16x16 fake `ItemStack` displays in a vertical left-gutter column at x=8 and y=17,35,53,71,89 relative to the screen origin, ordered Anchor, Crown, Seal, Mark, Trace.
 - offered currency summary bounds: not represented in the PNG; current procedural fallback renders compact 16x16 fake `ItemStack` summaries near the offer boxes at x=56,74,92,110,128 y=47 for the partner and x=56,74,92,110,128 y=108 for the local player, ordered Anchor, Crown, Seal, Mark, Trace.
 - accept hover border bounds: no separate hover texture found; button placement is not represented in the background PNG. The accept art itself is 16 x 16.
 - deny hover border bounds: no separate hover texture found; button placement is not represented in the background PNG. The deny art itself is 16 x 16.
@@ -133,7 +133,7 @@ Hotbar 9 slots:
   - other offer slots are display-only; they reject placement, pickup, removal, and shift-click transfers.
   - own offer slots reject placement/pickup while the local player's offer is ready/locked; item changes reset both players' ready/confirm state.
   - server-to-client trade state sync drives names, Trace balances, Trace offers, ready/confirm status, and status text; item offers remain synchronized through the container slots.
-  - local and partner balances are normalized from server-synced Trace totals into Anchor/Crown/Seal/Mark/Trace fake `ItemStack` displays; only the local balance row has hover borders and click handling.
+  - local and partner balances are normalized from server-synced Trace totals into Anchor/Crown/Seal/Mark/Trace fake `ItemStack` displays in the left gutter; only the local balance column has hover borders and click handling, and its bounds stay left of the offer slots so denomination clicks do not consume slot clicks.
   - local denomination clicks send `C2S_AdjustCurrencyOffer` with a denomination id plus signed delta count: left-click adds 1, right-click removes 1, and Shift changes the delta magnitude to 10. The server validates the denomination, converts through `CurrencyDenomination`, clamps the resulting Trace offer to `[0, player balance]`, resets ready/confirm state, and syncs both players.
   - offered currency summaries are fake `ItemStack` rows only; they are not real slots and only show a tooltip containing the formatted offered amount.
 - TradeScreen texture ResourceLocations:

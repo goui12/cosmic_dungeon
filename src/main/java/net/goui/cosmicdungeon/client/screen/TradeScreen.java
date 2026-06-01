@@ -26,6 +26,10 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
     private static final ResourceLocation TRADE_WINDOW = ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "textures/gui/trade_window.png");
     private static final int ICON_SIZE = 16;
     private static final int ICON_STEP = 18;
+    private static final int BALANCE_ICON_X = 8;
+    private static final int OTHER_BALANCE_ICON_Y = 17;
+    private static final int SELF_NAME_Y = 65;
+    private static final int SELF_BALANCE_ICON_Y = 76;
     private static final CurrencyIcon[] CURRENCY_ICONS = new CurrencyIcon[] {
             new CurrencyIcon(CurrencyDenomination.ANCHOR, ModItems.ATTUNEMENT_ANCHOR),
             new CurrencyIcon(CurrencyDenomination.CROWN, ModItems.ATTUNEMENT_CROWN),
@@ -67,13 +71,13 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
         long otherOffered = view == null ? 0L : view.otherOfferedTrace();
         long selfOffered = view == null ? 0L : view.selfOfferedTrace();
 
-        g.drawString(font, "Trading with: " + otherName, leftPos + 8, topPos + 6, 0xffffff, false);
-        renderCurrencyStacks(g, otherBalance, leftPos + 8, topPos + 17, false, mx, my);
+        g.drawString(font, "Trading with: " + otherName, leftPos + BALANCE_ICON_X, topPos + 6, 0xffffff, false);
+        renderCurrencyStacks(g, otherBalance, leftPos + BALANCE_ICON_X, topPos + OTHER_BALANCE_ICON_Y, false, mx, my);
         g.drawString(font, otherName + " offer", leftPos + 56, topPos + 17, 0xcccccc, false);
         renderOfferedCurrency(g, otherOffered, leftPos + 56, topPos + 47, mx, my);
 
-        g.drawString(font, selfName, leftPos + 8, topPos + 65, 0xffffff, false);
-        renderCurrencyStacks(g, selfBalance, leftPos + 8, topPos + 76, true, mx, my);
+        g.drawString(font, selfName, leftPos + BALANCE_ICON_X, topPos + SELF_NAME_Y, 0xffffff, false);
+        renderCurrencyStacks(g, selfBalance, leftPos + BALANCE_ICON_X, topPos + SELF_BALANCE_ICON_Y, true, mx, my);
         g.drawString(font, selfName + " offer", leftPos + 56, topPos + 78, 0xffffff, false);
         renderOfferedCurrency(g, selfOffered, leftPos + 56, topPos + 108, mx, my);
 
@@ -110,12 +114,12 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
     private void renderCurrencyStacks(GuiGraphics g, long traceAmount, int x, int y, boolean interactive, int mouseX, int mouseY) {
         long[] counts = normalizedCounts(traceAmount);
         for (int i = 0; i < CURRENCY_ICONS.length; i++) {
-            int iconX = x + i * ICON_STEP;
+            int iconY = y + i * ICON_STEP;
             ItemStack stack = stackFor(CURRENCY_ICONS[i]);
-            g.renderItem(stack, iconX, y);
-            g.renderItemDecorations(font, stack, iconX, y, Long.toString(counts[i]));
-            if (interactive && isInside(mouseX, mouseY, iconX, y, ICON_SIZE, ICON_SIZE)) {
-                drawHoverBorder(g, iconX, y);
+            g.renderItem(stack, x, iconY);
+            g.renderItemDecorations(font, stack, x, iconY, Long.toString(counts[i]));
+            if (interactive && isInside(mouseX, mouseY, x, iconY, ICON_SIZE, ICON_SIZE)) {
+                drawHoverBorder(g, x, iconY);
             }
         }
     }
@@ -146,11 +150,11 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
     }
 
     private CurrencyIcon hoveredOwnCurrency(int mouseX, int mouseY) {
-        int x = leftPos + 8;
-        int y = topPos + 76;
+        int x = leftPos + BALANCE_ICON_X;
+        int y = topPos + SELF_BALANCE_ICON_Y;
         for (int i = 0; i < CURRENCY_ICONS.length; i++) {
-            int iconX = x + i * ICON_STEP;
-            if (isInside(mouseX, mouseY, iconX, y, ICON_SIZE, ICON_SIZE)) {
+            int iconY = y + i * ICON_STEP;
+            if (isInside(mouseX, mouseY, x, iconY, ICON_SIZE, ICON_SIZE)) {
                 return CURRENCY_ICONS[i];
             }
         }
