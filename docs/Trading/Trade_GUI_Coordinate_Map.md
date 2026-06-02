@@ -4,7 +4,7 @@ Coordinate origin is the upper-left corner of `trade_window.png`. Coordinates ar
 
 ## 1. Asset inventory
 
-- trade background filename/path: `src/main/resources/assets/cosmicdungeon/textures/gui/trade_window.png`
+- trade background filename/path: `src/main/resources/assets/cosmicdungeon/textures/gui/container/trade_window.png`
   - texture width/height: 256 x 256
   - non-transparent drawn bounds: x=47, y=18, width=177, height=190; inclusive pixels x=47-223, y=18-207
 - accept button texture path(s): `src/main/resources/assets/cosmicdungeon/textures/gui/gui_accept.png`
@@ -117,9 +117,11 @@ Hotbar 9 slots:
 - clickable own currency denomination bounds: not represented in the PNG; current procedural fallback renders five 16x16 fake `ItemStack` controls in a vertical left-gutter column at x=8 and y=76,94,112,130,148 relative to the screen origin, ordered Anchor, Crown, Seal, Mark, Trace.
 - read-only other currency denomination bounds: not represented in the PNG; current procedural fallback renders five 16x16 fake `ItemStack` displays in a vertical left-gutter column at x=8 and y=17,35,53,71,89 relative to the screen origin, ordered Anchor, Crown, Seal, Mark, Trace.
 - offered currency summary bounds: not represented in the PNG; current procedural fallback renders compact 16x16 fake `ItemStack` summaries near the offer boxes at x=56,74,92,110,128 y=47 for the partner and x=56,74,92,110,128 y=108 for the local player, ordered Anchor, Crown, Seal, Mark, Trace.
-- accept hover border bounds: no separate hover texture found; button placement is not represented in the background PNG. The accept art itself is 16 x 16.
-- deny hover border bounds: no separate hover texture found; button placement is not represented in the background PNG. The deny art itself is 16 x 16.
-- denomination hover border bounds: no separate denomination hover art found and no denomination region is represented in the background PNG.
+- other accept status indicator bounds: x=228, y=28, width=16, height=16; status-only, never clickable, and rendered dim/off until the other player accepts.
+- own accept button bounds: x=228, y=89, width=16, height=16; left-click sends ready first, then confirm/finalize after both players are ready.
+- own deny button bounds: x=228, y=107, width=16, height=16; left-click sends cancel.
+- player preview bounds: x1=28, y1=72, x2=52, y2=124; rendered with `InventoryScreen.renderEntityInInventoryFollowsMouse` so it stays left of the offer and inventory slots without covering the vertical currency controls.
+- hover borders: no separate hover textures found; the screen draws procedural 1px/2px borders around the own accept/deny buttons and own denomination controls only. The other accept status indicator never receives a hover border.
 
 ## 7. Current implementation
 
@@ -135,10 +137,14 @@ Hotbar 9 slots:
   - server-to-client trade state sync drives names, Trace balances, Trace offers, ready/confirm status, and status text; item offers remain synchronized through the container slots.
   - local and partner balances are normalized from server-synced Trace totals into Anchor/Crown/Seal/Mark/Trace fake `ItemStack` displays in the left gutter; only the local balance column has hover borders and click handling, and its bounds stay left of the offer slots so denomination clicks do not consume slot clicks.
   - local denomination clicks send `C2S_AdjustCurrencyOffer` with a denomination id plus signed delta count: left-click adds 1, right-click removes 1, and Shift changes the delta magnitude to 10. The server validates the denomination, converts through `CurrencyDenomination`, clamps the resulting Trace offer to `[0, player balance]`, resets ready/confirm state, and syncs both players.
-  - offered currency summaries are fake `ItemStack` rows only; they are not real slots and only show a tooltip containing the formatted offered amount.
+  - offered currency summaries are fake `ItemStack` columns only; they are not real slots and only show tooltips containing formatted offered amounts.
+  - the default vanilla title/inventory labels and vanilla inventory background are suppressed; the PNG background is the GUI. Custom text draws the synced partner/self names and compact ready/finalize status after the real container slots/items render.
+  - the local player preview uses the same 1.21.10 rectangle API pattern as `ExtraInventoryScreen` and follows the mouse.
+  - the own accept icon uses the existing two-phase server-authoritative model: first click sends ready for the current offer, and once both sides are ready the same icon sends confirm/finalize. The deny icon sends cancel, returns offers through the server session, and closes both screens.
+  - the other accept icon is only a synced status indicator: dim/off when the partner has not accepted and on/outlined when the partner has accepted. It has tooltip text but no click behavior.
 - TradeScreen texture ResourceLocations:
-  - background: `cosmicdungeon:textures/gui/trade_window.png`
+  - background: `cosmicdungeon:textures/gui/container/trade_window.png`
   - accept button: `cosmicdungeon:textures/gui/gui_accept.png`
   - deny button: `cosmicdungeon:textures/gui/gui_deny.png`
   - currency icons: render `ItemStack`s from `ModItems` rather than referencing item texture paths directly.
-- Button hover rendering: draw hover/selected borders procedurally around the placed controls unless dedicated hover PNGs are added later; no separate hover textures are present in the searched assets.
+- Button and denomination hover rendering: draw hover/selected borders procedurally around the placed own-side controls unless dedicated hover PNGs are added later; no separate hover textures are present in the searched assets.
