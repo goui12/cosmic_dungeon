@@ -1,16 +1,17 @@
 package net.goui.cosmicdungeon.client.screen;
 
+import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.economy.CurrencyAmount;
 import net.goui.cosmicdungeon.economy.CurrencyDenomination;
 import net.goui.cosmicdungeon.item.ModItems;
 import net.goui.cosmicdungeon.network.ModNetwork;
 import net.goui.cosmicdungeon.network.TradePayloads;
 import net.goui.cosmicdungeon.trade.TradeMenu;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -23,13 +24,38 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
-    private static final ResourceLocation TRADE_WINDOW = ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "textures/gui/trade_window.png");
+    private static final ResourceLocation TRADE_WINDOW = ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "textures/gui/container/trade_window.png");
+    private static final ResourceLocation ACCEPT_BUTTON = ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "textures/gui/gui_accept.png");
+    private static final ResourceLocation DENY_BUTTON = ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "textures/gui/gui_deny.png");
+
+    private static final int TEXTURE_WIDTH = 256;
+    private static final int TEXTURE_HEIGHT = 256;
     private static final int ICON_SIZE = 16;
     private static final int ICON_STEP = 18;
     private static final int BALANCE_ICON_X = 8;
     private static final int OTHER_BALANCE_ICON_Y = 17;
     private static final int SELF_NAME_Y = 65;
     private static final int SELF_BALANCE_ICON_Y = 76;
+    private static final int OTHER_OFFER_SUMMARY_X = 56;
+    private static final int OTHER_OFFER_SUMMARY_Y = 47;
+    private static final int SELF_OFFER_SUMMARY_X = 56;
+    private static final int SELF_OFFER_SUMMARY_Y = 108;
+    private static final int OTHER_ACCEPT_X = 228;
+    private static final int OTHER_ACCEPT_Y = 28;
+    private static final int OWN_ACCEPT_X = 228;
+    private static final int OWN_ACCEPT_Y = 89;
+    private static final int OWN_DENY_X = 228;
+    private static final int OWN_DENY_Y = 107;
+    private static final int PLAYER_PREVIEW_X1 = 28;
+    private static final int PLAYER_PREVIEW_Y1 = 72;
+    private static final int PLAYER_PREVIEW_X2 = 52;
+    private static final int PLAYER_PREVIEW_Y2 = 124;
+    private static final int PLAYER_PREVIEW_SCALE = 22;
+    private static final float PLAYER_PREVIEW_Y_OFFSET = 0.0625F;
+    private static final int HOVER_BORDER_COLOR = 0xff66ffff;
+    private static final int READY_BORDER_COLOR = 0xff55ff55;
+    private static final int DISABLED_TEXTURE_COLOR = 0x66ffffff;
+
     private static final CurrencyIcon[] CURRENCY_ICONS = new CurrencyIcon[] {
             new CurrencyIcon(CurrencyDenomination.ANCHOR, ModItems.ATTUNEMENT_ANCHOR),
             new CurrencyIcon(CurrencyDenomination.CROWN, ModItems.ATTUNEMENT_CROWN),
@@ -38,68 +64,92 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
             new CurrencyIcon(CurrencyDenomination.TRACE, ModItems.ATTUNEMENT_TRACE)
     };
 
+    private float xMouse;
+    private float yMouse;
+
     public TradeScreen(TradeMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
-        this.imageWidth = 256;
-        this.imageHeight = 256;
-    }
-
-    @Override
-    protected void init() {
-        super.init();
-        addRenderableWidget(Button.builder(Component.literal("Ready"), b -> ModNetwork.sendToServer(new TradePayloads.C2S_Ready(true))).bounds(leftPos + 146, topPos + 64, 50, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Unready"), b -> ModNetwork.sendToServer(new TradePayloads.C2S_Ready(false))).bounds(leftPos + 198, topPos + 64, 50, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Confirm"), b -> ModNetwork.sendToServer(new TradePayloads.C2S_Confirm(true))).bounds(leftPos + 146, topPos + 108, 50, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Cancel"), b -> ModNetwork.sendToServer(new TradePayloads.C2S_Cancel())).bounds(leftPos + 198, topPos + 108, 50, 20).build());
+        this.imageWidth = TEXTURE_WIDTH;
+        this.imageHeight = TEXTURE_HEIGHT;
     }
 
     @Override
     protected void renderBg(GuiGraphics g, float pt, int mx, int my) {
-        g.blit(RenderPipelines.GUI_TEXTURED, TRADE_WINDOW, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, 256, 256);
+        g.blit(RenderPipelines.GUI_TEXTURED, TRADE_WINDOW, this.leftPos, this.topPos, 0.0F, 0.0F, this.imageWidth, this.imageHeight, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        if (this.minecraft != null && this.minecraft.player != null) {
+            InventoryScreen.renderEntityInInventoryFollowsMouse(
+                    g,
+                    this.leftPos + PLAYER_PREVIEW_X1,
+                    this.topPos + PLAYER_PREVIEW_Y1,
+                    this.leftPos + PLAYER_PREVIEW_X2,
+                    this.topPos + PLAYER_PREVIEW_Y2,
+                    PLAYER_PREVIEW_SCALE,
+                    PLAYER_PREVIEW_Y_OFFSET,
+                    this.xMouse,
+                    this.yMouse,
+                    this.minecraft.player
+            );
+        }
+    }
+
+    @Override
+    protected void renderLabels(GuiGraphics g, int mouseX, int mouseY) {
+        // The PNG supplies the panel/chrome; draw trade text explicitly after slots instead of vanilla labels.
     }
 
     @Override
     public void render(GuiGraphics g, int mx, int my, float pt) {
+        TradeClientState.TradeView view = TradeClientState.currentFor(menu.containerId);
+        TradeViewData data = TradeViewData.from(view);
+
         renderBackground(g, mx, my, pt);
+        renderCurrencyStacks(g, data.otherBalance(), leftPos + BALANCE_ICON_X, topPos + OTHER_BALANCE_ICON_Y, false, mx, my);
+        renderOfferedCurrency(g, data.otherOffered(), leftPos + OTHER_OFFER_SUMMARY_X, topPos + OTHER_OFFER_SUMMARY_Y, mx, my);
+        renderCurrencyStacks(g, data.selfBalance(), leftPos + BALANCE_ICON_X, topPos + SELF_BALANCE_ICON_Y, true, mx, my);
+        renderOfferedCurrency(g, data.selfOffered(), leftPos + SELF_OFFER_SUMMARY_X, topPos + SELF_OFFER_SUMMARY_Y, mx, my);
+        renderTradeButtons(g, view, mx, my);
+
         super.render(g, mx, my, pt);
 
-        TradeClientState.TradeView view = TradeClientState.currentFor(menu.containerId);
-        String otherName = view == null || view.otherName().isBlank() ? "Partner" : view.otherName();
-        String selfName = view == null || view.selfName().isBlank() ? "You" : view.selfName();
-        long otherBalance = view == null ? 0L : view.otherBalanceTrace();
-        long selfBalance = view == null ? 0L : view.selfBalanceTrace();
-        long otherOffered = view == null ? 0L : view.otherOfferedTrace();
-        long selfOffered = view == null ? 0L : view.selfOfferedTrace();
-
-        g.drawString(font, "Trading with: " + otherName, leftPos + BALANCE_ICON_X, topPos + 6, 0xffffff, false);
-        renderCurrencyStacks(g, otherBalance, leftPos + BALANCE_ICON_X, topPos + OTHER_BALANCE_ICON_Y, false, mx, my);
-        g.drawString(font, otherName + " offer", leftPos + 56, topPos + 17, 0xcccccc, false);
-        renderOfferedCurrency(g, otherOffered, leftPos + 56, topPos + 47, mx, my);
-
-        g.drawString(font, selfName, leftPos + BALANCE_ICON_X, topPos + SELF_NAME_Y, 0xffffff, false);
-        renderCurrencyStacks(g, selfBalance, leftPos + BALANCE_ICON_X, topPos + SELF_BALANCE_ICON_Y, true, mx, my);
-        g.drawString(font, selfName + " offer", leftPos + 56, topPos + 78, 0xffffff, false);
-        renderOfferedCurrency(g, selfOffered, leftPos + 56, topPos + 108, mx, my);
-
-        if (view != null) {
-            g.drawString(font, "You: " + tradeStatus(view.selfReady(), view.selfConfirmed()), leftPos + 146, topPos + 88, 0xffffff, false);
-            g.drawString(font, otherName + ": " + tradeStatus(view.otherReady(), view.otherConfirmed()), leftPos + 146, topPos + 98, 0xcccccc, false);
-            if (!view.statusMessage().isBlank()) {
-                g.drawString(font, view.statusMessage(), leftPos + 8, topPos + 238, 0xffdd66, false);
-            }
-        }
-
+        renderTradeText(g, view, data);
+        renderHoverBorders(g, mx, my);
         renderTooltip(g, mx, my);
-        renderCurrencyTooltips(g, mx, my, selfBalance, otherOffered, selfOffered);
+        renderCustomTooltips(g, mx, my, view, data);
+
+        this.xMouse = mx;
+        this.yMouse = my;
     }
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         int button = event.button();
-        if ((button == 0 || button == 1) && handleOwnCurrencyClick((int) event.x(), (int) event.y(), button)) {
+        int mouseX = (int) event.x();
+        int mouseY = (int) event.y();
+        if (button == 0) {
+            if (isInside(mouseX, mouseY, leftPos + OWN_ACCEPT_X, topPos + OWN_ACCEPT_Y, ICON_SIZE, ICON_SIZE)) {
+                clickAccept();
+                return true;
+            }
+            if (isInside(mouseX, mouseY, leftPos + OWN_DENY_X, topPos + OWN_DENY_Y, ICON_SIZE, ICON_SIZE)) {
+                ModNetwork.sendToServer(new TradePayloads.C2S_Cancel());
+                return true;
+            }
+        }
+        if ((button == 0 || button == 1) && handleOwnCurrencyClick(mouseX, mouseY, button)) {
             return true;
         }
         return super.mouseClicked(event, doubleClick);
+    }
+
+    private void clickAccept() {
+        TradeClientState.TradeView view = TradeClientState.currentFor(menu.containerId);
+        if (view != null && view.selfReady() && view.otherReady() && !view.selfConfirmed()) {
+            ModNetwork.sendToServer(new TradePayloads.C2S_Confirm(true));
+        } else if (view == null || !view.selfReady()) {
+            ModNetwork.sendToServer(new TradePayloads.C2S_Ready(true));
+        } else if (view.otherReady() && !view.selfConfirmed()) {
+            ModNetwork.sendToServer(new TradePayloads.C2S_Confirm(true));
+        }
     }
 
     private boolean handleOwnCurrencyClick(int mouseX, int mouseY, int button) {
@@ -111,6 +161,47 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
         return true;
     }
 
+    private void renderTradeButtons(GuiGraphics g, TradeClientState.TradeView view, int mouseX, int mouseY) {
+        boolean otherAccepted = view != null && (view.otherReady() || view.otherConfirmed());
+        int otherColor = otherAccepted ? -1 : DISABLED_TEXTURE_COLOR;
+        g.blit(RenderPipelines.GUI_TEXTURED, ACCEPT_BUTTON, leftPos + OTHER_ACCEPT_X, topPos + OTHER_ACCEPT_Y, 0.0F, 0.0F, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE, otherColor);
+        if (otherAccepted) {
+            drawBorder(g, leftPos + OTHER_ACCEPT_X, topPos + OTHER_ACCEPT_Y, ICON_SIZE, ICON_SIZE, READY_BORDER_COLOR, 1);
+        }
+
+        g.blit(RenderPipelines.GUI_TEXTURED, ACCEPT_BUTTON, leftPos + OWN_ACCEPT_X, topPos + OWN_ACCEPT_Y, 0.0F, 0.0F, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
+        g.blit(RenderPipelines.GUI_TEXTURED, DENY_BUTTON, leftPos + OWN_DENY_X, topPos + OWN_DENY_Y, 0.0F, 0.0F, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
+    }
+
+    private void renderTradeText(GuiGraphics g, TradeClientState.TradeView view, TradeViewData data) {
+        g.drawString(font, "Trading with: " + data.otherName(), leftPos + BALANCE_ICON_X, topPos + 6, 0xffffff, false);
+        g.drawString(font, data.otherName() + " offer", leftPos + 56, topPos + 17, 0xcccccc, false);
+        g.drawString(font, data.selfName(), leftPos + BALANCE_ICON_X, topPos + SELF_NAME_Y, 0xffffff, false);
+        g.drawString(font, data.selfName() + " offer", leftPos + 56, topPos + 78, 0xffffff, false);
+
+        g.drawString(font, "You: " + tradeStatus(view == null ? false : view.selfReady(), view == null ? false : view.selfConfirmed()), leftPos + 146, topPos + 64, 0xffffff, false);
+        g.drawString(font, data.otherName() + ": " + tradeStatus(view == null ? false : view.otherReady(), view == null ? false : view.otherConfirmed()), leftPos + 146, topPos + 74, 0xcccccc, false);
+
+        String status = statusText(view);
+        if (!status.isBlank()) {
+            g.drawString(font, font.plainSubstrByWidth(status, 238), leftPos + 8, topPos + 238, 0xffdd66, false);
+        }
+    }
+
+    private void renderHoverBorders(GuiGraphics g, int mouseX, int mouseY) {
+        CurrencyIcon hoveredOwn = hoveredOwnCurrency(mouseX, mouseY);
+        if (hoveredOwn != null) {
+            int iconY = topPos + SELF_BALANCE_ICON_Y + indexOf(hoveredOwn) * ICON_STEP;
+            drawBorder(g, leftPos + BALANCE_ICON_X, iconY, ICON_SIZE, ICON_SIZE, HOVER_BORDER_COLOR, 1);
+        }
+        if (isInside(mouseX, mouseY, leftPos + OWN_ACCEPT_X, topPos + OWN_ACCEPT_Y, ICON_SIZE, ICON_SIZE)) {
+            drawBorder(g, leftPos + OWN_ACCEPT_X, topPos + OWN_ACCEPT_Y, ICON_SIZE, ICON_SIZE, HOVER_BORDER_COLOR, 2);
+        }
+        if (isInside(mouseX, mouseY, leftPos + OWN_DENY_X, topPos + OWN_DENY_Y, ICON_SIZE, ICON_SIZE)) {
+            drawBorder(g, leftPos + OWN_DENY_X, topPos + OWN_DENY_Y, ICON_SIZE, ICON_SIZE, HOVER_BORDER_COLOR, 2);
+        }
+    }
+
     private void renderCurrencyStacks(GuiGraphics g, long traceAmount, int x, int y, boolean interactive, int mouseX, int mouseY) {
         long[] counts = normalizedCounts(traceAmount);
         for (int i = 0; i < CURRENCY_ICONS.length; i++) {
@@ -118,34 +209,51 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
             ItemStack stack = stackFor(CURRENCY_ICONS[i]);
             g.renderItem(stack, x, iconY);
             g.renderItemDecorations(font, stack, x, iconY, Long.toString(counts[i]));
-            if (interactive && isInside(mouseX, mouseY, x, iconY, ICON_SIZE, ICON_SIZE)) {
-                drawHoverBorder(g, x, iconY);
-            }
         }
     }
 
     private void renderOfferedCurrency(GuiGraphics g, long offeredTrace, int x, int y, int mouseX, int mouseY) {
-        g.drawString(font, "Offering", x, y - 10, 0xaaaaaa, false);
         renderCurrencyStacks(g, offeredTrace, x, y, false, mouseX, mouseY);
     }
 
-    private void renderCurrencyTooltips(GuiGraphics g, int mouseX, int mouseY, long selfBalance, long otherOffered, long selfOffered) {
+    private void renderCustomTooltips(GuiGraphics g, int mouseX, int mouseY, TradeClientState.TradeView view, TradeViewData data) {
         CurrencyIcon hoveredOwn = hoveredOwnCurrency(mouseX, mouseY);
         if (hoveredOwn != null) {
             g.setComponentTooltipForNextFrame(font, List.of(
-                    Component.literal("Add/remove Attunement " + displayName(hoveredOwn.denomination())),
+                    Component.literal("Offer Attunement " + displayName(hoveredOwn.denomination())),
                     Component.literal("Left-click: add 1"),
                     Component.literal("Right-click: remove 1"),
-                    Component.literal("Shift: x10"),
-                    Component.literal("Balance: " + CurrencyAmount.ofTrace(selfBalance).formatNormalized())
+                    Component.literal("Shift: adjust by 10"),
+                    Component.literal("Balance: " + CurrencyAmount.ofTrace(data.selfBalance()).formatNormalized())
             ), mouseX, mouseY);
             return;
         }
-
-        if (isInside(mouseX, mouseY, leftPos + 56, topPos + 47, ICON_STEP * CURRENCY_ICONS.length, ICON_SIZE)) {
-            g.setTooltipForNextFrame(font, Component.literal("Offered currency: " + CurrencyAmount.ofTrace(otherOffered).formatNormalized()), mouseX, mouseY);
-        } else if (isInside(mouseX, mouseY, leftPos + 56, topPos + 108, ICON_STEP * CURRENCY_ICONS.length, ICON_SIZE)) {
-            g.setTooltipForNextFrame(font, Component.literal("Offered currency: " + CurrencyAmount.ofTrace(selfOffered).formatNormalized()), mouseX, mouseY);
+        if (isInside(mouseX, mouseY, leftPos + OWN_ACCEPT_X, topPos + OWN_ACCEPT_Y, ICON_SIZE, ICON_SIZE)) {
+            g.setComponentTooltipForNextFrame(font, List.of(
+                    Component.literal(acceptTooltipTitle(view)),
+                    Component.literal("Locks your current item and currency offer."),
+                    Component.literal("Offer changes reset accepted/finalized state.")
+            ), mouseX, mouseY);
+            return;
+        }
+        if (isInside(mouseX, mouseY, leftPos + OWN_DENY_X, topPos + OWN_DENY_Y, ICON_SIZE, ICON_SIZE)) {
+            g.setComponentTooltipForNextFrame(font, List.of(
+                    Component.literal("Cancel trade"),
+                    Component.literal("Returns offered items and closes both screens.")
+            ), mouseX, mouseY);
+            return;
+        }
+        if (isInside(mouseX, mouseY, leftPos + OTHER_ACCEPT_X, topPos + OTHER_ACCEPT_Y, ICON_SIZE, ICON_SIZE)) {
+            g.setComponentTooltipForNextFrame(font, List.of(
+                    Component.literal("Other player status"),
+                    Component.literal(view != null && (view.otherReady() || view.otherConfirmed()) ? "Accepted" : "Not accepted yet")
+            ), mouseX, mouseY);
+            return;
+        }
+        if (isInside(mouseX, mouseY, leftPos + OTHER_OFFER_SUMMARY_X, topPos + OTHER_OFFER_SUMMARY_Y, ICON_SIZE, ICON_STEP * CURRENCY_ICONS.length)) {
+            g.setTooltipForNextFrame(Component.literal("Their offered currency: " + CurrencyAmount.ofTrace(data.otherOffered()).formatNormalized()), mouseX, mouseY);
+        } else if (isInside(mouseX, mouseY, leftPos + SELF_OFFER_SUMMARY_X, topPos + SELF_OFFER_SUMMARY_Y, ICON_SIZE, ICON_STEP * CURRENCY_ICONS.length)) {
+            g.setTooltipForNextFrame(Component.literal("Your offered currency: " + CurrencyAmount.ofTrace(data.selfOffered()).formatNormalized()), mouseX, mouseY);
         }
     }
 
@@ -176,15 +284,24 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
         return new ItemStack(icon.item().get());
     }
 
-    private static void drawHoverBorder(GuiGraphics g, int x, int y) {
-        g.fill(x - 1, y - 1, x + ICON_SIZE + 1, y, 0xffffffff);
-        g.fill(x - 1, y + ICON_SIZE, x + ICON_SIZE + 1, y + ICON_SIZE + 1, 0xffffffff);
-        g.fill(x - 1, y, x, y + ICON_SIZE, 0xffffffff);
-        g.fill(x + ICON_SIZE, y, x + ICON_SIZE + 1, y + ICON_SIZE, 0xffffffff);
+    private static void drawBorder(GuiGraphics g, int x, int y, int width, int height, int color, int thickness) {
+        for (int i = 0; i < thickness; i++) {
+            g.fill(x - i - 1, y - i - 1, x + width + i + 1, y - i, color);
+            g.fill(x - i - 1, y + height + i, x + width + i + 1, y + height + i + 1, color);
+            g.fill(x - i - 1, y - i, x - i, y + height + i, color);
+            g.fill(x + width + i, y - i, x + width + i + 1, y + height + i, color);
+        }
     }
 
     private static boolean isInside(int mouseX, int mouseY, int x, int y, int width, int height) {
         return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
+    }
+
+    private static int indexOf(CurrencyIcon icon) {
+        for (int i = 0; i < CURRENCY_ICONS.length; i++) {
+            if (CURRENCY_ICONS[i] == icon) return i;
+        }
+        return 0;
     }
 
     private static String displayName(CurrencyDenomination denomination) {
@@ -198,12 +315,44 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
     }
 
     private static String tradeStatus(boolean ready, boolean confirmed) {
-        if (confirmed) return "Confirmed";
-        if (ready) return "Ready";
-        return "Not ready";
+        if (confirmed) return "Finalized";
+        if (ready) return "Accepted";
+        return "Waiting";
+    }
+
+    private static String statusText(TradeClientState.TradeView view) {
+        if (view == null) return "Waiting for trade state...";
+        if (!view.statusMessage().isBlank()) return view.statusMessage();
+        if (view.otherReady() && !view.selfConfirmed()) return "Other player accepted. Press Accept to finalize.";
+        if (view.selfReady() && !view.otherReady()) return "Accepted. Waiting for other player.";
+        if (view.selfReady() && view.otherReady() && !view.selfConfirmed()) return "Both players accepted. Press Accept to finalize.";
+        return "Review offers, then press Accept.";
+    }
+
+    private static String acceptTooltipTitle(TradeClientState.TradeView view) {
+        if (view != null && view.selfReady() && view.otherReady() && !view.selfConfirmed()) {
+            return "Finalize trade";
+        }
+        if (view != null && view.selfReady()) {
+            return "Waiting for other player";
+        }
+        return "Accept current offer";
     }
 
     private record CurrencyIcon(CurrencyDenomination denomination, Supplier<? extends Item> item) {}
+
+    private record TradeViewData(String selfName, String otherName, long selfBalance, long otherBalance, long selfOffered, long otherOffered) {
+        static TradeViewData from(TradeClientState.TradeView view) {
+            return new TradeViewData(
+                    view == null || view.selfName().isBlank() ? "You" : view.selfName(),
+                    view == null || view.otherName().isBlank() ? "Partner" : view.otherName(),
+                    view == null ? 0L : view.selfBalanceTrace(),
+                    view == null ? 0L : view.otherBalanceTrace(),
+                    view == null ? 0L : view.selfOfferedTrace(),
+                    view == null ? 0L : view.otherOfferedTrace()
+            );
+        }
+    }
 
     public static final class TradeClientState {
         private static TradeView current;
