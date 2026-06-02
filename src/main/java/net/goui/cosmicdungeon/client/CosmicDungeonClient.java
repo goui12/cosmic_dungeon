@@ -53,8 +53,9 @@ public final class CosmicDungeonClient {
         modEventBus.addListener(SpawnerPresetKeybindClient::registerKeyMappings);
         modEventBus.addListener(TradeRequestKeybindClient::registerKeyMappings);
 
-        // Existing overlay
+        // Existing overlays
         NeoForge.EVENT_BUS.register(CosmicSpawnerHoverOverlay.class);
+        NeoForge.EVENT_BUS.register(TradeLookPromptOverlay.class);
 
         // Rift ambience (client tick)
         NeoForge.EVENT_BUS.register(new RiftAmbienceClient());

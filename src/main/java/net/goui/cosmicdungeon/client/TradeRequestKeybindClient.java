@@ -41,6 +41,23 @@ public final class TradeRequestKeybindClient {
     }
 
     /**
+     * Returns the looked-at player eligible for a CAPS LOCK trade request, or null when the
+     * crosshair target is not another player within the close-range trade prompt distance.
+     */
+    public static Player getLookTradeTarget(Minecraft minecraft) {
+        if (minecraft == null || minecraft.player == null || minecraft.level == null) {
+            return null;
+        }
+        if (minecraft.hitResult instanceof EntityHitResult entityHitResult
+                && entityHitResult.getEntity() instanceof Player target
+                && target != minecraft.player
+                && minecraft.player.distanceToSqr(target) <= MAX_TRADE_DISTANCE_SQR) {
+            return target;
+        }
+        return null;
+    }
+
+    /**
      * NeoForge/common client tick event.
      *
      * Registered from CosmicDungeonClient.init(modEventBus) using:
@@ -56,10 +73,8 @@ public final class TradeRequestKeybindClient {
         }
 
         while (KEY.consumeClick()) {
-            if (minecraft.hitResult instanceof EntityHitResult entityHitResult
-                    && entityHitResult.getEntity() instanceof Player target
-                    && target != minecraft.player
-                    && minecraft.player.distanceToSqr(target) <= MAX_TRADE_DISTANCE_SQR) {
+            Player target = getLookTradeTarget(minecraft);
+            if (target != null) {
                 ClientPacketDistributor.sendToServer(new TradePayloads.C2S_RequestLookTrade(target.getUUID()));
             } else {
                 minecraft.player.displayClientMessage(
