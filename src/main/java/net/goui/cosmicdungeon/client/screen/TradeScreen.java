@@ -155,6 +155,10 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
     private boolean handleOwnCurrencyClick(int mouseX, int mouseY, int button) {
         CurrencyIcon hovered = hoveredOwnCurrency(mouseX, mouseY);
         if (hovered == null) return false;
+        TradeClientState.TradeView view = TradeClientState.currentFor(menu.containerId);
+        if (view != null && view.selfReady()) {
+            return true;
+        }
         int amount = Minecraft.getInstance().hasShiftDown() ? 10 : 1;
         int delta = button == 0 ? amount : -amount;
         ModNetwork.sendToServer(new TradePayloads.C2S_AdjustCurrencyOffer(hovered.denomination().id(), delta));
@@ -223,7 +227,7 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
                     Component.literal("Offer Attunement " + displayName(hoveredOwn.denomination())),
                     Component.literal("Left-click: add 1"),
                     Component.literal("Right-click: remove 1"),
-                    Component.literal("Shift: adjust by 10"),
+                    Component.literal(view != null && view.selfReady() ? "Locked after accepting" : "Shift: adjust by 10"),
                     Component.literal("Balance: " + CurrencyAmount.ofTrace(data.selfBalance()).formatNormalized())
             ), mouseX, mouseY);
             return;
@@ -323,9 +327,10 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
     private static String statusText(TradeClientState.TradeView view) {
         if (view == null) return "Waiting for trade state...";
         if (!view.statusMessage().isBlank()) return view.statusMessage();
+        if (view.otherConfirmed() && !view.selfConfirmed()) return "Other player finalized. Press Accept to finalize.";
+        if (view.selfConfirmed() && !view.otherConfirmed()) return "Finalized. Waiting for other player to finalize.";
         if (view.otherReady() && !view.selfConfirmed()) return "Other player accepted. Press Accept to finalize.";
-        if (view.selfReady() && !view.otherReady()) return "Accepted. Waiting for other player.";
-        if (view.selfReady() && view.otherReady() && !view.selfConfirmed()) return "Both players accepted. Press Accept to finalize.";
+        if (view.selfReady() && !view.otherReady()) return "Waiting for other player to accept.";
         return "Review offers, then press Accept.";
     }
 

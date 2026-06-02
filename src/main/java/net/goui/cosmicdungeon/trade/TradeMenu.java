@@ -121,6 +121,9 @@ public class TradeMenu extends AbstractContainerMenu {
         if (isOtherOfferSlot(slotId)) {
             return;
         }
+        if (isOwnOfferSlot(slotId) && !canEditOwnOffer(player)) {
+            return;
+        }
         super.clicked(slotId, button, clickType, player);
     }
 
