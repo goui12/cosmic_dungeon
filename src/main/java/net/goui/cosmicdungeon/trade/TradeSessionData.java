@@ -298,22 +298,37 @@ public final class TradeSessionData {
         }
 
         public void onOfferChanged(net.minecraft.world.entity.player.Player p) {
-            if (ended) return;
+            if (ended || finalizing || p == null || !contains(p)) return;
+            if (!canEditOffer(p)) {
+                syncAll("Offer locked after accepting. Cancel to change it.");
+                return;
+            }
+            boolean hadAcceptance = aReady || bReady || aConfirm || bConfirm;
             aReady = false;
             bReady = false;
             aConfirm = false;
             bConfirm = false;
-            syncAll("");
+            syncAll(hadAcceptance ? "Offer changed; acceptance reset." : "");
         }
 
         public void setCurrency(ServerPlayer p, long amt) {
-            if (ended) return;
+            if (ended || finalizing || p == null || !contains(p)) return;
+            if (!canEditOffer(p)) {
+                syncAll("Currency offer locked after accepting. Cancel to change it.");
+                return;
+            }
             if (amt < 0L) amt = 0L;
             long balance = CurrencyService.getBalanceTrace(p);
             if (amt > balance) amt = balance;
-            if (p.getUUID().equals(a)) aCurrency = amt;
-            else if (p.getUUID().equals(b)) bCurrency = amt;
-            else return;
+            if (p.getUUID().equals(a)) {
+                if (aCurrency == amt) return;
+                aCurrency = amt;
+            } else if (p.getUUID().equals(b)) {
+                if (bCurrency == amt) return;
+                bCurrency = amt;
+            } else {
+                return;
+            }
             onOfferChanged(p);
         }
 
@@ -343,10 +358,16 @@ public final class TradeSessionData {
         }
 
         public void setReady(ServerPlayer p, boolean v) {
-            if (ended) return;
-            if (p.getUUID().equals(a)) aReady = v;
-            else if (p.getUUID().equals(b)) bReady = v;
-            else return;
+            if (ended || finalizing || p == null || !contains(p)) return;
+            if (p.getUUID().equals(a)) {
+                aReady = v;
+                aConfirm = false;
+            } else if (p.getUUID().equals(b)) {
+                bReady = v;
+                bConfirm = false;
+            } else {
+                return;
+            }
             if (!v) {
                 aConfirm = false;
                 bConfirm = false;
@@ -355,10 +376,16 @@ public final class TradeSessionData {
         }
 
         public void setConfirm(ServerPlayer p, boolean v) {
-            if (ended || !(aReady && bReady)) return;
-            if (p.getUUID().equals(a)) aConfirm = v;
-            else if (p.getUUID().equals(b)) bConfirm = v;
-            else return;
+            if (ended || finalizing || p == null || !contains(p) || !(aReady && bReady)) return;
+            if (p.getUUID().equals(a)) {
+                if (!aReady) return;
+                aConfirm = v;
+            } else if (p.getUUID().equals(b)) {
+                if (!bReady) return;
+                bConfirm = v;
+            } else {
+                return;
+            }
             if (aConfirm && bConfirm) {
                 finalizeTrade();
             } else {

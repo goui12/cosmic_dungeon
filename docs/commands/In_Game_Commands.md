@@ -96,8 +96,9 @@ Notes:
 - Players cannot start or accept another trade while already in an active trade.
 - If the hotkey has no valid look target, the client shows: `Look at a player within 3 blocks to request a trade.`
 - Trade cancellation, menu close, and logout/disconnect return offered items safely. Other-player offer slots are read-only.
-- The trade menu uses the custom `trade_window.png` container layout: 9 read-only partner offer slots, 9 lockable own offer slots, 27 player inventory slots, and 9 hotbar slots. Shift-clicking never takes partner offer items and only moves real item stacks between the player's inventory/hotbar and their own offer slots.
-- The trade screen receives server-authoritative, view-specific state sync for `Trading with: <name>`, each player's displayed name, Trace balances, Trace offers, ready/confirm status, and status messages; item offers still sync through the menu slots.
+- The trade menu uses the custom `trade_window.png` container layout: 9 read-only partner offer slots, 9 lockable own offer slots, 27 player inventory slots, and 9 hotbar slots. Shift-clicking never takes partner offer items and only moves real item stacks between the player's inventory/hotbar and their own offer slots before that player accepts.
+- Active trades keep the invite chat flow separate from the GUI flow: `[Accept Trade]` / `[Deny Trade]` only answer pending requests, while the GUI accept button first marks the current offer accepted/ready and then, after both players are ready, confirms/finalizes the same offer. The GUI deny button cancels the active trade, returns offered items, discards currency offers, closes both screens, and notifies both players.
+- The trade screen receives server-authoritative, view-specific state sync for `Trading with: <name>`, each player's displayed name, Trace balances, Trace offers, ready/confirm status, and status messages; item offers still sync through the menu slots. Own item/currency offer changes before acceptance reset both players' ready/confirm state, and accepted own offers are locked against further item/currency edits until cancel.
 
 ### Currency (Attunement Fragment economy foundation)
 `/currency balance [player]`
