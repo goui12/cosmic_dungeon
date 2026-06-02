@@ -148,3 +148,9 @@ Hotbar 9 slots:
   - deny button: `cosmicdungeon:textures/gui/gui_deny.png`
   - currency icons: render `ItemStack`s from `ModItems` rather than referencing item texture paths directly.
 - Button and denomination hover rendering: draw hover/selected borders procedurally around the placed own-side controls unless dedicated hover PNGs are added later; no separate hover textures are present in the searched assets.
+## 8. Look-at-player HUD trade prompt
+
+- `TradeLookPromptOverlay` is a client-only visual hint, not part of `trade_window.png` and not a clickable world menu.
+- It reuses `TradeRequestKeybindClient.getLookTradeTarget` so the prompt only appears when the crosshair is on another player within 3 blocks, never for self, and not merely because another player is nearby.
+- The prompt is hidden whenever a screen is open or the debug overlay is visible.
+- The overlay draws a small translucent box centered above the hotbar with `<OtherPlayerName>` and `Press CAPS LOCK to request trade`. It sends no packets; only pressing the registered CAPS LOCK trade-request key can send the look-target trade request packet.
