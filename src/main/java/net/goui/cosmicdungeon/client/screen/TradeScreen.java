@@ -102,22 +102,20 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
         TradeClientState.TradeView view = TradeClientState.currentFor(menu.containerId);
         TradeViewData data = TradeViewData.from(view);
 
-        renderBackground(g, mx, my, pt);
+        this.xMouse = mx;
+        this.yMouse = my;
+
+        super.render(g, mx, my, pt);
+
         renderCurrencyStacks(g, data.otherBalance(), leftPos + BALANCE_ICON_X, topPos + OTHER_BALANCE_ICON_Y, false, mx, my);
         renderOfferedCurrency(g, data.otherOffered(), leftPos + OTHER_OFFER_SUMMARY_X, topPos + OTHER_OFFER_SUMMARY_Y, mx, my);
         renderCurrencyStacks(g, data.selfBalance(), leftPos + BALANCE_ICON_X, topPos + SELF_BALANCE_ICON_Y, true, mx, my);
         renderOfferedCurrency(g, data.selfOffered(), leftPos + SELF_OFFER_SUMMARY_X, topPos + SELF_OFFER_SUMMARY_Y, mx, my);
         renderTradeButtons(g, view, mx, my);
-
-        super.render(g, mx, my, pt);
-
         renderTradeText(g, view, data);
         renderHoverBorders(g, mx, my);
         renderTooltip(g, mx, my);
         renderCustomTooltips(g, mx, my, view, data);
-
-        this.xMouse = mx;
-        this.yMouse = my;
     }
 
     @Override
@@ -217,7 +215,13 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
     }
 
     private void renderOfferedCurrency(GuiGraphics g, long offeredTrace, int x, int y, int mouseX, int mouseY) {
-        renderCurrencyStacks(g, offeredTrace, x, y, false, mouseX, mouseY);
+        long[] counts = normalizedCounts(offeredTrace);
+        for (int i = 0; i < CURRENCY_ICONS.length; i++) {
+            int iconX = x + i * ICON_STEP;
+            ItemStack stack = stackFor(CURRENCY_ICONS[i]);
+            g.renderItem(stack, iconX, y);
+            g.renderItemDecorations(font, stack, iconX, y, Long.toString(counts[i]));
+        }
     }
 
     private void renderCustomTooltips(GuiGraphics g, int mouseX, int mouseY, TradeClientState.TradeView view, TradeViewData data) {
@@ -254,9 +258,9 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
             ), mouseX, mouseY);
             return;
         }
-        if (isInside(mouseX, mouseY, leftPos + OTHER_OFFER_SUMMARY_X, topPos + OTHER_OFFER_SUMMARY_Y, ICON_SIZE, ICON_STEP * CURRENCY_ICONS.length)) {
+        if (isInside(mouseX, mouseY, leftPos + OTHER_OFFER_SUMMARY_X, topPos + OTHER_OFFER_SUMMARY_Y, ICON_STEP * CURRENCY_ICONS.length, ICON_SIZE)) {
             g.setTooltipForNextFrame(Component.literal("Their offered currency: " + CurrencyAmount.ofTrace(data.otherOffered()).formatNormalized()), mouseX, mouseY);
-        } else if (isInside(mouseX, mouseY, leftPos + SELF_OFFER_SUMMARY_X, topPos + SELF_OFFER_SUMMARY_Y, ICON_SIZE, ICON_STEP * CURRENCY_ICONS.length)) {
+        } else if (isInside(mouseX, mouseY, leftPos + SELF_OFFER_SUMMARY_X, topPos + SELF_OFFER_SUMMARY_Y, ICON_STEP * CURRENCY_ICONS.length, ICON_SIZE)) {
             g.setTooltipForNextFrame(Component.literal("Your offered currency: " + CurrencyAmount.ofTrace(data.selfOffered()).formatNormalized()), mouseX, mouseY);
         }
     }
