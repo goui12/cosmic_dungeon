@@ -50,6 +50,7 @@ public final class CosmicDungeonClient {
          * because that class also contains RegisterKeyMappingsEvent, which is not
          * allowed on the common/game event bus.
          */
+        modEventBus.addListener(CosmicDungeonKeybindCategories::registerCategories);
         modEventBus.addListener(SpawnerPresetKeybindClient::registerKeyMappings);
         modEventBus.addListener(TradeRequestKeybindClient::registerKeyMappings);
 
