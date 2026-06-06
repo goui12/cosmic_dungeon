@@ -1,12 +1,10 @@
 package net.goui.cosmicdungeon.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.network.TradePayloads;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.EntityHitResult;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -17,14 +15,11 @@ import org.lwjgl.glfw.GLFW;
 public final class TradeRequestKeybindClient {
     private static final double MAX_TRADE_DISTANCE_SQR = 3.0D * 3.0D;
 
-    private static final KeyMapping.Category CATEGORY =
-            new KeyMapping.Category(ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "cosmicdungeon"));
-
     private static final KeyMapping KEY = new KeyMapping(
             "key.cosmicdungeon.trade_request",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_CAPS_LOCK,
-            CATEGORY
+            CosmicDungeonKeybindCategories.COSMIC_DUNGEON
     );
 
     private TradeRequestKeybindClient() {}
@@ -36,7 +31,6 @@ public final class TradeRequestKeybindClient {
      * modEventBus.addListener(TradeRequestKeybindClient::registerKeyMappings);
      */
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
-        event.registerCategory(CATEGORY);
         event.register(KEY);
     }
 
