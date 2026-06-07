@@ -1,10 +1,10 @@
 package net.goui.cosmicdungeon.vendor;
 
-import net.goui.cosmicdungeon.economy.CurrencyDenomination;
 import net.goui.cosmicdungeon.economy.CurrencyService;
 import net.goui.cosmicdungeon.economy.pricing.VendorPrice;
 import net.goui.cosmicdungeon.economy.pricing.VendorPricingService;
 import net.goui.cosmicdungeon.network.VendorPayloads;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -57,7 +57,11 @@ public final class VendorService {
         }
 
         long newBalance = CurrencyService.getBalanceTrace(sp);
-        sp.sendSystemMessage(Component.literal("Purchased " + toGive.getHoverName().getString() + " for " + VendorMenuState.formatCost(offer) + "."));
+        sp.sendSystemMessage(Component.literal("Purchased ").withStyle(ChatFormatting.GREEN)
+                .append(Component.literal(toGive.getHoverName().getString()).withStyle(ChatFormatting.YELLOW))
+                .append(Component.literal(" for ").withStyle(ChatFormatting.WHITE))
+                .append(Component.literal(VendorMenuState.formatCost(offer)).withStyle(ChatFormatting.AQUA))
+                .append(Component.literal(".").withStyle(ChatFormatting.WHITE)));
         return new VendorPayloads.S2C_VendorPurchaseResult(true, "Purchase complete.", newBalance);
     }
 
@@ -84,7 +88,11 @@ public final class VendorService {
         }
 
         String soldName = soldStack.getHoverName().getString();
-        sp.sendSystemMessage(Component.literal("Sold " + soldName + " for " + price.traceValue() + " Trace."));
+        sp.sendSystemMessage(Component.literal("Sold ").withStyle(ChatFormatting.GREEN)
+                .append(Component.literal(soldName).withStyle(ChatFormatting.YELLOW))
+                .append(Component.literal(" for ").withStyle(ChatFormatting.WHITE))
+                .append(Component.literal(price.traceValue() + " Trace").withStyle(ChatFormatting.AQUA))
+                .append(Component.literal(".").withStyle(ChatFormatting.WHITE)));
         return new VendorPayloads.S2C_VendorPurchaseResult(true, "Sale complete.", CurrencyService.getBalanceTrace(sp));
     }
 
@@ -121,7 +129,11 @@ public final class VendorService {
             return fail(sp, "You do not have enough currency capacity.");
         }
 
-        sp.sendSystemMessage(Component.literal("Sold " + setDef.id() + " for " + payout + " Trace."));
+        sp.sendSystemMessage(Component.literal("Sold ").withStyle(ChatFormatting.GREEN)
+                .append(Component.literal(setDef.id()).withStyle(ChatFormatting.YELLOW))
+                .append(Component.literal(" for ").withStyle(ChatFormatting.WHITE))
+                .append(Component.literal(payout + " Trace").withStyle(ChatFormatting.AQUA))
+                .append(Component.literal(".").withStyle(ChatFormatting.WHITE)));
         return new VendorPayloads.S2C_VendorPurchaseResult(true, "Sale complete.", CurrencyService.getBalanceTrace(sp));
     }
 
@@ -157,7 +169,7 @@ public final class VendorService {
     }
 
     private static VendorPayloads.S2C_VendorPurchaseResult fail(ServerPlayer sp, String msg) {
-        sp.sendSystemMessage(Component.literal(msg));
+        sp.sendSystemMessage(Component.literal(msg).withStyle(ChatFormatting.RED));
         return new VendorPayloads.S2C_VendorPurchaseResult(false, msg, CurrencyService.getBalanceTrace(sp));
     }
 

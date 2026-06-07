@@ -3,15 +3,18 @@ package net.goui.cosmicdungeon.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.goui.cosmicdungeon.auth.AccessPolicy;
-import net.goui.cosmicdungeon.vendor.VendorAssignmentService;
 import net.goui.cosmicdungeon.vendor.VendorAccessService;
+import net.goui.cosmicdungeon.vendor.VendorAssignmentService;
 import net.goui.cosmicdungeon.vendor.VendorOffer;
 import net.goui.cosmicdungeon.vendor.VendorProfile;
 import net.goui.cosmicdungeon.vendor.VendorProfileManager;
+import net.goui.cosmicdungeon.vendor.VendorProfileResolver;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -30,88 +33,180 @@ public final class VendorCommand {
                 .then(Commands.literal("profile")
                         .requires(AccessPolicy::requireDeveloperOrConsole)
                         .then(Commands.argument("profileId", StringArgumentType.word())
-                                .suggests((ctx, b) -> SharedSuggestionProvider.suggest(
-                                        VendorProfileManager.INSTANCE.listProfileIds().stream().map(ResourceLocation::toString), b))
+                                .suggests((ctx, b) -> SharedSuggestionProvider.suggest(VendorProfileResolver.suggestions(), b))
                                 .executes(ctx -> profile(ctx.getSource(), StringArgumentType.getString(ctx, "profileId")))))
                 .then(Commands.literal("assign")
                         .requires(AccessPolicy::requireDeveloperOrConsole)
                         .then(Commands.argument("profileId", StringArgumentType.word())
-                                .suggests((ctx, b) -> SharedSuggestionProvider.suggest(
-                                        VendorProfileManager.INSTANCE.listProfileIds().stream().map(ResourceLocation::toString), b))
+                                .suggests((ctx, b) -> SharedSuggestionProvider.suggest(VendorProfileResolver.suggestions(), b))
                                 .executes(ctx -> assign(ctx.getSource(), StringArgumentType.getString(ctx, "profileId")))))
                 .then(Commands.literal("clear").requires(AccessPolicy::requireDeveloperOrConsole).executes(ctx -> clear(ctx.getSource())))
                 .then(Commands.literal("info").requires(AccessPolicy::requireDeveloperOrConsole).executes(ctx -> info(ctx.getSource())))
                 .then(Commands.literal("spawn")
                         .requires(AccessPolicy::requireDeveloperOrConsole)
                         .then(Commands.argument("profileId", StringArgumentType.word())
-                                .suggests((ctx, b) -> SharedSuggestionProvider.suggest(
-                                        VendorProfileManager.INSTANCE.listProfileIds().stream().map(ResourceLocation::toString), b))
+                                .suggests((ctx, b) -> SharedSuggestionProvider.suggest(VendorProfileResolver.suggestions(), b))
                                 .executes(ctx -> spawn(ctx.getSource(), StringArgumentType.getString(ctx, "profileId")))))
                 .then(Commands.literal("access")
                         .requires(AccessPolicy::requireDeveloperOrConsole)
                         .then(Commands.argument("profileId", StringArgumentType.word())
-                                .suggests((ctx, b) -> SharedSuggestionProvider.suggest(
-                                        VendorProfileManager.INSTANCE.listProfileIds().stream().map(ResourceLocation::toString), b))
+                                .suggests((ctx, b) -> SharedSuggestionProvider.suggest(VendorProfileResolver.suggestions(), b))
                                 .executes(ctx -> access(ctx.getSource(), StringArgumentType.getString(ctx, "profileId")))))
                 .executes(ctx -> usage(ctx.getSource())));
     }
 
-    private static int usage(CommandSourceStack src) { src.sendFailure(Component.literal("Usage: /vendor list|reload|profile <profileId>|assign <profileId>|clear|info|spawn <profileId>|access <profileId>")); return 0; }
-    private static int list(CommandSourceStack src) { var ids = VendorProfileManager.INSTANCE.listProfileIds(); src.sendSuccess(() -> Component.literal("Loaded vendor profiles: " + ids.size()), false); for (ResourceLocation id : ids) src.sendSuccess(() -> Component.literal(" - " + id), false); return 1; }
-    private static int reload(CommandSourceStack src) { if (src.getServer() == null) { src.sendFailure(Component.literal("Server unavailable.")); return 0; } VendorProfileManager.INSTANCE.reloadNow(src.getServer().getResourceManager()); src.sendSuccess(() -> Component.literal("Vendor profiles reloaded."), true); return 1; }
+    private static int usage(CommandSourceStack src) {
+        src.sendFailure(Component.literal("Usage: ").withStyle(ChatFormatting.RED)
+                .append(Component.literal("/vendor list|reload|profile <profileId>|assign <profileId>|clear|info|spawn <profileId>|access <profileId>").withStyle(ChatFormatting.YELLOW)));
+        return 0;
+    }
+
+    private static int list(CommandSourceStack src) {
+        var ids = VendorProfileManager.INSTANCE.listProfileIds();
+        src.sendSuccess(() -> Component.literal("Loaded vendor profiles: ").withStyle(ChatFormatting.GREEN)
+                .append(Component.literal(String.valueOf(ids.size())).withStyle(ChatFormatting.AQUA)), false);
+        ids.stream().sorted(java.util.Comparator.comparing(ResourceLocation::toString)).forEach(id -> src.sendSuccess(() ->
+                Component.literal(" - ").withStyle(ChatFormatting.DARK_GRAY)
+                        .append(Component.literal(VendorProfileResolver.shortName(id)).withStyle(ChatFormatting.YELLOW))
+                        .append(Component.literal("  (").withStyle(ChatFormatting.DARK_GRAY))
+                        .append(idComponent(id))
+                        .append(Component.literal(")").withStyle(ChatFormatting.DARK_GRAY)), false));
+        return 1;
+    }
+
+    private static int reload(CommandSourceStack src) {
+        if (src.getServer() == null) { fail(src, "Server unavailable."); return 0; }
+        VendorProfileManager.INSTANCE.reloadNow(src.getServer().getResourceManager());
+        src.sendSuccess(() -> Component.literal("Vendor profiles reloaded.").withStyle(ChatFormatting.GREEN), true);
+        return 1;
+    }
 
     private static int profile(CommandSourceStack src, String profileIdRaw) {
-        ResourceLocation id = ResourceLocation.tryParse(profileIdRaw); if (id == null) { src.sendFailure(Component.literal("Invalid profile id: " + profileIdRaw)); return 0; }
-        VendorProfile profile = VendorProfileManager.INSTANCE.get(id); if (profile == null) { src.sendFailure(Component.literal("Unknown profile: " + id)); return 0; }
-        src.sendSuccess(() -> Component.literal("Profile " + profile.id() + " (" + profile.displayName() + ")"), false);
-        src.sendSuccess(() -> Component.literal(" type=" + profile.vendorType() + ", requiredVillageAccess=" + profile.requiredVillageAccess() + ", requiredNpcSystem=" + profile.requiredNpcSystem() + ", requiredNpcTier=" + profile.requiredNpcTier() + ", requiredFaction=" + profile.requiredFactionId() + ", requiredFactionTier=" + profile.requiredFactionTier()), false);
-        for (VendorOffer offer : profile.buyOffers()) src.sendSuccess(() -> Component.literal(" offer " + offer.id() + " -> " + offer.result().getCount() + "x " + offer.result().getItemHolder().unwrapKey().map(k -> k.location().toString()).orElse("unknown") + " cost=" + offer.cost().amount() + " " + offer.cost().denomination().id()), false);
+        ResourceLocation id = resolveOrFail(src, profileIdRaw);
+        if (id == null) return 0;
+        VendorProfile profile = VendorProfileManager.INSTANCE.get(id);
+        src.sendSuccess(() -> Component.literal("Profile ").withStyle(ChatFormatting.WHITE)
+                .append(Component.literal(profile.displayName()).withStyle(ChatFormatting.GOLD))
+                .append(Component.literal(" ").withStyle(ChatFormatting.WHITE))
+                .append(Component.literal("(").withStyle(ChatFormatting.DARK_GRAY))
+                .append(idComponent(profile.id()))
+                .append(Component.literal(")").withStyle(ChatFormatting.DARK_GRAY)), false);
+        src.sendSuccess(() -> Component.literal(" type=").withStyle(ChatFormatting.GRAY)
+                .append(Component.literal(profile.vendorType()).withStyle(ChatFormatting.YELLOW))
+                .append(Component.literal(", requiredVillageAccess=").withStyle(ChatFormatting.GRAY))
+                .append(booleanComponent(profile.requiredVillageAccess()))
+                .append(Component.literal(", requiredNpcSystem=").withStyle(ChatFormatting.GRAY))
+                .append(secondary(String.valueOf(profile.requiredNpcSystem())))
+                .append(Component.literal(", requiredNpcTier=").withStyle(ChatFormatting.GRAY))
+                .append(secondary(String.valueOf(profile.requiredNpcTier())))
+                .append(Component.literal(", requiredFaction=").withStyle(ChatFormatting.GRAY))
+                .append(secondary(String.valueOf(profile.requiredFactionId())))
+                .append(Component.literal(", requiredFactionTier=").withStyle(ChatFormatting.GRAY))
+                .append(secondary(String.valueOf(profile.requiredFactionTier()))), false);
+        for (VendorOffer offer : profile.buyOffers()) src.sendSuccess(() -> Component.literal(" offer ").withStyle(ChatFormatting.GRAY)
+                .append(idComponent(offer.id()))
+                .append(Component.literal(" -> ").withStyle(ChatFormatting.GRAY))
+                .append(Component.literal(offer.result().getCount() + "x ").withStyle(ChatFormatting.AQUA))
+                .append(Component.literal(offer.result().getItemHolder().unwrapKey().map(k -> k.location().toString()).orElse("unknown")).withStyle(ChatFormatting.YELLOW))
+                .append(Component.literal(" cost=").withStyle(ChatFormatting.GRAY))
+                .append(Component.literal(offer.cost().amount() + " " + offer.cost().denomination().id()).withStyle(ChatFormatting.AQUA)), false);
         return 1;
     }
 
     private static int assign(CommandSourceStack src, String profileIdRaw) {
-        ServerPlayer sp = src.getPlayer(); if (sp == null) { src.sendFailure(Component.literal("Player context required.")); return 0; }
-        ResourceLocation id = ResourceLocation.tryParse(profileIdRaw); if (id == null || VendorProfileManager.INSTANCE.get(id) == null) { src.sendFailure(Component.literal("Unknown profile: " + profileIdRaw)); return 0; }
-        Villager villager = lookedVillager(sp); if (villager == null) { src.sendFailure(Component.literal("Look at a villager within 6 blocks.")); return 0; }
-        if (!VendorAssignmentService.assignProfile(villager, id)) { src.sendFailure(Component.literal("Failed assigning vendor profile.")); return 0; }
-        src.sendSuccess(() -> Component.literal("Assigned " + id + " to villager " + villager.getUUID()), true); return 1;
+        ServerPlayer sp = src.getPlayer(); if (sp == null) { fail(src, "Player context required."); return 0; }
+        ResourceLocation id = resolveOrFail(src, profileIdRaw); if (id == null) return 0;
+        Villager villager = lookedVillager(sp); if (villager == null) { fail(src, "Look at a villager within 6 blocks."); return 0; }
+        if (!VendorAssignmentService.assignProfile(villager, id)) { fail(src, "Failed assigning vendor profile."); return 0; }
+        src.sendSuccess(() -> Component.literal("Assigned ").withStyle(ChatFormatting.GREEN)
+                .append(profileName(id))
+                .append(Component.literal(" to villager ").withStyle(ChatFormatting.WHITE))
+                .append(Component.literal(villager.getUUID().toString()).withStyle(ChatFormatting.DARK_GRAY)), true);
+        return 1;
     }
 
     private static int clear(CommandSourceStack src) {
-        ServerPlayer sp = src.getPlayer(); if (sp == null) { src.sendFailure(Component.literal("Player context required.")); return 0; }
-        Villager villager = lookedVillager(sp); if (villager == null) { src.sendFailure(Component.literal("Look at a villager within 6 blocks.")); return 0; }
-        ResourceLocation old = VendorAssignmentService.getProfileId(villager); if (old == null) { src.sendFailure(Component.literal("Villager has no vendor profile.")); return 0; }
-        VendorAssignmentService.clearProfile(villager); src.sendSuccess(() -> Component.literal("Cleared vendor profile " + old), true); return 1;
+        ServerPlayer sp = src.getPlayer(); if (sp == null) { fail(src, "Player context required."); return 0; }
+        Villager villager = lookedVillager(sp); if (villager == null) { fail(src, "Look at a villager within 6 blocks."); return 0; }
+        ResourceLocation old = VendorAssignmentService.getProfileId(villager); if (old == null) { fail(src, "Villager has no vendor profile."); return 0; }
+        VendorAssignmentService.clearProfile(villager);
+        src.sendSuccess(() -> Component.literal("Cleared vendor profile ").withStyle(ChatFormatting.GREEN).append(profileName(old)), true);
+        return 1;
     }
 
     private static int info(CommandSourceStack src) {
-        ServerPlayer sp = src.getPlayer(); if (sp == null) { src.sendFailure(Component.literal("Player context required.")); return 0; }
-        Villager villager = lookedVillager(sp); if (villager == null) { src.sendFailure(Component.literal("Look at a villager within 6 blocks.")); return 0; }
-        ResourceLocation id = VendorAssignmentService.getProfileId(villager); if (id == null) { src.sendSuccess(() -> Component.literal("Villager is not an assigned vendor shell."), false); return 1; }
-        src.sendSuccess(() -> Component.literal("Villager vendor profile: " + id), false); return 1;
+        ServerPlayer sp = src.getPlayer(); if (sp == null) { fail(src, "Player context required."); return 0; }
+        Villager villager = lookedVillager(sp); if (villager == null) { fail(src, "Look at a villager within 6 blocks."); return 0; }
+        ResourceLocation id = VendorAssignmentService.getProfileId(villager);
+        if (id == null) { src.sendSuccess(() -> Component.literal("Villager is not an assigned vendor shell.").withStyle(ChatFormatting.GRAY), false); return 1; }
+        src.sendSuccess(() -> Component.literal("Villager vendor profile: ").withStyle(ChatFormatting.WHITE).append(profileName(id)), false);
+        return 1;
     }
 
     private static int spawn(CommandSourceStack src, String profileIdRaw) {
-        ServerPlayer sp = src.getPlayer(); if (sp == null) { src.sendFailure(Component.literal("Player context required.")); return 0; }
-        ResourceLocation id = ResourceLocation.tryParse(profileIdRaw); if (id == null || VendorProfileManager.INSTANCE.get(id) == null) { src.sendFailure(Component.literal("Unknown profile: " + profileIdRaw)); return 0; }
-        Villager villager = EntityType.VILLAGER.create(sp.level(), EntitySpawnReason.COMMAND); if (villager == null) { src.sendFailure(Component.literal("Could not create villager.")); return 0; }
+        ServerPlayer sp = src.getPlayer(); if (sp == null) { fail(src, "Player context required."); return 0; }
+        ResourceLocation id = resolveOrFail(src, profileIdRaw); if (id == null) return 0;
+        Villager villager = EntityType.VILLAGER.create(sp.level(), EntitySpawnReason.COMMAND); if (villager == null) { fail(src, "Could not create villager."); return 0; }
         villager.snapTo(sp.getX(), sp.getY(), sp.getZ(), sp.getYRot(), sp.getXRot());
-        if (!sp.level().addFreshEntity(villager)) { src.sendFailure(Component.literal("Could not spawn villager entity.")); return 0; }
+        if (!sp.level().addFreshEntity(villager)) { fail(src, "Could not spawn villager entity."); return 0; }
         if (!VendorAssignmentService.assignProfile(villager, id)) {
             villager.discard();
-            src.sendFailure(Component.literal("Failed assigning vendor profile."));
+            fail(src, "Failed assigning vendor profile.");
             return 0;
         }
-        src.sendSuccess(() -> Component.literal("Spawned vendor villager with profile " + id), true); return 1;
+        src.sendSuccess(() -> Component.literal("Spawned vendor villager with profile ").withStyle(ChatFormatting.GREEN).append(profileName(id)), true);
+        return 1;
     }
 
     private static int access(CommandSourceStack src, String profileIdRaw) {
-        ServerPlayer sp = src.getPlayer(); if (sp == null) { src.sendFailure(Component.literal("Player context required.")); return 0; }
-        ResourceLocation id = ResourceLocation.tryParse(profileIdRaw); if (id == null) { src.sendFailure(Component.literal("Invalid profile id: " + profileIdRaw)); return 0; }
-        VendorProfile profile = VendorProfileManager.INSTANCE.get(id); if (profile == null) { src.sendFailure(Component.literal("Unknown profile: " + id)); return 0; }
+        ServerPlayer sp = src.getPlayer(); if (sp == null) { fail(src, "Player context required."); return 0; }
+        ResourceLocation id = resolveOrFail(src, profileIdRaw); if (id == null) return 0;
+        VendorProfile profile = VendorProfileManager.INSTANCE.get(id);
         VendorAccessService.AccessResult result = VendorAccessService.evaluate(sp, profile);
-        src.sendSuccess(() -> Component.literal("Vendor access " + (result.allowed() ? "ALLOWED" : "DENIED") + " for " + id + ": " + result.message()), false);
+        src.sendSuccess(() -> Component.literal("Vendor access ").withStyle(ChatFormatting.WHITE)
+                .append(Component.literal(result.allowed() ? "ALLOWED" : "DENIED").withStyle(result.allowed() ? ChatFormatting.GREEN : ChatFormatting.RED))
+                .append(Component.literal(" for ").withStyle(ChatFormatting.WHITE))
+                .append(profileName(id))
+                .append(Component.literal(": ").withStyle(ChatFormatting.WHITE))
+                .append(Component.literal(result.message()).withStyle(result.allowed() ? ChatFormatting.GREEN : ChatFormatting.RED)), false);
         return result.allowed() ? 1 : 0;
+    }
+
+    private static ResourceLocation resolveOrFail(CommandSourceStack src, String raw) {
+        VendorProfileResolver.Result result = VendorProfileResolver.resolve(raw);
+        switch (result.status()) {
+            case RESOLVED -> { return result.id(); }
+            case INVALID -> fail(src, "Invalid profile id: " + raw);
+            case UNKNOWN -> fail(src, "Unknown profile: " + raw);
+            case AMBIGUOUS -> src.sendFailure(Component.literal("Ambiguous vendor profile alias ").withStyle(ChatFormatting.RED)
+                    .append(Component.literal(raw).withStyle(ChatFormatting.YELLOW))
+                    .append(Component.literal(". Use a full id: ").withStyle(ChatFormatting.RED))
+                    .append(Component.literal(result.matchList()).withStyle(ChatFormatting.GRAY)));
+        }
+        return null;
+    }
+
+    private static void fail(CommandSourceStack src, String message) {
+        src.sendFailure(Component.literal(message).withStyle(ChatFormatting.RED));
+    }
+
+    private static MutableComponent profileName(ResourceLocation id) {
+        return Component.literal(VendorProfileResolver.shortName(id)).withStyle(ChatFormatting.YELLOW)
+                .append(Component.literal(" (").withStyle(ChatFormatting.DARK_GRAY))
+                .append(idComponent(id))
+                .append(Component.literal(")").withStyle(ChatFormatting.DARK_GRAY));
+    }
+
+    private static MutableComponent idComponent(ResourceLocation id) {
+        return Component.literal(id.toString()).withStyle(ChatFormatting.GRAY);
+    }
+
+    private static MutableComponent secondary(String value) {
+        return Component.literal(value).withStyle(ChatFormatting.GRAY);
+    }
+
+    private static MutableComponent booleanComponent(boolean value) {
+        return Component.literal(String.valueOf(value)).withStyle(value ? ChatFormatting.GREEN : ChatFormatting.RED);
     }
 
     private static Villager lookedVillager(ServerPlayer sp) {
