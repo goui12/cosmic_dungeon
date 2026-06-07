@@ -178,6 +178,12 @@ Notes:
 
 Authority: developer or console only via `AccessPolicy.requireDeveloperOrConsole`.
 
+Profile ID usability:
+- Commands that accept `<profileId>` resolve exact full IDs first, such as `cosmicdungeon:d1/brewing_store`.
+- They also accept the short last-path alias, such as `brewing_store`, `general_supply_vendor`, `weapon_supplier`, or `save_teleport_npc`.
+- If multiple loaded profiles ever share the same short alias, commands fail with an ambiguity message instead of guessing.
+- `/vendor list` shows the short alias first and the full datapack `ResourceLocation` as secondary detail.
+
 Scope boundary:
 - loads datapack vendor profiles from `data/cosmicdungeon/vendor_profiles/*.json`
 - supports villager vendor assignment + vendor menu

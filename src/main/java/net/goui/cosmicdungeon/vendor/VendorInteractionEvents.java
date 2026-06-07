@@ -1,8 +1,8 @@
 package net.goui.cosmicdungeon.vendor;
 
-import net.goui.cosmicdungeon.economy.CurrencyService;
 import net.goui.cosmicdungeon.menu.VendorMenu;
 import net.goui.cosmicdungeon.network.VendorPayloads;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -12,7 +12,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
@@ -29,13 +28,17 @@ public final class VendorInteractionEvents {
 
         VendorProfile profile = VendorProfileManager.INSTANCE.get(profileId);
         if (profile == null) {
-            sp.sendSystemMessage(Component.literal("Vendor shell has unknown profile: " + profileId));
+            sp.sendSystemMessage(Component.literal("Vendor shell has unknown profile: ").withStyle(ChatFormatting.RED)
+                    .append(Component.literal(profileId.toString()).withStyle(ChatFormatting.GRAY)));
             return;
         }
 
         VendorMenuState.UnlockResult unlockResult = VendorMenuState.unlockState(sp, profile);
         if (!unlockResult.unlocked()) {
-            sp.sendSystemMessage(Component.literal("Vendor locked: " + unlockResult.reason()));
+            sp.sendSystemMessage(Component.literal("Vendor locked: ").withStyle(ChatFormatting.RED)
+                    .append(Component.literal(profile.displayName()).withStyle(ChatFormatting.GOLD))
+                    .append(Component.literal(" - ").withStyle(ChatFormatting.DARK_GRAY))
+                    .append(Component.literal(unlockResult.reason()).withStyle(ChatFormatting.RED)));
             return;
         }
 

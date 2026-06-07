@@ -308,6 +308,12 @@ Scope boundary for this pass:
   - Add localized translatable components for each denial reason and per-profile lock flavor text.
 
 
+## 1.5.0 Follow-up: Vendor command aliases and chat colors
+- Vendor commands that accept `<profileId>` now resolve exact full `ResourceLocation` IDs first, then short last-path aliases like `brewing_store` from `cosmicdungeon:d1/brewing_store`.
+- Ambiguous short aliases now fail clearly and list the matching full IDs instead of choosing one implicitly.
+- Vendor profile suggestions include clean short aliases before full IDs, while `/vendor list` presents short names first with full IDs as secondary technical detail.
+- Vendor command responses and interaction/purchase/sale feedback now use consistent readable colors for success, errors, vendor names, prices/balances, and technical IDs.
+
 ## Trading Foundation (1.5.0)
 - Added direct player-to-player trading foundation with item offers plus server-authoritative Attunement currency balance transfers via CurrencyService; persistent balances remain account data and are not converted into loose inventory items.
 - Added normal-player trade commands: `/trade <player>`, `/trade accept <player>`, `/trade deny <player>`, and `/trade cancel`.
