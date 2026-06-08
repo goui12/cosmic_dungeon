@@ -5,6 +5,276 @@
   "requiredVillageAccess": true,
   "requiredNpcSystem": "D1",
   "requiredNpcTier": 3,
-  "buyOffers": [],
-  "buyback": { "pricingGroup": "default", "rules": [] }
+  "buyOffers": [
+    {
+      "offerId": "nether_wart",
+      "result": {
+        "item": "minecraft:nether_wart",
+        "count": 1
+      },
+      "cost": {
+        "amount": 8,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "sugar",
+      "result": {
+        "item": "minecraft:sugar",
+        "count": 1
+      },
+      "cost": {
+        "amount": 3,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "spider_eye",
+      "result": {
+        "item": "minecraft:spider_eye",
+        "count": 1
+      },
+      "cost": {
+        "amount": 8,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "fermented_spider_eye",
+      "result": {
+        "item": "minecraft:fermented_spider_eye",
+        "count": 1
+      },
+      "cost": {
+        "amount": 2,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "magma_cream",
+      "result": {
+        "item": "minecraft:magma_cream",
+        "count": 1
+      },
+      "cost": {
+        "amount": 3,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "glistering_melon_slice",
+      "result": {
+        "item": "minecraft:glistering_melon_slice",
+        "count": 1
+      },
+      "cost": {
+        "amount": 3,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "blaze_powder",
+      "result": {
+        "item": "minecraft:blaze_powder",
+        "count": 1
+      },
+      "cost": {
+        "amount": 4,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "brewing_stand",
+      "result": {
+        "item": "minecraft:brewing_stand",
+        "count": 1
+      },
+      "cost": {
+        "amount": 8,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "cauldron",
+      "result": {
+        "item": "minecraft:cauldron",
+        "count": 1
+      },
+      "cost": {
+        "amount": 7,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "glass_bottle",
+      "result": {
+        "item": "minecraft:glass_bottle",
+        "count": 3
+      },
+      "cost": {
+        "amount": 6,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "potion_of_healing",
+      "result": {
+        "item": "minecraft:potion",
+        "count": 1,
+        "potion": "minecraft:healing"
+      },
+      "cost": {
+        "amount": 3,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "potion_of_healing_ii",
+      "result": {
+        "item": "minecraft:potion",
+        "count": 1,
+        "potion": "minecraft:strong_healing"
+      },
+      "cost": {
+        "amount": 6,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "potion_of_regeneration",
+      "result": {
+        "item": "minecraft:potion",
+        "count": 1,
+        "potion": "minecraft:regeneration"
+      },
+      "cost": {
+        "amount": 5,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "potion_of_strength",
+      "result": {
+        "item": "minecraft:potion",
+        "count": 1,
+        "potion": "minecraft:strength"
+      },
+      "cost": {
+        "amount": 5,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "potion_of_night_vision",
+      "result": {
+        "item": "minecraft:potion",
+        "count": 1,
+        "potion": "minecraft:night_vision"
+      },
+      "cost": {
+        "amount": 4,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "potion_of_fire_resistance",
+      "result": {
+        "item": "minecraft:potion",
+        "count": 1,
+        "potion": "minecraft:fire_resistance"
+      },
+      "cost": {
+        "amount": 6,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "extended_water_breathing",
+      "result": {
+        "item": "minecraft:potion",
+        "count": 1,
+        "potion": "minecraft:long_water_breathing"
+      },
+      "cost": {
+        "amount": 6,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "potion_of_invisibility",
+      "result": {
+        "item": "minecraft:potion",
+        "count": 1,
+        "potion": "minecraft:invisibility"
+      },
+      "cost": {
+        "amount": 7,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "splash_potion_of_healing",
+      "result": {
+        "item": "minecraft:splash_potion",
+        "count": 1,
+        "potion": "minecraft:healing"
+      },
+      "cost": {
+        "amount": 5,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "splash_potion_of_poison",
+      "result": {
+        "item": "minecraft:splash_potion",
+        "count": 1,
+        "potion": "minecraft:poison"
+      },
+      "cost": {
+        "amount": 5,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "splash_potion_of_invisibility",
+      "result": {
+        "item": "minecraft:splash_potion",
+        "count": 1,
+        "potion": "minecraft:invisibility"
+      },
+      "cost": {
+        "amount": 9,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "lingering_potion_of_healing",
+      "result": {
+        "item": "minecraft:lingering_potion",
+        "count": 1,
+        "potion": "minecraft:healing"
+      },
+      "cost": {
+        "amount": 9,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "lingering_potion_of_regeneration",
+      "result": {
+        "item": "minecraft:lingering_potion",
+        "count": 1,
+        "potion": "minecraft:regeneration"
+      },
+      "cost": {
+        "amount": 12,
+        "denomination": "mark"
+      }
+    }
+  ],
+  "buyback": {
+    "pricingGroup": "default",
+    "rules": []
+  }
 }

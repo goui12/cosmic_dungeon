@@ -4,12 +4,14 @@ import com.google.gson.*;
 import com.mojang.logging.LogUtils;
 import net.goui.cosmicdungeon.economy.CurrencyDenomination;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.InactiveProfiler;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.item.alchemy.PotionContents;
 import org.slf4j.Logger;
 
 import java.io.BufferedReader;
@@ -177,7 +179,19 @@ public final class VendorProfileManager extends SimplePreparableReloadListener<M
         if (itemId == null) throw new JsonParseException("Invalid item id: " + rawItem);
         int count = GsonHelper.getAsInt(o, "count", 1);
         if (count <= 0) throw new JsonParseException("Item count must be > 0");
-        return new ItemStackDef(itemId, count);
+
+        ResourceLocation potionId = null;
+        if (o.has("potion")) {
+            String rawPotion = GsonHelper.getAsString(o, "potion");
+            potionId = ResourceLocation.tryParse(rawPotion);
+            if (potionId == null) {
+                potionId = ResourceLocation.tryBuild(ResourceLocation.DEFAULT_NAMESPACE, rawPotion);
+            }
+            if (potionId == null) throw new JsonParseException("Invalid potion id: " + rawPotion);
+            validatePotionExists(potionId);
+        }
+
+        return new ItemStackDef(itemId, count, potionId);
     }
 
     private static void validateItemExists(ResourceLocation itemId) {
@@ -186,13 +200,25 @@ public final class VendorProfileManager extends SimplePreparableReloadListener<M
         }
     }
 
-    private record ItemStackDef(ResourceLocation itemId, int count) {
+    private static void validatePotionExists(ResourceLocation potionId) {
+        if (!BuiltInRegistries.POTION.containsKey(potionId)) {
+            throw new JsonParseException("Unknown potion id: " + potionId);
+        }
+    }
+
+    private record ItemStackDef(ResourceLocation itemId, int count, ResourceLocation potionId) {
         net.minecraft.world.item.ItemStack toStack() {
             var item = BuiltInRegistries.ITEM.getValue(itemId);
             if (item == null) {
                 throw new JsonParseException("Unknown item id: " + itemId);
             }
-            return new net.minecraft.world.item.ItemStack(item, count);
+            var stack = new net.minecraft.world.item.ItemStack(item, count);
+            if (potionId != null) {
+                var potion = BuiltInRegistries.POTION.get(potionId)
+                        .orElseThrow(() -> new JsonParseException("Unknown potion id: " + potionId));
+                stack.set(DataComponents.POTION_CONTENTS, new PotionContents(potion));
+            }
+            return stack;
         }
     }
 }

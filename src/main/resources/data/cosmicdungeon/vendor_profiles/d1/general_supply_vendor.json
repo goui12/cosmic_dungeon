@@ -7,19 +7,169 @@
   "requiredNpcTier": 1,
   "buyOffers": [
     {
+      "offerId": "golden_apple",
+      "result": {
+        "item": "minecraft:golden_apple",
+        "count": 1
+      },
+      "cost": {
+        "amount": 8,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "flint_and_steel",
+      "result": {
+        "item": "minecraft:flint_and_steel",
+        "count": 1
+      },
+      "cost": {
+        "amount": 3,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "bookshelves",
+      "result": {
+        "item": "minecraft:bookshelf",
+        "count": 1
+      },
+      "cost": {
+        "amount": 5,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "torches",
+      "result": {
+        "item": "minecraft:torch",
+        "count": 16
+      },
+      "cost": {
+        "amount": 8,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "lanterns",
+      "result": {
+        "item": "minecraft:lantern",
+        "count": 2
+      },
+      "cost": {
+        "amount": 4,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "campfires",
+      "result": {
+        "item": "minecraft:campfire",
+        "count": 1
+      },
+      "cost": {
+        "amount": 3,
+        "denomination": "mark"
+      }
+    },
+    {
       "offerId": "bread",
-      "result": { "item": "minecraft:bread", "count": 1 },
-      "cost": { "amount": 6, "denomination": "trace" }
+      "result": {
+        "item": "minecraft:bread",
+        "count": 1
+      },
+      "cost": {
+        "amount": 6,
+        "denomination": "trace"
+      }
     },
     {
-      "offerId": "torch",
-      "result": { "item": "minecraft:torch", "count": 1 },
-      "cost": { "amount": 2, "denomination": "trace" }
+      "offerId": "baked_potatoes",
+      "result": {
+        "item": "minecraft:baked_potato",
+        "count": 2
+      },
+      "cost": {
+        "amount": 5,
+        "denomination": "trace"
+      }
     },
     {
-      "offerId": "arrows",
-      "result": { "item": "minecraft:arrow", "count": 8 },
-      "cost": { "amount": 3, "denomination": "trace" }
+      "offerId": "cooked_chicken",
+      "result": {
+        "item": "minecraft:cooked_chicken",
+        "count": 1
+      },
+      "cost": {
+        "amount": 8,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "dried_kelp",
+      "result": {
+        "item": "minecraft:dried_kelp",
+        "count": 8
+      },
+      "cost": {
+        "amount": 6,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "apples",
+      "result": {
+        "item": "minecraft:apple",
+        "count": 2
+      },
+      "cost": {
+        "amount": 4,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "carrots",
+      "result": {
+        "item": "minecraft:carrot",
+        "count": 3
+      },
+      "cost": {
+        "amount": 4,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "beetroot_soup",
+      "result": {
+        "item": "minecraft:beetroot_soup",
+        "count": 1
+      },
+      "cost": {
+        "amount": 7,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "cookies",
+      "result": {
+        "item": "minecraft:cookie",
+        "count": 8
+      },
+      "cost": {
+        "amount": 6,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "honey_bottles",
+      "result": {
+        "item": "minecraft:honey_bottle",
+        "count": 1
+      },
+      "cost": {
+        "amount": 1,
+        "denomination": "mark"
+      }
     }
   ],
   "buyback": {
