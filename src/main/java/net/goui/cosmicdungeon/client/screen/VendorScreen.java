@@ -18,8 +18,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
+    private static final int OFFER_ROW_TOP_OFFSET = 46;
+    private static final int OFFER_ROW_HEIGHT = 22;
+    private static final int OFFERS_PER_PAGE = 4;
+
     private final VendorClientState.VendorView view;
     private final List<Button> offerButtons = new ArrayList<>();
+    private int offerPage;
 
     public VendorScreen(VendorMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -31,12 +36,38 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
     @Override
     protected void init() {
         super.init();
+        rebuildVendorWidgets();
+    }
+
+    private void rebuildVendorWidgets() {
+        clearWidgets();
         offerButtons.clear();
         int x0 = leftPos + 10;
-        int y = topPos + 36;
 
         if (view == null || view.profile() == null) return;
-        for (VendorOffer offer : view.profile().buyOffers()) {
+
+        clampOfferPage();
+        int pageCount = pageCount();
+        int firstOffer = offerPage * OFFERS_PER_PAGE;
+        int lastOffer = Math.min(firstOffer + OFFERS_PER_PAGE, view.profile().buyOffers().size());
+        int y = topPos + OFFER_ROW_TOP_OFFSET;
+
+        if (pageCount > 1) {
+            Button previous = Button.builder(Component.literal("<"), btn -> changeOfferPage(-1))
+                    .bounds(x0 + 114, topPos + 16, 20, 18)
+                    .build();
+            previous.active = offerPage > 0;
+            addRenderableWidget(previous);
+
+            Button next = Button.builder(Component.literal(">"), btn -> changeOfferPage(1))
+                    .bounds(x0 + 138, topPos + 16, 20, 18)
+                    .build();
+            next.active = offerPage < pageCount - 1;
+            addRenderableWidget(next);
+        }
+
+        for (int i = firstOffer; i < lastOffer; i++) {
+            VendorOffer offer = view.profile().buyOffers().get(i);
             boolean unlocked = view.unlockedOffers().contains(offer.id().toString());
             Button b = Button.builder(Component.literal(unlocked ? "Buy" : "Locked"), btn -> {
                 if (!unlocked) return;
@@ -45,7 +76,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             b.active = unlocked;
             addRenderableWidget(b);
             offerButtons.add(b);
-            y += 22;
+            y += OFFER_ROW_HEIGHT;
         }
 
         addRenderableWidget(Button.builder(Component.literal("Sell Held"), btn -> {
@@ -61,6 +92,37 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             if (sets.isEmpty()) return;
             ModNetwork.sendToServer(new VendorPayloads.C2S_RequestVendorSellDetectedSet(view.vendorEntityId(), sets.getFirst().setId()));
         }).bounds(x0 + 74, topPos + imageHeight - 44, 70, 20).build());
+    }
+
+    private int pageCount() {
+        if (view == null || view.profile() == null || view.profile().buyOffers().isEmpty()) {
+            return 1;
+        }
+        return (view.profile().buyOffers().size() + OFFERS_PER_PAGE - 1) / OFFERS_PER_PAGE;
+    }
+
+    private void clampOfferPage() {
+        offerPage = Math.max(0, Math.min(offerPage, pageCount() - 1));
+    }
+
+    private void changeOfferPage(int delta) {
+        int oldPage = offerPage;
+        offerPage = Math.max(0, Math.min(offerPage + delta, pageCount() - 1));
+        if (offerPage != oldPage) {
+            rebuildVendorWidgets();
+        }
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (super.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
+            return true;
+        }
+        if (view == null || view.profile() == null || pageCount() <= 1 || !isMouseOver(mouseX, mouseY)) {
+            return false;
+        }
+        changeOfferPage(scrollY < 0.0D ? 1 : -1);
+        return true;
     }
 
     @Override
@@ -83,9 +145,22 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         }
 
         g.drawString(font, Component.literal("Balance: " + CurrencyAmount.ofTrace(view.balanceTrace()).formatNormalized()), x0, y, 0xFFE082, false);
-        y += 16;
+        y += 12;
 
-        for (VendorOffer offer : view.profile().buyOffers()) {
+        int pageCount = pageCount();
+        if (pageCount > 1) {
+            g.drawString(font, Component.literal("Offers " + (offerPage + 1) + "/" + pageCount), x0, y, 0xB0BEC5, false);
+            g.drawString(font, Component.literal("Scroll or page"), x0 + 114, topPos + 36, 0xB0BEC5, false);
+        } else {
+            g.drawString(font, Component.literal("Offers"), x0, y, 0xB0BEC5, false);
+        }
+
+        int firstOffer = offerPage * OFFERS_PER_PAGE;
+        int lastOffer = Math.min(firstOffer + OFFERS_PER_PAGE, view.profile().buyOffers().size());
+        y = topPos + OFFER_ROW_TOP_OFFSET;
+
+        for (int i = firstOffer; i < lastOffer; i++) {
+            VendorOffer offer = view.profile().buyOffers().get(i);
             boolean unlocked = view.unlockedOffers().contains(offer.id().toString());
             String itemName = offer.result().getHoverName().getString();
             String cost = CurrencyAmount.of(offer.cost().amount(), offer.cost().denomination()).formatNormalized();
@@ -94,7 +169,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             if (!unlocked) {
                 g.drawString(font, Component.literal("LOCKED"), x0 + 160, y, 0xEF9A9A, false);
             }
-            y += 22;
+            y += OFFER_ROW_HEIGHT;
         }
 
         if (minecraft != null && minecraft.player != null) {
