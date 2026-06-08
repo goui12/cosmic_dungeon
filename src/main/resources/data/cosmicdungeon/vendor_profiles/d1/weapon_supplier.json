@@ -5,6 +5,98 @@
   "requiredVillageAccess": true,
   "requiredNpcSystem": "D1",
   "requiredNpcTier": 2,
-  "buyOffers": [],
-  "buyback": { "pricingGroup": "default", "rules": [] }
+  "buyOffers": [
+    {
+      "offerId": "stone_sword",
+      "result": {
+        "item": "minecraft:stone_sword",
+        "count": 1
+      },
+      "cost": {
+        "amount": 2,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "diamond_sword",
+      "result": {
+        "item": "minecraft:diamond_sword",
+        "count": 1
+      },
+      "cost": {
+        "amount": 18,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "stone_pickaxe",
+      "result": {
+        "item": "minecraft:stone_pickaxe",
+        "count": 1
+      },
+      "cost": {
+        "amount": 3,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "diamond_pickaxe",
+      "result": {
+        "item": "minecraft:diamond_pickaxe",
+        "count": 1
+      },
+      "cost": {
+        "amount": 24,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "bow",
+      "result": {
+        "item": "minecraft:bow",
+        "count": 1
+      },
+      "cost": {
+        "amount": 6,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "crossbow",
+      "result": {
+        "item": "minecraft:crossbow",
+        "count": 1
+      },
+      "cost": {
+        "amount": 8,
+        "denomination": "mark"
+      }
+    },
+    {
+      "offerId": "arrows",
+      "result": {
+        "item": "minecraft:arrow",
+        "count": 16
+      },
+      "cost": {
+        "amount": 6,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "shield",
+      "result": {
+        "item": "minecraft:shield",
+        "count": 1
+      },
+      "cost": {
+        "amount": 7,
+        "denomination": "mark"
+      }
+    }
+  ],
+  "buyback": {
+    "pricingGroup": "default",
+    "rules": []
+  }
 }
