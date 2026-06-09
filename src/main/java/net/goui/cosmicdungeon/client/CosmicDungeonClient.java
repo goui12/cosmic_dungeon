@@ -58,6 +58,9 @@ public final class CosmicDungeonClient {
         NeoForge.EVENT_BUS.register(CosmicSpawnerHoverOverlay.class);
         NeoForge.EVENT_BUS.register(TradeLookPromptOverlay.class);
 
+        // Dynamic tooltip line for vanilla/customized items attuned as class gear.
+        NeoForge.EVENT_BUS.addListener(ClassItemTooltipEvents::onItemTooltip);
+
         // Rift ambience (client tick)
         NeoForge.EVENT_BUS.register(new RiftAmbienceClient());
 

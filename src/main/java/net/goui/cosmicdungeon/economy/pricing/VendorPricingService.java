@@ -1,5 +1,6 @@
 package net.goui.cosmicdungeon.economy.pricing;
 
+import net.goui.cosmicdungeon.playerclass.api.ClassItemUtil;
 import net.goui.cosmicdungeon.util.ModTags;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -7,7 +8,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -20,18 +20,7 @@ public final class VendorPricingService {
     private static final String DEFAULT_VENDOR_TYPE = "default";
 
     private static final Map<String, List<GearSetDefinition>> SET_DEFINITIONS_BY_VENDOR = Map.of(
-            DEFAULT_VENDOR_TYPE,
-            List.of(new GearSetDefinition(
-                    "judicator_d2_t1_chainmail",
-                    Set.of(
-                            "cosmicdungeon:visor_of_the_resolute",
-                            "cosmicdungeon:cuirass_of_purpose",
-                            "cosmicdungeon:chausses_of_the_pledge",
-                            "cosmicdungeon:sabatons_of_the_unheard_oath"
-                    ),
-                    100L,
-                    10L
-            ))
+            DEFAULT_VENDOR_TYPE, List.of()
     );
 
     public static VendorPrice getSellValue(ItemStack stack, String vendorType) {
@@ -39,11 +28,21 @@ public final class VendorPricingService {
             return new VendorPrice(0L, "empty_stack");
         }
 
-        String itemId = itemId(stack);
-        for (GearSetDefinition definition : setDefinitionsFor(vendorType)) {
-            if (definition.pieceItemIds().contains(itemId)) {
-                return new VendorPrice(definition.individualPieceTraceValue(), "set_piece:" + definition.id());
+        if (ClassItemUtil.hasCompleteValidAttunement(stack)) {
+            String classId = ClassItemUtil.getClassAttunement(stack);
+            int dungeon = ClassItemUtil.getDungeon(stack);
+            int tier = ClassItemUtil.getTier(stack);
+            long trace = ClassItemUtil.getTraceValue(stack);
+            String source = classId + ":d" + dungeon + ":t" + tier;
+            if (trace > 0L) {
+                return new VendorPrice(trace, "class_attuned:" + source);
             }
+            return new VendorPrice(0L, "class_attuned_zero:" + source);
+        }
+
+        String itemId = itemId(stack);
+        if (ClassItemUtil.hasAnyAttunementMetadata(stack)) {
+            return new VendorPrice(0L, "unsupported:invalid_class_attunement:" + itemId);
         }
 
         VendorValueCategory category = categorize(stack);
@@ -55,19 +54,9 @@ public final class VendorPricingService {
     }
 
     public static List<CompleteSetValue> detectCompleteSets(Player player, String vendorType) {
-        Set<String> itemIds = new HashSet<>();
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-            ItemStack stack = player.getInventory().getItem(i);
-            if (!stack.isEmpty()) {
-                itemIds.add(itemId(stack));
-            }
-        }
-
         List<CompleteSetValue> detected = new ArrayList<>();
         for (GearSetDefinition definition : setDefinitionsFor(vendorType)) {
-            if (itemIds.containsAll(definition.pieceItemIds())) {
-                detected.add(new CompleteSetValue(definition.id(), definition.fullSetTraceValue(), definition.pieceItemIds().size()));
-            }
+            // No class item set ids or equipment-slot definitions exist yet; keep this stable for future data-backed sets.
         }
         return detected;
     }

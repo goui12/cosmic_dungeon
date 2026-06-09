@@ -74,17 +74,21 @@ These are planned for future 1.5.x follow-up work.
 
 - Added a new pricing package: `net.goui.cosmicdungeon.economy.pricing`.
 - Added foundational types: `VendorValueCategory`, `VendorPrice`, `GearSetDefinition`, and `VendorPricingService`.
-- Added starter isolated hardcoded set definitions (structured for later JSON migration under `data/cosmicdungeon/vendor_prices/*.json`).
-- Included starter pricing for the D2 T1 Judicator chainmail set:
-  - `visor_of_the_resolute`
-  - `cuirass_of_purpose`
-  - `chausses_of_the_pledge`
-  - `sabatons_of_the_unheard_oath`
-- Starter values: 10 Trace per individual piece, 100 Trace for complete set detection.
+- Pricing now supports class-attuned items as the source of truth for sell value.
+- The previous tiny hardcoded D2 T1 Judicator chainmail seed is no longer used; complete-set detection remains stable but has no class-item set id model yet.
 - Added `/currency value` to report the held item sell value/debug source.
 - Added `/currency value inventory` to report detected complete sets and notable inventory values.
 - Scope boundary remains unchanged: no vendor NPCs, no vendor GUI, no item removal in pricing evaluation.
 
+
+
+## 1.5.0 Follow-up: Class item attunement foundation
+- Added developer command `/classitem attune <class_name> <dungeon_number> <tier_number> <trace_value>` for turning an existing held vanilla/customized item into CosmicDungeon class gear.
+- Added `/classitem clear` to remove only CosmicDungeon class-item metadata from the held item.
+- Attunement uses persistent NeoForge data components: `class_attunement`, `class_item_dungeon`, `class_item_tier`, and `class_item_trace_value`.
+- Class ids are accepted case-insensitively from playable `ClassKeys`, excluding `none`, and stored as canonical lowercase values. Dungeon accepts both `d1` and `1`; tier is limited to 1-10; Trace is zero or greater.
+- Added a dynamic client tooltip line that shows only the attuned class display name at the bottom, bold/italic, in the configured class color. The tooltip is not lore and normal items remain unchanged.
+- Updated vendor pricing so valid attuned items return their stored Trace value with debug sources like `class_attuned:judicator:d1:t4`; zero-valued attuned items report `class_attuned_zero:...`.
 
 ## 1.5.0 Follow-up: Faction foundation (JHW baseline only)
 
@@ -282,10 +286,7 @@ Scope boundary for this pass:
 - Added sell actions in vendor UI: **Sell Held** (main-hand selected hotbar slot) and **Sell Set** (first detected complete eligible set).
 - Added atomic server validation for sell requests: vendor assignment/range checks, buyback eligibility, positive value checks, and currency capacity checks before commit.
 - Added C2S payloads for selling inventory slots and detected sets.
-- Added starter pricing support for **D2 T1 Judicator set**:
-  - Full set payout: **100 Trace**
-  - Individual piece payout: **10 Trace**
-  - Pieces: `visor_of_the_resolute`, `cuirass_of_purpose`, `chausses_of_the_pledge`, `sabatons_of_the_unheard_oath`.
+- Buyback pricing now reads valid class-item attunement metadata and pays the stored Trace value. The previous hardcoded D2 T1 Judicator seed is no longer the economy source.
 - Added player feedback messages for success and common failures, including capacity/ineligible/incomplete set states.
 
 ## Vendor Access Gating Integration (Added May 26, 2026)

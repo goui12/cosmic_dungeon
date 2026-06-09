@@ -35,6 +35,22 @@ public final class ModDataComponents {
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<UUID>> DOOR_LOCK_ID =
             register("door_lock_id", b -> b.persistent(UUID_STRING_CODEC));
 
+    /** Canonical lowercase CosmicDungeon class id for attuned vanilla/customized class gear. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<String>> CLASS_ATTUNEMENT =
+            register("class_attunement", b -> b.persistent(Codec.STRING));
+
+    /** Dungeon number for attuned class gear, stored as an integer (for example, d1 -> 1). */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> CLASS_ITEM_DUNGEON =
+            register("class_item_dungeon", b -> b.persistent(Codec.INT));
+
+    /** Tier number for attuned class gear. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> CLASS_ITEM_TIER =
+            register("class_item_tier", b -> b.persistent(Codec.INT));
+
+    /** Trace sell value for attuned class gear. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Long>> CLASS_ITEM_TRACE_VALUE =
+            register("class_item_trace_value", b -> b.persistent(Codec.LONG));
+
     private static <T> DeferredHolder<DataComponentType<?>, DataComponentType<T>> register(
             String name, UnaryOperator<DataComponentType.Builder<T>> builderOp) {
         return DATA_COMPONENT_TYPES.register(name, () -> builderOp.apply(DataComponentType.builder()).build());
