@@ -31,6 +31,7 @@
 - `/plantflags`
 - `/vendor`
 - `/trade`
+- `/classitem`
 
 ## High-use command groups
 
@@ -99,6 +100,20 @@ Notes:
 - The trade menu uses the custom `trade_window.png` container layout: 9 read-only partner offer slots, 9 lockable own offer slots, 27 player inventory slots, and 9 hotbar slots. Shift-clicking never takes partner offer items and only moves real item stacks between the player's inventory/hotbar and their own offer slots before that player accepts.
 - Active trades keep the invite chat flow separate from the GUI flow: `[Accept Trade]` / `[Deny Trade]` only answer pending requests, while the GUI accept button first marks the current offer accepted/ready and then, after both players are ready, confirms/finalizes the same offer. The GUI deny button cancels the active trade, returns offered items, discards currency offers, closes both screens, and notifies both players.
 - The trade screen receives server-authoritative, view-specific state sync for `Trading with: <name>`, each player's displayed name, Trace balances, Trace offers, ready/confirm status, and status messages; item offers still sync through the menu slots. Own item/currency offer changes before acceptance reset both players' ready/confirm state, and accepted own offers are locked against further item/currency edits until cancel.
+
+### Class item attunement (1.5.0 foundation)
+`/classitem attune <class_name> <dungeon_number> <tier_number> <trace_value>`
+`/classitem clear`
+
+Authority: developer-only through `AccessPolicy.requireDeveloperOrConsole`, but the action must be run by an in-game developer because it edits the main-hand item. Console receives a clean failure message.
+
+Notes:
+- Attunes the held vanilla or customized item as CosmicDungeon class gear without changing the item's display name, enchantments, trims, lore, durability, count, or unrelated data.
+- Class names use existing playable `ClassKeys` ids case-insensitively, excluding `none`; stored metadata is canonical lowercase such as `judicator`.
+- Dungeon accepts `d1`, `D1`, or `1` and stores integer `1`; tier must be `1` through `10`; Trace must be zero or greater.
+- Attunement is stored in persistent data components: `cosmicdungeon:class_attunement`, `cosmicdungeon:class_item_dungeon`, `cosmicdungeon:class_item_tier`, and `cosmicdungeon:class_item_trace_value`.
+- Hover tooltips append the attuned class display name at the bottom in that class color, bold and italic. Normal items show no extra line.
+- Vendor sell value now uses valid class-item attunement metadata and its stored Trace value as the source of truth.
 
 ### Currency (Attunement Fragment economy foundation)
 `/currency balance [player]`

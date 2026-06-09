@@ -2,6 +2,7 @@ package net.goui.cosmicdungeon.playerclass.api;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Canonical string constants for class IDs.
@@ -38,6 +39,21 @@ public final class ClassKeys {
 
     /** Fast membership check. */
     private static final Set<String> KNOWN = Set.copyOf(ORDERED);
+
+    /** Ordered playable classes, excluding the base none value. */
+    private static final List<String> PLAYABLE = ORDERED.stream()
+            .filter(id -> !CLASS_ID_NONE.equals(id))
+            .collect(Collectors.toUnmodifiableList());
+
+    /** Ordered playable classes, excluding the base none value. */
+    public static List<String> playableClassIds() {
+        return PLAYABLE;
+    }
+
+    /** Fast membership check for any known class id, including none. */
+    public static boolean isKnown(String classId) {
+        return classId != null && KNOWN.contains(classId);
+    }
 
     /** Clamp a potentially-invalid / hacked / typo class id to a known value. */
     public static String clamp(String classId) {
