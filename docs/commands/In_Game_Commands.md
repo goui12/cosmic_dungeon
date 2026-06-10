@@ -113,7 +113,8 @@ Notes:
 - Dungeon accepts `d1`, `D1`, or `1` and stores integer `1`; tier must be `1` through `10`; Trace must be zero or greater.
 - Attunement is stored in persistent data components: `cosmicdungeon:class_attunement`, `cosmicdungeon:class_item_dungeon`, `cosmicdungeon:class_item_tier`, and `cosmicdungeon:class_item_trace_value`.
 - Hover tooltips append the attuned class display name at the bottom in that class color, bold and italic. Normal items show no extra line.
-- Vendor sell value now uses valid class-item attunement metadata and its stored Trace value as the source of truth.
+- Vendor sell value uses valid class-item attunement metadata as the source of truth: any individually sold attuned item, including armor, sells for its stored Trace value.
+- An attuned armor set is detected when the inventory contains a helmet, chestpiece, pants/leggings, and boots that share the same attuned class, dungeon, and tier; the set payout is 125% of those four pieces' combined stored Trace values. For example, four 100-Trace pieces sell as a 500-Trace set.
 
 ### Currency (Attunement Fragment economy foundation)
 `/currency balance [player]`
