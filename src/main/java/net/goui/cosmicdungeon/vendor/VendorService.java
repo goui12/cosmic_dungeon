@@ -100,18 +100,12 @@ public final class VendorService {
         VendorContext context = validateVendor(sp, vendorEntityId, true);
         if (!context.ok()) return fail(sp, context.failMessage());
 
-        var setDefOpt = VendorPricingService.findSetDefinition(context.vendorType(), setId);
-        if (setDefOpt.isEmpty()) return fail(sp, "This vendor will not buy that.");
-        var setDef = setDefOpt.get();
+        var detectedSetOpt = VendorPricingService.findDetectedClassArmorSet(sp, setId);
+        if (detectedSetOpt.isEmpty()) return fail(sp, "The full set is incomplete.");
+        var detectedSet = detectedSetOpt.get();
 
-        List<Integer> slotsToRemove = new ArrayList<>();
-        for (String itemId : setDef.pieceItemIds()) {
-            int slot = findInventorySlotByItemId(sp, itemId, slotsToRemove);
-            if (slot < 0) return fail(sp, "The full set is incomplete.");
-            slotsToRemove.add(slot);
-        }
-
-        long payout = setDef.fullSetTraceValue();
+        List<Integer> slotsToRemove = detectedSet.inventorySlots();
+        long payout = detectedSet.traceValue();
         if (payout <= 0L) return fail(sp, "This vendor will not buy that.");
         if (!CurrencyService.canDeposit(sp, payout)) return fail(sp, "You do not have enough currency capacity.");
 
@@ -130,23 +124,11 @@ public final class VendorService {
         }
 
         sp.sendSystemMessage(Component.literal("Sold ").withStyle(ChatFormatting.GREEN)
-                .append(Component.literal(setDef.id()).withStyle(ChatFormatting.YELLOW))
+                .append(Component.literal(detectedSet.setId()).withStyle(ChatFormatting.YELLOW))
                 .append(Component.literal(" for ").withStyle(ChatFormatting.WHITE))
                 .append(Component.literal(payout + " Trace").withStyle(ChatFormatting.AQUA))
                 .append(Component.literal(".").withStyle(ChatFormatting.WHITE)));
         return new VendorPayloads.S2C_VendorPurchaseResult(true, "Sale complete.", CurrencyService.getBalanceTrace(sp));
-    }
-
-    private static int findInventorySlotByItemId(ServerPlayer sp, String itemId, List<Integer> excludedSlots) {
-        for (int i = 0; i < sp.getInventory().getContainerSize(); i++) {
-            if (excludedSlots.contains(i)) continue;
-            ItemStack stack = sp.getInventory().getItem(i);
-            if (!stack.isEmpty()) {
-                ResourceLocation key = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem());
-                if (key != null && itemId.equals(key.toString())) return i;
-            }
-        }
-        return -1;
     }
 
     private static VendorContext validateVendor(ServerPlayer sp, int vendorEntityId, boolean requireBuyback) {
