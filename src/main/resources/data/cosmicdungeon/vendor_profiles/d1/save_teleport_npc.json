@@ -1,6 +1,6 @@
 {
   "id": "cosmicdungeon:d1/save_teleport_npc",
-  "displayName": "D1 Save & Teleport NPC",
+  "displayName": "Beluzon Everly",
   "vendorType": "save_teleport",
   "requiredVillageAccess": true,
   "requiredNpcSystem": "D1",

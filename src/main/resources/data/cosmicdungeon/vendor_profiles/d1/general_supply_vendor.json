@@ -1,6 +1,6 @@
 {
   "id": "cosmicdungeon:d1/general_supply_vendor",
-  "displayName": "D1 General Supply",
+  "displayName": "Naton Whitlock",
   "vendorType": "general_supply",
   "requiredVillageAccess": true,
   "requiredNpcSystem": "D1",
