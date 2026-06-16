@@ -19,8 +19,8 @@ public final class PlayerProgressionData extends SavedData {
     private static final Codec<UUID> UUID_CODEC = Codec.STRING.xmap(UUID::fromString, UUID::toString);
     private static final Codec<Set<String>> FLAG_SET_CODEC = Codec.STRING.listOf().xmap(HashSet::new, java.util.ArrayList::new);
 
-    private record Entry(int d1TorchFlowersBest,
-                         boolean d1CompletedWithAtLeast3TorchFlowers,
+    private record Entry(int d1LesserBloomsBest,
+                         boolean d1CompletedWithAtLeast3LesserBlooms,
                          int lesserBlooms,
                          int cavernResidue,
                          boolean villageAccessUnlocked,
@@ -28,15 +28,21 @@ public final class PlayerProgressionData extends SavedData {
                          int npcUnlockTierD2,
                          Set<String> flags) {
         private static final Codec<Entry> CODEC = RecordCodecBuilder.create(inst -> inst.group(
-                Codec.INT.optionalFieldOf("d1_torch_flowers_best", 0).forGetter(Entry::d1TorchFlowersBest),
-                Codec.BOOL.optionalFieldOf("d1_completed_with_at_least_3_torch_flowers", false).forGetter(Entry::d1CompletedWithAtLeast3TorchFlowers),
+                Codec.INT.optionalFieldOf("d1_lesser_blooms_best", 0).forGetter(Entry::d1LesserBloomsBest),
+                Codec.BOOL.optionalFieldOf("d1_completed_with_at_least_3_lesser_blooms", false).forGetter(Entry::d1CompletedWithAtLeast3LesserBlooms),
                 Codec.INT.optionalFieldOf("lesser_blooms", 0).forGetter(Entry::lesserBlooms),
                 Codec.INT.optionalFieldOf("cavern_residue", 0).forGetter(Entry::cavernResidue),
                 Codec.BOOL.optionalFieldOf("village_access_unlocked", false).forGetter(Entry::villageAccessUnlocked),
                 Codec.INT.optionalFieldOf("npc_unlock_tier_d1", 0).forGetter(Entry::npcUnlockTierD1),
                 Codec.INT.optionalFieldOf("npc_unlock_tier_d2", 0).forGetter(Entry::npcUnlockTierD2),
-                FLAG_SET_CODEC.optionalFieldOf("flags", Set.of()).forGetter(Entry::flags)
-        ).apply(inst, Entry::new));
+                FLAG_SET_CODEC.optionalFieldOf("flags", Set.of()).forGetter(Entry::flags),
+                Codec.INT.optionalFieldOf("d1_torch_flowers_best", 0).forGetter(e -> 0),
+                Codec.BOOL.optionalFieldOf("d1_completed_with_at_least_3_torch_flowers", false).forGetter(e -> false)
+        ).apply(inst, (best, completed, lesserBlooms, cavernResidue, village, d1Tier, d2Tier, flags, legacyBest, legacyCompleted) -> {
+            int migratedBest = Math.max(clampLesserBloomsBest(best), clampLesserBloomsBest(legacyBest));
+            boolean migratedCompleted = completed || legacyCompleted || migratedBest >= 3;
+            return new Entry(migratedBest, migratedCompleted, lesserBlooms, cavernResidue, migratedCompleted || village, clampTier(d1Tier), clampTier(d2Tier), Set.copyOf(flags));
+        }));
     }
 
     private static final Codec<Map<UUID, Entry>> DATA_CODEC = Codec.unboundedMap(UUID_CODEC, Entry.CODEC);
@@ -63,8 +69,8 @@ public final class PlayerProgressionData extends SavedData {
         return overworld.getDataStorage().computeIfAbsent(TYPE);
     }
 
-    public int getD1TorchFlowersBest(UUID playerId) { return getEntry(playerId).d1TorchFlowersBest(); }
-    public boolean isD1CompletedWithAtLeast3TorchFlowers(UUID playerId) { return getEntry(playerId).d1CompletedWithAtLeast3TorchFlowers(); }
+    public int getD1LesserBloomsBest(UUID playerId) { return getEntry(playerId).d1LesserBloomsBest(); }
+    public boolean isD1CompletedWithAtLeast3LesserBlooms(UUID playerId) { return getEntry(playerId).d1CompletedWithAtLeast3LesserBlooms(); }
     public int getLesserBlooms(UUID playerId) { return getEntry(playerId).lesserBlooms(); }
     public int getCavernResidue(UUID playerId) { return getEntry(playerId).cavernResidue(); }
     public boolean isVillageAccessUnlocked(UUID playerId) { return getEntry(playerId).villageAccessUnlocked(); }
@@ -72,25 +78,25 @@ public final class PlayerProgressionData extends SavedData {
     public int getNpcUnlockTierD2(UUID playerId) { return getEntry(playerId).npcUnlockTierD2(); }
     public Set<String> getFlags(UUID playerId) { return Set.copyOf(getEntry(playerId).flags()); }
 
-    public void setD1TorchFlowersBest(UUID playerId, int value) {
-        mutate(playerId, e -> with(e, clampTorchFlowers(value), e.d1CompletedWithAtLeast3TorchFlowers(), e.lesserBlooms(), e.cavernResidue(), e.villageAccessUnlocked(), e.npcUnlockTierD1(), e.npcUnlockTierD2(), e.flags()));
+    public void setD1LesserBloomsBest(UUID playerId, int value) {
+        mutate(playerId, e -> with(e, clampLesserBloomsBest(value), e.d1CompletedWithAtLeast3LesserBlooms(), e.lesserBlooms(), e.cavernResidue(), e.villageAccessUnlocked(), e.npcUnlockTierD1(), e.npcUnlockTierD2(), e.flags()));
     }
 
     public void setD1Completed(UUID playerId, boolean completed) {
-        mutate(playerId, e -> with(e, e.d1TorchFlowersBest(), completed, e.lesserBlooms(), e.cavernResidue(), completed || e.villageAccessUnlocked(), e.npcUnlockTierD1(), e.npcUnlockTierD2(), e.flags()));
+        mutate(playerId, e -> with(e, e.d1LesserBloomsBest(), completed, e.lesserBlooms(), e.cavernResidue(), completed || e.villageAccessUnlocked(), e.npcUnlockTierD1(), e.npcUnlockTierD2(), e.flags()));
     }
 
     public void setVillageAccessUnlocked(UUID playerId, boolean unlocked) {
-        mutate(playerId, e -> with(e, e.d1TorchFlowersBest(), e.d1CompletedWithAtLeast3TorchFlowers(), e.lesserBlooms(), e.cavernResidue(), unlocked, e.npcUnlockTierD1(), e.npcUnlockTierD2(), e.flags()));
+        mutate(playerId, e -> with(e, e.d1LesserBloomsBest(), e.d1CompletedWithAtLeast3LesserBlooms(), e.lesserBlooms(), e.cavernResidue(), unlocked, e.npcUnlockTierD1(), e.npcUnlockTierD2(), e.flags()));
     }
 
     public void setLesserBlooms(UUID playerId, int value) {
         int clamped = Math.max(0, value);
-        mutate(playerId, e -> with(e, e.d1TorchFlowersBest(), e.d1CompletedWithAtLeast3TorchFlowers(), clamped, e.cavernResidue(), e.villageAccessUnlocked(), tierFromLesserBlooms(clamped), e.npcUnlockTierD2(), e.flags()));
+        mutate(playerId, e -> with(e, e.d1LesserBloomsBest(), e.d1CompletedWithAtLeast3LesserBlooms(), clamped, e.cavernResidue(), e.villageAccessUnlocked(), tierFromLesserBlooms(clamped), e.npcUnlockTierD2(), e.flags()));
     }
 
     public void setCavernResidue(UUID playerId, int value) {
-        mutate(playerId, e -> with(e, e.d1TorchFlowersBest(), e.d1CompletedWithAtLeast3TorchFlowers(), e.lesserBlooms(), Math.max(0, value), e.villageAccessUnlocked(), e.npcUnlockTierD1(), e.npcUnlockTierD2(), e.flags()));
+        mutate(playerId, e -> with(e, e.d1LesserBloomsBest(), e.d1CompletedWithAtLeast3LesserBlooms(), e.lesserBlooms(), Math.max(0, value), e.villageAccessUnlocked(), e.npcUnlockTierD1(), e.npcUnlockTierD2(), e.flags()));
     }
 
     private interface EntryMutator { Entry apply(Entry entry); }
@@ -123,6 +129,6 @@ public final class PlayerProgressionData extends SavedData {
         return 0;
     }
 
-    private static int clampTorchFlowers(int value) { return Math.max(0, Math.min(6, value)); }
+    private static int clampLesserBloomsBest(int value) { return Math.max(0, Math.min(6, value)); }
     private static int clampTier(int value) { return Math.max(0, Math.min(4, value)); }
 }

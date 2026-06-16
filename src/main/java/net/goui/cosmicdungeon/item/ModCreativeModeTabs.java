@@ -34,6 +34,7 @@ public class ModCreativeModeTabs {
                                 output.accept(ModBlocks.BARRIER_BLOCK);
                                 output.accept(ModBlocks.CHICKEN_BLOCK);
                                 output.accept(ModBlocks.PILE_OF_BOOKS);
+                                output.accept(ModBlocks.CAVERN_RESIDUE_ITEM.get());
                                 output.accept(ModBlocks.INFINITE_DISPENSER);
                                 output.accept(ModBlocks.COSMIC_MOB_SPAWNER);
                                output.accept(ModBlocks.COSMIC_RIFT);
@@ -50,6 +51,7 @@ public class ModCreativeModeTabs {
                                 // RF system
                                 output.accept(ModBlocks.REDSTONE_TRANSMITTER);
                                 output.accept(ModBlocks.REDSTONE_RECEIVER);
+                                output.accept(ModBlocks.LESSER_BLOOM_ITEM.get());
                                 output.accept(ModBlocks.BLOOM_OF_QUIET_ASSURANCE_ITEM.get());
                                 output.accept(ModBlocks.BLOOM_OF_GENTLE_LIES_ITEM.get());
                                 output.accept(ModBlocks.BLOOM_OF_WANING_MERCY_ITEM.get());

@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/flower_pot_cross",
+  "textures": {
+    "plant": "cosmicdungeon:block/lesser_bloom",
+    "dirt": "minecraft:block/dirt",
+    "particle": "cosmicdungeon:block/lesser_bloom"
+  },
+  "render_type": "cutout"
+}

@@ -16,6 +16,7 @@ import net.goui.cosmicdungeon.block.custom.CosmicMobSpawnerBlock;
 import net.goui.cosmicdungeon.block.custom.CosmicRiftPlacerBlock;
 import net.goui.cosmicdungeon.block.custom.CosmicRiftTileBlock;
 import net.goui.cosmicdungeon.block.custom.InfiniteDispenserBlock;
+import net.goui.cosmicdungeon.block.custom.LesserBloomBlock;
 
 import net.goui.cosmicdungeon.block.custom.SpectralBloomBlock;
 import net.goui.cosmicdungeon.item.ModItems;
@@ -85,6 +86,13 @@ public class ModBlocks {
             "pile_of_books",
             (BlockBehaviour.Properties props) -> new Block(
                     props.strength(0.8F).sound(SoundType.WOOD).noOcclusion()
+            )
+    );
+
+    public static final DeferredBlock<Block> CAVERN_RESIDUE = BLOCKS.registerBlock(
+            "cavern_residue",
+            (BlockBehaviour.Properties props) -> new Block(
+                    props.strength(0.4F, 0.4F).sound(SoundType.GRAVEL).noOcclusion()
             )
     );
 
@@ -250,7 +258,17 @@ public class ModBlocks {
             props -> new SpectralBloomBlock(spectralBloomProps(props))
     );
 
+    public static final DeferredBlock<Block> LESSER_BLOOM = BLOCKS.registerBlock(
+            "lesser_bloom",
+            props -> new LesserBloomBlock(props.noCollision().instabreak().sound(SoundType.GRASS).noOcclusion())
+    );
+
     // POTTED variants (no item). These MUST exist for flower pots.
+    public static final DeferredBlock<Block> POTTED_LESSER_BLOOM = BLOCKS.registerBlock(
+            "potted_lesser_bloom",
+            props -> new FlowerPotBlock(() -> (FlowerPotBlock) Blocks.FLOWER_POT, LESSER_BLOOM, props)
+    );
+
     public static final DeferredBlock<Block> POTTED_BLOOM_OF_QUIET_ASSURANCE = BLOCKS.registerBlock(
             "potted_bloom_of_quiet_assurance",
             props -> new FlowerPotBlock(() -> (FlowerPotBlock) Blocks.FLOWER_POT, BLOOM_OF_QUIET_ASSURANCE, props)
@@ -288,6 +306,7 @@ public class ModBlocks {
     public static void registerFlowerPots() {
         FlowerPotBlock pot = (FlowerPotBlock) Blocks.FLOWER_POT;
 
+        pot.addPlant(LESSER_BLOOM.getId(), POTTED_LESSER_BLOOM);
         pot.addPlant(BLOOM_OF_QUIET_ASSURANCE.getId(), POTTED_BLOOM_OF_QUIET_ASSURANCE);
         pot.addPlant(BLOOM_OF_GENTLE_LIES.getId(), POTTED_BLOOM_OF_GENTLE_LIES);
         pot.addPlant(BLOOM_OF_WANING_MERCY.getId(), POTTED_BLOOM_OF_WANING_MERCY);
@@ -992,6 +1011,11 @@ public class ModBlocks {
             ModItems.ITEMS.registerSimpleBlockItem("venefex_chest", VENEFEX_CHEST);
 
     /* ---------- BlockItems for Spectral Blooms (for creative tab & pickup) ---------- */
+    public static final DeferredItem<BlockItem> LESSER_BLOOM_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("lesser_bloom", LESSER_BLOOM);
+    public static final DeferredItem<BlockItem> CAVERN_RESIDUE_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("cavern_residue", CAVERN_RESIDUE);
+
     public static final DeferredItem<BlockItem> BLOOM_OF_QUIET_ASSURANCE_ITEM =
             ModItems.ITEMS.registerSimpleBlockItem("bloom_of_quiet_assurance", BLOOM_OF_QUIET_ASSURANCE);
     public static final DeferredItem<BlockItem> BLOOM_OF_GENTLE_LIES_ITEM =

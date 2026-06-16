@@ -57,7 +57,8 @@ public class ModModelProvider extends ModelProvider {
         chestLikeBlockstate(blockModels, ModBlocks.THEURGIST_CHEST.get());
         chestLikeBlockstate(blockModels, ModBlocks.VENEFEX_CHEST.get());
 
-        // ===== Dungeon 1: Spectral Blooms =====
+        // ===== Dungeon 1: Lesser Bloom + Spectral Blooms =====
+        simpleCrossPlant(blockModels, itemModels, ModBlocks.LESSER_BLOOM.get());
         simpleCrossPlant(blockModels, itemModels, ModBlocks.BLOOM_OF_QUIET_ASSURANCE.get());
         simpleCrossPlant(blockModels, itemModels, ModBlocks.BLOOM_OF_GENTLE_LIES.get());
         simpleCrossPlant(blockModels, itemModels, ModBlocks.BLOOM_OF_WANING_MERCY.get());
@@ -65,7 +66,8 @@ public class ModModelProvider extends ModelProvider {
         simpleCrossPlant(blockModels, itemModels, ModBlocks.BLOOM_OF_UNSPOKEN_RESIGNATION.get());
         simpleCrossPlant(blockModels, itemModels, ModBlocks.BLOOM_OF_ELEGY.get());
 
-        // ===== Dungeon 1: Spectral Blooms (potted variants) =====
+        // ===== Dungeon 1: Lesser Bloom + Spectral Blooms (potted variants) =====
+        pottedCrossPlant(blockModels, itemModels, ModBlocks.POTTED_LESSER_BLOOM.get());
         pottedCrossPlant(blockModels, itemModels, ModBlocks.POTTED_BLOOM_OF_QUIET_ASSURANCE.get());
         pottedCrossPlant(blockModels, itemModels, ModBlocks.POTTED_BLOOM_OF_GENTLE_LIES.get());
         pottedCrossPlant(blockModels, itemModels, ModBlocks.POTTED_BLOOM_OF_WANING_MERCY.get());

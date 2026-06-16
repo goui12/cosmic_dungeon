@@ -17,8 +17,8 @@ public final class VendorAccessService {
             if (!ProgressionService.hasVillageAccess(sp)) {
                 return new AccessResult(false, "Village access is required.");
             }
-            if (ProgressionService.getD1TorchFlowersBest(sp) < 3) {
-                return new AccessResult(false, "Need D1 completion with at least 3 Torch Flowers.");
+            if (ProgressionService.getD1LesserBloomsBest(sp) < 3) {
+                return new AccessResult(false, "Need D1 completion with at least 3 Lesser Blooms.");
             }
         }
 

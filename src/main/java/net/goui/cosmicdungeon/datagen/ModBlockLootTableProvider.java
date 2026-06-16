@@ -37,8 +37,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         // ===== Explicit loot rules =====
 
         dropSelfHandled(ModBlocks.PILE_OF_BOOKS.get());
-
-
+        dropSelfHandled(ModBlocks.CAVERN_RESIDUE.get());
         dropSelfHandled(ModBlocks.INFINITE_DISPENSER.get());
 
 
@@ -46,6 +45,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         addHandled(ModBlocks.COSMIC_MOB_SPAWNER.get(), this::cosmicSpawnerLoot);
 
         // --- Blooms: drop themselves
+        dropSelfHandled(ModBlocks.LESSER_BLOOM.get());
         dropSelfHandled(ModBlocks.BLOOM_OF_QUIET_ASSURANCE.get());
         dropSelfHandled(ModBlocks.BLOOM_OF_GENTLE_LIES.get());
         dropSelfHandled(ModBlocks.BLOOM_OF_WANING_MERCY.get());
@@ -54,6 +54,8 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelfHandled(ModBlocks.BLOOM_OF_ELEGY.get());
 
         // --- Potted blooms: drop flower pot + unpotted bloom item
+        addHandled(ModBlocks.POTTED_LESSER_BLOOM.get(),
+                b -> pottedBloomLoot(ModBlocks.LESSER_BLOOM.get()));
         addHandled(ModBlocks.POTTED_BLOOM_OF_QUIET_ASSURANCE.get(),
                 b -> pottedBloomLoot(ModBlocks.BLOOM_OF_QUIET_ASSURANCE.get()));
         addHandled(ModBlocks.POTTED_BLOOM_OF_GENTLE_LIES.get(),
