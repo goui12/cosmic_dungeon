@@ -142,7 +142,7 @@ Authority: players can read their own faction values. Reading or mutating anothe
 
 ### Progression (1.5.0 long-term progression foundation)
 `/progression get <player>`
-`/progression d1 complete <player> <torchFlowers>`
+`/progression d1 complete <player> <lesserBlooms>`
 `/progression lesser add <player> <amount>`
 `/progression lesser set <player> <amount>`
 `/progression cavern add <player> <amount>`

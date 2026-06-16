@@ -5,21 +5,21 @@ import net.minecraft.server.level.ServerPlayer;
 public final class ProgressionService {
     private ProgressionService() {}
 
-    public static int getD1TorchFlowersBest(ServerPlayer player) {
+    public static int getD1LesserBloomsBest(ServerPlayer player) {
         if (player == null) return 0;
-        return data(player).getD1TorchFlowersBest(player.getUUID());
+        return data(player).getD1LesserBloomsBest(player.getUUID());
     }
 
-    public static void setD1TorchFlowersBest(ServerPlayer player, int value) {
+    public static void setD1LesserBloomsBest(ServerPlayer player, int value) {
         if (player == null) return;
-        data(player).setD1TorchFlowersBest(player.getUUID(), value);
+        data(player).setD1LesserBloomsBest(player.getUUID(), value);
     }
 
-    public static void markD1Completed(ServerPlayer player, int torchFlowerCount) {
+    public static void markD1Completed(ServerPlayer player, int lesserBloomCount) {
         if (player == null) return;
         PlayerProgressionData data = data(player);
-        data.setD1TorchFlowersBest(player.getUUID(), Math.max(getD1TorchFlowersBest(player), torchFlowerCount));
-        if (torchFlowerCount >= 3) {
+        data.setD1LesserBloomsBest(player.getUUID(), Math.max(getD1LesserBloomsBest(player), lesserBloomCount));
+        if (lesserBloomCount >= 3) {
             data.setD1Completed(player.getUUID(), true);
         }
     }

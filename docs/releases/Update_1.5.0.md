@@ -112,8 +112,8 @@ Scope boundary: this pass does not add vendors, NPC interactions, achievement tr
 
 - Added persistent long-term progression package: `net.goui.cosmicdungeon.progression`.
 - Added `PlayerProgressionData` SavedData keyed by player UUID with:
-  - D1 Torch Flower best count (0-6)
-  - D1 completion flag for >=3 Torch Flowers
+  - D1 Lesser Bloom best count (0-6), with legacy Torch Flower save keys migrated on load
+  - D1 completion flag for >=3 Lesser Blooms
   - Lesser Blooms total
   - Cavern Residue total
   - Village access unlock flag
@@ -127,7 +127,7 @@ Scope boundary: this pass does not add vendors, NPC interactions, achievement tr
   - 10-14 => tier 2
   - 15-19 => tier 3
   - 20+ => tier 4
-- Village access unlocks once D1 is completed with at least 3 Torch Flowers.
+- Village access unlocks once D1 is completed with at least 3 Lesser Blooms.
 - Added `/progression` command root for debug/admin mutation workflows.
 - Permission model keeps AccessPolicy as central authority:
   - self-read allowed
@@ -289,6 +289,12 @@ Scope boundary for this pass:
 - Added C2S payloads for selling inventory slots and detected sets.
 - Buyback pricing now reads valid class-item attunement metadata. Any class-attuned item, including armor, pays its stored Trace value when sold individually; class armor can also be bought as a complete four-piece set (helmet, chestpiece, pants/leggings, boots) when all pieces share the same class, dungeon, and tier, paying 125% of the four pieces' combined stored Trace values. The previous hardcoded D2 T1 Judicator seed is no longer the economy source.
 - Added player feedback messages for success and common failures, including capacity/ineligible/incomplete set states.
+## 1.5.0 Content Registry Update: Lesser Bloom and Cavern Residue
+
+- Added `cosmicdungeon:lesser_bloom` as the canonical Dungeon 1 flower collectible. Torch Flower terminology was placeholder-only and Dungeon 1 progression, commands, vendor requirements, and save fields now use Lesser Bloom naming.
+- Lesser Bloom behaves like a normal small flower, uses crossed flower rendering, can be placed on valid flower surfaces, supports flower pots via `cosmicdungeon:potted_lesser_bloom`, and appears under the Dungeon Items creative tab.
+- Added `cosmicdungeon:cavern_residue` as a real mod item and placeable low-hardness block. Its placed block uses a separate Blockbench-style block model from the flat 16x16 inventory item model, appears under Dungeon Items, and drops the `cavern_residue` item when broken.
+- Cavern Residue progression counters now have a real mod registry item/block to count against in progression, advancement, vendor, and container-counting integrations as those hooks are expanded.
 
 ## Vendor Access Gating Integration (Added May 26, 2026)
 - Added `VendorAccessService` as the single evaluator for per-player vendor access outcomes and readable denial reasons.
@@ -304,7 +310,7 @@ Scope boundary for this pass:
   - `cosmicdungeon:d1/weapon_supplier` -> D1 tier 2 (10 Lesser Blooms)
   - `cosmicdungeon:d1/brewing_store` -> D1 tier 3 (15 Lesser Blooms)
   - `cosmicdungeon:d1/save_teleport_npc` -> D1 tier 4 (20 Lesser Blooms)
-- Village gate requirement now enforced for these D1 vendors, including D1 completion expectation with at least 3 Torch Flowers.
+- Village gate requirement now enforced for these D1 vendors, including D1 completion expectation with at least 3 Lesser Blooms.
 - TODO:
   - Replace current string-based `requiredNpcSystem` with a typed enum/registry-backed id when D3+ systems are introduced.
   - Add localized translatable components for each denial reason and per-profile lock flavor text.

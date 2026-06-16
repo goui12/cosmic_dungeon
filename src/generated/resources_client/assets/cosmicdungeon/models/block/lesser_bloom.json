@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "cosmicdungeon:block/lesser_bloom",
+    "particle": "cosmicdungeon:block/lesser_bloom"
+  },
+  "render_type": "cutout"
+}

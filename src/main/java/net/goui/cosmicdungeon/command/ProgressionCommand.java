@@ -23,8 +23,8 @@ public final class ProgressionCommand {
                         .then(Commands.literal("complete")
                                 .requires(AccessPolicy::requireDeveloperOrConsole)
                                 .then(Commands.argument("player", EntityArgument.player())
-                                        .then(Commands.argument("torchFlowers", IntegerArgumentType.integer(0, 6))
-                                                .executes(ctx -> d1Complete(ctx.getSource(), EntityArgument.getPlayer(ctx, "player"), IntegerArgumentType.getInteger(ctx, "torchFlowers")))))))
+                                        .then(Commands.argument("lesserBlooms", IntegerArgumentType.integer(0, 6))
+                                                .executes(ctx -> d1Complete(ctx.getSource(), EntityArgument.getPlayer(ctx, "player"), IntegerArgumentType.getInteger(ctx, "lesserBlooms")))))))
                 .then(Commands.literal("lesser")
                         .then(Commands.literal("add")
                                 .requires(AccessPolicy::requireDeveloperOrConsole)
@@ -58,7 +58,7 @@ public final class ProgressionCommand {
     private static int get(CommandSourceStack src, ServerPlayer target) {
         if (!canRead(src, target)) return 0;
         src.sendSuccess(() -> Component.literal("Progression for " + target.getName().getString() + ":"), false);
-        src.sendSuccess(() -> Component.literal(" - D1 best Torch Flowers: " + ProgressionService.getD1TorchFlowersBest(target)), false);
+        src.sendSuccess(() -> Component.literal(" - D1 best Lesser Blooms: " + ProgressionService.getD1LesserBloomsBest(target)), false);
         src.sendSuccess(() -> Component.literal(" - D1 NPC tier: " + ProgressionService.getD1NpcUnlockTier(target)), false);
         src.sendSuccess(() -> Component.literal(" - Lesser Blooms: " + ProgressionService.getLesserBlooms(target)), false);
         src.sendSuccess(() -> Component.literal(" - Village access: " + ProgressionService.hasVillageAccess(target)), false);
@@ -67,9 +67,9 @@ public final class ProgressionCommand {
         return 1;
     }
 
-    private static int d1Complete(CommandSourceStack src, ServerPlayer target, int torchFlowers) {
-        ProgressionService.markD1Completed(target, torchFlowers);
-        src.sendSuccess(() -> Component.literal("Marked D1 completion for " + target.getName().getString() + " with " + torchFlowers + " Torch Flowers."), true);
+    private static int d1Complete(CommandSourceStack src, ServerPlayer target, int lesserBlooms) {
+        ProgressionService.markD1Completed(target, lesserBlooms);
+        src.sendSuccess(() -> Component.literal("Marked D1 completion for " + target.getName().getString() + " with " + lesserBlooms + " Lesser Blooms."), true);
         return 1;
     }
 
