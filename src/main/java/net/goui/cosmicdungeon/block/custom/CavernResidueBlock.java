@@ -8,7 +8,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class CavernResidueBlock extends Block {
-    private static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 12.0D, 1.0D, 12.0D);
+    private static final VoxelShape SHAPE = Block.box(2.0D, 0.0D, 2.0D, 14.0D, 1.0D, 14.0D);
 
     public CavernResidueBlock(Properties properties) {
         super(properties);

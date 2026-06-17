@@ -293,7 +293,7 @@ Scope boundary for this pass:
 
 - Added `cosmicdungeon:lesser_bloom` as the canonical Dungeon 1 flower collectible. Torch Flower terminology was placeholder-only and Dungeon 1 progression, commands, vendor requirements, and save fields now use Lesser Bloom naming.
 - Lesser Bloom behaves like a normal small flower, uses crossed flower rendering and a centered flower-sized selection shape, can be placed on valid flower surfaces, supports flower pots via `cosmicdungeon:potted_lesser_bloom`, and appears under the Dungeon Items creative tab.
-- Added `cosmicdungeon:cavern_residue` as a real mod item and placeable low-hardness block. Its placed block uses a separate Blockbench-style block model from the flat 16x16 inventory item model, has a low 1/16-high residue collision/selection shape, appears under Dungeon Items, and drops the `cavern_residue` item when broken.
+- Added `cosmicdungeon:cavern_residue` as a real mod item and placeable low-hardness block. Its placed block uses a separate Blockbench-style block model from the flat 16x16 inventory item model, has a centered low 1/16-high residue collision/selection shape that matches its placed model, appears under Dungeon Items, and drops the `cavern_residue` item when broken.
 - Cavern Residue progression counters now have a real mod registry item/block to count against in progression, advancement, vendor, and container-counting integrations as those hooks are expanded.
 
 ## Vendor Access Gating Integration (Added May 26, 2026)
