@@ -11,6 +11,7 @@ import net.goui.cosmicdungeon.block.amethyst.ColoredClusterBlock;
 import net.goui.cosmicdungeon.block.amethyst.LitColoredAmethystBlock;
 import net.goui.cosmicdungeon.block.custom.BarrierBlock;
 import net.goui.cosmicdungeon.block.custom.ChickenBlock;
+import net.goui.cosmicdungeon.block.custom.CavernResidueBlock;
 import net.goui.cosmicdungeon.block.custom.ClassSelectorBlock;
 import net.goui.cosmicdungeon.block.custom.CosmicMobSpawnerBlock;
 import net.goui.cosmicdungeon.block.custom.CosmicRiftPlacerBlock;
@@ -91,7 +92,7 @@ public class ModBlocks {
 
     public static final DeferredBlock<Block> CAVERN_RESIDUE = BLOCKS.registerBlock(
             "cavern_residue",
-            (BlockBehaviour.Properties props) -> new Block(
+            (BlockBehaviour.Properties props) -> new CavernResidueBlock(
                     props.strength(0.4F, 0.4F).sound(SoundType.GRAVEL).noOcclusion()
             )
     );
