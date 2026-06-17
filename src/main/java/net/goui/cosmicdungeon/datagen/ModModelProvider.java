@@ -168,6 +168,17 @@ public class ModModelProvider extends ModelProvider {
 
         registerRiftTile_BlockbenchStyle(blockModels, ModBlocks.COSMIC_RIFT_TILE.get(), rlMod("block/rift/cosmic_rift_tile"));
 
+            // ===== Cavern Residue =====
+        {
+            var b = ModBlocks.CAVERN_RESIDUE.get();
+            var blockModel = rlMod("block/cavern_residue");
+
+            blockModels.blockStateOutput.accept(
+                    MultiVariantGenerator.dispatch(b, new MultiVariant(WeightedList.of(new Variant(blockModel))))
+            );
+
+            FLAT.accept(b.asItem());
+        }
         // ===== Pile of Books =====
         {
             var b = ModBlocks.PILE_OF_BOOKS.get();
