@@ -22,10 +22,21 @@ public final class VendorService {
 
     public static VendorPayloads.S2C_OpenVendor buildOpenPayload(ServerPlayer sp, Villager villager, VendorProfile profile) {
         Set<String> unlocked = new HashSet<>();
+        List<VendorPayloads.S2C_OpenVendor.OfferView> offers = new ArrayList<>();
         for (VendorOffer offer : profile.buyOffers()) {
             if (VendorMenuState.isOfferUnlocked(sp, offer)) unlocked.add(offer.id().toString());
+            offers.add(new VendorPayloads.S2C_OpenVendor.OfferView(
+                    offer.id().toString(),
+                    offer.result().getHoverName().getString(),
+                    offer.result().getCount(),
+                    offer.cost().amount(),
+                    offer.cost().denomination().id()
+            ));
         }
-        return new VendorPayloads.S2C_OpenVendor(villager.getId(), profile.id().toString(), profile.displayName(), CurrencyService.getBalanceTrace(sp), java.util.List.copyOf(unlocked));
+        String pricingGroup = profile.buyback() != null && profile.buyback().pricingGroup() != null && !profile.buyback().pricingGroup().isBlank()
+                ? profile.buyback().pricingGroup()
+                : "default";
+        return new VendorPayloads.S2C_OpenVendor(villager.getId(), profile.id().toString(), profile.displayName(), CurrencyService.getBalanceTrace(sp), pricingGroup, List.copyOf(offers), List.copyOf(unlocked));
     }
 
     public static VendorPayloads.S2C_VendorPurchaseResult tryPurchase(ServerPlayer sp, int vendorEntityId, String offerIdRaw) {

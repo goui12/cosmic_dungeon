@@ -43,9 +43,8 @@ public final class VendorInteractionEvents {
         }
 
         VendorPayloads.S2C_OpenVendor open = VendorService.buildOpenPayload(sp, villager, profile);
-        sp.connection.send(open);
-
         sp.openMenu(new VendorProvider(profile.displayName()));
+        sp.connection.send(open);
     }
 
     private record VendorProvider(String title) implements MenuProvider {

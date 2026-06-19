@@ -10,7 +10,6 @@ import net.goui.cosmicdungeon.network.TradePayloads;
 import net.goui.cosmicdungeon.network.VendorPayloads;
 import net.goui.cosmicdungeon.client.screen.VendorScreen.VendorClientState;
 import net.goui.cosmicdungeon.client.screen.TradeScreen.TradeClientState;
-import net.goui.cosmicdungeon.vendor.VendorProfileManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.goui.cosmicdungeon.network.payload.RegionLookAllPayload;
@@ -65,13 +64,13 @@ public final class ModNetworkClient {
 
     public static void onOpenVendor(VendorPayloads.S2C_OpenVendor payload) {
         var profileId = ResourceLocation.tryParse(payload.profileId());
-        var profile = profileId == null ? null : VendorProfileManager.INSTANCE.get(profileId);
         VendorClientState.set(new VendorClientState.VendorView(
                 payload.vendorEntityId(),
                 profileId,
                 payload.displayName(),
-                profile,
                 payload.balanceTrace(),
+                payload.pricingGroup(),
+                java.util.List.copyOf(payload.offers()),
                 new java.util.HashSet<>(payload.unlockedOffers())
         ));
     }
@@ -79,7 +78,7 @@ public final class ModNetworkClient {
     public static void onVendorPurchaseResult(VendorPayloads.S2C_VendorPurchaseResult payload) {
         var current = VendorClientState.current();
         if (current != null) {
-            VendorClientState.set(new VendorClientState.VendorView(current.vendorEntityId(), current.profileId(), current.title(), current.profile(), payload.newBalanceTrace(), current.unlockedOffers()));
+            VendorClientState.set(new VendorClientState.VendorView(current.vendorEntityId(), current.profileId(), current.title(), payload.newBalanceTrace(), current.pricingGroup(), current.offers(), current.unlockedOffers()));
         }
     }
 
