@@ -43,13 +43,24 @@ public final class VendorPayloads {
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 
-    public record S2C_OpenVendor(int vendorEntityId, String profileId, String displayName, long balanceTrace, List<String> unlockedOffers) implements CustomPacketPayload {
+    public record S2C_OpenVendor(int vendorEntityId, String profileId, String displayName, long balanceTrace, String pricingGroup, List<OfferView> offers, List<String> unlockedOffers) implements CustomPacketPayload {
+        public record OfferView(String offerId, String itemDisplayName, int count, long costAmount, String costDenomination) {}
+        public static final StreamCodec<ByteBuf, OfferView> OFFER_VIEW_CODEC = StreamCodec.composite(
+                ByteBufCodecs.STRING_UTF8, OfferView::offerId,
+                ByteBufCodecs.STRING_UTF8, OfferView::itemDisplayName,
+                ByteBufCodecs.INT, OfferView::count,
+                ByteBufCodecs.VAR_LONG, OfferView::costAmount,
+                ByteBufCodecs.STRING_UTF8, OfferView::costDenomination,
+                OfferView::new
+        );
         public static final Type<S2C_OpenVendor> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "vendor_open"));
         public static final StreamCodec<ByteBuf, S2C_OpenVendor> STREAM_CODEC = StreamCodec.composite(
                 ByteBufCodecs.INT, S2C_OpenVendor::vendorEntityId,
                 ByteBufCodecs.STRING_UTF8, S2C_OpenVendor::profileId,
                 ByteBufCodecs.STRING_UTF8, S2C_OpenVendor::displayName,
                 ByteBufCodecs.VAR_LONG, S2C_OpenVendor::balanceTrace,
+                ByteBufCodecs.STRING_UTF8, S2C_OpenVendor::pricingGroup,
+                OFFER_VIEW_CODEC.apply(ByteBufCodecs.list()), S2C_OpenVendor::offers,
                 ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), S2C_OpenVendor::unlockedOffers,
                 S2C_OpenVendor::new
         );

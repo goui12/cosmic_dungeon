@@ -1,12 +1,11 @@
 package net.goui.cosmicdungeon.client.screen;
 
 import net.goui.cosmicdungeon.economy.CurrencyAmount;
+import net.goui.cosmicdungeon.economy.CurrencyDenomination;
 import net.goui.cosmicdungeon.economy.pricing.VendorPricingService;
 import net.goui.cosmicdungeon.menu.VendorMenu;
 import net.goui.cosmicdungeon.network.ModNetwork;
 import net.goui.cosmicdungeon.network.VendorPayloads;
-import net.goui.cosmicdungeon.vendor.VendorOffer;
-import net.goui.cosmicdungeon.vendor.VendorProfile;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -22,13 +21,12 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
     private static final int OFFER_ROW_HEIGHT = 22;
     private static final int OFFERS_PER_PAGE = 4;
 
-    private final VendorClientState.VendorView view;
     private final List<Button> offerButtons = new ArrayList<>();
+    private VendorClientState.VendorView renderedView;
     private int offerPage;
 
     public VendorScreen(VendorMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
-        this.view = VendorClientState.current();
         this.imageWidth = 220;
         this.imageHeight = 206;
     }
@@ -39,17 +37,30 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         rebuildVendorWidgets();
     }
 
+    @Override
+    protected void containerTick() {
+        super.containerTick();
+        if (VendorClientState.current() != renderedView) {
+            rebuildVendorWidgets();
+        }
+    }
+
+    private VendorClientState.VendorView view() {
+        return VendorClientState.current();
+    }
+
     private void rebuildVendorWidgets() {
         clearWidgets();
         offerButtons.clear();
+        renderedView = view();
         int x0 = leftPos + 10;
 
-        if (view == null || view.profile() == null) return;
+        if (renderedView == null || renderedView.offers().isEmpty()) return;
 
         clampOfferPage();
         int pageCount = pageCount();
         int firstOffer = offerPage * OFFERS_PER_PAGE;
-        int lastOffer = Math.min(firstOffer + OFFERS_PER_PAGE, view.profile().buyOffers().size());
+        int lastOffer = Math.min(firstOffer + OFFERS_PER_PAGE, renderedView.offers().size());
         int y = topPos + OFFER_ROW_TOP_OFFSET;
 
         if (pageCount > 1) {
@@ -67,11 +78,12 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         }
 
         for (int i = firstOffer; i < lastOffer; i++) {
-            VendorOffer offer = view.profile().buyOffers().get(i);
-            boolean unlocked = view.unlockedOffers().contains(offer.id().toString());
+            VendorPayloads.S2C_OpenVendor.OfferView offer = renderedView.offers().get(i);
+            boolean unlocked = renderedView.unlockedOffers().contains(offer.offerId());
             Button b = Button.builder(Component.literal(unlocked ? "Buy" : "Locked"), btn -> {
-                if (!unlocked) return;
-                ModNetwork.sendToServer(new VendorPayloads.C2S_RequestVendorPurchase(view.vendorEntityId(), offer.id().toString()));
+                VendorClientState.VendorView current = view();
+                if (!unlocked || current == null) return;
+                ModNetwork.sendToServer(new VendorPayloads.C2S_RequestVendorPurchase(current.vendorEntityId(), offer.offerId()));
             }).bounds(x0 + 160, y, 46, 20).build();
             b.active = unlocked;
             addRenderableWidget(b);
@@ -80,25 +92,25 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         }
 
         addRenderableWidget(Button.builder(Component.literal("Sell Held"), btn -> {
-            if (minecraft == null || minecraft.player == null || view == null) return;
+            VendorClientState.VendorView current = view();
+            if (minecraft == null || minecraft.player == null || current == null) return;
             int selectedSlot = minecraft.player.getInventory().getSelectedSlot();
-            ModNetwork.sendToServer(new VendorPayloads.C2S_RequestVendorSellSlot(view.vendorEntityId(), selectedSlot));
+            ModNetwork.sendToServer(new VendorPayloads.C2S_RequestVendorSellSlot(current.vendorEntityId(), selectedSlot));
         }).bounds(x0, topPos + imageHeight - 44, 70, 20).build());
 
         addRenderableWidget(Button.builder(Component.literal("Sell Set"), btn -> {
-            if (minecraft == null || minecraft.player == null || view == null || view.profile() == null) return;
-            String pricingGroup = view.profile().buyback() != null ? view.profile().buyback().pricingGroup() : "default";
-            var sets = VendorPricingService.detectCompleteSets(minecraft.player, pricingGroup);
+            VendorClientState.VendorView current = view();
+            if (minecraft == null || minecraft.player == null || current == null) return;
+            var sets = VendorPricingService.detectCompleteSets(minecraft.player, current.pricingGroup());
             if (sets.isEmpty()) return;
-            ModNetwork.sendToServer(new VendorPayloads.C2S_RequestVendorSellDetectedSet(view.vendorEntityId(), sets.getFirst().setId()));
+            ModNetwork.sendToServer(new VendorPayloads.C2S_RequestVendorSellDetectedSet(current.vendorEntityId(), sets.getFirst().setId()));
         }).bounds(x0 + 74, topPos + imageHeight - 44, 70, 20).build());
     }
 
     private int pageCount() {
-        if (view == null || view.profile() == null || view.profile().buyOffers().isEmpty()) {
-            return 1;
-        }
-        return (view.profile().buyOffers().size() + OFFERS_PER_PAGE - 1) / OFFERS_PER_PAGE;
+        VendorClientState.VendorView current = view();
+        if (current == null || current.offers().isEmpty()) return 1;
+        return (current.offers().size() + OFFERS_PER_PAGE - 1) / OFFERS_PER_PAGE;
     }
 
     private void clampOfferPage() {
@@ -108,75 +120,77 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
     private void changeOfferPage(int delta) {
         int oldPage = offerPage;
         offerPage = Math.max(0, Math.min(offerPage + delta, pageCount() - 1));
-        if (offerPage != oldPage) {
-            rebuildVendorWidgets();
-        }
+        if (offerPage != oldPage) rebuildVendorWidgets();
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (super.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
-            return true;
-        }
-        if (view == null || view.profile() == null || pageCount() <= 1 || !isMouseOver(mouseX, mouseY)) {
-            return false;
-        }
+        if (super.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) return true;
+        VendorClientState.VendorView current = view();
+        if (current == null || current.offers().isEmpty() || pageCount() <= 1 || !isMouseOver(mouseX, mouseY)) return false;
         changeOfferPage(scrollY < 0.0D ? 1 : -1);
         return true;
     }
 
     @Override
     protected void renderBg(GuiGraphics g, float partialTick, int mouseX, int mouseY) {
+        int bg = 0xE0202028;
+        int border = 0xFF7E57C2;
+        g.fill(leftPos, topPos, leftPos + imageWidth, topPos + imageHeight, bg);
+        g.fill(leftPos, topPos, leftPos + imageWidth, topPos + 1, border);
+        g.fill(leftPos, topPos + imageHeight - 1, leftPos + imageWidth, topPos + imageHeight, border);
+        g.fill(leftPos, topPos, leftPos + 1, topPos + imageHeight, border);
+        g.fill(leftPos + imageWidth - 1, topPos, leftPos + imageWidth, topPos + imageHeight, border);
     }
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        if (VendorClientState.current() != renderedView) rebuildVendorWidgets();
         renderBackground(g, mouseX, mouseY, partialTick);
         super.render(g, mouseX, mouseY, partialTick);
         renderTooltip(g, mouseX, mouseY);
 
+        VendorClientState.VendorView current = view();
         int x0 = leftPos + 10;
         int y = topPos + 8;
-        g.drawString(font, title, x0, y, 0xFFFFFF, false);
+        g.drawString(font, current != null ? Component.literal(current.title()) : title, x0, y, 0xFFFFFF, false);
         y += 12;
-        if (view == null || view.profile() == null) {
-            g.drawString(font, Component.literal("Vendor data unavailable."), x0, y, 0xFF5555, false);
+        if (current == null) {
+            g.drawString(font, Component.literal("Loading vendor data..."), x0, y, 0xB0BEC5, false);
             return;
         }
 
-        g.drawString(font, Component.literal("Balance: " + CurrencyAmount.ofTrace(view.balanceTrace()).formatNormalized()), x0, y, 0xFFE082, false);
+        g.drawString(font, Component.literal("Balance: " + CurrencyAmount.ofTrace(current.balanceTrace()).formatNormalized()), x0, y, 0xFFE082, false);
         y += 12;
 
         int pageCount = pageCount();
-        if (pageCount > 1) {
-            g.drawString(font, Component.literal("Offers " + (offerPage + 1) + "/" + pageCount), x0, y, 0xB0BEC5, false);
-            g.drawString(font, Component.literal("Scroll or page"), x0 + 114, topPos + 36, 0xB0BEC5, false);
-        } else {
-            g.drawString(font, Component.literal("Offers"), x0, y, 0xB0BEC5, false);
+        g.drawString(font, Component.literal(pageCount > 1 ? "Offers " + (offerPage + 1) + "/" + pageCount : "Offers"), x0, y, 0xB0BEC5, false);
+        if (pageCount > 1) g.drawString(font, Component.literal("Scroll or page"), x0 + 114, topPos + 36, 0xB0BEC5, false);
+
+        if (current.offers().isEmpty()) {
+            g.drawString(font, Component.literal("This vendor has no offers."), x0, topPos + OFFER_ROW_TOP_OFFSET, 0xB0BEC5, false);
         }
 
         int firstOffer = offerPage * OFFERS_PER_PAGE;
-        int lastOffer = Math.min(firstOffer + OFFERS_PER_PAGE, view.profile().buyOffers().size());
+        int lastOffer = Math.min(firstOffer + OFFERS_PER_PAGE, current.offers().size());
         y = topPos + OFFER_ROW_TOP_OFFSET;
 
         for (int i = firstOffer; i < lastOffer; i++) {
-            VendorOffer offer = view.profile().buyOffers().get(i);
-            boolean unlocked = view.unlockedOffers().contains(offer.id().toString());
-            String itemName = offer.result().getHoverName().getString();
-            String cost = CurrencyAmount.of(offer.cost().amount(), offer.cost().denomination()).formatNormalized();
+            VendorPayloads.S2C_OpenVendor.OfferView offer = current.offers().get(i);
+            boolean unlocked = current.unlockedOffers().contains(offer.offerId());
+            String itemName = offer.count() > 1 ? offer.itemDisplayName() + " x" + offer.count() : offer.itemDisplayName();
+            CurrencyDenomination denomination = CurrencyDenomination.fromId(offer.costDenomination());
+            String cost = CurrencyAmount.of(offer.costAmount(), denomination).formatNormalized();
             g.drawString(font, Component.literal(itemName), x0, y, 0xFFFFFF, false);
             g.drawString(font, Component.literal(cost), x0 + 105, y, 0xA5D6A7, false);
-            if (!unlocked) {
-                g.drawString(font, Component.literal("LOCKED"), x0 + 160, y, 0xEF9A9A, false);
-            }
+            if (!unlocked) g.drawString(font, Component.literal("LOCKED"), x0 + 160, y, 0xEF9A9A, false);
             y += OFFER_ROW_HEIGHT;
         }
 
         if (minecraft != null && minecraft.player != null) {
-            String pricingGroup = view.profile().buyback() != null ? view.profile().buyback().pricingGroup() : "default";
-            var heldPrice = VendorPricingService.getSellValue(minecraft.player.getMainHandItem(), pricingGroup);
+            var heldPrice = VendorPricingService.getSellValue(minecraft.player.getMainHandItem(), current.pricingGroup());
             g.drawString(font, Component.literal("Held sell value: " + heldPrice.traceValue() + " Trace"), x0, topPos + imageHeight - 66, 0x90CAF9, false);
-            var sets = VendorPricingService.detectCompleteSets(minecraft.player, pricingGroup);
+            var sets = VendorPricingService.detectCompleteSets(minecraft.player, current.pricingGroup());
             if (sets.isEmpty()) {
                 g.drawString(font, Component.literal("No complete set detected"), x0 + 146, topPos + imageHeight - 38, 0xB0BEC5, false);
             } else {
@@ -191,6 +205,6 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         public static void set(VendorView state) { current = state; }
         public static VendorView current() { return current; }
 
-        public record VendorView(int vendorEntityId, ResourceLocation profileId, String title, VendorProfile profile, long balanceTrace, java.util.Set<String> unlockedOffers) {}
+        public record VendorView(int vendorEntityId, ResourceLocation profileId, String title, long balanceTrace, String pricingGroup, List<VendorPayloads.S2C_OpenVendor.OfferView> offers, java.util.Set<String> unlockedOffers) {}
     }
 }
