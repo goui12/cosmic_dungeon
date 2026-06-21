@@ -181,7 +181,9 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             String itemName = offer.count() > 1 ? offer.itemDisplayName() + " x" + offer.count() : offer.itemDisplayName();
             CurrencyDenomination denomination = CurrencyDenomination.fromId(offer.costDenomination());
             String cost = CurrencyAmount.of(offer.costAmount(), denomination).formatNormalized();
-            g.drawString(font, Component.literal(itemName), x0, y, 0xFFFFFF, false);
+            g.renderItem(offer.stack(), x0, y - 4);
+            g.renderItemDecorations(font, offer.stack(), x0, y - 4);
+            g.drawString(font, Component.literal(itemName), x0 + 22, y, 0xFFFFFF, false);
             g.drawString(font, Component.literal(cost), x0 + 105, y, 0xA5D6A7, false);
             if (!unlocked) g.drawString(font, Component.literal("LOCKED"), x0 + 160, y, 0xEF9A9A, false);
             y += OFFER_ROW_HEIGHT;
