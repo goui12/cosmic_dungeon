@@ -22,6 +22,10 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
     private static final int OFFER_ROW_HEIGHT = 22;
     private static final int OFFERS_PER_PAGE = 4;
     private static final int OFFER_ITEM_SIZE = 16;
+    private static final int SELLABLE_TABLE_X_OFFSET = 214;
+    private static final int SELLABLE_TABLE_TOP_OFFSET = 46;
+    private static final int SELLABLE_ROW_HEIGHT = 18;
+    private static final int SELLABLE_ROWS = 7;
 
     private final List<Button> offerButtons = new ArrayList<>();
     private VendorClientState.VendorView renderedView;
@@ -29,8 +33,8 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
 
     public VendorScreen(VendorMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
-        this.imageWidth = 220;
-        this.imageHeight = 206;
+        this.imageWidth = 360;
+        this.imageHeight = 226;
     }
 
     @Override
@@ -135,6 +139,11 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
     }
 
     @Override
+    protected void renderLabels(GuiGraphics g, int mouseX, int mouseY) {
+        // Draw all labels manually so the inherited empty player inventory label is not shown.
+    }
+
+    @Override
     protected void renderBg(GuiGraphics g, float partialTick, int mouseX, int mouseY) {
         int bg = 0xE0202028;
         int border = 0xFF7E57C2;
@@ -163,6 +172,8 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         }
 
         g.drawString(font, Component.literal("Balance: " + CurrencyAmount.ofTrace(current.balanceTrace()).formatNormalized()), x0, y, 0xFFE082, false);
+        y += 12;
+        g.drawString(font, Component.literal(current.descriptor()), x0, y, 0xB39DDB, false);
         y += 12;
 
         int pageCount = pageCount();
@@ -201,6 +212,8 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             g.setTooltipForNextFrame(font, hoveredOfferStack, mouseX, mouseY);
         }
 
+        renderSellableInventoryPreview(g, mouseX, mouseY, current);
+
         if (minecraft != null && minecraft.player != null) {
             var heldPrice = VendorPricingService.getSellValue(minecraft.player.getMainHandItem(), current.pricingGroup());
             g.drawString(font, Component.literal("Held sell value: " + heldPrice.traceValue() + " Trace"), x0, topPos + imageHeight - 66, 0x90CAF9, false);
@@ -211,6 +224,53 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
                 var set = sets.getFirst();
                 g.drawString(font, Component.literal("Set " + set.setId() + ": " + set.traceValue() + " Trace"), x0 + 146, topPos + imageHeight - 38, 0xC5E1A5, false);
             }
+        }
+    }
+
+    private void renderSellableInventoryPreview(GuiGraphics g, int mouseX, int mouseY, VendorClientState.VendorView current) {
+        int tableX = leftPos + SELLABLE_TABLE_X_OFFSET;
+        int tableY = topPos + SELLABLE_TABLE_TOP_OFFSET;
+        g.drawString(font, Component.literal("Sellable Inventory"), tableX, topPos + 34, 0xB0BEC5, false);
+
+        if (minecraft == null || minecraft.player == null) {
+            g.drawString(font, Component.literal("Inventory unavailable"), tableX, tableY, 0xB0BEC5, false);
+            return;
+        }
+
+        List<SellableStackView> sellable = new ArrayList<>();
+        var inventory = minecraft.player.getInventory();
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            ItemStack stack = inventory.getItem(slot);
+            if (stack.isEmpty()) continue;
+            var price = VendorPricingService.getSellValue(stack, current.pricingGroup());
+            if (price.traceValue() > 0L) sellable.add(new SellableStackView(slot, stack, price.traceValue()));
+        }
+
+        if (sellable.isEmpty()) {
+            g.drawString(font, Component.literal("No sellable items found"), tableX, tableY, 0xB0BEC5, false);
+            return;
+        }
+
+        ItemStack hoveredSellableStack = ItemStack.EMPTY;
+        int rows = Math.min(SELLABLE_ROWS, sellable.size());
+        for (int i = 0; i < rows; i++) {
+            SellableStackView sellableStack = sellable.get(i);
+            int rowY = tableY + i * SELLABLE_ROW_HEIGHT;
+            g.fill(tableX - 2, rowY - 2, leftPos + imageWidth - 8, rowY + SELLABLE_ROW_HEIGHT - 2, 0x502B2B36);
+            g.renderItem(sellableStack.stack(), tableX, rowY - 3);
+            g.renderItemDecorations(font, sellableStack.stack(), tableX, rowY - 3);
+            String itemName = font.plainSubstrByWidth(sellableStack.stack().getHoverName().getString(), 80);
+            g.drawString(font, Component.literal(itemName), tableX + 20, rowY + 1, 0xFFFFFF, false);
+            g.drawString(font, Component.literal(sellableStack.traceValue() + " Trace"), tableX + 105, rowY + 1, 0x90CAF9, false);
+            if (isHoveringItemStack(mouseX, mouseY, tableX, rowY - 3, sellableStack.stack())) {
+                hoveredSellableStack = sellableStack.stack();
+            }
+        }
+        if (sellable.size() > SELLABLE_ROWS) {
+            g.drawString(font, Component.literal("+" + (sellable.size() - SELLABLE_ROWS) + " more sellable stacks"), tableX, tableY + SELLABLE_ROWS * SELLABLE_ROW_HEIGHT + 2, 0xB0BEC5, false);
+        }
+        if (!hoveredSellableStack.isEmpty()) {
+            g.setTooltipForNextFrame(font, hoveredSellableStack, mouseX, mouseY);
         }
     }
 
@@ -227,6 +287,24 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         public static void set(VendorView state) { current = state; }
         public static VendorView current() { return current; }
 
-        public record VendorView(int vendorEntityId, ResourceLocation profileId, String title, long balanceTrace, String pricingGroup, List<VendorPayloads.S2C_OpenVendor.OfferView> offers, java.util.Set<String> unlockedOffers) {}
+        public static String descriptorFromProfileId(ResourceLocation profileId) {
+            if (profileId == null) return "Vendor";
+            String path = profileId.getPath();
+            int slash = path.lastIndexOf('/');
+            String raw = slash >= 0 ? path.substring(slash + 1) : path;
+            String[] words = raw.split("[_\\s-]+");
+            StringBuilder descriptor = new StringBuilder();
+            for (String word : words) {
+                if (word.isBlank()) continue;
+                if (!descriptor.isEmpty()) descriptor.append(' ');
+                descriptor.append(Character.toUpperCase(word.charAt(0)));
+                if (word.length() > 1) descriptor.append(word.substring(1).toLowerCase());
+            }
+            return descriptor.isEmpty() ? "Vendor" : descriptor.toString();
+        }
+
+        public record VendorView(int vendorEntityId, ResourceLocation profileId, String title, String descriptor, long balanceTrace, String pricingGroup, List<VendorPayloads.S2C_OpenVendor.OfferView> offers, java.util.Set<String> unlockedOffers) {}
     }
+
+    private record SellableStackView(int slotIndex, ItemStack stack, long traceValue) {}
 }
