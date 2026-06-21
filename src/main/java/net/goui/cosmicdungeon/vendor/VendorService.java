@@ -27,6 +27,7 @@ public final class VendorService {
             if (VendorMenuState.isOfferUnlocked(sp, offer)) unlocked.add(offer.id().toString());
             offers.add(new VendorPayloads.S2C_OpenVendor.OfferView(
                     offer.id().toString(),
+                    offer.result().copy(),
                     offer.result().getHoverName().getString(),
                     offer.result().getCount(),
                     offer.cost().amount(),

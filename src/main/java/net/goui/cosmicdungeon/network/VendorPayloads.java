@@ -1,10 +1,12 @@
 package net.goui.cosmicdungeon.network;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
@@ -44,9 +46,10 @@ public final class VendorPayloads {
     }
 
     public record S2C_OpenVendor(int vendorEntityId, String profileId, String displayName, long balanceTrace, String pricingGroup, List<OfferView> offers, List<String> unlockedOffers) implements CustomPacketPayload {
-        public record OfferView(String offerId, String itemDisplayName, int count, long costAmount, String costDenomination) {}
-        public static final StreamCodec<ByteBuf, OfferView> OFFER_VIEW_CODEC = StreamCodec.composite(
+        public record OfferView(String offerId, ItemStack stack, String itemDisplayName, int count, long costAmount, String costDenomination) {}
+        public static final StreamCodec<RegistryFriendlyByteBuf, OfferView> OFFER_VIEW_CODEC = StreamCodec.composite(
                 ByteBufCodecs.STRING_UTF8, OfferView::offerId,
+                ItemStack.STREAM_CODEC, OfferView::stack,
                 ByteBufCodecs.STRING_UTF8, OfferView::itemDisplayName,
                 ByteBufCodecs.INT, OfferView::count,
                 ByteBufCodecs.VAR_LONG, OfferView::costAmount,
@@ -54,7 +57,7 @@ public final class VendorPayloads {
                 OfferView::new
         );
         public static final Type<S2C_OpenVendor> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "vendor_open"));
-        public static final StreamCodec<ByteBuf, S2C_OpenVendor> STREAM_CODEC = StreamCodec.composite(
+        public static final StreamCodec<RegistryFriendlyByteBuf, S2C_OpenVendor> STREAM_CODEC = StreamCodec.composite(
                 ByteBufCodecs.INT, S2C_OpenVendor::vendorEntityId,
                 ByteBufCodecs.STRING_UTF8, S2C_OpenVendor::profileId,
                 ByteBufCodecs.STRING_UTF8, S2C_OpenVendor::displayName,
