@@ -12,6 +12,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
     private static final int OFFER_ROW_TOP_OFFSET = 46;
     private static final int OFFER_ROW_HEIGHT = 22;
     private static final int OFFERS_PER_PAGE = 4;
+    private static final int OFFER_ITEM_SIZE = 16;
 
     private final List<Button> offerButtons = new ArrayList<>();
     private VendorClientState.VendorView renderedView;
@@ -174,6 +176,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         int firstOffer = offerPage * OFFERS_PER_PAGE;
         int lastOffer = Math.min(firstOffer + OFFERS_PER_PAGE, current.offers().size());
         y = topPos + OFFER_ROW_TOP_OFFSET;
+        ItemStack hoveredOfferStack = ItemStack.EMPTY;
 
         for (int i = firstOffer; i < lastOffer; i++) {
             VendorPayloads.S2C_OpenVendor.OfferView offer = current.offers().get(i);
@@ -181,12 +184,21 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             String itemName = offer.count() > 1 ? offer.itemDisplayName() + " x" + offer.count() : offer.itemDisplayName();
             CurrencyDenomination denomination = CurrencyDenomination.fromId(offer.costDenomination());
             String cost = CurrencyAmount.of(offer.costAmount(), denomination).formatNormalized();
-            g.renderItem(offer.stack(), x0, y - 4);
-            g.renderItemDecorations(font, offer.stack(), x0, y - 4);
+            int itemX = x0;
+            int itemY = y - 4;
+            g.renderItem(offer.stack(), itemX, itemY);
+            g.renderItemDecorations(font, offer.stack(), itemX, itemY);
             g.drawString(font, Component.literal(itemName), x0 + 22, y, 0xFFFFFF, false);
             g.drawString(font, Component.literal(cost), x0 + 105, y, 0xA5D6A7, false);
             if (!unlocked) g.drawString(font, Component.literal("LOCKED"), x0 + 160, y, 0xEF9A9A, false);
+            if (isHoveringItemStack(mouseX, mouseY, itemX, itemY, offer.stack())) {
+                hoveredOfferStack = offer.stack();
+            }
             y += OFFER_ROW_HEIGHT;
+        }
+
+        if (!hoveredOfferStack.isEmpty()) {
+            g.setTooltipForNextFrame(font, hoveredOfferStack, mouseX, mouseY);
         }
 
         if (minecraft != null && minecraft.player != null) {
@@ -200,6 +212,14 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
                 g.drawString(font, Component.literal("Set " + set.setId() + ": " + set.traceValue() + " Trace"), x0 + 146, topPos + imageHeight - 38, 0xC5E1A5, false);
             }
         }
+    }
+
+    private static boolean isHoveringItemStack(int mouseX, int mouseY, int itemX, int itemY, ItemStack stack) {
+        return !stack.isEmpty()
+                && mouseX >= itemX
+                && mouseX < itemX + OFFER_ITEM_SIZE
+                && mouseY >= itemY
+                && mouseY < itemY + OFFER_ITEM_SIZE;
     }
 
     public static final class VendorClientState {
