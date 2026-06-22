@@ -23,23 +23,22 @@ public final class VendorPayloads {
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 
-    public record C2S_RequestVendorSellSlot(int vendorEntityId, int slotIndex) implements CustomPacketPayload {
-        public static final Type<C2S_RequestVendorSellSlot> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "vendor_sell_slot_request"));
-        public static final StreamCodec<ByteBuf, C2S_RequestVendorSellSlot> STREAM_CODEC = StreamCodec.composite(
-                ByteBufCodecs.INT, C2S_RequestVendorSellSlot::vendorEntityId,
-                ByteBufCodecs.INT, C2S_RequestVendorSellSlot::slotIndex,
-                C2S_RequestVendorSellSlot::new
+    public record C2S_RequestVendorSellSelected(int vendorEntityId, List<Integer> slotIndexes) implements CustomPacketPayload {
+        public static final Type<C2S_RequestVendorSellSelected> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "vendor_sell_selected_request"));
+        public static final StreamCodec<ByteBuf, C2S_RequestVendorSellSelected> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.INT, C2S_RequestVendorSellSelected::vendorEntityId,
+                ByteBufCodecs.INT.apply(ByteBufCodecs.list()), C2S_RequestVendorSellSelected::slotIndexes,
+                C2S_RequestVendorSellSelected::new
         );
 
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 
-    public record C2S_RequestVendorSellDetectedSet(int vendorEntityId, String setId) implements CustomPacketPayload {
-        public static final Type<C2S_RequestVendorSellDetectedSet> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "vendor_sell_set_request"));
-        public static final StreamCodec<ByteBuf, C2S_RequestVendorSellDetectedSet> STREAM_CODEC = StreamCodec.composite(
-                ByteBufCodecs.INT, C2S_RequestVendorSellDetectedSet::vendorEntityId,
-                ByteBufCodecs.STRING_UTF8, C2S_RequestVendorSellDetectedSet::setId,
-                C2S_RequestVendorSellDetectedSet::new
+    public record C2S_RequestVendorSellAll(int vendorEntityId) implements CustomPacketPayload {
+        public static final Type<C2S_RequestVendorSellAll> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "vendor_sell_all_request"));
+        public static final StreamCodec<ByteBuf, C2S_RequestVendorSellAll> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.INT, C2S_RequestVendorSellAll::vendorEntityId,
+                C2S_RequestVendorSellAll::new
         );
 
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }

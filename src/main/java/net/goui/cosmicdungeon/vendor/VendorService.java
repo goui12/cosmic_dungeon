@@ -77,70 +77,74 @@ public final class VendorService {
         return new VendorPayloads.S2C_VendorPurchaseResult(true, "Purchase complete.", newBalance);
     }
 
-    public static VendorPayloads.S2C_VendorPurchaseResult trySellSlot(ServerPlayer sp, int vendorEntityId, int slotIndex) {
+    public static VendorPayloads.S2C_VendorPurchaseResult trySellSelected(ServerPlayer sp, int vendorEntityId, List<Integer> slotIndexes) {
         VendorContext context = validateVendor(sp, vendorEntityId, true);
         if (!context.ok()) return fail(sp, context.failMessage());
+        if (slotIndexes == null || slotIndexes.isEmpty()) return fail(sp, "No sellable items selected.");
 
-        if (slotIndex < 0 || slotIndex >= sp.getInventory().getContainerSize()) {
-            return fail(sp, "This vendor will not buy that.");
+        List<Integer> slotsToSell = new ArrayList<>();
+        Set<Integer> seen = new HashSet<>();
+        long payout = 0L;
+        for (Integer rawSlot : slotIndexes) {
+            if (rawSlot == null || !seen.add(rawSlot)) continue;
+            int slot = rawSlot;
+            if (slot < 0 || slot >= sp.getInventory().getContainerSize()) return fail(sp, "Selected item is no longer valid.");
+            ItemStack stack = sp.getInventory().getItem(slot);
+            if (stack.isEmpty()) return fail(sp, "Selected item is no longer available.");
+            VendorPrice price = VendorPricingService.getSellValue(stack, context.vendorType());
+            if (price.traceValue() <= 0L) return fail(sp, "Selected item is no longer sellable.");
+            if (Long.MAX_VALUE - payout < price.traceValue()) return fail(sp, "Sale payout is too large.");
+            payout += price.traceValue();
+            slotsToSell.add(slot);
         }
-        ItemStack stack = sp.getInventory().getItem(slotIndex);
-        if (stack.isEmpty()) return fail(sp, "This vendor will not buy that.");
 
-        VendorPrice price = VendorPricingService.getSellValue(stack, context.vendorType());
-        if (price.traceValue() <= 0L) return fail(sp, "This vendor will not buy that.");
-        if (!CurrencyService.canDeposit(sp, price.traceValue())) return fail(sp, "You do not have enough currency capacity.");
-
-        ItemStack soldStack = stack.copy();
-        sp.getInventory().setItem(slotIndex, ItemStack.EMPTY);
-
-        if (!CurrencyService.tryDeposit(sp, price.traceValue())) {
-            sp.getInventory().setItem(slotIndex, soldStack);
-            return fail(sp, "You do not have enough currency capacity.");
-        }
-
-        String soldName = soldStack.getHoverName().getString();
-        sp.sendSystemMessage(Component.literal("Sold ").withStyle(ChatFormatting.GREEN)
-                .append(Component.literal(soldName).withStyle(ChatFormatting.YELLOW))
-                .append(Component.literal(" for ").withStyle(ChatFormatting.WHITE))
-                .append(Component.literal(price.traceValue() + " Trace").withStyle(ChatFormatting.AQUA))
-                .append(Component.literal(".").withStyle(ChatFormatting.WHITE)));
-        return new VendorPayloads.S2C_VendorPurchaseResult(true, "Sale complete.", CurrencyService.getBalanceTrace(sp));
+        if (slotsToSell.isEmpty() || payout <= 0L) return fail(sp, "No sellable items selected.");
+        return commitSale(sp, slotsToSell, payout, "Selected sale complete.");
     }
 
-    public static VendorPayloads.S2C_VendorPurchaseResult trySellDetectedSet(ServerPlayer sp, int vendorEntityId, String setId) {
+    public static VendorPayloads.S2C_VendorPurchaseResult trySellAll(ServerPlayer sp, int vendorEntityId) {
         VendorContext context = validateVendor(sp, vendorEntityId, true);
         if (!context.ok()) return fail(sp, context.failMessage());
 
-        var detectedSetOpt = VendorPricingService.findDetectedClassArmorSet(sp, setId);
-        if (detectedSetOpt.isEmpty()) return fail(sp, "The full set is incomplete.");
-        var detectedSet = detectedSetOpt.get();
+        List<Integer> slotsToSell = new ArrayList<>();
+        long payout = 0L;
+        for (int slot = 0; slot < sp.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = sp.getInventory().getItem(slot);
+            if (stack.isEmpty()) continue;
+            VendorPrice price = VendorPricingService.getSellValue(stack, context.vendorType());
+            if (price.traceValue() <= 0L) continue;
+            if (Long.MAX_VALUE - payout < price.traceValue()) return fail(sp, "Sale payout is too large.");
+            payout += price.traceValue();
+            slotsToSell.add(slot);
+        }
 
-        List<Integer> slotsToRemove = detectedSet.inventorySlots();
-        long payout = detectedSet.traceValue();
-        if (payout <= 0L) return fail(sp, "This vendor will not buy that.");
+        if (slotsToSell.isEmpty() || payout <= 0L) return fail(sp, "No sellable items found.");
+        return commitSale(sp, slotsToSell, payout, "Sell all complete.");
+    }
+
+    private static VendorPayloads.S2C_VendorPurchaseResult commitSale(ServerPlayer sp, List<Integer> slotsToSell, long payout, String resultMessage) {
         if (!CurrencyService.canDeposit(sp, payout)) return fail(sp, "You do not have enough currency capacity.");
 
         List<ItemStack> removed = new ArrayList<>();
-        for (int slot : slotsToRemove) {
+        for (int slot : slotsToSell) {
             ItemStack original = sp.getInventory().getItem(slot);
             removed.add(original.copy());
             sp.getInventory().setItem(slot, ItemStack.EMPTY);
         }
 
         if (!CurrencyService.tryDeposit(sp, payout)) {
-            for (int i = 0; i < slotsToRemove.size(); i++) {
-                sp.getInventory().setItem(slotsToRemove.get(i), removed.get(i));
+            for (int i = 0; i < slotsToSell.size(); i++) {
+                sp.getInventory().setItem(slotsToSell.get(i), removed.get(i));
             }
             return fail(sp, "You do not have enough currency capacity.");
         }
 
         sp.sendSystemMessage(Component.literal("Sold ").withStyle(ChatFormatting.GREEN)
-                .append(Component.literal(detectedSet.setId()).withStyle(ChatFormatting.YELLOW))
+                .append(Component.literal(slotsToSell.size() + " stack" + (slotsToSell.size() == 1 ? "" : "s")).withStyle(ChatFormatting.YELLOW))
                 .append(Component.literal(" for ").withStyle(ChatFormatting.WHITE))
                 .append(Component.literal(payout + " Trace").withStyle(ChatFormatting.AQUA))
                 .append(Component.literal(".").withStyle(ChatFormatting.WHITE)));
-        return new VendorPayloads.S2C_VendorPurchaseResult(true, "Sale complete.", CurrencyService.getBalanceTrace(sp));
+        return new VendorPayloads.S2C_VendorPurchaseResult(true, resultMessage, CurrencyService.getBalanceTrace(sp));
     }
 
     private static VendorContext validateVendor(ServerPlayer sp, int vendorEntityId, boolean requireBuyback) {

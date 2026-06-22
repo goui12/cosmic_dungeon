@@ -284,9 +284,9 @@ Scope boundary for this pass:
 
 ## Vendor Buyback (Added May 26, 2026)
 - Added vendor buyback flow so assigned vendors can purchase eligible items and pay Attunement Fragment balance directly.
-- Added sell actions in vendor UI: **Sell Held** (main-hand selected hotbar slot) and **Sell Set** (first detected complete eligible set).
+- Added vendor inventories and adjusted the vendor GUI.
 - Added atomic server validation for sell requests: vendor assignment/range checks, buyback eligibility, positive value checks, and currency capacity checks before commit.
-- Added C2S payloads for selling inventory slots and detected sets.
+- Added C2S payloads for selling selected vendor-buyable inventory slots and selling all vendor-buyable inventory stacks.
 - Buyback pricing now reads valid class-item attunement metadata. Any class-attuned item, including armor, pays its stored Trace value when sold individually; class armor can also be bought as a complete four-piece set (helmet, chestpiece, pants/leggings, boots) when all pieces share the same class, dungeon, and tier, paying 125% of the four pieces' combined stored Trace values. The previous hardcoded D2 T1 Judicator seed is no longer the economy source.
 - Added player feedback messages for success and common failures, including capacity/ineligible/incomplete set states.
 ## 1.5.0 Content Registry Update: Lesser Bloom and Cavern Residue
