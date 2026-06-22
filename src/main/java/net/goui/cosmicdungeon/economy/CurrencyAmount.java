@@ -42,6 +42,18 @@ public record CurrencyAmount(long totalTrace) {
 
         long traces = remaining;
 
-        return anchors + "A " + crowns + "C " + seals + "S " + marks + "M " + traces + "T";
+        StringBuilder formatted = new StringBuilder();
+        appendDenomination(formatted, anchors, "A");
+        appendDenomination(formatted, crowns, "C");
+        appendDenomination(formatted, seals, "S");
+        appendDenomination(formatted, marks, "M");
+        appendDenomination(formatted, traces, "T");
+        return formatted.isEmpty() ? "0T" : formatted.toString();
+    }
+
+    private static void appendDenomination(StringBuilder formatted, long amount, String suffix) {
+        if (amount <= 0L) return;
+        if (!formatted.isEmpty()) formatted.append(' ');
+        formatted.append(amount).append(suffix);
     }
 }
