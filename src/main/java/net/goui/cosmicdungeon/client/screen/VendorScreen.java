@@ -171,14 +171,14 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         VendorClientState.VendorView current = view();
         int x0 = leftPos + 10;
         int y = topPos + 8;
-        g.drawString(font, current != null ? Component.literal(current.title()) : title, x0, y, 0xFFFFFF, false);
+        g.drawString(font, current != null ? Component.literal(displayTitle(current)) : title, x0, y, 0xFFFFFF, false);
         y += 12;
         if (current == null) {
             g.drawString(font, Component.literal("Loading vendor data..."), x0, y, 0xB0BEC5, false);
             return;
         }
 
-        g.drawString(font, Component.literal(current.storeDisplayName()), x0, y, 0xB39DDB, false);
+        g.drawString(font, Component.literal(displayStoreName(current)), x0, y, 0xB39DDB, false);
         y += 12;
 
         int pageCount = pageCount();
@@ -358,6 +358,17 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         if (denomination == null) return amount + " Trace";
         String name = denomination.id().isEmpty() ? "trace" : denomination.id();
         return amount + " " + Character.toUpperCase(name.charAt(0)) + name.substring(1).toLowerCase(Locale.ROOT);
+    }
+
+    private static String displayTitle(VendorClientState.VendorView current) {
+        if (current.title() != null && !current.title().isBlank()) return current.title();
+        return VendorClientState.descriptorFromProfileId(current.profileId());
+    }
+
+    private static String displayStoreName(VendorClientState.VendorView current) {
+        if (current.storeDisplayName() != null && !current.storeDisplayName().isBlank()) return current.storeDisplayName();
+        String descriptor = VendorClientState.descriptorFromProfileId(current.profileId());
+        return descriptor.equals("Vendor") ? "Vendor Store" : descriptor + " Store";
     }
 
     public static void clearSelectionsIfOpen() {
