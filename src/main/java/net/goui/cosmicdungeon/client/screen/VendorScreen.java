@@ -30,6 +30,9 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
     private static final int SELLABLE_TABLE_TOP_OFFSET = 62;
     private static final int SELLABLE_ROW_HEIGHT = 18;
     private static final int SELLABLE_ROWS = 6;
+    private static final int SELLABLE_ITEM_NAME_X_OFFSET = 20;
+    private static final int SELLABLE_VALUE_X_OFFSET = 88;
+    private static final int SELLABLE_COLUMN_GAP = 4;
 
     private final List<Button> offerButtons = new ArrayList<>();
     private final Set<Integer> selectedSellSlots = new HashSet<>();
@@ -271,9 +274,12 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             if (selectedSellSlots.contains(sellableStack.slotIndex())) drawBorder(g, tableX - 1, rowY - 4, tableX + 17, rowY + 14, 0xFFFFFFFF);
             g.renderItem(sellableStack.stack(), tableX, rowY - 3);
             g.renderItemDecorations(font, sellableStack.stack(), tableX, rowY - 3);
-            String itemName = font.plainSubstrByWidth(sellableStack.stack().getHoverName().getString(), 80);
-            g.drawString(font, Component.literal(itemName), tableX + 20, rowY + 1, 0xFFFFFFFF, false);
-            g.drawString(font, Component.literal(CurrencyAmount.ofTrace(sellableStack.traceValue()).formatNormalized()), tableX + 88, rowY + 1, 0xFF90CAF9, false);
+            int nameX = tableX + SELLABLE_ITEM_NAME_X_OFFSET;
+            int valueX = tableX + SELLABLE_VALUE_X_OFFSET;
+            int nameColumnWidth = valueX - nameX - SELLABLE_COLUMN_GAP;
+            String itemName = truncateWithEllipsis(sellableStack.stack().getHoverName().getString(), nameColumnWidth);
+            g.drawString(font, Component.literal(itemName), nameX, rowY + 1, 0xFFFFFFFF, false);
+            g.drawString(font, Component.literal(CurrencyAmount.ofTrace(sellableStack.traceValue()).formatNormalized()), valueX, rowY + 1, 0xFF90CAF9, false);
             if (isHoveringItemStack(mouseX, mouseY, tableX, rowY - 3, sellableStack.stack())) {
                 hoveredSellableStack = sellableStack.stack();
             }
@@ -284,6 +290,22 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         if (!hoveredSellableStack.isEmpty()) {
             g.setTooltipForNextFrame(font, hoveredSellableStack, mouseX, mouseY);
         }
+    }
+
+    private String truncateWithEllipsis(String text, int maxWidth) {
+        if (font.width(text) <= maxWidth) return text;
+
+        String ellipsis = "...";
+        int ellipsisWidth = font.width(ellipsis);
+        if (maxWidth <= ellipsisWidth) return font.plainSubstrByWidth(ellipsis, maxWidth);
+
+        String trimmed = text;
+        while (!trimmed.isEmpty()) {
+            trimmed = trimmed.substring(0, trimmed.length() - 1);
+            String candidate = trimmed + ellipsis;
+            if (font.width(candidate) <= maxWidth) return candidate;
+        }
+        return ellipsis;
     }
 
     private long previewSelectedPayout(VendorClientState.VendorView current) {
