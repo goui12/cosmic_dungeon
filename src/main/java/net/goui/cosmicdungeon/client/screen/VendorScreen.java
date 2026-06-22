@@ -26,7 +26,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
     private static final int OFFER_ROW_HEIGHT = 22;
     private static final int OFFERS_PER_PAGE = 5;
     private static final int OFFER_ITEM_SIZE = 16;
-    private static final int SELLABLE_TABLE_X_OFFSET = 214;
+    private static final int SELLABLE_TABLE_X_OFFSET = 219;
     private static final int SELLABLE_TABLE_TOP_OFFSET = 46;
     private static final int SELLABLE_ROW_HEIGHT = 18;
     private static final int SELLABLE_ROWS = 6;
@@ -97,7 +97,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
                 VendorClientState.VendorView current = view();
                 if (!unlocked || current == null) return;
                 ModNetwork.sendToServer(new VendorPayloads.C2S_RequestVendorPurchase(current.vendorEntityId(), offer.offerId()));
-            }).bounds(x0 + 160, y, 46, 20).build();
+            }).bounds(x0 + 160, y - 5, 46, 20).build();
             b.active = unlocked;
             addRenderableWidget(b);
             offerButtons.add(b);
@@ -178,7 +178,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             return;
         }
 
-        g.drawString(font, Component.literal(current.descriptor()), x0, y, 0xB39DDB, false);
+        g.drawString(font, Component.literal(current.storeDisplayName()), x0, y, 0xB39DDB, false);
         y += 12;
 
         int pageCount = pageCount();
@@ -232,7 +232,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
     private void renderSellableInventoryPreview(GuiGraphics g, int mouseX, int mouseY, VendorClientState.VendorView current) {
         int tableX = leftPos + SELLABLE_TABLE_X_OFFSET;
         int tableY = topPos + SELLABLE_TABLE_TOP_OFFSET;
-        g.drawString(font, Component.literal("Your Items"), tableX, topPos + 34, 0xB0BEC5, false);
+        g.drawString(font, Component.literal("Player Inventory"), tableX, topPos + 34, 0xB0BEC5, false);
 
         if (minecraft == null || minecraft.player == null) {
             g.drawString(font, Component.literal("Inventory unavailable"), tableX, tableY, 0xB0BEC5, false);
@@ -395,7 +395,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             return descriptor.isEmpty() ? "Vendor" : descriptor.toString();
         }
 
-        public record VendorView(int vendorEntityId, ResourceLocation profileId, String title, String descriptor, long balanceTrace, String pricingGroup, List<VendorPayloads.S2C_OpenVendor.OfferView> offers, java.util.Set<String> unlockedOffers) {}
+        public record VendorView(int vendorEntityId, ResourceLocation profileId, String title, String storeDisplayName, long balanceTrace, String pricingGroup, List<VendorPayloads.S2C_OpenVendor.OfferView> offers, java.util.Set<String> unlockedOffers) {}
     }
 
     private record SellableStackView(int slotIndex, ItemStack stack, long traceValue) {}

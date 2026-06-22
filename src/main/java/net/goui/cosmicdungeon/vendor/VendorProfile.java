@@ -7,6 +7,7 @@ import java.util.List;
 public record VendorProfile(
         ResourceLocation id,
         String displayName,
+        String storeDisplayName,
         String vendorType,
         boolean requiredVillageAccess,
         String requiredNpcSystem,

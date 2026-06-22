@@ -68,8 +68,8 @@ public final class ModNetworkClient {
         VendorClientState.set(new VendorClientState.VendorView(
                 payload.vendorEntityId(),
                 profileId,
-                payload.displayName(),
-                VendorClientState.descriptorFromProfileId(profileId),
+                payload.vendorDisplayName(),
+                payload.storeDisplayName(),
                 payload.balanceTrace(),
                 payload.pricingGroup(),
                 java.util.List.copyOf(payload.offers()),
@@ -80,7 +80,7 @@ public final class ModNetworkClient {
     public static void onVendorPurchaseResult(VendorPayloads.S2C_VendorPurchaseResult payload) {
         var current = VendorClientState.current();
         if (current != null) {
-            VendorClientState.set(new VendorClientState.VendorView(current.vendorEntityId(), current.profileId(), current.title(), current.descriptor(), payload.newBalanceTrace(), current.pricingGroup(), current.offers(), current.unlockedOffers()));
+            VendorClientState.set(new VendorClientState.VendorView(current.vendorEntityId(), current.profileId(), current.title(), current.storeDisplayName(), payload.newBalanceTrace(), current.pricingGroup(), current.offers(), current.unlockedOffers()));
         }
         if (payload.ok()) VendorScreen.clearSelectionsIfOpen();
     }

@@ -91,6 +91,7 @@ public final class VendorProfileManager extends SimplePreparableReloadListener<M
 
     private static VendorProfile parseProfile(ResourceLocation id, JsonObject root) {
         String displayName = GsonHelper.getAsString(root, "displayName", id.toString());
+        String storeDisplayName = GsonHelper.getAsString(root, "storeDisplayName", displayNameFromProfileId(id));
         String vendorType = GsonHelper.getAsString(root, "vendorType", "generic");
 
         ResourceLocation factionId = null;
@@ -109,7 +110,22 @@ public final class VendorProfileManager extends SimplePreparableReloadListener<M
 
         VendorProfile.BuybackConfig buyback = parseBuyback(root);
 
-        return new VendorProfile(id, displayName, vendorType, requiredVillageAccess, requiredNpcSystem, requiredNpcTier, factionId, requiredFactionTier, List.copyOf(offers), buyback);
+        return new VendorProfile(id, displayName, storeDisplayName, vendorType, requiredVillageAccess, requiredNpcSystem, requiredNpcTier, factionId, requiredFactionTier, List.copyOf(offers), buyback);
+    }
+
+    private static String displayNameFromProfileId(ResourceLocation id) {
+        String path = id.getPath();
+        int slash = path.lastIndexOf('/');
+        String raw = slash >= 0 ? path.substring(slash + 1) : path;
+        String[] words = raw.split("[_\\s-]+");
+        StringBuilder displayName = new StringBuilder();
+        for (String word : words) {
+            if (word.isBlank()) continue;
+            if (!displayName.isEmpty()) displayName.append(' ');
+            displayName.append(Character.toUpperCase(word.charAt(0)));
+            if (word.length() > 1) displayName.append(word.substring(1).toLowerCase(Locale.ROOT));
+        }
+        return displayName.isEmpty() ? "Vendor" : displayName.toString();
     }
 
     private static List<VendorOffer> parseOffers(ResourceLocation profileId, JsonArray offersArray) {
