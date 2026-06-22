@@ -6,6 +6,7 @@ import net.goui.cosmicdungeon.economy.pricing.VendorPricingService;
 import net.goui.cosmicdungeon.network.VendorPayloads;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSetPlayerInventoryPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.npc.Villager;
@@ -145,6 +146,11 @@ public final class VendorService {
                 sp.getInventory().setItem(slotsToSell.get(i), removed.get(i));
             }
             return fail(sp, "You do not have enough currency capacity.");
+        }
+
+        sp.getInventory().setChanged();
+        for (int slot : slotsToSell) {
+            sp.connection.send(new ClientboundSetPlayerInventoryPacket(slot, sp.getInventory().getItem(slot)));
         }
 
         sp.sendSystemMessage(Component.literal("Sold ").withStyle(ChatFormatting.GREEN)
