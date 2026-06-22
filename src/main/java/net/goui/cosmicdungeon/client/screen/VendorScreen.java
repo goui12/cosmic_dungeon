@@ -171,22 +171,22 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         VendorClientState.VendorView current = view();
         int x0 = leftPos + 10;
         int y = topPos + 8;
-        g.drawString(font, current != null ? Component.literal(displayTitle(current)) : title, x0, y, 0xFFFFFF, false);
+        g.drawString(font, current != null ? Component.literal(displayTitle(current)) : title, x0, y, 0xFFFFFFFF, false);
         y += 12;
         if (current == null) {
-            g.drawString(font, Component.literal("Loading vendor data..."), x0, y, 0xB0BEC5, false);
+            g.drawString(font, Component.literal("Loading vendor data..."), x0, y, 0xFFB0BEC5, false);
             return;
         }
 
-        g.drawString(font, Component.literal(displayStoreName(current)), x0, y, 0xB39DDB, false);
+        g.drawString(font, Component.literal(displayStoreName(current)), x0, y, 0xFFB39DDB, false);
         y += 12;
 
         int pageCount = pageCount();
-        g.drawString(font, Component.literal(pageCount > 1 ? "Vendor Selling: " + (offerPage + 1) + "/" + pageCount : "Vendor Selling:"), x0, y, 0xB0BEC5, false);
-        if (pageCount > 1) g.drawString(font, Component.literal("Scroll or page"), x0 + 114, topPos + 36, 0xB0BEC5, false);
+        g.drawString(font, Component.literal(pageCount > 1 ? "Vendor Selling: " + (offerPage + 1) + "/" + pageCount : "Vendor Selling:"), x0, y, 0xFFB0BEC5, false);
+        if (pageCount > 1) g.drawString(font, Component.literal("Scroll or page"), x0 + 114, topPos + 36, 0xFFB0BEC5, false);
 
         if (current.offers().isEmpty()) {
-            g.drawString(font, Component.literal("This vendor has no offers."), x0, topPos + OFFER_ROW_TOP_OFFSET, 0xB0BEC5, false);
+            g.drawString(font, Component.literal("This vendor has no offers."), x0, topPos + OFFER_ROW_TOP_OFFSET, 0xFFB0BEC5, false);
         }
 
         int firstOffer = offerPage * OFFERS_PER_PAGE;
@@ -205,9 +205,9 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             drawBorder(g, x0 - 3, y - 6, x0 + 209, y + 16, unlocked ? 0xFF5F6370 : 0xFF7A4550);
             g.renderItem(offer.stack(), itemX, itemY);
             g.renderItemDecorations(font, offer.stack(), itemX, itemY);
-            g.drawString(font, Component.literal(font.plainSubstrByWidth(itemName, 76)), x0 + 22, y, 0xFFFFFF, false);
-            g.drawString(font, Component.literal(cost), x0 + 105, y, 0xA5D6A7, false);
-            if (!unlocked) g.drawString(font, Component.literal("LOCKED"), x0 + 160, y, 0xEF9A9A, false);
+            g.drawString(font, Component.literal(font.plainSubstrByWidth(itemName, 76)), x0 + 22, y, 0xFFFFFFFF, false);
+            g.drawString(font, Component.literal(cost), x0 + 105, y, 0xFFA5D6A7, false);
+            if (!unlocked) g.drawString(font, Component.literal("LOCKED"), x0 + 160, y, 0xFFEF9A9A, false);
             if (isHoveringItemStack(mouseX, mouseY, itemX, itemY, offer.stack())) {
                 hoveredOfferStack = offer.stack();
             }
@@ -222,20 +222,20 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         long selectedPreview = previewSelectedPayout(current);
         long allPreview = previewAllPayout(current);
         int previewX = leftPos + SELLABLE_TABLE_X_OFFSET + 98;
-        g.drawString(font, Component.literal("Selected: " + selectedPreview + " Trace"), previewX, topPos + imageHeight - 49, 0x90CAF9, false);
-        g.drawString(font, Component.literal("All: " + allPreview + " Trace"), previewX, topPos + imageHeight - 25, 0x90CAF9, false);
+        g.drawString(font, Component.literal("Selected: " + selectedPreview + " Trace"), previewX, topPos + imageHeight - 49, 0xFF90CAF9, false);
+        g.drawString(font, Component.literal("All: " + allPreview + " Trace"), previewX, topPos + imageHeight - 25, 0xFF90CAF9, false);
 
         String balance = "Balance: " + CurrencyAmount.ofTrace(current.balanceTrace()).formatNormalized();
-        g.drawString(font, Component.literal(balance), leftPos + imageWidth - 8 - font.width(balance), topPos + imageHeight - 12, 0xFFE082, false);
+        g.drawString(font, Component.literal(balance), leftPos + imageWidth - 8 - font.width(balance), topPos + imageHeight - 12, 0xFFFFE082, false);
     }
 
     private void renderSellableInventoryPreview(GuiGraphics g, int mouseX, int mouseY, VendorClientState.VendorView current) {
         int tableX = leftPos + SELLABLE_TABLE_X_OFFSET;
         int tableY = topPos + SELLABLE_TABLE_TOP_OFFSET;
-        g.drawString(font, Component.literal("Player Inventory"), tableX, topPos + 34, 0xB0BEC5, false);
+        g.drawString(font, Component.literal("Player Inventory"), tableX, topPos + 34, 0xFFB0BEC5, false);
 
         if (minecraft == null || minecraft.player == null) {
-            g.drawString(font, Component.literal("Inventory unavailable"), tableX, tableY, 0xB0BEC5, false);
+            g.drawString(font, Component.literal("Inventory unavailable"), tableX, tableY, 0xFFB0BEC5, false);
             return;
         }
 
@@ -249,7 +249,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         }
 
         if (sellable.isEmpty()) {
-            g.drawString(font, Component.literal("No sellable items found"), tableX, tableY, 0xB0BEC5, false);
+            g.drawString(font, Component.literal("No sellable items found"), tableX, tableY, 0xFFB0BEC5, false);
             updateSellButtons(0L, 0L);
             return;
         }
@@ -269,14 +269,14 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             g.renderItem(sellableStack.stack(), tableX, rowY - 3);
             g.renderItemDecorations(font, sellableStack.stack(), tableX, rowY - 3);
             String itemName = font.plainSubstrByWidth(sellableStack.stack().getHoverName().getString(), 80);
-            g.drawString(font, Component.literal(itemName), tableX + 20, rowY + 1, 0xFFFFFF, false);
-            g.drawString(font, Component.literal(sellableStack.traceValue() + " Trace"), tableX + 105, rowY + 1, 0x90CAF9, false);
+            g.drawString(font, Component.literal(itemName), tableX + 20, rowY + 1, 0xFFFFFFFF, false);
+            g.drawString(font, Component.literal(sellableStack.traceValue() + " Trace"), tableX + 105, rowY + 1, 0xFF90CAF9, false);
             if (isHoveringItemStack(mouseX, mouseY, tableX, rowY - 3, sellableStack.stack())) {
                 hoveredSellableStack = sellableStack.stack();
             }
         }
         if (sellable.size() > SELLABLE_ROWS) {
-            g.drawString(font, Component.literal("+" + (sellable.size() - SELLABLE_ROWS) + " more sellable stacks"), tableX, tableY + SELLABLE_ROWS * SELLABLE_ROW_HEIGHT + 2, 0xB0BEC5, false);
+            g.drawString(font, Component.literal("+" + (sellable.size() - SELLABLE_ROWS) + " more sellable stacks"), tableX, tableY + SELLABLE_ROWS * SELLABLE_ROW_HEIGHT + 2, 0xFFB0BEC5, false);
         }
         if (!hoveredSellableStack.isEmpty()) {
             g.setTooltipForNextFrame(font, hoveredSellableStack, mouseX, mouseY);
