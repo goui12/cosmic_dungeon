@@ -197,15 +197,23 @@ public final class CurrencyCommand {
             return 0;
         }
 
-        var completeSets = VendorPricingService.detectCompleteSets(sp, "default");
-        if (completeSets.isEmpty()) {
-            src.sendSuccess(() -> Component.literal("No complete gear sets detected."), false);
-        } else {
-            src.sendSuccess(() -> Component.literal("Complete gear sets:"), false);
-            for (var set : completeSets) {
-                src.sendSuccess(() -> Component.literal(" - " + set.setId() + ": " + set.traceValue() + " Trace (" + set.pieceCount() + " pieces)"), false);
+        long total = 0L;
+        int sellableStacks = 0;
+        for (int slot = 0; slot < sp.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = sp.getInventory().getItem(slot);
+            if (stack.isEmpty()) continue;
+            VendorPrice price = VendorPricingService.getSellValue(stack, "default");
+            if (price.traceValue() <= 0L) continue;
+            if (Long.MAX_VALUE - total < price.traceValue()) {
+                src.sendFailure(Component.literal("Inventory sell value is too large."));
+                return 0;
             }
+            total += price.traceValue();
+            sellableStacks++;
         }
+        long finalTotal = total;
+        int finalSellableStacks = sellableStacks;
+        src.sendSuccess(() -> Component.literal("Inventory sell value: " + finalTotal + " Trace (" + finalSellableStacks + " sellable stack" + (finalSellableStacks == 1 ? "" : "s") + ")"), false);
 
         ItemStack mainHand = sp.getMainHandItem();
         if (!mainHand.isEmpty()) {
