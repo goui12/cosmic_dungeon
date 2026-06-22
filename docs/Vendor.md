@@ -22,6 +22,8 @@ Vendors are assigned NPC shops that use the Cosmic Dungeon Attunement Fragment c
 
 - The right pane is labeled **Your Items**.
 - Only stacks this vendor can buy are shown. Sellability is based on the vendor pricing group and the same pricing rules used by `VendorPricingService.getSellValue(...)`.
+- Items are valued independently: each sellable stack contributes its own stored or configured sell value to the payout.
+- Complete armor sets do not receive special vendor sale treatment; selecting or selling all four matching class-attuned armor pieces pays only the sum of the individual piece values.
 - Hovering a listed stack shows its normal item tooltip.
 - Click a sellable item stack to select it; click it again to deselect it. Selected stacks are outlined with a white border, and multiple stacks can be selected at once.
 
@@ -30,7 +32,7 @@ Vendors are assigned NPC shops that use the Cosmic Dungeon Attunement Fragment c
 - **Sell Selected** sells only the stacks you have selected in **Your Items**.
 - The preview next to the button shows the current selected payout, such as `Selected: 40 Trace`.
 - When nothing is selected, the preview shows `Selected: 0 Trace` and the button is disabled.
-- The server recalculates the payout, rechecks the vendor, validates each inventory slot, ignores duplicate slot indexes safely, confirms every stack is still sellable, checks currency capacity, then removes items and deposits currency atomically.
+- The server recalculates the payout from individual stack values, rechecks the vendor, validates each inventory slot, ignores duplicate slot indexes safely, confirms every stack is still sellable, checks currency capacity, then removes items and deposits currency atomically.
 
 ## Sell All
 
