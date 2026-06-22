@@ -8,6 +8,7 @@ import net.goui.cosmicdungeon.network.RiftPayloads;
 import net.goui.cosmicdungeon.network.ShakeScreenPayload;
 import net.goui.cosmicdungeon.network.TradePayloads;
 import net.goui.cosmicdungeon.network.VendorPayloads;
+import net.goui.cosmicdungeon.client.screen.VendorScreen;
 import net.goui.cosmicdungeon.client.screen.VendorScreen.VendorClientState;
 import net.goui.cosmicdungeon.client.screen.TradeScreen.TradeClientState;
 import net.minecraft.client.Minecraft;
@@ -81,6 +82,7 @@ public final class ModNetworkClient {
         if (current != null) {
             VendorClientState.set(new VendorClientState.VendorView(current.vendorEntityId(), current.profileId(), current.title(), current.descriptor(), payload.newBalanceTrace(), current.pricingGroup(), current.offers(), current.unlockedOffers()));
         }
+        if (payload.ok()) VendorScreen.clearSelectionsIfOpen();
     }
 
     public static void onTradeState(TradePayloads.S2C_TradeState payload) {

@@ -19,6 +19,7 @@ Developer-facing reference for world builders, dungeon operators, and content in
   - [Class Restrictions & Inventories](./Classes/Class_Restrictions_and_Inventory.md)
   - [Mobs & AI Behaviors](./Mobs/Mob_Behavior_Reference.md)
   - [Blocks & Interaction Contracts](./Blocks/Block_Interaction_Reference.md)
+  - [Vendor](./Vendor.md)
 - Release prep
   - [Update 1.4.8 Preparation](./releases/Update_1.4.8_Preparation.md)
   - [Update 1.5.0 Notes](./releases/Update_1.5.0.md)
