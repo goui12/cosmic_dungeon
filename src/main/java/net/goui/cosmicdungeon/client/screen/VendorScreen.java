@@ -22,12 +22,12 @@ import java.util.Set;
 import java.util.Locale;
 
 public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
-    private static final int OFFER_ROW_TOP_OFFSET = 46;
+    private static final int OFFER_ROW_TOP_OFFSET = 62;
     private static final int OFFER_ROW_HEIGHT = 22;
     private static final int OFFERS_PER_PAGE = 5;
     private static final int OFFER_ITEM_SIZE = 16;
-    private static final int SELLABLE_TABLE_X_OFFSET = 219;
-    private static final int SELLABLE_TABLE_TOP_OFFSET = 46;
+    private static final int SELLABLE_TABLE_X_OFFSET = 238;
+    private static final int SELLABLE_TABLE_TOP_OFFSET = 62;
     private static final int SELLABLE_ROW_HEIGHT = 18;
     private static final int SELLABLE_ROWS = 6;
 
@@ -41,7 +41,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
     public VendorScreen(VendorMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
         this.imageWidth = 360;
-        this.imageHeight = 226;
+        this.imageHeight = 258;
     }
 
     @Override
@@ -78,13 +78,13 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
 
         if (pageCount > 1) {
             Button previous = Button.builder(Component.literal("<"), btn -> changeOfferPage(-1))
-                    .bounds(x0 + 114, topPos + 16, 20, 18)
+                    .bounds(x0 + 126, topPos + 39, 20, 18)
                     .build();
             previous.active = offerPage > 0;
             addRenderableWidget(previous);
 
             Button next = Button.builder(Component.literal(">"), btn -> changeOfferPage(1))
-                    .bounds(x0 + 138, topPos + 16, 20, 18)
+                    .bounds(x0 + 150, topPos + 39, 20, 18)
                     .build();
             next.active = offerPage < pageCount - 1;
             addRenderableWidget(next);
@@ -97,7 +97,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
                 VendorClientState.VendorView current = view();
                 if (!unlocked || current == null) return;
                 ModNetwork.sendToServer(new VendorPayloads.C2S_RequestVendorPurchase(current.vendorEntityId(), offer.offerId()));
-            }).bounds(x0 + 160, y - 5, 46, 20).build();
+            }).bounds(x0 + 160, y - 6, 46, 20).build();
             b.active = unlocked;
             addRenderableWidget(b);
             offerButtons.add(b);
@@ -105,17 +105,17 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         }
 
         int sellX = leftPos + SELLABLE_TABLE_X_OFFSET;
-        int sellY = topPos + imageHeight - 54;
+        int sellY = topPos + imageHeight - 66;
         sellSelectedButton = Button.builder(Component.literal("Sell Selected"), btn -> {
             VendorClientState.VendorView current = view();
             if (current == null || selectedSellSlots.isEmpty()) return;
             ModNetwork.sendToServer(new VendorPayloads.C2S_RequestVendorSellSelected(current.vendorEntityId(), List.copyOf(selectedSellSlots)));
-        }).bounds(sellX, sellY, 92, 20).build();
+        }).bounds(sellX, sellY, 104, 20).build();
         sellAllButton = Button.builder(Component.literal("Sell All"), btn -> {
             VendorClientState.VendorView current = view();
             if (current == null) return;
             ModNetwork.sendToServer(new VendorPayloads.C2S_RequestVendorSellAll(current.vendorEntityId()));
-        }).bounds(sellX, sellY + 24, 92, 20).build();
+        }).bounds(sellX, sellY + 34, 104, 20).build();
         addRenderableWidget(sellSelectedButton);
         addRenderableWidget(sellAllButton);
     }
@@ -179,11 +179,14 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         }
 
         g.drawString(font, Component.literal(displayStoreName(current)), x0, y, 0xFFB39DDB, false);
-        y += 12;
+        y += 20;
 
         int pageCount = pageCount();
-        g.drawString(font, Component.literal(pageCount > 1 ? "Vendor Selling: " + (offerPage + 1) + "/" + pageCount : "Vendor Selling:"), x0, y, 0xFFB0BEC5, false);
-        if (pageCount > 1) g.drawString(font, Component.literal("Scroll or page"), x0 + 114, topPos + 36, 0xFFB0BEC5, false);
+        g.drawString(font, Component.literal("Vendor Selling:"), x0, y, 0xFFB0BEC5, false);
+        if (pageCount > 1) {
+            String pageText = (offerPage + 1) + "/" + pageCount;
+            g.drawString(font, Component.literal(pageText), x0 + 128 + (42 - font.width(pageText)) / 2, topPos + 30, 0xFFB0BEC5, false);
+        }
 
         if (current.offers().isEmpty()) {
             g.drawString(font, Component.literal("This vendor has no offers."), x0, topPos + OFFER_ROW_TOP_OFFSET, 0xFFB0BEC5, false);
@@ -221,18 +224,18 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         renderSellableInventoryPreview(g, mouseX, mouseY, current);
         long selectedPreview = previewSelectedPayout(current);
         long allPreview = previewAllPayout(current);
-        int previewX = leftPos + SELLABLE_TABLE_X_OFFSET + 98;
-        g.drawString(font, Component.literal("Selected: " + selectedPreview + " Trace"), previewX, topPos + imageHeight - 49, 0xFF90CAF9, false);
-        g.drawString(font, Component.literal("All: " + allPreview + " Trace"), previewX, topPos + imageHeight - 25, 0xFF90CAF9, false);
+        int footerX = leftPos + SELLABLE_TABLE_X_OFFSET;
+        g.drawString(font, Component.literal("Selected Value: " + CurrencyAmount.ofTrace(selectedPreview).formatNormalized()), footerX, topPos + imageHeight - 77, 0xFF90CAF9, false);
+        g.drawString(font, Component.literal("Inventory Value: " + CurrencyAmount.ofTrace(allPreview).formatNormalized()), footerX, topPos + imageHeight - 43, 0xFF90CAF9, false);
 
         String balance = "Balance: " + CurrencyAmount.ofTrace(current.balanceTrace()).formatNormalized();
-        g.drawString(font, Component.literal(balance), leftPos + imageWidth - 8 - font.width(balance), topPos + imageHeight - 12, 0xFFFFE082, false);
+        g.drawString(font, Component.literal(balance), footerX, topPos + imageHeight - 10, 0xFFFFE082, false);
     }
 
     private void renderSellableInventoryPreview(GuiGraphics g, int mouseX, int mouseY, VendorClientState.VendorView current) {
         int tableX = leftPos + SELLABLE_TABLE_X_OFFSET;
         int tableY = topPos + SELLABLE_TABLE_TOP_OFFSET;
-        g.drawString(font, Component.literal("Player Inventory"), tableX, topPos + 34, 0xFFB0BEC5, false);
+        g.drawString(font, Component.literal("Player Inventory"), tableX, topPos + 40, 0xFFB0BEC5, false);
 
         if (minecraft == null || minecraft.player == null) {
             g.drawString(font, Component.literal("Inventory unavailable"), tableX, tableY, 0xFFB0BEC5, false);
@@ -270,7 +273,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             g.renderItemDecorations(font, sellableStack.stack(), tableX, rowY - 3);
             String itemName = font.plainSubstrByWidth(sellableStack.stack().getHoverName().getString(), 80);
             g.drawString(font, Component.literal(itemName), tableX + 20, rowY + 1, 0xFFFFFFFF, false);
-            g.drawString(font, Component.literal(sellableStack.traceValue() + " Trace"), tableX + 105, rowY + 1, 0xFF90CAF9, false);
+            g.drawString(font, Component.literal(CurrencyAmount.ofTrace(sellableStack.traceValue()).formatNormalized()), tableX + 88, rowY + 1, 0xFF90CAF9, false);
             if (isHoveringItemStack(mouseX, mouseY, tableX, rowY - 3, sellableStack.stack())) {
                 hoveredSellableStack = sellableStack.stack();
             }
