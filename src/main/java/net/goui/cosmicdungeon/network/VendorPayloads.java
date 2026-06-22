@@ -44,7 +44,7 @@ public final class VendorPayloads {
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 
-    public record S2C_OpenVendor(int vendorEntityId, String profileId, String displayName, long balanceTrace, String pricingGroup, List<OfferView> offers, List<String> unlockedOffers) implements CustomPacketPayload {
+    public record S2C_OpenVendor(int vendorEntityId, String profileId, String vendorDisplayName, String storeDisplayName, long balanceTrace, String pricingGroup, List<OfferView> offers, List<String> unlockedOffers) implements CustomPacketPayload {
         public record OfferView(String offerId, ItemStack stack, String itemDisplayName, int count, long costAmount, String costDenomination) {}
         public static final StreamCodec<RegistryFriendlyByteBuf, OfferView> OFFER_VIEW_CODEC = StreamCodec.composite(
                 ByteBufCodecs.STRING_UTF8, OfferView::offerId,
@@ -59,7 +59,8 @@ public final class VendorPayloads {
         public static final StreamCodec<RegistryFriendlyByteBuf, S2C_OpenVendor> STREAM_CODEC = StreamCodec.composite(
                 ByteBufCodecs.INT, S2C_OpenVendor::vendorEntityId,
                 ByteBufCodecs.STRING_UTF8, S2C_OpenVendor::profileId,
-                ByteBufCodecs.STRING_UTF8, S2C_OpenVendor::displayName,
+                ByteBufCodecs.STRING_UTF8, S2C_OpenVendor::vendorDisplayName,
+                ByteBufCodecs.STRING_UTF8, S2C_OpenVendor::storeDisplayName,
                 ByteBufCodecs.VAR_LONG, S2C_OpenVendor::balanceTrace,
                 ByteBufCodecs.STRING_UTF8, S2C_OpenVendor::pricingGroup,
                 OFFER_VIEW_CODEC.apply(ByteBufCodecs.list()), S2C_OpenVendor::offers,

@@ -37,7 +37,15 @@ public final class VendorService {
         String pricingGroup = profile.buyback() != null && profile.buyback().pricingGroup() != null && !profile.buyback().pricingGroup().isBlank()
                 ? profile.buyback().pricingGroup()
                 : "default";
-        return new VendorPayloads.S2C_OpenVendor(villager.getId(), profile.id().toString(), profile.displayName(), CurrencyService.getBalanceTrace(sp), pricingGroup, List.copyOf(offers), List.copyOf(unlocked));
+        return new VendorPayloads.S2C_OpenVendor(villager.getId(), profile.id().toString(), vendorDisplayName(villager, profile), profile.storeDisplayName(), CurrencyService.getBalanceTrace(sp), pricingGroup, List.copyOf(offers), List.copyOf(unlocked));
+    }
+
+    private static String vendorDisplayName(Villager villager, VendorProfile profile) {
+        Component customName = villager.getCustomName();
+        if (customName != null && !customName.getString().isBlank()) {
+            return customName.getString();
+        }
+        return profile.displayName();
     }
 
     public static VendorPayloads.S2C_VendorPurchaseResult tryPurchase(ServerPlayer sp, int vendorEntityId, String offerIdRaw) {
