@@ -114,6 +114,7 @@ Notes:
 - Attunement is stored in persistent data components: `cosmicdungeon:class_attunement`, `cosmicdungeon:class_item_dungeon`, `cosmicdungeon:class_item_tier`, and `cosmicdungeon:class_item_trace_value`.
 - Hover tooltips append the attuned class display name at the bottom in that class color, bold and italic. Normal items show no extra line.
 - Class-attuned equipment is server-restricted to the matching selected class: guarded tools, weapons, shields, bows/crossbows/tridents, maces, and armor/equippable combat gear deny use or wear with `Only a <Class> can use/wear that!` when the player has another class or no class.
+- Intrinsic class-bound Metalmancer utility items, including the Satchel of Samples and Metalmancer-only items/staffs, use the same central class item access policy; explicit stack attunement still takes priority if present.
 - Class-attuned banners are intentionally not guarded equipment, so Plant Flags banners remain placeable and can still be inspected by the Plant Flags system. Dungeon, tier, and Trace metadata do not affect equipment use restrictions.
 - Vendor sell value uses valid class-item attunement metadata as the source of truth: any sold attuned item, including armor, sells for its stored Trace value.
 - Vendor sales value each sellable stack independently; matching armor pieces do not receive special vendor sale treatment.

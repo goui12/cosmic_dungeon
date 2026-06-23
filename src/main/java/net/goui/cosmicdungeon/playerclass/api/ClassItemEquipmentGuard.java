@@ -31,7 +31,14 @@ public final class ClassItemEquipmentGuard {
     }
 
     public static String getRequiredClass(ItemStack stack) {
-        return ClassItemUtil.getClassAttunement(stack);
+        if (stack == null || stack.isEmpty()) return null;
+        String attuned = ClassItemUtil.getClassAttunement(stack);
+        if (attuned != null) return attuned;
+        if (stack.getItem() instanceof ClassBoundItem bound) {
+            String classId = ClassItemUtil.normalizeClassId(bound.requiredClassId());
+            return ClassItemUtil.isPlayableClass(classId) ? classId : null;
+        }
+        return null;
     }
 
     public static String getPlayerClass(ServerPlayer player) {
@@ -73,7 +80,7 @@ public final class ClassItemEquipmentGuard {
         if (required == null) return true;
         if (wearing) {
             if (!isWearableEquipment(stack)) return true;
-        } else if (!isGuardedEquipment(stack)) {
+        } else if (!isGuardedEquipment(stack) && !(stack.getItem() instanceof ClassBoundItem)) {
             return true;
         }
         return required.equals(getPlayerClass(player));

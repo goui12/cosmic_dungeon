@@ -1,6 +1,8 @@
 // file: net/goui/cosmicdungeon/playerclass/ore/SatchelOfSamplesItem.java
 package net.goui.cosmicdungeon.playerclass.ore;
 
+import net.goui.cosmicdungeon.playerclass.api.ClassBoundItem;
+import net.goui.cosmicdungeon.playerclass.api.ClassKeys;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -13,7 +15,7 @@ import net.minecraft.world.item.component.TooltipDisplay;
 
 import java.util.function.Consumer;
 
-public class SatchelOfSamplesItem extends Item {
+public class SatchelOfSamplesItem extends Item implements ClassBoundItem {
     public static final String KEY_ORE = "ore";
     public static final String KEY_CAP = "cap"; // optional capacity
 
@@ -23,6 +25,11 @@ public class SatchelOfSamplesItem extends Item {
 
     public SatchelOfSamplesItem(Properties p) {
         super(p.stacksTo(1));
+    }
+
+    @Override
+    public String requiredClassId() {
+        return ClassKeys.CLASS_ID_METALMANCER;
     }
 
     /* ---------- helpers (CustomData component) ---------- */

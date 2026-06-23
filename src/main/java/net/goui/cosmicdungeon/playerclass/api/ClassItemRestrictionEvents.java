@@ -2,13 +2,10 @@
 package net.goui.cosmicdungeon.playerclass.api;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -21,24 +18,6 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID)
 public final class ClassItemRestrictionEvents {
     private ClassItemRestrictionEvents() {}
-
-    private static final ResourceLocation SATCHEL_ID =
-            ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "satchel_of_samples");
-
-    private static boolean isLegacyRestrictedFor(ServerPlayer sp, ItemStack stack) {
-        if (sp == null) return false;
-        if (stack == null || stack.isEmpty()) return false;
-
-        String cls = ClassNbtUtil.getClassId(sp);
-        if (cls == null) cls = ClassKeys.CLASS_ID_NONE;
-
-        Item satchel = BuiltInRegistries.ITEM.getValue(SATCHEL_ID);
-        if (satchel != null && stack.getItem() == satchel) {
-            return !ClassKeys.CLASS_ID_METALMANCER.equals(cls);
-        }
-
-        return false;
-    }
 
     private static boolean denyWrongClassUse(ServerPlayer sp, ItemStack stack) {
         if (ClassItemEquipmentGuard.canUse(sp, stack)) return false;
@@ -65,10 +44,6 @@ public final class ClassItemRestrictionEvents {
             e.setCanceled(true);
             e.setCancellationResult(InteractionResult.FAIL);
             return;
-        }
-        if (isLegacyRestrictedFor(sp, e.getItemStack())) {
-            e.setCanceled(true);
-            e.setCancellationResult(InteractionResult.FAIL);
         }
     }
 
@@ -101,9 +76,6 @@ public final class ClassItemRestrictionEvents {
         if (!(e.getEntity() instanceof ServerPlayer sp)) return;
         if (sp.level().isClientSide()) return;
 
-        stripLegacyIfRestricted(sp, sp.getMainHandItem(), EquipmentSlot.MAINHAND);
-        stripLegacyIfRestricted(sp, sp.getOffhandItem(), EquipmentSlot.OFFHAND);
-
         rejectInvalidArmor(sp, EquipmentSlot.HEAD);
         rejectInvalidArmor(sp, EquipmentSlot.CHEST);
         rejectInvalidArmor(sp, EquipmentSlot.LEGS);
@@ -120,20 +92,5 @@ public final class ClassItemRestrictionEvents {
         boolean inserted = inv.add(copy);
         if (!inserted) sp.drop(copy, false);
         ClassItemEquipmentGuard.denyWear(sp, copy);
-    }
-
-    private static void stripLegacyIfRestricted(ServerPlayer sp, ItemStack stack, EquipmentSlot slot) {
-        if (sp == null) return;
-        if (stack == null || stack.isEmpty()) return;
-        if (!isLegacyRestrictedFor(sp, stack)) return;
-
-        ItemStack copy = stack.copy();
-        sp.setItemSlot(slot, ItemStack.EMPTY);
-
-        Inventory inv = sp.getInventory();
-        boolean inserted = inv.add(copy);
-        if (!inserted) {
-            sp.drop(copy, false);
-        }
     }
 }
