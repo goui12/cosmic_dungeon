@@ -70,6 +70,11 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
         return name;
     }
 
+    private static boolean isDisabledClassSelection(String classId) {
+        return ClassKeys.CLASS_ID_METALMANCER.equals(classId)
+                || ClassKeys.CLASS_ID_DEADEYE.equals(classId);
+    }
+
     @Override
     protected void init() {
         super.init();
@@ -127,6 +132,8 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
             boolean isActive = cls != null && cls.equals(activeClass);
 
             Button btn = Button.builder(classButtonLabel(cls, isActive), b -> {
+                        if (isDisabledClassSelection(cls)) return;
+
                         this.loading = true;
                         rebuildSelectorWidgets();
 
@@ -170,7 +177,7 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
             // only show buttons inside (or slightly overlapping) the viewport
             boolean inView = (y + BTN_H) > this.listY && y < (this.listY + this.listH);
             btn.visible = inView;
-            btn.active = true; // still clickable when visible; hide handles non-interaction
+            btn.active = !isDisabledClassSelection(this.available.get(i)); // disabled class buttons stay shaded and unclickable
         }
     }
 

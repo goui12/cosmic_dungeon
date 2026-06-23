@@ -49,9 +49,15 @@ public final class ClassNet {
 
     /* ---------- selectable classes ---------- */
 
+    public static boolean isDisabledClassSelection(String classId) {
+        return ClassKeys.CLASS_ID_METALMANCER.equals(classId)
+                || ClassKeys.CLASS_ID_DEADEYE.equals(classId);
+    }
+
     public static List<String> getSelectableClasses(ServerPlayer sp) {
         // Server-authoritative list the selector UI will display.
         // Expand/lock down later with ready-room rules if desired.
+        // Disabled classes remain listed so the client can shade them instead of hiding them.
         return ClassKeys.ORDERED;
     }
 
@@ -136,6 +142,7 @@ public final class ClassNet {
         String cls = Objects.requireNonNullElse(requested, ClassKeys.CLASS_ID_NONE);
         cls = ClassKeys.clamp(cls);
         if (!getSelectableClasses(sp).contains(cls)) return ClassKeys.CLASS_ID_NONE;
+        if (isDisabledClassSelection(cls)) return ClassKeys.CLASS_ID_NONE;
         return cls;
     }
 

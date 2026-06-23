@@ -8,6 +8,7 @@ Class selector is a block+block-entity+menu+screen workflow that assigns class a
 - Selector supports fallback destination.
 - Selector supports max-player configuration for dungeon entry targeting.
 - Teleport utility and ready-state tick manager coordinate handoff behavior.
+- Metalmancer and Deadeye remain visible in the selector list but are temporarily disabled: their buttons render with the normal disabled-button shading and cannot be clicked. Server-side selection normalization also rejects those class IDs while they are disabled.
 
 ## Developer interactions
 
