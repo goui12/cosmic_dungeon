@@ -271,6 +271,15 @@ public final class ModNetwork {
                     if (!(ctx.player() instanceof ServerPlayer sp)) return;
 
                     String requested = payload.classId();
+                    String clamped = ClassKeys.clamp(requested);
+
+                    if (ClassNet.isDisabledClassSelection(clamped)) {
+                        String now = Objects.requireNonNullElse(ClassNbtUtil.getClassId(sp), ClassKeys.CLASS_ID_NONE);
+                        ctx.reply(new ClassPayloads.S2C_SelectResult(false, "Class is currently disabled: " + clamped, now));
+                        ctx.reply(new ClassPayloads.S2C_SelectorData(now, ClassNet.getSelectableClasses(sp)));
+                        return;
+                    }
+
                     String normalized = ClassNet.normalizeRequestedClass(sp, requested);
 
                     ClassNet.applySelectedClass(sp, normalized);
