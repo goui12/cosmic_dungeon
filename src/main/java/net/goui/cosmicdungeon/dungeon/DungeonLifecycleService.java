@@ -1,5 +1,6 @@
 package net.goui.cosmicdungeon.dungeon;
 
+import net.goui.cosmicdungeon.achievement.plantflags.PlantFlagService;
 import net.goui.cosmicdungeon.advancement.BloomSharedAdvancements;
 import net.goui.cosmicdungeon.block.custom.ClassSelectorReadyManager;
 import net.goui.cosmicdungeon.block.custom.ClassSelectorTeleportUtil;
@@ -151,6 +152,8 @@ public final class DungeonLifecycleService {
         if (runId <= 0L) {
             return "Run registration failed.";
         }
+
+        PlantFlagService.initializeRun(server, runId);
 
         notifyDevelopers(server, Component.literal(
                 "[DungeonLifecycle] Started run " + runId + " for " + def.id() + " with " + party.size() + " player(s)."
@@ -450,6 +453,7 @@ public final class DungeonLifecycleService {
         }
 
         if (runId > 0L) {
+            PlantFlagService.clearForRun(server, runId);
             DungeonRunRegistryData.get(server).removeRun(runId);
             DungeonRunProgressData.get(server).clearRun(runId);
         }

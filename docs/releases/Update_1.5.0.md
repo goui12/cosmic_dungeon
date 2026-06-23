@@ -84,7 +84,7 @@ These are planned for future 1.5.x follow-up work.
 
 
 ## 1.5.0 Follow-up: Class item attunement foundation
-- Added developer command `/classitem attune <class_name> <dungeon_number> <tier_number> <trace_value>` for turning an existing held vanilla/customized item into CosmicDungeon class gear.
+- Added developer command `/classitem attune <class_name> <dungeon_number> <tier_number> <trace_value>` for turning an existing held vanilla/customized item, including designed vanilla banners, into CosmicDungeon class gear.
 - Added `/classitem clear` to remove only CosmicDungeon class-item metadata from the held item.
 - Attunement uses persistent NeoForge data components: `class_attunement`, `class_item_dungeon`, `class_item_tier`, and `class_item_trace_value`.
 - Class ids are accepted case-insensitively from playable `ClassKeys`, excluding `none`, and stored as canonical lowercase values. Dungeon accepts both `d1` and `1`; tier is limited to 1-10; Trace is zero or greater.
@@ -155,11 +155,11 @@ Scope boundary: this pass provides framework + tooling only; gameplay/event trig
 ## 1.5.0 Follow-up: D1 Plant Flags achievement foundation
 
 - Added package `net.goui.cosmicdungeon.achievement.plantflags` with persisted state machine foundation for D1 Plant Flags.
-- Added `PlantFlagData` SavedData including active run/session id, planted player UUID set, disconnect cooldown timestamp, completion flag, and configurable region bounds.
-- Added `PlantFlagService` with APIs to record banner planting, clear per-run state, compute online eligible players, evaluate cooldown/eligibility, and complete once ready.
+- Added `PlantFlagData` SavedData with global configurable region bounds and run-scoped planted/completed state keyed by dungeon run id.
+- Added `PlantFlagService` with APIs to record classitem-attuned banner planting, clear per-run state, compute online eligible players from each run orderedPlayers list, and complete once ready without a global disconnect cooldown.
 - Added event hooks for banner placement and disconnect handling:
-  - Banner placements only count when the placed block is a banner and inside configured Plant Flags region.
-  - Disconnects/link-dead events trigger a 5-minute cooldown lockout before completion can occur.
+  - Banner placements only count when a normal banner item/block is placed inside the Plant Flags region and its classitem attunement matches the player class and active dungeon run.
+  - Offline run members do not block completion; online members in the same run must plant matching class-attuned banners, with no global disconnect cooldown.
 - Added `/plantflags` command root:
   - `/plantflags status` (public)
   - `/plantflags reset` (developer/console)
