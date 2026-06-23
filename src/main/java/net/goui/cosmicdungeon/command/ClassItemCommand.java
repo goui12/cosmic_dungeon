@@ -30,16 +30,20 @@ public final class ClassItemCommand {
                 .requires(AccessPolicy::requireDeveloperOrConsole)
                 .executes(ctx -> showHelp(ctx.getSource()))
                 .then(Commands.literal("attune")
-                        .then(Commands.argument("class_name", StringArgumentType.word())
-                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(ClassKeys.playableClassIds(), builder))
-                                .then(Commands.argument("dungeon_number", StringArgumentType.word())
-                                        .then(Commands.argument("tier_number", IntegerArgumentType.integer(1, 10))
-                                                .then(Commands.argument("trace_value", LongArgumentType.longArg(0L))
-                                                        .executes(ClassItemCommand::attune))))))
+                        .then(attuneArguments()))
                 .then(Commands.literal("clear")
                         .executes(ctx -> clear(ctx.getSource())))
                 .then(Commands.argument("unknown", StringArgumentType.greedyString())
                         .executes(ctx -> unknown(ctx.getSource(), StringArgumentType.getString(ctx, "unknown")))));
+    }
+
+    private static com.mojang.brigadier.builder.RequiredArgumentBuilder<CommandSourceStack, String> attuneArguments() {
+        return Commands.argument("class_name", StringArgumentType.word())
+                .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(ClassKeys.playableClassIds(), builder))
+                .then(Commands.argument("dungeon_number", StringArgumentType.word())
+                        .then(Commands.argument("tier_number", IntegerArgumentType.integer(1, 10))
+                                .then(Commands.argument("trace_value", LongArgumentType.longArg(0L))
+                                        .executes(ClassItemCommand::attune))));
     }
 
     private static int showHelp(CommandSourceStack src) {
