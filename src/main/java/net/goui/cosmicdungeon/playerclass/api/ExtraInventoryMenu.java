@@ -138,6 +138,8 @@ public class ExtraInventoryMenu extends AbstractCraftingMenu {
         if (!player.level().isClientSide()) {
             this.clearContainer(player, this.craftSlots);
 
+            if (!ClassNbtUtil.isMetalmancer(player)) return;
+
             // Persist your 3 extra slots (server-side only; client must never write PD)
             NonNullList<ItemStack> list = NonNullList.withSize(extra.getContainerSize(), ItemStack.EMPTY);
             for (int i = 0; i < extra.getContainerSize(); i++) {
@@ -156,7 +158,7 @@ public class ExtraInventoryMenu extends AbstractCraftingMenu {
 
     @Override
     public boolean stillValid(Player p) {
-        return true;
+        return ClassNbtUtil.isMetalmancer(p);
     }
 
     @Override

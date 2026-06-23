@@ -96,6 +96,7 @@ These are planned for future 1.5.x follow-up work.
 - Class-attuned armor/equippable gear is rejected from armor slots on the server; invalid pieces are moved back to inventory when possible or safely dropped if the inventory is full, with throttled denial messages to avoid chat spam.
 - The restriction uses only the stored class attunement. Dungeon number, tier number, and Trace value remain stored/visible/economic metadata and do not affect use or wear permission.
 - Class-attuned banners are excluded from guarded equipment so Plant Flags banners remain placeable and can still be evaluated by the Plant Flags achievement system.
+- Class-bound Metalmancer utility items, including the Satchel of Samples and Metalmancer-only items/staffs, now use the same central class item access policy as class-attuned equipment; the satchel remains a utility item and does not require dungeon, tier, or Trace metadata.
 
 ## 1.5.0 Follow-up: Faction foundation (JHW baseline only)
 

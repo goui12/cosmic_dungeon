@@ -3,6 +3,7 @@ package net.goui.cosmicdungeon.playerclass.ore;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.playerclass.api.ClassData;
+import net.goui.cosmicdungeon.playerclass.api.ClassNbtUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.NonNullList;
@@ -29,7 +30,7 @@ public final class SatchelHudOverlay {
         if (mc.options.hideGui) return;
 
         Player p = mc.player;
-        if (p == null) return;
+        if (p == null || !ClassNbtUtil.isMetalmancer(p)) return;
 
         // Optional: skip HUD while your custom Metalmancer inventory is open, if you want
         // if (mc.screen instanceof ExtraInventoryScreen) return;
