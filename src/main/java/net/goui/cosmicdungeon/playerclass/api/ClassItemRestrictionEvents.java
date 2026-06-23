@@ -10,9 +10,12 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID)
@@ -22,7 +25,7 @@ public final class ClassItemRestrictionEvents {
     private static final ResourceLocation SATCHEL_ID =
             ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "satchel_of_samples");
 
-    private static boolean isRestrictedFor(ServerPlayer sp, ItemStack stack) {
+    private static boolean isLegacyRestrictedFor(ServerPlayer sp, ItemStack stack) {
         if (sp == null) return false;
         if (stack == null || stack.isEmpty()) return false;
 
@@ -31,44 +34,98 @@ public final class ClassItemRestrictionEvents {
 
         Item satchel = BuiltInRegistries.ITEM.getValue(SATCHEL_ID);
         if (satchel != null && stack.getItem() == satchel) {
-            // Only Metalmancer can use the Satchel of Samples
             return !ClassKeys.CLASS_ID_METALMANCER.equals(cls);
         }
 
         return false;
     }
 
-    @SubscribeEvent
+    private static boolean denyWrongClassUse(ServerPlayer sp, ItemStack stack) {
+        if (ClassItemEquipmentGuard.canUse(sp, stack)) return false;
+        ClassItemEquipmentGuard.denyUse(sp, stack);
+        return true;
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onBreakBlock(BlockEvent.BreakEvent e) {
+        if (!(e.getPlayer() instanceof ServerPlayer sp)) return;
+        if (denyWrongClassUse(sp, sp.getMainHandItem())) e.setCanceled(true);
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onAttackEntity(AttackEntityEvent e) {
+        if (!(e.getEntity() instanceof ServerPlayer sp)) return;
+        if (denyWrongClassUse(sp, sp.getMainHandItem())) e.setCanceled(true);
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onRightClickItem(PlayerInteractEvent.RightClickItem e) {
         if (!(e.getEntity() instanceof ServerPlayer sp)) return;
-        if (!isRestrictedFor(sp, e.getItemStack())) return;
+        if (denyWrongClassUse(sp, e.getItemStack())) {
+            e.setCanceled(true);
+            e.setCancellationResult(InteractionResult.FAIL);
+            return;
+        }
+        if (isLegacyRestrictedFor(sp, e.getItemStack())) {
+            e.setCanceled(true);
+            e.setCancellationResult(InteractionResult.FAIL);
+        }
+    }
 
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock e) {
+        if (!(e.getEntity() instanceof ServerPlayer sp)) return;
+        if (!denyWrongClassUse(sp, e.getItemStack())) return;
         e.setCanceled(true);
         e.setCancellationResult(InteractionResult.FAIL);
     }
 
-    /**
-     * NeoForge 1.21.x: PlayerTickEvent is abstract.
-     * You must subscribe to PlayerTickEvent.Pre or PlayerTickEvent.Post.
-     */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onEntityInteract(PlayerInteractEvent.EntityInteract e) {
+        if (!(e.getEntity() instanceof ServerPlayer sp)) return;
+        if (!denyWrongClassUse(sp, e.getItemStack())) return;
+        e.setCanceled(true);
+        e.setCancellationResult(InteractionResult.FAIL);
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onEntityInteractSpecific(PlayerInteractEvent.EntityInteractSpecific e) {
+        if (!(e.getEntity() instanceof ServerPlayer sp)) return;
+        if (!denyWrongClassUse(sp, e.getItemStack())) return;
+        e.setCanceled(true);
+        e.setCancellationResult(InteractionResult.FAIL);
+    }
+
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post e) {
         if (!(e.getEntity() instanceof ServerPlayer sp)) return;
         if (sp.level().isClientSide()) return;
 
-        stripIfRestricted(sp, sp.getMainHandItem(), EquipmentSlot.MAINHAND);
-        stripIfRestricted(sp, sp.getOffhandItem(), EquipmentSlot.OFFHAND);
+        stripLegacyIfRestricted(sp, sp.getMainHandItem(), EquipmentSlot.MAINHAND);
+        stripLegacyIfRestricted(sp, sp.getOffhandItem(), EquipmentSlot.OFFHAND);
 
-        stripIfRestricted(sp, sp.getItemBySlot(EquipmentSlot.HEAD), EquipmentSlot.HEAD);
-        stripIfRestricted(sp, sp.getItemBySlot(EquipmentSlot.CHEST), EquipmentSlot.CHEST);
-        stripIfRestricted(sp, sp.getItemBySlot(EquipmentSlot.LEGS), EquipmentSlot.LEGS);
-        stripIfRestricted(sp, sp.getItemBySlot(EquipmentSlot.FEET), EquipmentSlot.FEET);
+        rejectInvalidArmor(sp, EquipmentSlot.HEAD);
+        rejectInvalidArmor(sp, EquipmentSlot.CHEST);
+        rejectInvalidArmor(sp, EquipmentSlot.LEGS);
+        rejectInvalidArmor(sp, EquipmentSlot.FEET);
     }
 
-    private static void stripIfRestricted(ServerPlayer sp, ItemStack stack, EquipmentSlot slot) {
+    private static void rejectInvalidArmor(ServerPlayer sp, EquipmentSlot slot) {
+        ItemStack stack = sp.getItemBySlot(slot);
+        if (stack == null || stack.isEmpty()) return;
+        if (ClassItemEquipmentGuard.canWear(sp, stack)) return;
+        ItemStack copy = stack.copy();
+        sp.setItemSlot(slot, ItemStack.EMPTY);
+        Inventory inv = sp.getInventory();
+        boolean inserted = inv.add(copy);
+        if (!inserted) sp.drop(copy, false);
+        ClassItemEquipmentGuard.denyWear(sp, copy);
+    }
+
+    private static void stripLegacyIfRestricted(ServerPlayer sp, ItemStack stack, EquipmentSlot slot) {
         if (sp == null) return;
         if (stack == null || stack.isEmpty()) return;
-        if (!isRestrictedFor(sp, stack)) return;
+        if (!isLegacyRestrictedFor(sp, stack)) return;
 
         ItemStack copy = stack.copy();
         sp.setItemSlot(slot, ItemStack.EMPTY);

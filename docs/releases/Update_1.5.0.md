@@ -91,6 +91,12 @@ These are planned for future 1.5.x follow-up work.
 - Added a dynamic client tooltip line that shows only the attuned class display name at the bottom, bold/italic, in the configured class color. The tooltip is not lore and normal items remain unchanged.
 - Updated vendor pricing so valid attuned items return their stored Trace value with debug sources like `class_attuned:judicator:d1:t4`; zero-valued attuned items report `class_attuned_zero:...`.
 
+## 1.5.0 Follow-up: Class-attuned equipment restrictions
+- Class attunement now controls server-side use of guarded equipment: wrong-class or unclassed players cannot break blocks with attuned tools, attack with attuned weapons/tools, or right-click-use attuned equipment such as bows, shields, tridents, maces, and tool interactions.
+- Class-attuned armor/equippable gear is rejected from armor slots on the server; invalid pieces are moved back to inventory when possible or safely dropped if the inventory is full, with throttled denial messages to avoid chat spam.
+- The restriction uses only the stored class attunement. Dungeon number, tier number, and Trace value remain stored/visible/economic metadata and do not affect use or wear permission.
+- Class-attuned banners are excluded from guarded equipment so Plant Flags banners remain placeable and can still be evaluated by the Plant Flags achievement system.
+
 ## 1.5.0 Follow-up: Faction foundation (JHW baseline only)
 
 - Added faction foundation package: `net.goui.cosmicdungeon.faction`.
