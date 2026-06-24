@@ -1,6 +1,7 @@
 package net.goui.cosmicdungeon.playerclass.api;
 
 import net.goui.cosmicdungeon.component.ModDataComponents;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.Locale;
@@ -69,6 +70,20 @@ public final class ClassItemUtil {
         if (stack == null || stack.isEmpty()) return null;
         Long trace = stack.get(ModDataComponents.CLASS_ITEM_TRACE_VALUE.get());
         return trace != null && trace >= 0L ? trace : null;
+    }
+
+    /**
+     * Returns true when {@code stack} is the expected item and carries complete class-item
+     * attunement metadata for the requested class, dungeon, and tier. This intentionally
+     * ignores display/custom names so renamed vanilla stacks and custom mod items can share
+     * the same matching path.
+     */
+    public static boolean matchesAttunedItem(ItemStack stack, Item expectedItem, String classId, int dungeon, int tier) {
+        if (stack == null || stack.isEmpty() || expectedItem == null) return false;
+        if (!stack.is(expectedItem)) return false;
+        if (!normalizeClassId(classId).equals(getClassAttunement(stack))) return false;
+        return Integer.valueOf(dungeon).equals(getDungeon(stack))
+                && Integer.valueOf(tier).equals(getTier(stack));
     }
 
     public static boolean hasCompleteValidAttunement(ItemStack stack) {
