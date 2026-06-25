@@ -1,0 +1,17 @@
+{
+  "parent": "cosmicdungeon:pyroclast",
+  "display": {
+    "icon": { "id": "minecraft:tnt" },
+    "title": { "translate": "advancements.cosmicdungeon.pyroclast.boom.title" },
+    "description": { "translate": "advancements.cosmicdungeon.pyroclast.boom.desc" },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false,
+    "x": 0,
+    "y": 1
+  },
+  "criteria": {
+    "triggered": { "trigger": "minecraft:impossible" }
+  }
+}

@@ -30,13 +30,14 @@ public final class CosmicAchievementIds {
     public static final ResourceLocation SIXFOLD_VIGIL_TWIN_MANIFESTATION = id("achievements/sixfold_vigil_twin_manifestation");
     public static final ResourceLocation CYCLE_OF_RECORDED_SOUND = id("achievements/cycle_of_recorded_sound");
     public static final ResourceLocation SYNCHRONOUS_PEAL = id("achievements/synchronous_peal");
+    public static final ResourceLocation PYROCLAST_BOOM = id("pyroclast/boom");
 
     public static final List<ResourceLocation> ALL = List.of(
             PLANT_FLAGS, CONTRACT_FULFILLED, ENTANGLED_OBLIGOR, VOTARY_OF_THE_IDOL, BOUND_DEVOTEE, BONDED_THRALL,
             CONTRACT_ENFORCED, BINDING_CREDITOR, VOTARY_OF_THE_LEDGER, WARDEN_OF_THE_LEDGER, SOVEREIGN_OF_THE_BOND,
             TIRED_NOT_BROKEN, VITAL_EXCHANGE_1, VITAL_EXCHANGE_2, VITAL_EXCHANGE_3, VITAL_EXCHANGE_4, SIXFOLD_VIGIL,
             SIXFOLD_VIGIL_AFTER_DISSOLUTION, SIXFOLD_VIGIL_LONE_ADVERSARY, SIXFOLD_VIGIL_TWIN_MANIFESTATION,
-            CYCLE_OF_RECORDED_SOUND, SYNCHRONOUS_PEAL
+            CYCLE_OF_RECORDED_SOUND, SYNCHRONOUS_PEAL, PYROCLAST_BOOM
     );
 
     private static ResourceLocation id(String path) {

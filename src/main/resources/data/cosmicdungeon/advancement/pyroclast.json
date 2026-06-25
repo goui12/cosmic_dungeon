@@ -1,0 +1,17 @@
+{
+  "parent": "cosmicdungeon:root",
+  "display": {
+    "icon": { "id": "minecraft:gunpowder" },
+    "title": { "translate": "advancements.cosmicdungeon.pyroclast.root.title" },
+    "description": { "translate": "advancements.cosmicdungeon.pyroclast.root.desc" },
+    "frame": "task",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false,
+    "x": 1,
+    "y": 4
+  },
+  "criteria": {
+    "tick": { "trigger": "minecraft:tick" }
+  }
+}
