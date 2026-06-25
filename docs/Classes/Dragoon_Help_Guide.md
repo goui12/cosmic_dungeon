@@ -11,11 +11,18 @@
 
 ## Overview
 
-TBD.
+Dragoon is a melee-forward class with an innate chain-lightning passive that occasionally turns a weapon hit into a short-range mob-clearing burst.
 
 ## Abilities
 
-- TBD.
+### Innate passive: Chain Lightning
+
+- Every Dragoon hit against an enemy mob has a **3% chance** to trigger chain lightning.
+- When triggered, the lightning uses the same final on-hit damage that the Dragoon was already going to deliver. For example, a 3-damage sword hit chains for 3 damage per chained mob.
+- The chain can hit up to **7 mobs total** in a full **360-degree** search around the Dragoon.
+- Eligible chained mobs must be within **3 blocks** of the Dragoon.
+- The lightning bounces through the available mobs in a randomized nearby order and plays the `dragoon_lightning_particle` visual between each bounce.
+- Chain-lightning damage does not recursively trigger additional chain lightning.
 
 ## Benefits
 
@@ -24,7 +31,7 @@ TBD.
 
 ## Incentives
 
-- TBD.
+- Occasional burst cleave while staying focused on melee combat.
 
 ## Team roles
 
@@ -38,7 +45,6 @@ TBD.
 
 ## Known gaps / TBD
 
-- Define ability list.
 - Define intended party role.
 - Define player-facing incentives.
 - Define any class-specific commands, resource systems, or progression hooks.

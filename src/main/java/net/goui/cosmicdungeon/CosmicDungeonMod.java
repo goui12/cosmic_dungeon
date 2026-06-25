@@ -11,6 +11,7 @@ import net.goui.cosmicdungeon.item.ModCreativeModeTabs;
 import net.goui.cosmicdungeon.item.ModItems;
 import net.goui.cosmicdungeon.menu.ModMenus;
 import net.goui.cosmicdungeon.network.ModNetwork;
+import net.goui.cosmicdungeon.particle.ModParticleTypes;
 import net.goui.cosmicdungeon.playerclass.metalmancer.MetalmancerCommand;
 import net.goui.cosmicdungeon.playerclass.metalmancer.MetalmancerItems;
 import net.goui.cosmicdungeon.redstone.rf.ModRfBlockEntities;
@@ -72,6 +73,7 @@ public class CosmicDungeonMod {
         ModEntities.register(modEventBus);
         ModBlocks.register(modEventBus);
         ModSounds.registerSounds(modEventBus);
+        ModParticleTypes.register(modEventBus);
         ModBlockEntities.register(modEventBus);
 
         // client-only init — call this ONCE
