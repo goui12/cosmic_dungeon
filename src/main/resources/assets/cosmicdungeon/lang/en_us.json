@@ -610,6 +610,10 @@
   "advancements.cosmicdungeon.achievements.cycle_of_recorded_sound.desc": "Placeholder achievement: cycle_of_recorded_sound.",
   "advancements.cosmicdungeon.achievements.synchronous_peal.title": "Synchronous Peal",
   "advancements.cosmicdungeon.achievements.synchronous_peal.desc": "Placeholder achievement: synchronous_peal.",
+  "advancements.cosmicdungeon.pyroclast.root.title": "Pyroclast",
+  "advancements.cosmicdungeon.pyroclast.root.desc": "Pyroclast class achievements.",
+  "advancements.cosmicdungeon.pyroclast.boom.title": "Boom!",
+  "advancements.cosmicdungeon.pyroclast.boom.desc": "Craft gunpowder from gravel and flint as a Pyroclast.",
   "block.cosmicdungeon.lesser_bloom": "Lesser Bloom",
   "block.cosmicdungeon.potted_lesser_bloom": "Potted Lesser Bloom",
   "block.cosmicdungeon.cavern_residue": "Cavern Residue"

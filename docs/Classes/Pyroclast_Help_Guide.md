@@ -11,11 +11,17 @@
 
 ## Overview
 
-TBD.
+Pyroclasts specialize in volatile dungeon utility and improvised explosive components. Their first innate crafting perk turns common mineral drops into gunpowder without requiring a fixed recipe shape.
 
 ## Abilities
 
-- TBD.
+### Innate craft: Gravel + Flint = Gunpowder
+
+- Pyroclasts can craft **1 gravel** and **1 flint** into **1 gunpowder**.
+- The recipe is shapeless, so the gravel and flint may be placed in any order or position in a normal crafting grid or the class inventory crafting grid.
+- When a Pyroclast picks up gravel while carrying flint, or picks up flint while carrying gravel, the player receives the reminder: `Craft: Gravel + Flint = Gunpowder`.
+- Crafting gunpowder with this recipe grants the Pyroclast achievement **Boom!** under the **Pyroclast** achievement category.
+
 
 ## Benefits
 
@@ -39,7 +45,5 @@ TBD.
 
 ## Known gaps / TBD
 
-- Define ability list.
 - Define intended party role.
 - Define player-facing incentives.
-- Define any class-specific commands, resource systems, or progression hooks.
