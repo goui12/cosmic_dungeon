@@ -11,18 +11,18 @@
 
 ## Overview
 
-Theurgist has documented access to brewing stands. Other class-specific design details are currently TBD.
+Theurgist has exclusive access to brewing stands. Brewing stands used by Theurgists complete valid potion brews instantly instead of waiting through the vanilla brew timer. Other class-specific design details are currently TBD.
 
 ## Abilities
 
-- Use brewing stands.
+- Use brewing stands exclusively; valid potion brews complete instantly once brewing starts.
 - Other abilities: TBD.
 
 ## Benefits
 
 - Access to Theurgist-attuned equipment, when such equipment is authored.
 - Access to Theurgist class-locked chests.
-- Access to brewing stand interaction.
+- Access to brewing stand interaction and instant potion brewing.
 - Theurgist-specific item assets exist in the current content set.
 
 ## Incentives
@@ -32,14 +32,14 @@ Theurgist has documented access to brewing stands. Other class-specific design d
 
 ## Team roles
 
-- Brewing/support role, based only on documented brewing stand access.
+- Brewing/support role, based on exclusive brewing stand access and instant potion brewing.
 - Additional team role details: TBD.
 
 ## Class restrictions and access
 
 - Can use/wear equipment attuned to `theurgist`.
 - Can open Theurgist class-locked chests.
-- Only Theurgists can use brewing stands.
+- Only Theurgists can use brewing stands; brewing stands instantly finish valid potion brews.
 - Other class-specific restrictions: TBD.
 
 ## Known gaps / TBD
