@@ -1,4 +1,4 @@
-# Known Bugs (Developer Tracking) — 1.4.8
+# Known Bugs (Developer Tracking) — 1.5
 
 Only issues evidenced directly from implementation behavior, explicit TODO markers, or command/runtime guard rails are listed.
 

@@ -47,3 +47,25 @@ Vendors are assigned NPC shops that use the Cosmic Dungeon Attunement Fragment c
 - Higher denominations are converted through the currency model: Mark, Seal, Crown, and Anchor are worth increasing amounts of Trace.
 - Vendor purchases withdraw from the player's stored balance, and vendor sales deposit payout into that same balance.
 - Failed transactions do not partially remove items or partially deposit currency.
+
+## Vendor profile authoring
+
+Vendor profiles load from datapack JSON under `data/cosmicdungeon/vendor_profiles/<path>.json`. Profile IDs should be stable full `ResourceLocation` values; commands also accept unambiguous short aliases for common operator workflows. Invalid entries log clear errors rather than hard-crashing the server.
+
+## Access gates
+
+Vendor access is evaluated centrally before a GUI opens. Profiles can require village access, NPC system/tier progress, faction standing, or future progression flags. Locked vendors show the server-authoritative denial reason instead of opening. Use `/vendor access <profileId>` to test the executing player against a profile.
+
+## Pricing and buyback authoring notes
+
+Buyback uses each eligible stack's individual sell value. Class-attuned items sell for their stored Trace value, including armor pieces; complete sets do not receive special set bonuses.
+
+## Related topics
+
+- [Economy & Currency](./Economy/Economy_and_Currency.md)
+- [Progression, Factions & Unlocks](./Progression/Progression_Factions_and_Unlocks.md)
+- [Commands: Vendor](./commands/In_Game_Commands.md#vendor-15-progression--faction-access)
+
+## Changelog
+
+- **1.5:** Added assigned vendor NPCs, profile-loaded offers, buy/sell GUI flows, centralized access gates, profile aliases, buyback, and atomic transaction validation.

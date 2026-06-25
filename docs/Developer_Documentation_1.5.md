@@ -1,4 +1,4 @@
-# Cosmic Dungeon Developer Documentation (1.5.0)
+# Cosmic Dungeon Developer Documentation (1.5)
 
 Developer-facing reference for world builders, dungeon operators, and content integrators.
 
@@ -19,10 +19,14 @@ Developer-facing reference for world builders, dungeon operators, and content in
   - [Class Restrictions & Inventories](./Classes/Class_Restrictions_and_Inventory.md)
   - [Mobs & AI Behaviors](./Mobs/Mob_Behavior_Reference.md)
   - [Blocks & Interaction Contracts](./Blocks/Block_Interaction_Reference.md)
+  - [Economy & Currency](./Economy/Economy_and_Currency.md)
   - [Vendor](./Vendor.md)
+  - [Trading](./Trading/Trading_Guide.md)
+  - [Progression, Factions & Unlocks](./Progression/Progression_Factions_and_Unlocks.md)
+  - [Achievements & Advancements](./Achievements/Achievements_and_Advancements.md)
 - Release prep
   - [Update 1.4.8 Preparation](./releases/Update_1.4.8_Preparation.md)
-  - [Update 1.5.0 Notes](./releases/Update_1.5.0.md)
+  - [Update 1.5 Notes](./releases/Update_1.5.0.md)
 
 ## Intended documentation usage order
 
@@ -31,4 +35,5 @@ Developer-facing reference for world builders, dungeon operators, and content in
 3. Rift routing and class-selector routing.
 4. Spawner + mob encounter design.
 5. RedstoneRF event wiring.
-6. Command rehearsals and bug mitigation checks.
+6. Economy, vendor, trade, and progression rehearsals.
+7. Command rehearsals and bug mitigation checks.

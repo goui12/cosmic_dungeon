@@ -1,6 +1,6 @@
 # Deprecated: Region Protection Guide (Moved)
 
-This page has been replaced for the 1.4.8 developer documentation overhaul.
+This page has been replaced for the 1.5 developer documentation overhaul.
 
 Use:
 - [Regions / Region_Protection_Guide](./regions/Region_Protection_Guide.md)

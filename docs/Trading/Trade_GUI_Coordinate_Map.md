@@ -154,3 +154,7 @@ Hotbar 9 slots:
 - It reuses `TradeRequestKeybindClient.getLookTradeTarget` so the prompt only appears when the crosshair is on another player within 3 blocks, never for self, and not merely because another player is nearby.
 - The prompt is hidden whenever a screen is open or the debug overlay is visible.
 - The overlay draws a small translucent box centered above the hotbar with `<OtherPlayerName>` and `Press CAPS LOCK to request trade`. It sends no packets; only pressing the registered CAPS LOCK trade-request key can send the look-target trade request packet.
+
+## Changelog
+
+- **1.5:** Documented the implemented trade GUI texture, real slot coordinates, procedural currency/control regions, and related screen layout assumptions.

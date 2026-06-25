@@ -1,4 +1,4 @@
-# In-Game Commands (Developer Reference) — 1.5.0
+# In-Game Commands (Developer Reference) — 1.5
 
 ## Command roots registered by the mod
 
@@ -81,7 +81,7 @@
 - Failed syntax for `/spawner` falls back to help output with unknown syntax warning.
 
 
-### Trade (1.5.0 player-to-player foundation)
+### Trade (1.5 player-to-player foundation)
 `/trade <player>`
 `/trade accept <player>`
 `/trade deny <player>`
@@ -101,7 +101,7 @@ Notes:
 - Active trades keep the invite chat flow separate from the GUI flow: `[Accept Trade]` / `[Deny Trade]` only answer pending requests, while the GUI accept button first marks the current offer accepted/ready and then, after both players are ready, confirms/finalizes the same offer. The GUI deny button cancels the active trade, returns offered items, discards currency offers, closes both screens, and notifies both players.
 - The trade screen receives server-authoritative, view-specific state sync for `Trading with: <name>`, each player's displayed name, Trace balances, Trace offers, ready/confirm status, and status messages; item offers still sync through the menu slots. Own item/currency offer changes before acceptance reset both players' ready/confirm state, and accepted own offers are locked against further item/currency edits until cancel.
 
-### Class item attunement (1.5.0 foundation)
+### Class item attunement (1.5 foundation)
 `/classitem attune <class_name> <dungeon_number> <tier_number> <trace_value>`
 `/classitem clear`
 
@@ -133,7 +133,7 @@ Authority: self-balance and value-check commands are open to players; other-play
 
 Pickup behavior: Attunement currency item entities auto-store into balance on pickup, with all-or-nothing capacity checks (no partial deposit).
 
-### Faction (1.5.0 foundation)
+### Faction (1.5 foundation)
 `/faction get <player> <faction>`
 `/faction set <player> <faction> <value>`
 `/faction add <player> <faction> <delta>`
@@ -143,7 +143,7 @@ Authority: players can read their own faction values. Reading or mutating anothe
 
 
 
-### Progression (1.5.0 long-term progression foundation)
+### Progression (1.5 long-term progression foundation)
 `/progression get <player>`
 `/progression d1 complete <player> <lesserBlooms>`
 `/progression lesser add <player> <amount>`
@@ -155,7 +155,7 @@ Authority: players can read their own faction values. Reading or mutating anothe
 Authority: players can read their own progression. Reading another player's progression and all mutations require developer or console authority through AccessPolicy.
 
 
-### Achievement (1.5.0 advancement foundation)
+### Achievement (1.5 advancement foundation)
 `/achievement grant <player> <achievementId>`
 `/achievement counters <player>`
 `/achievement counters reset <player>`
@@ -171,7 +171,7 @@ Notes:
 - Binding Idol debug hooks: use `idol return` and `idol provide` to increment idol counters and validate threshold advancement grants.
 
 
-### Plant Flags (1.5.0 D1 foundation)
+### Plant Flags (1.5 D1 foundation)
 `/plantflags status`
 `/plantflags reset`
 `/plantflags setregion pos1`
@@ -181,11 +181,11 @@ Notes:
 Authority: `status` is public. `reset`, `setregion`, and `complete-debug` require developer or console authority via `AccessPolicy.requireDeveloperOrConsole`.
 
 Notes:
-- Tracks per-run/session planting state and a 5-minute disconnect cooldown before completion can resolve.
+- Tracks per-run/session planting state. Offline run members do not block completion; online members in the same run must plant matching class-attuned banners.
 - Completion grants `cosmicdungeon:achievements/plant_flags` to online eligible players and broadcasts placeholder JHW summon text.
 
 
-### Vendor (1.5.0 progression + faction access)
+### Vendor (1.5 progression + faction access)
 `/vendor list`
 `/vendor reload`
 `/vendor profile <profileId>`
@@ -207,3 +207,7 @@ Scope boundary:
 - loads datapack vendor profiles from `data/cosmicdungeon/vendor_profiles/*.json`
 - supports villager vendor assignment + vendor menu
 - `/vendor access` explains whether the executing player can access a vendor profile and why
+
+## Changelog
+
+- **1.5:** Added command coverage for currency, class item attunement, faction, progression, achievements, Plant Flags, vendors, and trading.
