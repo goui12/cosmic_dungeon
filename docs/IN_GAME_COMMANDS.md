@@ -1,6 +1,6 @@
 # Deprecated: In-Game Commands (Moved)
 
-This page has been replaced for the 1.4.8 developer documentation overhaul.
+This page has been replaced for the 1.5 developer documentation overhaul.
 
 Use the new command reference:
 - [Commands / In_Game_Commands](./commands/In_Game_Commands.md)
@@ -12,7 +12,7 @@ For command subsets embedded by system area:
 - [Dungeon Flow and Locks](./Progression/Dungeon_Flow_and_Locks.md)
 
 
-## Trading Foundation (1.5.0)
+## Trading Foundation (1.5)
 - Added direct player-to-player trading foundation with item offers plus Attunement Fragment (Trace) balance transfers via CurrencyService.
 - Added normal-player trade commands: `/trade <player>`, `/trade accept <player>`, `/trade deny <player>`, `/trade cancel`.
 - Added pending invite metadata with 30-second expiration, 3-second requester cooldown, clickable accept/deny chat buttons, active-trade validation, logout/menu-close cleanup, safe item returns, and read-only other-player offer slots.

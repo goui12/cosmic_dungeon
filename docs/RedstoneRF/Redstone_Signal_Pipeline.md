@@ -1,4 +1,4 @@
-# Redstone RF Signal Pipeline (Developer) — 1.4.8
+# Redstone RF Signal Pipeline (Developer) — 1.5
 
 This guide explains how dungeon signal TX/RX behavior should be authored and validated.
 

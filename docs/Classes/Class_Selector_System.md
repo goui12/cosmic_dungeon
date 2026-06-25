@@ -1,4 +1,4 @@
-# Class Selector Block System (Developer) — 1.4.8
+# Class Selector Block System (Developer) — 1.5
 
 ## System behavior
 

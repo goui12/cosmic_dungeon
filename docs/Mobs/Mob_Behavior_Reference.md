@@ -1,4 +1,4 @@
-# Mobs & AI Behavior Reference (Developer) — 1.4.8
+# Mobs & AI Behavior Reference (Developer) — 1.5
 
 ## Registered custom mobs
 

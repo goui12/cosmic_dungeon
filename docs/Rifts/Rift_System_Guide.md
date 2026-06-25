@@ -1,4 +1,4 @@
-# Rift System Guide (Developer) — 1.4.8
+# Rift System Guide (Developer) — 1.5
 
 ## System behavior
 

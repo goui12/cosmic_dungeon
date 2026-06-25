@@ -1,4 +1,4 @@
-# Dungeon Flow and Locks (Developer) — 1.4.8
+# Dungeon Flow and Locks (Developer) — 1.5
 
 This guide documents progression gates, checkpoints, and lock sequencing behavior.
 
@@ -37,3 +37,7 @@ Progression systems ensure players complete objectives in designed order while p
 - Prefer short objective chains with explicit player feedback points.
 - Couple gate unlocks to observable world events when possible.
 - Keep emergency recovery paths documented for live operators.
+
+## Changelog
+
+- **1.5:** Added links from dungeon flow concepts to long-term D1 progression, faction gates, and vendor unlock documentation. See [Progression, Factions & Unlocks](./Progression_Factions_and_Unlocks.md).
