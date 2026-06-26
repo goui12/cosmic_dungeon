@@ -6,3 +6,6 @@
 - Added support for Dragoon passive innate ability 3% chain lightning. See [Dragoon Help Guide](../Classes/Dragoon_Help_Guide.md).
 
 - Added gunpowder crafting ability for Pyroclast class. See [Pyroclast Help Guide](../Classes/Pyroclast_Help_Guide.md).
+
+## Fixed
+- Fixed hitbox on class chests.
