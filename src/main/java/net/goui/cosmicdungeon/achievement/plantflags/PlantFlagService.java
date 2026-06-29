@@ -64,6 +64,11 @@ public final class PlantFlagService {
         if (runId > 0L) data.clearRun(runId); else data.clearAllRuns();
     }
 
+    public static void clearPlayerForRun(MinecraftServer server, long runId, UUID playerId) {
+        if (server == null || runId <= 0L || playerId == null) return;
+        PlantFlagData.get(server).clearPlayerFromRun(runId, playerId);
+    }
+
     public static List<ServerPlayer> getOnlineEligiblePlayers(MinecraftServer server, DungeonRunRegistryData.RunRecord run) {
         if (server == null || run == null) return List.of();
         List<ServerPlayer> out = new ArrayList<>();

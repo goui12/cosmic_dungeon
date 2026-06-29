@@ -122,6 +122,16 @@ public final class DungeonRunProgressData extends SavedData {
         }
     }
 
+    public void clearPlayerFromRun(long runId, UUID playerId) {
+        if (runId <= 0L || playerId == null) return;
+        Map<UUID, Long> byPlayer = bloomMasks.get(runId);
+        if (byPlayer == null) return;
+        if (byPlayer.remove(playerId) != null) {
+            if (byPlayer.isEmpty()) bloomMasks.remove(runId);
+            setDirty();
+        }
+    }
+
     public void markCompleted(UUID playerId, String dungeonId, String difficulty) {
         if (playerId == null || dungeonId == null || dungeonId.isBlank()) return;
 

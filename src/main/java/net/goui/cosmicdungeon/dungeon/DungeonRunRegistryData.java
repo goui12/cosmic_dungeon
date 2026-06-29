@@ -80,6 +80,10 @@ public final class DungeonRunRegistryData extends SavedData {
             return Optional.empty();
         }
 
+        public Optional<UUID> groupLeader() {
+            return orderedPlayers.isEmpty() ? Optional.empty() : Optional.ofNullable(orderedPlayers.getFirst());
+        }
+
         public RunRecord withCompletionExited(UUID playerId) {
             if (playerId == null || completionExitedPlayers.contains(playerId)) return this;
 
@@ -98,6 +102,37 @@ public final class DungeonRunRegistryData extends SavedData {
                     orderedPlayers,
                     updated,
                     playerSnapshots
+            );
+        }
+
+        public RunRecord withoutPlayer(UUID playerId) {
+            if (playerId == null || !orderedPlayers.contains(playerId)) return this;
+
+            List<UUID> updatedPlayers = new ArrayList<>(orderedPlayers);
+            updatedPlayers.remove(playerId);
+
+            List<UUID> updatedExited = new ArrayList<>(completionExitedPlayers);
+            updatedExited.remove(playerId);
+
+            List<DungeonPlayerRunSnapshot> updatedSnapshots = new ArrayList<>();
+            for (DungeonPlayerRunSnapshot snap : playerSnapshots) {
+                if (snap == null || !playerId.equals(snap.playerId())) {
+                    updatedSnapshots.add(snap);
+                }
+            }
+
+            return new RunRecord(
+                    runId,
+                    dungeonId,
+                    selectorDimensionId,
+                    selectorPosLong,
+                    dungeonDimensionIds,
+                    state,
+                    resetReason,
+                    startedAtEpochMillis,
+                    updatedPlayers,
+                    updatedExited,
+                    updatedSnapshots
             );
         }
 
@@ -262,6 +297,20 @@ public final class DungeonRunRegistryData extends SavedData {
         if (old == null) return false;
 
         RunRecord updated = old.withCompletionExited(playerId);
+        if (updated == old) return false;
+
+        runsById.put(runId, updated);
+        setDirty();
+        return true;
+    }
+
+    public boolean removePlayer(long runId, UUID playerId) {
+        if (runId <= 0L || playerId == null) return false;
+
+        RunRecord old = runsById.get(runId);
+        if (old == null) return false;
+
+        RunRecord updated = old.withoutPlayer(playerId);
         if (updated == old) return false;
 
         runsById.put(runId, updated);

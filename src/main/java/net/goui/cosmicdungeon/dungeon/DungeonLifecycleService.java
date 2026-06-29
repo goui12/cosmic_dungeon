@@ -71,6 +71,59 @@ public final class DungeonLifecycleService {
         return run.stateEnum() == DungeonRunState.ACTIVE ? Optional.of(run) : Optional.empty();
     }
 
+
+    public static boolean isGroupLeader(ServerPlayer sp) {
+        if (sp == null) return false;
+        Optional<DungeonRunRegistryData.RunRecord> run = findActiveRunForPlayer(sp);
+        return run.flatMap(DungeonRunRegistryData.RunRecord::groupLeader)
+                .map(sp.getUUID()::equals)
+                .orElse(false);
+    }
+
+    public static String kickRunMember(ServerPlayer leader, ServerPlayer target) {
+        if (leader == null || target == null) return "Leader or target was null.";
+        if (leader.getUUID().equals(target.getUUID())) return "The Group Leader cannot kick themselves.";
+
+        MinecraftServer server = leader.level().getServer();
+        if (server == null) return "Server was null.";
+
+        DungeonRunRegistryData runs = DungeonRunRegistryData.get(server);
+        Optional<DungeonRunRegistryData.RunRecord> leaderRunOpt = runs.findRunForPlayer(leader.getUUID());
+        if (leaderRunOpt.isEmpty() || leaderRunOpt.get().stateEnum() != DungeonRunState.ACTIVE) {
+            return "You are not the Group Leader of an active dungeon run.";
+        }
+
+        DungeonRunRegistryData.RunRecord run = leaderRunOpt.get();
+        if (!run.groupLeader().map(leader.getUUID()::equals).orElse(false)) {
+            return "Only the Group Leader can kick dungeon members.";
+        }
+        if (!run.containsPlayer(target.getUUID())) {
+            return target.getName().getString() + " is not in your dungeon run.";
+        }
+
+        DungeonDefinition def = DungeonDefinitions.byId(run.dungeonId()).orElse(null);
+        DungeonPlayerRunSnapshot snapshot = run.snapshotFor(target.getUUID())
+                .orElseGet(() -> snapshotPlayer(target));
+
+        applyRecoveryToLivePlayer(server, target, def, snapshot, true, "KICKED");
+        PendingDungeonRecoveryData.get(server).remove(target.getUUID());
+        runs.removePlayer(run.runId(), target.getUUID());
+        DungeonRunProgressData.get(server).clearPlayerFromRun(run.runId(), target.getUUID());
+        PlantFlagService.clearPlayerForRun(server, run.runId(), target.getUUID());
+
+        target.sendSystemMessage(Component.literal("You were kicked from the dungeon by the Group Leader.").withStyle(ChatFormatting.RED));
+        leader.sendSystemMessage(Component.literal("Kicked " + target.getName().getString() + " from the dungeon.").withStyle(ChatFormatting.YELLOW));
+
+        DungeonRunRegistryData.RunRecord updated = runs.getRun(run.runId()).orElse(null);
+        if (updated != null && updated.orderedPlayers().isEmpty()) {
+            finishRun(server, updated.runId(), DungeonResetReason.ABANDONED, null);
+        } else if (updated != null && allOnlineTrackedPlayersCompletionExited(server, updated)) {
+            finishRun(server, updated.runId(), DungeonResetReason.COMPLETED, null);
+        }
+
+        return null;
+    }
+
     public static String getStartRunBlocker(MinecraftServer server,
                                             net.minecraft.resources.ResourceKey<Level> dungeonDimension,
                                             Collection<UUID> party) {

@@ -7,6 +7,8 @@ Dungeon lifecycle is built around snapshot-driven recovery and run-state trackin
 ## What developers should expect
 
 - Dungeon runs track participant and progression state separate from static world layout.
+- The first class-selector ready player is treated as the run **Group Leader**.
+- Group Leader kicks remove the target from the active run record immediately, restore that player from their pre-run snapshot, clear temporary run side data such as bloom/Plant Flags tracking for that member, and teleport them to the main overworld spawn. Kicked players therefore do not block completion, abandonment, or reset registration.
 - Reset operations rely on snapshot data per dungeon.
 - Reset attempts can abort if active players remain in dungeon spaces.
 - Post-reset cleanup attempts to remove non-player entities and force chunk/cache drain before restore completes.
