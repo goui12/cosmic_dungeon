@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:emerald"
+    },
+    "title": "I'm Rich!",
+    "description": "Cosmic Dungeon currency is stored in your /currency balance as Trace. Denominations: T = Trace (1), M = Mark (10), S = Seal (100), C = Crown (1,000), A = Anchor (10,000).",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "joined_server": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "joined_server"
+    ]
+  ]
+}
