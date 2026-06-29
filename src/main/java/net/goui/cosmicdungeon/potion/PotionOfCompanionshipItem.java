@@ -59,6 +59,7 @@ public class PotionOfCompanionshipItem extends Item {
     }
     private static void openSelection(ServerPlayer sp) {
         DungeonRunRegistryData.RunRecord run = DungeonLifecycleService.findActiveRunForPlayer(sp).orElse(null); if (run == null) return;
+        CompanionshipTeleportService.beginSelection(sp, COOLDOWN_TICKS);
         List<CompanionshipTeleportPayloads.PlayerEntry> entries = new ArrayList<>();
         for (var id : run.orderedPlayers()) { if (id.equals(sp.getUUID())) continue; ServerPlayer other = sp.server.getPlayerList().getPlayer(id); if (other != null) entries.add(new CompanionshipTeleportPayloads.PlayerEntry(id, other.getGameProfile().getName())); }
         PacketDistributor.sendToPlayer(sp, new CompanionshipTeleportPayloads.S2C_Open(entries));
