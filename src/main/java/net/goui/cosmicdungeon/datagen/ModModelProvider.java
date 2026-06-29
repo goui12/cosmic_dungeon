@@ -76,6 +76,7 @@ public class ModModelProvider extends ModelProvider {
         pottedCrossPlant(blockModels, itemModels, ModBlocks.POTTED_BLOOM_OF_ELEGY.get());
 
         // ===== Flat/simple items =====
+        registerExternalItem(itemModels, ModItems.POTION_OF_COMPANIONSHIP.get(), ResourceLocation.withDefaultNamespace("item/potion"));
         FLAT.accept(ModItems.BARNACLED_PEARL.get());
         FLAT.accept(ModItems.SHATTERED_REALITY_OF_SHUDDE_MELL.get());
         FLAT.accept(ModItems.SEISMIC_CORE_FRAGMENT.get());

@@ -3,11 +3,13 @@ package net.goui.cosmicdungeon.client;
 
 import net.goui.cosmicdungeon.client.rift.RiftConfigScreen;
 import net.goui.cosmicdungeon.client.screen.ClassSelectorScreen;
+import net.goui.cosmicdungeon.client.screen.CompanionshipTeleportScreen;
 import net.goui.cosmicdungeon.network.ClassPayloads;
 import net.goui.cosmicdungeon.network.RiftPayloads;
 import net.goui.cosmicdungeon.network.ShakeScreenPayload;
 import net.goui.cosmicdungeon.network.TradePayloads;
 import net.goui.cosmicdungeon.network.VendorPayloads;
+import net.goui.cosmicdungeon.network.CompanionshipTeleportPayloads;
 import net.goui.cosmicdungeon.client.screen.VendorScreen;
 import net.goui.cosmicdungeon.client.screen.VendorScreen.VendorClientState;
 import net.goui.cosmicdungeon.client.screen.TradeScreen.TradeClientState;
@@ -61,6 +63,10 @@ public final class ModNetworkClient {
 
     public static void onSpawnerLabel(SpawnerLabelPayload payload) {
         CosmicSpawnerHoverOverlay.setEnabled(payload.enabled());
+    }
+
+    public static void onOpenCompanionshipTeleport(CompanionshipTeleportPayloads.S2C_Open payload) {
+        Minecraft.getInstance().setScreen(new CompanionshipTeleportScreen(payload.players()));
     }
 
     public static void onOpenVendor(VendorPayloads.S2C_OpenVendor payload) {

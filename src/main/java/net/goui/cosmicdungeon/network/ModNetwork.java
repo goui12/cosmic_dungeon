@@ -43,6 +43,20 @@ public final class ModNetwork {
         /* ===================== SHAKE ===================== */
 
         registrar.playToClient(
+                CompanionshipTeleportPayloads.S2C_Open.TYPE,
+                CompanionshipTeleportPayloads.S2C_Open.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() -> ClientNetworkDispatch.dispatch("onOpenCompanionshipTeleport", payload))
+        );
+
+        registrar.playToServer(
+                CompanionshipTeleportPayloads.C2S_Select.TYPE,
+                CompanionshipTeleportPayloads.C2S_Select.STREAM_CODEC,
+                (payload, ctx) -> {
+                    if (ctx.player() instanceof ServerPlayer sp) net.goui.cosmicdungeon.potion.CompanionshipTeleportService.teleport(sp, payload.targetPlayerId());
+                }
+        );
+
+        registrar.playToClient(
                 ShakeScreenPayload.TYPE,
                 ShakeScreenPayload.STREAM_CODEC,
                 (payload, ctx) -> ctx.enqueueWork(() ->
