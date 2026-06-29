@@ -6,7 +6,6 @@ import net.goui.cosmicdungeon.effect.ModMobEffects;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.Level;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -52,12 +51,7 @@ public final class CompanionshipTeleportService {
     }
 
     private static boolean isTargetInTeleportableDungeonDimension(DungeonRunRegistryData.RunRecord run, ServerPlayer target) {
-        if (run == null || target == null) return false;
-
-        var targetDimension = target.level().dimension();
-        if (run.containsDimension(targetDimension)) return true;
-
-        return "dungeon_1".equals(run.dungeonId()) && Level.NETHER.equals(targetDimension);
+        return run != null && target != null && run.containsDimension(target.level().dimension());
     }
 
     private static boolean hasPendingSelection(ServerPlayer sp) {
