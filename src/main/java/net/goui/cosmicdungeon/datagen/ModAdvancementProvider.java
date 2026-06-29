@@ -24,6 +24,7 @@ public final class ModAdvancementProvider implements AdvancementSubProvider {
     @Override
     public void generate(HolderLookup.Provider registries, Consumer<AdvancementHolder> saver) {
         for (ResourceLocation id : ACHIEVEMENTS) {
+            if (!id.getPath().startsWith("achievements/")) continue;
             String key = id.getPath().substring("achievements/".length());
             String base = "advancements." + CosmicDungeonMod.MOD_ID + ".achievements." + key;
             Advancement.Builder.advancement()

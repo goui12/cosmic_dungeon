@@ -8,6 +8,7 @@ import java.util.List;
 public final class CosmicAchievementIds {
     private CosmicAchievementIds() {}
 
+    public static final ResourceLocation IM_RICH = id("achievements/im_rich");
     public static final ResourceLocation PLANT_FLAGS = id("achievements/plant_flags");
     public static final ResourceLocation CONTRACT_FULFILLED = id("achievements/contract_fulfilled");
     public static final ResourceLocation ENTANGLED_OBLIGOR = id("achievements/entangled_obligor");
@@ -33,7 +34,7 @@ public final class CosmicAchievementIds {
     public static final ResourceLocation PYROCLAST_BOOM = id("pyroclast/boom");
 
     public static final List<ResourceLocation> ALL = List.of(
-            PLANT_FLAGS, CONTRACT_FULFILLED, ENTANGLED_OBLIGOR, VOTARY_OF_THE_IDOL, BOUND_DEVOTEE, BONDED_THRALL,
+            IM_RICH, PLANT_FLAGS, CONTRACT_FULFILLED, ENTANGLED_OBLIGOR, VOTARY_OF_THE_IDOL, BOUND_DEVOTEE, BONDED_THRALL,
             CONTRACT_ENFORCED, BINDING_CREDITOR, VOTARY_OF_THE_LEDGER, WARDEN_OF_THE_LEDGER, SOVEREIGN_OF_THE_BOND,
             TIRED_NOT_BROKEN, VITAL_EXCHANGE_1, VITAL_EXCHANGE_2, VITAL_EXCHANGE_3, VITAL_EXCHANGE_4, SIXFOLD_VIGIL,
             SIXFOLD_VIGIL_AFTER_DISSOLUTION, SIXFOLD_VIGIL_LONE_ADVERSARY, SIXFOLD_VIGIL_TWIN_MANIFESTATION,
