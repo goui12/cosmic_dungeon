@@ -29,6 +29,7 @@ public class ModCreativeModeTabs {
                                 output.accept(ModItems.SHATTERED_REALITY_OF_SHUDDE_MELL);
                                 output.accept(ModItems.BROODING_FORK);
                                 output.accept(ModItems.REGION_WAND);
+                                output.accept(ModItems.POTION_OF_COMPANIONSHIP);
                                 output.accept(ModBlocks.CLASS_SELECTOR_BLOCK);
                                 // Dungeon blocks
                                 output.accept(ModBlocks.BARRIER_BLOCK);

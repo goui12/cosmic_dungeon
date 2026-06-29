@@ -4,6 +4,7 @@ package net.goui.cosmicdungeon.item;
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.block.ModBlocks;
 import net.goui.cosmicdungeon.item.custom.*;
+import net.goui.cosmicdungeon.potion.PotionOfCompanionshipItem;
 import net.goui.cosmicdungeon.playerclass.metalmancer.item.MetalmancerSummoningStaffItem;
 import net.goui.cosmicdungeon.playerclass.ore.SatchelOfSamplesItem;
 
@@ -60,6 +61,9 @@ public class ModItems {
     public static final DeferredItem<Item> ATTUNEMENT_SEAL = ITEMS.registerSimpleItem("attunement_seal");
     public static final DeferredItem<Item> ATTUNEMENT_CROWN = ITEMS.registerSimpleItem("attunement_crown");
     public static final DeferredItem<Item> ATTUNEMENT_ANCHOR = ITEMS.registerSimpleItem("attunement_anchor");
+
+    public static final DeferredItem<PotionOfCompanionshipItem> POTION_OF_COMPANIONSHIP =
+            ITEMS.registerItem("potion_of_companionship", PotionOfCompanionshipItem::new);
 
     // REGION
     public static final DeferredItem<Item> REGION_WAND = ITEMS.registerItem(

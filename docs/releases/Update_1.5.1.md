@@ -9,3 +9,12 @@
 
 ## Fixed
 - Fixed hitbox on class chests.
+
+## Potion of Companionship
+
+- Added the Potion of Companionship, a light-pink dungeon party teleport potion.
+- Drinking it inside an active dungeon group opens a dungeoneer selection GUI containing only online players in the same active dungeon lifecycle.
+- Selecting a dungeoneer teleports the drinker to that player and applies a visible five-minute Teleport Cooldown effect.
+- Cooldown and non-dungeon attempts do not consume the potion and provide clear error messages.
+- Added the potion to the Food & Drinks and Dungeon Items creative tabs.
+- Added the potion to Beluzon Everly's Save Teleport NPC shop for one Seal.

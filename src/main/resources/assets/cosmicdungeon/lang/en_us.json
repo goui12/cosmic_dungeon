@@ -616,5 +616,7 @@
   "advancements.cosmicdungeon.pyroclast.boom.desc": "Craft gunpowder from gravel and flint as a Pyroclast.",
   "block.cosmicdungeon.lesser_bloom": "Lesser Bloom",
   "block.cosmicdungeon.potted_lesser_bloom": "Potted Lesser Bloom",
-  "block.cosmicdungeon.cavern_residue": "Cavern Residue"
+  "block.cosmicdungeon.cavern_residue": "Cavern Residue",
+  "item.cosmicdungeon.potion_of_companionship": "Potion of Companionship",
+  "effect.cosmicdungeon.teleport_cooldown": "Teleport Cooldown"
 }

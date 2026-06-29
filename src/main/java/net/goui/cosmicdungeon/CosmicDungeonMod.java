@@ -7,6 +7,7 @@ import net.goui.cosmicdungeon.client.CosmicDungeonClient;
 import net.goui.cosmicdungeon.command.*;
 import net.goui.cosmicdungeon.component.ModDataComponents;
 import net.goui.cosmicdungeon.entity.*;
+import net.goui.cosmicdungeon.effect.ModMobEffects;
 import net.goui.cosmicdungeon.item.ModCreativeModeTabs;
 import net.goui.cosmicdungeon.item.ModItems;
 import net.goui.cosmicdungeon.menu.ModMenus;
@@ -51,6 +52,7 @@ public class CosmicDungeonMod {
 
         // networking payloads
         modEventBus.addListener(ModNetwork::registerPayloadHandlers);
+        modEventBus.addListener(this::addCreative);
 
 
         // forge bus listeners (commands, etc.)
@@ -67,6 +69,7 @@ public class CosmicDungeonMod {
 
         ModCreativeModeTabs.register(modEventBus);
         ModItems.register(modEventBus);
+        ModMobEffects.register(modEventBus);
         ModDataComponents.register(modEventBus);
 
         ModMenus.register(modEventBus);
@@ -93,6 +96,10 @@ public class CosmicDungeonMod {
 
         // config
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+    }
+
+    private void addCreative(BuildCreativeModeTabContentsEvent event) {
+        if (event.getTabKey() == CreativeModeTabs.FOOD_AND_DRINKS) event.accept(ModItems.POTION_OF_COMPANIONSHIP);
     }
 
     private void onRegisterCommands(RegisterCommandsEvent event) {

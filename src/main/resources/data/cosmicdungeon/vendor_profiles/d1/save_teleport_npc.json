@@ -5,6 +5,21 @@
   "requiredVillageAccess": true,
   "requiredNpcSystem": "D1",
   "requiredNpcTier": 4,
-  "buyOffers": [],
-  "buyback": { "pricingGroup": "default", "rules": [] }
+  "buyOffers": [
+    {
+      "offerId": "potion_of_companionship",
+      "result": {
+        "item": "cosmicdungeon:potion_of_companionship",
+        "count": 1
+      },
+      "cost": {
+        "amount": 1,
+        "denomination": "seal"
+      }
+    }
+  ],
+  "buyback": {
+    "pricingGroup": "default",
+    "rules": []
+  }
 }
