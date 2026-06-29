@@ -5,6 +5,7 @@ Cosmic Dungeon achievements use generated advancements plus server-side helper s
 ## Current foundations
 
 - Advancement IDs are centralized and generated through datagen.
+- New players are granted the **I'm Rich!** onboarding achievement on first login if they do not already have it; the reward deposits 5 Trace into their `/currency` balance and the description explains T/M/S/C/A currency abbreviations.
 - Developer commands can grant achievements and inspect/reset persisted counters.
 - Binding Idol counters track returns through an idol and players who provide idols to others.
 - Vital Exchange hooks grant achievements when the expected healing/support items are provided to a Deadeye receiver.
@@ -22,4 +23,4 @@ Use [Commands: Achievement](../commands/In_Game_Commands.md#achievement-15-advan
 
 ## Changelog
 
-- **1.5:** Added generated achievement scaffolding, counter persistence, Binding Idol hooks, Vital Exchange hooks, Plant Flags tracking, and D1 environmental tracker foundations.
+- **1.5:** Added generated achievement scaffolding, counter persistence, Binding Idol hooks, Vital Exchange hooks, Plant Flags tracking, D1 environmental tracker foundations, and the I'm Rich! currency onboarding achievement.

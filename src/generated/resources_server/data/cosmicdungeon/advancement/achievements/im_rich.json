@@ -1,0 +1,29 @@
+{
+  "criteria": {
+    "triggered": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "announce_to_chat": true,
+    "description": {
+      "translate": "advancements.cosmicdungeon.achievements.im_rich.desc"
+    },
+    "frame": "task",
+    "hidden": false,
+    "icon": {
+      "count": 1,
+      "id": "minecraft:paper"
+    },
+    "show_toast": true,
+    "title": {
+      "translate": "advancements.cosmicdungeon.achievements.im_rich.title"
+    }
+  },
+  "requirements": [
+    [
+      "triggered"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

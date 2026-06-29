@@ -566,6 +566,8 @@
   "item.cosmicdungeon.attunement_crown": "Attunement Crown",
   "item.cosmicdungeon.attunement_anchor": "Attunement Anchor",
   "message.cosmicdungeon.currency_pickup_denied_capacity": "Attunement capacity full.",
+  "advancements.cosmicdungeon.achievements.im_rich.title": "I'm Rich!",
+  "advancements.cosmicdungeon.achievements.im_rich.desc": "Attunement currency is stored in your /currency balance, not your inventory. Denominations are T = Trace (1), M = Mark (10), S = Seal (100), C = Crown (1,000), and A = Anchor (10,000). Use /currency balance to check your total.",
   "advancements.cosmicdungeon.achievements.plant_flags.title": "Plant Flags",
   "advancements.cosmicdungeon.achievements.plant_flags.desc": "Placeholder achievement: plant_flags.",
   "advancements.cosmicdungeon.achievements.contract_fulfilled.title": "Contract Fulfilled",
