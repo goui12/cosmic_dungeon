@@ -1,6 +1,8 @@
 package net.goui.cosmicdungeon.potion;
 
 import net.goui.cosmicdungeon.dungeon.DungeonLifecycleService;
+import net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData;
+import net.goui.cosmicdungeon.effect.ModMobEffects;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -29,16 +31,27 @@ public final class CompanionshipTeleportService {
         ServerPlayer target = sp.server.getPlayerList().getPlayer(targetId);
         if (target == null) { sp.sendSystemMessage(Component.literal("That dungeoneer is no longer online.").withStyle(ChatFormatting.RED)); return; }
 
+        var run = runOpt.get();
         var targetRunOpt = DungeonLifecycleService.findActiveRunForPlayer(target);
         if (targetRunOpt.isEmpty()
-                || targetRunOpt.get().runId() != runOpt.get().runId()
+                || targetRunOpt.get().runId() != run.runId()
                 || targetRunOpt.get().isCompletionExited(targetId)) {
             sp.sendSystemMessage(Component.literal("That player is no longer in your active dungeon group.").withStyle(ChatFormatting.RED));
             return;
         }
 
+        if (!isTargetInTeleportableDungeonDimension(run, target)) {
+            sp.removeEffect(ModMobEffects.TELEPORT_COOLDOWN);
+            sp.sendSystemMessage(Component.literal("That player is no longer inside the dungeon.").withStyle(ChatFormatting.RED));
+            return;
+        }
+
         PENDING_SELECTIONS.remove(sp.getUUID());
         sp.teleportTo(target.serverLevel(), target.getX(), target.getY(), target.getZ(), java.util.Set.of(), target.getYRot(), target.getXRot(), true);
+    }
+
+    private static boolean isTargetInTeleportableDungeonDimension(DungeonRunRegistryData.RunRecord run, ServerPlayer target) {
+        return run != null && target != null && run.containsDimension(target.level().dimension());
     }
 
     private static boolean hasPendingSelection(ServerPlayer sp) {
