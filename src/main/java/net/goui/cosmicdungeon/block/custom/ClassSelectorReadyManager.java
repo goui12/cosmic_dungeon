@@ -79,6 +79,16 @@ public final class ClassSelectorReadyManager {
 
         broadcastReadyProgress(server, st, ready, max);
 
+        if (slot == 1) {
+            Component leaderMsg = Component.literal(sp.getName().getString())
+                    .withStyle(ChatFormatting.GOLD)
+                    .append(Component.literal(" is the Group Leader for this dungeon run.").withStyle(ChatFormatting.YELLOW));
+            for (UUID id : st.ordered) {
+                ServerPlayer p = server.getPlayerList().getPlayer(id);
+                if (p != null) p.sendSystemMessage(leaderMsg);
+            }
+        }
+
         if (ready >= max && st.countdownEndTick < 0L) {
             long nowTick = selectorLevel.getGameTime();
             st.countdownEndTick = nowTick + COUNTDOWN_TICKS;

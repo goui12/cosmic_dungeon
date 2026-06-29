@@ -23,6 +23,7 @@
 - `/rank`
 - `/developer`
 - `/dungeoneer`
+- `/dungeoneer kick <player>`
 - `/classselectordestination`
 - `/currency`
 - `/faction`

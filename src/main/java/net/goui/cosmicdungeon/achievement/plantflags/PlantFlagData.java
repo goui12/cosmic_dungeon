@@ -99,6 +99,11 @@ public final class PlantFlagData extends SavedData {
 
     public void initializeRun(long runId) { if (runId > 0L) { plantedByRun.put(runId, new HashSet<>()); completedRuns.remove(runId); setDirty(); } }
     public void markPlanted(long runId, UUID id) { if (runId > 0L && id != null && plantedByRun.computeIfAbsent(runId, k -> new HashSet<>()).add(id)) setDirty(); }
+    public void clearPlayerFromRun(long runId, UUID id) {
+        if (runId <= 0L || id == null) return;
+        Set<UUID> planted = plantedByRun.get(runId);
+        if (planted != null && planted.remove(id)) setDirty();
+    }
     public void clearRun(long runId) { if (runId > 0L) { plantedByRun.remove(runId); completedRuns.remove(runId); setDirty(); } }
     public void clearAllRuns() { plantedByRun.clear(); completedRuns.clear(); setDirty(); }
     public void setCompleted(long runId, boolean value) { if (runId <= 0L) return; if (value) completedRuns.add(runId); else completedRuns.remove(runId); setDirty(); }
