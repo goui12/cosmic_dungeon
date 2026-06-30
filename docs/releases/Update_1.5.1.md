@@ -23,3 +23,10 @@
 - Cooldown and non-dungeon attempts do not consume the potion and provide clear error messages.
 - Added the potion to the Food & Drinks and Dungeon Items creative tabs.
 - Added the potion to Beluzon Everly's Save Teleport NPC shop for one Seal.
+
+## Dungeon AFK handling
+
+- Added active dungeon AFK detection after more than 15 minutes without server-observable player input. See [Dungeon AFK Handling](../DungeonLifecycle/Dungeon_AFK_Handling.md).
+- Other dungeoneers are warned that the AFK player will no longer receive Group Split until returning; Group Split payout enforcement remains a TODO for the future Group Split implementation.
+- Group Leaders receive clickable `[YES]` / `[NO]` kick prompts for AFK members. `[YES]` reuses the existing Group Leader kick path and `[NO]` does nothing.
+- AFK state is transient and does not modify saved entity/block-entity data, so 1.5.0 worlds can update to 1.5.1 without spawner, door/key, rift/RD, class selector, or access-policy migration for this feature.

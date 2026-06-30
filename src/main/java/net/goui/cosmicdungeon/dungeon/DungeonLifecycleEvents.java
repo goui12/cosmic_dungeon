@@ -8,6 +8,9 @@ import net.goui.cosmicdungeon.achievement.plantflags.PlantFlagService;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.ServerChatEvent;
+import net.neoforged.neoforge.event.CommandEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID)
@@ -21,13 +24,15 @@ public final class DungeonLifecycleEvents {
         if (!(e.getEntity() instanceof ServerPlayer sp)) return;
         if (sp.level().isClientSide()) return;
 
+        DungeonAfkService.markActivity(sp);
         DungeonLifecycleService.performPendingRecoveryIfNeeded(sp);
         reevaluateSoon = true;
     }
 
     @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent e) {
-        if (!(e.getEntity() instanceof ServerPlayer)) return;
+        if (!(e.getEntity() instanceof ServerPlayer sp)) return;
+        DungeonAfkService.onPlayerLoggedOut(sp);
         reevaluateSoon = true;
     }
 
@@ -52,10 +57,43 @@ public final class DungeonLifecycleEvents {
 
         DungeonLifecycleService.processPendingResets(server);
         PlantFlagService.completeIfReady(server);
+        DungeonAfkService.tick(server);
 
         if (!reevaluateSoon && !doPeriodic) return;
 
         reevaluateSoon = false;
         DungeonLifecycleService.evaluateActiveRuns(server);
+    }
+
+    @SubscribeEvent
+    public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock e) {
+        if (e.getEntity() instanceof ServerPlayer sp) DungeonAfkService.markActivity(sp);
+    }
+
+    @SubscribeEvent
+    public static void onRightClickItem(PlayerInteractEvent.RightClickItem e) {
+        if (e.getEntity() instanceof ServerPlayer sp) DungeonAfkService.markActivity(sp);
+    }
+
+    @SubscribeEvent
+    public static void onLeftClickBlock(PlayerInteractEvent.LeftClickBlock e) {
+        if (e.getEntity() instanceof ServerPlayer sp) DungeonAfkService.markActivity(sp);
+    }
+
+    @SubscribeEvent
+    public static void onEntityInteract(PlayerInteractEvent.EntityInteract e) {
+        if (e.getEntity() instanceof ServerPlayer sp) DungeonAfkService.markActivity(sp);
+    }
+
+    @SubscribeEvent
+    public static void onServerChat(ServerChatEvent e) {
+        DungeonAfkService.markActivity(e.getPlayer());
+    }
+
+    @SubscribeEvent
+    public static void onCommand(CommandEvent e) {
+        if (e.getParseResults().getContext().getSource().getEntity() instanceof ServerPlayer sp) {
+            DungeonAfkService.markActivity(sp);
+        }
     }
 }

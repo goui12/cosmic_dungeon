@@ -212,3 +212,7 @@ Scope boundary:
 ## Changelog
 
 - **1.5:** Added command coverage for currency, class item attunement, faction, progression, achievements, Plant Flags, vendors, and trading.
+
+### Dungeon AFK prompt commands
+
+AFK kick prompt clicks use internal `/dungeoneer afk-kick yes <uuid>` and `/dungeoneer afk-kick no <uuid>` command fallbacks. Players should normally use the clickable `[YES]` / `[NO]` text documented in [Dungeon AFK Handling](../DungeonLifecycle/Dungeon_AFK_Handling.md); manual `/dungeoneer kick <player>` remains the normal explicit Group Leader kick command.

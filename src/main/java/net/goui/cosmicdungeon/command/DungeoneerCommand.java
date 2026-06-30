@@ -2,6 +2,7 @@ package net.goui.cosmicdungeon.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.goui.cosmicdungeon.auth.*;
+import net.goui.cosmicdungeon.dungeon.DungeonAfkService;
 import net.goui.cosmicdungeon.dungeon.DungeonLifecycleService;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -10,6 +11,7 @@ import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import java.util.UUID;
 
 public final class DungeoneerCommand {
     private DungeoneerCommand() {}
@@ -30,6 +32,38 @@ public final class DungeoneerCommand {
                                             }
                                             return 1;
                                         })))
+
+                        .then(Commands.literal("afk-kick")
+                                .then(Commands.literal("yes")
+                                        .then(Commands.argument("player", com.mojang.brigadier.arguments.StringArgumentType.word())
+                                                .executes(ctx -> {
+                                                    ServerPlayer leader = ctx.getSource().getPlayerOrException();
+                                                    UUID targetId;
+                                                    try {
+                                                        targetId = UUID.fromString(com.mojang.brigadier.arguments.StringArgumentType.getString(ctx, "player"));
+                                                    } catch (IllegalArgumentException ex) {
+                                                        ctx.getSource().sendFailure(Component.literal("Invalid AFK player id.").withStyle(ChatFormatting.RED));
+                                                        return 0;
+                                                    }
+                                                    ServerPlayer target = leader.level().getServer().getPlayerList().getPlayer(targetId);
+                                                    if (target == null) {
+                                                        ctx.getSource().sendFailure(Component.literal("That AFK player is no longer online.").withStyle(ChatFormatting.RED));
+                                                        return 0;
+                                                    }
+                                                    if (!DungeonAfkService.isAfk(targetId)) {
+                                                        ctx.getSource().sendFailure(Component.literal(target.getName().getString() + " is no longer AFK.").withStyle(ChatFormatting.RED));
+                                                        return 0;
+                                                    }
+                                                    String error = DungeonLifecycleService.kickRunMember(leader, target);
+                                                    if (error != null) {
+                                                        ctx.getSource().sendFailure(Component.literal(error).withStyle(ChatFormatting.RED));
+                                                        return 0;
+                                                    }
+                                                    return 1;
+                                                })))
+                                .then(Commands.literal("no")
+                                        .then(Commands.argument("player", com.mojang.brigadier.arguments.StringArgumentType.word())
+                                                .executes(ctx -> 1))))
                         .then(Commands.literal("rank")
                                 .requires(AccessPolicy::requireDeveloperOrConsole)
                                 .executes(ctx -> {

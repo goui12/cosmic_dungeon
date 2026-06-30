@@ -24,3 +24,7 @@ Dungeon lifecycle is built around snapshot-driven recovery and run-state trackin
 - `/world ...` (dimension / dungeon target routing)
 - `/dungeoneer ...` and `/developer ...` (rank-gated operational command surfaces)
 - `/region ...`, `/rift ...`, `/spawner ...`, `/door ...` (subsystem state manipulated as part of lifecycle rehearsals)
+
+## Dungeon AFK handling
+
+Active dungeon runs now include transient AFK tracking for dungeoneers. See [Dungeon AFK Handling](./Dungeon_AFK_Handling.md) for the 15-minute threshold, Group Leader prompt behavior, and 1.5.0 to 1.5.1 update safety notes.
