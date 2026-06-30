@@ -1,0 +1,26 @@
+{
+  "parent": "cosmicdungeon:blooms",
+  "criteria": {
+    "shared": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.cosmicdungeon.blooms.constricting_bonds.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "cosmicdungeon:bloom_of_constricting_bonds"
+    },
+    "title": {
+      "translate": "advancements.cosmicdungeon.blooms.constricting_bonds.title"
+    }
+  },
+  "requirements": [
+    [
+      "shared"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

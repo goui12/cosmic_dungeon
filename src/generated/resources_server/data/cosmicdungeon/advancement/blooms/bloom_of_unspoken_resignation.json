@@ -1,0 +1,26 @@
+{
+  "parent": "cosmicdungeon:blooms",
+  "criteria": {
+    "shared": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.cosmicdungeon.blooms.unspoken_resignation.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "cosmicdungeon:bloom_of_unspoken_resignation"
+    },
+    "title": {
+      "translate": "advancements.cosmicdungeon.blooms.unspoken_resignation.title"
+    }
+  },
+  "requirements": [
+    [
+      "shared"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

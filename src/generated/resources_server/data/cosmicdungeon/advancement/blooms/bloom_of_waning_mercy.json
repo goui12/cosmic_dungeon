@@ -1,0 +1,26 @@
+{
+  "parent": "cosmicdungeon:blooms",
+  "criteria": {
+    "shared": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.cosmicdungeon.blooms.waning_mercy.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "cosmicdungeon:bloom_of_waning_mercy"
+    },
+    "title": {
+      "translate": "advancements.cosmicdungeon.blooms.waning_mercy.title"
+    }
+  },
+  "requirements": [
+    [
+      "shared"
+    ]
+  ],
+  "sends_telemetry_event": true
+}
