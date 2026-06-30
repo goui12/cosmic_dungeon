@@ -16,7 +16,7 @@ When the server observes activity from an AFK dungeoneer, the AFK flag is cleare
 
 ## Group Split integration note
 
-Group Split payout logic is intentionally not implemented in 1.5.1. The AFK service exposes an in-memory AFK handle for future Group Split code and includes TODO markers where payout exclusion/reactivation should be wired once Group Split exists.
+Group Split payout logic is implemented in 1.5.1. The AFK service flag is honored by [Dungeon Group Split](./Dungeon_Group_Split.md), so AFK dungeoneers are excluded from both the payout divisor and the final Trace grant until activity clears the flag.
 
 ## Persistence and update safety
 

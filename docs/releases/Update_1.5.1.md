@@ -27,6 +27,12 @@
 ## Dungeon AFK handling
 
 - Added active dungeon AFK detection after more than 15 minutes without server-observable player input. See [Dungeon AFK Handling](../DungeonLifecycle/Dungeon_AFK_Handling.md).
-- Other dungeoneers are warned that the AFK player will no longer receive Group Split until returning; Group Split payout enforcement remains a TODO for the future Group Split implementation.
+- Other dungeoneers are warned that the AFK player will no longer receive Group Split until returning; Group Split payout enforcement is active for dungeon mob kills, so AFK members are excluded from the divisor and payout.
 - Group Leaders receive clickable `[YES]` / `[NO]` kick prompts for AFK members. `[YES]` reuses the existing Group Leader kick path and `[NO]` does nothing.
 - AFK state is transient and does not modify saved entity/block-entity data, so 1.5.0 worlds can update to 1.5.1 without spawner, door/key, rift/RD, class selector, or access-policy migration for this feature.
+
+## Dungeon Group Split
+
+- Dungeon mob kills now pay [Trace Group Split](../DungeonLifecycle/Dungeon_Group_Split.md) from the mob max-HP heart value. Eligible dungeoneers split the pool evenly through the existing currency account deposit path.
+- Eligibility is server-side: active run membership, same world as the mob, within 100 blocks, online/non-spectator, and not AFK according to [Dungeon AFK Handling](../DungeonLifecycle/Dungeon_AFK_Handling.md).
+- This change is runtime/server-player currency state only and does not modify entity/block-entity storage for [Cosmic Mob Spawners](../Spawners/Spawner_Systems.md), [Rifts](../Rifts/Rift_System_Guide.md), doors/keys, [classes](../Classes/Class_Selector_System.md), teleportation, or access-policy data. Updating from 1.5.0 to 1.5.1 requires no data migration for those systems.

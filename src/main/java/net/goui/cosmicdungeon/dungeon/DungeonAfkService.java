@@ -103,7 +103,6 @@ public final class DungeonAfkService {
         String name = afkPlayer.getName().getString();
         Component groupMessage = Component.literal("Player: " + name + " has been AFK for 15 minutes. They will no longer receive Group Split until they return")
                 .withStyle(ChatFormatting.YELLOW);
-        // TODO: Exclude this player from future Group Split payouts once Group Split logic is implemented.
         for (UUID id : run.orderedPlayers()) {
             if (id.equals(afkPlayer.getUUID())) continue;
             ServerPlayer member = server.getPlayerList().getPlayer(id);
@@ -138,7 +137,6 @@ public final class DungeonAfkService {
         String name = player.getName().getString();
         Component message = Component.literal("Player: " + name + " is no longer afk. Group split is reactivated for this player")
                 .withStyle(ChatFormatting.GREEN);
-        // TODO: Re-include this player in future Group Split payouts once Group Split logic is implemented.
         for (UUID id : runOpt.get().orderedPlayers()) {
             ServerPlayer member = server.getPlayerList().getPlayer(id);
             if (member != null) member.sendSystemMessage(message);

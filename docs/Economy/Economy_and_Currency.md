@@ -34,3 +34,7 @@ Use [Commands: Currency](../commands/In_Game_Commands.md#currency-attunement-fra
 ## Changelog
 
 - **1.5:** Added account balances, tender-item pickup, denominations, capacity checks, value commands, vendor integration, and trade integration.
+
+## Dungeon Group Split payouts
+
+[Dungeon Group Split](../DungeonLifecycle/Dungeon_Group_Split.md) adds Trace to eligible dungeoneers when dungeon mobs die. The payout pool is based on the mob max-HP heart value and is divided by eligible nearby, same-world, non-AFK dungeoneers through the same account deposit path as other currency grants.
