@@ -26,3 +26,7 @@ Class selector is a block+block-entity+menu+screen workflow that assigns class a
 - `/classselectordestination fallback set <destination>`
 - `/classselectordestination fallback clear`
 - `/classselectordestination maxplayers <n>`
+
+## Related dungeon lifecycle systems
+
+- [Dungeon AFK Handling](../DungeonLifecycle/Dungeon_AFK_Handling.md) documents the active-run AFK timer and Group Leader kick prompt that applies after class selector runs begin.
