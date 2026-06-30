@@ -14,7 +14,7 @@ Cosmic Dungeon achievements use generated advancements plus server-side helper s
 
 ## Operator workflow
 
-Use [Commands: Achievement](../commands/In_Game_Commands.md#achievement-15-advancement-foundation) for debug grants and counter inspection. Use [Commands: Plant Flags](../commands/In_Game_Commands.md#plant-flags-15-d1-foundation) for Plant Flags region setup and diagnostics.
+Use [Commands: Achievement](../commands/In_Game_Commands.md#achievement-15-advancement-foundation) for debug grants and counter inspection. Use [Commands: Region Quest Reactions](../commands/In_Game_Commands.md#region-quest-reactions-151-location-quest-foundation) for Plant Flags region setup and diagnostics through `/region quest plant_flags ...`.
 
 ## Related topics
 
@@ -23,4 +23,5 @@ Use [Commands: Achievement](../commands/In_Game_Commands.md#achievement-15-advan
 
 ## Changelog
 
+- **1.5.1:** Standardized Plant Flags setup and diagnostics under `/region quest plant_flags ...` and added a small region quest handler registry for future location-based quest reactions.
 - **1.5:** Added generated achievement scaffolding, counter persistence, Binding Idol hooks, Vital Exchange hooks, Plant Flags tracking, D1 environmental tracker foundations, and the I'm Rich! currency onboarding achievement.

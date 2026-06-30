@@ -29,7 +29,6 @@
 - `/faction`
 - `/progression`
 - `/achievement`
-- `/plantflags`
 - `/vendor`
 - `/trade`
 - `/classitem`
@@ -60,6 +59,11 @@
 - `/region flags <name> exceptions <place|break> <torch|ladder|water> <allow|deny|clear>` (`water` only for `place`)
 - `/region flag list`
 - `/region flag <flag> <allow|deny>` (applies to effective region at your location)
+- `/region quest <quest-name> status`
+- `/region quest <quest-name> reset`
+- `/region quest <quest-name> setregion pos1`
+- `/region quest <quest-name> setregion pos2`
+- `/region quest <quest-name> complete-debug`
 
 **Default behavior note:** newly created regions now default `interact=allow`.
 
@@ -172,18 +176,20 @@ Notes:
 - Binding Idol debug hooks: use `idol return` and `idol provide` to increment idol counters and validate threshold advancement grants.
 
 
-### Plant Flags (1.5 D1 foundation)
-`/plantflags status`
-`/plantflags reset`
-`/plantflags setregion pos1`
-`/plantflags setregion pos2`
-`/plantflags complete-debug`
+### Region Quest Reactions (1.5.1 location quest foundation)
+`/region quest plant_flags status`
+`/region quest plant_flags reset`
+`/region quest plant_flags setregion pos1`
+`/region quest plant_flags setregion pos2`
+`/region quest plant_flags complete-debug`
 
-Authority: `status` is public. `reset`, `setregion`, and `complete-debug` require developer or console authority via `AccessPolicy.requireDeveloperOrConsole`.
+Authority: the `/region` root remains developer-or-console scoped. Player invocations require developer rank; console remains allowed for non-player subcommands, while `setregion` requires an in-world player position.
 
 Notes:
-- Tracks per-run/session planting state. Offline run members do not block completion; online members in the same run must plant matching class-attuned banners.
+- Quest names are single command words. Use `plant_flags` exactly, not `plant flags`, so quest IDs cannot be mistaken for later arguments.
+- Tracks per-run/session planting state. Offline run members do not block completion; online members in the same run must plant matching class-attuned banners inside the configured quest cuboid.
 - Completion grants `cosmicdungeon:achievements/plant_flags` to online eligible players and broadcasts placeholder JHW summon text.
+- The old `/plantflags` command root is removed so Plant Flags uses the same `/region quest <quest-name> ...` shape as future location-based quest reactions. New region-backed quests should add a `RegionQuestHandler` and register it through the small region quest registry instead of adding Plant Flags-specific branches to the command parser.
 
 
 ### Vendor (1.5 progression + faction access)
@@ -211,6 +217,7 @@ Scope boundary:
 
 ## Changelog
 
+- **1.5.1:** Moved Plant Flags operator tools from `/plantflags` to `/region quest plant_flags ...` as the first standardized location-based quest reaction command.
 - **1.5:** Added command coverage for currency, class item attunement, faction, progression, achievements, Plant Flags, vendors, and trading.
 
 ### Dungeon AFK prompt commands

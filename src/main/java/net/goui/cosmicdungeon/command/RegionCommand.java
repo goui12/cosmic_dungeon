@@ -62,6 +62,7 @@ public final class RegionCommand {
         root.then(buildListCommand());
         root.then(buildFlagsCommand());
         root.then(buildFlagCommand());
+        root.then(RegionQuestCommand.build());
 
         dispatcher.register(root);
     }
