@@ -4,7 +4,7 @@ Dungeon Group Split pays Attunement Fragment currency when dungeon mobs die. For
 
 ## Trace payout source
 
-When a hostile monster spawned by a Cosmic Mob Spawner dies in an active dungeon run dimension, the server builds a Trace pool from the mob's max HP expressed as hearts: `floor(max_hp / 2)`. A 40 HP mob therefore creates a 20 Trace pool. Player-summoned Metalmancer golems, passive animals, players, and any other non-Cosmic-Spawner deaths do not create Group Split pools.
+When a hostile monster spawned by a [Cosmic Mob Spawner](../Spawners/Spawner_Systems.md) dies in an active dungeon run dimension, the server builds a Trace pool from the mob's max HP expressed as hearts: `floor(max_hp / 2)`. A 40 HP mob therefore creates a 20 Trace pool. Player-summoned Metalmancer golems, passive animals, players, and any other non-Cosmic-Spawner deaths do not create Group Split pools. Cosmic Mob Spawners mark their spawned mobs with a server-authored `cosmic_spawner_<x>_<y>_<z>` tag before spawning, including base-entity-only spawners that have no optional preset, boss one-shot flag, or mob cap.
 
 ## Eligible dungeoneers
 
@@ -27,4 +27,4 @@ Payouts use the same [CurrencyService](../Economy/Economy_and_Currency.md) depos
 
 Group Split is enforced entirely on the server from the NeoForge living-death event. Clients only receive the system message after the server has attempted the CurrencyService deposit, so client-side workarounds cannot opt into a split or bypass AFK, dimension, run-membership, or distance checks.
 
-The feature does not alter entity save data, block-entity save data, Cosmic Mob Spawner storage, rift/RD data, door/key data, class selector data, teleportation data, or access-policy records. Updating a 1.5.0 server to 1.5.1 requires no migration for mob spawners, doors/keys, rifts/RD, class systems, teleportation/rifts, or region/access policies for this feature.
+The feature does not add required saved fields to entity save data, block-entity save data, Cosmic Mob Spawner storage, rift/RD data, door/key data, class selector data, teleportation data, or access-policy records. Cosmic spawner tags are injected into runtime spawn data on the server before new mobs spawn, so updating a 1.5.0 server to 1.5.1 requires no migration for mob spawners, doors/keys, [rifts/RD](../Rifts/Rift_System_Guide.md), [class systems](../Classes/Class_Selector_System.md), teleportation/rifts, or region/access policies for this feature.

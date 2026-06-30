@@ -1,5 +1,6 @@
 package net.goui.cosmicdungeon.dungeon;
 
+import net.goui.cosmicdungeon.block.entity.CosmicSpawnerBlockEntity;
 import net.goui.cosmicdungeon.economy.CurrencyService;
 import net.goui.cosmicdungeon.entity.ModEntities;
 import net.minecraft.ChatFormatting;
@@ -22,7 +23,6 @@ public final class DungeonGroupSplitService {
 
     public static final int MAX_ELIGIBLE_DISTANCE_BLOCKS = 100;
     private static final double MAX_ELIGIBLE_DISTANCE_SQR = MAX_ELIGIBLE_DISTANCE_BLOCKS * MAX_ELIGIBLE_DISTANCE_BLOCKS;
-    private static final String COSMIC_SPAWNER_TAG_PREFIX = "cosmic_spawner_";
 
     public static void onMobKilled(LivingEntity killed) {
         if (!isRewardableDungeonMob(killed)) return;
@@ -69,7 +69,8 @@ public final class DungeonGroupSplitService {
                 && killed.getType() != ModEntities.METALMANCER_GOLEM.get()
                 && killed.getType().getCategory() == MobCategory.MONSTER
                 && killed instanceof Enemy
-                && killed.getTags().stream().anyMatch(tag -> tag.startsWith(COSMIC_SPAWNER_TAG_PREFIX));
+                && killed.getTags().stream()
+                        .anyMatch(tag -> tag.startsWith(CosmicSpawnerBlockEntity.COSMIC_SPAWNER_TAG_PREFIX));
     }
 
     private static List<ServerPlayer> eligiblePlayers(MinecraftServer server, DungeonRunRegistryData.RunRecord run, LivingEntity killed) {

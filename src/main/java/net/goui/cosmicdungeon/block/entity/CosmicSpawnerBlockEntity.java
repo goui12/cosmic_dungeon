@@ -68,6 +68,13 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     // One-shot spawn detection cache (tag-filtered, not total entities).
     private int oneShotTaggedCount = -1;
 
+    /**
+     * Stable marker prefix added to every mob emitted by a Cosmic Mob Spawner.
+     * Keep this storage-free: existing 1.5.0 block entities upgrade at runtime by
+     * rewriting only the pending SpawnData before the next spawn.
+     */
+    public static final String COSMIC_SPAWNER_TAG_PREFIX = "cosmic_spawner_";
+
     // -------- Reflection access to BaseSpawner private config fields --------
     // These are mapping-sensitive. We treat missing fields as "feature disabled" instead of hard-crashing.
     private static final @Nullable Field F_SPAWN_DELAY;
@@ -530,14 +537,18 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         this.clientSpawnerDirty = false;
     }
 
-    
     private String oneShotSpawnTag() {
-        return "cosmic_spawner_" + this.worldPosition.getX() + "_" + this.worldPosition.getY() + "_" + this.worldPosition.getZ();
+        return COSMIC_SPAWNER_TAG_PREFIX
+                + this.worldPosition.getX() + "_"
+                + this.worldPosition.getY() + "_"
+                + this.worldPosition.getZ();
     }
 
     private void applySpawnTagToSpawnerData() {
         CompoundTag base = new CompoundTag();
-        ResourceLocation entityId = this.spawnerPreset != null ? this.spawnerPreset.getEntityTypeId() : ResourceLocation.tryParse(this.spawnerEntityId);
+        ResourceLocation entityId = this.spawnerPreset != null
+                ? this.spawnerPreset.getEntityTypeId()
+                : ResourceLocation.tryParse(this.spawnerEntityId);
         if (entityId != null) {
             base.putString("id", entityId.toString());
         }
@@ -556,7 +567,8 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
             base.put("Tags", out);
         }
 
-        this.spawner.setNextSpawnDataPublic(this.level, this.worldPosition, forceFullBrightRules(new SpawnData(base, Optional.empty(), Optional.empty())));
+        SpawnData spawnData = forceFullBrightRules(new SpawnData(base, Optional.empty(), Optional.empty()));
+        this.spawner.setNextSpawnDataPublic(this.level, this.worldPosition, spawnData);
         invalidatePreviewEntityCache();
     }
 
@@ -581,7 +593,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
             }
         }
     }
-// ----------------------------
+    // ----------------------------
     // Tick hooks
     // ----------------------------
 
@@ -604,11 +616,10 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
             return;
         }
 
-        // Tag all Cosmic Spawner mobs so boss/cap logic counts only mobs born from this block.
-        if (be.bossOneShot || be.spawnerMobCap > 0 || be.spawnerPreset != null) {
-            be.applySpawnTagToSpawnerData();
-            if (be.oneShotTaggedCount < 0) be.oneShotTaggedCount = be.countTaggedEntities(sl);
-        }
+        // Tag every Cosmic Spawner mob, including legacy/base-entity-only spawners with no preset, cap, or boss flag.
+        // This is a runtime SpawnData upgrade only; existing block-entity config is preserved.
+        be.applySpawnTagToSpawnerData();
+        if (be.oneShotTaggedCount < 0) be.oneShotTaggedCount = be.countTaggedEntities(sl);
 
         int before = be.countTaggedEntities(sl);
         if (be.spawnerMobCap > 0 && before >= be.spawnerMobCap) {
