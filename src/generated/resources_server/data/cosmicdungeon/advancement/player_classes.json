@@ -1,0 +1,24 @@
+{
+  "parent": "cosmicdungeon:root",
+  "criteria": {
+    "tick": {
+      "trigger": "minecraft:tick"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": "Can you play them all?",
+    "icon": {
+      "count": 1,
+      "id": "cosmicdungeon:bent_rod_of_melted_shavings"
+    },
+    "show_toast": false,
+    "title": "Player Classes"
+  },
+  "requirements": [
+    [
+      "tick"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

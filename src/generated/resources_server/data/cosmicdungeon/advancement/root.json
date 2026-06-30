@@ -1,0 +1,24 @@
+{
+  "criteria": {
+    "tick": {
+      "trigger": "minecraft:tick"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "background": "cosmicdungeon:gui/advancements/region_ghost_glass",
+    "description": "The ascent of insanity.",
+    "icon": {
+      "count": 1,
+      "id": "cosmicdungeon:shattered_reality_of_shudde_mell"
+    },
+    "show_toast": false,
+    "title": "Cosmic Dungeon"
+  },
+  "requirements": [
+    [
+      "tick"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

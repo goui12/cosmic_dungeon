@@ -1,0 +1,26 @@
+{
+  "parent": "cosmicdungeon:blooms",
+  "criteria": {
+    "shared": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.cosmicdungeon.blooms.elegy.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "cosmicdungeon:bloom_of_elegy"
+    },
+    "title": {
+      "translate": "advancements.cosmicdungeon.blooms.elegy.title"
+    }
+  },
+  "requirements": [
+    [
+      "shared"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -7,14 +7,14 @@
   },
   "display": {
     "description": {
-      "translate": "advancements.cosmicdungeon.achievements.im_rich.desc"
+      "translate": "advancements.cosmicdungeon.achievements.cycle_of_recorded_sound.desc"
     },
     "icon": {
       "count": 1,
       "id": "minecraft:paper"
     },
     "title": {
-      "translate": "advancements.cosmicdungeon.achievements.im_rich.title"
+      "translate": "advancements.cosmicdungeon.achievements.cycle_of_recorded_sound.title"
     }
   },
   "requirements": [
