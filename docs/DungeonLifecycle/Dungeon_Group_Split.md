@@ -4,7 +4,7 @@ Dungeon Group Split pays Attunement Fragment currency when dungeon mobs die. For
 
 ## Trace payout source
 
-When a non-player living mob dies in an active dungeon run dimension, the server builds a Trace pool from the mob's max HP expressed as hearts: `floor(max_hp / 2)`. A 40 HP mob therefore creates a 20 Trace pool.
+When a hostile monster spawned by a Cosmic Mob Spawner dies in an active dungeon run dimension, the server builds a Trace pool from the mob's max HP expressed as hearts: `floor(max_hp / 2)`. A 40 HP mob therefore creates a 20 Trace pool. Player-summoned Metalmancer golems, passive animals, players, and any other non-Cosmic-Spawner deaths do not create Group Split pools.
 
 ## Eligible dungeoneers
 

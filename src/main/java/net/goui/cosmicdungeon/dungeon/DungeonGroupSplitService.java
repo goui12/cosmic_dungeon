@@ -1,12 +1,15 @@
 package net.goui.cosmicdungeon.dungeon;
 
 import net.goui.cosmicdungeon.economy.CurrencyService;
+import net.goui.cosmicdungeon.entity.ModEntities;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.ArrayList;
@@ -19,9 +22,10 @@ public final class DungeonGroupSplitService {
 
     public static final int MAX_ELIGIBLE_DISTANCE_BLOCKS = 100;
     private static final double MAX_ELIGIBLE_DISTANCE_SQR = MAX_ELIGIBLE_DISTANCE_BLOCKS * MAX_ELIGIBLE_DISTANCE_BLOCKS;
+    private static final String COSMIC_SPAWNER_TAG_PREFIX = "cosmic_spawner_";
 
     public static void onMobKilled(LivingEntity killed) {
-        if (killed == null || killed.level().isClientSide() || killed instanceof Player) return;
+        if (!isRewardableDungeonMob(killed)) return;
         if (!(killed.level() instanceof ServerLevel level)) return;
 
         MinecraftServer server = level.getServer();
@@ -56,6 +60,16 @@ public final class DungeonGroupSplitService {
 
     private static long tracePoolFor(LivingEntity killed) {
         return Math.max(0L, (long) Math.floor(killed.getMaxHealth() / 2.0F));
+    }
+
+    private static boolean isRewardableDungeonMob(LivingEntity killed) {
+        return killed != null
+                && !killed.level().isClientSide()
+                && !(killed instanceof Player)
+                && killed.getType() != ModEntities.METALMANCER_GOLEM.get()
+                && killed.getType().getCategory() == MobCategory.MONSTER
+                && killed instanceof Enemy
+                && killed.getTags().stream().anyMatch(tag -> tag.startsWith(COSMIC_SPAWNER_TAG_PREFIX));
     }
 
     private static List<ServerPlayer> eligiblePlayers(MinecraftServer server, DungeonRunRegistryData.RunRecord run, LivingEntity killed) {
