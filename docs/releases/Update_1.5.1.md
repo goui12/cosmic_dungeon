@@ -33,6 +33,7 @@
 
 ## Dungeon Group Split
 
-- Dungeon mob kills now pay [Trace Group Split](../DungeonLifecycle/Dungeon_Group_Split.md) from the mob max-HP heart value. Eligible dungeoneers split the pool evenly through the existing currency account deposit path.
+- Dungeon mob kills now pay [Trace Group Split](../DungeonLifecycle/Dungeon_Group_Split.md) from the mob max-HP heart value. Eligible dungeoneers split the pool evenly through the existing [currency account](../Economy/Economy_and_Currency.md) deposit path.
 - Eligibility is server-side: active run membership, same world as the mob, within 100 blocks, online/non-spectator, and not AFK according to [Dungeon AFK Handling](../DungeonLifecycle/Dungeon_AFK_Handling.md).
-- This change is runtime/server-player currency state only and does not modify entity/block-entity storage for [Cosmic Mob Spawners](../Spawners/Spawner_Systems.md), [Rifts](../Rifts/Rift_System_Guide.md), doors/keys, [classes](../Classes/Class_Selector_System.md), teleportation, or access-policy data. Updating from 1.5.0 to 1.5.1 requires no data migration for those systems.
+- [Cosmic Mob Spawners](../Spawners/Spawner_Systems.md) now tag every newly spawned mob with the shared `cosmic_spawner_<x>_<y>_<z>` marker used by Group Split, including base-entity-only spawners with no optional preset, boss one-shot flag, or mob cap.
+- This change is runtime/server-player currency and runtime SpawnData state only; it does not add required saved fields or invalidate existing entity/block-entity storage for [Cosmic Mob Spawners](../Spawners/Spawner_Systems.md), [Rifts](../Rifts/Rift_System_Guide.md), doors/keys, [classes](../Classes/Class_Selector_System.md), teleportation, or access-policy data. Updating from 1.5.0 to 1.5.1 requires no data migration for those systems; keep normal world backups, deploy the 1.5.1 jar, and let existing placed spawners tick naturally to tag future spawns.
