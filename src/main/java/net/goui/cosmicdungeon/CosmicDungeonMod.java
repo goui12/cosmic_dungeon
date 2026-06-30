@@ -134,7 +134,6 @@ public class CosmicDungeonMod {
         FactionCommand.register(event.getDispatcher());
         ProgressionCommand.register(event.getDispatcher());
         AchievementCommand.register(event.getDispatcher(), event.getBuildContext());
-        PlantFlagsCommand.register(event.getDispatcher());
         VendorCommand.register(event.getDispatcher());
         TradeCommand.register(event.getDispatcher());
         ClassItemCommand.register(event.getDispatcher());
