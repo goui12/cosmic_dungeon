@@ -27,4 +27,4 @@ Dungeon lifecycle is built around snapshot-driven recovery and run-state trackin
 
 ## Dungeon AFK handling
 
-Active dungeon runs now include transient AFK tracking for dungeoneers. See [Dungeon AFK Handling](./Dungeon_AFK_Handling.md) for the 15-minute threshold, Group Leader prompt behavior, and 1.5.0 to 1.5.1 update safety notes.
+Active dungeon runs now include transient AFK tracking for dungeoneers. See [Dungeon AFK Handling](./Dungeon_AFK_Handling.md) for the 15-minute threshold and Group Leader prompt behavior, and see [Dungeon Group Split](./Dungeon_Group_Split.md) for mob-kill Trace payouts that exclude AFK, cross-world, and distant members.
