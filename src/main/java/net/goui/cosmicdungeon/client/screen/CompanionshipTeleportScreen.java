@@ -25,9 +25,18 @@ public final class CompanionshipTeleportScreen extends Screen {
     @Override public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         renderBackground(g, mouseX, mouseY, partialTick);
         int panelW = 230, panelH = 78 + players.size() * 22 + 38, x = (width - panelW) / 2, y = height / 2 - 78;
-        g.fill(x, y, x + panelW, y + panelH, 0xE0101018); g.renderOutline(x, y, panelW, panelH, 0xFFB0BEC5);
+        g.fill(x, y, x + panelW, y + panelH, 0xE0101018);
+        drawOutline(g, x, y, panelW, panelH, 0xFFB0BEC5);
         g.drawCenteredString(font, "Teleport to a Dungeoneer:", width / 2, y + 14, 0xFFF8BBD0);
         super.render(g, mouseX, mouseY, partialTick);
     }
+
+    private static void drawOutline(GuiGraphics g, int x, int y, int width, int height, int color) {
+        g.fill(x, y, x + width, y + 1, color);
+        g.fill(x, y + height - 1, x + width, y + height, color);
+        g.fill(x, y, x + 1, y + height, color);
+        g.fill(x + width - 1, y, x + width, y + height, color);
+    }
+
     @Override public boolean isPauseScreen() { return false; }
 }

@@ -19,7 +19,7 @@ public final class CompanionshipTeleportService {
     public static void beginSelection(ServerPlayer sp, int durationTicks) {
         if (sp == null || durationTicks <= 0) return;
 
-        PENDING_SELECTIONS.put(sp.getUUID(), sp.serverLevel().getGameTime() + durationTicks);
+        PENDING_SELECTIONS.put(sp.getUUID(), sp.level().getGameTime() + durationTicks);
     }
 
     public static void teleport(ServerPlayer sp, UUID targetId) {
@@ -28,7 +28,7 @@ public final class CompanionshipTeleportService {
         if (runOpt.isEmpty()) { sp.sendSystemMessage(Component.literal("You’re not part of an active dungeon group").withStyle(ChatFormatting.RED)); return; }
         if (!runOpt.get().orderedPlayers().contains(targetId)) { sp.sendSystemMessage(Component.literal("That player is not in your active dungeon group.").withStyle(ChatFormatting.RED)); return; }
         if (!hasPendingSelection(sp)) { sp.sendSystemMessage(Component.literal("Teleportation selection expired.").withStyle(ChatFormatting.RED)); return; }
-        ServerPlayer target = sp.server.getPlayerList().getPlayer(targetId);
+        ServerPlayer target = sp.level().getServer().getPlayerList().getPlayer(targetId);
         if (target == null) { sp.sendSystemMessage(Component.literal("That dungeoneer is no longer online.").withStyle(ChatFormatting.RED)); return; }
 
         var run = runOpt.get();
@@ -47,7 +47,7 @@ public final class CompanionshipTeleportService {
         }
 
         PENDING_SELECTIONS.remove(sp.getUUID());
-        sp.teleportTo(target.serverLevel(), target.getX(), target.getY(), target.getZ(), java.util.Set.of(), target.getYRot(), target.getXRot(), true);
+        sp.teleportTo(target.level(), target.getX(), target.getY(), target.getZ(), java.util.Set.of(), target.getYRot(), target.getXRot(), true);
     }
 
     private static boolean isTargetInTeleportableDungeonDimension(DungeonRunRegistryData.RunRecord run, ServerPlayer target) {
@@ -58,7 +58,7 @@ public final class CompanionshipTeleportService {
         Long expiresAtTick = PENDING_SELECTIONS.get(sp.getUUID());
         if (expiresAtTick == null) return false;
 
-        if (sp.serverLevel().getGameTime() > expiresAtTick) {
+        if (sp.level().getGameTime() > expiresAtTick) {
             PENDING_SELECTIONS.remove(sp.getUUID());
             return false;
         }
