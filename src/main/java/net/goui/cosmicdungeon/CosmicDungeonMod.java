@@ -18,6 +18,7 @@ import net.goui.cosmicdungeon.playerclass.metalmancer.MetalmancerItems;
 import net.goui.cosmicdungeon.redstone.rf.ModRfBlockEntities;
 import net.goui.cosmicdungeon.region.RegionWandEvents;
 import net.goui.cosmicdungeon.sound.ModSounds;
+import net.goui.cosmicdungeon.trade.TradeFinalizationGameTests;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.level.Spawner;
@@ -52,6 +53,7 @@ public class CosmicDungeonMod {
 
         // networking payloads
         modEventBus.addListener(ModNetwork::registerPayloadHandlers);
+        modEventBus.addListener(TradeFinalizationGameTests::register);
         modEventBus.addListener(this::addCreative);
 
 

@@ -13,13 +13,13 @@ Trading lets two players exchange item offers and Attunement Fragment currency t
 
 - Partner offer slots are read-only.
 - Your offer slots accept item stacks until you accept/lock your offer.
-- Currency controls use Attunement denominations and show normalized offer summaries.
+- Currency controls use Attunement denominations, show both players' current account balances, and show normalized offer summaries. Item-only, currency-only, mixed, and zero-currency item trades are all valid as long as both players accept/finalize the server-authoritative session.
 - The first accept locks your current offer; after both players are ready, accept confirms/finalizes.
 - Deny/cancel returns offered items and discards uncommitted currency offers.
 
 ## Safety and server authority
 
-The server validates online state, active-session state, inventory capacity, account balances, currency capacity, and menu lifecycle. Disconnects and menu closes clean up the session and return items where possible. Successful finalization grants the first-trade achievement to both participants server-side; clients only use the synced achievement state to hide the onboarding prompt and cannot bypass the server-authoritative trade checks.
+The server validates online state, active-session state, inventory capacity, account balances, currency capacity, and menu lifecycle. Zero-currency offers skip withdraw/deposit calls so account storage methods keep their positive-amount invariants while item-only trades can complete safely. Dedicated server-side trade finalization GameTests cover item-only, currency-only, mixed, full-inventory, and currency-capacity-limit outcomes. Disconnects and menu closes clean up the session and return items where possible. Successful finalization grants the first-trade achievement to both participants server-side; clients only use the synced achievement state to hide the onboarding prompt and cannot bypass the server-authoritative trade checks.
 
 ## Related topics
 
@@ -30,5 +30,5 @@ The server validates online state, active-session state, inventory capacity, acc
 
 ## Changelog
 
-- **1.5.1:** Fixed the CAPS LOCK look prompt text rendering, and added the first-trade achievement so the prompt retires permanently after a successful player trade.
+- **1.5.1:** Allows item-only, currency-only, and mixed trades; improves trade currency spacing; shows both players' balances in the GUI; removes decorative coin stack counts; fixed the CAPS LOCK look prompt text rendering; and added the first-trade achievement so the prompt retires permanently after a successful player trade.
 - **1.5:** Added trade invites, clickable chat responses, item/currency offer slots, ready/confirm flow, CAPS LOCK look-target request, server validation, and disconnect cleanup.
