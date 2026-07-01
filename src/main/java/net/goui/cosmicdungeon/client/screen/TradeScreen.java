@@ -31,14 +31,14 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
     private static final int TEXTURE_WIDTH = 256;
     private static final int TEXTURE_HEIGHT = 256;
     private static final int ICON_SIZE = 16;
-    private static final int ICON_STEP = 18;
+    private static final int ICON_STEP = 20;
     private static final int BALANCE_ICON_X = 8;
     private static final int OTHER_BALANCE_ICON_Y = 17;
     private static final int SELF_NAME_Y = 65;
     private static final int SELF_BALANCE_ICON_Y = 76;
-    private static final int OTHER_OFFER_SUMMARY_X = 56;
+    private static final int OTHER_OFFER_SUMMARY_X = 54;
     private static final int OTHER_OFFER_SUMMARY_Y = 47;
-    private static final int SELF_OFFER_SUMMARY_X = 56;
+    private static final int SELF_OFFER_SUMMARY_X = 54;
     private static final int SELF_OFFER_SUMMARY_Y = 108;
     private static final int OTHER_ACCEPT_X = 228;
     private static final int OTHER_ACCEPT_Y = 28;
@@ -178,8 +178,10 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
     private void renderTradeText(GuiGraphics g, TradeClientState.TradeView view, TradeViewData data) {
         g.drawString(font, "Trading with: " + data.otherName(), leftPos + BALANCE_ICON_X, topPos + 6, 0xffffff, false);
         g.drawString(font, data.otherName() + " offer", leftPos + 56, topPos + 17, 0xcccccc, false);
+        g.drawString(font, "Balance: " + CurrencyAmount.ofTrace(data.otherBalance()).formatNormalized(), leftPos + 30, topPos + 32, 0xcccccc, false);
         g.drawString(font, data.selfName(), leftPos + BALANCE_ICON_X, topPos + SELF_NAME_Y, 0xffffff, false);
         g.drawString(font, data.selfName() + " offer", leftPos + 56, topPos + 78, 0xffffff, false);
+        g.drawString(font, "Balance: " + CurrencyAmount.ofTrace(data.selfBalance()).formatNormalized(), leftPos + 30, topPos + 93, 0xffffff, false);
 
         g.drawString(font, "You: " + tradeStatus(view == null ? false : view.selfReady(), view == null ? false : view.selfConfirmed()), leftPos + 146, topPos + 64, 0xffffff, false);
         g.drawString(font, data.otherName() + ": " + tradeStatus(view == null ? false : view.otherReady(), view == null ? false : view.otherConfirmed()), leftPos + 146, topPos + 74, 0xcccccc, false);
@@ -205,22 +207,18 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
     }
 
     private void renderCurrencyStacks(GuiGraphics g, long traceAmount, int x, int y, boolean interactive, int mouseX, int mouseY) {
-        long[] counts = normalizedCounts(traceAmount);
         for (int i = 0; i < CURRENCY_ICONS.length; i++) {
             int iconY = y + i * ICON_STEP;
             ItemStack stack = stackFor(CURRENCY_ICONS[i]);
             g.renderItem(stack, x, iconY);
-            g.renderItemDecorations(font, stack, x, iconY, Long.toString(counts[i]));
         }
     }
 
     private void renderOfferedCurrency(GuiGraphics g, long offeredTrace, int x, int y, int mouseX, int mouseY) {
-        long[] counts = normalizedCounts(offeredTrace);
         for (int i = 0; i < CURRENCY_ICONS.length; i++) {
             int iconX = x + i * ICON_STEP;
             ItemStack stack = stackFor(CURRENCY_ICONS[i]);
             g.renderItem(stack, iconX, y);
-            g.renderItemDecorations(font, stack, iconX, y, Long.toString(counts[i]));
         }
     }
 

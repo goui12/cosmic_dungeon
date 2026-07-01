@@ -410,61 +410,114 @@ public final class TradeSessionData {
                 return;
             }
 
-            long originalABalance = CurrencyService.getBalanceTrace(sa);
-            long originalBBalance = CurrencyService.getBalanceTrace(sb);
-            if (aCurrency < 0L || bCurrency < 0L || originalABalance < aCurrency || originalBBalance < bCurrency) {
-                cancel("Insufficient balance");
-                return;
-            }
-            if (!canReceiveCurrency(sa, bCurrency, aCurrency) || !canReceiveCurrency(sb, aCurrency, bCurrency)) {
-                cancel("Cannot receive offered currency");
-                return;
-            }
-            if (!hasCapacityFor(sa, bOffer) || !hasCapacityFor(sb, aOffer)) {
-                cancel("Not enough inventory space");
+            TradeFinalizationService.Result result = TradeFinalizationService.finalizeTrade(
+                    participant(sa, aCurrency),
+                    participant(sb, bCurrency),
+                    offeredItems(aOffer),
+                    offeredItems(bOffer)
+            );
+            if (result != TradeFinalizationService.Result.SUCCESS) {
+                cancel(cancelReason(result));
                 return;
             }
 
-            boolean withdrewA = false;
-            boolean withdrewB = false;
-            boolean depositedToA = false;
-            boolean depositedToB = false;
-            try {
-                withdrewA = CurrencyService.tryWithdraw(sa, aCurrency);
-                withdrewB = CurrencyService.tryWithdraw(sb, bCurrency);
-                if (!withdrewA || !withdrewB) {
-                    rollbackCurrency(sa, sb, originalABalance, originalBBalance);
-                    cancel("Currency withdrawal failed");
-                    return;
-                }
-
-                depositedToA = CurrencyService.tryDeposit(sa, bCurrency);
-                depositedToB = CurrencyService.tryDeposit(sb, aCurrency);
-                if (!depositedToA || !depositedToB) {
-                    rollbackCurrency(sa, sb, originalABalance, originalBBalance);
-                    cancel("Currency transfer failed");
-                    return;
-                }
-            } catch (RuntimeException ex) {
-                rollbackCurrency(sa, sb, originalABalance, originalBBalance);
-                cancel("Currency transfer failed");
-                return;
-            }
-
-            if (!depositedToA || !depositedToB) {
-                rollbackCurrency(sa, sb, originalABalance, originalBBalance);
-                cancel("Currency transfer failed");
-                return;
-            }
-
-            moveAll(aOffer, sb);
-            moveAll(bOffer, sa);
             syncAll("Trade completed.");
             sa.sendSystemMessage(Component.literal("Trade completed."));
             sb.sendSystemMessage(Component.literal("Trade completed."));
             TradeAchievementService.onSuccessfulTrade(sa, sb);
             end();
             closeMenus(sa, sb);
+        }
+
+        private TradeFinalizationService.TradeParticipant participant(ServerPlayer player, long offeredCurrencyTrace) {
+            return new ServerBackedParticipant() {
+                @Override
+                public ServerPlayer player() {
+                    return player;
+                }
+
+                @Override
+                public long offeredCurrencyTrace() {
+                    return offeredCurrencyTrace;
+                }
+
+                @Override
+                public long balanceTrace() {
+                    return CurrencyService.getBalanceTrace(player);
+                }
+
+                @Override
+                public long capacityTrace() {
+                    return CurrencyService.getCapacity(player);
+                }
+
+                @Override
+                public boolean tryWithdraw(long traceAmount) {
+                    return CurrencyService.tryWithdraw(player, traceAmount);
+                }
+
+                @Override
+                public boolean tryDeposit(long traceAmount) {
+                    return CurrencyService.tryDeposit(player, traceAmount);
+                }
+
+                @Override
+                public void setBalanceTrace(long traceAmount) {
+                    CurrencyService.setBalanceTrace(player, traceAmount);
+                }
+
+                @Override
+                public boolean canReceiveItems(TradeFinalizationService.OfferedItems items) {
+                    return items.canMoveInto(this);
+                }
+
+                @Override
+                public void receiveItems(TradeFinalizationService.OfferedItems items) {
+                    items.moveInto(this);
+                }
+            };
+        }
+
+        private TradeFinalizationService.OfferedItems offeredItems(SimpleContainer container) {
+            return new TradeFinalizationService.OfferedItems() {
+                @Override
+                public boolean canMoveInto(TradeFinalizationService.TradeParticipant receiver) {
+                    return receiverCanAcceptItems(receiver, container);
+                }
+
+                @Override
+                public void moveInto(TradeFinalizationService.TradeParticipant receiver) {
+                    receiverAcceptItems(receiver, container);
+                }
+            };
+        }
+
+        private boolean receiverCanAcceptItems(TradeFinalizationService.TradeParticipant receiver, SimpleContainer container) {
+            if (receiver instanceof ServerBackedParticipant serverBacked) {
+                return hasCapacityFor(serverBacked.player(), container);
+            }
+            return container.getContainerSize() == 0;
+        }
+
+        private void receiverAcceptItems(TradeFinalizationService.TradeParticipant receiver, SimpleContainer container) {
+            if (receiver instanceof ServerBackedParticipant serverBacked) {
+                moveAll(container, serverBacked.player());
+            }
+        }
+
+        private String cancelReason(TradeFinalizationService.Result result) {
+            return switch (result) {
+                case INSUFFICIENT_BALANCE -> "Insufficient balance";
+                case CANNOT_RECEIVE_CURRENCY -> "Cannot receive offered currency";
+                case NOT_ENOUGH_INVENTORY_SPACE -> "Not enough inventory space";
+                case CURRENCY_WITHDRAWAL_FAILED -> "Currency withdrawal failed";
+                case CURRENCY_TRANSFER_FAILED -> "Currency transfer failed";
+                case SUCCESS -> "Trade completed";
+            };
+        }
+
+        private interface ServerBackedParticipant extends TradeFinalizationService.TradeParticipant {
+            ServerPlayer player();
         }
 
         private void syncAll(String statusMessage) {
@@ -507,18 +560,6 @@ public final class TradeSessionData {
             ));
         }
 
-        private void rollbackCurrency(ServerPlayer sa, ServerPlayer sb, long originalABalance, long originalBBalance) {
-            CurrencyService.setBalanceTrace(sa, originalABalance);
-            CurrencyService.setBalanceTrace(sb, originalBBalance);
-        }
-
-        private boolean canReceiveCurrency(ServerPlayer player, long incoming, long outgoing) {
-            if (incoming < 0L || outgoing < 0L) return false;
-            long balanceAfterWithdrawal = CurrencyService.getBalanceTrace(player) - outgoing;
-            if (balanceAfterWithdrawal < 0L) return false;
-            long capacity = CurrencyService.getCapacity(player);
-            return incoming <= capacity - balanceAfterWithdrawal;
-        }
 
         private boolean hasCapacityFor(ServerPlayer p, SimpleContainer src) {
             ItemStack[] simulated = new ItemStack[p.getInventory().getContainerSize()];
