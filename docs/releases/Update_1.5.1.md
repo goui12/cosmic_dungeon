@@ -19,6 +19,13 @@
 - Region-backed quest commands now route through a small handler registry, so future quests can register their own `RegionQuestHandler` without adding quest-specific branches to `/region quest`.
 - This refactor reuses the existing Plant Flags saved data format (`cosmicdungeon_plant_flags_v1`) and only changes the command surface. It does not add required saved fields or alter entity/block-entity storage for [Cosmic Mob Spawners](../Spawners/Spawner_Systems.md), [Rifts](../Rifts/Rift_System_Guide.md), doors/keys, class selector data, teleportation, or access-policy records. Updating from 1.5.0 to 1.5.1 requires no migration for those systems; keep a normal world backup, deploy the 1.5.1 jar, and run `/region quest plant_flags status` to verify the existing configured cuboid loaded.
 
+
+## Trading prompt and achievement
+
+- Fixed the player-to-player trade look prompt so the player name and `CAPS LOCK` instruction render over the prompt background instead of appearing as only a gray box. See [Trading Guide](../Trading/Trading_Guide.md#starting-a-trade).
+- Added the **Handshake Protocol** achievement for completing one successful player-to-player trade. After the server finalizes a trade and grants this advancement, the client stops showing the CAPS LOCK onboarding prompt for that player. See [Achievements & Advancements](../Achievements/Achievements_and_Advancements.md#trade-onboarding-achievement).
+- This change uses generated advancement data and a small login/finalization prompt-state sync. It does not modify server-data-storage methods for entity/block-entity data such as [Cosmic Mob Spawners](../Spawners/Spawner_Systems.md), doors/keys, [Rifts/RD](../Rifts/Rift_System_Guide.md), [classes](../Classes/Class_Selector_System.md), teleportation, or access-policy records. Updating from 1.5.0 to 1.5.1 requires no migration for those systems: keep a normal world backup, deploy the 1.5.1 jar, and let advancement progress sync on player login.
+
 ## Fixed
 - Fixed hitbox on class chests.
 

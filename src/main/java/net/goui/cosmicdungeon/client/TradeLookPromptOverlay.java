@@ -16,6 +16,9 @@ public final class TradeLookPromptOverlay {
         if (minecraft == null || minecraft.player == null || minecraft.level == null) {
             return;
         }
+        if (TradePromptClientState.shouldHidePrompt()) {
+            return;
+        }
         if (minecraft.screen != null || minecraft.getDebugOverlay().showDebugScreen()) {
             return;
         }
@@ -38,7 +41,7 @@ public final class TradeLookPromptOverlay {
         int boxY = screenHeight - 70;
 
         event.getGuiGraphics().fill(boxX, boxY, boxX + boxWidth, boxY + boxHeight, 0x66000000);
-        event.getGuiGraphics().drawString(minecraft.font, name, (screenWidth - nameWidth) / 2, boxY + 4, 0xFFFFFF, true);
-        event.getGuiGraphics().drawString(minecraft.font, prompt, (screenWidth - promptWidth) / 2, boxY + 14, 0xFFE082, true);
+        event.getGuiGraphics().drawString(minecraft.font, name, (screenWidth - nameWidth) / 2, boxY + 4, 0xFFFFFFFF, true);
+        event.getGuiGraphics().drawString(minecraft.font, prompt, (screenWidth - promptWidth) / 2, boxY + 14, 0xFFFFE082, true);
     }
 }
