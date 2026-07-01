@@ -1,5 +1,6 @@
 package net.goui.cosmicdungeon.trade;
 
+import net.goui.cosmicdungeon.achievement.TradeAchievementService;
 import net.goui.cosmicdungeon.economy.CurrencyDenomination;
 import net.goui.cosmicdungeon.economy.CurrencyService;
 import net.goui.cosmicdungeon.network.ModNetwork;
@@ -461,6 +462,7 @@ public final class TradeSessionData {
             syncAll("Trade completed.");
             sa.sendSystemMessage(Component.literal("Trade completed."));
             sb.sendSystemMessage(Component.literal("Trade completed."));
+            TradeAchievementService.onSuccessfulTrade(sa, sb);
             end();
             closeMenus(sa, sb);
         }

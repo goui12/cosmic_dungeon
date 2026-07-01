@@ -91,6 +91,10 @@ public final class ModNetworkClient {
         if (payload.ok()) VendorScreen.clearSelectionsIfOpen();
     }
 
+    public static void onTradePromptState(TradePayloads.S2C_TradePromptState payload) {
+        TradePromptClientState.setHidePrompt(payload.hidePrompt());
+    }
+
     public static void onTradeState(TradePayloads.S2C_TradeState payload) {
         TradeClientState.set(new TradeClientState.TradeView(
                 payload.containerId(),

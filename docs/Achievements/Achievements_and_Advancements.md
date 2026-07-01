@@ -11,6 +11,11 @@ Cosmic Dungeon achievements use generated advancements plus server-side helper s
 - Vital Exchange hooks grant achievements when the expected healing/support items are provided to a Deadeye receiver.
 - Plant Flags tracks D1 run-scoped banner planting and grants the Plant Flags advancement when eligible online members complete the requirement.
 - D1 environmental tracker services exist for region-based achievement work.
+- Successful player-to-player trade finalization grants the first-trade onboarding achievement to both participants.
+
+## Trade onboarding achievement
+
+**Handshake Protocol** tracks "You have traded with a player at least once." It is granted only after the server successfully finalizes a [player-to-player trade](../Trading/Trading_Guide.md), after item/currency capacity checks and transfers pass. The client receives a small synced prompt state on login and after the grant so the CAPS LOCK look prompt no longer appears for players who have already traded once. This stores advancement progress only; it does not add saved entity or block-entity fields.
 
 ## Operator workflow
 
@@ -20,8 +25,10 @@ Use [Commands: Achievement](../commands/In_Game_Commands.md#achievement-15-advan
 
 - [Class Restrictions & Inventory](../Classes/Class_Restrictions_and_Inventory.md) for class-attuned Plant Flags banners.
 - [Progression, Factions & Unlocks](../Progression/Progression_Factions_and_Unlocks.md) for D1 unlock context.
+- [Trading Guide](../Trading/Trading_Guide.md) for the trade finalization hook that grants Handshake Protocol.
 
 ## Changelog
 
+- **1.5.1:** Added Handshake Protocol for first successful player trade and uses its synced state to retire the CAPS LOCK trade prompt.
 - **1.5.1:** Standardized Plant Flags setup and diagnostics under `/region quest plant_flags ...` and added a small region quest handler registry for future location-based quest reactions.
 - **1.5:** Added generated achievement scaffolding, counter persistence, Binding Idol hooks, Vital Exchange hooks, Plant Flags tracking, D1 environmental tracker foundations, and the I'm Rich! currency onboarding achievement.

@@ -108,6 +108,8 @@
   "message.cosmicdungeon.metalmancer.not_enough_ore": "You need 40 ore to summon Golem.",
   "message.cosmicdungeon.metalmancer.golem_already_active": "You already have a Golem!",
   "message.cosmicdungeon.trade.look_at_player": "Look at a player within 3 blocks to request a trade.",
+  "advancements.cosmicdungeon.achievements.first_player_trade.title": "Handshake Protocol",
+  "advancements.cosmicdungeon.achievements.first_player_trade.desc": "Trade with another player at least once.",
   "entity.cosmicdungeon.goblin_ambusher": "Goblin Ambusher",
   "item.cosmicdungeon.goblin_ambusher_spawn_egg": "Goblin Ambusher Spawn Egg",
   "item.cosmicdungeon.satchel_of_samples": "Satchel of Samples",
