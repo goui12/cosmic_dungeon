@@ -60,6 +60,8 @@
   "key.cosmicdungeon.spawner_preset_4": "Cosmic Spawner Preset Load Keybind: 4",
   "key.cosmicdungeon.spawner_preset_5": "Cosmic Spawner Preset Load Keybind: 5",
   "key.cosmicdungeon.trade_request": "Trade Request",
+  "key.cosmicdungeon.help_menu": "Open Help Menu",
+  "screen.cosmicdungeon.help_menu": "Cosmic Dungeon Help",
   "hud.cosmicdungeon.trade.look_name": "%s",
   "hud.cosmicdungeon.trade.press_key": "Press CAPS LOCK to request trade",
   "item.cosmicdungeon.region_wand": "Region Wand",
