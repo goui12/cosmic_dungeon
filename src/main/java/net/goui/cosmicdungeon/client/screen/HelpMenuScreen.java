@@ -1,14 +1,16 @@
 package net.goui.cosmicdungeon.client.screen;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.client.HelpMenuKeybindClient;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -110,26 +112,29 @@ public final class HelpMenuScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE || HelpMenuKeybindClient.matchesHelpMenuKey(keyCode, scanCode)) {
+    public boolean keyPressed(KeyEvent event) {
+        if (event.key() == InputConstants.KEY_ESCAPE || HelpMenuKeybindClient.matchesHelpMenuKey(event)) {
             this.onClose();
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         if (button == 0) {
             if (this.currentView == HelpView.MAIN) {
-                return clickMainButton(mouseX, mouseY) || super.mouseClicked(mouseX, mouseY, button);
+                return clickMainButton(mouseX, mouseY) || super.mouseClicked(event, isDoubleClick);
             }
             if (this.currentView == HelpView.CLASSES) {
-                return clickBackButton(mouseX, mouseY) || clickClassButton(mouseX, mouseY) || super.mouseClicked(mouseX, mouseY, button);
+                return clickBackButton(mouseX, mouseY) || clickClassButton(mouseX, mouseY) || super.mouseClicked(event, isDoubleClick);
             }
-            return clickBackButton(mouseX, mouseY) || super.mouseClicked(mouseX, mouseY, button);
+            return clickBackButton(mouseX, mouseY) || super.mouseClicked(event, isDoubleClick);
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, isDoubleClick);
     }
 
     private boolean clickMainButton(double mouseX, double mouseY) {

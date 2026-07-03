@@ -3,6 +3,7 @@ package net.goui.cosmicdungeon.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.goui.cosmicdungeon.client.screen.HelpMenuScreen;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.Minecraft;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
@@ -33,7 +34,7 @@ public final class HelpMenuKeybindClient {
         }
     }
 
-    public static boolean matchesHelpMenuKey(int keyCode, int scanCode) {
-        return HELP_MENU_KEY.matches(keyCode, scanCode);
+    public static boolean matchesHelpMenuKey(KeyEvent event) {
+        return HELP_MENU_KEY.matches(event);
     }
 }
