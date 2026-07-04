@@ -17,6 +17,7 @@ Developer-facing reference for world builders, dungeon operators, and content in
 - Gameplay-content systems
   - [Class Selector Block](./Classes/Class_Selector_System.md)
   - [Class Restrictions & Inventories](./Classes/Class_Restrictions_and_Inventory.md)
+  - [Help Menu Classes Subpage](./Classes/Help_Menu_Classes.md)
   - [Mobs & AI Behaviors](./Mobs/Mob_Behavior_Reference.md)
   - [Blocks & Interaction Contracts](./Blocks/Block_Interaction_Reference.md)
   - [Economy & Currency](./Economy/Economy_and_Currency.md)
