@@ -38,6 +38,8 @@
 ### Spawner
 `/spawner help|set|name|boss|cap|equip|enchant|drop|drops|showlabels|delay|preset|info|reset`
 
+`/spawner showlabels` toggles the developer-only Cosmic Spawner summary HUD. When enabled, developers looking at a Cosmic Mob Spawner see mob type, mob name, cap, and delay range in the bottom-right corner instead of the old teal in-world label.
+
 ### Region (actual command tree)
 
 - `/region wand`

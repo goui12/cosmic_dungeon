@@ -4,6 +4,7 @@ import net.goui.cosmicdungeon.block.ModBlocks;
 import net.goui.cosmicdungeon.block.entity.CosmicSpawnerIntrinsicDropEvents;
 import net.goui.cosmicdungeon.block.entity.ModBlockEntities;
 import net.goui.cosmicdungeon.client.CosmicDungeonClient;
+import net.goui.cosmicdungeon.client.SpawnerHudClientConfig;
 import net.goui.cosmicdungeon.command.*;
 import net.goui.cosmicdungeon.component.ModDataComponents;
 import net.goui.cosmicdungeon.entity.*;
@@ -84,6 +85,7 @@ public class CosmicDungeonMod {
         // client-only init — call this ONCE
         if (FMLLoader.getCurrent().getDist() == Dist.CLIENT) {
             CosmicDungeonClient.init(modEventBus);
+            modContainer.registerConfig(ModConfig.Type.CLIENT, SpawnerHudClientConfig.SPEC);
         }
 
         // entity attributes
