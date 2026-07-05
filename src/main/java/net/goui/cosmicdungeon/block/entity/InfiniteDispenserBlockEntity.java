@@ -1,11 +1,8 @@
 package net.goui.cosmicdungeon.block.entity;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
-import net.goui.cosmicdungeon.util.ModTags;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderSet;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -15,7 +12,6 @@ import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.DispenserMenu;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.SpawnEggItem;
@@ -87,7 +83,7 @@ public class InfiniteDispenserBlockEntity extends BaseContainerBlockEntity imple
         unpackLootTable(null);
         for (int i = 0; i < items.size(); i++) {
             ItemStack s = items.get(i);
-            if (!s.isEmpty() && isShootable(level, s)) {
+            if (InfiniteDispenserShootables.isShootable(level, s)) {
                 return i;
             }
         }
@@ -150,20 +146,5 @@ public class InfiniteDispenserBlockEntity extends BaseContainerBlockEntity imple
 
     private void playFail(Level level, BlockPos pos) {
         level.levelEvent(1001, pos, 0); // fail click
-    }
-
-    private static boolean isShootable(Level level, ItemStack s) {
-        if (s.isEmpty()) return false;
-        try {
-            var lookup = level.registryAccess().lookupOrThrow(Registries.ITEM);
-            HolderSet<Item> set = lookup.getOrThrow(ModTags.Items.INFINITE_SHOOTABLES);
-            if (set.size() > 0) {
-                return s.is(ModTags.Items.INFINITE_SHOOTABLES);
-            }
-        } catch (Throwable ignored) {}
-        return s.is(Items.ARROW)
-                || s.is(Items.TIPPED_ARROW)
-                || s.is(Items.SPECTRAL_ARROW)
-                || s.getItem() instanceof SpawnEggItem;
     }
 }
