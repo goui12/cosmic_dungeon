@@ -32,7 +32,7 @@ Spawner behavior is driven by `cosmic_mob_spawner` block entities and optional p
 - `/spawner enchant ...`
 - `/spawner drop <slot> <0..1>`
 - `/spawner drops`
-- `/spawner showlabels`
+- `/spawner showlabels` — toggles the developer-only bottom-right summary HUD while looking at a Cosmic Mob Spawner
 - `/spawner delay <ticks>`
 - `/spawner info`
 - `/spawner reset`

@@ -9,19 +9,19 @@ import net.minecraft.world.phys.HitResult;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 
+import java.util.List;
+
 public final class CosmicSpawnerHoverOverlay {
+
+    private static final int PADDING = 6;
+    private static final int MARGIN = 12;
+    private static final int LINE_HEIGHT = 10;
 
     private CosmicSpawnerHoverOverlay() {}
 
     /**
-     * Client-only toggle for whether spawner labels are rendered.
-     * Default: HIDE.
-     *
-     * Server controls this via SpawnerLabelPayload (developer-only command).
-     *
-     * NOTE:
-     * We store the actual value in SpawnerLabelState so common/network code can set it
-     * without relying on reflective dispatch.
+     * Client-only toggle for whether the developer spawner summary HUD is rendered.
+     * Default: HIDE. Server controls this via SpawnerLabelPayload after developer checks.
      */
     public static boolean isEnabled() {
         return SpawnerLabelState.isEnabled();
@@ -37,22 +37,44 @@ public final class CosmicSpawnerHoverOverlay {
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
-        if (mc.screen != null) return;
+        if (mc.screen != null || mc.getDebugOverlay().showDebugScreen()) return;
 
         HitResult hit = mc.hitResult;
         if (!(hit instanceof BlockHitResult bhr)) return;
-
         if (!(mc.level.getBlockEntity(bhr.getBlockPos()) instanceof CosmicSpawnerBlockEntity be)) return;
 
-        Component text = Component.translatable("hud.cosmicdungeon.spawner", be.getSpawnerDisplayEntityId());
+        List<Component> lines = List.of(
+                Component.literal("Mob Type: " + be.getSpawnerDisplayEntityId()),
+                Component.literal("Mob Name: " + be.getSpawnerDisplayMobName()),
+                Component.literal("Cap: " + formatCap(be.getSpawnerMobCap())),
+                Component.literal("Delay: " + be.getSpawnerMinSpawnDelay() + "-" + be.getSpawnerMaxSpawnDelay() + " ticks")
+        );
 
-        int w = mc.getWindow().getGuiScaledWidth();
-        int h = mc.getWindow().getGuiScaledHeight();
+        int textWidth = lines.stream().mapToInt(mc.font::width).max().orElse(0);
+        int boxWidth = textWidth + (PADDING * 2);
+        int boxHeight = (lines.size() * LINE_HEIGHT) + (PADDING * 2) - 2;
+        SpawnerHudClientConfig.Anchor anchor = SpawnerHudClientConfig.anchor();
+        int edgeOffsetX = MARGIN + SpawnerHudClientConfig.HORIZONTAL_OFFSET.get();
+        int edgeOffsetY = MARGIN + SpawnerHudClientConfig.VERTICAL_OFFSET.get();
+        int x = anchor.left()
+                ? edgeOffsetX
+                : mc.getWindow().getGuiScaledWidth() - boxWidth - edgeOffsetX;
+        int y = anchor.top()
+                ? edgeOffsetY
+                : mc.getWindow().getGuiScaledHeight() - boxHeight - edgeOffsetY;
 
-        // Centered, slightly above crosshair
-        int x = (w / 2) - (mc.font.width(text) / 2);
-        int y = (h / 2) - 20;
+        e.getGuiGraphics().fill(x, y, x + boxWidth, y + boxHeight, SpawnerHudClientConfig.backgroundColor());
+        e.getGuiGraphics().fill(x, y, x + boxWidth, y + 1, SpawnerHudClientConfig.borderColor());
+        e.getGuiGraphics().fill(x, y + boxHeight - 1, x + boxWidth, y + boxHeight, SpawnerHudClientConfig.borderColor());
 
-        e.getGuiGraphics().drawString(mc.font, text, x, y, 0xFFFFFF, true);
+        int lineY = y + PADDING;
+        for (Component line : lines) {
+            e.getGuiGraphics().drawString(mc.font, line, x + PADDING, lineY, 0xFFFFFFFF, true);
+            lineY += LINE_HEIGHT;
+        }
+    }
+
+    private static String formatCap(int cap) {
+        return cap <= 0 ? "uncapped" : Integer.toString(cap);
     }
 }

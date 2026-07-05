@@ -68,11 +68,13 @@ This document covers the full `/spawner` command surface for Cosmic Dungeon oper
 
 
 ## `/spawner showlabels`
-- Developer-only global toggle.
-- `/spawner showlabels` switches whether the cyan/teal spawner entity label above Cosmic Spawners is visible.
-- When enabled, labels are shown to all online developers and to developers who join later.
-- Non-developers never receive this label view mode.
 
+- `/spawner showlabels` now switches the developer-only **Cosmic Spawner summary HUD** instead of rendering a teal nameplate above spawners.
+- When enabled, online developers who look directly at a Cosmic Mob Spawner see a bottom-right screen panel with mob type, configured mob name, per-spawner cap, and delay range.
+- Looking away from the spawner, opening another screen, or disabling the toggle hides the panel.
+- Developers can tune the HUD locally in the client config with `spawnerHud.position`, `spawnerHud.opacity`, `spawnerHud.horizontalOffset`, and `spawnerHud.verticalOffset` for different screen layouts.
+- Non-developers never receive this HUD mode, and the command remains server-authorized through the existing developer access checks.
+- This is a client HUD/render refactor only. It does not add required saved fields or change Cosmic Mob Spawner block-entity storage, preset JSON formats, entity save data, rift/RD data, door/key data, class selector data, teleportation data, or access-policy records. Updating from 1.5.0 to 1.5.1 requires no data migration for this display change.
 
 ## Spawner preset hotkeys
 - Five client keybinds are available under **Cosmic Dungeon** in Controls.
