@@ -186,6 +186,7 @@ public final class SpawnerCommand {
             }
             src.sendSuccess(() -> Component.literal("=== Cosmic Spawner Info ===").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
             src.sendSuccess(() -> Component.literal("Mob: ").withStyle(ChatFormatting.YELLOW).append(Component.literal(p.getDisplayEntityTypeId().toString()).withStyle(ChatFormatting.WHITE)), false);
+            src.sendSuccess(() -> Component.literal("Mob Name: ").withStyle(ChatFormatting.YELLOW).append(spawnerMobName(p)), false);
             src.sendSuccess(() -> Component.literal("Spawner Coordinates: ").withStyle(ChatFormatting.YELLOW).append(Component.literal(be.getBlockPos().getX()+", "+be.getBlockPos().getY()+", "+be.getBlockPos().getZ()+" <x,y,z>").withStyle(ChatFormatting.AQUA)), false);
 
             sendEquipmentInfo(src, p, CosmicSpawnerPreset.Slot.HEAD, "Armor: Helmet");
@@ -211,6 +212,14 @@ public final class SpawnerCommand {
             src.sendFailure(Component.literal("Failed: " + e.getMessage()));
             return 0;
         }
+    }
+
+    private static Component spawnerMobName(CosmicSpawnerPreset preset) {
+        Component customName = preset.getCustomName();
+        if (customName == null || customName.getString().isBlank()) {
+            return Component.literal("unnamed").withStyle(ChatFormatting.DARK_GRAY);
+        }
+        return customName.copy().withStyle(ChatFormatting.WHITE);
     }
 
     private static int adjustDrop(CommandSourceStack src, CosmicSpawnerPreset.Slot slot, float delta) {
