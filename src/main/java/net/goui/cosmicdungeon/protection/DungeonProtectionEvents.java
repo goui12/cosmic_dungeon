@@ -281,5 +281,85 @@ public final class DungeonProtectionEvents {
         }
     }
 
-    /* Remaining methods unchanged */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onBlockPlaced(BlockEvent.EntityPlaceEvent e) {
+        if (!(e.getLevel() instanceof ServerLevel level)) return;
+        if (!(e.getEntity() instanceof ServerPlayer sp)) return;
+        if (AccessPolicy.isDeveloper(sp)) return;
+
+        BlockPos pos = e.getPos();
+        RegionRegistryData.Region region = effectiveRegion(level, pos);
+        if (region == null) return;
+
+        BlockState placed = e.getPlacedBlock();
+        if (resolveFlag(level, region, FLAG_PLACE, false)) return;
+
+        if (isTorchLike(placed) && resolveException(level, region, "place", EX_TORCH, true)) return;
+        if (isLadderLike(placed) && resolveException(level, region, "place", EX_LADDER, false)) return;
+        if (isWaterLike(placed) && resolveException(level, region, "place", EX_WATER, false)) return;
+        if (placed.is(ModTags.Blocks.DUNGEONEER_PLACEABLE)) return;
+
+        e.setCanceled(true);
+        AccessPolicy.deny(sp, "You cannot place blocks here.");
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onBreakBlock(BlockEvent.BreakEvent e) {
+        if (!(e.getLevel() instanceof ServerLevel level)) return;
+        if (!(e.getPlayer() instanceof ServerPlayer sp)) return;
+        if (AccessPolicy.isDeveloper(sp)) return;
+
+        BlockPos pos = e.getPos();
+        RegionRegistryData.Region region = effectiveRegion(level, pos);
+        if (region == null) return;
+
+        BlockState state = e.getState();
+        Block block = state.getBlock();
+
+        if (AccessPolicy.isBreakProtectedDevice(block) && !AccessPolicy.canBreakProtectedDevices(sp)) {
+            e.setCanceled(true);
+            AccessPolicy.deny(sp, "You cannot break that device.");
+            return;
+        }
+
+        if (resolveFlag(level, region, FLAG_BREAK, false)) return;
+
+        if (isTorchLike(state) && resolveException(level, region, "break", EX_TORCH, true)) return;
+        if (isLadderLike(state) && resolveException(level, region, "break", EX_LADDER, false)) return;
+        if (state.is(ModTags.Blocks.DUNGEONEER_BREAKABLE)) return;
+
+        e.setCanceled(true);
+        AccessPolicy.deny(sp, "You cannot break blocks here.");
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock e) {
+        if (!(e.getLevel() instanceof ServerLevel level)) return;
+        if (!(e.getEntity() instanceof ServerPlayer sp)) return;
+        if (AccessPolicy.isDeveloper(sp)) return;
+
+        ItemStack held = e.getItemStack();
+        if (isPlacementOrWorldModifyAttempt(held)) return;
+
+        BlockPos pos = e.getPos();
+        RegionRegistryData.Region region = effectiveRegion(level, pos);
+        if (region == null) return;
+
+        BlockState state = level.getBlockState(pos);
+        Block block = state.getBlock();
+
+        if (AccessPolicy.isUseProtectedDevice(block) && !AccessPolicy.canUseProtectedDevices(sp)) {
+            e.setCanceled(true);
+            e.setCancellationResult(InteractionResult.FAIL);
+            AccessPolicy.deny(sp, "You cannot use that device.");
+            return;
+        }
+
+        if (state.is(ModTags.Blocks.DUNGEONEER_INTERACTABLE)) return;
+        if (resolveFlag(level, region, FLAG_INTERACT, false)) return;
+
+        e.setCanceled(true);
+        e.setCancellationResult(InteractionResult.FAIL);
+        AccessPolicy.deny(sp, "You cannot interact here.");
+    }
 }

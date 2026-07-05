@@ -7,6 +7,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.common.data.BlockTagsProvider;
 import net.neoforged.neoforge.registries.DeferredBlock;
 
@@ -77,10 +78,25 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                         .toArray(Block[]::new)
         );
         // ===== Dungeon protection tags =====
-        // These start empty so you can define policy per-dungeon without my guessing.
-        this.tag(ModTags.Blocks.DUNGEONEER_BREAKABLE);
+        // Default dungeoneer allowances inside protected regions. Region flags can still be
+        // narrowed with explicit exception flags; ladders intentionally remain denied by default.
+        this.tag(ModTags.Blocks.DUNGEONEER_BREAKABLE).add(
+                Blocks.COBWEB,
+                ModBlocks.COSMIC_MOB_SPAWNER.get(),
+                ModBlocks.LESSER_BLOOM.get(),
+                Blocks.TORCH,
+                Blocks.WALL_TORCH,
+                Blocks.SOUL_TORCH,
+                Blocks.SOUL_WALL_TORCH,
+                Blocks.REDSTONE_TORCH,
+                Blocks.REDSTONE_WALL_TORCH
+        );
         this.tag(ModTags.Blocks.DUNGEONEER_PLACEABLE);
-        this.tag(ModTags.Blocks.DUNGEONEER_INTERACTABLE);
+        this.tag(ModTags.Blocks.DUNGEONEER_INTERACTABLE).addTags(
+                BlockTags.BUTTONS
+        ).add(
+                Blocks.LEVER
+        );
     }
 
     /** Helper: all colored amethyst blocks (any stage) as a flat array for tag().add(...) */
