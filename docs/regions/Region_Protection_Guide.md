@@ -28,8 +28,9 @@ Use `/region info`, `/region list`, and `/region look` to inspect what exists an
 When a new region is created (via `/region new` or `/region create`):
 - `interact` is pre-seeded to **allow** (`true`).
 - Other standard flags are unset and therefore resolve by inheritance/default behavior.
+- Ladder placement remains **deny by default** through the `place.ex.ladder` exception. This is intentional so later dungeon sections can explicitly enable ladder placement only where traversal requires it.
 
-This means `/region flag interact allow` is now the default state for newly created regions.
+This means `/region flag interact allow` is now the default state for newly created regions, while `/region flags <name> exceptions place ladder allow` must be set deliberately where ladder placement is part of the route.
 
 ## Region commands (actual)
 
@@ -89,6 +90,12 @@ Standard region flags:
 - `spread`
 - `burn`
 
+Default dungeoneer allowances in protected regions:
+- Interact with vanilla buttons and levers, so puzzle inputs remain usable even when a region denies general interaction.
+- Break cobwebs, Cosmic Mob Spawners, Lesser Blooms, and torch variants, so dungeon combat/progression cleanup remains available even when a region denies general breaking.
+- Place torch variants through the torch exception default.
+- Do **not** place ladders unless the place-ladder exception is explicitly allowed for the effective region.
+
 Exception flags are stored as:
 - `place.ex.torch`, `place.ex.ladder`, `place.ex.water`
 - `break.ex.torch`, `break.ex.ladder`
@@ -105,6 +112,10 @@ Inheritance control keys:
 4. Optionally assign parent: `/region parent <child> <parent>`
 5. Configure policy in `/region flags <name>`.
 6. Validate with `/region look <name>`, `/region info <name>`, `/region list`.
+
+## Compatibility and update notes
+
+The region-flag update only changes server-authoritative protection checks and generated block tags. It does not add packets, registries, saved fields, or data migrations for [Cosmic Mob Spawners](../Spawners/Spawner_Systems.md), [Rifts/RD](../Rifts/Rift_System_Guide.md), doors/keys, [class selector and teleportation workflows](../Classes/Class_Selector_System.md), or [AccessPolicy](../commands/In_Game_Commands.md#class-item-attunement-15-foundation). Worlds updating from 1.5.0 to 1.5.1 can keep existing `cosmicdungeon_regions` data as-is; new region defaults are applied when regions are created, and operators can opt existing regions into ladder traversal with `/region flags <name> exceptions place ladder allow`.
 
 ## Important corrections vs old docs
 

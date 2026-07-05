@@ -67,7 +67,7 @@
 - `/region quest <quest-name> setregion pos2`
 - `/region quest <quest-name> complete-debug`
 
-**Default behavior note:** newly created regions now default `interact=allow`.
+**Default behavior note:** newly created regions now default `interact=allow`; dungeoneers can use buttons/levers and break cobwebs, Cosmic Mob Spawners, Lesser Blooms, and torches in protected regions. Ladder placement remains denied by default until an operator enables `place` exception `ladder` for a specific region.
 
 ### Door/Key
 `/door lock|info|count|pass_limit|reset_count|key info|key duplicate`
@@ -219,6 +219,7 @@ Scope boundary:
 
 ## Changelog
 
+- **1.5.1:** Added default protected-region dungeoneer allowances for buttons/levers, cobwebs, Cosmic Mob Spawners, Lesser Blooms, and torches while keeping ladder placement denied by default for explicit per-region enablement.
 - **1.5.1:** Moved Plant Flags operator tools from `/plantflags` to `/region quest plant_flags ...` as the first standardized location-based quest reaction command.
 - **1.5:** Added command coverage for currency, class item attunement, faction, progression, achievements, Plant Flags, vendors, and trading.
 
