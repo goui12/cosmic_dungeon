@@ -17,13 +17,15 @@ import net.minecraft.world.level.storage.ValueOutput;
 
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import org.slf4j.Logger;
 
 public final class CosmicSpawnerPreset {
     private static final Logger LOGGER = LogUtils.getLogger();
-    public static final int PRESET_VERSION = 3;
+    public static final int PRESET_VERSION = 4;
     public static final int LEGACY_1_5_0_PRESET_VERSION = 2;
     public static final String LEGACY_INTRINSIC_DROPS_KEY = "intrinsicDrops";
     public static final String INTRINSIC_DROP_RULES_KEY = "intrinsicDropRules";
@@ -34,19 +36,26 @@ public final class CosmicSpawnerPreset {
     private ResourceLocation entityTypeId = ResourceLocation.withDefaultNamespace("pig");
     private Component customName; private boolean illagerCaptainVariant;
     private final EnumMap<Slot, ItemStack> equipment = new EnumMap<>(Slot.class); private final EnumMap<Slot, Float> dropChances = new EnumMap<>(Slot.class);
-    private final Map<ResourceLocation, IntrinsicDropRule> intrinsicDropRules = new HashMap<>();
+    private final Map<String, IntrinsicDropRule> intrinsicDropRules = new LinkedHashMap<>();
 
     /**
-     * 1.5.1-ready configured intrinsic drop rule. Phase 1 intentionally keeps
-     * legacy entries in UNKNOWN_CONFIGURED form until Phase 2 can classify them
-     * against the active server loot table as either DEFAULT_OVERRIDE or
-     * CUSTOM_ADDITION. In all cases chance is a final per-spawner chance.
+     * Lossless configured intrinsic drop rule. Each rule is one independent roll
+     * for one item stack. The id is stable save data so chat buttons can target
+     * duplicate item rows safely after /spawner info refreshes.
      */
-    public record IntrinsicDropRule(ResourceLocation itemId, float chance, Kind kind) {
+    public record IntrinsicDropRule(String id, ResourceLocation itemId, float chance, int count, Kind kind) {
+        public static final int MIN_COUNT = 1;
+        public static final int MAX_COUNT = 64;
+
         public IntrinsicDropRule {
+            id = sanitizeRuleId(id);
             chance = clampChance(chance);
+            count = clampCount(count);
             kind = kind == null ? Kind.UNKNOWN_CONFIGURED : kind;
         }
+
+        public IntrinsicDropRule withChance(float newChance) { return new IntrinsicDropRule(id, itemId, newChance, count, kind); }
+        public IntrinsicDropRule withCount(int newCount) { return new IntrinsicDropRule(id, itemId, chance, newCount, kind); }
 
         public enum Kind {
             UNKNOWN_CONFIGURED,
@@ -63,14 +72,42 @@ public final class CosmicSpawnerPreset {
     public ItemStack getEquipment(Slot s){return equipment.get(s);} public void setEquipment(Slot s, ItemStack st){equipment.put(s,st.copy());} public float getDropChance(Slot s){return dropChances.get(s);} public void setDropChance(Slot s,float f){dropChances.put(s,Math.max(0f,Math.min(1f,f)));}
     public Map<ResourceLocation, Float> getIntrinsicDropChances(){
         Map<ResourceLocation, Float> chances = new HashMap<>();
-        intrinsicDropRules.forEach((id, rule) -> chances.put(id, rule.chance()));
+        intrinsicDropRules.values().forEach(rule -> chances.putIfAbsent(rule.itemId(), rule.chance()));
         return java.util.Collections.unmodifiableMap(chances);
     }
-    public Map<ResourceLocation, IntrinsicDropRule> getConfiguredIntrinsicDropRules(){ return java.util.Collections.unmodifiableMap(intrinsicDropRules); }
-    public void setIntrinsicDropChance(ResourceLocation itemId, float chance){ setConfiguredIntrinsicDropRule(itemId, chance, IntrinsicDropRule.Kind.UNKNOWN_CONFIGURED); }
-    public void setConfiguredIntrinsicDropRule(ResourceLocation itemId, float chance, IntrinsicDropRule.Kind kind){ if (itemId != null) intrinsicDropRules.put(itemId, new IntrinsicDropRule(itemId, chance, kind)); }
+    public Map<String, IntrinsicDropRule> getConfiguredIntrinsicDropRules(){ return java.util.Collections.unmodifiableMap(intrinsicDropRules); }
+    public List<IntrinsicDropRule> getConfiguredIntrinsicDropRuleList(){ return List.copyOf(intrinsicDropRules.values()); }
+    public List<IntrinsicDropRule> getConfiguredIntrinsicDropRules(ResourceLocation itemId){ return intrinsicDropRules.values().stream().filter(r -> r.itemId().equals(itemId)).toList(); }
+    public IntrinsicDropRule getConfiguredIntrinsicDropRule(String ruleId){ return intrinsicDropRules.get(ruleId); }
+    public void setIntrinsicDropChance(ResourceLocation itemId, float chance){ upsertConfiguredIntrinsicDropRule(itemId, chance, 1, IntrinsicDropRule.Kind.UNKNOWN_CONFIGURED); }
+    public IntrinsicDropRule upsertConfiguredIntrinsicDropRule(ResourceLocation itemId, float chance, int count, IntrinsicDropRule.Kind kind){
+        if (itemId == null) return null;
+        int safeCount = clampCount(count);
+        for (IntrinsicDropRule rule : intrinsicDropRules.values()) {
+            if (rule.itemId().equals(itemId) && rule.count() == safeCount) {
+                IntrinsicDropRule updated = new IntrinsicDropRule(rule.id(), itemId, chance, safeCount, kind);
+                intrinsicDropRules.put(rule.id(), updated);
+                return updated;
+            }
+        }
+        return addConfiguredIntrinsicDropRule(itemId, chance, safeCount, kind);
+    }
+    public IntrinsicDropRule addConfiguredIntrinsicDropRule(ResourceLocation itemId, float chance, int count, IntrinsicDropRule.Kind kind){
+        if (itemId == null) return null;
+        String id = nextRuleId();
+        IntrinsicDropRule rule = new IntrinsicDropRule(id, itemId, chance, count, kind);
+        intrinsicDropRules.put(id, rule);
+        return rule;
+    }
+    public void setConfiguredIntrinsicDropRule(ResourceLocation itemId, float chance, IntrinsicDropRule.Kind kind){ upsertConfiguredIntrinsicDropRule(itemId, chance, 1, kind); }
+    public boolean removeConfiguredIntrinsicDropRule(String ruleId){ return intrinsicDropRules.remove(ruleId) != null; }
+    public boolean adjustIntrinsicDropRuleChance(String ruleId, float delta){ IntrinsicDropRule r=intrinsicDropRules.get(ruleId); if(r==null)return false; intrinsicDropRules.put(ruleId, r.withChance(r.chance()+delta)); return true; }
+    public boolean adjustIntrinsicDropRuleCount(String ruleId, int delta){ IntrinsicDropRule r=intrinsicDropRules.get(ruleId); if(r==null)return false; intrinsicDropRules.put(ruleId, r.withCount(r.count()+delta)); return true; }
     public void resetIntrinsicDropRuleToDefault(ResourceLocation itemId){ clearIntrinsicDropChance(itemId); }
-    public void clearIntrinsicDropChance(ResourceLocation itemId){ intrinsicDropRules.remove(itemId); }
+    public void clearIntrinsicDropChance(ResourceLocation itemId){ intrinsicDropRules.values().removeIf(rule -> rule.itemId().equals(itemId)); }
+    public static int clampCount(int count) { return Math.max(IntrinsicDropRule.MIN_COUNT, Math.min(IntrinsicDropRule.MAX_COUNT, count)); }
+    private String nextRuleId(){ int i=1; while(intrinsicDropRules.containsKey("r"+i)) i++; return "r"+i; }
+    private static String sanitizeRuleId(String id) { return id == null || id.isBlank() ? "r" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8) : id.replaceAll("[^A-Za-z0-9_-]", "_"); }
     private static float clampChance(float chance) { return Math.max(0f, Math.min(1f, chance)); }
 
     public void save(ValueOutput out){
@@ -85,12 +122,14 @@ public final class CosmicSpawnerPreset {
         var legacyIntrinsic = out.child(LEGACY_INTRINSIC_DROPS_KEY);
         for (var e : intrinsicDropRules.entrySet()) {
             IntrinsicDropRule rule = e.getValue();
-            var ruleOut = rules.child(e.getKey().toString());
+            var ruleOut = rules.child(e.getKey());
+            ruleOut.putString("id", rule.id());
+            ruleOut.putString("item", rule.itemId().toString());
             ruleOut.putFloat("chance", rule.chance());
+            ruleOut.putInt("count", rule.count());
             ruleOut.putString("kind", rule.kind().name());
-            // Keep a legacy mirror during the 1.5.1 transition so externally edited
-            // tooling that still reads intrinsicDrops sees the same final chances.
-            legacyIntrinsic.putFloat(e.getKey().toString(), rule.chance());
+            // Compatibility-only legacy mirror: cannot represent duplicate item rules.
+            legacyIntrinsic.putFloat(rule.itemId().toString(), rule.chance());
         }
     }
     public static CosmicSpawnerPreset load(ValueInput in){
@@ -113,17 +152,19 @@ public final class CosmicSpawnerPreset {
     private static void loadIntrinsicDropRules(ValueInput child, CosmicSpawnerPreset preset) {
         try {
             for (String key : child.keySet()) {
-                ResourceLocation id = ResourceLocation.tryParse(key);
-                if (id == null) continue;
                 child.child(key).ifPresent(ruleIn -> {
+                    ResourceLocation itemId = ResourceLocation.tryParse(ruleIn.getStringOr("item", key));
+                    if (itemId == null) return;
+                    String ruleId = ruleIn.getStringOr("id", ResourceLocation.tryParse(key) != null ? preset.nextRuleId() : key);
                     float chance = ruleIn.getFloatOr("chance", 1.0f);
+                    int count = ruleIn.getIntOr("count", 1);
                     IntrinsicDropRule.Kind kind = parseRuleKind(ruleIn.getStringOr("kind", IntrinsicDropRule.Kind.UNKNOWN_CONFIGURED.name()));
-                    preset.setConfiguredIntrinsicDropRule(id, chance, kind);
+                    IntrinsicDropRule rule = new IntrinsicDropRule(ruleId, itemId, chance, count, kind);
+                    preset.intrinsicDropRules.put(rule.id(), rule);
                 });
             }
         } catch (NoSuchElementException ignored) {
             // Malformed or non-compound intrinsicDropRules data can appear in edited saves.
-            // Ignore it so a bad tag cannot crash client/server when syncing block entity data.
         }
     }
 
@@ -140,7 +181,7 @@ public final class CosmicSpawnerPreset {
             for (String key : child.keySet()) {
                 ResourceLocation id = ResourceLocation.tryParse(key);
                 if (id != null) {
-                    preset.intrinsicDropRules.putIfAbsent(id, new IntrinsicDropRule(id, child.getFloatOr(key, 1.0f), IntrinsicDropRule.Kind.UNKNOWN_CONFIGURED));
+                    if (preset.getConfiguredIntrinsicDropRules(id).isEmpty()) preset.addConfiguredIntrinsicDropRule(id, child.getFloatOr(key, 1.0f), 1, IntrinsicDropRule.Kind.UNKNOWN_CONFIGURED);
                 }
             }
         } catch (NoSuchElementException ignored) {

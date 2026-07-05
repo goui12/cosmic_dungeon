@@ -17,44 +17,41 @@ import org.slf4j.Logger;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public final class CosmicSpawnerIntrinsicDropEvents {
     private static final Logger LOGGER = LogUtils.getLogger();
-
     private CosmicSpawnerIntrinsicDropEvents() {}
 
     @SubscribeEvent
     public static void onLivingDrops(LivingDropsEvent event) {
         if (!(event.getEntity().level() instanceof ServerLevel sl)) return;
-
-        Optional<Map<ResourceLocation, Float>> attachedRules = CosmicSpawnerEntityIntrinsicDropData.readChances(event.getEntity());
-        Map<ResourceLocation, Float> rules = attachedRules.orElseGet(() -> findRulesFromSpawnerBlock(sl, event));
+        Map<String, CosmicSpawnerPreset.IntrinsicDropRule> rules = CosmicSpawnerEntityIntrinsicDropData.readRules(event.getEntity()).orElseGet(() -> findRulesFromSpawnerBlock(sl, event));
         if (rules.isEmpty()) return;
-
         removeOverriddenIntrinsicDrops(event, rules);
         rollConfiguredIntrinsicDrops(sl, event, rules);
         event.getDrops().removeIf(e -> e.getItem().isEmpty());
     }
 
-    private static Map<ResourceLocation, Float> findRulesFromSpawnerBlock(ServerLevel sl, LivingDropsEvent event) {
+    private static Map<String, CosmicSpawnerPreset.IntrinsicDropRule> findRulesFromSpawnerBlock(ServerLevel sl, LivingDropsEvent event) {
         for (String tag : event.getEntity().getTags()) {
             if (!tag.startsWith(CosmicSpawnerBlockEntity.COSMIC_SPAWNER_TAG_PREFIX)) continue;
             BlockPos pos = parseSpawnerPos(tag);
             if (pos == null) continue;
             if (!(sl.getBlockEntity(pos) instanceof CosmicSpawnerBlockEntity be)) continue;
             CosmicSpawnerPreset preset = be.getSpawnerPreset();
-            if (preset != null && !preset.getIntrinsicDropChances().isEmpty()) {
-                return new LinkedHashMap<>(preset.getIntrinsicDropChances());
-            }
+            if (preset != null && !preset.getConfiguredIntrinsicDropRules().isEmpty()) return new LinkedHashMap<>(preset.getConfiguredIntrinsicDropRules());
         }
         return Map.of();
     }
 
-    private static void removeOverriddenIntrinsicDrops(LivingDropsEvent event, Map<ResourceLocation, Float> rules) {
+    private static void removeOverriddenIntrinsicDrops(LivingDropsEvent event, Map<String, CosmicSpawnerPreset.IntrinsicDropRule> rules) {
+        Set<ResourceLocation> itemIds = rules.values().stream().map(CosmicSpawnerPreset.IntrinsicDropRule::itemId).collect(Collectors.toSet());
         event.getDrops().removeIf(itemEntity -> {
             ItemStack stack = itemEntity.getItem();
             ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
-            if (!rules.containsKey(itemId)) return false;
+            if (!itemIds.contains(itemId)) return false;
             return !looksLikeEquipmentDrop(event, stack);
         });
     }
@@ -63,27 +60,25 @@ public final class CosmicSpawnerIntrinsicDropEvents {
         if (!(event.getEntity() instanceof Mob mob)) return false;
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             ItemStack equipped = mob.getItemBySlot(slot);
-            if (!equipped.isEmpty() && ItemStack.matches(equipped, stack)) {
-                return true;
-            }
+            if (!equipped.isEmpty() && ItemStack.matches(equipped, stack)) return true;
         }
         return false;
     }
 
-    private static void rollConfiguredIntrinsicDrops(ServerLevel sl, LivingDropsEvent event, Map<ResourceLocation, Float> rules) {
-        for (var entry : rules.entrySet()) {
-            ResourceLocation itemId = entry.getKey();
-            float chance = Math.max(0f, Math.min(1f, entry.getValue()));
+    private static void rollConfiguredIntrinsicDrops(ServerLevel sl, LivingDropsEvent event, Map<String, CosmicSpawnerPreset.IntrinsicDropRule> rules) {
+        for (CosmicSpawnerPreset.IntrinsicDropRule rule : rules.values()) {
+            float chance = Math.max(0f, Math.min(1f, rule.chance()));
             if (chance <= 0f || sl.random.nextFloat() > chance) continue;
-
-            Optional<Item> item = BuiltInRegistries.ITEM.getOptional(itemId);
-            if (item.isEmpty()) {
-                LOGGER.warn("CosmicSpawner: skipping unknown intrinsic drop item '{}' on {}", itemId, event.getEntity().getStringUUID());
-                continue;
+            Optional<Item> item = BuiltInRegistries.ITEM.getOptional(rule.itemId());
+            if (item.isEmpty()) { LOGGER.warn("CosmicSpawner: skipping unknown intrinsic drop item '{}' on {}", rule.itemId(), event.getEntity().getStringUUID()); continue; }
+            int remaining = CosmicSpawnerPreset.clampCount(rule.count());
+            int max = Math.max(1, item.get().getDefaultMaxStackSize());
+            while (remaining > 0) {
+                int stackCount = Math.min(max, remaining);
+                remaining -= stackCount;
+                ItemStack stack = new ItemStack(item.get(), stackCount);
+                if (!stack.isEmpty()) event.getDrops().add(new ItemEntity(sl, event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ(), stack));
             }
-            ItemStack stack = new ItemStack(item.get());
-            if (stack.isEmpty()) continue;
-            event.getDrops().add(new ItemEntity(sl, event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ(), stack));
         }
     }
 
@@ -91,10 +86,7 @@ public final class CosmicSpawnerIntrinsicDropEvents {
         String rest = tag.substring(CosmicSpawnerBlockEntity.COSMIC_SPAWNER_TAG_PREFIX.length());
         String[] parts = rest.split("_");
         if (parts.length != 3) return null;
-        try {
-            return new BlockPos(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
-        } catch (NumberFormatException ignored) {
-            return null;
-        }
+        try { return new BlockPos(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2])); }
+        catch (NumberFormatException ignored) { return null; }
     }
 }
