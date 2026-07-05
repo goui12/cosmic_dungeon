@@ -34,6 +34,11 @@
 - The interaction and purchase/sell validation paths are still server-authoritative and keyed to the assigned entity id/profile, so [vendor access gates](../Vendor.md#access-gates), [class restrictions](../Classes/Class_Restrictions_and_Inventory.md), [teleportation/rifts](../Rifts/Rift_System_Guide.md), and [Cosmic Mob Spawners](../Spawners/Spawner_Systems.md) do not share state with this command change.
 - This feature only stores the existing `cosmicdungeon.vendor_profile_id` string on vendor entities and does not modify server-data-storage methods for block entities or existing entity systems such as mob spawners, doors/keys, rifts/RD, class selector data, teleportation, or access-policy records. Updating from 1.5.0 to 1.5.1 requires no migration for those systems: keep a normal world backup, deploy the 1.5.1 jar, and respawn/reassign only the vendors you want to visually change from villager shells to another mob type.
 
+## D1 Gritch vendor profile
+
+- Added [`cosmicdungeon:d1/d1_nether_gritch_of_the_barter_pit`](../Vendor.md#d1-vendor-profiles), displayed as **Gritch of the Barter Pit**, with two buy offers: one golden carrot for `1000` Trace and one glistering melon slice for `1000` Trace.
+- This is a datapack vendor-profile addition under the existing vendor reload/list/spawn path. It does not change access-policy records, class systems, teleportation/rifts, Cosmic Mob Spawner entity or block-entity storage, doors/keys, or server-data-storage methods. Updating from 1.5.0 to 1.5.1 requires no data migration for those systems: keep a normal world backup, deploy the 1.5.1 jar, and use `/vendor reload` or restart the server so the new profile is loaded.
+
 ## Fixed
 - Fixed hitbox on class chests.
 

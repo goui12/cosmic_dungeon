@@ -59,6 +59,11 @@ Vendors are assigned NPC shops that use the Cosmic Dungeon Attunement Fragment c
 
 Vendor profiles load from datapack JSON under `data/cosmicdungeon/vendor_profiles/<path>.json`. Profile IDs should be stable full `ResourceLocation` values; commands also accept unambiguous short aliases for common operator workflows. Invalid entries log clear errors rather than hard-crashing the server.
 
+## D1 vendor profiles
+
+- `cosmicdungeon:d1/d1_nether_gritch_of_the_barter_pit` opens **Gritch of the Barter Pit**, a D1 tier-1 village-access vendor that sells one [golden carrot](https://minecraft.wiki/w/Golden_Carrot) for `1000` Trace and one [glistering melon slice](https://minecraft.wiki/w/Glistering_Melon_Slice) for `1000` Trace.
+- Spawn or inspect this profile with the standard [vendor commands](./commands/In_Game_Commands.md#vendor-15-progression--faction-access), such as `/vendor spawn d1/d1_nether_gritch_of_the_barter_pit` or `/vendor profile d1_nether_gritch_of_the_barter_pit`.
+
 ## Access gates
 
 Vendor access is evaluated centrally before a GUI opens. Profiles can require village access, NPC system/tier progress, faction standing, or future progression flags. Locked vendors show the server-authoritative denial reason instead of opening. Use `/vendor access <profileId>` to test the executing player against a profile.
@@ -75,5 +80,6 @@ Buyback uses each eligible stack's individual sell value. Class-attuned items se
 
 ## Changelog
 
+- **1.5.1:** Added the D1 Gritch of the Barter Pit vendor profile for expensive golden food purchases.
 - **1.5.1:** Added optional mob-type vendor shells, bright neon-green friendly overhead names, and enforced invulnerable/no-AI vendor standing behavior.
 - **1.5:** Added assigned vendor NPCs, profile-loaded offers, buy/sell GUI flows, centralized access gates, profile aliases, buyback, and atomic transaction validation.
