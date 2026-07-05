@@ -39,6 +39,12 @@
 - Added [`cosmicdungeon:d1/d1_nether_gritch_of_the_barter_pit`](../Vendor.md#d1-vendor-profiles), displayed as **Gritch of the Barter Pit**, with two buy offers: one golden carrot for `1000` Trace and one glistering melon slice for `1000` Trace.
 - This is a datapack vendor-profile addition under the existing vendor reload/list/spawn path. It does not change access-policy records, class systems, teleportation/rifts, Cosmic Mob Spawner entity or block-entity storage, doors/keys, or server-data-storage methods. Updating from 1.5.0 to 1.5.1 requires no data migration for those systems: keep a normal world backup, deploy the 1.5.1 jar, and use `/vendor reload` or restart the server so the new profile is loaded.
 
+
+## Infinite Dispenser mob eggs
+
+- [Infinite Dispensers](../Blocks/Block_Interaction_Reference.md#infinite-dispenser) now recognize every `SpawnEggItem` as shootable even when the generated `cosmicdungeon:infinite_shootables` item tag exists for other projectiles. This lets operators fire vanilla eggs such as zombie spawn eggs and modded mob eggs without maintaining duplicate tag entries.
+- The spawn-egg path is server-authoritative and reuses the existing block-entity inventory/menu path, so it does not add packets, registries, saved fields, or storage migrations. [Cosmic Mob Spawners](../Spawners/Spawner_Systems.md), doors/keys, [Rifts/RD](../Rifts/Rift_System_Guide.md), [classes](../Classes/Class_Selector_System.md), teleportation, and access-policy records are unchanged. To update safely from 1.5.0 to 1.5.1, keep a normal world backup, deploy the 1.5.1 jar, and leave existing block entities in place; no data fixer or manual conversion is required.
+
 ## Fixed
 - Fixed hitbox on class chests.
 
