@@ -9,7 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetPlayerInventoryPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ import java.util.Set;
 public final class VendorService {
     private VendorService() {}
 
-    public static VendorPayloads.S2C_OpenVendor buildOpenPayload(ServerPlayer sp, Villager villager, VendorProfile profile) {
+    public static VendorPayloads.S2C_OpenVendor buildOpenPayload(ServerPlayer sp, Entity vendor, VendorProfile profile) {
         Set<String> unlocked = new HashSet<>();
         List<VendorPayloads.S2C_OpenVendor.OfferView> offers = new ArrayList<>();
         for (VendorOffer offer : profile.buyOffers()) {
@@ -38,11 +38,11 @@ public final class VendorService {
         String pricingGroup = profile.buyback() != null && profile.buyback().pricingGroup() != null && !profile.buyback().pricingGroup().isBlank()
                 ? profile.buyback().pricingGroup()
                 : "default";
-        return new VendorPayloads.S2C_OpenVendor(villager.getId(), profile.id().toString(), vendorDisplayName(villager, profile), profile.storeDisplayName(), CurrencyService.getBalanceTrace(sp), pricingGroup, List.copyOf(offers), List.copyOf(unlocked));
+        return new VendorPayloads.S2C_OpenVendor(vendor.getId(), profile.id().toString(), vendorDisplayName(vendor, profile), profile.storeDisplayName(), CurrencyService.getBalanceTrace(sp), pricingGroup, List.copyOf(offers), List.copyOf(unlocked));
     }
 
-    private static String vendorDisplayName(Villager villager, VendorProfile profile) {
-        Component customName = villager.getCustomName();
+    private static String vendorDisplayName(Entity vendor, VendorProfile profile) {
+        Component customName = vendor.getCustomName();
         if (customName != null && !customName.getString().isBlank()) {
             return customName.getString();
         }
@@ -162,12 +162,13 @@ public final class VendorService {
     }
 
     private static VendorContext validateVendor(ServerPlayer sp, int vendorEntityId, boolean requireBuyback) {
-        if (!(sp.level().getEntity(vendorEntityId) instanceof Villager villager)) {
+        Entity vendor = sp.level().getEntity(vendorEntityId);
+        if (vendor == null) {
             return VendorContext.fail("Vendor no longer exists.");
         }
-        if (sp.distanceToSqr(villager) > 64.0D) return VendorContext.fail("Too far from vendor.");
+        if (sp.distanceToSqr(vendor) > 64.0D) return VendorContext.fail("Too far from vendor.");
 
-        ResourceLocation profileId = VendorAssignmentService.getProfileId(villager);
+        ResourceLocation profileId = VendorAssignmentService.getProfileId(vendor);
         if (profileId == null) return VendorContext.fail("Vendor is not assigned.");
 
         VendorProfile profile = VendorProfileManager.INSTANCE.get(profileId);

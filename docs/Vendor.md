@@ -48,6 +48,13 @@ Vendors are assigned NPC shops that use the Cosmic Dungeon Attunement Fragment c
 - Vendor purchases withdraw from the player's stored balance, and vendor sales deposit payout into that same balance.
 - Failed transactions do not partially remove items or partially deposit currency.
 
+## Vendor entity shells
+
+- `/vendor spawn <profileId>` still creates the default villager vendor shell.
+- `/vendor spawn <profileId> <mobType>` creates another mob shell, such as `/vendor spawn d1/general_supply_vendor horse`. Short vanilla IDs are interpreted as `minecraft:<id>`; full modded entity IDs are also accepted.
+- Assigned vendor shells show the vendor profile display name as a bold bright neon-green overhead name, are persistent, invulnerable, and have AI disabled so they stand still instead of roaming.
+- Vendor opening and transaction validation are server-authoritative for any assigned mob shell, so client-side screen/network behavior continues to use the spawned entity id and cannot bypass distance, access-gate, profile, or buyback validation.
+
 ## Vendor profile authoring
 
 Vendor profiles load from datapack JSON under `data/cosmicdungeon/vendor_profiles/<path>.json`. Profile IDs should be stable full `ResourceLocation` values; commands also accept unambiguous short aliases for common operator workflows. Invalid entries log clear errors rather than hard-crashing the server.
@@ -68,4 +75,5 @@ Buyback uses each eligible stack's individual sell value. Class-attuned items se
 
 ## Changelog
 
+- **1.5.1:** Added optional mob-type vendor shells, bright neon-green friendly overhead names, and enforced invulnerable/no-AI vendor standing behavior.
 - **1.5:** Added assigned vendor NPCs, profile-loaded offers, buy/sell GUI flows, centralized access gates, profile aliases, buyback, and atomic transaction validation.
