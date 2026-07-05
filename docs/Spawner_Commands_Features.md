@@ -46,6 +46,7 @@ This document covers the full `/spawner` command surface for Cosmic Dungeon oper
 - Unknown subcommand text (example: `/spawner dropp`) now shows an error plus the full syntax guide in chat.
 
 ## `/spawner info` display
+- The top of the panel now shows both the entity type (`Mob`) and the custom mob name (`Mob Name`) set by `/spawner name set <display name>`, or `unnamed` when no name is configured.
 - Primary operator panel with color-coded sections for mob, equipment, coordinates, runtime properties, and drops.
 - Equipment rows now display item identifier, custom-name state, and enchantment list (from real item NBT/components).
 - Drop entries include clickable `[+]`/`[-]` controls for each equipment slot. Clicking adjusts the value and immediately re-runs the info panel.

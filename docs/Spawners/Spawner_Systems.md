@@ -24,7 +24,7 @@ Spawner behavior is driven by `cosmic_mob_spawner` block entities and optional p
 
 - `/spawner help`
 - `/spawner set <entity_type>`
-- `/spawner name set <name>` / `clear`
+- `/spawner name set <name>` / `clear` — the configured mob name is shown near the top of `/spawner info` as `Mob Name`.
 - `/spawner boss [true|false]`
 - `/spawner cap <amount>`
 - `/spawner equip <slot> fromhand`
