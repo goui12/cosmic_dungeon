@@ -45,6 +45,17 @@
 - [Infinite Dispensers](../Blocks/Block_Interaction_Reference.md#infinite-dispenser) now recognize every `SpawnEggItem` as shootable even when the generated `cosmicdungeon:infinite_shootables` item tag exists for other projectiles. This lets operators fire vanilla eggs such as zombie spawn eggs and modded mob eggs without maintaining duplicate tag entries.
 - The spawn-egg path is server-authoritative and reuses the existing block-entity inventory/menu path, so it does not add packets, registries, saved fields, or storage migrations. [Cosmic Mob Spawners](../Spawners/Spawner_Systems.md), doors/keys, [Rifts/RD](../Rifts/Rift_System_Guide.md), [classes](../Classes/Class_Selector_System.md), teleportation, and access-policy records are unchanged. To update safely from 1.5.0 to 1.5.1, keep a normal world backup, deploy the 1.5.1 jar, and leave existing block entities in place; no data fixer or manual conversion is required.
 
+
+## Cosmic Spawner intrinsic-drop refactor
+
+- [Cosmic Mob Spawners](../Spawners/Spawner_Systems.md#intrinsic-loot-table-drops-and-per-spawner-rules) now display active mob loot-table drops in [`/spawner info`](../Spawner_Commands_Features.md#intrinsic-drops-in-spawner-info), including base spawners that only have `SpawnerEntityId` and no custom preset. The display comes from active server loot-table resources/registry data, not a hardcoded vanilla list.
+- Developers can set final per-spawner intrinsic chances with `/spawner drop intrinsic <item> <0.0-1.0>`, remove them with the preferred `/spawner drop intrinsic default <item>`, or use the legacy `/spawner drop intrinsic clear <item>` alias. Chat rows expose `[+]`, `[-]`, and `[Default]` controls for the same server-authorized command path.
+- Per-spawner rules can override default loot-table items or add custom intrinsic items such as `minecraft:pink_wool` to a zombie spawner. These rules do not modify global vanilla/datapack loot tables.
+- Configured intrinsic rules are copied onto spawned entities and applied server-side on death, so custom drops and overrides continue to work for boss one-shot spawns after the spawner block self-destructs. Older already-spawned mobs without entity-attached rules still fall back to the existing `cosmic_spawner_<x>_<y>_<z>` block lookup when possible.
+- Existing 1.5.0 placed/configured Cosmic Spawners are preserved. Missing `CosmicSpawnerDataVersion` is treated as legacy 1.5.0 data, loaded lazily, and saved with the current version after normal chunk save. Old `SpawnerPreset/intrinsicDrops` entries are preserved as final configured chances and re-evaluated against active loot tables as overrides or custom-added rows.
+- Preset JSON files in `<server_root>/cosmicdungeon/spawner_presets/` are read safely across the 1.5.1 transition. Older `formatVersion: 1` files are logged for upgrade on next save, and nested legacy `spawnerPresetNbt` intrinsic drops remain supported. Keep normal world backups before updating, but developers do not need to redo placed Cosmic Spawners.
+- Complex/conditional loot-table chances may display as `complex`, `conditional`, `rare/player/looting`, or similar rather than fake exact percentages. Use explicit per-spawner overrides when an exact final chance is required.
+
 ## Fixed
 - Fixed hitbox on class chests.
 

@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.logging.LogUtils;
 import com.mojang.serialization.JsonOps;
 import net.goui.cosmicdungeon.block.entity.CosmicSpawnerBlockEntity;
 import net.goui.cosmicdungeon.block.entity.CosmicSpawnerPreset;
@@ -19,9 +20,13 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.slf4j.Logger;
 
 final class SpawnerPresetFileStore {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final int FORMAT_VERSION = 2;
+    private static final int LEGACY_FORMAT_VERSION = 1;
 
     private SpawnerPresetFileStore() {}
 
@@ -40,7 +45,7 @@ final class SpawnerPresetFileStore {
 
         JsonObject root = new JsonObject();
         root.addProperty("format", "cosmicdungeon_spawner_preset");
-        root.addProperty("formatVersion", 1);
+        root.addProperty("formatVersion", FORMAT_VERSION);
         root.addProperty("note", "When Cosmic spawner fields change, update SpawnerPresetFileStore + /spawner preset parser/writer.");
         root.addProperty("entityTypeId", be.getSpawnerEntityId());
         root.addProperty("bossOneShot", be.isBossOneShot());
@@ -68,7 +73,12 @@ final class SpawnerPresetFileStore {
     }
 
     static LoadedPreset readPreset(MinecraftServer server, String name) throws IOException {
-        JsonObject root = JsonParser.parseString(Files.readString(presetPath(server, name))).getAsJsonObject();
+        Path path = presetPath(server, name);
+        JsonObject root = JsonParser.parseString(Files.readString(path)).getAsJsonObject();
+        int formatVersion = root.has("formatVersion") ? root.get("formatVersion").getAsInt() : LEGACY_FORMAT_VERSION;
+        if (formatVersion < FORMAT_VERSION) {
+            LOGGER.info("Upgrading Cosmic Spawner preset file '{}' from format version {} to {} on next save", path, formatVersion, FORMAT_VERSION);
+        }
 
         LoadedPreset out = new LoadedPreset();
         out.entityTypeId = root.has("entityTypeId") ? root.get("entityTypeId").getAsString() : "minecraft:pig";
@@ -127,7 +137,7 @@ final class SpawnerPresetFileStore {
     private static String example(String entity, boolean boss, int cap, int minDelay, int maxDelay) {
         JsonObject root = new JsonObject();
         root.addProperty("format", "cosmicdungeon_spawner_preset");
-        root.addProperty("formatVersion", 1);
+        root.addProperty("formatVersion", FORMAT_VERSION);
         root.addProperty("entityTypeId", entity);
         root.addProperty("bossOneShot", boss);
         root.addProperty("spawnerMobCap", cap);

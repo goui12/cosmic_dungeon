@@ -16,9 +16,9 @@ Only issues evidenced directly from implementation behavior, explicit TODO marke
    - Evidence: TODO indicates future tier expansion path not yet implemented.
    - Developer impact: tier expectations beyond implemented branches can fail silently or behave as fallback.
 
-4. **Spawner intrinsic drop control is display-only for intrinsic rows**
-   - Evidence: intrinsic drop UI buttons are inert display elements.
-   - Developer impact: intrinsic drop rows in `/spawner drops` are informational, not editable through those controls.
+4. **Spawner intrinsic loot-table chance display is approximate for complex tables**
+   - Evidence: Minecraft loot tables can include conditions, functions, looting bonuses, killed-by-player checks, weighted alternatives, and datapack logic that are not always safely reducible to one exact percentage.
+   - Developer impact: `/spawner info` lists displayable intrinsic items and marks complex rows as `complex`, `conditional`, `rare/player/looting`, or similar; operators should use explicit per-spawner overrides when they need exact final chances.
 
 5. **Rift deletion/list operations are dimension-sensitive and can be misread as global**
    - Evidence: command feedback warns chat delete actions are current-dimension scoped.

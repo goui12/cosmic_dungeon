@@ -38,6 +38,10 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
      */
     private static final boolean DEBUG = Boolean.getBoolean("cosmicdungeon.debugSpawner");
 
+    public static final String DATA_VERSION_KEY = "CosmicSpawnerDataVersion";
+    public static final int CURRENT_DATA_VERSION = 151;
+    public static final int LEGACY_1_5_0_DATA_VERSION = 150;
+
     // Persisted: what this spawner is set to spawn (label + commands + client preview bootstrap)
     private String spawnerEntityId = "none";
     private CosmicSpawnerPreset spawnerPreset;
@@ -417,6 +421,11 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     protected void loadAdditional(net.minecraft.world.level.storage.ValueInput input) {
         super.loadAdditional(input);
 
+        int dataVersion = input.getIntOr(DATA_VERSION_KEY, LEGACY_1_5_0_DATA_VERSION);
+        if (dataVersion < CURRENT_DATA_VERSION) {
+            LOGGER.info("Upgrading Cosmic Spawner block entity at {} from data version {} to {}", this.worldPosition, dataVersion, CURRENT_DATA_VERSION);
+        }
+
         this.spawnerEntityId = input.getString("SpawnerEntityId").orElse("none");
 
         input.child("SpawnerPreset").ifPresent(child -> this.setSpawnerPresetInternal(CosmicSpawnerPreset.load(child)));
@@ -435,6 +444,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     protected void saveAdditional(net.minecraft.world.level.storage.ValueOutput output) {
         super.saveAdditional(output);
 
+        output.putInt(DATA_VERSION_KEY, CURRENT_DATA_VERSION);
         output.putString("SpawnerEntityId", this.spawnerEntityId);
         if (this.spawnerPreset != null) {
             this.spawnerPreset.save(output.child("SpawnerPreset"));
