@@ -1,0 +1,36 @@
+{
+  "id": "cosmicdungeon:d1/d1_nether_gritch_of_the_barter_pit",
+  "displayName": "Gritch of the Barter Pit",
+  "vendorType": "barter_pit",
+  "requiredVillageAccess": true,
+  "requiredNpcSystem": "D1",
+  "requiredNpcTier": 1,
+  "buyOffers": [
+    {
+      "offerId": "golden_carrot",
+      "result": {
+        "item": "minecraft:golden_carrot",
+        "count": 1
+      },
+      "cost": {
+        "amount": 1000,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "golden_melon_slice",
+      "result": {
+        "item": "minecraft:glistering_melon_slice",
+        "count": 1
+      },
+      "cost": {
+        "amount": 1000,
+        "denomination": "trace"
+      }
+    }
+  ],
+  "buyback": {
+    "pricingGroup": "default",
+    "rules": []
+  }
+}
