@@ -36,7 +36,21 @@
 ## High-use command groups
 
 ### Spawner
-`/spawner help|set|name|boss|cap|equip|enchant|drop|drops|showlabels|delay|preset|info|reset`
+`/spawner help|set|name|boss|cap|equip|enchant|drop|drops|showlabels|delay|preset|keybind|info|reset`
+
+See [Spawner Commands Features](../Spawner_Commands_Features.md) and [Spawner Systems](../Spawners/Spawner_Systems.md) for the full operator workflow.
+
+Common examples:
+
+```mcfunction
+/spawner info
+/spawner drop intrinsic minecraft:potato 1.0
+/spawner drop intrinsic default minecraft:potato
+/spawner drop intrinsic minecraft:pink_wool 1.0
+/spawner drop intrinsic default minecraft:pink_wool
+```
+
+Intrinsic drop commands set final per-spawner mob loot-table chances. Default loot-table items become overrides; items that are not in the active mob loot table become custom-added intrinsic drops. `/spawner drop intrinsic clear <item>` remains supported as a legacy alias for `/spawner drop intrinsic default <item>`.
 
 `/spawner showlabels` toggles the developer-only Cosmic Spawner summary HUD. When enabled, developers looking at a Cosmic Mob Spawner see mob type, mob name, cap, and delay range in the bottom-right corner instead of the old teal in-world label.
 
