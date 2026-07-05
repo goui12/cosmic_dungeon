@@ -27,6 +27,13 @@
 - Added the **Handshake Protocol** achievement for completing one successful player-to-player trade. After the server finalizes a trade and grants this advancement, the client stops showing the CAPS LOCK onboarding prompt for that player. See [Achievements & Advancements](../Achievements/Achievements_and_Advancements.md#trade-onboarding-achievement).
 - This change uses generated advancement data and a small login/finalization prompt-state sync. It does not modify server-data-storage methods for entity/block-entity data such as [Cosmic Mob Spawners](../Spawners/Spawner_Systems.md), doors/keys, [Rifts/RD](../Rifts/Rift_System_Guide.md), [classes](../Classes/Class_Selector_System.md), teleportation, or access-policy records. Updating from 1.5.0 to 1.5.1 requires no migration for those systems: keep a normal world backup, deploy the 1.5.1 jar, and let advancement progress sync on player login.
 
+## Vendor mob shells
+
+- [`/vendor spawn <profileId>`](../commands/In_Game_Commands.md#vendor-15-progression--faction-access) remains backward-compatible and spawns a villager by default. Operators can now pass a mob type, such as `/vendor spawn <profileId> horse`, to use another mob as the vendor shell. See [Vendor entity shells](../Vendor.md#vendor-entity-shells).
+- Vendor shells now render the profile display name above the mob in bold bright neon green, are always marked invulnerable, and have mob AI disabled so they stand still and do not roam.
+- The interaction and purchase/sell validation paths are still server-authoritative and keyed to the assigned entity id/profile, so [vendor access gates](../Vendor.md#access-gates), [class restrictions](../Classes/Class_Restrictions_and_Inventory.md), [teleportation/rifts](../Rifts/Rift_System_Guide.md), and [Cosmic Mob Spawners](../Spawners/Spawner_Systems.md) do not share state with this command change.
+- This feature only stores the existing `cosmicdungeon.vendor_profile_id` string on vendor entities and does not modify server-data-storage methods for block entities or existing entity systems such as mob spawners, doors/keys, rifts/RD, class selector data, teleportation, or access-policy records. Updating from 1.5.0 to 1.5.1 requires no migration for those systems: keep a normal world backup, deploy the 1.5.1 jar, and respawn/reassign only the vendors you want to visually change from villager shells to another mob type.
+
 ## Fixed
 - Fixed hitbox on class chests.
 

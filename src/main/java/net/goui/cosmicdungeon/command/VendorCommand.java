@@ -15,11 +15,13 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
@@ -46,7 +48,12 @@ public final class VendorCommand {
                         .requires(AccessPolicy::requireDeveloperOrConsole)
                         .then(Commands.argument("profileId", StringArgumentType.word())
                                 .suggests((ctx, b) -> SharedSuggestionProvider.suggest(VendorProfileResolver.suggestions(), b))
-                                .executes(ctx -> spawn(ctx.getSource(), StringArgumentType.getString(ctx, "profileId")))))
+                                .executes(ctx -> spawn(ctx.getSource(), StringArgumentType.getString(ctx, "profileId"), "villager"))
+                                .then(Commands.argument("mobType", StringArgumentType.word())
+                                        .suggests((ctx, b) -> SharedSuggestionProvider.suggest(BuiltInRegistries.ENTITY_TYPE.keySet().stream()
+                                                .filter(id -> BuiltInRegistries.ENTITY_TYPE.getValue(id) != EntityType.PLAYER)
+                                                .map(ResourceLocation::toString), b))
+                                        .executes(ctx -> spawn(ctx.getSource(), StringArgumentType.getString(ctx, "profileId"), StringArgumentType.getString(ctx, "mobType"))))))
                 .then(Commands.literal("access")
                         .requires(AccessPolicy::requireDeveloperOrConsole)
                         .then(Commands.argument("profileId", StringArgumentType.word())
@@ -116,19 +123,19 @@ public final class VendorCommand {
     private static int assign(CommandSourceStack src, String profileIdRaw) {
         ServerPlayer sp = src.getPlayer(); if (sp == null) { fail(src, "Player context required."); return 0; }
         ResourceLocation id = resolveOrFail(src, profileIdRaw); if (id == null) return 0;
-        Villager villager = lookedVillager(sp); if (villager == null) { fail(src, "Look at a villager within 6 blocks."); return 0; }
+        Mob villager = lookedMob(sp); if (villager == null) { fail(src, "Look at a mob within 6 blocks."); return 0; }
         if (!VendorAssignmentService.assignProfile(villager, id)) { fail(src, "Failed assigning vendor profile."); return 0; }
         src.sendSuccess(() -> Component.literal("Assigned ").withStyle(ChatFormatting.GREEN)
                 .append(profileName(id))
-                .append(Component.literal(" to villager ").withStyle(ChatFormatting.WHITE))
+                .append(Component.literal(" to mob ").withStyle(ChatFormatting.WHITE))
                 .append(Component.literal(villager.getUUID().toString()).withStyle(ChatFormatting.DARK_GRAY)), true);
         return 1;
     }
 
     private static int clear(CommandSourceStack src) {
         ServerPlayer sp = src.getPlayer(); if (sp == null) { fail(src, "Player context required."); return 0; }
-        Villager villager = lookedVillager(sp); if (villager == null) { fail(src, "Look at a villager within 6 blocks."); return 0; }
-        ResourceLocation old = VendorAssignmentService.getProfileId(villager); if (old == null) { fail(src, "Villager has no vendor profile."); return 0; }
+        Mob villager = lookedMob(sp); if (villager == null) { fail(src, "Look at a mob within 6 blocks."); return 0; }
+        ResourceLocation old = VendorAssignmentService.getProfileId(villager); if (old == null) { fail(src, "Mob has no vendor profile."); return 0; }
         VendorAssignmentService.clearProfile(villager);
         src.sendSuccess(() -> Component.literal("Cleared vendor profile ").withStyle(ChatFormatting.GREEN).append(profileName(old)), true);
         return 1;
@@ -136,25 +143,32 @@ public final class VendorCommand {
 
     private static int info(CommandSourceStack src) {
         ServerPlayer sp = src.getPlayer(); if (sp == null) { fail(src, "Player context required."); return 0; }
-        Villager villager = lookedVillager(sp); if (villager == null) { fail(src, "Look at a villager within 6 blocks."); return 0; }
+        Mob villager = lookedMob(sp); if (villager == null) { fail(src, "Look at a mob within 6 blocks."); return 0; }
         ResourceLocation id = VendorAssignmentService.getProfileId(villager);
-        if (id == null) { src.sendSuccess(() -> Component.literal("Villager is not an assigned vendor shell.").withStyle(ChatFormatting.GRAY), false); return 1; }
-        src.sendSuccess(() -> Component.literal("Villager vendor profile: ").withStyle(ChatFormatting.WHITE).append(profileName(id)), false);
+        if (id == null) { src.sendSuccess(() -> Component.literal("Mob is not an assigned vendor shell.").withStyle(ChatFormatting.GRAY), false); return 1; }
+        src.sendSuccess(() -> Component.literal("Mob vendor profile: ").withStyle(ChatFormatting.WHITE).append(profileName(id)), false);
         return 1;
     }
 
-    private static int spawn(CommandSourceStack src, String profileIdRaw) {
+    private static int spawn(CommandSourceStack src, String profileIdRaw, String mobTypeRaw) {
         ServerPlayer sp = src.getPlayer(); if (sp == null) { fail(src, "Player context required."); return 0; }
         ResourceLocation id = resolveOrFail(src, profileIdRaw); if (id == null) return 0;
-        Villager villager = EntityType.VILLAGER.create(sp.level(), EntitySpawnReason.COMMAND); if (villager == null) { fail(src, "Could not create villager."); return 0; }
-        villager.snapTo(sp.getX(), sp.getY(), sp.getZ(), sp.getYRot(), sp.getXRot());
-        if (!sp.level().addFreshEntity(villager)) { fail(src, "Could not spawn villager entity."); return 0; }
-        if (!VendorAssignmentService.assignProfile(villager, id)) {
-            villager.discard();
+        ResourceLocation mobTypeId = parseEntityTypeId(mobTypeRaw);
+        EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.getValue(mobTypeId);
+        if (entityType == null) { fail(src, "Unknown mob type: " + mobTypeRaw); return 0; }
+        Entity entity = entityType.create(sp.level(), EntitySpawnReason.COMMAND);
+        if (!(entity instanceof Mob vendorMob)) { fail(src, "Entity type is not a mob vendor shell: " + mobTypeId); return 0; }
+        vendorMob.snapTo(sp.getX(), sp.getY(), sp.getZ(), sp.getYRot(), sp.getXRot());
+        if (!sp.level().addFreshEntity(vendorMob)) { fail(src, "Could not spawn vendor entity: " + mobTypeId); return 0; }
+        if (!VendorAssignmentService.assignProfile(vendorMob, id)) {
+            vendorMob.discard();
             fail(src, "Failed assigning vendor profile.");
             return 0;
         }
-        src.sendSuccess(() -> Component.literal("Spawned vendor villager with profile ").withStyle(ChatFormatting.GREEN).append(profileName(id)), true);
+        src.sendSuccess(() -> Component.literal("Spawned vendor ").withStyle(ChatFormatting.GREEN)
+                .append(Component.literal(mobTypeId.toString()).withStyle(ChatFormatting.AQUA))
+                .append(Component.literal(" with profile ").withStyle(ChatFormatting.GREEN))
+                .append(profileName(id)), true);
         return 1;
     }
 
@@ -209,13 +223,19 @@ public final class VendorCommand {
         return Component.literal(String.valueOf(value)).withStyle(value ? ChatFormatting.GREEN : ChatFormatting.RED);
     }
 
-    private static Villager lookedVillager(ServerPlayer sp) {
+    private static ResourceLocation parseEntityTypeId(String raw) {
+        ResourceLocation direct = ResourceLocation.tryParse(raw);
+        if (direct != null && raw.contains(":")) return direct;
+        return ResourceLocation.fromNamespaceAndPath("minecraft", raw);
+    }
+
+    private static Mob lookedMob(ServerPlayer sp) {
         Vec3 eye = sp.getEyePosition();
         Vec3 end = eye.add(sp.getLookAngle().scale(6.0D));
         AABB box = new AABB(eye, end).inflate(1.5D);
-        Villager best = null;
+        Mob best = null;
         double bestDist = Double.MAX_VALUE;
-        for (Villager v : sp.level().getEntitiesOfClass(Villager.class, box, e -> e.isAlive())) {
+        for (Mob v : sp.level().getEntitiesOfClass(Mob.class, box, e -> e.isAlive())) {
             double d = v.distanceToSqr(sp);
             if (d < bestDist) { bestDist = d; best = v; }
         }

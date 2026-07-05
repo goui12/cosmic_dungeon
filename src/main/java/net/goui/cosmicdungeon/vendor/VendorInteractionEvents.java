@@ -10,7 +10,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
@@ -19,8 +19,8 @@ public final class VendorInteractionEvents {
     @SubscribeEvent
     public void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
         if (event.getHand() != InteractionHand.MAIN_HAND) return;
-        if (!(event.getTarget() instanceof Villager villager)) return;
-        ResourceLocation profileId = VendorAssignmentService.getProfileId(villager);
+        Entity vendor = event.getTarget();
+        ResourceLocation profileId = VendorAssignmentService.getProfileId(vendor);
         if (profileId == null) return;
         if (!(event.getEntity() instanceof ServerPlayer sp)) return;
 
@@ -42,7 +42,7 @@ public final class VendorInteractionEvents {
             return;
         }
 
-        VendorPayloads.S2C_OpenVendor open = VendorService.buildOpenPayload(sp, villager, profile);
+        VendorPayloads.S2C_OpenVendor open = VendorService.buildOpenPayload(sp, vendor, profile);
         sp.openMenu(new VendorProvider(profile.displayName()));
         sp.connection.send(open);
     }

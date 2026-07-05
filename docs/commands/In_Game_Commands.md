@@ -202,6 +202,7 @@ Notes:
 `/vendor clear`
 `/vendor info`
 `/vendor spawn <profileId>`
+`/vendor spawn <profileId> <mobType>`
 `/vendor access <profileId>`
 
 Authority: developer or console only via `AccessPolicy.requireDeveloperOrConsole`.
@@ -214,7 +215,7 @@ Profile ID usability:
 
 Scope boundary:
 - loads datapack vendor profiles from `data/cosmicdungeon/vendor_profiles/*.json`
-- supports villager vendor assignment + vendor menu
+- supports default villager vendor spawning plus optional assigned mob vendor shells, for example `/vendor spawn <profileId> horse`
 - `/vendor access` explains whether the executing player can access a vendor profile and why
 
 ## Changelog
