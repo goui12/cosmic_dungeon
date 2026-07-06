@@ -39,7 +39,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     private static final boolean DEBUG = Boolean.getBoolean("cosmicdungeon.debugSpawner");
 
     public static final String DATA_VERSION_KEY = "CosmicSpawnerDataVersion";
-    public static final int CURRENT_DATA_VERSION = 151;
+    public static final int CURRENT_DATA_VERSION = 152;
     public static final int LEGACY_1_5_0_DATA_VERSION = 150;
 
     // Persisted: what this spawner is set to spawn (label + commands + client preview bootstrap)
@@ -601,6 +601,16 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         return count;
     }
 
+
+    private void applySpawnDefaultsToTaggedEntities(net.minecraft.server.level.ServerLevel sl) {
+        String marker = oneShotSpawnTag();
+        for (Entity e : sl.getAllEntities()) {
+            if (e.getTags().contains(marker)) {
+                CosmicSpawnerSpawnDefaults.applyIfNeeded(e);
+            }
+        }
+    }
+
     private void applyPresetToTaggedEntities(net.minecraft.server.level.ServerLevel sl) {
         if (this.spawnerPreset == null) return;
         String marker = oneShotSpawnTag();
@@ -641,6 +651,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
 
         int before = be.countTaggedEntities(sl);
         if (be.spawnerMobCap > 0 && before >= be.spawnerMobCap) {
+            be.applySpawnDefaultsToTaggedEntities(sl);
             be.applyPresetToTaggedEntities(sl);
             return;
         }
@@ -654,6 +665,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         if (be.spawnerMobCap > 0 && originalSpawnCount > 0) {
             int remaining = Math.max(0, be.spawnerMobCap - before);
             if (remaining <= 0) {
+                be.applySpawnDefaultsToTaggedEntities(sl);
                 be.applyPresetToTaggedEntities(sl);
                 return;
             }
@@ -670,6 +682,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
             be.setSpawnerSpawnCount(originalSpawnCount);
         }
 
+        be.applySpawnDefaultsToTaggedEntities(sl);
         be.applyPresetToTaggedEntities(sl);
 
         if (be.bossOneShot) {

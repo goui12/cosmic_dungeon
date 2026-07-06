@@ -90,7 +90,17 @@ public final class SpawnerCommand {
                         .then(Commands.literal("all").then(Commands.argument("chance", FloatArgumentType.floatArg(0f,1f)).executes(c -> withPreset(c.getSource(), p -> {float f=FloatArgumentType.getFloat(c,"chance"); for (var s: CosmicSpawnerPreset.Slot.values()) p.setDropChance(s,f);}))))
                         .then(Commands.literal("intrinsic")
                                 .then(Commands.argument("item", ResourceLocationArgument.id()).suggests(SpawnerCommand::suggestItems)
-                                        .then(Commands.argument("chance", FloatArgumentType.floatArg(0f,1f)).executes(c -> setIntrinsic(c.getSource(), ResourceLocationArgument.getId(c, "item"), FloatArgumentType.getFloat(c, "chance")))))
+                                        .then(Commands.argument("chance", FloatArgumentType.floatArg(0f,1f))
+                                                .executes(c -> setIntrinsic(c.getSource(), ResourceLocationArgument.getId(c, "item"), FloatArgumentType.getFloat(c, "chance"), 1, false))
+                                                .then(Commands.argument("quantity", IntegerArgumentType.integer(1, CosmicSpawnerPreset.IntrinsicDropRule.MAX_COUNT))
+                                                        .executes(c -> setIntrinsic(c.getSource(), ResourceLocationArgument.getId(c, "item"), FloatArgumentType.getFloat(c, "chance"), IntegerArgumentType.getInteger(c, "quantity"), false)))))
+                                .then(Commands.literal("add")
+                                        .then(Commands.argument("item", ResourceLocationArgument.id()).suggests(SpawnerCommand::suggestItems)
+                                                .then(Commands.argument("chance", FloatArgumentType.floatArg(0f,1f))
+                                                        .executes(c -> setIntrinsic(c.getSource(), ResourceLocationArgument.getId(c, "item"), FloatArgumentType.getFloat(c, "chance"), 1, true))
+                                                        .then(Commands.argument("quantity", IntegerArgumentType.integer(1, CosmicSpawnerPreset.IntrinsicDropRule.MAX_COUNT))
+                                                                .executes(c -> setIntrinsic(c.getSource(), ResourceLocationArgument.getId(c, "item"), FloatArgumentType.getFloat(c, "chance"), IntegerArgumentType.getInteger(c, "quantity"), true))))))
+                                .then(Commands.literal("remove").then(Commands.argument("rule_id", StringArgumentType.word()).executes(c -> removeIntrinsicRule(c.getSource(), StringArgumentType.getString(c, "rule_id")))))
                                 .then(Commands.literal("clear")
                                         .then(Commands.argument("item", ResourceLocationArgument.id()).suggests(SpawnerCommand::suggestItems).executes(c -> defaultIntrinsic(c.getSource(), ResourceLocationArgument.getId(c, "item")))))
                                 .then(Commands.literal("default")
@@ -100,6 +110,8 @@ public final class SpawnerCommand {
                 .then(Commands.literal("delay").then(Commands.argument("ticks", IntegerArgumentType.integer(1)).executes(c -> setDelay(c.getSource(), IntegerArgumentType.getInteger(c, "ticks")))))
                 .then(Commands.literal("adjustdrop").then(Commands.argument("slot", StringArgumentType.word()).suggests(SpawnerCommand::suggestSlots).then(Commands.argument("delta", FloatArgumentType.floatArg(-1f,1f)).executes(c -> adjustDrop(c.getSource(), slot(c), FloatArgumentType.getFloat(c, "delta"))))))
                 .then(Commands.literal("adjustintrinsic").then(Commands.argument("item", ResourceLocationArgument.id()).suggests(SpawnerCommand::suggestItems).then(Commands.argument("delta", FloatArgumentType.floatArg(-1f,1f)).executes(c -> adjustIntrinsic(c.getSource(), ResourceLocationArgument.getId(c, "item"), FloatArgumentType.getFloat(c, "delta"))))))
+                .then(Commands.literal("adjustintrinsicrule").then(Commands.argument("rule_id", StringArgumentType.word()).then(Commands.argument("delta", FloatArgumentType.floatArg(-1f,1f)).executes(c -> adjustIntrinsicRuleChance(c.getSource(), StringArgumentType.getString(c, "rule_id"), FloatArgumentType.getFloat(c, "delta"))))))
+                .then(Commands.literal("adjustintrinsiccount").then(Commands.argument("rule_id", StringArgumentType.word()).then(Commands.argument("delta", IntegerArgumentType.integer(-64,64)).executes(c -> adjustIntrinsicRuleCount(c.getSource(), StringArgumentType.getString(c, "rule_id"), IntegerArgumentType.getInteger(c, "delta"))))))
                 .then(Commands.literal("info").executes(c -> info(c.getSource())))
 
                 .then(Commands.literal("preset").executes(c -> helpPreset(c.getSource()))
@@ -156,7 +168,7 @@ public final class SpawnerCommand {
     private static int helpSet(CommandSourceStack src){ return syntax(src, "Set syntax", new String[]{"/spawner set <namespace:entity>","Tip: Use TAB to browse entities."}); }
     private static int helpName(CommandSourceStack src){ return syntax(src, "Name syntax", new String[]{"/spawner name set <display name>","/spawner name clear"}); }
     private static int helpEquip(CommandSourceStack src){ return syntax(src, "Equip syntax", new String[]{"/spawner equip <slot> <namespace:item>","/spawner equip <slot> fromhand","/spawner equip clear <slot>","/spawner equip clear all"}); }
-    private static int helpDrop(CommandSourceStack src){ return syntax(src, "Drop syntax", new String[]{"/spawner drop <slot> <0.0-1.0>","/spawner drop armor <0.0-1.0>","/spawner drop hands <0.0-1.0>","/spawner drop all <0.0-1.0>","/spawner drop intrinsic <namespace:item> <0.0-1.0>","/spawner drop intrinsic clear <namespace:item>","Drop controls are also clickable in /spawner info"}); }
+    private static int helpDrop(CommandSourceStack src){ return syntax(src, "Drop syntax", new String[]{"/spawner drop <slot> <0.0-1.0>","/spawner drop armor <0.0-1.0>","/spawner drop hands <0.0-1.0>","/spawner drop all <0.0-1.0>","/spawner drop intrinsic <namespace:item> <0.0-1.0> [quantity]","/spawner drop intrinsic add <namespace:item> <0.0-1.0> [quantity]","/spawner drop intrinsic default <namespace:item>","/spawner drop intrinsic clear <namespace:item>","Drop controls are also clickable in /spawner info"}); }
     private static int helpPreset(CommandSourceStack src){ return syntax(src, "Preset syntax", new String[]{"/spawner preset save <preset_name>","/spawner preset load <preset_name>","/spawner preset delete <preset_name>","/spawner preset reload","Example: /spawner preset save Skeleton_Master","Preset names must not contain spaces."}); }
     private static int helpPresetSave(CommandSourceStack src){ return syntax(src, "Preset save syntax", new String[]{"/spawner preset save <preset_name>","Example: /spawner preset save Skeleton_Master","Look at a Cosmic Spawner within 5 blocks."}); }
     private static int helpPresetLoad(CommandSourceStack src){ return syntax(src, "Preset load syntax", new String[]{"/spawner preset load <preset_name>","Example: /spawner preset load Skeleton_Master","Look at a Cosmic Spawner within 5 blocks."}); }
@@ -244,20 +256,24 @@ public final class SpawnerCommand {
 
     private static MutableComponent intrinsicDropRow(CosmicSpawnerIntrinsicDropService.Row row) {
         MutableComponent out = Component.literal("  " + row.itemId() + ": ").withStyle(ChatFormatting.GRAY);
-        if (row.customAdded()) {
-            out.append(Component.literal("custom " + formatChance(row.overrideChance())).withStyle(ChatFormatting.LIGHT_PURPLE));
+        if (row.hasOverride()) {
+            out.append(Component.literal("Chance: " + formatChance(row.overrideChance())).withStyle(row.customAdded() ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.GOLD));
+            out.append(Component.literal(" ")).append(intrinsicRuleChanceButton(row.ruleId(), 0.05f, "+"))
+                    .append(Component.literal(" ")).append(intrinsicRuleChanceButton(row.ruleId(), -0.05f, "-"));
+            out.append(Component.literal(" Count: " + row.count()).withStyle(ChatFormatting.WHITE));
+            out.append(Component.literal(" ")).append(intrinsicRuleCountButton(row.ruleId(), 1, "+"))
+                    .append(Component.literal(" ")).append(intrinsicRuleCountButton(row.ruleId(), -1, "-"));
+            out.append(Component.literal(" ")).append(intrinsicRuleDefaultButton(row.ruleId(), row.itemId()));
+            if (row.kind() != null) out.append(Component.literal(" (" + row.kind().name().toLowerCase(java.util.Locale.ROOT) + ")").withStyle(ChatFormatting.DARK_GRAY));
         } else {
-            out.append(Component.literal("default " + formatDefaultChance(row.defaultChance())).withStyle(ChatFormatting.WHITE));
-            if (row.overriddenDefault()) {
-                out.append(Component.literal(", override " + formatChance(row.overrideChance())).withStyle(ChatFormatting.GOLD));
-            }
+            out.append(Component.literal("Chance: default " + formatDefaultChance(row.defaultChance())).withStyle(ChatFormatting.WHITE));
+            out.append(Component.literal(" ")).append(intrinsicChanceButton(row.itemId(), 0.05f, "+"))
+                    .append(Component.literal(" ")).append(intrinsicChanceButton(row.itemId(), -0.05f, "-"));
+            out.append(Component.literal(" Count: default").withStyle(ChatFormatting.WHITE));
+            out.append(Component.literal(" ")).append(intrinsicDefaultCountButton(row.itemId(), row.defaultChance(), 1, "+"))
+                    .append(Component.literal(" ")).append(intrinsicDefaultCountButton(row.itemId(), row.defaultChance(), -1, "-"));
+            out.append(Component.literal(" ")).append(intrinsicDefaultButton(row.itemId()));
         }
-        out.append(Component.literal("  "));
-        out.append(intrinsicChanceButton(row.itemId(), 0.05f, "+"))
-                .append(Component.literal(" "))
-                .append(intrinsicChanceButton(row.itemId(), -0.05f, "-"))
-                .append(Component.literal(" "))
-                .append(intrinsicDefaultButton(row.itemId()));
         return out;
     }
 
@@ -273,10 +289,12 @@ public final class SpawnerCommand {
 
     private static MutableComponent intrinsicDefaultButton(ResourceLocation itemId) {
         String cmd = "/spawner drop intrinsic default " + itemId;
-        return Component.literal("[Default]").withStyle(style -> style
-                .withColor(ChatFormatting.GRAY)
-                .withClickEvent(new ClickEvent.RunCommand(cmd))
-                .withHoverEvent(new HoverEvent.ShowText(Component.literal("Remove override/addition and use default loot table behavior for " + itemId))));
+        return Component.literal("[Default]").withStyle(style -> style.withColor(ChatFormatting.GRAY).withClickEvent(new ClickEvent.RunCommand(cmd)).withHoverEvent(new HoverEvent.ShowText(Component.literal("Remove all configured rules and use default loot table behavior for " + itemId))));
+    }
+
+    private static MutableComponent intrinsicRuleDefaultButton(String ruleId, ResourceLocation itemId) {
+        String cmd = "/spawner drop intrinsic remove " + ruleId;
+        return Component.literal("[Default]").withStyle(style -> style.withColor(ChatFormatting.GRAY).withClickEvent(new ClickEvent.RunCommand(cmd)).withHoverEvent(new HoverEvent.ShowText(Component.literal("Remove only this configured intrinsic rule for " + itemId))));
     }
 
     private static Component spawnerMobName(CosmicSpawnerPreset preset) {
@@ -294,8 +312,11 @@ public final class SpawnerCommand {
         return withPreset(src, p -> p.setDropChance(slot, p.getDropChance(slot) + delta), false, true);
     }
 
-    private static int setIntrinsic(CommandSourceStack src, ResourceLocation itemId, float chance) {
-        return withPreset(src, p -> p.setIntrinsicDropChance(itemId, chance), true, true);
+    private static int setIntrinsic(CommandSourceStack src, ResourceLocation itemId, float chance, int quantity, boolean alwaysAdd) {
+        return withPreset(src, p -> {
+            if (alwaysAdd) p.addConfiguredIntrinsicDropRule(itemId, chance, quantity, CosmicSpawnerPreset.IntrinsicDropRule.Kind.UNKNOWN_CONFIGURED);
+            else p.upsertConfiguredIntrinsicDropRule(itemId, chance, quantity, CosmicSpawnerPreset.IntrinsicDropRule.Kind.UNKNOWN_CONFIGURED);
+        }, true, true);
     }
 
     private static int defaultIntrinsic(CommandSourceStack src, ResourceLocation itemId) {
@@ -327,9 +348,13 @@ public final class SpawnerCommand {
                 if (rl != null) preset.setEntityTypeId(rl);
             }
 
-            Float existing = preset.getIntrinsicDropChances().get(itemId);
-            float baseline = existing != null ? existing : intrinsicAdjustmentBaseline(src, preset.getEntityTypeId(), itemId, delta);
-            preset.setIntrinsicDropChance(itemId, baseline + delta);
+            var rules = preset.getConfiguredIntrinsicDropRules(itemId);
+            if (!rules.isEmpty()) {
+                preset.adjustIntrinsicDropRuleChance(rules.get(0).id(), delta);
+            } else {
+                float baseline = intrinsicAdjustmentBaseline(src, preset.getEntityTypeId(), itemId, delta);
+                preset.upsertConfiguredIntrinsicDropRule(itemId, baseline + delta, 1, CosmicSpawnerPreset.IntrinsicDropRule.Kind.UNKNOWN_CONFIGURED);
+            }
             be.setSpawnerPreset(preset);
             info(src);
             return 1;
@@ -337,6 +362,18 @@ public final class SpawnerCommand {
             src.sendFailure(Component.literal("Failed: " + e.getMessage()));
             return 0;
         }
+    }
+
+    private static int adjustIntrinsicRuleChance(CommandSourceStack src, String ruleId, float delta) {
+        return withPreset(src, p -> p.adjustIntrinsicDropRuleChance(ruleId, delta), false, true);
+    }
+
+    private static int adjustIntrinsicRuleCount(CommandSourceStack src, String ruleId, int delta) {
+        return withPreset(src, p -> p.adjustIntrinsicDropRuleCount(ruleId, delta), false, true);
+    }
+
+    private static int removeIntrinsicRule(CommandSourceStack src, String ruleId) {
+        return withPreset(src, p -> p.removeConfiguredIntrinsicDropRule(ruleId), false, true);
     }
 
     private static float intrinsicAdjustmentBaseline(CommandSourceStack src, ResourceLocation entityTypeId, ResourceLocation itemId, float delta) {
@@ -383,7 +420,24 @@ public final class SpawnerCommand {
         return row;
     }
 
-    private static MutableComponent intrinsicChanceButton(ResourceLocation itemId, float delta, String symbol) { String cmd = "/spawner adjustintrinsic " + itemId + " " + String.format(java.util.Locale.ROOT, "%.2f", delta); return Component.literal("["+symbol+"]").withStyle(style -> style.withColor(delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED).withClickEvent(new ClickEvent.RunCommand(cmd)).withHoverEvent(new HoverEvent.ShowText(Component.literal((delta > 0 ? "Increase" : "Decrease") + " final spawner-specific chance by " + Math.abs(Math.round(delta*100f)) + "%")))); }
+    private static MutableComponent intrinsicChanceButton(ResourceLocation itemId, float delta, String symbol) { String cmd = "/spawner adjustintrinsic " + itemId + " " + String.format(java.util.Locale.ROOT, "%.2f", delta); return Component.literal("["+symbol+"]").withStyle(style -> style.withColor(delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED).withClickEvent(new ClickEvent.RunCommand(cmd)).withHoverEvent(new HoverEvent.ShowText(Component.literal((delta > 0 ? "Create/increase" : "Create/decrease") + " count-1 spawner-specific chance by " + Math.abs(Math.round(delta*100f)) + "%")))); }
+    private static MutableComponent intrinsicRuleChanceButton(String ruleId, float delta, String symbol) { String cmd = "/spawner adjustintrinsicrule " + ruleId + " " + String.format(java.util.Locale.ROOT, "%.2f", delta); return Component.literal("["+symbol+"]").withStyle(style -> style.withColor(delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED).withClickEvent(new ClickEvent.RunCommand(cmd)).withHoverEvent(new HoverEvent.ShowText(Component.literal((delta > 0 ? "Increase" : "Decrease") + " this rule chance by " + Math.abs(Math.round(delta*100f)) + "%")))); }
+    private static MutableComponent intrinsicRuleCountButton(String ruleId, int delta, String symbol) { String cmd = "/spawner adjustintrinsiccount " + ruleId + " " + delta; return Component.literal("["+symbol+"]").withStyle(style -> style.withColor(delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED).withClickEvent(new ClickEvent.RunCommand(cmd)).withHoverEvent(new HoverEvent.ShowText(Component.literal((delta > 0 ? "Increase" : "Decrease") + " this rule count by " + Math.abs(delta))))); }
+    private static MutableComponent intrinsicDefaultCountButton(ResourceLocation itemId, CosmicSpawnerLootTableSummary.ChanceDisplay defaultChance, int delta, String symbol) {
+        if (defaultChance == null || !defaultChance.numeric() || defaultChance.chance() == null) {
+            return Component.literal("[" + symbol + "]").withStyle(style -> style
+                    .withColor(ChatFormatting.DARK_GRAY)
+                    .withHoverEvent(new HoverEvent.ShowText(Component.literal("Default chance is complex; set chance explicitly with /spawner drop intrinsic " + itemId + " <chance> [quantity]."))));
+        }
+        int count = delta > 0 ? 2 : 1;
+        String cmd = "/spawner drop intrinsic " + itemId + " "
+                + String.format(java.util.Locale.ROOT, "%.4f", Math.max(0f, Math.min(1f, defaultChance.chance())))
+                + " " + count;
+        return Component.literal("[" + symbol + "]").withStyle(style -> style
+                .withColor(delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED)
+                .withClickEvent(new ClickEvent.RunCommand(cmd))
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal("Create a spawner-specific count-" + count + " rule for " + itemId + " while preserving the displayed default chance."))));
+    }
 
     private static MutableComponent chanceButton(CosmicSpawnerPreset.Slot slot, float delta, String symbol) { String cmd = "/spawner adjustdrop " + slot.id + " " + String.format(java.util.Locale.ROOT, "%.2f", delta); return Component.literal("["+symbol+"]").withStyle(style -> style.withColor(delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED).withClickEvent(new ClickEvent.RunCommand(cmd)).withHoverEvent(new HoverEvent.ShowText(Component.literal("Adjust "+slot.id+" by "+Math.round(delta*100f)+"% and refresh info")))); }
 

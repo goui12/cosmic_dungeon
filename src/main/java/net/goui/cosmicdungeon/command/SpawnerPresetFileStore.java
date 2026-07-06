@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 final class SpawnerPresetFileStore {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final int FORMAT_VERSION = 2;
+    private static final int FORMAT_VERSION = 3;
     private static final int LEGACY_FORMAT_VERSION = 1;
 
     private SpawnerPresetFileStore() {}
