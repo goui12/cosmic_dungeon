@@ -270,8 +270,8 @@ public final class SpawnerCommand {
             out.append(Component.literal(" ")).append(intrinsicChanceButton(row.itemId(), 0.05f, "+"))
                     .append(Component.literal(" ")).append(intrinsicChanceButton(row.itemId(), -0.05f, "-"));
             out.append(Component.literal(" Count: default").withStyle(ChatFormatting.WHITE));
-            out.append(Component.literal(" ")).append(intrinsicDefaultCountButton(row.itemId(), 1, "+"))
-                    .append(Component.literal(" ")).append(intrinsicDefaultCountButton(row.itemId(), -1, "-"));
+            out.append(Component.literal(" ")).append(intrinsicDefaultCountButton(row.itemId(), row.defaultChance(), 1, "+"))
+                    .append(Component.literal(" ")).append(intrinsicDefaultCountButton(row.itemId(), row.defaultChance(), -1, "-"));
             out.append(Component.literal(" ")).append(intrinsicDefaultButton(row.itemId()));
         }
         return out;
@@ -423,7 +423,21 @@ public final class SpawnerCommand {
     private static MutableComponent intrinsicChanceButton(ResourceLocation itemId, float delta, String symbol) { String cmd = "/spawner adjustintrinsic " + itemId + " " + String.format(java.util.Locale.ROOT, "%.2f", delta); return Component.literal("["+symbol+"]").withStyle(style -> style.withColor(delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED).withClickEvent(new ClickEvent.RunCommand(cmd)).withHoverEvent(new HoverEvent.ShowText(Component.literal((delta > 0 ? "Create/increase" : "Create/decrease") + " count-1 spawner-specific chance by " + Math.abs(Math.round(delta*100f)) + "%")))); }
     private static MutableComponent intrinsicRuleChanceButton(String ruleId, float delta, String symbol) { String cmd = "/spawner adjustintrinsicrule " + ruleId + " " + String.format(java.util.Locale.ROOT, "%.2f", delta); return Component.literal("["+symbol+"]").withStyle(style -> style.withColor(delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED).withClickEvent(new ClickEvent.RunCommand(cmd)).withHoverEvent(new HoverEvent.ShowText(Component.literal((delta > 0 ? "Increase" : "Decrease") + " this rule chance by " + Math.abs(Math.round(delta*100f)) + "%")))); }
     private static MutableComponent intrinsicRuleCountButton(String ruleId, int delta, String symbol) { String cmd = "/spawner adjustintrinsiccount " + ruleId + " " + delta; return Component.literal("["+symbol+"]").withStyle(style -> style.withColor(delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED).withClickEvent(new ClickEvent.RunCommand(cmd)).withHoverEvent(new HoverEvent.ShowText(Component.literal((delta > 0 ? "Increase" : "Decrease") + " this rule count by " + Math.abs(delta))))); }
-    private static MutableComponent intrinsicDefaultCountButton(ResourceLocation itemId, int delta, String symbol) { String cmd = "/spawner drop intrinsic " + itemId + " " + (delta > 0 ? "0.05 2" : "0.05 1"); return Component.literal("["+symbol+"]").withStyle(style -> style.withColor(delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED).withClickEvent(new ClickEvent.RunCommand(cmd)).withHoverEvent(new HoverEvent.ShowText(Component.literal("Create a spawner-specific intrinsic rule for " + itemId)))); }
+    private static MutableComponent intrinsicDefaultCountButton(ResourceLocation itemId, CosmicSpawnerLootTableSummary.ChanceDisplay defaultChance, int delta, String symbol) {
+        if (defaultChance == null || !defaultChance.numeric() || defaultChance.chance() == null) {
+            return Component.literal("[" + symbol + "]").withStyle(style -> style
+                    .withColor(ChatFormatting.DARK_GRAY)
+                    .withHoverEvent(new HoverEvent.ShowText(Component.literal("Default chance is complex; set chance explicitly with /spawner drop intrinsic " + itemId + " <chance> [quantity]."))));
+        }
+        int count = delta > 0 ? 2 : 1;
+        String cmd = "/spawner drop intrinsic " + itemId + " "
+                + String.format(java.util.Locale.ROOT, "%.4f", Math.max(0f, Math.min(1f, defaultChance.chance())))
+                + " " + count;
+        return Component.literal("[" + symbol + "]").withStyle(style -> style
+                .withColor(delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED)
+                .withClickEvent(new ClickEvent.RunCommand(cmd))
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal("Create a spawner-specific count-" + count + " rule for " + itemId + " while preserving the displayed default chance."))));
+    }
 
     private static MutableComponent chanceButton(CosmicSpawnerPreset.Slot slot, float delta, String symbol) { String cmd = "/spawner adjustdrop " + slot.id + " " + String.format(java.util.Locale.ROOT, "%.2f", delta); return Component.literal("["+symbol+"]").withStyle(style -> style.withColor(delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED).withClickEvent(new ClickEvent.RunCommand(cmd)).withHoverEvent(new HoverEvent.ShowText(Component.literal("Adjust "+slot.id+" by "+Math.round(delta*100f)+"% and refresh info")))); }
 
