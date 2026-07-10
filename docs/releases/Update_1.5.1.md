@@ -112,3 +112,47 @@ Cosmic Mob Spawners now apply a small server-side spawn-default pass only to mob
 Vanilla `minecraft:slime` and `minecraft:magma_cube` spawned by Cosmic Spawners are raised to the max standard size 4 using the entity API so health and dimensions refresh correctly. Larger entities are not shrunk, and naturally spawned mobs are unaffected.
 
 This phase does not change Cosmic Spawner block-entity storage, preset JSON/NBT storage, intrinsic drop rule storage, rift/RD data, door/key data, access policy, class, teleportation, or dungeon reset data. The only new marker is per spawned entity: `cosmicdungeon:spawner_spawn_defaults_applied_version`, used to avoid reapplying the defaults forever.
+
+## Preflight audit baseline (help menu, vendors, factions, repair, teleportation)
+
+This audit intentionally made no gameplay, GUI, network, saved-data, or PNG asset changes. It records the current baseline before later help-menu, settings, spawner HUD, vendor pricing, faction, or repair work.
+
+### Help menu and asset baseline
+
+- The current H help menu is client-only and opens/closes from the registered `H` keybind. It uses `HelpMenuScreen`, `HelpMenuContent`, and `HelpMenuKeybindClient` with titles/body copy from `assets/cosmicdungeon/lang/en_us.json`.
+- `HelpMenuScreen` still assumes a `256x192` menu canvas and loads `textures/gui/menu/background.png`, not `background_large.png`.
+- `HelpMenuScreen` still assumes text buttons are `128x32`, while the supplied button PNGs are `128x24`. This mismatch must be corrected before a polished large help GUI uses the existing button art.
+- PNG dimension baseline for supplied help-menu art:
+  - `background_large.png`: `384x240` and should be used for the professional large help GUI.
+  - `background.png`: `256x192` legacy/small art only; do not use it as the fallback for the large help GUI.
+  - `title.png`: `128x32`.
+  - `text_button.png`, `text_button_hover.png`, `text_button_selected.png`, `text_button_disabled.png`: `128x24`.
+  - `left_button.png`, `left_button_hover.png`, `right_button.png`, `right_button_hover.png`, `up_button.png`, `up_button_hover.png`, `down_button.png`, `down_button_hover.png`: `28x28`.
+
+### Current system baseline for later prompts
+
+- Achievement onboarding currently grants `achievements/im_rich` on first login, deposits 5 Trace, and sends a reward message. The visible lang title is `I'm Rich!`, and the description explains `/currency balance` and denomination values.
+- Keeping the internal achievement id `achievements/im_rich` while changing only the visible lang title to `First Trace` is the safest future path because code, generated advancement JSON, and persisted player advancement progress all key off the id.
+- Class vanilla-use restrictions are server-side through `AccessPolicy.allowClassGatedVanillaUse`: Judicator can use anvils, Theurgist can use brewing stands, and developers bypass the gate. Dragoon does not currently have anvil access in code.
+- Class-attuned equipment restrictions are server-side and centralized through the class item guard/restriction event path; future UI/help text must not imply client-only enforcement is authoritative.
+- Vendor profiles are datapack JSONs under `data/cosmicdungeon/vendor_profiles`. Elias Centvin exists as the `cosmicdungeon:d1/weapon_supplier` profile display name.
+- Vendor access currently supports profile-level village access, NPC tier/system, and faction tier requirements, plus offer-level progression flag and NPC tier checks. Offer records include `requiredFactionTier`, but current offer unlock logic does not evaluate offer-level faction requirements, and there is no class-restricted offer visibility/purchase field in the offer schema.
+- Vendor buyback pricing currently uses class-attuned trace metadata and optional buyback rule multipliers parsed from profile JSON. NPC/vendor faction pricing multipliers are not implemented as active code.
+- Active faction code currently defines the JHW faction and player faction saved data/service/command support. NPC/vendor faction concepts beyond that are design-only unless represented as profile access requirements.
+- Teleportation is active for the Potion of Companionship and rift systems. The potion opens a dungeoneer-target selection flow, performs server-side teleport validation, and applies a teleport cooldown. Treat any broader “Notes Teleport” concepts as unverified/future until the note file is present and matched to source.
+- Cosmic Spawner HUD/label code is split between a server-authoritative `/spawner showlabels` path and client rendering/config state. The client config controls position/opacity only; later changes must not let client-only settings authorize developer HUD access.
+- Important saved-data/storage ids observed in source/docs include spawners via block entity NBT with `CosmicSpawnerDataVersion`, doors/keys via `cosmicdungeon_door_passages_v2` and `cosmicdungeon_door_locks_v1`, rifts via `cosmicdungeon_rifts_v2` with legacy `cosmicdungeon_rifts`, regions/access policy via `cosmicdungeon_regions` and ranks/dev password data, class selector block-entity data, teleportation runtime cooldown/effect state, vendors via assigned entity profile id, currency via player currency data, factions via player faction data, progression via player progression data, and achievements via generated advancements plus achievement counter data.
+
+### Design-note availability and exposure classification
+
+The requested design-note files (`Faction General.txt`, `NPC Faction.txt`, `Achievement_ First Trace.txt`, `NPC Elias Centvin.txt`, `Pricing Master List.txt`, `Dragoon Repair System (Internal).txt`, and `Notes Teleport.txt`) were not present as standalone files in the working tree and were not found inside `src/CosmicDungeonFiles.zip` by filename. Classification therefore defaults to source-verified behavior only:
+
+- Implemented and safe to expose in player help later: `I'm Rich!`/first-login Trace reward, player currency denominations, Potion of Companionship target teleport with cooldown, player-facing class basics that are already implemented, rift use where documented as gameplay, and Elias as an active weapon-supplier vendor profile.
+- Implemented but developer/world-designer-only, docs only: `/vendor` authoring/spawn/reload/list flows, `/faction` authoring/debug, `/spawner` authoring/HUD label controls, `/rift` authoring, `/rank`, `/developer`, `/classitem`, achievement debug, region and door debug/configuration commands.
+- Design/future note only: NPC/vendor faction pricing multipliers, Dragoon Repair Affinity, Dragoon anvil access, class-restricted vendor offer visibility/purchase, and any pricing-master-list values not already encoded in vendor profile JSON or class-attuned item metadata.
+- Unclear until source/design-note verification: any missing-note detail not backed by current code/docs, especially broader teleport-planning notes and internal repair/faction economy mechanics.
+
+### Compile baseline
+
+- Initial `./gradlew compileJava` ran under Java 25 and failed before compilation with `Unsupported class file major version 69`.
+- Re-running with Java 21 is the valid baseline path for this repository; `JAVA_HOME=$(mise where java@21.0.2) PATH="$(mise where java@21.0.2)/bin:$PATH" ./gradlew compileJava` completed successfully with two existing deprecation warnings in `ModAdvancementProvider`.
