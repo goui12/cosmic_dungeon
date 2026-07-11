@@ -45,7 +45,7 @@ public final class VendorAccessService {
         return 0;
     }
 
-    private static FactionTier factionTierFromOrdinal(int ordinal) {
+    static FactionTier factionTierFromOrdinal(int ordinal) {
         FactionTier[] values = FactionTier.values();
         return ordinal >= 0 && ordinal < values.length ? values[ordinal] : null;
     }

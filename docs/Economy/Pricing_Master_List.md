@@ -9,7 +9,7 @@
 
 ## Design/future pricing notes
 
-The pricing master list is a balancing reference for future vendor stock, buyback, faction pricing, and repair-cost work. Values in this document are not live unless encoded in vendor profile data, item metadata, or server-side pricing code.
+The pricing master list is a balancing reference for future vendor stock, buyback, faction pricing, and repair-cost work. Values in this document are not live unless encoded in vendor profile data, item metadata, or server-side pricing code. Keep this as a developer/world-designer reference and do not dump the full list into the player H help menu.
 
 ## Related docs
 
