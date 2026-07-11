@@ -156,3 +156,13 @@ The requested design-note files (`Faction General.txt`, `NPC Faction.txt`, `Achi
 
 - Initial `./gradlew compileJava` ran under Java 25 and failed before compilation with `Unsupported class file major version 69`.
 - Re-running with Java 21 is the valid baseline path for this repository; `JAVA_HOME=$(mise where java@21.0.2) PATH="$(mise where java@21.0.2)/bin:$PATH" ./gradlew compileJava` completed successfully with two existing deprecation warnings in `ModAdvancementProvider`.
+
+## Client Help Menu Framework
+
+- Refactored the H-key Cosmic Dungeon help menu from the legacy compact 256x192 layout into a centered 384x240 two-pane GUI using `background_large.png`.
+- Added reusable client-only layout, asset, textured-button, scroll-state, and rich-text renderer helpers for scalable future help pages.
+- Replaced hardcoded main/class button math with a data-driven scrollable navigation index sourced from help content pages.
+- Added scrollable clipped navigation and rich-text content panes with mouse-wheel support, scroll clamping, and contextual up/down scroll buttons.
+- Standardized text buttons to the 128x24 normal/hover/selected/disabled PNG states already present under `textures/gui/menu/`.
+- Replaced the old class cycling screen with visible class entries for Theurgist, Pyroclast, Bogatyr, Dragoon, Venefex, Judicator, plus disabled Metalmancer and Deadeye placeholders marked Coming in Dungeon 2.
+- This is a client-only UI refactor. It changes no packets, saved data, server authorization, access policy, class storage, teleportation, rifts/RD, spawners, doors/keys, vendors, trading, currency, progression, factions, or achievements. No data migration is required.
