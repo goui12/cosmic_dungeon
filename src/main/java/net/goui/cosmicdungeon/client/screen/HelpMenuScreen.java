@@ -18,6 +18,7 @@ public final class HelpMenuScreen extends Screen {
     private static final int SCROLL_STEP = 18;
     private final HelpScrollPane navScroll = new HelpScrollPane();
     private final Map<String, HelpScrollPane> contentScrolls = new HashMap<>();
+    private ScrollTarget activeArrowTarget = ScrollTarget.CONTENT;
     private HelpMenuContent.Page currentPage = HelpMenuContent.GET_STARTED;
     private HelpMenuGeometry geometry = HelpMenuGeometry.centered(0, 0);
 
@@ -62,7 +63,8 @@ public final class HelpMenuScreen extends Screen {
     }
 
     private void renderScrollButtons(GuiGraphics g, int mouseX, int mouseY) {
-        HelpScrollPane target = geometry.navViewport().contains(mouseX, mouseY) ? navScroll : contentScroll();
+        activeArrowTarget = arrowTargetFor(mouseX, mouseY);
+        HelpScrollPane target = scrollPane(activeArrowTarget);
         if (!target.canScroll()) return;
         if (target.canScrollUp()) {
             HelpMenuGeometry.Rect up = geometry.upButton();
@@ -96,7 +98,8 @@ public final class HelpMenuScreen extends Screen {
     }
 
     private boolean clickScrollButton(double mouseX, double mouseY) {
-        HelpScrollPane target = geometry.navViewport().contains(mouseX, mouseY) ? navScroll : contentScroll();
+        if (!geometry.upButton().contains(mouseX, mouseY) && !geometry.downButton().contains(mouseX, mouseY)) return false;
+        HelpScrollPane target = scrollPane(activeArrowTarget);
         if (geometry.upButton().contains(mouseX, mouseY) && target.canScrollUp()) return target.scroll(-SCROLL_STEP);
         if (geometry.downButton().contains(mouseX, mouseY) && target.canScrollDown()) return target.scroll(SCROLL_STEP);
         return false;
@@ -120,6 +123,20 @@ public final class HelpMenuScreen extends Screen {
     }
 
     private HelpScrollPane contentScroll() { return contentScrolls.computeIfAbsent(currentPage.id(), id -> new HelpScrollPane()); }
+
+    private HelpScrollPane scrollPane(ScrollTarget target) {
+        return target == ScrollTarget.NAVIGATION ? navScroll : contentScroll();
+    }
+
+    private ScrollTarget arrowTargetFor(double mouseX, double mouseY) {
+        if (geometry.navViewport().contains(mouseX, mouseY)) return ScrollTarget.NAVIGATION;
+        if (geometry.contentViewport().contains(mouseX, mouseY)) return ScrollTarget.CONTENT;
+        if (geometry.upButton().contains(mouseX, mouseY) || geometry.downButton().contains(mouseX, mouseY)) return activeArrowTarget;
+        return ScrollTarget.CONTENT;
+    }
+
     private static HelpMenuGeometry.Rect rect(int x, int y, int w, int h) { return new HelpMenuGeometry.Rect(x, y, w, h); }
     @Override public boolean isPauseScreen() { return false; }
+
+    private enum ScrollTarget { NAVIGATION, CONTENT }
 }
