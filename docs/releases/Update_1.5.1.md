@@ -210,3 +210,12 @@ The design-note context for factions, NPC/vendor faction behavior, First Trace, 
 - Login sync now sends each player only their effective state: developers receive their stored in-memory preference for the current server session, while non-developers or players who lost developer status receive `false`. Rank demotion and `/dungeoneer rank` revoke the HUD immediately for the affected online player.
 - The client still stores only the last server-authorized `SpawnerLabelPayload` value; client config can choose how authorized HUD rows display but cannot grant label access.
 - This is command/network/session state only. It does not change Cosmic Spawner block-entity NBT, Cosmic Spawner preset files, entity/block saved data, rift/RD data, door/key data, class selector data, teleportation data, vendor data, faction data, currency data, progression data, access-policy data, or achievement tracking data.
+
+## Final migration and regression-safety notes
+
+- Help menu UI/content changes are client presentation only and require no server data migration. See [Help Menu](../Help_Menu.md).
+- **First Trace** is a visible title/description rename for the onboarding achievement; the internal advancement id remains `cosmicdungeon:achievements/im_rich`, preserving existing advancement-file compatibility and the 5 Trace reward path. See [Achievements & Advancements](../Achievements/Achievements_and_Advancements.md#first-trace-onboarding-achievement).
+- Dragoon anvil access is a server-side behavior correction, not a saved-data change; Judicator remains unrelated to anvil access, and Theurgist brewing stand access is unchanged. See [Class Restrictions & Inventory](../Classes/Class_Restrictions_and_Inventory.md#dragoon-anvil-access).
+- Cosmic Spawner HUD field toggles and per-player `/spawner showlabels` authorization do not change `cosmic_spawner` block-entity saved data or Cosmic Spawner preset file formats. See [Spawner Systems](../Spawners/Spawner_Systems.md#client-cosmic-dungeon-settings-and-spawner-hud-preferences) and [Spawner Commands](../Spawner_Commands_Features.md#spawner-showlabels).
+- Existing 1.5.0 spawners, doors/keys, rifts/RD, class selector data, teleportation data, region/access policy data, vendor data, currency, faction, progression, and achievement tracking should not need manual conversion for these help-menu, First Trace display, Dragoon anvil, settings, or showlabels changes unless another feature-specific section explicitly documents a migration.
+- As always, take a normal world backup before deploying a new jar.

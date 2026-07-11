@@ -52,7 +52,7 @@ Common examples:
 
 Intrinsic drop commands set final per-spawner mob loot-table chances. Default loot-table items become overrides; items that are not in the active mob loot table become custom-added intrinsic drops. `/spawner drop intrinsic clear <item>` remains supported as a legacy alias for `/spawner drop intrinsic default <item>`.
 
-`/spawner showlabels [true|false]` controls the executing developer's personal, server-authorized Cosmic Spawner summary HUD. Without an argument it toggles only that player; `true` and `false` explicitly set that same personal preference. Other developers are not changed, and non-developers cannot enable the HUD through command attempts or client config. When enabled, that developer sees mob type, mob name, cap, and delay range while looking at a Cosmic Mob Spawner. This HUD is display-only and does not migrate or rewrite placed spawner or preset file formats.
+`/spawner showlabels [true|false]` controls the executing developer's personal, server-authorized Cosmic Spawner summary HUD. Without an argument it toggles only that player; `true` and `false` explicitly set that same personal preference. Other developers are not changed, and non-developers cannot enable the HUD through command attempts or client config. When enabled, that developer can locally toggle HUD rows for Mob Type, Mob Name, Coordinates, Boss One-Shot, Boss Spawned, Cap, Delay, Spawn Count, Spawn Range, Required Player Range, Max Nearby Entities, Preset Present, and Equipment while looking at a Cosmic Mob Spawner; loot tables are intentionally not shown in the HUD. This HUD is display-only and does not migrate or rewrite placed spawner or preset file formats.
 
 ### Region (actual command tree)
 
