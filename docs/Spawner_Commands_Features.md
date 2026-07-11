@@ -109,7 +109,7 @@ Examples:
 - Looking away from the spawner, opening another screen, or disabling the toggle hides the panel.
 - Developers can tune the HUD locally in the client config with `spawnerHud.position`, `spawnerHud.opacity`, `spawnerHud.horizontalOffset`, and `spawnerHud.verticalOffset` for different screen layouts.
 - Non-developers never receive this HUD mode, command attempts from non-developers sync `false`, and the client config cannot authorize labels.
-- This HUD uses server-to-client sync for display only; the per-player preference is in-memory server-session state and intrinsic info, drop behavior, block-entity NBT, and preset files remain server-authoritative and unchanged.
+- This HUD uses server-to-client sync for display only; the per-player preference is in-memory server-session state and intrinsic info, drop behavior, block-entity NBT, and preset files remain server-authoritative and unchanged. The 1.5.1 HUD/showlabels audit confirmed no placed Cosmic Spawner or preset file migration is required for this display feature.
 
 ## Spawner preset hotkeys
 - Five client keybinds are available under **Cosmic Dungeon** in Controls.

@@ -201,6 +201,7 @@ The design-note context for factions, NPC/vendor faction behavior, First Trace, 
 - Added client HUD preferences for maximum width and equipment mode while preserving the existing bottom-right default position, opacity, horizontal offset, and vertical offset config behavior.
 - These settings are client display preferences only. The server-authoritative per-player `/spawner showlabels [true|false]` permission/sync path still controls whether the HUD can appear, so local config changes do not authorize non-developers to see spawner HUD data.
 - No Cosmic Spawner saved-data format, block entity storage, preset storage, rift/RD data, door/key data, teleportation data, class selector data, vendor data, faction data, currency data, progression data, access-policy data, or achievement tracking data changed for this settings UI. See [Spawner Systems](../Spawners/Spawner_Systems.md#client-cosmic-dungeon-settings-and-spawner-hud-preferences) for usage details.
+- A dedicated HUD/showlabels saved-data audit confirmed that block-entity keys, preset NBT keys, preset JSON fields, equipment serialization, boss/cap/delay/spawn settings serialization, and intrinsic drop compatibility handling remain on the existing 1.5.1 paths; no additional migration is required for placed spawners or preset files.
 
 
 ## Per-player Cosmic Spawner showlabels authorization
