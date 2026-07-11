@@ -2,19 +2,31 @@
 
 ## Current profile
 
-Elias Centvin is represented by the existing D1 weapon-supplier vendor profile. In current code/data, Elias should be treated as an active vendor profile rather than a completed bespoke NPC faction/pricing overhaul.
+Elias Centvin is represented by the existing D1 weapon-supplier vendor profile:
 
-## Design profile notes
+- Profile id: `cosmicdungeon:d1/weapon_supplier`
+- Data path: `src/main/resources/data/cosmicdungeon/vendor_profiles/d1/weapon_supplier.json`
+- Display name: `Elias Centvin`
+- Vendor type: `weapon_supplier`
+- Access gates: village access, `requiredNpcSystem: "D1"`, and `requiredNpcTier: 2`
 
-Elias design notes should inform personality, role, and future stock/pricing pass documentation: a weapon-focused vendor whose final offer list, faction reactions, and pricing rules should be driven by vendor profiles and server-authoritative checks.
+Because D1 NPC tier 2 currently derives from 10 cumulative Lesser Blooms, Elias's current profile matches the design note that vendor access begins at 10 Lesser Blooms through village/NPC progression. The runtime gate is server-authoritative through vendor access and progression services.
 
-## Not implemented in this prompt
+## Current stock
 
-- No Elias stock overhaul.
-- No class-restricted Elias offers.
-- No NPC faction price multiplier implementation.
+Elias currently sells straightforward weapon/tool supplies encoded directly in the vendor profile: stone and diamond swords, stone and diamond pickaxes, bow, crossbow, arrows, and shield. Prices are live only because they are encoded in the profile JSON.
+
+## Dragoon repair-material design note
+
+Design notes call for Dragoon-only repair materials through Elias. Those offers are **not** currently added to Elias's profile because the active vendor schema still has no class-restricted offer field. Do not add Dragoon-only repair materials as normal public offers until a complete server-authoritative offer class gate is implemented and documented.
+
+## NPC/vendor faction pricing design note
+
+NPC/vendor faction pricing multipliers are design-only for Elias at this time. Current code supports profile-level faction access and offer-level faction tier locks tied to the profile faction id, but it does not implement dynamic faction price multipliers.
 
 ## Related docs
 
 - [Vendor](../Vendor.md)
 - [Pricing Master List](../Economy/Pricing_Master_List.md)
+- [NPC/Vendor Faction](../Factions/NPC_Vendor_Faction.md)
+- [Progression, Factions & Unlocks](../Progression/Progression_Factions_and_Unlocks.md)
