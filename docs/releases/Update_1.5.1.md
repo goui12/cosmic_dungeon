@@ -182,3 +182,12 @@ The requested design-note files (`Faction General.txt`, `NPC Faction.txt`, `Achi
 - Kept Dragoon-only repair material offers out of Elias stock because the vendor offer schema still has no class-restricted offer field. Those materials remain design/future until a complete server-authoritative class gate is added.
 - Documented NPC/vendor faction ranges, Lesser Bloom faction gain, NPC kill faction loss, and dynamic faction price multipliers as design-only; no NPC faction saved data, kill tracking, Lesser Bloom faction gain, or dynamic faction pricing was added.
 - Saved-data formats were not changed.
+
+## Complete dungeoneer-facing H help menu
+
+- Populated every main H-key help-menu category with concise player guidance for getting started, dungeons, classes, party flow, trading, vendors, currency, progression, factions, teleportation, achievements, and quick references.
+- The in-game menu is intentionally external/dungeoneer-facing only: player-safe commands are listed, while developer, operator, debug, and world-authoring commands remain in markdown documentation instead of the live H menu.
+- Class pages now describe currently supported player mechanics for Theurgist brewing, Pyroclast gunpowder crafting, Dragoon anvil access and chain lightning, and class-attuned gear/chest use without exposing unreleased mechanics.
+- Metalmancer and Deadeye remain the only disabled help-menu stubs and say only that they are Coming in Dungeon 2.
+- Future/internal teleport, faction, vendor, and Dragoon repair notes are not presented as live mechanics unless current source support exists.
+- This is a client-only help-content and documentation update. It does not change packets, saved data, server authorization, access policy, class storage, teleportation, rifts/RD, spawners, doors/keys, vendors, trading, currency, progression, factions, achievements, or PNG assets. No data migration is required.
