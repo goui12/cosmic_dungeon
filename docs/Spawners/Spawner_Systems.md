@@ -32,7 +32,7 @@ Spawner behavior is driven by `cosmic_mob_spawner` block entities and optional p
 - `/spawner enchant ...`
 - `/spawner drop <slot> <0..1>`
 - `/spawner drops`
-- `/spawner showlabels` — toggles the developer-only bottom-right summary HUD while looking at a Cosmic Mob Spawner
+- `/spawner showlabels [true|false]` — toggles the executing developer's personal, server-authorized bottom-right summary HUD while looking at a Cosmic Mob Spawner
 - `/spawner delay <ticks>`
 - `/spawner info`
 - `/spawner reset`
@@ -90,3 +90,23 @@ Cosmic Mob Spawners now apply a small server-side spawn-default pass only to mob
 Vanilla `minecraft:slime` and `minecraft:magma_cube` spawned by Cosmic Spawners are raised to the max standard size 4 using the entity API so health and dimensions refresh correctly. Larger entities are not shrunk, and naturally spawned mobs are unaffected.
 
 This phase does not change Cosmic Spawner block-entity storage, preset JSON/NBT storage, intrinsic drop rule storage, rift/RD data, door/key data, access policy, class, teleportation, or dungeon reset data. The only new marker is per spawned entity: `cosmicdungeon:spawner_spawn_defaults_applied_version`, used to avoid reapplying the defaults forever.
+
+## Client Cosmic Dungeon Settings and Spawner HUD preferences
+
+Cosmic Dungeon now exposes a client-side **Cosmic Dungeon Settings** screen from the standard Minecraft **Options** screen and from **Mods → Cosmic Dungeon → Config** when the mod-list config button is available. The screen currently contains a **Cosmic Spawner HUD** subsection for local display preferences.
+
+The Cosmic Spawner HUD field toggles are client display preferences only. They decide which already-authorized HUD rows a client wants to draw; they do not grant access to the HUD. The server-authoritative `/spawner showlabels [true|false]` state is per-player and developer-only, so one developer enabling labels does not enable them for other developers, and non-developers cannot reveal spawner labels by changing their local config.
+
+The default HUD preserves the existing four-line summary:
+
+- Mob Type: on
+- Mob Name: on
+- Cap: on
+- Delay: on
+
+
+`/spawner showlabels` without an argument toggles only the executing developer. `/spawner showlabels true` and `/spawner showlabels false` explicitly set that same personal preference. The preference is held in memory for the current server session and synced to that player on login; if the player is no longer a developer, the server sends `false` and clears the effective HUD state.
+
+Additional optional fields default off until a designer enables them locally: coordinates, boss one-shot, boss spawned, spawn count, spawn range, required player range, max nearby entities, preset present, and equipment. The subsection also includes local HUD layout preferences for maximum width and equipment mode, while the existing position, opacity, horizontal offset, and vertical offset config values continue to work.
+
+Related docs: [`/spawner showlabels`](../Spawner_Commands_Features.md#spawner-showlabels) and the [1.5.1 release notes](../releases/Update_1.5.1.md#cosmic-dungeon-settings-and-spawner-hud-preferences).

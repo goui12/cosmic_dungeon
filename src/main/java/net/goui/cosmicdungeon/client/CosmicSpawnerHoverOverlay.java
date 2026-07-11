@@ -9,6 +9,7 @@ import net.minecraft.world.phys.HitResult;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class CosmicSpawnerHoverOverlay {
@@ -43,15 +44,16 @@ public final class CosmicSpawnerHoverOverlay {
         if (!(hit instanceof BlockHitResult bhr)) return;
         if (!(mc.level.getBlockEntity(bhr.getBlockPos()) instanceof CosmicSpawnerBlockEntity be)) return;
 
-        List<Component> lines = List.of(
-                Component.literal("Mob Type: " + be.getSpawnerDisplayEntityId()),
-                Component.literal("Mob Name: " + be.getSpawnerDisplayMobName()),
-                Component.literal("Cap: " + formatCap(be.getSpawnerMobCap())),
-                Component.literal("Delay: " + be.getSpawnerMinSpawnDelay() + "-" + be.getSpawnerMaxSpawnDelay() + " ticks")
-        );
+        List<Component> lines = new ArrayList<>();
+        if (SpawnerHudClientConfig.MOB_TYPE.get()) lines.add(Component.literal("Mob Type: " + be.getSpawnerDisplayEntityId()));
+        if (SpawnerHudClientConfig.MOB_NAME.get()) lines.add(Component.literal("Mob Name: " + be.getSpawnerDisplayMobName()));
+        if (SpawnerHudClientConfig.COORDINATES.get()) lines.add(Component.literal("Coordinates: " + bhr.getBlockPos().toShortString()));
+        if (SpawnerHudClientConfig.CAP.get()) lines.add(Component.literal("Cap: " + formatCap(be.getSpawnerMobCap())));
+        if (SpawnerHudClientConfig.DELAY.get()) lines.add(Component.literal("Delay: " + be.getSpawnerMinSpawnDelay() + "-" + be.getSpawnerMaxSpawnDelay() + " ticks"));
+        if (lines.isEmpty()) return;
 
         int textWidth = lines.stream().mapToInt(mc.font::width).max().orElse(0);
-        int boxWidth = textWidth + (PADDING * 2);
+        int boxWidth = Math.min(SpawnerHudClientConfig.MAX_WIDTH.get(), textWidth + (PADDING * 2));
         int boxHeight = (lines.size() * LINE_HEIGHT) + (PADDING * 2) - 2;
         SpawnerHudClientConfig.Anchor anchor = SpawnerHudClientConfig.anchor();
         int edgeOffsetX = MARGIN + SpawnerHudClientConfig.HORIZONTAL_OFFSET.get();

@@ -92,8 +92,8 @@
 
 ## Cosmic Spawner summary HUD
 
-- [`/spawner showlabels`](../Spawner_Commands_Features.md#spawner-showlabels) now enables a developer-only bottom-right HUD panel while looking at a [Cosmic Mob Spawner](../Spawners/Spawner_Systems.md), replacing the old teal in-world mob-type label. The panel shows mob type, configured mob name, per-spawner cap, and delay range, then disappears when the developer looks away. Developers can tune the panel locally through client config values for position, opacity, and pixel offsets.
-- This change reuses the existing developer authorization and client sync path for the showlabels toggle. It does not change server-data-storage methods for entity/block-entity data such as Cosmic Mob Spawners, doors/keys, [Rifts/RD](../Rifts/Rift_System_Guide.md), [classes](../Classes/Class_Selector_System.md), teleportation, or access-policy records. Updating from 1.5.0 to 1.5.1 requires no migration for these systems: keep a normal world backup, deploy the 1.5.1 jar, and let clients receive the updated HUD behavior after `/spawner showlabels` is enabled.
+- [`/spawner showlabels [true|false]`](../Spawner_Commands_Features.md#spawner-showlabels) now controls a per-player, developer-only bottom-right HUD panel while looking at a [Cosmic Mob Spawner](../Spawners/Spawner_Systems.md), replacing the old teal in-world mob-type label. The panel shows mob type, configured mob name, per-spawner cap, and delay range, then disappears when that developer looks away. Developers can tune the panel locally through client config values for position, opacity, and pixel offsets.
+- This change uses per-server-session, per-player in-memory showlabels preferences keyed by player UUID, with server-authorized sync on command use, login, and rank loss. It does not change server-data-storage methods for entity/block-entity data such as Cosmic Mob Spawners, doors/keys, [Rifts/RD](../Rifts/Rift_System_Guide.md), [classes](../Classes/Class_Selector_System.md), teleportation, or access-policy records. Updating from 1.5.0 to 1.5.1 requires no migration for these systems: keep a normal world backup, deploy the 1.5.1 jar, and let each developer enable their own HUD with `/spawner showlabels [true|false]`.
 
 ## Phase 6 Cosmic Spawner Intrinsic Drop Counts
 
@@ -190,3 +190,20 @@ The design-note context for factions, NPC/vendor faction behavior, First Trace, 
 - Metalmancer and Deadeye remain the only disabled help-menu stubs and say only that they are Coming in Dungeon 2.
 - Future/internal teleport, faction, vendor, and Dragoon repair notes are not presented as live mechanics unless current source support exists.
 - This is a client-only help-content and documentation update. It does not change packets, saved data, server authorization, access policy, class storage, teleportation, rifts/RD, spawners, doors/keys, vendors, trading, currency, progression, factions, achievements, or PNG assets. No data migration is required.
+
+## Cosmic Dungeon Settings and Spawner HUD preferences
+
+- Added a client-side **Cosmic Dungeon Settings** screen reachable from Minecraft **Options** through a visible **Cosmic Dungeon** button, and from **Mods → Cosmic Dungeon → Config** through NeoForge's config screen extension point when that flow is available.
+- Added a **Cosmic Spawner HUD** settings subsection for local HUD field toggles. The existing four-line HUD defaults are preserved: mob type, mob name, cap, and delay remain enabled by default.
+- Added optional client display toggles for coordinates, boss one-shot, boss spawned, spawn count, spawn range, required player range, max nearby entities, preset present, and equipment. These new extras default off.
+- Added client HUD preferences for maximum width and equipment mode while preserving the existing position, opacity, horizontal offset, and vertical offset config behavior.
+- These settings are client display preferences only. The server-authoritative per-player `/spawner showlabels [true|false]` permission/sync path still controls whether the HUD can appear, so local config changes do not authorize non-developers to see spawner HUD data.
+- No Cosmic Spawner saved-data format, block entity storage, preset storage, rift/RD data, door/key data, teleportation data, class selector data, vendor data, faction data, currency data, progression data, access-policy data, or achievement tracking data changed for this settings UI. See [Spawner Systems](../Spawners/Spawner_Systems.md#client-cosmic-dungeon-settings-and-spawner-hud-preferences) for usage details.
+
+
+## Per-player Cosmic Spawner showlabels authorization
+
+- Replaced the old global `/spawner showlabels` developer HUD switch with a per-player server-session preference. `/spawner showlabels` toggles only the executing developer, while `/spawner showlabels true` and `/spawner showlabels false` explicitly set that developer's personal state.
+- Login sync now sends each player only their effective state: developers receive their stored in-memory preference for the current server session, while non-developers or players who lost developer status receive `false`. Rank demotion and `/dungeoneer rank` revoke the HUD immediately for the affected online player.
+- The client still stores only the last server-authorized `SpawnerLabelPayload` value; client config can choose how authorized HUD rows display but cannot grant label access.
+- This is command/network/session state only. It does not change Cosmic Spawner block-entity NBT, Cosmic Spawner preset files, entity/block saved data, rift/RD data, door/key data, class selector data, teleportation data, vendor data, faction data, currency data, progression data, access-policy data, or achievement tracking data.

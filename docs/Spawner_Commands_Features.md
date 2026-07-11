@@ -32,7 +32,7 @@ This document covers the full `/spawner` command surface for Cosmic Dungeon oper
 - `/spawner drop intrinsic clear <namespace:item>` legacy alias for the same reset behavior
 - `/spawner drops`
 - `/spawner delay <ticks>`
-- `/spawner showlabels`
+- `/spawner showlabels [true|false]`
 - `/spawner info`
 - `/spawner preset save <preset_name>`
 - `/spawner preset load <preset_name>`
@@ -104,12 +104,12 @@ Examples:
 
 ## `/spawner showlabels`
 
-- `/spawner showlabels` switches the developer-only **Cosmic Spawner summary HUD** instead of rendering a teal nameplate above spawners.
-- When enabled, online developers who look directly at a Cosmic Mob Spawner see a bottom-right screen panel with mob type, configured mob name, per-spawner cap, and delay range.
+- `/spawner showlabels [true|false]` controls only the executing developer's personal, server-authorized **Cosmic Spawner summary HUD** instead of rendering a teal nameplate above spawners. Without an argument it toggles; `true` and `false` explicitly set that same personal preference.
+- When enabled, that developer sees a bottom-right screen panel with mob type, configured mob name, per-spawner cap, and delay range while looking directly at a Cosmic Mob Spawner. Other developers are not changed by the command.
 - Looking away from the spawner, opening another screen, or disabling the toggle hides the panel.
 - Developers can tune the HUD locally in the client config with `spawnerHud.position`, `spawnerHud.opacity`, `spawnerHud.horizontalOffset`, and `spawnerHud.verticalOffset` for different screen layouts.
-- Non-developers never receive this HUD mode, and the command remains server-authorized through the existing developer access checks.
-- This HUD uses existing server/client sync for display only; intrinsic info and drop behavior remain server-authoritative.
+- Non-developers never receive this HUD mode, command attempts from non-developers sync `false`, and the client config cannot authorize labels.
+- This HUD uses server-to-client sync for display only; the per-player preference is in-memory server-session state and intrinsic info, drop behavior, block-entity NBT, and preset files remain server-authoritative and unchanged.
 
 ## Spawner preset hotkeys
 - Five client keybinds are available under **Cosmic Dungeon** in Controls.

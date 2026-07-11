@@ -12,6 +12,7 @@ import net.goui.cosmicdungeon.client.rift.RiftAmbienceClient;
 import net.goui.cosmicdungeon.client.screen.ClassSelectorScreen;
 import net.goui.cosmicdungeon.client.screen.VendorScreen;
 import net.goui.cosmicdungeon.client.screen.TradeScreen;
+import net.goui.cosmicdungeon.client.screen.settings.CosmicDungeonOptionsIntegration;
 import net.goui.cosmicdungeon.entity.ModEntities;
 import net.goui.cosmicdungeon.menu.ModMenus;
 import net.goui.cosmicdungeon.particle.ModParticleTypes;
@@ -19,6 +20,7 @@ import net.goui.cosmicdungeon.playerclass.api.ExtraInventoryScreen;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
@@ -75,6 +77,11 @@ public final class CosmicDungeonClient {
         NeoForge.EVENT_BUS.addListener(SpawnerPresetKeybindClient::onClientTick);
         NeoForge.EVENT_BUS.addListener(TradeRequestKeybindClient::onClientTick);
         NeoForge.EVENT_BUS.addListener(HelpMenuKeybindClient::onClientTick);
+        NeoForge.EVENT_BUS.addListener(CosmicDungeonOptionsIntegration::onScreenInit);
+    }
+
+    public static void registerConfigScreen(ModContainer modContainer) {
+        CosmicDungeonOptionsIntegration.registerConfigScreen(modContainer);
     }
 
     private static void registerParticleProviders(RegisterParticleProvidersEvent e) {
