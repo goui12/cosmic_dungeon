@@ -367,6 +367,15 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         setInt(F_SPAWN_COUNT, count);
     }
 
+    /**
+     * Temporarily adjusts BaseSpawner spawnCount for server-side runtime limiting only.
+     * This intentionally avoids setChanged()/markUpdated() so clients and saved data keep
+     * seeing the configured designer value rather than a transient per-tick cap.
+     */
+    private void setSpawnerSpawnCountTransient(int count) {
+        setIntRaw(F_SPAWN_COUNT, count);
+    }
+
     /** requiredPlayerRange */
     public void setSpawnerRequiredPlayerRange(int blocks) {
         setInt(F_REQUIRED_PLAYER_RANGE, blocks);
@@ -672,14 +681,16 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
             spawnLimit = Math.min(spawnLimit, remaining);
         }
         if (spawnLimit > 0 && spawnLimit < originalSpawnCount) {
-            be.setSpawnerSpawnCount(spawnLimit);
+            be.setSpawnerSpawnCountTransient(spawnLimit);
             limitedSpawnCount = true;
         }
 
-        be.spawner.serverTick(sl, pos);
-
-        if (limitedSpawnCount) {
-            be.setSpawnerSpawnCount(originalSpawnCount);
+        try {
+            be.spawner.serverTick(sl, pos);
+        } finally {
+            if (limitedSpawnCount) {
+                be.setSpawnerSpawnCountTransient(originalSpawnCount);
+            }
         }
 
         be.applySpawnDefaultsToTaggedEntities(sl);
