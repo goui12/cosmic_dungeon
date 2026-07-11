@@ -103,8 +103,8 @@ public final class HelpMenuContent {
             HelpBlock.heading("Faction Standing"),
             HelpBlock.bullet("Faction tracks long-term alignment and conduct with faction groups."),
             HelpBlock.bullet("Tiers are Hostile, Suspicious, Indifferent, Cordial, Favorable, Warmly, and Ally."),
-            HelpBlock.bullet("Faction may affect vendors, dialogue, quests, teleport access, NPC reactions, and settlement access where configured."),
-            HelpBlock.bullet("Positive and negative actions can change faction over time."),
+            HelpBlock.bullet("Faction standing can be checked in-game when a faction is visible to you."),
+            HelpBlock.bullet("Positive and negative actions may change faction over time where the dungeon has configured them."),
             HelpBlock.bullet("Hostile status can restrict access, but recovery paths may exist by faction."),
             HelpBlock.command("List", "/faction list <your_name>"),
             HelpBlock.command("Get", "/faction get <your_name> <faction_id>"),
@@ -150,7 +150,7 @@ public final class HelpMenuContent {
     public static final Page THEURGIST = page("class.theurgist", "Theurgist", true, List.of(
             HelpBlock.heading("Theurgist"),
             HelpBlock.paragraph("Once a battlefield medic turned biochemist, the Theurgist draws on care, chemistry, and the otherworldly to mend what others consider beyond saving."),
-            HelpBlock.bullet("Party identity: major healing, resurrection, and potion-brewing support."),
+            HelpBlock.bullet("Role theme: healing and potion-brewing support."),
             HelpBlock.bullet("Only Theurgists can use brewing stands."),
             HelpBlock.bullet("Valid potion brews complete instantly."),
             HelpBlock.bullet("Can use Theurgist-attuned gear and class chests.")));
@@ -186,7 +186,7 @@ public final class HelpMenuContent {
     public static final Page JUDICATOR = page("class.judicator", "Judicator", true, List.of(
             HelpBlock.heading("Judicator"),
             HelpBlock.paragraph("A wandering arbiter sworn to uphold balance."),
-            HelpBlock.bullet("Specializes in slaying undead foes and light healing support identity."),
+            HelpBlock.bullet("Role theme: slaying undead foes and protecting the party."),
             HelpBlock.bullet("Can use Judicator-attuned gear and class chests.")));
 
     public static final Page METALMANCER = page("class.metalmancer", "Metalmancer", false, List.of(
