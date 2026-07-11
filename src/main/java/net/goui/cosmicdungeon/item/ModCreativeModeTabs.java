@@ -190,12 +190,12 @@ public class ModCreativeModeTabs {
 
                             }).build());
 
-    //~~~~~~~~~~~~~~~ Bogatur Item Tab ~~~~~~~~~~~~~~~
-    public static final Supplier<CreativeModeTab> BOGATUR_ITEM_TAB =
-            CREATIVE_MODE_TAB.register("bogatur_items_tab",
+    //~~~~~~~~~~~~~~~ Bogatyr Item Tab ~~~~~~~~~~~~~~~
+    public static final Supplier<CreativeModeTab> BOGATYR_ITEM_TAB =
+            CREATIVE_MODE_TAB.register("bogatyr_items_tab",
                     () -> CreativeModeTab.builder()
                             .icon(() -> new ItemStack(ModItems.TOTEM_OF_DOG_WHISPERING.get()))
-                            .title(Component.translatable("creativetab.cosmicdungeon.bogatur_items"))
+                            .title(Component.translatable("creativetab.cosmicdungeon.bogatyr_items"))
                             .displayItems((itemDisplayParameters, output) -> {
                             output.accept(ModItems.TOTEM_OF_DOG_WHISPERING);
                                 //                            output.accept(ModItems.SEISMIC_CORE_FRAGMENT);
