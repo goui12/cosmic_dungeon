@@ -1,6 +1,7 @@
 package net.goui.cosmicdungeon.vendor;
 
 import net.goui.cosmicdungeon.economy.CurrencyAmount;
+import net.goui.cosmicdungeon.faction.FactionDefinitions;
 import net.goui.cosmicdungeon.faction.FactionService;
 import net.goui.cosmicdungeon.faction.FactionTier;
 import net.goui.cosmicdungeon.progression.ProgressionService;
@@ -31,6 +32,7 @@ public final class VendorMenuState {
         }
         if (offer.requiredFactionTier() != null) {
             if (profile == null || profile.requiredFactionId() == null) return false;
+            if (FactionDefinitions.get(profile.requiredFactionId()) == null) return false;
             FactionTier need = VendorAccessService.factionTierFromOrdinal(offer.requiredFactionTier());
             if (need == null || !FactionService.hasAtLeast(sp, profile.requiredFactionId(), need)) return false;
         }

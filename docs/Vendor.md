@@ -74,7 +74,7 @@ Buyback uses each eligible stack's individual sell value. Class-attuned items se
 
 ## Offer-level gates
 
-Buy offers support the existing optional `requiredProgressionFlag`, `requiredNpcTier`, and `requiredFactionTier` fields. `requiredFactionTier` is evaluated against the profile-level `requiredFaction` id; if an offer declares a faction tier but the profile has no `requiredFaction`, the offer remains locked. The schema does **not** currently support `requiredClass` or `requiredClassId`, so class-only stock such as Dragoon-only repair materials must remain design/future unless that field is implemented server-authoritatively.
+Buy offers support the existing optional `requiredProgressionFlag`, `requiredNpcTier`, and `requiredFactionTier` fields. `requiredFactionTier` is evaluated against the profile-level `requiredFaction` id; if an offer declares a faction tier but the profile has no registered `requiredFaction`, the offer remains locked. Profiles that declare an invalid or unregistered `requiredFaction` id are rejected during vendor-profile loading. The schema does **not** currently support `requiredClass` or `requiredClassId`, so class-only stock such as Dragoon-only repair materials must remain design/future unless that field is implemented server-authoritatively.
 
 ## Related topics
 

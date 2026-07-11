@@ -3,6 +3,7 @@ package net.goui.cosmicdungeon.vendor;
 import com.google.gson.*;
 import com.mojang.logging.LogUtils;
 import net.goui.cosmicdungeon.economy.CurrencyDenomination;
+import net.goui.cosmicdungeon.faction.FactionDefinitions;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
@@ -99,6 +100,7 @@ public final class VendorProfileManager extends SimplePreparableReloadListener<M
             String raw = GsonHelper.getAsString(root, "requiredFaction");
             factionId = ResourceLocation.tryParse(raw);
             if (factionId == null) throw new JsonParseException("Invalid requiredFaction id: " + raw);
+            if (FactionDefinitions.get(factionId) == null) throw new JsonParseException("Unknown requiredFaction id: " + raw);
         }
 
         Integer requiredFactionTier = root.has("requiredFactionTier") ? GsonHelper.getAsInt(root, "requiredFactionTier") : null;

@@ -2,7 +2,7 @@
 
 ## Current implemented behavior
 
-Vendor profiles can require progression flags, NPC tiers, system tiers, village access, and faction tier requirements at the profile/access level. Buy offers can also use `requiredFactionTier`; this is evaluated against the profile-level faction id and blocks both GUI purchasing and manipulated purchase packets when unmet. Vendor buyback pricing uses encoded item trace values and optional profile buyback rules.
+Vendor profiles can require progression flags, NPC tiers, system tiers, village access, and faction tier requirements at the profile/access level. Buy offers can also use `requiredFactionTier`; this is evaluated against the profile-level registered faction id and blocks both GUI purchasing and manipulated purchase packets when unmet. Vendor profiles with invalid or unregistered `requiredFaction` ids are rejected during loading instead of falling back to a default tier. Vendor buyback pricing uses encoded item trace values and optional profile buyback rules.
 
 ## Not currently live
 
