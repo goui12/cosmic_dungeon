@@ -79,7 +79,9 @@ Buy offers support the existing optional `requiredProgressionFlag`, `requiredNpc
 ## Related topics
 
 - [Economy & Currency](./Economy/Economy_and_Currency.md)
+- [Pricing Master List](./Economy/Pricing_Master_List.md)
 - [Progression, Factions & Unlocks](./Progression/Progression_Factions_and_Unlocks.md)
+- [NPC/Vendor Faction Notes](./Factions/NPC_Vendor_Faction.md)
 - [Commands: Vendor](./commands/In_Game_Commands.md#vendor-15-progression--faction-access)
 
 ## Changelog

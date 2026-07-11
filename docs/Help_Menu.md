@@ -35,6 +35,16 @@ Only dungeoneer-facing information belongs in the in-game help menu. Operator, d
 
 The help menu is client-only. It is opened and closed by the H key and closes with Esc. It does not pause the game. The UI never grants access, class capabilities, currency, progression, teleportation, vendor unlocks, faction state, achievements, rift behavior, door/key access, or spawner behavior. Those systems remain server-authoritative.
 
+## Related player and operator references
+
+The in-game H menu intentionally summarizes only dungeoneer-facing behavior. Use these markdown references for deeper, linkable documentation:
+
+- Classes: [Help Menu Classes](Classes/Help_Menu_Classes.md), [Class Restrictions & Inventory](Classes/Class_Restrictions_and_Inventory.md), [Dragoon](Classes/Dragoon_Help_Guide.md), [Judicator](Classes/Judicator_Help_Guide.md), and [Dragoon Repair System design notes](Classes/Dragoon_Repair_System.md).
+- Economy and trading: [Economy & Currency](Economy/Economy_and_Currency.md), [Trading Guide](Trading/Trading_Guide.md), [Vendor](Vendor.md), and [Pricing Master List](Economy/Pricing_Master_List.md).
+- Progression and factions: [Progression, Factions & Unlocks](Progression/Progression_Factions_and_Unlocks.md), [Faction Notes](Factions/Faction_General.md), and [NPC/Vendor Faction Notes](Factions/NPC_Vendor_Faction.md).
+- Travel and milestones: [Potion of Companionship teleportation](Potions/Potion_of_Companionship_teleportation.md), [Travel Services Design Notes](Teleportation/Travel_Services_Design_Notes.md), and [Achievements & Advancements](Achievements/Achievements_and_Advancements.md).
+- Commands and release context: [In-Game Commands](commands/In_Game_Commands.md) and [Update 1.5.1](releases/Update_1.5.1.md).
+
 ## Migration
 
 No server saved data or gameplay storage structures are changed by the help menu framework. No 1.5.0 to 1.5.1 server data migration is required.
