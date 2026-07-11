@@ -3,7 +3,6 @@ package net.goui.cosmicdungeon.network;
 
 import net.goui.cosmicdungeon.auth.AccessPolicy;
 import net.goui.cosmicdungeon.command.SpawnerCommand;
-import net.goui.cosmicdungeon.client.SpawnerLabelState;
 import net.goui.cosmicdungeon.network.handler.RegionLookAllClientPayloadHandler;
 import net.goui.cosmicdungeon.network.handler.RegionLookAllServerPayloadHandler;
 import net.goui.cosmicdungeon.network.handler.RegionLookClientPayloadHandler;
@@ -69,13 +68,7 @@ public final class ModNetwork {
         registrar.playToClient(
                 SpawnerLabelPayload.TYPE,
                 SpawnerLabelPayload.STREAM_CODEC,
-                (payload, ctx) -> ctx.enqueueWork(() -> {
-                    // Hard-set state directly (no reflection needed).
-                    SpawnerLabelState.setEnabled(payload.enabled());
-
-                    // Keep your reflective path too (harmless, and helps if you want extra behavior there later).
-                    ClientNetworkDispatch.dispatch("onSpawnerLabel", payload);
-                })
+                (payload, ctx) -> ctx.enqueueWork(() -> ClientNetworkDispatch.dispatch("onSpawnerLabel", payload))
         );
 
         

@@ -2,8 +2,6 @@
 package net.goui.cosmicdungeon.auth;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
-import net.goui.cosmicdungeon.network.ModNetwork;
-import net.goui.cosmicdungeon.network.payload.SpawnerLabelPayload;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -16,7 +14,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import net.goui.cosmicdungeon.command.SpawnerCommand;
+import net.goui.cosmicdungeon.command.SpawnerLabelServerState;
 
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID)
 public final class RankEnforcementEvents {
@@ -58,9 +56,8 @@ public final class RankEnforcementEvents {
 
         enforce(sp);
 
-        // Sync global spawner-label toggle on login (developers only).
-        boolean enabled = Authority.isDeveloper(sp) && SpawnerCommand.isShowLabelsEnabled();
-        ModNetwork.sendTo(sp, new SpawnerLabelPayload(enabled));
+        // Sync this player's server-authorized spawner-label preference on login.
+        SpawnerLabelServerState.sync(sp);
     }
 
     private static void enforce(ServerPlayer sp) {

@@ -99,6 +99,11 @@ public final class RankCommand {
                                                         final ServerPlayer online = server.getPlayerList().getPlayer(id);
                                                         if (online != null) {
                                                             OpUtil.setOperator(server, online, rankFinal.isDeveloper());
+                                                            if (rankFinal.isDeveloper()) {
+                                                                SpawnerLabelServerState.sync(online);
+                                                            } else {
+                                                                SpawnerLabelServerState.revoke(online);
+                                                            }
                                                         }
                                                     }
 

@@ -80,8 +80,9 @@ public final class DungeoneerCommand {
                                     RankStore store = RankStore.get(server);
                                     store.setRank(p.getUUID(), Rank.DUNGEONEER);
 
-                                    // Apply deop immediately
+                                    // Apply deop immediately and revoke developer-only label access.
                                     OpUtil.setOperator(server, p, false);
+                                    SpawnerLabelServerState.revoke(p);
 
                                     src.sendSuccess(() -> Component.literal("You are now DUNGEONEER.")
                                             .withStyle(ChatFormatting.GREEN), true);
@@ -105,8 +106,9 @@ public final class DungeoneerCommand {
                             RankStore store = RankStore.get(server);
                             store.setRank(p.getUUID(), Rank.DUNGEONEER);
 
-                            // Apply deop immediately
+                            // Apply deop immediately and revoke developer-only label access.
                             OpUtil.setOperator(server, p, false);
+                            SpawnerLabelServerState.revoke(p);
 
                             src.sendSuccess(() -> Component.literal("You are now DUNGEONEER.")
                                     .withStyle(ChatFormatting.GREEN), true);

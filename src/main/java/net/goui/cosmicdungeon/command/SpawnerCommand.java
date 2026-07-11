@@ -9,8 +9,6 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.goui.cosmicdungeon.auth.Authority;
 import net.goui.cosmicdungeon.block.custom.CosmicMobSpawnerBlock;
-import net.goui.cosmicdungeon.network.ModNetwork;
-import net.goui.cosmicdungeon.network.payload.SpawnerLabelPayload;
 import net.goui.cosmicdungeon.block.entity.CosmicSpawnerBlockEntity;
 import net.goui.cosmicdungeon.block.entity.CosmicSpawnerPreset;
 import net.goui.cosmicdungeon.block.entity.CosmicSpawnerIntrinsicDropService;
@@ -52,7 +50,10 @@ public final class SpawnerCommand {
         d.register(Commands.literal("spawner").requires(s -> s.hasPermission(2))
                 .executes(c -> help(c.getSource()))
                 .then(Commands.literal("help").executes(c -> help(c.getSource())))
-                .then(Commands.literal("showlabels").executes(c -> toggleShowLabels(c.getSource())))
+                .then(Commands.literal("showlabels")
+                        .executes(c -> toggleShowLabels(c.getSource()))
+                        .then(Commands.argument("enabled", BoolArgumentType.bool())
+                                .executes(c -> setShowLabels(c.getSource(), BoolArgumentType.getBool(c, "enabled")))))
                 .then(Commands.literal("set").executes(c -> helpSet(c.getSource()))
                         .then(Commands.argument("entity_type", ResourceLocationArgument.id()).suggests(SpawnerCommand::suggestEntities)
                                 .executes(c -> withPreset(c.getSource(), p -> {
@@ -135,30 +136,38 @@ public final class SpawnerCommand {
 
     private static int help(CommandSourceStack src) { return syntax(src, "Spawner command guide", new String[]{
             "/spawner set <namespace:entity>", "/spawner boss [true|false]", "/spawner equip <slot> <namespace:item>", "/spawner drop <slot> <0.0-1.0>",
-            "/spawner drops", "/spawner showlabels", "/spawner preset save <preset_name>", "/spawner preset load <preset_name>", "/spawner preset delete <preset_name>", "/spawner preset reload", "/spawner keybind <1-5> <preset_name>", "/spawner info", "/spawner reset", "/spawner help"
+            "/spawner drops", "/spawner showlabels [true|false]", "/spawner preset save <preset_name>", "/spawner preset load <preset_name>", "/spawner preset delete <preset_name>", "/spawner preset reload", "/spawner keybind <1-5> <preset_name>", "/spawner info", "/spawner reset", "/spawner help"
     }); }
-
-    private static volatile boolean showLabelsEnabled = false;
-
-    public static boolean isShowLabelsEnabled() {
-        return showLabelsEnabled;
-    }
 
     private static int toggleShowLabels(CommandSourceStack src) {
         try {
             var player = src.getPlayerOrException();
             if (!Authority.isDeveloper(player)) {
+                SpawnerLabelServerState.revoke(player);
                 src.sendFailure(Component.literal("Only developers can toggle spawner labels."));
                 return 0;
             }
-            showLabelsEnabled = !showLabelsEnabled;
-            boolean enabled = showLabelsEnabled;
-            var server = src.getServer();
-            for (var sp : server.getPlayerList().getPlayers()) {
-                boolean shouldSee = enabled && Authority.isDeveloper(sp);
-                ModNetwork.sendTo(sp, new SpawnerLabelPayload(shouldSee));
+            boolean enabled = SpawnerLabelServerState.toggle(player);
+            SpawnerLabelServerState.sync(player);
+            src.sendSuccess(() -> Component.literal("Your spawner labels are now " + (enabled ? "enabled" : "disabled") + "."), false);
+            return 1;
+        } catch (Exception e) {
+            src.sendFailure(Component.literal("Failed: " + e.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int setShowLabels(CommandSourceStack src, boolean enabled) {
+        try {
+            var player = src.getPlayerOrException();
+            if (!Authority.isDeveloper(player)) {
+                SpawnerLabelServerState.revoke(player);
+                src.sendFailure(Component.literal("Only developers can toggle spawner labels."));
+                return 0;
             }
-            src.sendSuccess(() -> Component.literal("Global spawner labels are now " + (enabled ? "enabled" : "disabled") + " for developers."), true);
+            boolean effective = SpawnerLabelServerState.setRequested(player, enabled);
+            SpawnerLabelServerState.sync(player);
+            src.sendSuccess(() -> Component.literal("Your spawner labels are now " + (effective ? "enabled" : "disabled") + "."), false);
             return 1;
         } catch (Exception e) {
             src.sendFailure(Component.literal("Failed: " + e.getMessage()));

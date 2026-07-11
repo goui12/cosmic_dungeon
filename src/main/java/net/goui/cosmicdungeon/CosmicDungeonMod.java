@@ -20,7 +20,6 @@ import net.goui.cosmicdungeon.redstone.rf.ModRfBlockEntities;
 import net.goui.cosmicdungeon.region.RegionWandEvents;
 import net.goui.cosmicdungeon.sound.ModSounds;
 import net.goui.cosmicdungeon.trade.TradeFinalizationGameTests;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.level.Spawner;
 import net.neoforged.api.distmarker.Dist;
@@ -85,6 +84,7 @@ public class CosmicDungeonMod {
         // client-only init — call this ONCE
         if (FMLLoader.getCurrent().getDist() == Dist.CLIENT) {
             CosmicDungeonClient.init(modEventBus);
+            CosmicDungeonClient.registerConfigScreen(modContainer);
             modContainer.registerConfig(ModConfig.Type.CLIENT, SpawnerHudClientConfig.SPEC);
         }
 
