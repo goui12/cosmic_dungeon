@@ -115,13 +115,13 @@ This phase does not change Cosmic Spawner block-entity storage, preset JSON/NBT 
 
 ## Preflight audit baseline (help menu, vendors, factions, repair, teleportation)
 
-This audit intentionally made no gameplay, GUI, network, saved-data, or PNG asset changes. It records the current baseline before later help-menu, settings, spawner HUD, vendor pricing, faction, or repair work.
+This audit records the source-verified baseline that guided the help-menu polish, settings, spawner HUD, vendor pricing, faction, and repair documentation work. Later 1.5.1 sections below describe the integrated GUI and documentation updates.
 
 ### Help menu and asset baseline
 
 - The current H help menu is client-only and opens/closes from the registered `H` keybind. It uses `HelpMenuScreen`, `HelpMenuContent`, and `HelpMenuKeybindClient` with titles/body copy from `assets/cosmicdungeon/lang/en_us.json`.
-- `HelpMenuScreen` still assumes a `256x192` menu canvas and loads `textures/gui/menu/background.png`, not `background_large.png`.
-- `HelpMenuScreen` still assumes text buttons are `128x32`, while the supplied button PNGs are `128x24`. This mismatch must be corrected before a polished large help GUI uses the existing button art.
+- `HelpMenuScreen` now uses the supplied `384x240` `textures/gui/menu/background_large.png` canvas for the large player help GUI. The legacy `background.png` remains documented as small/legacy art only and is not a fallback for the large menu.
+- `HelpMenuScreen` and helper classes use the supplied `128x24` text-button assets and `28x28` arrow assets without modifying PNG files.
 - PNG dimension baseline for supplied help-menu art:
   - `background_large.png`: `384x240` and should be used for the professional large help GUI.
   - `background.png`: `256x192` legacy/small art only; do not use it as the fallback for the large help GUI.
@@ -139,18 +139,17 @@ This audit intentionally made no gameplay, GUI, network, saved-data, or PNG asse
 - Vendor access currently supports profile-level village access, NPC tier/system, and faction tier requirements, plus offer-level progression flag, NPC tier, and faction tier checks. Offer-level `requiredFactionTier` now evaluates against the profile-level registered faction id and is enforced in both the server-built unlocked-offer state and the server purchase path; invalid or unregistered profile `requiredFaction` ids fail closed during loading/access checks instead of inheriting the faction service fallback tier. There is still no class-restricted offer visibility/purchase field in the offer schema.
 - Vendor buyback pricing currently uses class-attuned trace metadata and optional buyback rule multipliers parsed from profile JSON. NPC/vendor faction pricing multipliers are not implemented as active code.
 - Active faction code currently defines the JHW faction and player faction saved data/service/command support. NPC/vendor faction concepts beyond that are design-only unless represented as profile access requirements.
-- Teleportation is active for the Potion of Companionship and rift systems. The potion opens a dungeoneer-target selection flow, performs server-side teleport validation, and applies a teleport cooldown. Treat any broader “Notes Teleport” concepts as unverified/future until the note file is present and matched to source.
+- Teleportation is active for the Potion of Companionship and rift systems. The potion opens a dungeoneer-target selection flow, performs server-side teleport validation, and applies a teleport cooldown. Broader travel-service concepts are integrated into the travel-service design notes and remain future/design documentation unless source code implements them.
 - Cosmic Spawner HUD/label code is split between a server-authoritative `/spawner showlabels` path and client rendering/config state. The client config controls position/opacity only; later changes must not let client-only settings authorize developer HUD access.
 - Important saved-data/storage ids observed in source/docs include spawners via block entity NBT with `CosmicSpawnerDataVersion`, doors/keys via `cosmicdungeon_door_passages_v2` and `cosmicdungeon_door_locks_v1`, rifts via `cosmicdungeon_rifts_v2` with legacy `cosmicdungeon_rifts`, regions/access policy via `cosmicdungeon_regions` and ranks/dev password data, class selector block-entity data, teleportation runtime cooldown/effect state, vendors via assigned entity profile id, currency via player currency data, factions via player faction data, progression via player progression data, and achievements via generated advancements plus achievement counter data.
 
-### Design-note availability and exposure classification
+### Integrated design-note exposure classification
 
-The requested design-note files (`Faction General.txt`, `NPC Faction.txt`, `Achievement_ First Trace.txt`, `NPC Elias Centvin.txt`, `Pricing Master List.txt`, `Dragoon Repair System (Internal).txt`, and `Notes Teleport.txt`) were not present as standalone files in the working tree and were not found inside `src/CosmicDungeonFiles.zip` by filename. Classification therefore defaults to source-verified behavior only:
+The design-note context for factions, NPC/vendor faction behavior, First Trace, Elias Centvin, pricing, Dragoon repair, and travel services has been integrated into repository documentation. Player-facing H-menu content should continue to expose only source-verified, dungeoneer-safe behavior:
 
-- Implemented and safe to expose in player help later: `First Trace`/first-login Trace reward, player currency denominations, Potion of Companionship target teleport with cooldown, player-facing class basics that are already implemented, rift use where documented as gameplay, and Elias as an active weapon-supplier vendor profile.
-- Implemented but developer/world-designer-only, docs only: `/vendor` authoring/spawn/reload/list flows, `/faction` authoring/debug, `/spawner` authoring/HUD label controls, `/rift` authoring, `/rank`, `/developer`, `/classitem`, achievement debug, region and door debug/configuration commands.
-- Design/future note only: NPC/vendor faction pricing multipliers, Dragoon Repair Affinity UI, class-restricted vendor offer visibility/purchase, and any pricing-master-list values not already encoded in vendor profile JSON or class-attuned item metadata.
-- Unclear until source/design-note verification: any missing-note detail not backed by current code/docs, especially broader teleport-planning notes and internal repair/faction economy mechanics.
+- Implemented and safe to expose in player help: `First Trace`/first-login Trace reward, player currency denominations, Potion of Companionship target teleport with cooldown, player-facing class basics that are already implemented, rift use where documented as gameplay, and Elias as an active weapon-supplier vendor profile.
+- Implemented but developer/world-designer-only, docs only: `/vendor` authoring/spawn/reload/list flows, faction setup/debug, `/spawner` authoring/HUD label controls, `/rift` authoring, `/rank`, `/developer`, `/classitem`, achievement debug, region setup, and door debug/configuration commands.
+- Design/future documentation only: broader travel services, NPC/vendor faction price multipliers, Dragoon Repair Affinity UI, class-restricted vendor offer visibility/purchase, and pricing-master-list values not already encoded in vendor profile JSON or class-attuned item metadata.
 
 ### Compile baseline
 
