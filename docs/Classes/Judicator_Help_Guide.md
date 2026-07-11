@@ -35,6 +35,7 @@ TBD.
 
 - Can use/wear equipment attuned to `judicator`.
 - Can open Judicator class-locked chests.
+- Judicator is not the anvil/repair-support class; anvil access belongs to Dragoon.
 - Other class-specific restrictions: TBD.
 
 ## Known gaps / TBD

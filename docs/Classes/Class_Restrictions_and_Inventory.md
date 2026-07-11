@@ -33,3 +33,8 @@ Developer-authored class gear stores class, dungeon, tier, and Trace value metad
 ## Changelog
 
 - **1.5:** Added class-item attunement metadata, dynamic class tooltips, server-side equipment restrictions, Metalmancer policy unification, Plant Flags banner carve-out, and class-attuned vendor sell values.
+
+
+## Dragoon anvil access
+
+Dragoon is the server-authoritative vanilla anvil/repair-support class. `AccessPolicy.allowClassGatedVanillaUse` allows Dragoons to use anvils, denies non-Dragoons with a clear message, and preserves developer bypass. Theurgist brewing stand access remains a separate restriction and is unchanged. No custom Dragoon Repair Affinity UI is implemented yet; see [Dragoon Repair System](Dragoon_Repair_System.md).

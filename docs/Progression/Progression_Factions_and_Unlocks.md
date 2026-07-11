@@ -27,3 +27,7 @@ Vendor profiles can require village access, a D1/D2 NPC tier, faction standing, 
 ## Changelog
 
 - **1.5:** Added JHW faction data, Lesser Bloom/Cavern Residue progression counters, village access, D1/D2 NPC unlock tiers, and centralized vendor gate inputs.
+
+## Faction design note links
+
+See [Faction General](../Factions/Faction_General.md) and [NPC/Vendor Faction](../Factions/NPC_Vendor_Faction.md) for current-vs-future faction documentation. These notes do not imply unimplemented NPC faction pricing, stock, or travel services are live.

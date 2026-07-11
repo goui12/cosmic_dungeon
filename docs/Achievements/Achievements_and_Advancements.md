@@ -5,13 +5,17 @@ Cosmic Dungeon achievements use generated advancements plus server-side helper s
 ## Current foundations
 
 - Advancement IDs are centralized and generated through datagen.
-- New players are granted the **I'm Rich!** onboarding achievement on first login if they do not already have it; the reward deposits 5 Trace into their `/currency` balance and the description explains T/M/S/C/A currency abbreviations.
+- New players are granted the **First Trace** onboarding achievement on first login if they do not already have it; the reward deposits 5 Trace into their `/currency` balance and introduces Trace as currency for purchases, upgrades, and dungeon rewards. The internal advancement path remains `achievements/im_rich` for player advancement compatibility.
 - Developer commands can grant achievements and inspect/reset persisted counters.
 - Binding Idol counters track returns through an idol and players who provide idols to others.
 - Vital Exchange hooks grant achievements when the expected healing/support items are provided to a Deadeye receiver.
 - Plant Flags tracks D1 run-scoped banner planting and grants the Plant Flags advancement when eligible online members complete the requirement.
 - D1 environmental tracker services exist for region-based achievement work.
 - Successful player-to-player trade finalization grants the first-trade onboarding achievement to both participants.
+
+## First Trace onboarding achievement
+
+**First Trace** is the visible onboarding achievement for the first-login Trace grant. It keeps the existing `cosmicdungeon:achievements/im_rich` advancement id so existing player advancement files remain compatible, but player-facing title/copy now use First Trace. Trace represents stabilized fragments of severed divine attunement recovered from dungeon-bound or attuned beings. Freed NPCs gather Trace because it helps resist future binding, re-attunement, displacement, and enslavement.
 
 ## Trade onboarding achievement
 
@@ -31,4 +35,4 @@ Use [Commands: Achievement](../commands/In_Game_Commands.md#achievement-15-advan
 
 - **1.5.1:** Added Handshake Protocol for first successful player trade and uses its synced state to retire the CAPS LOCK trade prompt.
 - **1.5.1:** Standardized Plant Flags setup and diagnostics under `/region quest plant_flags ...` and added a small region quest handler registry for future location-based quest reactions.
-- **1.5:** Added generated achievement scaffolding, counter persistence, Binding Idol hooks, Vital Exchange hooks, Plant Flags tracking, D1 environmental tracker foundations, and the I'm Rich! currency onboarding achievement.
+- **1.5:** Added generated achievement scaffolding, counter persistence, Binding Idol hooks, Vital Exchange hooks, Plant Flags tracking, D1 environmental tracker foundations, and the First Trace currency onboarding achievement while preserving the legacy `achievements/im_rich` id.

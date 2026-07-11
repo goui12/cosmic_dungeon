@@ -1,6 +1,6 @@
 # Economy & Currency Guide — 1.5
 
-Attunement Fragment currency is an account-based player balance system. World-item tender exists for pickup and drops, but normal spending uses the server-side account balance.
+Trace is an account-based player currency system. In lore, Trace consists of stabilized fragments of severed divine attunement recovered from dungeon-bound or attuned beings; freed NPCs gather it to resist future binding, re-attunement, displacement, and enslavement. Attunement Fragment currency is stored as the same account balance. World-item tender exists for pickup and drops, but normal spending uses the server-side account balance.
 
 ## Denominations
 
@@ -13,6 +13,10 @@ Attunement Fragment currency is an account-based player balance system. World-it
 | Anchor | 10,000 |
 
 Balances are stored internally as total Trace. The display can normalize that total into larger denominations for player readability.
+
+## Value and use
+
+Trace is used for purchases, upgrades, dungeon rewards, vendor buyback, and player trades where those systems are implemented. New players receive 5 Trace through the [First Trace onboarding achievement](../Achievements/Achievements_and_Advancements.md#first-trace-onboarding-achievement).
 
 ## Player behavior
 
@@ -27,6 +31,7 @@ Use [Commands: Currency](../commands/In_Game_Commands.md#currency-attunement-fra
 
 ## Related topics
 
+- [Pricing Master List](Pricing_Master_List.md) tracks current pricing sources and future balancing notes.
 - [Vendor](../Vendor.md) explains how shops withdraw or deposit currency.
 - [Trading Guide](../Trading/Trading_Guide.md) explains direct player-to-player currency offers.
 - [Class Restrictions & Inventory](../Classes/Class_Restrictions_and_Inventory.md) explains class-attuned item sell values.
