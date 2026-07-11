@@ -28,6 +28,7 @@ Dragoon is a melee-forward class with an innate chain-lightning passive that occ
 
 - Access to Dragoon-attuned equipment, when such equipment is authored.
 - Access to Dragoon class-locked chests.
+- Server-authoritative anvil access for vanilla repair/support interactions.
 
 ## Incentives
 
@@ -41,7 +42,8 @@ Dragoon is a melee-forward class with an innate chain-lightning passive that occ
 
 - Can use/wear equipment attuned to `dragoon`.
 - Can open Dragoon class-locked chests.
-- Other class-specific restrictions: TBD.
+- Can use anvils; non-Dragoons are denied unless they have developer bypass.
+- Future custom repair-affinity UI is design-only and is not implemented yet. See [Dragoon Repair System](Dragoon_Repair_System.md).
 
 ## Known gaps / TBD
 

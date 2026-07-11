@@ -131,9 +131,9 @@ This audit intentionally made no gameplay, GUI, network, saved-data, or PNG asse
 
 ### Current system baseline for later prompts
 
-- Achievement onboarding currently grants `achievements/im_rich` on first login, deposits 5 Trace, and sends a reward message. The visible lang title is `I'm Rich!`, and the description explains `/currency balance` and denomination values.
+- Achievement onboarding grants `achievements/im_rich` on first login, deposits 5 Trace, and sends a reward message. The visible lang title is now `First Trace`, and the description introduces Trace as currency for purchases, upgrades, and dungeon rewards.
 - Keeping the internal achievement id `achievements/im_rich` while changing only the visible lang title to `First Trace` is the safest future path because code, generated advancement JSON, and persisted player advancement progress all key off the id.
-- Class vanilla-use restrictions are server-side through `AccessPolicy.allowClassGatedVanillaUse`: Judicator can use anvils, Theurgist can use brewing stands, and developers bypass the gate. Dragoon does not currently have anvil access in code.
+- Class vanilla-use restrictions are server-side through `AccessPolicy.allowClassGatedVanillaUse`: Dragoon can use anvils, Theurgist can use brewing stands, and developers bypass the gate. Judicator is not the anvil class.
 - Class-attuned equipment restrictions are server-side and centralized through the class item guard/restriction event path; future UI/help text must not imply client-only enforcement is authoritative.
 - Vendor profiles are datapack JSONs under `data/cosmicdungeon/vendor_profiles`. Elias Centvin exists as the `cosmicdungeon:d1/weapon_supplier` profile display name.
 - Vendor access currently supports profile-level village access, NPC tier/system, and faction tier requirements, plus offer-level progression flag and NPC tier checks. Offer records include `requiredFactionTier`, but current offer unlock logic does not evaluate offer-level faction requirements, and there is no class-restricted offer visibility/purchase field in the offer schema.
@@ -147,9 +147,9 @@ This audit intentionally made no gameplay, GUI, network, saved-data, or PNG asse
 
 The requested design-note files (`Faction General.txt`, `NPC Faction.txt`, `Achievement_ First Trace.txt`, `NPC Elias Centvin.txt`, `Pricing Master List.txt`, `Dragoon Repair System (Internal).txt`, and `Notes Teleport.txt`) were not present as standalone files in the working tree and were not found inside `src/CosmicDungeonFiles.zip` by filename. Classification therefore defaults to source-verified behavior only:
 
-- Implemented and safe to expose in player help later: `I'm Rich!`/first-login Trace reward, player currency denominations, Potion of Companionship target teleport with cooldown, player-facing class basics that are already implemented, rift use where documented as gameplay, and Elias as an active weapon-supplier vendor profile.
+- Implemented and safe to expose in player help later: `First Trace`/first-login Trace reward, player currency denominations, Potion of Companionship target teleport with cooldown, player-facing class basics that are already implemented, rift use where documented as gameplay, and Elias as an active weapon-supplier vendor profile.
 - Implemented but developer/world-designer-only, docs only: `/vendor` authoring/spawn/reload/list flows, `/faction` authoring/debug, `/spawner` authoring/HUD label controls, `/rift` authoring, `/rank`, `/developer`, `/classitem`, achievement debug, region and door debug/configuration commands.
-- Design/future note only: NPC/vendor faction pricing multipliers, Dragoon Repair Affinity, Dragoon anvil access, class-restricted vendor offer visibility/purchase, and any pricing-master-list values not already encoded in vendor profile JSON or class-attuned item metadata.
+- Design/future note only: NPC/vendor faction pricing multipliers, Dragoon Repair Affinity UI, class-restricted vendor offer visibility/purchase, and any pricing-master-list values not already encoded in vendor profile JSON or class-attuned item metadata.
 - Unclear until source/design-note verification: any missing-note detail not backed by current code/docs, especially broader teleport-planning notes and internal repair/faction economy mechanics.
 
 ### Compile baseline
@@ -166,3 +166,10 @@ The requested design-note files (`Faction General.txt`, `NPC Faction.txt`, `Achi
 - Standardized text buttons to the 128x24 normal/hover/selected/disabled PNG states already present under `textures/gui/menu/`.
 - Replaced the old class cycling screen with visible class entries for Theurgist, Pyroclast, Bogatyr, Dragoon, Venefex, Judicator, plus disabled Metalmancer and Deadeye placeholders marked Coming in Dungeon 2.
 - This is a client-only UI refactor. It changes no packets, saved data, server authorization, access policy, class storage, teleportation, rifts/RD, spawners, doors/keys, vendors, trading, currency, progression, factions, or achievements. No data migration is required.
+
+## First Trace, Dragoon anvil access, and design-note documentation
+
+- Renamed the visible first-login onboarding achievement to **First Trace** while preserving the internal `cosmicdungeon:achievements/im_rich` advancement path for existing player advancement compatibility. The reward remains 5 Trace, and the login chat copy now identifies the First Trace reward.
+- Updated Trace documentation with lore/value framing: Trace is stabilized severed divine attunement used for purchases, upgrades, dungeon rewards, vendor buyback, and trades where implemented.
+- Corrected class vanilla-use access so Dragoon is the anvil/repair-support class. Judicator is not the anvil class. Theurgist brewing stand access and class-attuned equipment restrictions remain unchanged.
+- Added documentation homes for faction, NPC/vendor faction, Elias Centvin, pricing master list, Dragoon repair-system design, and travel-service planning notes. Future systems such as NPC faction pricing, Elias stock overhauls, class-restricted vendor offers, broader travel services, and a full Dragoon Repair Affinity UI remain documented as design/future unless source support exists.

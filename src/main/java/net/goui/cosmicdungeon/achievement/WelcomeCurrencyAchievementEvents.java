@@ -27,16 +27,16 @@ public final class WelcomeCurrencyAchievementEvents {
         MinecraftServer server = player.level().getServer();
         if (server == null) return;
 
-        AdvancementHolder holder = server.getAdvancements().get(CosmicAchievementIds.IM_RICH);
+        AdvancementHolder holder = server.getAdvancements().get(CosmicAchievementIds.FIRST_TRACE);
         if (holder == null) return;
         if (player.getAdvancements().getOrStartProgress(holder).isDone()) return;
 
         CurrencyService.tryDeposit(player, WELCOME_REWARD_TRACE);
-        CosmicAdvancementUtil.grant(player, CosmicAchievementIds.IM_RICH);
-        player.sendSystemMessage(Component.literal("Reward: ")
+        CosmicAdvancementUtil.grant(player, CosmicAchievementIds.FIRST_TRACE);
+        player.sendSystemMessage(Component.literal("First Trace reward: ")
                 .withStyle(ChatFormatting.GOLD)
-                .append(Component.literal("5 Trace!").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD))
-                .append(Component.literal(" (Check achievements for more information.)")
+                .append(Component.literal("5 Trace").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD))
+                .append(Component.literal(" received. Check achievements to learn how Trace is used.")
                         .withStyle(ChatFormatting.AQUA)));
     }
 }

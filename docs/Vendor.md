@@ -83,3 +83,7 @@ Buyback uses each eligible stack's individual sell value. Class-attuned items se
 - **1.5.1:** Added the D1 Gritch of the Barter Pit vendor profile for expensive golden food purchases.
 - **1.5.1:** Added optional mob-type vendor shells, bright neon-green friendly overhead names, and enforced invulnerable/no-AI vendor standing behavior.
 - **1.5:** Added assigned vendor NPCs, profile-loaded offers, buy/sell GUI flows, centralized access gates, profile aliases, buyback, and atomic transaction validation.
+
+## Elias Centvin and pricing design notes
+
+Elias Centvin is documented as the current D1 weapon-supplier profile plus future design direction in [Elias Centvin](Vendors/Elias_Centvin.md). Pricing sources and future balancing references are tracked in [Pricing Master List](Economy/Pricing_Master_List.md). NPC faction pricing and stock overhauls are not live unless encoded in current vendor profiles or server-side vendor code.

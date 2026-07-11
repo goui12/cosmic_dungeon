@@ -25,3 +25,7 @@ Rifts are authored as placer+tile constructs and registry-backed destinations.
 - Unknown dimensions are rejected.
 - Deleting from non-rift tiles is rejected.
 - Duplicate rift names produce ambiguity errors.
+
+## Travel-service planning boundary
+
+Additional NPC or hub travel-service concepts belong in [Travel Services Design Notes](../Teleportation/Travel_Services_Design_Notes.md) and should not be treated as implemented rift behavior until source support exists.

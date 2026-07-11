@@ -20,3 +20,7 @@ The Potion of Companionship is a light-pink utility potion that helps dungeon pa
 
 - Creative inventory: vanilla `Food & Drinks` tab and Cosmic Dungeon `Dungeon Items` tab.
 - Vendor: Beluzon Everly, the D1 Save Teleport NPC, sells one potion for one Seal.
+
+## Travel-service planning boundary
+
+Broader travel services are tracked as future planning in [Travel Services Design Notes](../Teleportation/Travel_Services_Design_Notes.md). The live mechanic documented here remains the Potion of Companionship dungeon-party teleport with cooldown.

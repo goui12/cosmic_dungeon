@@ -121,10 +121,10 @@ public final class AccessPolicy {
 
         String have = ClassNbtUtil.getClassId(sp);
 
-        // Only Judicators can use anvils (covers anvil + chipped + damaged)
+        // Only Dragoons can use anvils (covers anvil + chipped + damaged)
         if (clickedBlock.defaultBlockState().is(BlockTags.ANVIL)) {
-            if (!ClassKeys.CLASS_ID_JUDICATOR.equals(have)) {
-                deny(sp, "Only Judicators can use anvils.");
+            if (!ClassKeys.CLASS_ID_DRAGOON.equals(have)) {
+                deny(sp, "Only Dragoons can use anvils.");
                 return false;
             }
         }
