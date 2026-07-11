@@ -25,7 +25,7 @@ public final class VendorService {
         Set<String> unlocked = new HashSet<>();
         List<VendorPayloads.S2C_OpenVendor.OfferView> offers = new ArrayList<>();
         for (VendorOffer offer : profile.buyOffers()) {
-            if (VendorMenuState.isOfferUnlocked(sp, offer)) unlocked.add(offer.id().toString());
+            if (VendorMenuState.isOfferUnlocked(sp, profile, offer)) unlocked.add(offer.id().toString());
             offers.add(new VendorPayloads.S2C_OpenVendor.OfferView(
                     offer.id().toString(),
                     offer.result().copy(),
@@ -58,7 +58,7 @@ public final class VendorService {
         if (offerOpt.isEmpty()) return fail(sp, "Offer not found.");
         VendorOffer offer = offerOpt.get();
 
-        if (!VendorMenuState.isOfferUnlocked(sp, offer)) return fail(sp, "Offer locked.");
+        if (!VendorMenuState.isOfferUnlocked(sp, profile, offer)) return fail(sp, "Offer locked.");
 
         long traceCost = offer.cost().denomination().toTrace(offer.cost().amount());
         if (traceCost <= 0L) return fail(sp, "Invalid offer cost.");

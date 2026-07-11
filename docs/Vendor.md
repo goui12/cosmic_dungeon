@@ -66,11 +66,15 @@ Vendor profiles load from datapack JSON under `data/cosmicdungeon/vendor_profile
 
 ## Access gates
 
-Vendor access is evaluated centrally before a GUI opens. Profiles can require village access, NPC system/tier progress, faction standing, or future progression flags. Locked vendors show the server-authoritative denial reason instead of opening. Use `/vendor access <profileId>` to test the executing player against a profile.
+Vendor access is evaluated centrally before a GUI opens. Profiles can require village access, NPC system/tier progress, faction standing, or future progression flags. Locked vendors show the server-authoritative denial reason instead of opening. Use `/vendor access <profileId>` to test the executing player against a profile. Offer rows can also be locked by supported offer-level gates; these rows are displayed as locked in the GUI and rechecked on the server purchase path.
 
 ## Pricing and buyback authoring notes
 
 Buyback uses each eligible stack's individual sell value. Class-attuned items sell for their stored Trace value, including armor pieces; complete sets do not receive special set bonuses.
+
+## Offer-level gates
+
+Buy offers support the existing optional `requiredProgressionFlag`, `requiredNpcTier`, and `requiredFactionTier` fields. `requiredFactionTier` is evaluated against the profile-level `requiredFaction` id; if an offer declares a faction tier but the profile has no registered `requiredFaction`, the offer remains locked. Profiles that declare an invalid or unregistered `requiredFaction` id are rejected during vendor-profile loading. The schema does **not** currently support `requiredClass` or `requiredClassId`, so class-only stock such as Dragoon-only repair materials must remain design/future unless that field is implemented server-authoritatively.
 
 ## Related topics
 
@@ -80,6 +84,7 @@ Buyback uses each eligible stack's individual sell value. Class-attuned items se
 
 ## Changelog
 
+- **1.5.1:** Activated server-side evaluation for existing offer-level `requiredFactionTier` locks and documented that class-restricted offers are still not part of the schema.
 - **1.5.1:** Added the D1 Gritch of the Barter Pit vendor profile for expensive golden food purchases.
 - **1.5.1:** Added optional mob-type vendor shells, bright neon-green friendly overhead names, and enforced invulnerable/no-AI vendor standing behavior.
 - **1.5:** Added assigned vendor NPCs, profile-loaded offers, buy/sell GUI flows, centralized access gates, profile aliases, buyback, and atomic transaction validation.

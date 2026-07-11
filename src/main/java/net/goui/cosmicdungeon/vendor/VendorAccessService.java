@@ -1,5 +1,6 @@
 package net.goui.cosmicdungeon.vendor;
 
+import net.goui.cosmicdungeon.faction.FactionDefinitions;
 import net.goui.cosmicdungeon.faction.FactionService;
 import net.goui.cosmicdungeon.faction.FactionTier;
 import net.goui.cosmicdungeon.progression.ProgressionService;
@@ -30,6 +31,9 @@ public final class VendorAccessService {
         }
 
         if (profile.requiredFactionId() != null && profile.requiredFactionTier() != null) {
+            if (FactionDefinitions.get(profile.requiredFactionId()) == null) {
+                return new AccessResult(false, "Faction requirement not met.");
+            }
             FactionTier need = factionTierFromOrdinal(profile.requiredFactionTier());
             if (need == null || !FactionService.hasAtLeast(sp, profile.requiredFactionId(), need)) {
                 return new AccessResult(false, "Faction requirement not met.");
@@ -45,7 +49,7 @@ public final class VendorAccessService {
         return 0;
     }
 
-    private static FactionTier factionTierFromOrdinal(int ordinal) {
+    static FactionTier factionTierFromOrdinal(int ordinal) {
         FactionTier[] values = FactionTier.values();
         return ordinal >= 0 && ordinal < values.length ? values[ordinal] : null;
     }
