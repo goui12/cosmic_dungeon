@@ -102,7 +102,7 @@ public final class CosmicSpawnerHoverOverlay {
         addTextRow(rows, font, contentMaxWidth, SpawnerHudClientConfig.BOSS_ONE_SHOT.get(), "Boss One-Shot: " + be.isBossOneShot());
         addTextRow(rows, font, contentMaxWidth, SpawnerHudClientConfig.BOSS_SPAWNED.get(), "Boss Spawned: " + be.hasBossSpawned());
         addTextRow(rows, font, contentMaxWidth, SpawnerHudClientConfig.CAP.get(), "Cap: " + formatCap(be.getSpawnerMobCap()));
-        addTextRow(rows, font, contentMaxWidth, SpawnerHudClientConfig.DELAY.get(), "Delay: current " + be.getSpawnerDelayTicks() + ", range " + be.getSpawnerMinSpawnDelay() + "-" + be.getSpawnerMaxSpawnDelay() + " ticks");
+        addTextRow(rows, font, contentMaxWidth, SpawnerHudClientConfig.DELAY.get(), "Delay: range " + be.getSpawnerMinSpawnDelay() + "-" + be.getSpawnerMaxSpawnDelay() + " ticks");
         addTextRow(rows, font, contentMaxWidth, SpawnerHudClientConfig.SPAWN_COUNT.get(), "Spawn Count: " + be.getSpawnerSpawnCount());
         addTextRow(rows, font, contentMaxWidth, SpawnerHudClientConfig.SPAWN_RANGE.get(), "Spawn Range: " + be.getSpawnerSpawnRange());
         addTextRow(rows, font, contentMaxWidth, SpawnerHudClientConfig.REQUIRED_PLAYER_RANGE.get(), "Player Range: " + be.getSpawnerRequiredPlayerRange());
