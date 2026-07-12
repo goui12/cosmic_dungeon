@@ -72,9 +72,34 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Use Sell Selected or Sell All to sell eligible items."),
             HelpBlock.bullet("Your currency balance updates after completed transactions."),
             HelpBlock.bullet("Costs display in the vendor's configured denominations."),
-            HelpBlock.bullet("Elias Centvin is a Dungeon 1 weapon and tool vendor unlocked through village and NPC progression."),
-            HelpBlock.bullet("Eon Penrose runs the Dungeon 1 Brewing Store with ingredients, bottles, potions, and class-locked healer stock."),
+            HelpBlock.bullet("Naton Whitlock offers general supplies: food, fire, light, and container basics."),
+            HelpBlock.bullet("Elias Centvin sells weapons and tools, plus repair materials and services for battered gear."),
+            HelpBlock.bullet("Eon Penrose runs the Brewing Store for ingredients, bottles, equipment, and potions."),
+            HelpBlock.bullet("Beatrix Farrow provides food, Beatrix's Campfire, and Farrow's Chop for a safe return home."),
+            HelpBlock.bullet("See Brewing Store, Travel, and Village Souls for the short field guide."),
             HelpBlock.tip("Purchases and sales are server-authoritative and atomic: they either complete safely or do not complete.")));
+
+
+    public static final Page BREWING_STORE = page("brewing_store", "Brewing Store", true, List.of(
+            HelpBlock.heading("Eon Penrose"),
+            HelpBlock.paragraph("Eon Penrose sells brewing ingredients, equipment, and potions in the restored Village."),
+            HelpBlock.heading("Live Dungeon 1 Stock"),
+            HelpBlock.bullet("General: brewing ingredients, Glass Bottles, Night Vision, and Fire Resistance."),
+            HelpBlock.bullet("Theurgist only: Brewing Stand, Cauldron, Healing II, Regeneration, and Lingering Healing."),
+            HelpBlock.bullet("Theurgist or Judicator: Healing and Splash Healing."),
+            HelpBlock.bullet("Dungeon 2 potion stock is planned for later and is not live in Dungeon 1."),
+            HelpBlock.tip("If a row is locked, check your class and Village progression before buying.")));
+
+    public static final Page VILLAGE_SOULS = page("village_souls", "Village Souls", true, List.of(
+            HelpBlock.heading("Restored Village Faces"),
+            HelpBlock.bullet("Naton Whitlock: general supplies, food, fire, light, and container basics."),
+            HelpBlock.bullet("Elias Centvin: weapons, tools, repair services, repair materials, and Dragoon salvage craft."),
+            HelpBlock.bullet("Eon Penrose: brewing ingredients, equipment, and potion work."),
+            HelpBlock.bullet("Beatrix Farrow: food, campfire cooking, Farrow's Chop, and the memory of home."),
+            HelpBlock.heading("Dungeon Story"),
+            HelpBlock.bullet("Tamsin Vane: starting-area dungeon entry broker who found a JHW map to Base Camp."),
+            HelpBlock.bullet("John Hamish Watson: doomed scholar tied to the abandoned Base Camp, spectral blooms, and later guidance."),
+            HelpBlock.tip("Listen for NPC dialogue and letters; they explain who is helping you and why.")));
 
     public static final Page CURRENCY = page("currency", "Currency", true, List.of(
             HelpBlock.heading("Attunement Fragments"),
@@ -96,6 +121,7 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Cavern Residue is a progression material used by current and future systems."),
             HelpBlock.bullet("Dungeon 1 completion currently expects at least 3 Lesser Blooms."),
             HelpBlock.bullet("Village access unlocks from Dungeon 1 completion."),
+            HelpBlock.bullet("Watson's Base Camp story points toward spectral blooms, but your active Dungeon 1 instructions currently follow Lesser Bloom completion checks."),
             HelpBlock.bullet("Dungeon 1 NPC unlock tiers derive from cumulative Lesser Blooms: tier 1 at 5, tier 2 at 10, tier 3 at 15, and tier 4 at 20."),
             HelpBlock.command("Read Progress", "/progression get <your_name>"),
             HelpBlock.tip("Progression commands listed here are read-only for your own character unless you have elevated access.")));
@@ -111,7 +137,7 @@ public final class HelpMenuContent {
             HelpBlock.command("Get", "/faction get <your_name> <faction_id>"),
             HelpBlock.tip("Exact value ranges can vary by faction; rely on the tier shown to you in-game.")));
 
-    public static final Page TELEPORTATION = page("teleportation", "Teleportation", true, List.of(
+    public static final Page TELEPORTATION = page("teleportation", "Travel", true, List.of(
             HelpBlock.heading("Potion of Companionship"),
             HelpBlock.bullet("Only works during an active dungeon run."),
             HelpBlock.bullet("Opens Teleport to a Dungeoneer with online companions in the same active run, excluding you."),
@@ -121,9 +147,10 @@ public final class HelpMenuContent {
             HelpBlock.heading("Rifts"),
             HelpBlock.bullet("Rifts are world-travel structures when presented by the dungeon."),
             HelpBlock.heading("Farrow's Chop"),
-            HelpBlock.bullet("Farrow's Chop is a return-home meal tied to Beatrix's Campfire."),
-            HelpBlock.bullet("When the Main Village destination is available, eating it safely returns you home."),
-            HelpBlock.bullet("If the route is unavailable or unsafe, the chop is not consumed."),
+            HelpBlock.bullet("Beatrix's Campfire cooks Raw Farrow's Chop into Farrow's Chop."),
+            HelpBlock.bullet("Eating Farrow's Chop returns you to the Main Village when the route is available and safe."),
+            HelpBlock.bullet("The chop is consumed only after a successful return, unless creative-mode rules preserve it."),
+            HelpBlock.bullet("A successful return grants the Nostalgia Bait achievement."),
             HelpBlock.tip("Only use teleport options offered by the dungeon, a potion, visible in-world travel structures, or Farrow's Chop.")));
 
     public static final Page ACHIEVEMENTS = page("achievements", "Achievements", true, List.of(
@@ -131,7 +158,8 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Achievements are server-side advancements that reward notable dungeon milestones."),
             HelpBlock.bullet("First Trace grants 5 Trace and explains currency abbreviations and value."),
             HelpBlock.bullet("Handshake Protocol is awarded after your first successful player trade."),
-            HelpBlock.bullet("Nostalgia Bait is awarded after Farrow's Chop successfully returns you to the Main Village."),
+            HelpBlock.bullet("Nostalgia Bait is live: return to the Main Village with Farrow's Chop."),
+            HelpBlock.bullet("The Tamsin Tax is coming soon: repay Tamsin after your first dungeon once a payment interface exists."),
             HelpBlock.bullet("Plant Flags tracks class-attuned banner planting during Dungeon 1 where configured."),
             HelpBlock.bullet("Binding Idol and Vital Exchange support dungeon progression and support-role milestone hooks where relevant."),
             HelpBlock.tip("Achievement popups are reminders of progress; server checks decide when they are earned.")));
@@ -204,7 +232,7 @@ public final class HelpMenuContent {
             HelpBlock.heading("Coming in Dungeon 2"),
             HelpBlock.paragraph("Deadeye is disabled.")));
 
-    public static final List<Page> PAGES = List.of(GET_STARTED, DUNGEONS, CLASSES, THEURGIST, PYROCLAST, BOGATYR, DRAGOON, VENEFEX, JUDICATOR, METALMANCER, DEADEYE, PARTY, TRADING, VENDORS, CURRENCY, PROGRESSION, FACTIONS, TELEPORTATION, ACHIEVEMENTS, REFERENCES);
+    public static final List<Page> PAGES = List.of(GET_STARTED, DUNGEONS, CLASSES, THEURGIST, PYROCLAST, BOGATYR, DRAGOON, VENEFEX, JUDICATOR, METALMANCER, DEADEYE, PARTY, TRADING, VENDORS, BREWING_STORE, VILLAGE_SOULS, CURRENCY, PROGRESSION, FACTIONS, TELEPORTATION, ACHIEVEMENTS, REFERENCES);
 
     private HelpMenuContent() {}
 

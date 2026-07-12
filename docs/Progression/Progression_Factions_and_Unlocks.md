@@ -31,3 +31,7 @@ Vendor profiles can require village access, a D1/D2 NPC tier, faction standing, 
 ## Faction design note links
 
 See [Faction General](../Factions/Faction_General.md) and [NPC/Vendor Faction](../Factions/NPC_Vendor_Faction.md) for current-vs-future faction documentation. These notes do not imply unimplemented NPC faction pricing, stock, or travel services are live.
+
+## Watson, spectral blooms, and live D1 progression wording
+
+John Hamish Watson's lore connects the abandoned Base Camp, the initials JHW, and spectral bloom mysteries to later dungeon guidance. Active player instructions should remain aligned with implemented progression checks: Dungeon 1 currently uses Lesser Blooms and the live D1 completion threshold, not a mandatory six-spectral-bloom objective.

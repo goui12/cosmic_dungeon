@@ -235,3 +235,11 @@ The design-note context for factions, NPC/vendor faction behavior, First Trace, 
 - Added server-authoritative offer-level class gates for vendor profiles through `requiredClasses`; the client shows gated rows locked, and the server rechecks gates during purchase.
 - Kept Dungeon 2 brewing stock as documentation/planning only until a real server-authoritative Dungeon 2 gate exists.
 - Live brewing offers sell one item per click so per-item prices cannot be exploited through stack-count results.
+
+## Prompt 03 help guide, NPC lore, and achievement content
+
+- Expanded the H help menu with concise dungeoneer-facing pages for the Brewing Store and Village Souls, plus updated Vendor, Travel, Progression, and Achievements copy.
+- Added markdown lore/docs for Naton Whitlock, Elias Centvin, Eon Penrose, Beatrix Farrow, Tamsin Vane, John Hamish Watson, and Farrow's Chop teleportation.
+- Documented **Nostalgia Bait** as live through successful Farrow's Chop travel.
+- Documented **The Tamsin Tax** as planned/docs-only because the current source has no player-facing Tamsin payment interface. No developer-only command grant path was added.
+- No saved-data format, rift/RD schema, spawner schema, door/key data, class selector data, teleportation saved data, vendor saved data, currency data, progression data, faction data, or achievement tracking storage changed for this content pass.
