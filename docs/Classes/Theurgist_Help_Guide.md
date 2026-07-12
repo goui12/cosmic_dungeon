@@ -16,6 +16,7 @@ Theurgist has exclusive access to brewing stands. Brewing stands used by Theurgi
 ## Abilities
 
 - Use brewing stands exclusively; valid potion brews complete instantly once brewing starts.
+- Eon Penrose sells Theurgist-only brewing equipment, Healing II, Regeneration, and Lingering Healing offers, plus shared Theurgist/Judicator healing offers.
 - Other abilities: TBD.
 
 ## Benefits

@@ -5,6 +5,7 @@ import net.goui.cosmicdungeon.faction.FactionDefinitions;
 import net.goui.cosmicdungeon.faction.FactionService;
 import net.goui.cosmicdungeon.faction.FactionTier;
 import net.goui.cosmicdungeon.progression.ProgressionService;
+import net.goui.cosmicdungeon.playerclass.api.ClassItemEquipmentGuard;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class VendorMenuState {
@@ -18,6 +19,10 @@ public final class VendorMenuState {
     }
 
     public static boolean isOfferUnlocked(ServerPlayer sp, VendorProfile profile, VendorOffer offer) {
+        if (offer.requiredClasses() != null && !offer.requiredClasses().isEmpty()) {
+            String playerClass = ClassItemEquipmentGuard.getPlayerClass(sp);
+            if (!offer.requiredClasses().contains(playerClass)) return false;
+        }
         if (offer.requiredProgressionFlag() != null) {
             if (offer.requiredProgressionFlag().equalsIgnoreCase("village_access")) {
                 if (!ProgressionService.hasVillageAccess(sp)) return false;

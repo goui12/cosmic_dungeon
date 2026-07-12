@@ -4,6 +4,7 @@ import com.google.gson.*;
 import com.mojang.logging.LogUtils;
 import net.goui.cosmicdungeon.economy.CurrencyDenomination;
 import net.goui.cosmicdungeon.faction.FactionDefinitions;
+import net.goui.cosmicdungeon.playerclass.api.ClassKeys;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
@@ -153,10 +154,25 @@ public final class VendorProfileManager extends SimplePreparableReloadListener<M
                     obj.has("maxUses") ? GsonHelper.getAsInt(obj, "maxUses") : null,
                     obj.has("requiredFactionTier") ? GsonHelper.getAsInt(obj, "requiredFactionTier") : null,
                     obj.has("requiredProgressionFlag") ? GsonHelper.getAsString(obj, "requiredProgressionFlag") : null,
-                    obj.has("requiredNpcTier") ? GsonHelper.getAsInt(obj, "requiredNpcTier") : null
+                    obj.has("requiredNpcTier") ? GsonHelper.getAsInt(obj, "requiredNpcTier") : null,
+                    parseRequiredClasses(obj)
             ));
         }
         return offers;
+    }
+
+    private static List<String> parseRequiredClasses(JsonObject obj) {
+        if (!obj.has("requiredClasses")) return List.of();
+        JsonArray classesArray = GsonHelper.getAsJsonArray(obj, "requiredClasses");
+        List<String> classes = new ArrayList<>();
+        for (JsonElement el : classesArray) {
+            String classId = el.getAsString();
+            if (!ClassKeys.playableClassIds().contains(classId)) {
+                throw new JsonParseException("Unknown requiredClasses class id: " + classId);
+            }
+            if (!classes.contains(classId)) classes.add(classId);
+        }
+        return List.copyOf(classes);
     }
 
     private static VendorProfile.BuybackConfig parseBuyback(JsonObject root) {
