@@ -227,3 +227,11 @@ The design-note context for factions, NPC/vendor faction behavior, First Trace, 
 - Added `/rd move <name>` / `/rift destination move <name>` so developers can update a destination to their current dimension and block position without deleting portal links or rift blocks.
 - Added Raw Farrow's Chop, Farrow's Chop, Beatrix's Campfire, and the Nostalgia Bait advancement. Farrow's Chop targets `main_village` and is not consumed if teleport fails.
 - This is additive and does not change rift saved-data schema, portal records, tile links, spawners, doors/keys, class selector data, Potion of Companionship data, AccessPolicy/rank data, vendors, currency, factions, progression, or achievement storage schemas. Existing worlds need no manual conversion.
+
+
+## Eon Penrose Brewing Store
+
+- Updated the live Dungeon 1 Eon Penrose Brewing Store profile with the requested ingredient, brewing equipment, potion, splash potion, and lingering potion prices.
+- Added server-authoritative offer-level class gates for vendor profiles through `requiredClasses`; the client shows gated rows locked, and the server rechecks gates during purchase.
+- Kept Dungeon 2 brewing stock as documentation/planning only until a real server-authoritative Dungeon 2 gate exists.
+- Live brewing offers sell one item per click so per-item prices cannot be exploited through stack-count results.

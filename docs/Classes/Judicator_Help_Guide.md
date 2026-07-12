@@ -22,6 +22,7 @@ TBD.
 - Access to Judicator-attuned equipment, when such equipment is authored.
 - Access to Judicator class-locked chests.
 - Judicator-specific item and armor assets exist in the current content set.
+- Eon Penrose sells Potion of Healing and Splash Potion of Healing offers shared by Theurgist and Judicator.
 
 ## Incentives
 

@@ -61,6 +61,7 @@ Vendor profiles load from datapack JSON under `data/cosmicdungeon/vendor_profile
 
 ## D1 vendor profiles
 
+- `cosmicdungeon:d1/brewing_store` opens **Eon Penrose**, a D1 tier-3 village-access Brewing Store with general brewing ingredients, Theurgist-only brewing equipment and advanced healing/regeneration stock, and Theurgist/Judicator shared healing offers. See [Eon Penrose](./Vendors/Eon_Penrose.md).
 - `cosmicdungeon:d1/d1_nether_gritch_of_the_barter_pit` opens **Gritch of the Barter Pit**, a D1 tier-1 village-access vendor that sells one [golden carrot](https://minecraft.wiki/w/Golden_Carrot) for `1000` Trace and one [glistering melon slice](https://minecraft.wiki/w/Glistering_Melon_Slice) for `1000` Trace.
 - Spawn or inspect this profile with the standard [vendor commands](./commands/In_Game_Commands.md#vendor-15-progression--faction-access), such as `/vendor spawn d1/d1_nether_gritch_of_the_barter_pit` or `/vendor profile d1_nether_gritch_of_the_barter_pit`.
 
@@ -74,7 +75,7 @@ Buyback uses each eligible stack's individual sell value. Class-attuned items se
 
 ## Offer-level gates
 
-Buy offers support the existing optional `requiredProgressionFlag`, `requiredNpcTier`, and `requiredFactionTier` fields. `requiredFactionTier` is evaluated against the profile-level `requiredFaction` id; if an offer declares a faction tier but the profile has no registered `requiredFaction`, the offer remains locked. Profiles that declare an invalid or unregistered `requiredFaction` id are rejected during vendor-profile loading. The schema does **not** currently support `requiredClass` or `requiredClassId`, so class-only stock such as Dragoon-only repair materials must remain design/future unless that field is implemented server-authoritatively.
+Buy offers support the existing optional `requiredProgressionFlag`, `requiredNpcTier`, and `requiredFactionTier` fields. `requiredFactionTier` is evaluated against the profile-level `requiredFaction` id; if an offer declares a faction tier but the profile has no registered `requiredFaction`, the offer remains locked. Profiles that declare an invalid or unregistered `requiredFaction` id are rejected during vendor-profile loading. Buy offers also support optional `requiredClasses`, an array of canonical class ids from `ClassKeys`, such as `["theurgist"]` or `["theurgist", "judicator"]`. Missing or empty `requiredClasses` means general access. Profile loading rejects unknown class ids. Offer-level class gates are server-authoritative: locked rows are disabled in the GUI, and `VendorService.tryPurchase` rechecks `VendorMenuState.isOfferUnlocked` before currency is withdrawn or items are delivered.
 
 ## Related topics
 
@@ -86,7 +87,8 @@ Buy offers support the existing optional `requiredProgressionFlag`, `requiredNpc
 
 ## Changelog
 
-- **1.5.1:** Activated server-side evaluation for existing offer-level `requiredFactionTier` locks and documented that class-restricted offers are still not part of the schema.
+- **1.5.1:** Added server-authoritative offer-level `requiredClasses` gates and activated them for Eon Penrose brewing-store stock.
+- **1.5.1:** Activated server-side evaluation for existing offer-level `requiredFactionTier` locks.
 - **1.5.1:** Added the D1 Gritch of the Barter Pit vendor profile for expensive golden food purchases.
 - **1.5.1:** Added optional mob-type vendor shells, bright neon-green friendly overhead names, and enforced invulnerable/no-AI vendor standing behavior.
 - **1.5:** Added assigned vendor NPCs, profile-loaded offers, buy/sell GUI flows, centralized access gates, profile aliases, buyback, and atomic transaction validation.

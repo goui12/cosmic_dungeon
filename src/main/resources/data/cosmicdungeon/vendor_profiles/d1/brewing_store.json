@@ -13,8 +13,8 @@
         "count": 1
       },
       "cost": {
-        "amount": 8,
-        "denomination": "trace"
+        "amount": 2,
+        "denomination": "mark"
       }
     },
     {
@@ -24,7 +24,7 @@
         "count": 1
       },
       "cost": {
-        "amount": 3,
+        "amount": 1,
         "denomination": "trace"
       }
     },
@@ -46,8 +46,8 @@
         "count": 1
       },
       "cost": {
-        "amount": 2,
-        "denomination": "mark"
+        "amount": 9,
+        "denomination": "trace"
       }
     },
     {
@@ -57,8 +57,8 @@
         "count": 1
       },
       "cost": {
-        "amount": 3,
-        "denomination": "mark"
+        "amount": 7,
+        "denomination": "trace"
       }
     },
     {
@@ -68,7 +68,7 @@
         "count": 1
       },
       "cost": {
-        "amount": 3,
+        "amount": 2,
         "denomination": "mark"
       }
     },
@@ -79,8 +79,19 @@
         "count": 1
       },
       "cost": {
-        "amount": 4,
-        "denomination": "mark"
+        "amount": 5,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "glass_bottle",
+      "result": {
+        "item": "minecraft:glass_bottle",
+        "count": 1
+      },
+      "cost": {
+        "amount": 5,
+        "denomination": "trace"
       }
     },
     {
@@ -92,7 +103,10 @@
       "cost": {
         "amount": 8,
         "denomination": "mark"
-      }
+      },
+      "requiredClasses": [
+        "theurgist"
+      ]
     },
     {
       "offerId": "cauldron",
@@ -101,68 +115,12 @@
         "count": 1
       },
       "cost": {
-        "amount": 7,
-        "denomination": "mark"
-      }
-    },
-    {
-      "offerId": "glass_bottle",
-      "result": {
-        "item": "minecraft:glass_bottle",
-        "count": 3
-      },
-      "cost": {
-        "amount": 6,
-        "denomination": "trace"
-      }
-    },
-    {
-      "offerId": "potion_of_healing",
-      "result": {
-        "item": "minecraft:potion",
-        "count": 1,
-        "potion": "minecraft:healing"
-      },
-      "cost": {
-        "amount": 3,
-        "denomination": "mark"
-      }
-    },
-    {
-      "offerId": "potion_of_healing_ii",
-      "result": {
-        "item": "minecraft:potion",
-        "count": 1,
-        "potion": "minecraft:strong_healing"
-      },
-      "cost": {
-        "amount": 6,
-        "denomination": "mark"
-      }
-    },
-    {
-      "offerId": "potion_of_regeneration",
-      "result": {
-        "item": "minecraft:potion",
-        "count": 1,
-        "potion": "minecraft:regeneration"
-      },
-      "cost": {
         "amount": 5,
         "denomination": "mark"
-      }
-    },
-    {
-      "offerId": "potion_of_strength",
-      "result": {
-        "item": "minecraft:potion",
-        "count": 1,
-        "potion": "minecraft:strength"
       },
-      "cost": {
-        "amount": 5,
-        "denomination": "mark"
-      }
+      "requiredClasses": [
+        "theurgist"
+      ]
     },
     {
       "offerId": "potion_of_night_vision",
@@ -172,7 +130,7 @@
         "potion": "minecraft:night_vision"
       },
       "cost": {
-        "amount": 4,
+        "amount": 3,
         "denomination": "mark"
       }
     },
@@ -184,33 +142,55 @@
         "potion": "minecraft:fire_resistance"
       },
       "cost": {
-        "amount": 6,
+        "amount": 4,
         "denomination": "mark"
       }
     },
     {
-      "offerId": "extended_water_breathing",
+      "offerId": "potion_of_healing",
       "result": {
         "item": "minecraft:potion",
         "count": 1,
-        "potion": "minecraft:long_water_breathing"
+        "potion": "minecraft:healing"
       },
       "cost": {
-        "amount": 6,
+        "amount": 2,
         "denomination": "mark"
-      }
+      },
+      "requiredClasses": [
+        "theurgist",
+        "judicator"
+      ]
     },
     {
-      "offerId": "potion_of_invisibility",
+      "offerId": "potion_of_healing_ii",
       "result": {
         "item": "minecraft:potion",
         "count": 1,
-        "potion": "minecraft:invisibility"
+        "potion": "minecraft:strong_healing"
       },
       "cost": {
-        "amount": 7,
+        "amount": 4,
         "denomination": "mark"
-      }
+      },
+      "requiredClasses": [
+        "theurgist"
+      ]
+    },
+    {
+      "offerId": "potion_of_regeneration",
+      "result": {
+        "item": "minecraft:potion",
+        "count": 1,
+        "potion": "minecraft:regeneration"
+      },
+      "cost": {
+        "amount": 4,
+        "denomination": "mark"
+      },
+      "requiredClasses": [
+        "theurgist"
+      ]
     },
     {
       "offerId": "splash_potion_of_healing",
@@ -220,33 +200,13 @@
         "potion": "minecraft:healing"
       },
       "cost": {
-        "amount": 5,
+        "amount": 3,
         "denomination": "mark"
-      }
-    },
-    {
-      "offerId": "splash_potion_of_poison",
-      "result": {
-        "item": "minecraft:splash_potion",
-        "count": 1,
-        "potion": "minecraft:poison"
       },
-      "cost": {
-        "amount": 5,
-        "denomination": "mark"
-      }
-    },
-    {
-      "offerId": "splash_potion_of_invisibility",
-      "result": {
-        "item": "minecraft:splash_potion",
-        "count": 1,
-        "potion": "minecraft:invisibility"
-      },
-      "cost": {
-        "amount": 9,
-        "denomination": "mark"
-      }
+      "requiredClasses": [
+        "theurgist",
+        "judicator"
+      ]
     },
     {
       "offerId": "lingering_potion_of_healing",
@@ -256,21 +216,12 @@
         "potion": "minecraft:healing"
       },
       "cost": {
-        "amount": 9,
+        "amount": 5,
         "denomination": "mark"
-      }
-    },
-    {
-      "offerId": "lingering_potion_of_regeneration",
-      "result": {
-        "item": "minecraft:lingering_potion",
-        "count": 1,
-        "potion": "minecraft:regeneration"
       },
-      "cost": {
-        "amount": 12,
-        "denomination": "mark"
-      }
+      "requiredClasses": [
+        "theurgist"
+      ]
     }
   ],
   "buyback": {

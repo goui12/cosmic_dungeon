@@ -73,6 +73,7 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Your currency balance updates after completed transactions."),
             HelpBlock.bullet("Costs display in the vendor's configured denominations."),
             HelpBlock.bullet("Elias Centvin is a Dungeon 1 weapon and tool vendor unlocked through village and NPC progression."),
+            HelpBlock.bullet("Eon Penrose runs the Dungeon 1 Brewing Store with ingredients, bottles, potions, and class-locked healer stock."),
             HelpBlock.tip("Purchases and sales are server-authoritative and atomic: they either complete safely or do not complete.")));
 
     public static final Page CURRENCY = page("currency", "Currency", true, List.of(
@@ -158,6 +159,7 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Role theme: healing and potion-brewing support."),
             HelpBlock.bullet("Only Theurgists can use brewing stands."),
             HelpBlock.bullet("Valid potion brews complete instantly."),
+            HelpBlock.bullet("Eon Penrose sells Theurgist-only brewing equipment and advanced healing/regeneration potions."),
             HelpBlock.bullet("Can use Theurgist-attuned gear and class chests.")));
 
     public static final Page PYROCLAST = page("class.pyroclast", "Pyroclast", true, List.of(
