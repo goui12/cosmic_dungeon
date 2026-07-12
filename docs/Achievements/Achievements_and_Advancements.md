@@ -43,3 +43,14 @@ Use [Commands: Achievement](../commands/In_Game_Commands.md#achievement-15-advan
 - **Title:** Nostalgia Bait
 - **Description:** Teleport back to the Main Village using Farrow's Chop.
 - **Trigger:** Granted only after a successful Farrow's Chop teleport to `main_village`. Failed destination lookups or unsafe teleports do not grant it.
+
+## The Tamsin Tax
+
+**Status:** planned/docs-only. The current source does not include a player-facing Tamsin payment interaction, so this advancement is not presented as earnable and no developer-only command is used as a grant path.
+
+- **Title:** The Tamsin Tax
+- **Description/design:** Awarded when an adventurer returns from the dungeon and gives Tamsin Vane a share of the treasure recovered using her map.
+- **Flavor:** Tamsin calls it business. You may call it gratitude, obligation, or a poor decision made before seeing the haul.
+- **Gate:** Locked behind completion of the first dungeon.
+- **Payment:** Any item or currency can be used to pay this debt once a real player-facing payment interface exists.
+- **Repeatability:** Not repeatable.

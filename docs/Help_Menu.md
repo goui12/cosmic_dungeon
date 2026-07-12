@@ -48,3 +48,15 @@ The in-game H menu intentionally summarizes only dungeoneer-facing behavior. Use
 ## Migration
 
 No server saved data or gameplay storage structures are changed by the help menu framework. No 1.5.0 to 1.5.1 server data migration is required.
+
+## Prompt 03 dungeoneer content pass
+
+The H help menu now includes concise, player-facing coverage for:
+
+- Vendor identities: Naton Whitlock, Elias Centvin, Eon Penrose, and Beatrix Farrow.
+- Eon Penrose's Brewing Store, including live Dungeon 1 stock categories and major class restrictions.
+- Travel via Beatrix's Campfire and Farrow's Chop, including successful-return consumption and Nostalgia Bait.
+- Village Souls / story NPC summaries for Tamsin Vane and John Hamish Watson.
+- Achievement status notes that keep **Nostalgia Bait** live and mark **The Tamsin Tax** as coming soon until a real Tamsin payment interface exists.
+
+The menu intentionally omits developer/world-designer commands, saved-data schema details, vendor profile authoring, rift destination authoring, spawner authoring, rank/debug commands, and other internal setup details.
