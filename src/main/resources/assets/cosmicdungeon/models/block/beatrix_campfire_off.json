@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/campfire_off",
+  "textures": {
+    "particle": "cosmicdungeon:block/beatrix_campfire_log",
+    "log": "cosmicdungeon:block/beatrix_campfire_log"
+  }
+}

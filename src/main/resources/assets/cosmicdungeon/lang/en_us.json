@@ -651,4 +651,10 @@
   "screen.cosmicdungeon.help.class.deadeye": "Deadeye",
   "screen.cosmicdungeon.help.class.deadeye.body": "Deadeye is disabled and coming in Dungeon 2.",
   "screen.cosmicdungeon.help.class.coming_soon": "COMING SOON!"
+,
+  "item.cosmicdungeon.raw_farrows_chop": "Raw Farrow's Chop",
+  "item.cosmicdungeon.farrows_chop": "Farrow's Chop",
+  "block.cosmicdungeon.beatrix_campfire": "Beatrix's Campfire",
+  "advancements.cosmicdungeon.achievements.nostalgia_bait.title": "Nostalgia Bait",
+  "advancements.cosmicdungeon.achievements.nostalgia_bait.desc": "Teleport back to the Main Village using Farrow's Chop."
 }

@@ -13,3 +13,8 @@ Broader travel-service notes are future expansion planning unless source code ex
 
 - [Potion of Companionship Teleportation](../Potions/Potion_of_Companionship_teleportation.md)
 - [Rift System Guide](../Rifts/Rift_System_Guide.md)
+
+
+## Farrow's Chop return-home destination
+
+Farrow's Chop return travel targets the normal rift destination `main_village`. The destination is auto-created only if missing, stored in existing rift destination saved data, and never overwrites developer edits. Use `/rd info main_village` to inspect it and `/rd move main_village` to update it in-game.

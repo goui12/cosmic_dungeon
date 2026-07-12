@@ -30,11 +30,14 @@ public class ModCreativeModeTabs {
                                 output.accept(ModItems.BROODING_FORK);
                                 output.accept(ModItems.REGION_WAND);
                                 output.accept(ModItems.POTION_OF_COMPANIONSHIP);
+                                output.accept(ModItems.RAW_FARROWS_CHOP);
+                                output.accept(ModItems.FARROWS_CHOP);
                                 output.accept(ModBlocks.CLASS_SELECTOR_BLOCK);
                                 // Dungeon blocks
                                 output.accept(ModBlocks.BARRIER_BLOCK);
                                 output.accept(ModBlocks.CHICKEN_BLOCK);
                                 output.accept(ModBlocks.PILE_OF_BOOKS);
+                                output.accept(ModBlocks.BEATRIX_CAMPFIRE_ITEM.get());
                                 output.accept(ModBlocks.CAVERN_RESIDUE_ITEM.get());
                                 output.accept(ModBlocks.INFINITE_DISPENSER);
                                 output.accept(ModBlocks.COSMIC_MOB_SPAWNER);

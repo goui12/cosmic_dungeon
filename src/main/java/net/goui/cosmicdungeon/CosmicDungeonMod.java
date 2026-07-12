@@ -17,6 +17,7 @@ import net.goui.cosmicdungeon.particle.ModParticleTypes;
 import net.goui.cosmicdungeon.playerclass.metalmancer.MetalmancerCommand;
 import net.goui.cosmicdungeon.playerclass.metalmancer.MetalmancerItems;
 import net.goui.cosmicdungeon.redstone.rf.ModRfBlockEntities;
+import net.goui.cosmicdungeon.rift.DefaultRiftDestinations;
 import net.goui.cosmicdungeon.region.RegionWandEvents;
 import net.goui.cosmicdungeon.sound.ModSounds;
 import net.goui.cosmicdungeon.trade.TradeFinalizationGameTests;
@@ -35,6 +36,7 @@ import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.AddServerReloadListenersEvent;
 import net.goui.cosmicdungeon.vendor.VendorInteractionEvents;
 import net.goui.cosmicdungeon.vendor.VendorProfileManager;
@@ -103,7 +105,7 @@ public class CosmicDungeonMod {
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.FOOD_AND_DRINKS) event.accept(ModItems.POTION_OF_COMPANIONSHIP);
+        if (event.getTabKey() == CreativeModeTabs.FOOD_AND_DRINKS) { event.accept(ModItems.POTION_OF_COMPANIONSHIP); event.accept(ModItems.RAW_FARROWS_CHOP); event.accept(ModItems.FARROWS_CHOP); }
     }
 
     private void onRegisterCommands(RegisterCommandsEvent event) {
@@ -152,6 +154,11 @@ public class CosmicDungeonMod {
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         // server starting hook if needed
+    }
+
+    @SubscribeEvent
+    public void onServerStarted(ServerStartedEvent event) {
+        DefaultRiftDestinations.ensureDefaults(event.getServer());
     }
 
     @SubscribeEvent

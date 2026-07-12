@@ -249,6 +249,13 @@ public final class RiftRegistryData extends SavedData {
         return true;
     }
 
+    public boolean moveDestination(String name, ResourceLocation dimensionId, BlockPos pos) {
+        if (!destinations.containsKey(name)) return false;
+        destinations.put(name, new DestinationRecord(name, dimensionId.toString(), pos.asLong()));
+        setDirty();
+        return true;
+    }
+
     public DeleteResult deleteDestination(String name) {
         Set<PosKey> users = destinationToAnchors.get(name);
         if (users != null && !users.isEmpty()) {

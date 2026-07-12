@@ -219,3 +219,11 @@ The design-note context for factions, NPC/vendor faction behavior, First Trace, 
 - Cosmic Spawner HUD field toggles and per-player `/spawner showlabels` authorization do not change `cosmic_spawner` block-entity saved data or Cosmic Spawner preset file formats. See [Spawner Systems](../Spawners/Spawner_Systems.md#client-cosmic-dungeon-settings-and-spawner-hud-preferences) and [Spawner Commands](../Spawner_Commands_Features.md#spawner-showlabels).
 - Existing 1.5.0 spawners, doors/keys, rifts/RD, class selector data, teleportation data, region/access policy data, vendor data, currency, faction, progression, and achievement tracking should not need manual conversion for these help-menu, First Trace display, Dragoon anvil, settings, or showlabels changes unless another feature-specific section explicitly documents a migration.
 - As always, take a normal world backup before deploying a new jar.
+
+
+## Farrow's Chop, Beatrix's Campfire, and default Main Village rift destination
+
+- Added default rift destination seeding for `main_village`. It is created only if missing, stored in existing `cosmicdungeon_rifts_v2` rift destination data, and never overwrites developer edits.
+- Added `/rd move <name>` / `/rift destination move <name>` so developers can update a destination to their current dimension and block position without deleting portal links or rift blocks.
+- Added Raw Farrow's Chop, Farrow's Chop, Beatrix's Campfire, and the Nostalgia Bait advancement. Farrow's Chop targets `main_village` and is not consumed if teleport fails.
+- This is additive and does not change rift saved-data schema, portal records, tile links, spawners, doors/keys, class selector data, Potion of Companionship data, AccessPolicy/rank data, vendors, currency, factions, progression, or achievement storage schemas. Existing worlds need no manual conversion.

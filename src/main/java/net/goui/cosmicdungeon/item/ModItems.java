@@ -14,6 +14,7 @@ import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.*;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.component.BlocksAttacks;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.TooltipDisplay;
@@ -55,6 +56,10 @@ public class ModItems {
     public static final DeferredItem<Item> BARNACLED_PEARL = ITEMS.registerSimpleItem("barnacled_pearl");
     public static final DeferredItem<Item> SEISMIC_CORE_FRAGMENT = ITEMS.registerSimpleItem("seismic_core_fragment");
     public static final DeferredItem<Item> SHATTERED_REALITY_OF_SHUDDE_MELL = ITEMS.registerSimpleItem("shattered_reality_of_shudde_mell");
+    public static final DeferredItem<Item> RAW_FARROWS_CHOP = ITEMS.registerItem("raw_farrows_chop",
+            props -> new Item(props.food(new FoodProperties.Builder().nutrition(3).saturationModifier(0.3F).build())));
+    public static final DeferredItem<FarrowsChopItem> FARROWS_CHOP = ITEMS.registerItem("farrows_chop",
+            props -> new FarrowsChopItem(props.food(new FoodProperties.Builder().nutrition(8).saturationModifier(0.8F).build())));
 
     public static final DeferredItem<Item> ATTUNEMENT_TRACE = ITEMS.registerSimpleItem("attunement_trace");
     public static final DeferredItem<Item> ATTUNEMENT_MARK = ITEMS.registerSimpleItem("attunement_mark");
