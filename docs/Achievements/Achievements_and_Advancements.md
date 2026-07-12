@@ -36,3 +36,10 @@ Use [Commands: Achievement](../commands/In_Game_Commands.md#achievement-15-advan
 - **1.5.1:** Added Handshake Protocol for first successful player trade and uses its synced state to retire the CAPS LOCK trade prompt.
 - **1.5.1:** Standardized Plant Flags setup and diagnostics under `/region quest plant_flags ...` and added a small region quest handler registry for future location-based quest reactions.
 - **1.5:** Added generated achievement scaffolding, counter persistence, Binding Idol hooks, Vital Exchange hooks, Plant Flags tracking, D1 environmental tracker foundations, and the First Trace currency onboarding achievement while preserving the legacy `achievements/im_rich` id.
+
+
+## Nostalgia Bait
+
+- **Title:** Nostalgia Bait
+- **Description:** Teleport back to the Main Village using Farrow's Chop.
+- **Trigger:** Granted only after a successful Farrow's Chop teleport to `main_village`. Failed destination lookups or unsafe teleports do not grant it.

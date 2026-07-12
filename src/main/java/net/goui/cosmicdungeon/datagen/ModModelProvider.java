@@ -79,6 +79,8 @@ public class ModModelProvider extends ModelProvider {
         registerExternalItem(itemModels, ModItems.POTION_OF_COMPANIONSHIP.get(), ResourceLocation.withDefaultNamespace("item/potion"));
         FLAT.accept(ModItems.BARNACLED_PEARL.get());
         FLAT.accept(ModItems.SHATTERED_REALITY_OF_SHUDDE_MELL.get());
+        FLAT.accept(ModItems.RAW_FARROWS_CHOP.get());
+        FLAT.accept(ModItems.FARROWS_CHOP.get());
         FLAT.accept(ModItems.SEISMIC_CORE_FRAGMENT.get());
         FLAT.accept(ModItems.BROODING_FORK.get());
         FLAT.accept(ModItems.REGION_WAND.get());
@@ -180,6 +182,12 @@ public class ModModelProvider extends ModelProvider {
 
             FLAT.accept(b.asItem());
         }
+        // ===== Beatrix's Campfire =====
+        {
+            var b = ModBlocks.BEATRIX_CAMPFIRE.get();
+            registerExternalItem(itemModels, b.asItem(), rlMod("item/beatrix_campfire"));
+        }
+
         // ===== Pile of Books =====
         {
             var b = ModBlocks.PILE_OF_BOOKS.get();

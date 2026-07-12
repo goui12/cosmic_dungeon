@@ -10,6 +10,7 @@ import net.goui.cosmicdungeon.block.amethyst.ColoredBuddingAmethystBlock;
 import net.goui.cosmicdungeon.block.amethyst.ColoredClusterBlock;
 import net.goui.cosmicdungeon.block.amethyst.LitColoredAmethystBlock;
 import net.goui.cosmicdungeon.block.custom.BarrierBlock;
+import net.goui.cosmicdungeon.block.custom.BeatrixCampfireBlock;
 import net.goui.cosmicdungeon.block.custom.ChickenBlock;
 import net.goui.cosmicdungeon.block.custom.CavernResidueBlock;
 import net.goui.cosmicdungeon.block.custom.ClassSelectorBlock;
@@ -29,6 +30,7 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.FlowerPotBlock;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -87,6 +89,13 @@ public class ModBlocks {
             "pile_of_books",
             (BlockBehaviour.Properties props) -> new Block(
                     props.strength(0.8F).sound(SoundType.WOOD).noOcclusion()
+            )
+    );
+
+    public static final DeferredBlock<CampfireBlock> BEATRIX_CAMPFIRE = BLOCKS.registerBlock(
+            "beatrix_campfire",
+            (BlockBehaviour.Properties props) -> new BeatrixCampfireBlock(
+                    props.strength(2.0F).sound(SoundType.WOOD).lightLevel(state -> state.getValue(CampfireBlock.LIT) ? 15 : 0).noOcclusion()
             )
     );
 
@@ -980,6 +989,8 @@ public class ModBlocks {
             ModItems.ITEMS.registerSimpleBlockItem("chicken_block", CHICKEN_BLOCK);
     public static final DeferredItem<BlockItem> INFINITE_DISPENSER_ITEM =
             ModItems.ITEMS.registerSimpleBlockItem("infinite_dispenser", INFINITE_DISPENSER);
+    public static final DeferredItem<BlockItem> BEATRIX_CAMPFIRE_ITEM =
+            ModItems.ITEMS.registerSimpleBlockItem("beatrix_campfire", BEATRIX_CAMPFIRE);
     public static final DeferredItem<BlockItem> REDSTONE_TRANSMITTER_ITEM =
             ModItems.ITEMS.registerSimpleBlockItem("redstone_transmitter", REDSTONE_TRANSMITTER);
     public static final DeferredItem<BlockItem> REDSTONE_RECEIVER_ITEM =

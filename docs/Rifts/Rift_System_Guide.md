@@ -29,3 +29,10 @@ Rifts are authored as placer+tile constructs and registry-backed destinations.
 ## Travel-service planning boundary
 
 Additional NPC or hub travel-service concepts belong in [Travel Services Design Notes](../Teleportation/Travel_Services_Design_Notes.md) and should not be treated as implemented rift behavior until source support exists.
+
+
+## Default destination: main_village
+
+On server start, Cosmic Dungeon ensures a default rift destination named `main_village` exists. If it is missing, it is added to the normal rift destination saved data at the Overworld shared spawn position. If it already exists, it is never overwritten, so developer edits persist.
+
+Developers can inspect it with `/rd info main_village` and move it to their current dimension and block position with `/rd move main_village`. Moving the destination updates only the destination record; it does not delete portal links or rift blocks.

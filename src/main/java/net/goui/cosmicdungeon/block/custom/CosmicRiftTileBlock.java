@@ -8,6 +8,7 @@ import net.goui.cosmicdungeon.dungeon.DungeonLifecycleService;
 import net.goui.cosmicdungeon.network.ModNetwork;
 import net.goui.cosmicdungeon.network.RiftPayloads;
 import net.goui.cosmicdungeon.rift.RiftRegistryData;
+import net.goui.cosmicdungeon.rift.SafeTeleportUtil;
 import net.goui.cosmicdungeon.sound.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
@@ -25,7 +26,6 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -42,9 +42,6 @@ public class CosmicRiftTileBlock extends Block {
     private static final ThreadLocal<Boolean> BREAKING_WHOLE = ThreadLocal.withInitial(() -> Boolean.FALSE);
     private static final long TELEPORT_COOLDOWN_TICKS = 12L;
     private static final Map<UUID, Long> NEXT_ALLOWED_TELEPORT = new ConcurrentHashMap<>();
-    private static final int SAFE_SEARCH_RADIUS = 6;
-    private static final int SAFE_SEARCH_UP = 4;
-    private static final int SAFE_SEARCH_DOWN = 2;
     private static final int CONFIG_MAX_DIST = 16;
 
     public CosmicRiftTileBlock(Properties props) {
@@ -167,18 +164,12 @@ public class CosmicRiftTileBlock extends Block {
         if (targetLevel == null) return;
 
         BlockPos rawTarget = dest.pos();
-        targetLevel.getChunk(rawTarget);
-
-        BlockPos safe = findSafeTeleportPos(targetLevel, rawTarget);
+        BlockPos safe = SafeTeleportUtil.findSafeTeleportPos(targetLevel, rawTarget);
         if (safe == null) return;
-
-        double tx = safe.getX() + 0.5D;
-        double ty = safe.getY();
-        double tz = safe.getZ() + 0.5D;
 
         boolean ok = sp.teleportTo(
                 targetLevel,
-                tx, ty, tz,
+                safe.getX() + 0.5D, safe.getY(), safe.getZ() + 0.5D,
                 Set.of(),
                 sp.getYRot(),
                 sp.getXRot(),
@@ -211,45 +202,6 @@ public class CosmicRiftTileBlock extends Block {
             DungeonLifecycleService.setPlayerRespawnTo(sp, targetLevel, safe, sp.getYRot(), sp.getXRot());
             DungeonLifecycleService.onPlayerExitedThroughResetRift(currentLevel, sp);
         }
-    }
-
-    private static BlockPos findSafeTeleportPos(ServerLevel level, BlockPos preferred) {
-        if (isStandable(level, preferred)) return preferred;
-
-        int baseX = preferred.getX();
-        int baseY = preferred.getY();
-        int baseZ = preferred.getZ();
-
-        for (int r = 1; r <= SAFE_SEARCH_RADIUS; r++) {
-            for (int dx = -r; dx <= r; dx++) {
-                for (int dz = -r; dz <= r; dz++) {
-                    if (Math.abs(dx) != r && Math.abs(dz) != r) continue;
-
-                    for (int dy = -SAFE_SEARCH_DOWN; dy <= SAFE_SEARCH_UP; dy++) {
-                        BlockPos p = new BlockPos(baseX + dx, baseY + dy, baseZ + dz);
-                        if (isStandable(level, p)) return p;
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private static boolean isStandable(ServerLevel level, BlockPos pos) {
-        BlockState feet = level.getBlockState(pos);
-        BlockState head = level.getBlockState(pos.above());
-        BlockState floor = level.getBlockState(pos.below());
-
-        if (!feet.getCollisionShape(level, pos).isEmpty()) return false;
-        if (!head.getCollisionShape(level, pos.above()).isEmpty()) return false;
-
-        FluidState ff = feet.getFluidState();
-        FluidState hf = head.getFluidState();
-        if (!ff.isEmpty()) return false;
-        if (!hf.isEmpty()) return false;
-
-        return !floor.getCollisionShape(level, pos.below()).isEmpty();
     }
 
     @Override

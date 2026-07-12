@@ -119,13 +119,18 @@ public final class HelpMenuContent {
             HelpBlock.bullet("The potion is not consumed when the attempt is invalid or you are cooling down."),
             HelpBlock.heading("Rifts"),
             HelpBlock.bullet("Rifts are world-travel structures when presented by the dungeon."),
-            HelpBlock.tip("Only use teleport options offered by the dungeon, a potion, or visible in-world travel structures.")));
+            HelpBlock.heading("Farrow's Chop"),
+            HelpBlock.bullet("Farrow's Chop is a return-home meal tied to Beatrix's Campfire."),
+            HelpBlock.bullet("When the Main Village destination is available, eating it safely returns you home."),
+            HelpBlock.bullet("If the route is unavailable or unsafe, the chop is not consumed."),
+            HelpBlock.tip("Only use teleport options offered by the dungeon, a potion, visible in-world travel structures, or Farrow's Chop.")));
 
     public static final Page ACHIEVEMENTS = page("achievements", "Achievements", true, List.of(
             HelpBlock.heading("Milestones"),
             HelpBlock.bullet("Achievements are server-side advancements that reward notable dungeon milestones."),
             HelpBlock.bullet("First Trace grants 5 Trace and explains currency abbreviations and value."),
             HelpBlock.bullet("Handshake Protocol is awarded after your first successful player trade."),
+            HelpBlock.bullet("Nostalgia Bait is awarded after Farrow's Chop successfully returns you to the Main Village."),
             HelpBlock.bullet("Plant Flags tracks class-attuned banner planting during Dungeon 1 where configured."),
             HelpBlock.bullet("Binding Idol and Vital Exchange support dungeon progression and support-role milestone hooks where relevant."),
             HelpBlock.tip("Achievement popups are reminders of progress; server checks decide when they are earned.")));

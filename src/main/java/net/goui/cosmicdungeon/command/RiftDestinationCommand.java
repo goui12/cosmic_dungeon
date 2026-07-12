@@ -38,6 +38,10 @@ public final class RiftDestinationCommand {
                                         .then(Commands.argument("name", StringArgumentType.greedyString())
                                                 .suggests(RiftDestinationCommand::suggestDestinations)
                                                 .executes(ctx -> cmdInfo(ctx.getSource(), StringArgumentType.getString(ctx, "name")))))
+                                .then(Commands.literal("move")
+                                        .then(Commands.argument("name", StringArgumentType.greedyString())
+                                                .suggests(RiftDestinationCommand::suggestDestinations)
+                                                .executes(ctx -> cmdMove(ctx.getSource(), StringArgumentType.getString(ctx, "name")))))
                         )
         );
 
@@ -54,6 +58,10 @@ public final class RiftDestinationCommand {
                                 .then(Commands.argument("name", StringArgumentType.greedyString())
                                         .suggests(RiftDestinationCommand::suggestDestinations)
                                         .executes(ctx -> cmdInfo(ctx.getSource(), StringArgumentType.getString(ctx, "name")))))
+                        .then(Commands.literal("move")
+                                .then(Commands.argument("name", StringArgumentType.greedyString())
+                                        .suggests(RiftDestinationCommand::suggestDestinations)
+                                        .executes(ctx -> cmdMove(ctx.getSource(), StringArgumentType.getString(ctx, "name")))))
         );
     }
 
@@ -170,6 +178,37 @@ public final class RiftDestinationCommand {
             src.sendSuccess(() -> line, false);
         }
 
+        return 1;
+    }
+
+    private static int cmdMove(CommandSourceStack src, String nameRaw) {
+        ServerPlayer p = src.getPlayer();
+        if (p == null) {
+            src.sendFailure(Component.translatable("permissions.requires.player"));
+            return 0;
+        }
+        if (!(p.level() instanceof ServerLevel level)) return 0;
+
+        String name = cleanName(nameRaw);
+        RiftRegistryData data = RiftRegistryData.get(level);
+        BlockPos pos = p.blockPosition();
+        ResourceLocation dim = level.dimension().location();
+
+        if (!data.moveDestination(name, dim, pos)) {
+            src.sendFailure(Component.literal("No such destination: ")
+                    .append(Component.literal(name).withStyle(ChatFormatting.YELLOW)));
+            return 0;
+        }
+
+        src.sendSuccess(() ->
+                        Component.literal("Moved destination ").withStyle(ChatFormatting.GREEN)
+                                .append(Component.literal(name).withStyle(ChatFormatting.AQUA))
+                                .append(Component.literal(" to "))
+                                .append(Component.literal(dim.toString()).withStyle(ChatFormatting.DARK_AQUA))
+                                .append(Component.literal(" "))
+                                .append(copyable(pos.toShortString(), pos.toShortString())),
+                false
+        );
         return 1;
     }
 
