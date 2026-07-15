@@ -8,6 +8,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID)
 public final class DragoonRepairEvents {
@@ -16,4 +17,5 @@ public final class DragoonRepairEvents {
     @SubscribeEvent public static void onChangedDimension(PlayerEvent.PlayerChangedDimensionEvent e){ if(e.getEntity() instanceof ServerPlayer sp) DragoonRepairSessionData.cancel(sp, "dimension changed"); }
     @SubscribeEvent public static void onDeath(LivingDeathEvent e){ if(e.getEntity() instanceof ServerPlayer sp) DragoonRepairSessionData.cancel(sp, "player died"); }
     @SubscribeEvent public static void onTick(ServerTickEvent.Post e){ MinecraftServer s=e.getServer(); if(s!=null && s.getTickCount()%20==0) DragoonRepairSessionData.tick(s); }
+    @SubscribeEvent public static void onServerStopping(ServerStoppingEvent e){ DragoonRepairSessionData.clearAll(); }
 }
