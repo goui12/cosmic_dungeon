@@ -10,7 +10,8 @@
       "offerId": "nether_wart",
       "result": {
         "item": "minecraft:nether_wart",
-        "count": 1
+        "count": 1,
+        "maxStackSize": 20
       },
       "cost": {
         "amount": 2,
@@ -21,7 +22,8 @@
       "offerId": "sugar",
       "result": {
         "item": "minecraft:sugar",
-        "count": 1
+        "count": 1,
+        "maxStackSize": 20
       },
       "cost": {
         "amount": 1,
@@ -32,7 +34,8 @@
       "offerId": "spider_eye",
       "result": {
         "item": "minecraft:spider_eye",
-        "count": 1
+        "count": 1,
+        "maxStackSize": 20
       },
       "cost": {
         "amount": 8,
@@ -43,7 +46,8 @@
       "offerId": "fermented_spider_eye",
       "result": {
         "item": "minecraft:fermented_spider_eye",
-        "count": 1
+        "count": 1,
+        "maxStackSize": 20
       },
       "cost": {
         "amount": 9,
@@ -54,7 +58,8 @@
       "offerId": "magma_cream",
       "result": {
         "item": "minecraft:magma_cream",
-        "count": 1
+        "count": 1,
+        "maxStackSize": 20
       },
       "cost": {
         "amount": 7,
@@ -65,7 +70,8 @@
       "offerId": "glistering_melon_slice",
       "result": {
         "item": "minecraft:glistering_melon_slice",
-        "count": 1
+        "count": 1,
+        "maxStackSize": 20
       },
       "cost": {
         "amount": 2,
@@ -76,7 +82,8 @@
       "offerId": "blaze_powder",
       "result": {
         "item": "minecraft:blaze_powder",
-        "count": 1
+        "count": 1,
+        "maxStackSize": 20
       },
       "cost": {
         "amount": 5,
@@ -87,7 +94,8 @@
       "offerId": "glass_bottle",
       "result": {
         "item": "minecraft:glass_bottle",
-        "count": 1
+        "count": 1,
+        "maxStackSize": 20
       },
       "cost": {
         "amount": 5,
@@ -98,7 +106,8 @@
       "offerId": "brewing_stand",
       "result": {
         "item": "minecraft:brewing_stand",
-        "count": 1
+        "count": 1,
+        "maxStackSize": 1
       },
       "cost": {
         "amount": 8,
@@ -112,7 +121,8 @@
       "offerId": "cauldron",
       "result": {
         "item": "minecraft:cauldron",
-        "count": 1
+        "count": 1,
+        "maxStackSize": 1
       },
       "cost": {
         "amount": 5,
@@ -127,7 +137,8 @@
       "result": {
         "item": "minecraft:potion",
         "count": 1,
-        "potion": "minecraft:night_vision"
+        "potion": "minecraft:night_vision",
+        "maxStackSize": 20
       },
       "cost": {
         "amount": 3,
@@ -139,7 +150,8 @@
       "result": {
         "item": "minecraft:potion",
         "count": 1,
-        "potion": "minecraft:fire_resistance"
+        "potion": "minecraft:fire_resistance",
+        "maxStackSize": 20
       },
       "cost": {
         "amount": 4,
@@ -151,7 +163,8 @@
       "result": {
         "item": "minecraft:potion",
         "count": 1,
-        "potion": "minecraft:healing"
+        "potion": "minecraft:healing",
+        "maxStackSize": 20
       },
       "cost": {
         "amount": 2,
@@ -167,7 +180,8 @@
       "result": {
         "item": "minecraft:potion",
         "count": 1,
-        "potion": "minecraft:strong_healing"
+        "potion": "minecraft:strong_healing",
+        "maxStackSize": 20
       },
       "cost": {
         "amount": 4,
@@ -182,7 +196,8 @@
       "result": {
         "item": "minecraft:potion",
         "count": 1,
-        "potion": "minecraft:regeneration"
+        "potion": "minecraft:regeneration",
+        "maxStackSize": 20
       },
       "cost": {
         "amount": 4,
@@ -197,7 +212,8 @@
       "result": {
         "item": "minecraft:splash_potion",
         "count": 1,
-        "potion": "minecraft:healing"
+        "potion": "minecraft:healing",
+        "maxStackSize": 20
       },
       "cost": {
         "amount": 3,
@@ -213,7 +229,8 @@
       "result": {
         "item": "minecraft:lingering_potion",
         "count": 1,
-        "potion": "minecraft:healing"
+        "potion": "minecraft:healing",
+        "maxStackSize": 20
       },
       "cost": {
         "amount": 5,

@@ -1,0 +1,161 @@
+{
+  "id": "cosmicdungeon:d1/food_vendor",
+  "displayName": "Beatrix Farrow",
+  "storeDisplayName": "Beatrix Farrow Food Store",
+  "vendorType": "food_vendor",
+  "requiredVillageAccess": true,
+  "requiredNpcSystem": "D1",
+  "requiredNpcTier": 1,
+  "buyOffers": [
+    {
+      "offerId": "potato",
+      "result": {
+        "item": "minecraft:potato",
+        "count": 1,
+        "maxStackSize": 20
+      },
+      "cost": {
+        "amount": 1,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "kelp",
+      "result": {
+        "item": "minecraft:kelp",
+        "count": 1,
+        "maxStackSize": 20
+      },
+      "cost": {
+        "amount": 1,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "raw_beef",
+      "result": {
+        "item": "minecraft:beef",
+        "count": 1,
+        "maxStackSize": 20
+      },
+      "cost": {
+        "amount": 2,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "raw_chicken",
+      "result": {
+        "item": "minecraft:chicken",
+        "count": 1,
+        "maxStackSize": 20
+      },
+      "cost": {
+        "amount": 2,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "raw_rabbit",
+      "result": {
+        "item": "minecraft:rabbit",
+        "count": 1,
+        "maxStackSize": 20
+      },
+      "cost": {
+        "amount": 2,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "raw_porkchop",
+      "result": {
+        "item": "minecraft:porkchop",
+        "count": 1,
+        "maxStackSize": 20
+      },
+      "cost": {
+        "amount": 2,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "raw_mutton",
+      "result": {
+        "item": "minecraft:mutton",
+        "count": 1,
+        "maxStackSize": 20
+      },
+      "cost": {
+        "amount": 2,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "raw_cod",
+      "result": {
+        "item": "minecraft:cod",
+        "count": 1,
+        "maxStackSize": 20
+      },
+      "cost": {
+        "amount": 2,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "raw_salmon",
+      "result": {
+        "item": "minecraft:salmon",
+        "count": 1,
+        "maxStackSize": 20
+      },
+      "cost": {
+        "amount": 2,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "raw_farrows_chop",
+      "result": {
+        "item": "cosmicdungeon:raw_farrows_chop",
+        "count": 1,
+        "maxStackSize": 1
+      },
+      "cost": {
+        "amount": 2,
+        "denomination": "crown"
+      },
+      "maxPurchasesPerPlayer": 1
+    },
+    {
+      "offerId": "farrows_chop",
+      "result": {
+        "item": "cosmicdungeon:farrows_chop",
+        "count": 1,
+        "maxStackSize": 1
+      },
+      "cost": {
+        "amount": 2,
+        "denomination": "crown"
+      },
+      "maxPurchasesPerPlayer": 1
+    },
+    {
+      "offerId": "beatrix_campfire",
+      "result": {
+        "item": "cosmicdungeon:beatrix_campfire",
+        "count": 1,
+        "maxStackSize": 1
+      },
+      "cost": {
+        "amount": 5,
+        "denomination": "trace"
+      }
+    }
+  ],
+  "buyback": {
+    "pricingGroup": "default",
+    "rules": []
+  }
+}

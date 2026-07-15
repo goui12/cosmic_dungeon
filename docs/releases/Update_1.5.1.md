@@ -149,7 +149,7 @@ This audit records the source-verified baseline that guided the help-menu polish
 - Class vanilla-use restrictions are server-side through `AccessPolicy.allowClassGatedVanillaUse`: Dragoon can use anvils, Theurgist can use brewing stands, and developers bypass the gate. Judicator is not the anvil class.
 - Class-attuned equipment restrictions are server-side and centralized through the class item guard/restriction event path; future UI/help text must not imply client-only enforcement is authoritative.
 - Vendor profiles are datapack JSONs under `data/cosmicdungeon/vendor_profiles`. Elias Centvin exists as the `cosmicdungeon:d1/weapon_supplier` profile display name.
-- Vendor access currently supports profile-level village access, NPC tier/system, and faction tier requirements, plus offer-level progression flag, NPC tier, and faction tier checks. Offer-level `requiredFactionTier` now evaluates against the profile-level registered faction id and is enforced in both the server-built unlocked-offer state and the server purchase path; invalid or unregistered profile `requiredFaction` ids fail closed during loading/access checks instead of inheriting the faction service fallback tier. There is still no class-restricted offer visibility/purchase field in the offer schema.
+- Vendor access currently supports profile-level village access, NPC tier/system, and faction tier requirements, plus offer-level progression flag, NPC tier, and faction tier checks. Offer-level `requiredFactionTier` now evaluates against the profile-level registered faction id and is enforced in both the server-built unlocked-offer state and the server purchase path; invalid or unregistered profile `requiredFaction` ids fail closed during loading/access checks instead of inheriting the faction service fallback tier. The later 1.5.1 vendor work adds the class-restricted `requiredClasses` offer field, so class-gated stock is now server-authoritative where profile JSON declares it.
 - Vendor buyback pricing currently uses class-attuned trace metadata and optional buyback rule multipliers parsed from profile JSON. NPC/vendor faction pricing multipliers are not implemented as active code.
 - Active faction code currently defines the JHW faction and player faction saved data/service/command support. NPC/vendor faction concepts beyond that are design-only unless represented as profile access requirements.
 - Teleportation is active for the Potion of Companionship and rift systems. The potion opens a dungeoneer-target selection flow, performs server-side teleport validation, and applies a teleport cooldown. Broader travel-service concepts are integrated into the travel-service design notes and remain future/design documentation unless source code implements them.
@@ -191,7 +191,7 @@ The design-note context for factions, NPC/vendor faction behavior, First Trace, 
 
 - Verified Elias Centvin is the active `cosmicdungeon:d1/weapon_supplier` profile at `data/cosmicdungeon/vendor_profiles/d1/weapon_supplier.json` with village access, D1 NPC tier 2, and current weapon/tool stock. Because D1 NPC tier 2 derives from 10 cumulative Lesser Blooms, the profile matches the vendor-access design note without data migration.
 - Implemented the already-parsed offer-level `requiredFactionTier` gate server-side. It now affects the unlocked-offer list sent to the client and is rechecked when purchase packets are handled. Unknown profile faction ids are rejected during profile loading and fail closed if encountered at runtime.
-- Kept Dragoon-only repair material offers out of Elias stock because the vendor offer schema still has no class-restricted offer field. Those materials remain design/future until a complete server-authoritative class gate is added.
+- Earlier planning kept Dragoon-only repair materials out of Elias stock until class gates existed; the later live D1 vendor pricing alignment now adds those offers with server-authoritative `requiredClasses: ["dragoon"]` gates.
 - Documented NPC/vendor faction ranges, Lesser Bloom faction gain, NPC kill faction loss, and dynamic faction price multipliers as design-only; no NPC faction saved data, kill tracking, Lesser Bloom faction gain, or dynamic faction pricing was added.
 - Saved-data formats were not changed.
 
@@ -263,3 +263,13 @@ The design-note context for factions, NPC/vendor faction behavior, First Trace, 
 - Dragoons can invite a customer, the customer owns the damaged-item slot and optional labor fee, and successful finalization consumes Dragoon repair materials, transfers the optional fee, and repairs the item in 25% max-durability units.
 - Supported groups are leather armor, gold gear, chainmail armor, iron gear, diamond gear, and netherite gear. Unsupported special items remain unsupported with a friendly message.
 - This does not add direct Elias shop repair service, D2 Deadeye exceptions, unsupported special-item repair, or any world saved-data migration.
+
+
+## Live D1 vendor pricing alignment: Elias, Naton, Eon, and Beatrix
+
+- Aligned Elias Centvin's live `cosmicdungeon:d1/weapon_supplier` profile to the current weapon/tool/ammunition pricing list, including Trace-total costs for mixed denominations and a max-stack-64 Arrow result.
+- Added Elias's live Dragoon-only repair-material offers using server-authoritative `requiredClasses: ["dragoon"]` gates. Direct Elias shop repair services remain design/future because no direct repair-service offer type exists in the live vendor system.
+- Replaced Naton Whitlock's old placeholder/extras with the current General Supply stock and added Bucket at 5 Marks.
+- Added Beatrix Farrow's live D1 `cosmicdungeon:d1/food_vendor` profile for raw food, Beatrix's Campfire, and one-per-player Raw Farrow's Chop/Farrow's Chop offers. Existing worlds do not require manual conversion because vendor profiles reload from datapack JSON and purchase-limit storage was already additive.
+- Added vendor-result stack caps to Eon Penrose's D1 Brewing Store offers and kept the D2 potion list documented as future-only instead of adding those offers to the D1 profile.
+- Vendor pricing tables remain in markdown vendor/economy docs, not in the in-game H help menu.

@@ -7,14 +7,58 @@
   "requiredNpcTier": 2,
   "buyOffers": [
     {
+      "offerId": "wooden_sword",
+      "result": {
+        "item": "minecraft:wooden_sword",
+        "count": 1
+      },
+      "cost": {
+        "amount": 50,
+        "denomination": "trace"
+      }
+    },
+    {
       "offerId": "stone_sword",
       "result": {
         "item": "minecraft:stone_sword",
         "count": 1
       },
       "cost": {
-        "amount": 2,
-        "denomination": "mark"
+        "amount": 80,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "golden_sword",
+      "result": {
+        "item": "minecraft:golden_sword",
+        "count": 1
+      },
+      "cost": {
+        "amount": 160,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "copper_sword",
+      "result": {
+        "item": "minecraft:copper_sword",
+        "count": 1
+      },
+      "cost": {
+        "amount": 250,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "iron_sword",
+      "result": {
+        "item": "minecraft:iron_sword",
+        "count": 1
+      },
+      "cost": {
+        "amount": 490,
+        "denomination": "trace"
       }
     },
     {
@@ -24,8 +68,30 @@
         "count": 1
       },
       "cost": {
-        "amount": 18,
-        "denomination": "mark"
+        "amount": 570,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "netherite_sword",
+      "result": {
+        "item": "minecraft:netherite_sword",
+        "count": 1
+      },
+      "cost": {
+        "amount": 690,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "wooden_pickaxe",
+      "result": {
+        "item": "minecraft:wooden_pickaxe",
+        "count": 1
+      },
+      "cost": {
+        "amount": 60,
+        "denomination": "trace"
       }
     },
     {
@@ -35,8 +101,41 @@
         "count": 1
       },
       "cost": {
-        "amount": 3,
-        "denomination": "mark"
+        "amount": 100,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "golden_pickaxe",
+      "result": {
+        "item": "minecraft:golden_pickaxe",
+        "count": 1
+      },
+      "cost": {
+        "amount": 180,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "copper_pickaxe",
+      "result": {
+        "item": "minecraft:copper_pickaxe",
+        "count": 1
+      },
+      "cost": {
+        "amount": 310,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "iron_pickaxe",
+      "result": {
+        "item": "minecraft:iron_pickaxe",
+        "count": 1
+      },
+      "cost": {
+        "amount": 620,
+        "denomination": "trace"
       }
     },
     {
@@ -46,40 +145,18 @@
         "count": 1
       },
       "cost": {
-        "amount": 24,
-        "denomination": "mark"
+        "amount": 720,
+        "denomination": "trace"
       }
     },
     {
-      "offerId": "bow",
+      "offerId": "netherite_pickaxe",
       "result": {
-        "item": "minecraft:bow",
+        "item": "minecraft:netherite_pickaxe",
         "count": 1
       },
       "cost": {
-        "amount": 6,
-        "denomination": "mark"
-      }
-    },
-    {
-      "offerId": "crossbow",
-      "result": {
-        "item": "minecraft:crossbow",
-        "count": 1
-      },
-      "cost": {
-        "amount": 8,
-        "denomination": "mark"
-      }
-    },
-    {
-      "offerId": "arrows",
-      "result": {
-        "item": "minecraft:arrow",
-        "count": 16
-      },
-      "cost": {
-        "amount": 6,
+        "amount": 880,
         "denomination": "trace"
       }
     },
@@ -90,9 +167,152 @@
         "count": 1
       },
       "cost": {
-        "amount": 7,
-        "denomination": "mark"
+        "amount": 240,
+        "denomination": "trace"
       }
+    },
+    {
+      "offerId": "bow",
+      "result": {
+        "item": "minecraft:bow",
+        "count": 1
+      },
+      "cost": {
+        "amount": 220,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "crossbow",
+      "result": {
+        "item": "minecraft:crossbow",
+        "count": 1
+      },
+      "cost": {
+        "amount": 360,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "trident",
+      "result": {
+        "item": "minecraft:trident",
+        "count": 1
+      },
+      "cost": {
+        "amount": 580,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "arrow",
+      "result": {
+        "item": "minecraft:arrow",
+        "count": 1,
+        "maxStackSize": 64
+      },
+      "cost": {
+        "amount": 1,
+        "denomination": "trace"
+      }
+    },
+    {
+      "offerId": "leather_patch",
+      "result": {
+        "item": "cosmicdungeon:leather_patch",
+        "count": 1
+      },
+      "cost": {
+        "amount": 2,
+        "denomination": "trace"
+      },
+      "requiredClasses": [
+        "dragoon"
+      ]
+    },
+    {
+      "offerId": "gold_ingot",
+      "result": {
+        "item": "minecraft:gold_ingot",
+        "count": 1
+      },
+      "cost": {
+        "amount": 4,
+        "denomination": "trace"
+      },
+      "requiredClasses": [
+        "dragoon"
+      ]
+    },
+    {
+      "offerId": "copper_ingot",
+      "result": {
+        "item": "minecraft:copper_ingot",
+        "count": 1
+      },
+      "cost": {
+        "amount": 8,
+        "denomination": "trace"
+      },
+      "requiredClasses": [
+        "dragoon"
+      ]
+    },
+    {
+      "offerId": "chain_link",
+      "result": {
+        "item": "cosmicdungeon:chain_link",
+        "count": 1
+      },
+      "cost": {
+        "amount": 12,
+        "denomination": "trace"
+      },
+      "requiredClasses": [
+        "dragoon"
+      ]
+    },
+    {
+      "offerId": "iron_ingot",
+      "result": {
+        "item": "minecraft:iron_ingot",
+        "count": 1
+      },
+      "cost": {
+        "amount": 16,
+        "denomination": "trace"
+      },
+      "requiredClasses": [
+        "dragoon"
+      ]
+    },
+    {
+      "offerId": "diamond",
+      "result": {
+        "item": "minecraft:diamond",
+        "count": 1
+      },
+      "cost": {
+        "amount": 18,
+        "denomination": "trace"
+      },
+      "requiredClasses": [
+        "dragoon"
+      ]
+    },
+    {
+      "offerId": "netherite_repair_fragment",
+      "result": {
+        "item": "cosmicdungeon:netherite_repair_fragment",
+        "count": 1
+      },
+      "cost": {
+        "amount": 22,
+        "denomination": "trace"
+      },
+      "requiredClasses": [
+        "dragoon"
+      ]
     }
   ],
   "buyback": {

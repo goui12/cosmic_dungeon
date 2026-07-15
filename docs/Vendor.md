@@ -66,9 +66,12 @@ Vendor profiles load from datapack JSON under `data/cosmicdungeon/vendor_profile
 
 ## D1 vendor profiles
 
-- `cosmicdungeon:d1/brewing_store` opens **Eon Penrose**, a D1 tier-3 village-access Brewing Store with general brewing ingredients, Theurgist-only brewing equipment and advanced healing/regeneration stock, and Theurgist/Judicator shared healing offers. See [Eon Penrose](./Vendors/Eon_Penrose.md).
+- `cosmicdungeon:d1/weapon_supplier` opens **Elias Centvin**, a D1 tier-2 village-access Weapon Supplier with live weapon/tool pricing, arrows, and Dragoon-only repair-material stock. Direct shop repair services remain design/future unless a future repair-service offer type is implemented. See [Elias Centvin](./Vendors/Elias_Centvin.md).
+- `cosmicdungeon:d1/general_supply_vendor` opens **Naton Whitlock**, a D1 tier-1 village-access General Supply vendor whose live stock is flint and steel, torches, basic foods, carrots, apples, and bucket. See [Naton Whitlock](./NPCs/Naton_Whitlock.md).
+- `cosmicdungeon:d1/food_vendor` opens **Beatrix Farrow**, a D1 tier-1 village-access Food Store with raw food, Beatrix's Campfire, and one-per-player Farrow's Chop offers. See [Beatrix Farrow](./NPCs/Beatrix_Farrow.md).
+- `cosmicdungeon:d1/brewing_store` opens **Eon Penrose**, a D1 tier-3 village-access Brewing Store with general brewing ingredients, Theurgist-only brewing equipment and advanced healing/regeneration stock, and Theurgist/Judicator shared healing offers. D2 potion notes remain future only. See [Eon Penrose](./Vendors/Eon_Penrose.md).
 - `cosmicdungeon:d1/d1_nether_gritch_of_the_barter_pit` opens **Gritch of the Barter Pit**, a D1 tier-1 village-access vendor that sells one [golden carrot](https://minecraft.wiki/w/Golden_Carrot) for `1000` Trace and one [glistering melon slice](https://minecraft.wiki/w/Glistering_Melon_Slice) for `1000` Trace.
-- Spawn or inspect this profile with the standard [vendor commands](./commands/In_Game_Commands.md#vendor-15-progression--faction-access), such as `/vendor spawn d1/d1_nether_gritch_of_the_barter_pit` or `/vendor profile d1_nether_gritch_of_the_barter_pit`.
+- Spawn or inspect profiles with the standard [vendor commands](./commands/In_Game_Commands.md#vendor-15-progression--faction-access), such as `/vendor spawn d1/food_vendor` or `/vendor profile d1/weapon_supplier`.
 
 ## Access gates
 
@@ -93,7 +96,8 @@ Buy offers support the existing optional `requiredProgressionFlag`, `requiredNpc
 ## Changelog
 
 - **1.5.1:** Added `maxPurchasesPerPlayer`, vendor-result `maxStackSize`, and normalized purchase-cost display support for vendor profiles.
-- **1.5.1:** Added server-authoritative offer-level `requiredClasses` gates and activated them for Eon Penrose brewing-store stock.
+- **1.5.1:** Added server-authoritative offer-level `requiredClasses` gates and activated them for Eon Penrose brewing-store stock and Elias Dragoon-only repair-material stock.
+- **1.5.1:** Aligned D1 Elias, Naton, and Eon vendor profile prices to the pricing master list and added Beatrix Farrow as the live D1 food vendor.
 - **1.5.1:** Activated server-side evaluation for existing offer-level `requiredFactionTier` locks.
 - **1.5.1:** Added the D1 Gritch of the Barter Pit vendor profile for expensive golden food purchases.
 - **1.5.1:** Added optional mob-type vendor shells, bright neon-green friendly overhead names, and enforced invulnerable/no-AI vendor standing behavior.
