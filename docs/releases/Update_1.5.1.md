@@ -12,6 +12,13 @@
 
 - Added gunpowder crafting ability for Pyroclast class. See [Pyroclast Help Guide](../Classes/Pyroclast_Help_Guide.md).
 
+
+## Dragoon repair-material prerequisites
+
+- Added the prerequisite custom repair-material item registrations for `cosmicdungeon:leather_patch`, `cosmicdungeon:chain_link`, and `cosmicdungeon:netherite_repair_fragment`, with generated client item models/item definitions, display names, and the `cosmicdungeon:dragoon_repair_materials` item tag.
+- The full Dragoon Repair Affinity UI/service remains separate future work; this item prerequisite pass does not add repair menus, repair packets, payment/item transfer flows, anti-dupe state, or saved-data migrations.
+- Elias repair-material vendor offers are intentionally not added until server-authoritative class-gated vendor offers exist, so these materials are not exposed as normal public vendor stock.
+
 ## Region quest reactions
 
 - Moved Plant Flags operator tooling from `/plantflags ...` to `/region quest plant_flags ...`. See [In-Game Commands](../commands/In_Game_Commands.md#region-quest-reactions-151-location-quest-foundation) and [Achievements & Advancements](../Achievements/Achievements_and_Advancements.md).

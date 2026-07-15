@@ -63,6 +63,7 @@ public final class ModTags {
         public static final TagKey<Item> AMETHYST_SHARDS     = create("amethyst_shards");
 
         public static final TagKey<Item> ATTUNEMENT_CURRENCY = create("attunement_currency");
+        public static final TagKey<Item> DRAGOON_REPAIR_MATERIALS = create("dragoon_repair_materials");
 
         public static final TagKey<Item> SHIELDS =
                 ItemTags.create(ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "shields"));

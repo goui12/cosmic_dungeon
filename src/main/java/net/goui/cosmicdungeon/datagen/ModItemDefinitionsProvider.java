@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.block.ModBlocks;
+import net.goui.cosmicdungeon.item.ModItems;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
@@ -56,8 +57,11 @@ public final class ModItemDefinitionsProvider implements DataProvider {
                 .resolve(CosmicDungeonMod.MOD_ID)
                 .resolve("items");
 
-        // These must be ITEM ids (BlockItem IDs), not block ids.
-        List<ResourceLocation> chestItemIds = List.of(
+        // These must be item registry ids, not block ids. Block-backed entries use their BlockItem ids.
+        List<ResourceLocation> simpleItemDefinitionIds = List.of(
+                ModItems.LEATHER_PATCH.getId(),
+                ModItems.CHAIN_LINK.getId(),
+                ModItems.NETHERITE_REPAIR_FRAGMENT.getId(),
                 ModBlocks.BOGATYR_CHEST_ITEM.getId(),
                 ModBlocks.DEADEYE_CHEST_ITEM.getId(),
                 ModBlocks.DRAGOON_CHEST_ITEM.getId(),
@@ -68,10 +72,10 @@ public final class ModItemDefinitionsProvider implements DataProvider {
                 ModBlocks.VENEFEX_CHEST_ITEM.getId()
         );
 
-        CompletableFuture<?>[] futures = new CompletableFuture<?>[chestItemIds.size()];
+        CompletableFuture<?>[] futures = new CompletableFuture<?>[simpleItemDefinitionIds.size()];
 
-        for (int i = 0; i < chestItemIds.size(); i++) {
-            ResourceLocation id = chestItemIds.get(i);
+        for (int i = 0; i < simpleItemDefinitionIds.size(); i++) {
+            ResourceLocation id = simpleItemDefinitionIds.get(i);
 
             ResourceLocation itemModel = ResourceLocation.fromNamespaceAndPath(
                     CosmicDungeonMod.MOD_ID,

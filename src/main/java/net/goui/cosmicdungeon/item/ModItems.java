@@ -56,6 +56,9 @@ public class ModItems {
     public static final DeferredItem<Item> BARNACLED_PEARL = ITEMS.registerSimpleItem("barnacled_pearl");
     public static final DeferredItem<Item> SEISMIC_CORE_FRAGMENT = ITEMS.registerSimpleItem("seismic_core_fragment");
     public static final DeferredItem<Item> SHATTERED_REALITY_OF_SHUDDE_MELL = ITEMS.registerSimpleItem("shattered_reality_of_shudde_mell");
+    public static final DeferredItem<Item> LEATHER_PATCH = ITEMS.registerSimpleItem("leather_patch");
+    public static final DeferredItem<Item> CHAIN_LINK = ITEMS.registerSimpleItem("chain_link");
+    public static final DeferredItem<Item> NETHERITE_REPAIR_FRAGMENT = ITEMS.registerSimpleItem("netherite_repair_fragment");
     public static final DeferredItem<Item> RAW_FARROWS_CHOP = ITEMS.registerItem("raw_farrows_chop",
             props -> new Item(props.food(new FoodProperties.Builder().nutrition(3).saturationModifier(0.3F).build())));
     public static final DeferredItem<FarrowsChopItem> FARROWS_CHOP = ITEMS.registerItem("farrows_chop",

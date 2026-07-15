@@ -78,6 +78,9 @@ public class ModModelProvider extends ModelProvider {
         // ===== Flat/simple items =====
         registerExternalItem(itemModels, ModItems.POTION_OF_COMPANIONSHIP.get(), ResourceLocation.withDefaultNamespace("item/potion"));
         FLAT.accept(ModItems.BARNACLED_PEARL.get());
+        FLAT.accept(ModItems.LEATHER_PATCH.get());
+        FLAT.accept(ModItems.CHAIN_LINK.get());
+        FLAT.accept(ModItems.NETHERITE_REPAIR_FRAGMENT.get());
         FLAT.accept(ModItems.SHATTERED_REALITY_OF_SHUDDE_MELL.get());
         FLAT.accept(ModItems.RAW_FARROWS_CHOP.get());
         FLAT.accept(ModItems.FARROWS_CHOP.get());
@@ -185,6 +188,20 @@ public class ModModelProvider extends ModelProvider {
         // ===== Beatrix's Campfire =====
         {
             var b = ModBlocks.BEATRIX_CAMPFIRE.get();
+            ResourceLocation modelOff = rlMod("block/beatrix_campfire_off");
+            ResourceLocation modelOn = rlMod("block/beatrix_campfire");
+
+            var pd = PropertyDispatch.initial(BlockStateProperties.HORIZONTAL_FACING, BlockStateProperties.LIT);
+            pd.select(Direction.NORTH, Boolean.FALSE, new MultiVariant(WeightedList.of(new Variant(modelOff).withYRot(Quadrant.R180))));
+            pd.select(Direction.NORTH, Boolean.TRUE, new MultiVariant(WeightedList.of(new Variant(modelOn).withYRot(Quadrant.R180))));
+            pd.select(Direction.SOUTH, Boolean.FALSE, new MultiVariant(WeightedList.of(new Variant(modelOff))));
+            pd.select(Direction.SOUTH, Boolean.TRUE, new MultiVariant(WeightedList.of(new Variant(modelOn))));
+            pd.select(Direction.WEST, Boolean.FALSE, new MultiVariant(WeightedList.of(new Variant(modelOff).withYRot(Quadrant.R90))));
+            pd.select(Direction.WEST, Boolean.TRUE, new MultiVariant(WeightedList.of(new Variant(modelOn).withYRot(Quadrant.R90))));
+            pd.select(Direction.EAST, Boolean.FALSE, new MultiVariant(WeightedList.of(new Variant(modelOff).withYRot(Quadrant.R270))));
+            pd.select(Direction.EAST, Boolean.TRUE, new MultiVariant(WeightedList.of(new Variant(modelOn).withYRot(Quadrant.R270))));
+
+            blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(b).with(pd));
             registerExternalItem(itemModels, b.asItem(), rlMod("item/beatrix_campfire"));
         }
 

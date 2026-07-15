@@ -27,6 +27,9 @@ public class ModCreativeModeTabs {
                                 output.accept(ModItems.BARNACLED_PEARL);
                                 output.accept(ModItems.SEISMIC_CORE_FRAGMENT);
                                 output.accept(ModItems.SHATTERED_REALITY_OF_SHUDDE_MELL);
+                                output.accept(ModItems.LEATHER_PATCH);
+                                output.accept(ModItems.CHAIN_LINK);
+                                output.accept(ModItems.NETHERITE_REPAIR_FRAGMENT);
                                 output.accept(ModItems.BROODING_FORK);
                                 output.accept(ModItems.REGION_WAND);
                                 output.accept(ModItems.POTION_OF_COMPANIONSHIP);
@@ -216,6 +219,9 @@ public class ModCreativeModeTabs {
                             .icon(() -> new ItemStack(ModItems.BARNACLED_PEARL.get()))
                             .title(Component.translatable("creativetab.cosmicdungeon.dragoon_items"))
                             .displayItems((itemDisplayParameters, output) -> {
+                                output.accept(ModItems.LEATHER_PATCH);
+                                output.accept(ModItems.CHAIN_LINK);
+                                output.accept(ModItems.NETHERITE_REPAIR_FRAGMENT);
                                 //                            output.accept(ModItems.BARNACLED_PEARL);
                                 //                            output.accept(ModItems.SEISMIC_CORE_FRAGMENT);
                                 //                            output.accept(ModItems.SHATTERED_REALITY_OF_SHUDDE_MELL);
