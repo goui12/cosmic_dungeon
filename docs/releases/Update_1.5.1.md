@@ -250,3 +250,10 @@ The design-note context for factions, NPC/vendor faction behavior, First Trace, 
 - Documented **Nostalgia Bait** as live through successful Farrow's Chop travel.
 - Documented **The Tamsin Tax** as planned/docs-only because the current source has no player-facing Tamsin payment interface. No developer-only command grant path was added.
 - No saved-data format, rift/RD schema, spawner schema, door/key data, class selector data, teleportation saved data, vendor saved data, currency data, progression data, faction data, or achievement tracking storage changed for this content pass.
+
+## Dragoon Repair Affinity UI/system
+
+- Added the live player-to-player Dragoon Repair Affinity interface and `/repair` command flow.
+- Dragoons can invite a customer, the customer owns the damaged-item slot and optional labor fee, and successful finalization consumes Dragoon repair materials, transfers the optional fee, and repairs the item in 25% max-durability units.
+- Supported groups are leather armor, gold gear, chainmail armor, iron gear, diamond gear, and netherite gear. Unsupported special items remain unsupported with a friendly message.
+- This does not add direct Elias shop repair service, D2 Deadeye exceptions, unsupported special-item repair, or any world saved-data migration.

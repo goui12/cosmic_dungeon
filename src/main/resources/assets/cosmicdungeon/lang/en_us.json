@@ -644,7 +644,7 @@
   "screen.cosmicdungeon.help.class.bogatyr": "Bogatyr",
   "screen.cosmicdungeon.help.class.bogatyr.body": "Bogatyrs are rugged survivalist fighters themed around endurance, traditional weaponry, and wolf companionship.",
   "screen.cosmicdungeon.help.class.dragoon": "Dragoon",
-  "screen.cosmicdungeon.help.class.dragoon.body": "Melee-forward Dragoon fighters can trigger chain lightning on weapon hits, use Dragoon-attuned gear, open Dragoon chests, and are the class allowed to use anvils for vanilla repair support.",
+  "screen.cosmicdungeon.help.class.dragoon.body": "Melee-forward Dragoon fighters can trigger chain lightning on weapon hits, use Dragoon-attuned gear, open Dragoon chests, use anvils, and open Repair Affinity with /repair <player> to repair another player's supported damaged gear while the customer keeps ownership and may offer an optional labor fee.",
   "screen.cosmicdungeon.help.class.venefex": "Venefex",
   "screen.cosmicdungeon.help.class.venefex.body": "Venefex characters focus on poison, debuff, and attrition themes while using Venefex-attuned gear and chests.",
   "screen.cosmicdungeon.help.class.judicator": "Judicator",

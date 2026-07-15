@@ -19,3 +19,7 @@ Disabled visible class pages:
 Metalmancer and Deadeye stay visible in the index so future Dungeon 2 content has a stable destination, but they are not enabled in the current player-facing help menu.
 
 See also: [Cosmic Dungeon Help Menu](../Help_Menu.md).
+
+## Dragoon Repair Affinity player help
+
+The in-game class help now presents Repair Affinity as live Dragoon support: `/repair <player>`, `/repair accept <player>`, `/repair deny <player>`, and `/repair cancel`; customer item ownership; optional labor fee; Elias repair materials; and the requirement that both players stay nearby with the UI open.

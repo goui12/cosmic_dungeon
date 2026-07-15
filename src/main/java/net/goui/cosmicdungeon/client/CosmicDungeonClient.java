@@ -12,6 +12,7 @@ import net.goui.cosmicdungeon.client.rift.RiftAmbienceClient;
 import net.goui.cosmicdungeon.client.screen.ClassSelectorScreen;
 import net.goui.cosmicdungeon.client.screen.VendorScreen;
 import net.goui.cosmicdungeon.client.screen.TradeScreen;
+import net.goui.cosmicdungeon.client.screen.DragoonRepairScreen;
 import net.goui.cosmicdungeon.client.screen.settings.CosmicDungeonOptionsIntegration;
 import net.goui.cosmicdungeon.entity.ModEntities;
 import net.goui.cosmicdungeon.menu.ModMenus;
@@ -50,6 +51,7 @@ public final class CosmicDungeonClient {
             e.register(ModMenus.CLASS_SELECTOR.get(), ClassSelectorScreen::new);
             e.register(ModMenus.VENDOR.get(), VendorScreen::new);
             e.register(ModMenus.TRADE.get(), TradeScreen::new);
+            e.register(ModMenus.DRAGOON_REPAIR.get(), DragoonRepairScreen::new);
         });
 
         /*

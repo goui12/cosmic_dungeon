@@ -46,3 +46,7 @@ Eon Penrose's live Dungeon 1 Brewing Store prices are encoded in `cosmicdungeon:
 | Splash Potion of Poison | 3 Marks each | D2 planned only | TBD |
 | Splash Potion of Invisibility | 6 Marks each | D2 planned only | TBD |
 | Lingering Potion of Regeneration | 7 Marks each | D2 planned only | TBD |
+
+## Dragoon repair material prices
+
+Design source prices for Elias Dragoon-only repair materials are: Leather Patch 2 Trace; Gold Ingot 4 Trace; Copper Ingot 8 Trace where copper gear/material support exists; Chain Link 1 Mark 2 Trace; Iron Ingot 1 Mark 6 Trace; Diamond 1 Mark 8 Trace; Netherite Repair Fragment 2 Marks 2 Trace. Repair Affinity itself does not enforce a mandatory labor fee; customer labor payment is optional account currency selected in the UI.
