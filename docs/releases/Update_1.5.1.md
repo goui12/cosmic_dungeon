@@ -13,11 +13,12 @@
 - Added gunpowder crafting ability for Pyroclast class. See [Pyroclast Help Guide](../Classes/Pyroclast_Help_Guide.md).
 
 
-## Dragoon repair-material prerequisites
+## Dragoon Repair Affinity polish
 
-- Added the prerequisite custom repair-material item registrations for `cosmicdungeon:leather_patch`, `cosmicdungeon:chain_link`, and `cosmicdungeon:netherite_repair_fragment`, with generated client item models/item definitions, display names, and the `cosmicdungeon:dragoon_repair_materials` item tag.
-- The full Dragoon Repair Affinity UI/service remains separate future work; this item prerequisite pass does not add repair menus, repair packets, payment/item transfer flows, anti-dupe state, or saved-data migrations.
-- Elias repair-material vendor offers are intentionally not added until server-authoritative class-gated vendor offers exist, so these materials are not exposed as normal public vendor stock.
+- Dragoon Repair Affinity is implemented as a player-to-player repair service using `/repair <player>`, `/repair accept <player>`, `/repair deny <player>`, and `/repair cancel`. The customer places the damaged item into the repair interface, and the Dragoon supplies required repair materials from inventory.
+- The implemented payment model is an account-currency labor fee agreed through the repair UI, not a physical payment slot. The customer confirms readiness, the Dragoon confirms repair, and on successful server validation only the Dragoon materials are consumed, the customer item durability is restored by selected repair units, and the account-currency labor fee transfers.
+- Cancel, close, range break, death, logout, server stop, or failed validation paths do not consume/transfer repair materials or currency and return the repair item according to the customer-owned slot rules. The client now clears stale repair state when opening/closing the UI, ignores state packets for non-current container ids, and uses the supplied Repair Affinity textured button PNGs.
+- Existing repair-material registrations for `cosmicdungeon:leather_patch`, `cosmicdungeon:chain_link`, and `cosmicdungeon:netherite_repair_fragment` remain unchanged, and this polish pass does not change currency saved-data schemas, vendor profile pricing, class restrictions, spawner/rift/door/progression/faction data, or PNG assets. Updating existing 1.5.0 worlds requires no repair-data migration because repair sessions and invites are in-memory only.
 
 ## Region quest reactions
 

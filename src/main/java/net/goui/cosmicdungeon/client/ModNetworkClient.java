@@ -23,6 +23,8 @@ import net.goui.cosmicdungeon.network.payload.SpawnerLabelPayload;
 import net.goui.cosmicdungeon.region.client.RegionLookClient;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 
 /**
  * Client-only implementations called reflectively from common code.
@@ -33,6 +35,8 @@ import net.neoforged.neoforge.client.network.ClientPacketDistributor;
  * - So these methods should run immediately (no extra Minecraft.execute nesting).
  */
 public final class ModNetworkClient {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private ModNetworkClient() {}
 
     public static void onShakeScreen(ShakeScreenPayload payload) {
@@ -116,7 +120,13 @@ public final class ModNetworkClient {
     }
 
     public static void onDragoonRepairState(DragoonRepairPayloads.S2C_State payload) {
-        RepairClientState.set(new RepairClientState.View(payload.containerId(), payload.sessionId(), payload.dragoonName(), payload.targetName(), payload.viewerDragoon(), payload.offeredFeeTrace(), payload.targetBalanceTrace(), payload.dragoonCapacityTrace(), payload.selectedUnits(), payload.requiredUnitsToFull(), payload.materialItemId(), payload.materialDisplay(), payload.requiredMaterialCount(), payload.dragoonHasMaterial(), payload.targetReady(), payload.dragoonRepairing(), payload.statusMessage()));
+        boolean accepted = RepairClientState.setIfCurrent(
+                payload.containerId(),
+                new RepairClientState.View(payload.containerId(), payload.sessionId(), payload.dragoonName(), payload.targetName(), payload.viewerDragoon(), payload.offeredFeeTrace(), payload.targetBalanceTrace(), payload.dragoonCapacityTrace(), payload.selectedUnits(), payload.requiredUnitsToFull(), payload.materialItemId(), payload.materialDisplay(), payload.requiredMaterialCount(), payload.dragoonHasMaterial(), payload.targetReady(), payload.dragoonRepairing(), payload.statusMessage())
+        );
+        if (!accepted) {
+            LOGGER.debug("Ignoring Dragoon Repair state for inactive container {}", payload.containerId());
+        }
     }
 
     public static void sendToServer(CustomPacketPayload payload) {

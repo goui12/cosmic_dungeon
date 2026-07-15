@@ -55,6 +55,6 @@ Dragoon is a melee-forward class with an innate chain-lightning passive that occ
 
 Dragoons can repair supported damaged equipment for another player through Repair Affinity. Use `/repair <player>` to invite a customer, while the customer can run `/repair accept <player>`, `/repair deny <player>`, or either player can run `/repair cancel`.
 
-The customer keeps ownership of the item slot, may offer an optional account-currency labor fee, and must stay nearby with the interface open. The Dragoon supplies the matching Elias repair material from inventory. Supported groups are leather armor, gold gear, chainmail armor, iron gear, diamond gear, and netherite gear; unsupported special items remain unrepaired.
+The customer places the damaged item into the interface, keeps ownership of that item slot, may offer an optional account-currency labor fee (not a physical payment slot), confirms readiness, and must stay nearby with the interface open. The Dragoon supplies the matching Elias repair material from inventory and confirms the repair. Materials and account currency move only after successful server validation. Supported groups are leather armor, gold gear, chainmail armor, iron gear, diamond gear, and netherite gear; unsupported special items remain unrepaired.
 
 See [Dragoon Repair Affinity](Dragoon_Repair_Affinity.md).
