@@ -28,6 +28,8 @@ public class DragoonRepairScreen extends AbstractContainerScreen<DragoonRepairMe
     private static final ResourceLocation SMALL_BUTTON_HOVER = ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "textures/gui/repair_affinity_small_button_hover.png");
     private static final ResourceLocation SMALL_BUTTON_DISABLED = ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "textures/gui/repair_affinity_small_button_disabled.png");
 
+    private boolean clearedInitialState;
+
     public DragoonRepairScreen(DragoonRepairMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
         imageWidth = 256;
@@ -37,7 +39,12 @@ public class DragoonRepairScreen extends AbstractContainerScreen<DragoonRepairMe
 
     @Override
     protected void init() {
-        RepairClientState.clear();
+        if (!clearedInitialState) {
+            // Clear stale data for a newly opened repair screen, but preserve the active
+            // session view when Minecraft re-runs init() during resize/GUI-scale relayout.
+            RepairClientState.clear();
+            clearedInitialState = true;
+        }
         super.init();
         int x = leftPos;
         int y = topPos;
@@ -137,7 +144,6 @@ public class DragoonRepairScreen extends AbstractContainerScreen<DragoonRepairMe
             this.activeSupplier = activeSupplier;
             this.selectedSupplier = selectedSupplier;
         }
-
 
         @Override
         protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
