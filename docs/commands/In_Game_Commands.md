@@ -251,3 +251,18 @@ Multiple independent rules for the same item are supported. For example, potato 
 `/spawner info` shows configured rows as `Chance: <percent> [+] [-] Count: <n> [+] [-] [Default]`. The chance and count buttons target the stable rule id for that row, so duplicate item rows are safe. Clicking `[Default]` on a configured row removes only that rule; `/spawner drop intrinsic default <item>` and the backward-compatible `/spawner drop intrinsic clear <item>` remove all configured rules for that item and restore vanilla/datapack default behavior. `/spawner drop intrinsic add <item> <chance> [quantity]` always adds a new independent rule, while `/spawner drop intrinsic <item> <chance> [quantity]` upserts by item/count for convenience.
 
 Save migration is lazy and backward-compatible: 1.5.0 data, block-entity data versions 150/151, preset versions 2/3, preset file formats 1/2, old `intrinsicDrops` maps, and Phase-5 `intrinsicDropRules` keyed by item id are read as one count-1 rule per old item chance. New block entities save as data version 152, presets save as preset version 4, and preset JSON saves as format version 3 while preserving the full `spawnerPresetNbt` rule list. The legacy `intrinsicDrops` mirror remains compatibility-only and cannot represent duplicate rows.
+
+### Repair Affinity (Dragoon player-to-player repair)
+`/repair <player>`
+`/repair accept <player>`
+`/repair deny <player>`
+`/repair cancel`
+
+Authority: the initiator must be a Dragoon. The target accepts or denies the invite with command fallbacks or clickable chat buttons.
+
+Notes:
+- Both players must be online, alive, non-spectators, in the same dimension, and within 8 blocks when the session opens and while it remains active.
+- The customer owns the repair slot: only the customer can place or remove the damaged item, and the Dragoon cannot take it.
+- Labor payment is optional account currency selected by the customer in the UI; it is withdrawn only after successful repair finalization.
+- The Dragoon supplies repair materials from inventory. Supported rules are leather armor with Leather Patch, gold gear with Gold Ingot, chainmail armor with Chain Link, iron gear with Iron Ingot, diamond gear with Diamond, and netherite gear with Netherite Repair Fragment. Copper gear remains unsupported unless the running Minecraft/source version exposes explicit copper equipment.
+- Unsupported special damaged items such as bows, crossbows, tridents, elytra, and fishing rods are rejected with a friendly status instead of being repaired.

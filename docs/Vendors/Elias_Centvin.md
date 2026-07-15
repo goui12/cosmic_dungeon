@@ -30,3 +30,7 @@ NPC/vendor faction pricing multipliers are design-only for Elias at this time. C
 - [Pricing Master List](../Economy/Pricing_Master_List.md)
 - [NPC/Vendor Faction](../Factions/NPC_Vendor_Faction.md)
 - [Progression, Factions & Unlocks](../Progression/Progression_Factions_and_Unlocks.md)
+
+## Repair Affinity materials now consumed by Dragoon UI
+
+Elias's Dragoon repair material theme now feeds the live player-to-player Repair Affinity system: Dragoons consume Leather Patches, Chain Links, Netherite Repair Fragments, and vanilla material ingots/gems from their inventory when repairing another player's supported damaged gear. This is not a direct Elias shop repair service, and the customer labor fee remains optional player-negotiated account currency in the Repair Affinity UI.

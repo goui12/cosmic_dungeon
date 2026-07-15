@@ -407,6 +407,13 @@ public final class ModNetwork {
                 )
         );
 
+        registrar.playToServer(DragoonRepairPayloads.C2S_AdjustFee.TYPE, DragoonRepairPayloads.C2S_AdjustFee.STREAM_CODEC, (payload, ctx) -> { if (ctx.player() instanceof ServerPlayer sp) { var s0=net.goui.cosmicdungeon.playerclass.dragoon.repair.DragoonRepairSessionData.get(sp); if (s0!=null) s0.adjustFee(sp, payload.denominationId(), payload.deltaCount()); } });
+        registrar.playToServer(DragoonRepairPayloads.C2S_SelectUnits.TYPE, DragoonRepairPayloads.C2S_SelectUnits.STREAM_CODEC, (payload, ctx) -> { if (ctx.player() instanceof ServerPlayer sp) { var s0=net.goui.cosmicdungeon.playerclass.dragoon.repair.DragoonRepairSessionData.get(sp); if (s0!=null) s0.selectUnits(sp, payload.units()); } });
+        registrar.playToServer(DragoonRepairPayloads.C2S_TargetReady.TYPE, DragoonRepairPayloads.C2S_TargetReady.STREAM_CODEC, (payload, ctx) -> { if (ctx.player() instanceof ServerPlayer sp) { var s0=net.goui.cosmicdungeon.playerclass.dragoon.repair.DragoonRepairSessionData.get(sp); if (s0!=null) s0.setReady(sp, payload.ready()); } });
+        registrar.playToServer(DragoonRepairPayloads.C2S_Repair.TYPE, DragoonRepairPayloads.C2S_Repair.STREAM_CODEC, (payload, ctx) -> { if (ctx.player() instanceof ServerPlayer sp) { var s0=net.goui.cosmicdungeon.playerclass.dragoon.repair.DragoonRepairSessionData.get(sp); if (s0!=null) s0.repair(sp); } });
+        registrar.playToServer(DragoonRepairPayloads.C2S_Cancel.TYPE, DragoonRepairPayloads.C2S_Cancel.STREAM_CODEC, (payload, ctx) -> { if (ctx.player() instanceof ServerPlayer sp) net.goui.cosmicdungeon.playerclass.dragoon.repair.DragoonRepairSessionData.cancel(sp, "Cancelled"); });
+        registrar.playToClient(DragoonRepairPayloads.S2C_State.TYPE, DragoonRepairPayloads.S2C_State.STREAM_CODEC, (payload, ctx) -> ctx.enqueueWork(() -> ClientNetworkDispatch.dispatch("onDragoonRepairState", payload)));
+
         /* ===================== REGION LOOK ===================== */
 
         registrar.playToClient(

@@ -209,6 +209,9 @@ public final class HelpMenuContent {
             HelpBlock.paragraph("A trident-wielding specialist in battlefield salvage and historical armorcraft."),
             HelpBlock.bullet("Dragoon is the anvil and repair-support class."),
             HelpBlock.bullet("Dragoons can use vanilla anvils."),
+            HelpBlock.bullet("Repair Affinity lets a Dragoon repair another player's supported damaged gear while the customer keeps item ownership."),
+            HelpBlock.bullet("The customer may offer an optional account-currency labor fee; the Dragoon supplies Elias repair materials."),
+            HelpBlock.bullet("Both players must stay nearby with the interface open. Commands: /repair <player>, /repair accept <player>, /repair deny <player>, /repair cancel."),
             HelpBlock.bullet("Dragoon passive: 3% chance to trigger chain lightning."),
             HelpBlock.bullet("Can use Dragoon-attuned gear and class chests.")));
 

@@ -15,6 +15,7 @@ import net.goui.cosmicdungeon.menu.ModMenus;
 import net.goui.cosmicdungeon.network.ModNetwork;
 import net.goui.cosmicdungeon.particle.ModParticleTypes;
 import net.goui.cosmicdungeon.playerclass.metalmancer.MetalmancerCommand;
+import net.goui.cosmicdungeon.playerclass.dragoon.repair.DragoonRepairCommand;
 import net.goui.cosmicdungeon.playerclass.metalmancer.MetalmancerItems;
 import net.goui.cosmicdungeon.redstone.rf.ModRfBlockEntities;
 import net.goui.cosmicdungeon.rift.DefaultRiftDestinations;
@@ -142,6 +143,7 @@ public class CosmicDungeonMod {
         AchievementCommand.register(event.getDispatcher(), event.getBuildContext());
         VendorCommand.register(event.getDispatcher());
         TradeCommand.register(event.getDispatcher());
+        DragoonRepairCommand.register(event.getDispatcher());
         ClassItemCommand.register(event.getDispatcher());
 
     }

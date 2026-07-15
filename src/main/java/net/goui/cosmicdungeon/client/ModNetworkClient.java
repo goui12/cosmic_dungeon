@@ -8,6 +8,8 @@ import net.goui.cosmicdungeon.network.ClassPayloads;
 import net.goui.cosmicdungeon.network.RiftPayloads;
 import net.goui.cosmicdungeon.network.ShakeScreenPayload;
 import net.goui.cosmicdungeon.network.TradePayloads;
+import net.goui.cosmicdungeon.network.DragoonRepairPayloads;
+import net.goui.cosmicdungeon.client.screen.DragoonRepairScreen.RepairClientState;
 import net.goui.cosmicdungeon.network.VendorPayloads;
 import net.goui.cosmicdungeon.network.CompanionshipTeleportPayloads;
 import net.goui.cosmicdungeon.client.screen.VendorScreen;
@@ -111,6 +113,10 @@ public final class ModNetworkClient {
                 payload.otherConfirmed(),
                 payload.statusMessage()
         ));
+    }
+
+    public static void onDragoonRepairState(DragoonRepairPayloads.S2C_State payload) {
+        RepairClientState.set(new RepairClientState.View(payload.containerId(), payload.sessionId(), payload.dragoonName(), payload.targetName(), payload.viewerDragoon(), payload.offeredFeeTrace(), payload.targetBalanceTrace(), payload.dragoonCapacityTrace(), payload.selectedUnits(), payload.requiredUnitsToFull(), payload.materialItemId(), payload.materialDisplay(), payload.requiredMaterialCount(), payload.dragoonHasMaterial(), payload.targetReady(), payload.dragoonRepairing(), payload.statusMessage()));
     }
 
     public static void sendToServer(CustomPacketPayload payload) {
