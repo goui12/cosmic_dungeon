@@ -57,3 +57,7 @@ These offers are planning notes only until a real Dungeon 2 progression gate exi
 | Splash Potion of Poison | 20 | 3 Marks each |
 | Splash Potion of Invisibility | 20 | 6 Marks each |
 | Lingering Potion of Regeneration | 20 | 7 Marks each |
+
+## Related lore
+
+For dungeoneer-facing backstory without price tables, see [Eon Penrose NPC lore](../NPCs/Eon_Penrose.md).

@@ -106,3 +106,14 @@ Buy offers support the existing optional `requiredProgressionFlag`, `requiredNpc
 ## Elias Centvin and pricing design notes
 
 Elias Centvin is documented as the current D1 weapon-supplier profile plus future design direction in [Elias Centvin](Vendors/Elias_Centvin.md). Pricing sources and future balancing references are tracked in [Pricing Master List](Economy/Pricing_Master_List.md). NPC faction pricing and stock overhauls are not live unless encoded in current vendor profiles or server-side vendor code.
+
+## NPC lore links
+
+Vendor stock and pricing stay in this vendor documentation and the specific vendor/pricing references. Dungeoneer-facing backstory is maintained separately in the NPC lore pages:
+
+- [Naton Whitlock](./NPCs/Naton_Whitlock.md)
+- [Elias Centvin](./NPCs/Elias_Centvin.md) and [Elias vendor details](./Vendors/Elias_Centvin.md)
+- [Eon Penrose](./NPCs/Eon_Penrose.md) and [Eon vendor details](./Vendors/Eon_Penrose.md)
+- [Beatrix Farrow](./NPCs/Beatrix_Farrow.md)
+- [Tamsin Vane](./NPCs/Tamsin_Vane.md)
+- [John Hamish Watson](./NPCs/John_Hamish_Watson.md)

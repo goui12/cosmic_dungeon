@@ -66,3 +66,7 @@ NPC/vendor faction pricing multipliers are design-only for Elias at this time. C
 - [Pricing Master List](../Economy/Pricing_Master_List.md)
 - [NPC/Vendor Faction](../Factions/NPC_Vendor_Faction.md)
 - [Progression, Factions & Unlocks](../Progression/Progression_Factions_and_Unlocks.md)
+
+## Related lore
+
+For dungeoneer-facing backstory without price tables, see [Elias Centvin NPC lore](../NPCs/Elias_Centvin.md).

@@ -273,3 +273,12 @@ The design-note context for factions, NPC/vendor faction behavior, First Trace, 
 - Added Beatrix Farrow's live D1 `cosmicdungeon:d1/food_vendor` profile for raw food, Beatrix's Campfire, and one-per-player Raw Farrow's Chop/Farrow's Chop offers. Existing worlds do not require manual conversion because vendor profiles reload from datapack JSON and purchase-limit storage was already additive.
 - Added vendor-result stack caps to Eon Penrose's D1 Brewing Store offers and kept the D2 potion list documented as future-only instead of adding those offers to the D1 profile.
 - Vendor pricing tables remain in markdown vendor/economy docs, not in the in-game H help menu.
+
+## Prompt 03 NPC lore and H-menu pages
+
+- Added full dungeoneer-facing NPC lore/backstory pages to the H-key help menu for Naton Whitlock, Elias Centvin, Eon Penrose, Beatrix Farrow, Tamsin Vane, and John Hamish Watson.
+- Added a small `HelpBlock.longText(...)` helper so long lore blocks are split into readable wrapped paragraphs inside the existing scrollable help-menu content viewport.
+- Updated NPC documentation with the same full lore and linked vendor documentation back to NPC lore pages without duplicating price tables in the in-game help menu.
+- Clarified that Watson's six spectral blooms are unique placed dungeon bloom items tied to his D1 spiritual release/objective, while Lesser Blooms remain separate restoration/progression collectibles for NPC/vendor access, achievements, and unlocks.
+- Tamsin Vane's lore is documented, but her map interface, dungeon broker UI, Tamsin Tax payment flow, and queue system remain future/stubbed unless implemented by live source.
+- This is a client help-content and markdown documentation update only. It does not change server-data-storage formats, Cosmic Mob Spawner NBT/presets, doors/keys, rifts, class selector data, teleportation, access-policy records, vendor transaction state, currency state, faction state, or progression saved data; existing 1.5.0 worlds do not require manual conversion.
