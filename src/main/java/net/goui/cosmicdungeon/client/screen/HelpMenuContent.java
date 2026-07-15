@@ -2,6 +2,7 @@ package net.goui.cosmicdungeon.client.screen;
 
 import net.minecraft.network.chat.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class HelpMenuContent {
@@ -90,16 +91,34 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Dungeon 2 potion stock is planned for later and is not live in Dungeon 1."),
             HelpBlock.tip("If a row is locked, check your class and Village progression before buying.")));
 
-    public static final Page VILLAGE_SOULS = page("village_souls", "Village Souls", true, List.of(
-            HelpBlock.heading("Restored Village Faces"),
+    public static final Page VILLAGE_SOULS = page("village_souls", "Village NPCs", true, List.of(
+            HelpBlock.heading("Village NPC Lore"),
+            HelpBlock.paragraph("These pages collect the dungeoneer-facing backstories of the Village NPCs and story figures tied to Dungeon 1."),
             HelpBlock.bullet("Naton Whitlock: general supplies, food, fire, light, and container basics."),
             HelpBlock.bullet("Elias Centvin: weapons, tools, Dragoon repair materials, and salvage craft; direct shop repair service is future-only."),
             HelpBlock.bullet("Eon Penrose: brewing ingredients, equipment, and potion work."),
             HelpBlock.bullet("Beatrix Farrow: food, campfire cooking, Farrow's Chop, and the memory of home."),
-            HelpBlock.heading("Dungeon Story"),
-            HelpBlock.bullet("Tamsin Vane: starting-area dungeon entry broker who found a JHW map to Base Camp."),
-            HelpBlock.bullet("John Hamish Watson: doomed scholar tied to the abandoned Base Camp, spectral blooms, and later guidance."),
-            HelpBlock.tip("Listen for NPC dialogue and letters; they explain who is helping you and why.")));
+            HelpBlock.bullet("Tamsin Vane: starting-area treasure hunter who found a JHW map to Base Camp; her deeper broker/payment systems are future-only until presented in-game."),
+            HelpBlock.bullet("John Hamish Watson: doomed scholar tied to the abandoned Base Camp, six spectral blooms, and later guidance."),
+            HelpBlock.tip("Use each NPC's page in the left index for the full backstory. Vendor prices stay out of these lore pages.")));
+
+    public static final Page NATON_WHITLOCK = lorePage("npc.naton_whitlock", "Naton Whitlock", "General Supply Vendor",
+            "Naton Whitlock provides basic travel supplies, food, fire access, light access, and container access for players in the Village.", natonBackstory(), natonNotes());
+
+    public static final Page ELIAS_CENTVIN = lorePage("npc.elias_centvin", "Elias Centvin", "Weapon, Tool Sales and Service",
+            "Elias Centvin provides weapon and tool sales, armor repair material access, and repair service rules for damaged armor, weapons, and tools.", eliasBackstory(), eliasNotes());
+
+    public static final Page EON_PENROSE = lorePage("npc.eon_penrose", "Eon Penrose", "Brewing Store Vendor",
+            "Eon Penrose provides brewing ingredients, equipment, and potion sales, for players in the Village.", eonBackstory(), eonNotes());
+
+    public static final Page BEATRIX_FARROW = lorePage("npc.beatrix_farrow", "Beatrix Farrow", "Food and Farrow's Chop Vendor",
+            "Beatrix sells food that can be cooked on a campfire, along with her special Farrow’s Chop. Beatrix Farrow grounds the campfire food system and Farrow’s Chop travel mechanic in restored-soul progression, Village recovery, and the lingering cosmic damage caused by Atlach-Nacha’s centuries-long search for an anchor on Earth.", beatrixBackstory(), beatrixNotes());
+
+    public static final Page TAMSIN_VANE = lorePage("npc.tamsin_vane", "Tamsin Vane", "Dungeon Entry Broker",
+            "Tamsin Vane is a living surface-side treasure hunter who discovered a map to the Base Camp and now sells access to nearby adventurers. Her map lore can frame entry, but map interfaces, dungeon broker UI, payment flows, and queue systems remain future-only unless you see them implemented in-game.", tamsinBackstory(), tamsinNotes());
+
+    public static final Page JOHN_HAMISH_WATSON = lorePage("npc.john_hamish_watson", "John Hamish Watson", "Quest Giver",
+            "John Hamish Watson introduces the abandoned Base Camp, the six spectral blooms, and the first major dungeon recovery objective. The six spectral blooms are unique placed dungeon bloom items tied to Watson's spiritual release; Lesser Blooms are separate restoration collectibles for side progression, vendor access, achievements, and unlocks.", watsonBackstory(), watsonNotes());
 
     public static final Page CURRENCY = page("currency", "Currency", true, List.of(
             HelpBlock.heading("Attunement Fragments"),
@@ -235,7 +254,290 @@ public final class HelpMenuContent {
             HelpBlock.heading("Coming in Dungeon 2"),
             HelpBlock.paragraph("Deadeye is disabled.")));
 
-    public static final List<Page> PAGES = List.of(GET_STARTED, DUNGEONS, CLASSES, THEURGIST, PYROCLAST, BOGATYR, DRAGOON, VENEFEX, JUDICATOR, METALMANCER, DEADEYE, PARTY, TRADING, VENDORS, BREWING_STORE, VILLAGE_SOULS, CURRENCY, PROGRESSION, FACTIONS, TELEPORTATION, ACHIEVEMENTS, REFERENCES);
+    public static final List<Page> PAGES = List.of(GET_STARTED, DUNGEONS, CLASSES, THEURGIST, PYROCLAST, BOGATYR, DRAGOON, VENEFEX, JUDICATOR, METALMANCER, DEADEYE, PARTY, TRADING, VENDORS, BREWING_STORE, VILLAGE_SOULS, NATON_WHITLOCK, ELIAS_CENTVIN, EON_PENROSE, BEATRIX_FARROW, TAMSIN_VANE, JOHN_HAMISH_WATSON, CURRENCY, PROGRESSION, FACTIONS, TELEPORTATION, ACHIEVEMENTS, REFERENCES);
+
+
+
+    private static String natonBackstory() { return """
+Naton Whitlock was once a general supplier by profession and a public inconvenience by necessity.
+
+He made his living buying excess goods from couriers, wagon drivers, pack handlers, and anyone else who might have a crate or two fall off the wagon while passing through town. He did not rob caravans. He was firm on that point. He was simply present at the right time with coin in hand, a friendly smile, and a special charisma for noticing when a delivery contained twelve buckets but only eleven were expected.
+
+Naton called this commerce.
+
+Several clerks called it deeply irritating.
+
+He dealt in small necessities. Bread. Apples. Torches. Buckets. Flint and steel. Things travelers forgot until the precise moment forgetting became a problem. He had a talent for being nearby when someone said, “I wish I had brought one of those.”
+
+He also had a talent for discovering, at that same moment, that the price had just gone up.
+
+Naton’s career carried him through many settlements, though rarely twice in the same season. In Felbridge, he was chased out after selling defective “rain-tested torches” after a storm. In Oakhollow, a customer broke a tooth on three day old bread Naton had labeled “firm travel loaf.” In Dunmere, he was asked to leave after renting the same bucket to one farmer three times before noon.
+
+Naton insisted every complaint was a misunderstanding, except, of course, the bucket matter, which he considered sound business.
+
+His shop was never impressive. It was crowded, tilted, over-labeled, and arranged according to a system known only to him and possibly one clever cat. Customers often found carrots under torch bundles, apples in tool crates, and a sign reading, “All sales final. All complaints ignored.”
+
+He was proud of that sign.
+
+By the time death found him, Naton had survived angry customers, suspicious clerks, unpaid guards, kicked shins, thrown turnips, and one regrettable incident involving a goat, three sacks of potatoes, and a bridge toll.
+
+When his soul was restored through the Lesser Bloom system, Naton returned with the posture of a man who had expected to wake inside a crate and was relieved to find himself only partly dead. He resumed business quickly, though no one is entirely certain where his new stock comes from.
+
+Naton says he has suppliers.
+
+When asked who they are, he looks around, lowers his voice, and says, “Reliable fellows. Tall. Private. Excellent delivery times.”
+
+He will not say more.
+
+Naton considers his work honest enough to stand behind, though preferably not in front of.
+"""; }
+    private static String natonNotes() { return """
+Naton’s stall is crowded with useful things arranged in a manner that suggests planning, panic, and several interrupted breakfasts. Food sits beside fire-starting tools. Buckets hang from hooks at unequal heights. Torch bundles are tied neatly, though never in the same kind of cord twice.
+
+His supplies are ordinary in use, but not always ordinary in arrival. Crates sometimes appear before anyone sees them delivered. Apples occasionally roll out from under shelves that were empty moments before.
+
+He does not sell rare treasures. He sells the things travelers should have brought before leaving home.
+"""; }
+    private static String eliasBackstory() { return """
+Elias Centvin was once a blacksmith of renown. When his son, Oren, enlisted as a Dragoon, Elias was always there to help.
+
+The Dragoons patrolled the nearby towns and roadways. Whenever Oren returned to the forge, Elias would see him approach and call, “How did the armor hold?”
+
+Oren would grin through road dust and exhaustion.
+
+“It holds.”
+
+Elias always answered, “Then it shall hold longer,” as he pulled the damaged pieces from his son and began to work.
+
+At first, the work was simple. Split straps. Bent buckles. Dents hammered into breastplates. Elias learned the intricacies of Dragoon armor because Oren kept bringing it home broken, proud, and alive.
+
+Over time, the lower roads they patrolled became crowded with walking monsters.
+
+The Dragoons called them the Hollow Mail. They were soldiers in armor, but not human enough. They walked after wounds that should have ended them. Their shields bore narrow claw marks no animal had made. Their helmets turned toward sound, though some had no heads inside them.
+
+Eventually, the Dragoons marched out to stop the menace once and for all. Elias packed what gear he could and followed behind.
+
+For several days, the Dragoons fought at the breach. Armor came back scorched, torn, and bent into impossible shapes. Elias patched, hammered, reset, and tightened until his hands bled and sweat matted his hair and clothes.
+
+On the third night of battle, Oren brought back a breastplate with deep creases across the front.
+
+Elias set both hands on the plate.
+
+“How did it hold?”
+
+Oren smiled.
+
+“It holds.”
+
+Elias looked at the damage, then at his son.
+
+“Then it shall hold longer.”
+
+He repaired it before dawn, and Oren wore it once again into the breach.
+
+After the fighting ended, bones rose inside Dragoon armor and came against the support camp. As the hungry dead approached, Elias saw familiar helmets moving in the dark. He heard Dragoon mail clattering over empty ribs, and among their ranks he spotted the breastplate he had repaired the night before.
+
+The tradesmen, doctors, and support staff rose one at a time, each realizing the threat in their own moment. Then, together, they took up the tools of their trades and carried on the fight the Dragoons had lost. Only this time, they fought the Hollow Mail, who had been their friends, family, and defenders only a day before.
+
+Elias rose as well. His forge hammer in hand, he paced out to unmake the armor he had strengthened only the night before and lay his son to rest. As he swung his hammer, he felt webs pulling him down. He felt them, cold and wet, winding up his legs and constricting his heart even as he charged forward.
+
+From across the expanse, Atlach-Nacha’s webs searched among the broken souls under the earth, hunting for something strong enough to anchor the tugging of worlds.
+
+In the dark, Elias was dragged underground. As the webs passed through him, he felt his life ending and his soul divided into pieces useful enough to keep, but scattered far and wide throughout the dungeon.
+
+When restored through the Lesser Bloom system, Elias returns as a semi-solid remembrance of himself. He appears as a working armorer because that is how he remembers his most important contribution.
+
+Elias does not speak about death, the Dragoons, or even his son. But every so often, you may hear him grumble about cracks, dents, and whether something will hold.
+
+Because of his affinity with the Dragoons, Elias stocks a secret list of armor patches that some gifted in the art of weapon and armor repair may find useful.
+"""; }
+    private static String eliasNotes() { return """
+Elias’s shop has the order of a dedicated mind and a disciplined body. Tools hang in straight lines. Repair materials are sorted by weight and use. In front of his shop is an old grindstone, and behind it an old Dragoon anvil, but only Elias is permitted to labor over the anvil within.
+
+His Dragoon stock is arranged apart from the rest. Leather patches, chain links, ingots, diamonds, and Netherite repair fragments are ordered carefully, yet hidden from most eyes.
+
+Some players report hearing a second hammer strike when Elias works, though no second hammer is visible. Others say the repaired item feels briefly cold or damp, as if it has passed through a place with no sun before returning to the hand.
+
+But do not ask Elias. He knows only that broken armor should be made whole, dull weapons should be made sharp, and some battles are survived because someone mended what others had given up.
+"""; }
+    private static String eonBackstory() { return """
+Eon was once an apothecary in the heart of town. His shop smelled of simmering sugar solutions, savory herbs, and the slightest traces of smoke from the small flames he kept beneath his bottles.
+
+For Eon, business had never been better. Just last year, he had discovered how to make healing potions linger in the air, and now he could barely keep up with demand. Eon knew that a good theurgist could follow recipes, but the best theurgists were not afraid to take chances. And take chances he did.
+
+Well after dark, when the streets were empty and his shop was closed, Eon gathered his supplies and experimented through the night. A little less heat. A little more powder. One drop added, two drops regretted. He kept careful notes, but his best discoveries usually began with the words, “That should not have happened.”
+
+When the dungeon’s influence reached the town, the first signs appeared in the sickroom. Wounds closed too quickly, then opened in wrong places. Sleep tonics brought dreams of black corridors. Patients woke speaking in an ancient tongue no one could decipher.
+
+Eon followed the symptoms until the symptoms followed him back.
+
+At first, the signs were small. A burn on a patient’s hand appeared faintly on his own. A sleeping man whispered a phrase, and Eon later found the same words written in his notes, though he had no memory of putting them there. Slowly, terribly, he began to understand that the foreign tongue was not sickness. It was ritual.
+
+The words spoke of vast powers beyond the ordered world, of webs drawn across hidden spaces, and of a hunger that mistook souls for thread. Eon was frightened, but fear did not stop him. It clarified the work.
+
+He began searching for a cure, one mixture at a time. Each failure taught him something, and every failed mixture brought him closer to the cure. Whether standing at his station or lying sleepless in bed, he could feel a downward pull upon his soul.
+
+The pull grew stronger as the sickness spread. Eon came to believe that the answer could not be found in his shop alone. If the ritual language had risen from below, then some part of its cure might be waiting below as well.
+
+So Eon descended.
+
+He entered the labyrinth beneath the city with bottles wrapped in cloth and notes tucked against his chest. In the passages below, where Atlach-Nacha’s web had grown thickest, the dead rose around him. Skeletons climbed from the dark in broken armor and burial cloth, closing in until there was nowhere left to run. Glass shattered around him as Eon breathed his last.
+
+When restored through the Lesser Bloom system, Eon resumes his work because his soul remembers the need for a cure. He mixes ingredients, steadies flames beneath glass bottles, and watches percolating liquids for the smallest change in color. He sells brewing ingredients, equipment, and potions because he believes the cure still exists somewhere in the work.
+
+Every failed mixture brings him closer to the cure.
+"""; }
+    private static String eonNotes() { return """
+Eon’s shop feels lived in, worked in, and slightly overfilled. Bottles crowd the shelves. Notes sit beneath paperweights. Brewing stands click softly as liquid moves through narrow glass necks. The air carries sugar, herbs, smoke, and the clean sharpness of potion work.
+
+He does not treat failure as shameful. A spoiled batch, cracked bottle, or useless potion only sends him back to his notes with renewed interest. Travelers who expect certainty may find him unsettling. Travelers who need hope often find him useful.
+
+Some potions in Eon’s shop glow after the room has gone dark. He claims this is a promising sign, though he has not yet determined what.
+"""; }
+    private static String beatrixBackstory() { return """
+Beatrix Farrow is a restored village soul and the only known source of Farrow’s Chop. She keeps a small pig farm near the village lanes, tending her animals with the quiet seriousness of a child repeating work she remembers from life.
+
+Beatrix Farrow was once a child on her parents’ pig farm, long before the Village became a refuge for restored souls. Her memories of life are simple, but stubborn. Mud underfoot. Warm feed buckets. Piglets pressing close in the cold. Her parents calling her in before dusk.
+
+Those memories ended in the dungeon.
+
+Beatrix and her family were among the many souls drawn into the deeper working of Atlach-Nacha, the Cosmic Weaver. For centuries, Atlach-Nacha brushed against Earth from beyond the thin places, seeking a stronger anchor point. She entangled lives, places, memories, and souls in her cosmic web, but most broke under the strain. Beatrix’s family was lost in that pressure. Their souls did not hold together.
+
+Beatrix’s soul survived, but not unchanged.
+
+When her soul is restored through the Lesser Bloom system, she returns as the child she remembers herself to be, carrying fragments of the farm that once made her happy. She begins again in the Village, small and quiet, building a little pig farm from memory more than knowledge. She feeds the animals, keeps the pens, and prepares food for travelers who still have roads ahead of them.
+
+Beatrix does not understand what happened to her family. She does not understand why certain cuts of meat carry more than scent after passing through her hands. She only knows that some food comforts people, and some food brings them back.
+
+The truth is stranger. Beatrix’s brief contact with Atlach-Nacha’s web left a cosmic affinity threaded through her soul. The food she prepares, especially Farrow’s Chop, carries a faint interdimensional charge. When cooked over Beatrix’s Campfire, that charge binds to the fire, the Village, and the traveler who prepared it, opening a temporary path between them.
+
+Beatrix believes she is only feeding people.
+
+She may be right. But sometimes, a warm meal is enough to turn the traveler’s heart toward home.
+"""; }
+    private static String beatrixNotes() { return """
+Beatrix’s farm is small because she is small. A few pens, a few animals, a few routines recovered from a life that ended badly. There is comfort in the shape of it, but not peace.
+
+Travelers often notice that Beatrix seems happiest when working. She speaks more easily to pigs than to adults and becomes guarded when asked too much about her parents. She remembers them kindly, but never clearly enough to finish the story.
+
+Farrow’s Chop carries the warm smell of a village hearth, but beneath that comfort is something that does not belong to hearths, villages, or meat. The scent lingers too long. The memory it stirs is too strong. Some travelers say it reminds them of home, even when they cannot remember having one.
+
+Beatrix is unaware of the cosmic nature of her gift. She does not know that Atlach-Nacha’s failed attempt to anchor herself through weaker souls left traces behind. She does not know that her family broke in the same web that marked her.
+
+She only knows the pens need cleaning, the animals need feeding, and travelers come back hungry.
+"""; }
+    private static String tamsinBackstory() { return """
+Tamsin Vane was already a seller of recovered treasures before she became a seller of dangerous opportunities. Tomb roads, collapsed shrines, sealed wells, and abandoned military works all interested her for the same practical reason. Old places held old treasures, and old treasures sold for big money.
+
+She did not call herself a grave robber. She preferred treasure hunter, expedition guide, or independent recovery specialist, depending on who was doing the asking.
+
+Tamsin found a narrow cave mouth half-hidden behind stone and root. She expected a smuggler’s hollow, or a buried strongbox if fortune smiled. Instead, she found a passage sloping farther down.
+
+Beyond the first chamber, she found the remains of an old makeshift camp.
+
+Bedrolls had rotted into dark cloth. Crates had split. A lantern hung from a bent hook with no oil left inside it. Nothing in the chamber looked recently used, but nothing looked entirely abandoned either.
+
+Beneath a fallen pack, she found the map.
+
+It showed a route through the tunnels below, twisting in loops and spirals until the lines nearly crossed themselves. At the end was an X beside the words Base Camp. In the bottom right corner, written in a careful hand, were three initials.
+
+JHW.
+
+Tamsin did not know the initials, but she knew value when she saw it.
+
+She followed the map farther down. The lower passages carried sound strangely. Footsteps arrived before she took them. Once, she saw torchlight ahead and hurried toward it, only to find her own lantern sitting on a stone ledge she had not yet reached.
+
+That was enough for Tamsin.
+
+She returned to the surface with the map, three broken fingernails, and a new respect for good judgment. She decided there was treasure below, almost certainly. There was also death below, absolutely. She could not spend the treasure if she was dead, so she chose to sell the opportunity to someone more adventurous.
+
+When players meet her, Tamsin presents the map with confidence, charm, and very little desire to personally test the route again. She speaks of lost camps, buried wealth, forgotten gear, and the kind of treasure people only leave behind when something has gone impressively wrong.
+
+Tamsin considers this a warning.
+
+She also considers it excellent marketing.
+"""; }
+    private static String tamsinNotes() { return """
+Tamsin stands just off the main path, watching for newcomers to the area. The map is tied with string and hangs from her belt. A compass hangs beside it, though the needle has been known to spin from time to time.
+
+She does not understand the full importance of the initials JHW. To her, they are proof that someone educated, funded, or desperate once reached the tunnels before her. That is enough to make the map valuable.
+
+Tamsin is not cruel. She is simply better at measuring risk for herself than for others. She tells players the route is dangerous, then immediately mentions what might be found at the bottom.
+"""; }
+    private static String watsonBackstory() { return """
+To Whom It May Concern, Should They Descend
+
+Written from the lower depths.
+
+Anno Domini 1897
+
+In life, I had always sensed the oppressive shadows draped upon our world, pressing down from rooftops and lurking beneath streets paved in whispers. My scholarly pursuits into antiquities, once governed by reason, gradually surrendered to obsession with the hidden pathways beneath.
+
+These pathways were labyrinthine corridors spiraling endlessly downward, carved from stone by hands far older and stranger than our own. My predecessors left scattered warnings, journals whose pages grew frantic, cryptic, and stained with despair.
+
+In time, and in defiance of their scribbled pleas for caution, I too fell under the downward sway. Though a fear pleaded with me to remain aboveground, curiosity compelled me onward, guiding my steps through crumbling archways into forgotten subterranean realms.
+
+There, beyond the reach of sunlight, after months of careful exploration, I established a modest camp amid ruins shaped by eldritch geometries. Lanterns were lit, supplies gathered, maps painstakingly drawn. Foolishly, I believed myself secure within that silent abyss.
+
+Yet something found me there in the gloom beneath our city.
+
+A presence older than history stirred within those tunnels, whispering secrets never meant for mortal ears. Its terrible voice drove me frantically back toward the surface, shattered and hollow. I abandoned my camp with lanterns extinguished, provisions untouched, notes scattered across the ground.
+
+Even then, I knew others would eventually follow my footsteps into the darkness.
+
+During my time beneath the surface, I discovered faded murals hinting at six rare subterranean flowers whose blossoms held the power to shield travelers from madness and ward off horrors lurking in the shadows.
+
+In my travels, I found the flowers, but as fate would have it, I never truly understood their enigmatic power until it was too late.
+
+In my desperate flight upward, I carefully placed one flower blossom at each of the six camps where I paused to rest. Influenced by the murals, perhaps I believed they emitted a cleansing aura. Or perhaps they merely marked my fleeting defiance against that citadel of evil.
+
+Upon reflection, I now suspect these flowers did not cleanse, but instead absorbed my life while I slept. Fragments of myself may still cling to them, bound in the petals and blooms that once drew breath from me.
+
+Should you come upon them, I implore you, gather all six and return them to me. If any remnant of my spirit endures, their presence may grant me release, and I may at last be permitted to rest.
+
+But if you do nothing else, do not leave them scattered, or even in death, I remain tethered to what lies beneath.
+
+After days of trekking ever upward, I remember vividly the desperate moment when I emerged beneath the moonless sky, gasping and stumbling through shadows. I glimpsed above me a strange winged silhouette gliding silently among clouds stained silver by starlight.
+
+Madness clawed at my thoughts while shrieks of pursuing horrors echoed beneath my feet. Knowing my fate was sealed, I hurriedly completed this letter by the dwindling flame of my final candle.
+
+Raising a trembling hand toward the sky, I waved my message frantically, shouting for the creature above to carry my warning onward. Behind me, the earth rumbled as darkness whispered my name, promising oblivion.
+
+If you receive this correspondence, understand it was written long before your eyes fell upon these words. It was composed feverishly in dreadful certainty of the fate awaiting me.
+
+But now, I fear my bones lie scattered quietly in the darkness, my voice forever silenced by truths beyond comprehension. Yet perhaps my spirit lingers still, eternally bound to those tunnels where reason faltered and madness took root.
+
+Below awaits that abandoned camp, perhaps untouched, perhaps disturbed by the shadows that once whispered my name.
+
+Enter cautiously, for if you venture downward into the city’s forgotten depths, you may discover more than ruin. You may learn that even death cannot sever a soul’s bond with what lies buried beneath.
+
+May Providence shield your reason where mine failed.
+
+J.H.W.
+"""; }
+    private static String watsonNotes() { return """
+Watson’s first known presence is not his ghost, but his warning. The letter establishes the lower depths, the abandoned Base Camp, and the six spectral blooms as remnants of his failed escape.
+
+Watson believed the blooms offered protection, but later understood that they had drawn fragments of his life into themselves while he slept. His spirit remained divided among them, leaving him bound to the tunnels after death.
+
+The initials JHW on Tamsin Vane’s map connect her discovery to Watson’s original expedition. Tamsin sees the initials as proof of value. Watson’s later restoration reveals them as evidence of a doomed scholar’s descent.
+
+Once all six blooms are rescued from the dungeon, Watson’s soul is released. He remains dead, but no longer scattered. His restored ghost becomes a guide for later dungeon progression. Though Atlach-Nacha’s thread still keeps him from true rest, his affinity for her webs and his keen mind allow him to track dangers nearing our cosmos.
+"""; }
+
+    private static Page lorePage(String id, String title, String role, String purpose, String backstory, String notes) {
+        List<HelpBlock> blocks = new ArrayList<>();
+        blocks.add(HelpBlock.heading(title));
+        blocks.add(HelpBlock.heading("Role"));
+        blocks.add(HelpBlock.paragraph(role));
+        blocks.add(HelpBlock.heading("Purpose"));
+        blocks.add(HelpBlock.paragraph(purpose));
+        blocks.add(HelpBlock.heading("Backstory"));
+        blocks.addAll(HelpBlock.longText(backstory));
+        blocks.add(HelpBlock.heading("Lore Notes"));
+        blocks.addAll(HelpBlock.longText(notes));
+        return page(id, title, true, List.copyOf(blocks));
+    }
 
     private HelpMenuContent() {}
 
@@ -248,6 +550,14 @@ public final class HelpMenuContent {
         static HelpBlock command(String label, String text) { return new HelpBlock(Kind.COMMAND, Component.literal(label), Component.literal(text)); }
         static HelpBlock tip(String text) { return new HelpBlock(Kind.TIP, Component.empty(), Component.literal(text)); }
         static HelpBlock spacer() { return new HelpBlock(Kind.SPACER, Component.empty(), Component.empty()); }
+        static List<HelpBlock> longText(String text) {
+            List<HelpBlock> blocks = new ArrayList<>();
+            for (String paragraph : text.split("\\R\\s*\\R")) {
+                String trimmed = paragraph.strip();
+                if (!trimmed.isEmpty()) blocks.add(paragraph(trimmed.replaceAll("\\R", " ")));
+            }
+            return List.copyOf(blocks);
+        }
     }
     public enum Kind { HEADING, PARAGRAPH, BULLET, COMMAND, TIP, SPACER }
 }

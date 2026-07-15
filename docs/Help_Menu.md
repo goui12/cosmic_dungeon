@@ -60,3 +60,16 @@ The H help menu now includes concise, player-facing coverage for:
 - Achievement status notes that keep **Nostalgia Bait** live and mark **The Tamsin Tax** as coming soon until a real Tamsin payment interface exists.
 
 The menu intentionally omits developer/world-designer commands, saved-data schema details, vendor profile authoring, rift destination authoring, spawner authoring, rank/debug commands, and other internal setup details.
+
+## NPC lore pages
+
+Prompt 03 adds a **Village NPCs** index page plus individual scrollable H-menu lore pages for [Naton Whitlock](NPCs/Naton_Whitlock.md), [Elias Centvin](NPCs/Elias_Centvin.md), [Eon Penrose](NPCs/Eon_Penrose.md), [Beatrix Farrow](NPCs/Beatrix_Farrow.md), [Tamsin Vane](NPCs/Tamsin_Vane.md), and [John Hamish Watson](NPCs/John_Hamish_Watson.md).
+
+These in-game pages are dungeoneer-facing lore/backstory pages only. They intentionally do **not** include vendor price tables, vendor profile JSON details, operator/world-designer commands, or internal authoring details. Use [Vendor](Vendor.md) and the specific files under [docs/Vendors](Vendors/) for shop stock, pricing, and vendor implementation notes.
+
+Watson wording distinguishes two flower tracks:
+
+- **Six Spectral Blooms:** unique placed dungeon bloom items tied to Watson's D1 spiritual release/objective.
+- **Lesser Blooms:** separate collectible side-hustle/progression/restoration items that affect NPC/vendor access, achievements, and unlocks.
+
+Tamsin Vane's lore may appear in the H menu, but her map interface, dungeon broker UI, Tamsin Tax payment flow, and queue system remain future/stubbed unless live source code implements them.

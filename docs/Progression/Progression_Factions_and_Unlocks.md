@@ -35,3 +35,10 @@ See [Faction General](../Factions/Faction_General.md) and [NPC/Vendor Faction](.
 ## Watson, spectral blooms, and live D1 progression wording
 
 John Hamish Watson's lore connects the abandoned Base Camp, the initials JHW, and spectral bloom mysteries to later dungeon guidance. Active player instructions should remain aligned with implemented progression checks: Dungeon 1 currently uses Lesser Blooms and the live D1 completion threshold, not a mandatory six-spectral-bloom objective.
+
+## Watson blooms vs. Lesser Blooms
+
+- **Six Spectral Blooms** are unique placed dungeon bloom items tied to John Hamish Watson's D1 spiritual release/objective and the abandoned Base Camp story.
+- **Lesser Blooms** are separate collectible side-hustle/progression/restoration items used for NPC/vendor access, achievements, and unlocks.
+
+Do not describe Lesser Bloom restoration thresholds as Watson's six-spectral-bloom quest, and do not describe Watson's six unique blooms as the same repeatable/restoration collectible track.
