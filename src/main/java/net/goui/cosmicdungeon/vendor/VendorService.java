@@ -70,7 +70,7 @@ public final class VendorService {
         if (CurrencyService.getBalanceTrace(sp) < traceCost) return fail(sp, "Not enough attunement fragments.");
 
         ItemStack toGive = offer.result().copy();
-        if (sp.getInventory().getFreeSlot() < 0 && !sp.getInventory().hasAnyMatching(s -> s.isEmpty())) {
+        if (!canFitPurchase(sp, toGive)) {
             return fail(sp, "Inventory full.");
         }
 
@@ -91,6 +91,18 @@ public final class VendorService {
                 .append(Component.literal(VendorMenuState.formatCost(offer)).withStyle(ChatFormatting.AQUA))
                 .append(Component.literal(".").withStyle(ChatFormatting.WHITE)));
         return new VendorPayloads.S2C_VendorPurchaseResult(true, "Purchase complete.", newBalance);
+    }
+
+    private static boolean canFitPurchase(ServerPlayer sp, ItemStack toGive) {
+        if (toGive.isEmpty()) return false;
+        if (sp.getInventory().getFreeSlot() >= 0) return true;
+        for (int slot = 0; slot < sp.getInventory().getContainerSize(); slot++) {
+            ItemStack existing = sp.getInventory().getItem(slot);
+            if (!existing.isEmpty() && ItemStack.isSameItemSameComponents(existing, toGive) && existing.getCount() < existing.getMaxStackSize()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static VendorPayloads.S2C_VendorPurchaseResult trySellSelected(ServerPlayer sp, int vendorEntityId, List<Integer> slotIndexes) {
