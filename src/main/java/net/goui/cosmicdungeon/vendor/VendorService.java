@@ -10,6 +10,7 @@ import net.minecraft.network.protocol.game.ClientboundSetPlayerInventoryPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -95,14 +96,24 @@ public final class VendorService {
 
     private static boolean canFitPurchase(ServerPlayer sp, ItemStack toGive) {
         if (toGive.isEmpty()) return false;
-        if (sp.getInventory().getFreeSlot() >= 0) return true;
-        for (int slot = 0; slot < sp.getInventory().getContainerSize(); slot++) {
-            ItemStack existing = sp.getInventory().getItem(slot);
-            if (!existing.isEmpty() && ItemStack.isSameItemSameComponents(existing, toGive) && existing.getCount() < existing.getMaxStackSize()) {
-                return true;
+
+        int remaining = toGive.getCount();
+        for (ItemStack existing : sp.getInventory().getNonEquipmentItems()) {
+            if (existing.isEmpty()) {
+                remaining -= sp.getInventory().getMaxStackSize(toGive);
+            } else if (ItemStack.isSameItemSameComponents(existing, toGive) && existing.isStackable()) {
+                remaining -= Math.max(0, sp.getInventory().getMaxStackSize(existing) - existing.getCount());
             }
+
+            if (remaining <= 0) return true;
         }
-        return false;
+
+        ItemStack offhand = sp.getInventory().getItem(Inventory.SLOT_OFFHAND);
+        if (!offhand.isEmpty() && ItemStack.isSameItemSameComponents(offhand, toGive) && offhand.isStackable()) {
+            remaining -= Math.max(0, sp.getInventory().getMaxStackSize(offhand) - offhand.getCount());
+        }
+
+        return remaining <= 0;
     }
 
     public static VendorPayloads.S2C_VendorPurchaseResult trySellSelected(ServerPlayer sp, int vendorEntityId, List<Integer> slotIndexes) {
