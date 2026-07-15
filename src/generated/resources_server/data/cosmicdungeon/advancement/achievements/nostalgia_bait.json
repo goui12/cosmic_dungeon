@@ -1,0 +1,26 @@
+{
+  "parent": "cosmicdungeon:root",
+  "criteria": {
+    "triggered": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.cosmicdungeon.achievements.nostalgia_bait.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "cosmicdungeon:farrows_chop"
+    },
+    "title": {
+      "translate": "advancements.cosmicdungeon.achievements.nostalgia_bait.title"
+    }
+  },
+  "requirements": [
+    [
+      "triggered"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "cosmicdungeon:block/whisper_pox_ashmire_tile"
+  }
+}

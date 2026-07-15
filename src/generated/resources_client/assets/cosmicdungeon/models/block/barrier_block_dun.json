@@ -1,0 +1,8 @@
+{
+  "parent": "block/cube_all",
+  "render_type": "translucent",
+  "textures": {
+    "all": "cosmicdungeon:block/barrier_dun",
+    "particle": "cosmicdungeon:block/barrier_dun"
+  }
+}

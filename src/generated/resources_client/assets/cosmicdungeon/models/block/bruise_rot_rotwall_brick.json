@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "cosmicdungeon:block/bruise_rot_rotwall_brick"
+  }
+}

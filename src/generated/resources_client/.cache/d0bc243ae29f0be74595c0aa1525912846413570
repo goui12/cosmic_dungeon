@@ -1,9 +1,12 @@
-// 1.21.10	2026-01-14T13:46:19.6342593	Cosmic Dungeon Item Definitions (<modid>/items/*.json)
+// 1.21.10	2026-07-14T22:39:21.168429	Cosmic Dungeon Item Definitions (<modid>/items/*.json)
 50488c2a484fa19082d309db2d3f0578201b3748 assets/cosmicdungeon/items/bogatyr_chest.json
+e1bc7d5784a61e66ac4c10de71c2960662f058b5 assets/cosmicdungeon/items/chain_link.json
 d52d5ba26aff6a364819e317877e8efdd1c7753e assets/cosmicdungeon/items/deadeye_chest.json
 b05820a5ff8621408ad14830c99b1ace145a72f5 assets/cosmicdungeon/items/dragoon_chest.json
 e595275327ec142e7d9ed59b56af60c757d06d24 assets/cosmicdungeon/items/judicator_chest.json
+12531a9f1f01c4f1906d400a84a75037d58530fa assets/cosmicdungeon/items/leather_patch.json
 8aacc87a94b22794046c991ba2c471d1aa6942b1 assets/cosmicdungeon/items/metalmancer_chest.json
+c15da66405975ae5872ee73136c58171b503c432 assets/cosmicdungeon/items/netherite_repair_fragment.json
 9d663be45e367c40bb3bc47d863846c2a6393a35 assets/cosmicdungeon/items/pyroclast_chest.json
 5b99ca59d99b2a4c9309465b277fa2da3e5639bf assets/cosmicdungeon/items/theurgist_chest.json
 838240afd1f6f51ce0584fbd070a0dce10e7287c assets/cosmicdungeon/items/venefex_chest.json

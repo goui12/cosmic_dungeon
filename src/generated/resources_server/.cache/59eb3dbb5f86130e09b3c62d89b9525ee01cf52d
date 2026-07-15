@@ -1,4 +1,4 @@
-// 1.21.10	2026-06-16T16:49:47.6360304	Loot Tables
+// 1.21.10	2026-07-14T22:39:32.814724	Loot Tables
 d399b4d4ab277b68c6bf2a8563e5b28d3580843c data/cosmicdungeon/loot_table/blocks/amethyst_block_black.json
 2ea7b1cc9ee6c957d12a5f241d5610990131444c data/cosmicdungeon/loot_table/blocks/amethyst_block_blue.json
 6448f272f5950ec0738354f8bc7239e7c60bd1be data/cosmicdungeon/loot_table/blocks/amethyst_block_brown.json
@@ -38,6 +38,7 @@ a46a9fb2c4931bc6633146335324f27fbcd2615b data/cosmicdungeon/loot_table/blocks/am
 e1b71444c6fbe7c98b629382e2f6fc7031e26445 data/cosmicdungeon/loot_table/blocks/ashen_bone_dust_deepslate_tiles.json
 0cd88f81123007cbdd90d7255d2ddc5ab1e21b80 data/cosmicdungeon/loot_table/blocks/ashen_bone_dust_polished_blackstone.json
 fda4c5dd98e2e271484946aec5a4e33a4e8553aa data/cosmicdungeon/loot_table/blocks/ashen_bone_dust_polished_deepslate.json
+a2fdfc1da033d00cf2b31b2365715058f809f67c data/cosmicdungeon/loot_table/blocks/beatrix_campfire.json
 03cebf50a6cfbf56127f44b28154d43151fa9d9a data/cosmicdungeon/loot_table/blocks/black_eye_knots_blackstone_bricks.json
 f3246597a38cfdc5edd0fd84ad516219ff5f334a data/cosmicdungeon/loot_table/blocks/black_eye_knots_blackstone_top.json
 5fa5b1dfe297a44df077f98569e39fb7eafceea9 data/cosmicdungeon/loot_table/blocks/black_eye_knots_cobbled_deepslate.json

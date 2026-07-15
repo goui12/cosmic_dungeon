@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "cosmicdungeon:block/cold_blue_curse_polished_blackstone"
+  }
+}

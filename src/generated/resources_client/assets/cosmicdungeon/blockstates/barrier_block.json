@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "cosmicdungeon:block/barrier_block_dev"
+    }
+  }
+}

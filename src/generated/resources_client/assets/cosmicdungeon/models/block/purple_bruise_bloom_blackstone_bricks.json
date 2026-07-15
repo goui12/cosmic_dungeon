@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "cosmicdungeon:block/purple_bruise_bloom_blackstone_bricks"
+  }
+}

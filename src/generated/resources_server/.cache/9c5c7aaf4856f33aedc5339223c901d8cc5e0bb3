@@ -1,4 +1,4 @@
-// 1.21.10	2026-05-26T23:03:45.4922383	CosmicDungeon Item Tags
+// 1.21.10	2026-07-14T22:39:32.8097243	CosmicDungeon Item Tags
 5a3e67bc0fc12ce50fb1ddbf1046ec44d7af09c8 data/cosmicdungeon/tags/item/attunement_currency.json
 35133e95f1c8fdd7a1c21afcc231fc0bffefb9a8 data/cosmicdungeon/tags/item/class_restricted/bogatyr.json
 35133e95f1c8fdd7a1c21afcc231fc0bffefb9a8 data/cosmicdungeon/tags/item/class_restricted/deadeye.json
@@ -8,6 +8,7 @@
 35133e95f1c8fdd7a1c21afcc231fc0bffefb9a8 data/cosmicdungeon/tags/item/class_restricted/pyroclast.json
 35133e95f1c8fdd7a1c21afcc231fc0bffefb9a8 data/cosmicdungeon/tags/item/class_restricted/theurgist.json
 35133e95f1c8fdd7a1c21afcc231fc0bffefb9a8 data/cosmicdungeon/tags/item/class_restricted/venefex.json
+1feceaec05817254387c7fc9cbbad7c25e0754f1 data/cosmicdungeon/tags/item/dragoon_repair_materials.json
 7641d9d12bdc331f6f3e3bdc38a34f3e451184c4 data/cosmicdungeon/tags/item/infinite_shootables.json
 85a003927f89f9a039d97810a17eaf7b6e229186 data/cosmicdungeon/tags/item/shields.json
 7e960ad06a914a90812331b5672ab52407d87736 data/cosmicdungeon/tags/item/transformable_items.json
