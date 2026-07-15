@@ -13,6 +13,7 @@ import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.InactiveProfiler;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.alchemy.PotionContents;
 import org.slf4j.Logger;
 
@@ -151,7 +152,8 @@ public final class VendorProfileManager extends SimplePreparableReloadListener<M
                     offerId,
                     resultDef.toStack(),
                     cost,
-                    obj.has("maxUses") ? GsonHelper.getAsInt(obj, "maxUses") : null,
+                    obj.has("maxUses") ? positiveInt(obj, "maxUses") : null,
+                    obj.has("maxPurchasesPerPlayer") ? positiveInt(obj, "maxPurchasesPerPlayer") : null,
                     obj.has("requiredFactionTier") ? GsonHelper.getAsInt(obj, "requiredFactionTier") : null,
                     obj.has("requiredProgressionFlag") ? GsonHelper.getAsString(obj, "requiredProgressionFlag") : null,
                     obj.has("requiredNpcTier") ? GsonHelper.getAsInt(obj, "requiredNpcTier") : null,
@@ -213,6 +215,10 @@ public final class VendorProfileManager extends SimplePreparableReloadListener<M
         if (itemId == null) throw new JsonParseException("Invalid item id: " + rawItem);
         int count = GsonHelper.getAsInt(o, "count", 1);
         if (count <= 0) throw new JsonParseException("Item count must be > 0");
+        Integer maxStackSize = o.has("maxStackSize") ? positiveInt(o, "maxStackSize") : null;
+        if (maxStackSize != null && maxStackSize > Item.ABSOLUTE_MAX_STACK_SIZE) {
+            throw new JsonParseException("maxStackSize must be <= " + Item.ABSOLUTE_MAX_STACK_SIZE);
+        }
 
         ResourceLocation potionId = null;
         if (o.has("potion")) {
@@ -225,7 +231,7 @@ public final class VendorProfileManager extends SimplePreparableReloadListener<M
             validatePotionExists(potionId);
         }
 
-        return new ItemStackDef(itemId, count, potionId);
+        return new ItemStackDef(itemId, count, potionId, maxStackSize);
     }
 
     private static void validateItemExists(ResourceLocation itemId) {
@@ -240,13 +246,22 @@ public final class VendorProfileManager extends SimplePreparableReloadListener<M
         }
     }
 
-    private record ItemStackDef(ResourceLocation itemId, int count, ResourceLocation potionId) {
+    private static int positiveInt(JsonObject obj, String fieldName) {
+        int value = GsonHelper.getAsInt(obj, fieldName);
+        if (value <= 0) throw new JsonParseException(fieldName + " must be > 0");
+        return value;
+    }
+
+    private record ItemStackDef(ResourceLocation itemId, int count, ResourceLocation potionId, Integer maxStackSize) {
         net.minecraft.world.item.ItemStack toStack() {
             var item = BuiltInRegistries.ITEM.getValue(itemId);
             if (item == null) {
                 throw new JsonParseException("Unknown item id: " + itemId);
             }
             var stack = new net.minecraft.world.item.ItemStack(item, count);
+            if (maxStackSize != null) {
+                stack.set(DataComponents.MAX_STACK_SIZE, maxStackSize);
+            }
             if (potionId != null) {
                 var potion = BuiltInRegistries.POTION.get(potionId)
                         .orElseThrow(() -> new JsonParseException("Unknown potion id: " + potionId));

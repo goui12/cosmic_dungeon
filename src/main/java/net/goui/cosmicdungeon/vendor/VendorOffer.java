@@ -11,6 +11,7 @@ public record VendorOffer(
         ItemStack result,
         Cost cost,
         Integer maxUses,
+        Integer maxPurchasesPerPlayer,
         Integer requiredFactionTier,
         String requiredProgressionFlag,
         Integer requiredNpcTier,

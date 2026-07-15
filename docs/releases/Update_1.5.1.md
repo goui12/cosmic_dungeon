@@ -41,6 +41,12 @@
 - The interaction and purchase/sell validation paths are still server-authoritative and keyed to the assigned entity id/profile, so [vendor access gates](../Vendor.md#access-gates), [class restrictions](../Classes/Class_Restrictions_and_Inventory.md), [teleportation/rifts](../Rifts/Rift_System_Guide.md), and [Cosmic Mob Spawners](../Spawners/Spawner_Systems.md) do not share state with this command change.
 - This feature only stores the existing `cosmicdungeon.vendor_profile_id` string on vendor entities and does not modify server-data-storage methods for block entities or existing entity systems such as mob spawners, doors/keys, rifts/RD, class selector data, teleportation, or access-policy records. Updating from 1.5.0 to 1.5.1 requires no migration for those systems: keep a normal world backup, deploy the 1.5.1 jar, and respawn/reassign only the vendors you want to visually change from villager shells to another mob type.
 
+## Vendor profile infrastructure
+
+- Vendor buy offers now support optional `maxPurchasesPerPlayer` positive-integer limits, enforced server-side before currency withdrawal and recorded only after successful item delivery. Limit records are kept in new additive saved data (`cosmicdungeon_vendor_purchase_limits_v1`) keyed by player UUID, vendor profile id, and offer id. Existing 1.5.0 worlds do not require manual conversion because no existing vendor, currency, progression, faction, trade, spawner, rift, door/key, class, teleportation, achievement, or access-policy saved-data schema is modified.
+- Vendor result JSON now supports optional `result.maxStackSize` positive integers up to the safe Minecraft item-stack cap. The implementation uses the vanilla `DataComponents.MAX_STACK_SIZE` component on the vendor-provided `ItemStack` only, so vanilla item definitions are not globally changed and `result.count` remains the number sold per click.
+- Vendor GUI buy rows now normalize mixed-denomination costs with the same Trace conversion rules used by the server, so storage-friendly Trace prices such as `570 trace` render as `5S 7M` instead of raw `570 Trace`.
+
 ## D1 Gritch vendor profile
 
 - Added [`cosmicdungeon:d1/d1_nether_gritch_of_the_barter_pit`](../Vendor.md#d1-vendor-profiles), displayed as **Gritch of the Barter Pit**, with two buy offers: one golden carrot for `1000` Trace and one glistering melon slice for `1000` Trace.

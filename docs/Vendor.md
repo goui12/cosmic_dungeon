@@ -13,8 +13,7 @@ Vendors are assigned NPC shops that use the Cosmic Dungeon Attunement Fragment c
 
 - The left pane is labeled **Vendor Selling:**.
 - Each row shows the item stack, a shortened item name when space allows, the configured offer cost, and a **Buy** button.
-- Offer costs come from the vendor profile's `cost.amount` plus `cost.denomination`. For example, an offer configured as amount `8` and denomination `trace` displays as `8 Trace`, while amount `3` and denomination `mark` displays as `3 Mark`.
-- Costs are not shown as normalized balance strings in offer rows; they use the raw configured profile denomination so the price matches the profile authoring intent.
+- Offer costs come from the vendor profile's `cost.amount` plus `cost.denomination`, are converted to total Trace with the same denomination rules used by the server, and display as normalized abbreviations. For example, `{ "amount": 570, "denomination": "trace" }` displays as `5S 7M`, and `{ "amount": 3, "denomination": "mark" }` displays as `3M`.
 - Locked offers are visibly marked and cannot be clicked.
 - If the vendor has more offers than fit on one page, use the arrow buttons or mouse wheel to cycle pages.
 
@@ -59,6 +58,12 @@ Vendors are assigned NPC shops that use the Cosmic Dungeon Attunement Fragment c
 
 Vendor profiles load from datapack JSON under `data/cosmicdungeon/vendor_profiles/<path>.json`. Profile IDs should be stable full `ResourceLocation` values; commands also accept unambiguous short aliases for common operator workflows. Invalid entries log clear errors rather than hard-crashing the server.
 
+### Optional offer/result fields
+
+- Buy offers may declare `maxPurchasesPerPlayer` as a positive integer. The server stores successful purchases in additive saved data (`cosmicdungeon_vendor_purchase_limits_v1`) keyed by player UUID, vendor profile id, and offer id. Existing worlds do not require manual conversion because this is a new, separate saved-data file. Failed purchases, failed delivery, and refunded purchases do not increment the count.
+- Buy offers still parse the older `maxUses` field where present, but per-player limits use `maxPurchasesPerPlayer` so the semantics are explicit.
+- Offer results may declare `maxStackSize` as a positive integer up to Minecraft's safe item-stack cap. This writes the vanilla `DataComponents.MAX_STACK_SIZE` component only onto the vendor-provided `ItemStack`; it does not globally change the item definition. `result.count` remains the number of items sold per click.
+
 ## D1 vendor profiles
 
 - `cosmicdungeon:d1/brewing_store` opens **Eon Penrose**, a D1 tier-3 village-access Brewing Store with general brewing ingredients, Theurgist-only brewing equipment and advanced healing/regeneration stock, and Theurgist/Judicator shared healing offers. See [Eon Penrose](./Vendors/Eon_Penrose.md).
@@ -87,6 +92,7 @@ Buy offers support the existing optional `requiredProgressionFlag`, `requiredNpc
 
 ## Changelog
 
+- **1.5.1:** Added `maxPurchasesPerPlayer`, vendor-result `maxStackSize`, and normalized purchase-cost display support for vendor profiles.
 - **1.5.1:** Added server-authoritative offer-level `requiredClasses` gates and activated them for Eon Penrose brewing-store stock.
 - **1.5.1:** Activated server-side evaluation for existing offer-level `requiredFactionTier` locks.
 - **1.5.1:** Added the D1 Gritch of the Barter Pit vendor profile for expensive golden food purchases.
