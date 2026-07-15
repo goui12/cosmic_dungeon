@@ -52,6 +52,15 @@ public class ModItemTagProvider extends BlockTagCopyingItemTagProvider {
                 .add(Items.FIRE_CHARGE)
                 .add(Items.WIND_CHARGE);
 
+        this.tag(ModTags.Items.DRAGOON_REPAIR_MATERIALS)
+                .add(ModItems.LEATHER_PATCH.get())
+                .add(Items.GOLD_INGOT)
+                .add(Items.COPPER_INGOT)
+                .add(ModItems.CHAIN_LINK.get())
+                .add(Items.IRON_INGOT)
+                .add(Items.DIAMOND)
+                .add(ModItems.NETHERITE_REPAIR_FRAGMENT.get());
+
         // ===== Class restriction tags =====
         // Intentionally emitted even if empty right now, so the structure exists and is repeatable.
         this.tag(ModTags.Items.CLASS_RESTRICTED_METALMANCER);
