@@ -73,7 +73,7 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Your currency balance updates after completed transactions."),
             HelpBlock.bullet("Costs display in the vendor's configured denominations."),
             HelpBlock.bullet("Naton Whitlock offers general supplies: food, fire, light, and container basics."),
-            HelpBlock.bullet("Elias Centvin sells weapons and tools, plus repair materials and services for battered gear."),
+            HelpBlock.bullet("Elias Centvin sells weapons, tools, and Dragoon repair materials; direct shop repair service is future-only."),
             HelpBlock.bullet("Eon Penrose runs the Brewing Store for ingredients, bottles, equipment, and potions."),
             HelpBlock.bullet("Beatrix Farrow provides food, Beatrix's Campfire, and Farrow's Chop for a safe return home."),
             HelpBlock.bullet("See Brewing Store, Travel, and Village Souls for the short field guide."),
@@ -93,7 +93,7 @@ public final class HelpMenuContent {
     public static final Page VILLAGE_SOULS = page("village_souls", "Village Souls", true, List.of(
             HelpBlock.heading("Restored Village Faces"),
             HelpBlock.bullet("Naton Whitlock: general supplies, food, fire, light, and container basics."),
-            HelpBlock.bullet("Elias Centvin: weapons, tools, repair services, repair materials, and Dragoon salvage craft."),
+            HelpBlock.bullet("Elias Centvin: weapons, tools, Dragoon repair materials, and salvage craft; direct shop repair service is future-only."),
             HelpBlock.bullet("Eon Penrose: brewing ingredients, equipment, and potion work."),
             HelpBlock.bullet("Beatrix Farrow: food, campfire cooking, Farrow's Chop, and the memory of home."),
             HelpBlock.heading("Dungeon Story"),
