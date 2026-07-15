@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.Locale;
 
 public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
     private static final int OFFER_ROW_TOP_OFFSET = 62;
@@ -204,8 +203,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             VendorPayloads.S2C_OpenVendor.OfferView offer = current.offers().get(i);
             boolean unlocked = current.unlockedOffers().contains(offer.offerId());
             String itemName = offer.count() > 1 ? offer.itemDisplayName() + " x" + offer.count() : offer.itemDisplayName();
-            CurrencyDenomination denomination = CurrencyDenomination.fromId(offer.costDenomination());
-            String cost = formatRawCost(offer.costAmount(), denomination);
+            String cost = CurrencyAmount.of(offer.costAmount(), CurrencyDenomination.fromId(offer.costDenomination())).formatNormalized();
             int itemX = x0;
             int itemY = y - 4;
             drawBorder(g, x0 - 3, y - 6, x0 + 209, y + 16, unlocked ? 0xFF5F6370 : 0xFF7A4550);
@@ -377,12 +375,6 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         g.fill(x1, y2 - 1, x2, y2, color);
         g.fill(x1, y1, x1 + 1, y2, color);
         g.fill(x2 - 1, y1, x2, y2, color);
-    }
-
-    private static String formatRawCost(long amount, CurrencyDenomination denomination) {
-        if (denomination == null) return amount + " Trace";
-        String name = denomination.id().isEmpty() ? "trace" : denomination.id();
-        return amount + " " + Character.toUpperCase(name.charAt(0)) + name.substring(1).toLowerCase(Locale.ROOT);
     }
 
     private static String displayTitle(VendorClientState.VendorView current) {

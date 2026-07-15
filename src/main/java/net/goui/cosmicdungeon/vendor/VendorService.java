@@ -60,6 +60,11 @@ public final class VendorService {
 
         if (!VendorMenuState.isOfferUnlocked(sp, profile, offer)) return fail(sp, "Offer locked.");
 
+        VendorPurchaseLimitData purchaseLimits = VendorPurchaseLimitData.get(sp.level().getServer());
+        if (purchaseLimits.hasReachedLimit(sp.getUUID(), profile.id(), offer.id(), offer.maxPurchasesPerPlayer())) {
+            return fail(sp, "Purchase limit reached.");
+        }
+
         long traceCost = offer.cost().denomination().toTrace(offer.cost().amount());
         if (traceCost <= 0L) return fail(sp, "Invalid offer cost.");
         if (CurrencyService.getBalanceTrace(sp) < traceCost) return fail(sp, "Not enough attunement fragments.");
@@ -76,6 +81,8 @@ public final class VendorService {
             CurrencyService.tryDeposit(sp, traceCost);
             return fail(sp, "Inventory full. No currency deducted.");
         }
+
+        purchaseLimits.recordPurchase(sp.getUUID(), profile.id(), offer.id());
 
         long newBalance = CurrencyService.getBalanceTrace(sp);
         sp.sendSystemMessage(Component.literal("Purchased ").withStyle(ChatFormatting.GREEN)
