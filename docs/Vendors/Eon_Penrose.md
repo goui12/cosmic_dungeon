@@ -11,7 +11,7 @@ Eon Penrose runs the Dungeon 1 Brewing Store profile `cosmicdungeon:d1/brewing_s
 
 ## Live Dungeon 1 stock
 
-All live offers sell one item per click. The store design allows most brewing stock to stack up to 20 in inventory, but quantity-buy support is not implemented here; prices below are per item.
+All live offers sell one item per click. Vendor-result `maxStackSize` is live in the D1 profile: ingredients, bottles, and potions use max stack 20; Brewing Stand and Cauldron use max stack 1. Prices below are per item.
 
 ### Ingredients
 

@@ -1,8 +1,8 @@
 # Elias Centvin Vendor Notes
 
-## Current profile
+## Current live profile
 
-Elias Centvin is represented by the existing D1 weapon-supplier vendor profile:
+Elias Centvin is the live Dungeon 1 weapon supplier profile:
 
 - Profile id: `cosmicdungeon:d1/weapon_supplier`
 - Data path: `src/main/resources/data/cosmicdungeon/vendor_profiles/d1/weapon_supplier.json`
@@ -10,15 +10,51 @@ Elias Centvin is represented by the existing D1 weapon-supplier vendor profile:
 - Vendor type: `weapon_supplier`
 - Access gates: village access, `requiredNpcSystem: "D1"`, and `requiredNpcTier: 2`
 
-Because D1 NPC tier 2 currently derives from 10 cumulative Lesser Blooms, Elias's current profile matches the design note that vendor access begins at 10 Lesser Blooms through village/NPC progression. The runtime gate is server-authoritative through vendor access and progression services.
+D1 NPC tier 2 currently derives from cumulative Lesser Bloom/NPC progression, so Elias remains gated behind restored-village progress. This is separate from Watson's six spectral bloom quest.
 
-## Current stock
+## Live weapon, tool, and ammunition stock
 
-Elias currently sells straightforward weapon/tool supplies encoded directly in the vendor profile: stone and diamond swords, stone and diamond pickaxes, bow, crossbow, arrows, and shield. Prices are live only because they are encoded in the profile JSON.
+All live offers sell one item per click at the listed per-item price. Stack caps are represented with vendor-result `maxStackSize` where the live vendor schema supports it.
 
-## Dragoon repair-material design note
+| Item | Cost | Notes |
+| --- | ---: | --- |
+| Wooden Sword | 5 Marks | Live |
+| Stone Sword | 8 Marks | Live |
+| Golden Sword | 1 Seal, 6 Marks | Live |
+| Copper Sword | 2 Seals, 5 Marks | Live where the target Minecraft/NeoForge item exists |
+| Iron Sword | 4 Seals, 9 Marks | Live |
+| Diamond Sword | 5 Seals, 7 Marks | Live |
+| Netherite Sword | 6 Seals, 9 Marks | Live |
+| Wooden Pickaxe | 6 Marks | Live |
+| Stone Pickaxe | 1 Seal | Live |
+| Golden Pickaxe | 1 Seal, 8 Marks | Live |
+| Copper Pickaxe | 3 Seals, 1 Mark | Live where the target Minecraft/NeoForge item exists |
+| Iron Pickaxe | 6 Seals, 2 Marks | Live |
+| Diamond Pickaxe | 7 Seals, 2 Marks | Live |
+| Netherite Pickaxe | 8 Seals, 8 Marks | Live |
+| Shield | 2 Seals, 4 Marks | Live |
+| Bow | 2 Seals, 2 Marks | Live |
+| Crossbow | 3 Seals, 6 Marks | Live |
+| Trident | 5 Seals, 8 Marks | Live |
+| Arrow | 1 Trace | Live, vendor result max stack 64 |
 
-Design notes call for Dragoon-only repair materials through Elias. The custom material items now exist (`cosmicdungeon:leather_patch`, `cosmicdungeon:chain_link`, and `cosmicdungeon:netherite_repair_fragment`), but those offers are **not** currently added to Elias's profile because the active vendor schema still has no class-restricted offer field. Do not add Dragoon-only repair materials as normal public offers until a complete server-authoritative offer class gate is implemented and documented.
+## Live Dragoon-only repair-material stock
+
+Elias now sells Dragoon-only repair materials through server-authoritative `requiredClasses: ["dragoon"]` offer gates.
+
+| Item | Cost | Class gate |
+| --- | ---: | --- |
+| Leather Patch | 2 Trace | Dragoon only |
+| Gold Ingot | 4 Trace | Dragoon only |
+| Copper Ingot | 8 Trace | Dragoon only |
+| Chain Link | 1 Mark, 2 Trace | Dragoon only |
+| Iron Ingot | 1 Mark, 6 Trace | Dragoon only |
+| Diamond | 1 Mark, 8 Trace | Dragoon only |
+| Netherite Repair Fragment | 2 Marks, 2 Trace | Dragoon only |
+
+## Direct shop repair services
+
+Direct Elias shop repair services are still design/future. The live source supports vendor item offers and the separate Dragoon Repair Affinity flow; it does not implement a direct vendor repair-service offer type.
 
 ## NPC/vendor faction pricing design note
 
@@ -30,7 +66,3 @@ NPC/vendor faction pricing multipliers are design-only for Elias at this time. C
 - [Pricing Master List](../Economy/Pricing_Master_List.md)
 - [NPC/Vendor Faction](../Factions/NPC_Vendor_Faction.md)
 - [Progression, Factions & Unlocks](../Progression/Progression_Factions_and_Unlocks.md)
-
-## Repair Affinity materials now consumed by Dragoon UI
-
-Elias's Dragoon repair material theme now feeds the live player-to-player Repair Affinity system: Dragoons consume Leather Patches, Chain Links, Netherite Repair Fragments, and vanilla material ingots/gems from their inventory when repairing another player's supported damaged gear. This is not a direct Elias shop repair service, and the customer labor fee remains optional player-negotiated account currency in the Repair Affinity UI.
