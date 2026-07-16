@@ -308,3 +308,11 @@ The design-note context for factions, NPC/vendor faction behavior, First Trace, 
 - Safe update from 1.5.0 to 1.5.1: stop the server, make a full backup of the server folder/world, replace the Cosmic Dungeon mod jar on the server and every client with the same 1.5.1 build, then restart. Do not delete world, config, datapack, player-data, rift/RD, vendor, currency, faction, progression, access-policy, door/key, spawner, or other data files.
 - This fix does not change registry IDs, NBT keys, saved-data schemas, rift/RD storage, teleportation storage, Cosmic Mob Spawner data, door/key data, vendor transaction storage, currency storage, faction storage, progression storage, or Access Policy data. No 1.5.0 data migration or rollback-specific storage conversion is required; rollback is the normal jar rollback paired with restoring the pre-update backup if the world was opened with the newer jar.
 - Regression audit: Access Policy, classes, teleportation/rifts/RD, Cosmic Mob Spawners, doors/keys, vendors, currency, factions, progression, and dedicated-server/client shared-jar compatibility were reviewed for this patch and were not modified beyond the vendor locked-label presentation and Beatrix Campfire compatibility/model/tag fixes described above.
+
+### H-key help menu directory refactor
+
+- Refactored the H-key help menu from a flat page list into a directory-style guide with root entries for Get Started, Dungeons, Party, Classes, General, and References.
+- Added directory navigation with Back support, pane-specific navigation/content arrow buttons, and semi-transparent dark backgrounds behind both panes.
+- Fixed rich-text measurement for Note blocks by sharing wrap-width calculations between measuring and rendering, plus bottom scroll padding so final lines can scroll fully into view.
+- Increased the current page title slightly through GUI pose scaling while preserving the title artwork and color.
+- Preserved the client-only boundary: this refactor does not change server data, registries, networking, access policy, class logic, vendors, teleportation/rifts, or Cosmic Mob Spawner behavior.
