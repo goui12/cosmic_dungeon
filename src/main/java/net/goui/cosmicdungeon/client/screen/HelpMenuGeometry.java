@@ -17,7 +17,7 @@ record HelpMenuGeometry(int left, int top) {
     static final int NAV_ARROW_X = 6;
     static final int CONTENT_ARROW_X = 356;
     static final int UP_Y = 24;
-    static final int DOWN_Y = 188;
+    static final int DOWN_Y = 206;
     static final int PANE_PADDING = 4;
 
     static HelpMenuGeometry centered(int screenWidth, int screenHeight) {

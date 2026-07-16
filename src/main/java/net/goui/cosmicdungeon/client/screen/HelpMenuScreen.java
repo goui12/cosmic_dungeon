@@ -107,7 +107,7 @@ public final class HelpMenuScreen extends Screen {
     }
 
     @Override public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
-        if (event.button() == 0 && (clickNavigation(event.x(), event.y()) || clickScrollButton(event.x(), event.y()))) return true;
+        if (event.button() == 0 && (clickScrollButton(event.x(), event.y()) || clickNavigation(event.x(), event.y()))) return true;
         return super.mouseClicked(event, isDoubleClick);
     }
 
