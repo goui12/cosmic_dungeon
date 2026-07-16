@@ -38,10 +38,6 @@ public final class VendorProfileResolver {
                 .distinct()
                 .sorted()
                 .forEach(values::add);
-        VendorProfileManager.INSTANCE.listProfileIds().stream()
-                .map(ResourceLocation::toString)
-                .sorted()
-                .forEach(values::add);
         return values;
     }
 
