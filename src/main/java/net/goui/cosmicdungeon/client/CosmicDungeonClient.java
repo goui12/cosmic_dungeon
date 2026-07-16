@@ -79,7 +79,6 @@ public final class CosmicDungeonClient {
         NeoForge.EVENT_BUS.addListener(SpawnerPresetKeybindClient::onClientTick);
         NeoForge.EVENT_BUS.addListener(TradeRequestKeybindClient::onClientTick);
         NeoForge.EVENT_BUS.addListener(HelpMenuKeybindClient::onClientTick);
-        NeoForge.EVENT_BUS.addListener(CosmicDungeonOptionsIntegration::onScreenInit);
     }
 
     public static void registerConfigScreen(ModContainer modContainer) {

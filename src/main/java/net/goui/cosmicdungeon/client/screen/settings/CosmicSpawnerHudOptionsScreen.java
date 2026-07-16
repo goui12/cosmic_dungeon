@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.jetbrains.annotations.NotNull;
@@ -28,29 +29,34 @@ public final class CosmicSpawnerHudOptionsScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        rebuildRows();
-        addRenderableWidget(Button.builder(Component.literal("Done"), b -> onClose())
-                .bounds(this.width / 2 - 100, this.height - 28, 200, 20)
-                .build());
-    }
 
-    private void rebuildRows() {
-        this.clearWidgets();
-        int contentHeight = rows().size() * ROW_HEIGHT;
+        List<Row> rows = rows();
+
+        int contentHeight = rows.size() * ROW_HEIGHT;
         int viewport = Math.max(1, this.height - TOP - BOTTOM_PADDING);
-        maxScroll = Math.max(0, contentHeight - viewport);
-        scroll = Math.max(0, Math.min(scroll, maxScroll));
-        int y = TOP - scroll;
-        for (Row row : rows()) {
-            if (y > TOP - ROW_HEIGHT && y < this.height - BOTTOM_PADDING) {
-                addRenderableWidget(Button.builder(row.label().get(), b -> {
-                    row.toggle();
+
+        this.maxScroll = Math.max(0, contentHeight - viewport);
+        this.scroll = Math.max(0, Math.min(this.scroll, this.maxScroll));
+
+        int y = TOP - this.scroll;
+
+        for (Row row : rows) {
+            int rowY = y;
+
+            if (rowY > TOP - ROW_HEIGHT && rowY < this.height - BOTTOM_PADDING) {
+                addRenderableWidget(Button.builder(row.label().get(), button -> {
+                    row.advance().run();
+                    button.setMessage(row.label().get());
                     SpawnerHudClientConfig.save();
-                    this.init();
-                }).bounds(this.width / 2 - 155, y, 310, 20).build());
+                }).bounds(this.width / 2 - 155, rowY, 310, 20).build());
             }
+
             y += ROW_HEIGHT;
         }
+
+        addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, b -> onClose())
+                .bounds(this.width / 2 - 100, this.height - 28, 200, 20)
+                .build());
     }
 
     private List<Row> rows() {
@@ -109,10 +115,21 @@ public final class CosmicSpawnerHudOptionsScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (maxScroll <= 0) return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
-        scroll = Math.max(0, Math.min(maxScroll, scroll + (scrollY < 0 ? ROW_HEIGHT : -ROW_HEIGHT)));
-        this.init();
-        return true;
+        if (this.maxScroll <= 0 || scrollY == 0) {
+            return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        }
+
+        int previous = this.scroll;
+        int amount = scrollY < 0 ? ROW_HEIGHT : -ROW_HEIGHT;
+
+        this.scroll = Math.max(0, Math.min(this.maxScroll, this.scroll + amount));
+
+        if (this.scroll != previous) {
+            this.rebuildWidgets();
+            return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -121,5 +138,5 @@ public final class CosmicSpawnerHudOptionsScreen extends Screen {
         Minecraft.getInstance().setScreen(parent);
     }
 
-    private record Row(java.util.function.Supplier<Component> label, Runnable toggle) {}
+    private record Row(java.util.function.Supplier<Component> label, Runnable advance) {}
 }
