@@ -95,7 +95,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         for (int i = firstOffer; i < lastOffer; i++) {
             VendorPayloads.S2C_OpenVendor.OfferView offer = renderedView.offers().get(i);
             boolean unlocked = renderedView.unlockedOffers().contains(offer.offerId());
-            Button b = Button.builder(Component.literal(unlocked ? "Buy" : "Locked"), btn -> {
+            Button b = Button.builder(Component.literal(unlocked ? "Buy" : "LOCKED"), btn -> {
                 VendorClientState.VendorView current = view();
                 if (!unlocked || current == null) return;
                 ModNetwork.sendToServer(new VendorPayloads.C2S_RequestVendorPurchase(current.vendorEntityId(), offer.offerId()));
@@ -211,7 +211,6 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             g.renderItemDecorations(font, offer.stack(), itemX, itemY);
             g.drawString(font, Component.literal(font.plainSubstrByWidth(itemName, 76)), x0 + 22, y, 0xFFFFFFFF, false);
             g.drawString(font, Component.literal(cost), x0 + 105, y, 0xFFA5D6A7, false);
-            if (!unlocked) g.drawString(font, Component.literal("LOCKED"), x0 + 160, y, 0xFFEF9A9A, false);
             if (isHoveringItemStack(mouseX, mouseY, itemX, itemY, offer.stack())) {
                 hoveredOfferStack = offer.stack();
             }

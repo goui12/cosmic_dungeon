@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "cosmicdungeon:item/beatrix_campfire"
+    "model": "cosmicdungeon:block/beatrix_campfire"
   }
 }

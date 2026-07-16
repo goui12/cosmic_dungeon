@@ -33,8 +33,11 @@ public class ModBlockTagProvider extends BlockTagsProvider {
         this.tag(BlockTags.NEEDS_IRON_TOOL).add(ModBlocks.DUNGEON_BUILDING_BLOCKS.values().stream().map(DeferredBlock::get).toArray(Block[]::new));
 
         this.tag(BlockTags.MINEABLE_WITH_AXE).add(
-                ModBlocks.PILE_OF_BOOKS.get()
+                ModBlocks.PILE_OF_BOOKS.get(),
+                ModBlocks.BEATRIX_CAMPFIRE.get()
         );
+        this.tag(BlockTags.CAMPFIRES)
+                .add(ModBlocks.BEATRIX_CAMPFIRE.get());
 
         // ===== Vanilla: Colored Amethyst (all colors, all stages) =====
         Block[] amethystAllStages = allAmethystBlocks();

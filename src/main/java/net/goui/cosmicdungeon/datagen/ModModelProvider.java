@@ -202,7 +202,7 @@ public class ModModelProvider extends ModelProvider {
             pd.select(Direction.EAST, Boolean.TRUE, new MultiVariant(WeightedList.of(new Variant(modelOn).withYRot(Quadrant.R270))));
 
             blockModels.blockStateOutput.accept(MultiVariantGenerator.dispatch(b).with(pd));
-            registerExternalItem(itemModels, b.asItem(), rlMod("item/beatrix_campfire"));
+            registerExternalItem(itemModels, b.asItem(), modelOn);
         }
 
         // ===== Pile of Books =====

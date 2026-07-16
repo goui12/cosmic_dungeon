@@ -7,6 +7,7 @@ import net.goui.cosmicdungeon.redstone.rf.RedstoneTransmitterBE;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.event.BlockEntityTypeAddBlocksEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -90,6 +91,14 @@ public final class ModBlockEntities {
 
     public static void register(IEventBus bus) {
         BLOCK_ENTITY_TYPES.register(bus);
+        bus.addListener(ModBlockEntities::addVanillaCompatibleBlocks);
+    }
+
+    private static void addVanillaCompatibleBlocks(BlockEntityTypeAddBlocksEvent event) {
+        event.modify(
+                BlockEntityType.CAMPFIRE,
+                ModBlocks.BEATRIX_CAMPFIRE.get()
+        );
     }
 
     private ModBlockEntities() {}

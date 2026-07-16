@@ -16,6 +16,10 @@ Flavor line: _Smells like home. Costs like nostalgia._
 
 Farrow's Chop resolves the normal rift destination data through `DefaultRiftDestinations`, preferring `main_village`, then `village`, then `Main Village`. The destination lives in the existing `cosmicdungeon_rifts_v2` saved data alongside other rift destinations; no parallel registry or extra saved-data file is used. Server-start seeding creates `main_village` only if missing, and item use does not create or overwrite destinations.
 
+## Beatrix Campfire compatibility
+
+Beatrix's Campfire uses the vanilla campfire block entity through NeoForge block-entity compatibility registration. It keeps normal campfire placement, lighting, extinguishing, waterlogging, smoke, cooking, breaking, and chunk-reload behavior while adding only the lit-campfire Raw Farrow's Chop conversion described above. The block and item models are generated/packaged so the inventory item uses the existing lit 3D campfire model rather than a missing flat item model.
+
 
 ## Beatrix vendor availability
 

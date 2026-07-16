@@ -14,7 +14,7 @@ Vendors are assigned NPC shops that use the Cosmic Dungeon Attunement Fragment c
 - The left pane is labeled **Vendor Selling:**.
 - Each row shows the item stack, a shortened item name when space allows, the configured offer cost, and a **Buy** button.
 - Offer costs come from the vendor profile's `cost.amount` plus `cost.denomination`, are converted to total Trace with the same denomination rules used by the server, and display as normalized abbreviations. For example, `{ "amount": 570, "denomination": "trace" }` displays as `5S 7M`, and `{ "amount": 3, "denomination": "mark" }` displays as `3M`.
-- Locked offers are visibly marked and cannot be clicked.
+- Locked offers show a single disabled **LOCKED** button and cannot be clicked.
 - If the vendor has more offers than fit on one page, use the arrow buttons or mouse wheel to cycle pages.
 
 ## Selling your items
