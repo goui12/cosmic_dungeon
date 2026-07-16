@@ -263,19 +263,24 @@ public final class DungeonWorldSnapshotService {
                         + level.dimension().location());
                 clearDimensionDataCache(level);
 
-                debug("[DUNGEON DEBUG] resetToSnapshot invalidating chunk IO caches for "
+                debug("[DUNGEON DEBUG] resetToSnapshot invalidating chunk/entity IO caches for "
                         + level.dimension().location());
                 invalidateChunkIoCaches(level);
                 invalidateAuxiliaryIoCaches(level);
                 clearEntityManagerHotCaches(level);
 
+                debug("[DUNGEON DEBUG] resetToSnapshot re-applying snapshot entity storage after cache invalidation for "
+                        + level.dimension().location());
+                restoreSnapshotEntityStorage(dimSnapshot, livePath);
+
                 debug("[DUNGEON DEBUG] resetToSnapshot clearing runtime chunk access caches for "
                         + level.dimension().location());
                 clearChunkSourceHotCaches(level);
 
-                debug("[DUNGEON DEBUG] resetToSnapshot purging loaded non-player entities after restore for "
+                debug("[DUNGEON DEBUG] resetToSnapshot purging stale loaded non-player entities after restore for "
                         + level.dimension().location());
-                purgeLoadedNonPlayerEntities(level, "post-restore");
+                purgeLoadedNonPlayerEntities(level, "post-restore-stale-runtime");
+                clearEntityManagerHotCaches(level);
 
                 debug("[DUNGEON DEBUG] resetToSnapshot forcing post-restore unload verification for "
                         + level.dimension().location());
@@ -1389,6 +1394,25 @@ public final class DungeonWorldSnapshotService {
             debug("[DUNGEON DEBUG] clearDimensionDataCache EXCEPTION for "
                     + level.dimension().location() + ": " + e);
             throw new RuntimeException("Failed to clear DimensionDataStorage cache for " + level.dimension().location(), e);
+        }
+    }
+
+    private static void restoreSnapshotEntityStorage(Path dimSnapshot, Path livePath) throws IOException {
+        for (String relative : List.of("entities", "region")) {
+            Path source = dimSnapshot.resolve(relative);
+            Path target = livePath.resolve(relative);
+
+            if (!Files.exists(source)) {
+                debug("[DUNGEON DEBUG] restoreSnapshotEntityStorage removing live " + relative
+                        + " because snapshot has none: " + target);
+                deleteDirectory(target);
+                continue;
+            }
+
+            debug("[DUNGEON DEBUG] restoreSnapshotEntityStorage replacing live " + relative
+                    + " from snapshot source=" + source + " target=" + target);
+            deleteDirectory(target);
+            copyDirectory(source, target);
         }
     }
 
