@@ -120,6 +120,30 @@ public final class HelpMenuContent {
     public static final Page JOHN_HAMISH_WATSON = lorePage("npc.john_hamish_watson", "John Hamish Watson", "Quest Giver",
             "John Hamish Watson introduces the abandoned Base Camp, the six spectral blooms, and the first major dungeon recovery objective. The six spectral blooms are unique placed dungeon bloom items tied to Watson's spiritual release; Lesser Blooms are separate restoration collectibles for side progression, vendor access, achievements, and unlocks.", watsonBackstory(), watsonNotes());
 
+    public static final Page FOOD_VENDOR = page("vendor.food", "Food Vendor", true, List.of(
+            HelpBlock.heading("Beatrix Farrow"),
+            HelpBlock.paragraph("Beatrix Farrow provides food, Beatrix's Campfire, and Farrow's Chop in the restored Village."),
+            HelpBlock.bullet("Her food and Farrow's Chop travel behavior are documented under Travel and her NPC lore page."),
+            HelpBlock.tip("Only use the travel behavior presented in-game; unimplemented broker or queue systems remain future-only.")));
+
+    public static final Page WEAPONS_SUPPLIER = page("vendor.weapons", "Weapons Supplier", true, List.of(
+            HelpBlock.heading("Elias Centvin"),
+            HelpBlock.paragraph("Elias Centvin sells weapons, tools, and Dragoon repair materials."),
+            HelpBlock.bullet("Direct shop repair service is future-only; player repair flow remains the Dragoon repair-support class behavior."),
+            HelpBlock.tip("Locked rows and access requirements are enforced server-side.")));
+
+    public static final Page GENERAL_SUPPLY_VENDOR = page("vendor.general_supply", "General Supply Vendor", true, List.of(
+            HelpBlock.heading("Naton Whitlock"),
+            HelpBlock.paragraph("Naton Whitlock offers basic general supplies: food, fire, light, and container basics."),
+            HelpBlock.bullet("Purchases and sales use the same server-authoritative currency balance as other vendors."),
+            HelpBlock.tip("If a vendor is locked, follow the reason shown in-game.")));
+
+    public static final Page TELEPORT_VENDOR = page("vendor.teleport", "Teleport Vendor", true, List.of(
+            HelpBlock.heading("Tamsin Vane"),
+            HelpBlock.paragraph("Tamsin Vane's live H-menu page is lore and travel context for her map to Base Camp."),
+            HelpBlock.bullet("Map interfaces, dungeon broker UI, payment flows, queue systems, and deeper teleport-vendor services remain future-only unless presented in-game."),
+            HelpBlock.tip("For live travel behavior, use Travel and the prompts shown by the dungeon.")));
+
     public static final Page CURRENCY = page("currency", "Currency", true, List.of(
             HelpBlock.heading("Attunement Fragments"),
             HelpBlock.paragraph("Trace is stabilized attunement residue recovered from dungeon-bound beings and valued by freed NPCs as protection against future binding."),
@@ -254,7 +278,39 @@ public final class HelpMenuContent {
             HelpBlock.heading("Coming in Dungeon 2"),
             HelpBlock.paragraph("Deadeye is disabled.")));
 
-    public static final List<Page> PAGES = List.of(GET_STARTED, DUNGEONS, CLASSES, THEURGIST, PYROCLAST, BOGATYR, DRAGOON, VENEFEX, JUDICATOR, METALMANCER, DEADEYE, PARTY, TRADING, VENDORS, BREWING_STORE, VILLAGE_SOULS, NATON_WHITLOCK, ELIAS_CENTVIN, EON_PENROSE, BEATRIX_FARROW, TAMSIN_VANE, JOHN_HAMISH_WATSON, CURRENCY, PROGRESSION, FACTIONS, TELEPORTATION, ACHIEVEMENTS, REFERENCES);
+    public static final HelpNode ROOT = node(rootPage(),
+            node(GET_STARTED),
+            node(DUNGEONS),
+            node(PARTY,
+                    node(FACTIONS),
+                    node(PROGRESSION),
+                    node(TELEPORTATION),
+                    node(VENDORS,
+                            node(VILLAGE_SOULS,
+                                    node(BEATRIX_FARROW, node(FOOD_VENDOR)),
+                                    node(ELIAS_CENTVIN, node(WEAPONS_SUPPLIER)),
+                                    node(EON_PENROSE, node(BREWING_STORE)),
+                                    node(JOHN_HAMISH_WATSON),
+                                    node(NATON_WHITLOCK, node(GENERAL_SUPPLY_VENDOR)),
+                                    node(TAMSIN_VANE, node(TELEPORT_VENDOR))))),
+            node(CLASSES,
+                    node(BOGATYR),
+                    node(DEADEYE),
+                    node(DRAGOON),
+                    node(JUDICATOR),
+                    node(METALMANCER),
+                    node(PYROCLAST),
+                    node(THEURGIST),
+                    node(VENEFEX)),
+            node(generalPage(),
+                    node(ACHIEVEMENTS),
+                    node(CURRENCY),
+                    node(TRADING),
+                    node(validationPage())),
+            node(REFERENCES));
+
+    public static final List<HelpNode> ROOT_ENTRIES = ROOT.children();
+
 
 
 
@@ -541,8 +597,25 @@ Once all six blooms are rescued from the dungeon, Watson’s soul is released. H
 
     private HelpMenuContent() {}
 
+    private static HelpNode node(Page page, HelpNode... children) { return new HelpNode(page, List.of(children)); }
+    private static Page rootPage() { return page("root", "Guide", true, List.of(
+            HelpBlock.heading("Cosmic Dungeon Guide"),
+            HelpBlock.paragraph("Choose a directory entry on the left to get started."))); }
+    private static Page generalPage() { return page("general", "General", true, List.of(
+            HelpBlock.heading("General Reference"),
+            HelpBlock.paragraph("General topics cover achievements, currency, trading, and validation reminders."),
+            HelpBlock.tip("Choose a child topic from the left directory."))); }
+    private static Page validationPage() { return page("validation", "Validation", true, List.of(
+            HelpBlock.heading("Server Validation"),
+            HelpBlock.paragraph("Cosmic Dungeon validates gameplay-sensitive behavior on the server."),
+            HelpBlock.bullet("Class access, vendors, trades, currency, progression, teleports, achievements, and dungeon systems remain server-authoritative."),
+            HelpBlock.tip("The H menu is only a guide; it never grants access or changes saved data."))); }
+
     private static Page page(String id, String title, boolean enabled, List<HelpBlock> blocks) { return new Page(id, Component.literal(title), enabled, blocks); }
     public record Page(String id, Component title, boolean enabled, List<HelpBlock> blocks) {}
+    public record HelpNode(Page page, List<HelpNode> children) {
+        public boolean isDirectory() { return !children.isEmpty(); }
+    }
     public record HelpBlock(Kind kind, Component label, Component text) {
         static HelpBlock heading(String text) { return new HelpBlock(Kind.HEADING, Component.empty(), Component.literal(text)); }
         static HelpBlock paragraph(String text) { return new HelpBlock(Kind.PARAGRAPH, Component.empty(), Component.literal(text)); }

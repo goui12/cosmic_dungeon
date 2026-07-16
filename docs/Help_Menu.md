@@ -73,3 +73,11 @@ Watson wording distinguishes two flower tracks:
 - **Lesser Blooms:** separate collectible side-hustle/progression/restoration items that affect NPC/vendor access, achievements, and unlocks.
 
 Tamsin Vane's lore may appear in the H menu, but her map interface, dungeon broker UI, Tamsin Tax payment flow, and queue system remain future/stubbed unless live source code implements them.
+
+## Directory-style guide refactor
+
+The H-key guide now presents a directory tree instead of one flat list. The root navigation contains exactly six entries: Get Started, Dungeons, Party, Classes, General, and References. Directory entries show their overview page on the right, replace the left pane with child entries, and add a Back button at the top until the player returns to the root.
+
+Scroll controls are pane-specific: the left arrow pair controls only the navigation pane, and the right arrow pair controls only the rich-text content pane. Mouse-wheel scrolling still affects the pane under the cursor. Semi-transparent dark pane backgrounds are drawn over the menu artwork before text and buttons so the original art remains visible while improving readability.
+
+The rich-text renderer measures and renders bullets, notes, and command rows with the same wrap width. Note blocks reserve label space during both measurement and rendering, and the measured content includes bottom padding so final lines can scroll clear of the scissor boundary.
