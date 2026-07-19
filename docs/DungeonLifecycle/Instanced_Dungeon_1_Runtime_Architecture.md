@@ -1,130 +1,157 @@
 # Instanced Dungeon 1 Runtime Architecture — Phase 0 feasibility ADR
 
-**Audited main:** `5e4f219c42cf4c64081447505704d246867f4e5d` (the current `origin/main` on 2026-07-19).
-**Decision status:** **DYNAMIC_UNSUPPORTED_ALTERNATIVE_REQUIRES_APPROVAL**.
-**Scope:** evidence and future design only; this ADR changes no runtime, storage, registry, network, resource, or generated data behavior.
+**Audited `origin/main`:** `5e4f219c42cf4c64081447505704d246867f4e5d` (2026-07-19).
+**Decision:** **DYNAMIC_UNSUPPORTED_ALTERNATIVE_REQUIRES_APPROVAL**.
+**Correction scope:** documentation only. No runtime, registry, SavedData, network, resource, generated-data, command, or filesystem behavior changes.
 
-## 1. Decision status
+## 1. Decision status and executive conclusion
 
-A new `ResourceKey<Level>` is not, by itself, a runtime dimension. The audited 1.21.10 server constructs its level map during startup from the registered `LevelStem` set. Phase 0 found no public NeoForge 21.10.64 API that creates/removes a `ServerLevel`, mutates the live level-stem registry, synchronizes a newly added dimension to connected clients, and later closes/removes it. Therefore Option A cannot be authorized. The safest product-compliant alternative is a **bounded, startup-predeclared paired slot pool** (Option B), but accepting its bounded capacity and implementing its complete clone/unload transaction require product-owner approval.
+The approved per-run dynamic-key architecture (A) is **not authorized**. Exact 1.21.10/NeoForge 21.10.64 source proves startup construction and shutdown closure of server levels, but does not prove a supported lifecycle to add a new level stem/key and `ServerLevel` to an already running server, synchronize that registry to connected clients, independently close/remove the level, then delete its storage. The only public map exposure found is NeoForge's mutable world map accessor; using it to invent a lifecycle is implementation-dependent and does not supply construction, client synchronization, or closure sequencing.
 
-## 2. Executive conclusion
+**Coherent fallback assessed:** predeclare a finite pair pool in datapack/registry before startup; an **external stopped-server preparation tool** copies a selected published paired snapshot into unused slot paths; the next startup opens every declared slot; parties lease a clean pair once; ended pairs are quarantined/inaccessible until shutdown; no slot is reused in that uptime. This is a possible operational model, not a supported in-mod runtime implementation. It requires a restart for preparation, a restart after every consumed pair before reuse, and external tooling because no supported pre-level-load NeoForge hook was found. It therefore **does not satisfy the approved no-restart deletion/reuse requirement**. Product approval is required before any fallback PR.
 
-Fresh isolated paired storage is possible in principle only where both physical level keys are registered before startup and remain registered for the process lifetime. A run would lease one predeclared PRIMARY/NETHER slot pair, clone one published paired template snapshot into that pair only while it has no live storage owner, load/reconcile it through normal startup ownership, and route server-side by run membership. This is not an authorization to implement it: live in-process slot unloading/recloning also lacks an audited supported removal API, so the conservative compliant operational model is **allocate slots before server start; delete/reseed only during controlled stopped-server/startup reconciliation**. If product requires immediate same-process slot reuse, this campaign stops until NeoForge supplies a supported lifecycle API or a separately audited engine change is approved.
+## 2. Reproducible source/API evidence matrix
 
-## 3. Observed defect and PR #181 analysis
+**Artifact/search scope.** Inspected repository `gradle.properties` (`minecraft_version=1.21.10`, `neo_version=21.10.64`) and repository-local `SourceCode/neoforge-21.10.64-merged.jar/`. Search covered `net.minecraft.server`, `server.level`, `world.level.storage`, `world.level.chunk.storage`, `world.level.entity`, `network.protocol.game`, and `net.neoforged.neoforge.{server,event,common}`; queried `createLevels`, `levels`, `ServerLevel`, `close`, `LevelStem`, `LevelStorage`, `PersistentEntity`, `IOWorker`, `PortalForcer`, `ticket`, `LevelEvent`, and server lifecycle events. “Not found” below means this exact source tree and these class families were searched; it is not evidence of an API outside the artifact.
 
-**Runtime observation supplied to this task:** `/world reset dungeon_1` restores blocks but post-snapshot monsters survive in the same process; relog does not help; restart does. **Repository evidence:** PR #181 is merge `b97861b2`, with implementation commit `be73c122`; `DungeonWorldSnapshotService` saves, reflects into `ServerChunkCache`/`ChunkMap`, flushes, copies files, clears caches, removes loaded non-player entities, and drains chunks. It imports `Field`/`Method` and accesses private implementation details.
-
-**Engine evidence:** a `ServerLevel` owns a `ServerChunkCache`; `ServerChunkCache.close()` saves then closes `DimensionDataStorage`, light engine, and `ChunkMap`; `ChunkMap.close()` closes worldgen/light dispatchers, POI manager, and storage; `IOWorker.close()` closes its executor and region storage. Those owners remain live during the reset. `ChunkMap` resolves `region`, `poi`, and `data` under the level's dimension path. Replacing files beneath these open owners is consequently unsupported.
-
-**Inference (not a proven single root cause):** an already-created entity manager/chunk map/IO worker can retain entities, pending writes, region handles, tickets, or in-memory chunk state and can write stale state back after copy. Restart succeeds because normal server shutdown closes those owners and startup reconstructs them from disk. The exact surviving owner in the reported reproduction remains unproven; Phase 0 must not claim PR #181's reflection-driven cache invalidation is a safe replacement lifecycle.
-
-## 4. Source/API evidence and option comparison
-
-### Exact inspected artifacts
-
-* Repository coordinates: `gradle.properties` declares Minecraft `1.21.10` and NeoForge `21.10.64`.
-* Deobfuscated source artifact inspected: `SourceCode/neoforge-21.10.64-merged.jar/` (the repository's merged Minecraft/NeoForge source tree), including `net.minecraft.server.MinecraftServer`, `server.level.ServerLevel`, `ServerChunkCache`, `ChunkMap`, `ServerPlayer`, `world.level.dimension.LevelStem`, and chunk-storage `IOWorker`, `RegionFileStorage`, and `SectionStorage`.
-* No separate public NeoForge runtime-level lifecycle API was found in that exact source tree. This is negative evidence from source inspection, not proof an undocumented external API can never exist.
-
-| Requirement | A: unique dynamic keys | B: predeclared slot pairs | C: other genuine fresh worlds |
+| Subject / exact source member | Access / lifecycle | Proves | Does **not** prove / reliance |
 | --- | --- | --- | --- |
-| Isolation/simultaneous parties | Yes if safely created | Yes, capped by configured slot pairs | No supported alternative found; shared coordinates are rejected |
-| Level stems/registry | Requires live registry mutation and client knowledge; unsupported evidence | Data-driven stems registered before startup | Any equivalent still needs registered physical levels |
-| Creation/client synchronization | No audited public API; unsafe to use private `MinecraftServer.levels`/registry maps | Existing keys are known at login; no dynamic registry sync | None found |
-| In-process unload/removal | No audited public remove/close API | Also unproven for reuse; use stopped-server/startup reclamation | Same issue |
-| Filesystem deletion | Prohibited while owner exists | Safe only after verified close/no owner; conservative stopped-server action | Same |
-| Restart/crash recovery | Registry availability remains uncertain | Deterministic: slots and stems reconstruct at startup | No better supported mechanism |
-| Reflection/engine patching | Required and forbidden | Avoidable for routing; immediate reuse would again require it | No supported candidate |
-| Complexity/testability | High/unsafe | High but bounded and testable around policy/staging | Not available |
-| Required routing | Possible only after unsupported lifecycle | Compatible with server-side resolver | Not available |
+| `net.minecraft.server.MinecraftServer#createLevels(): void`, lines 400–470; `Registry<LevelStem>` iteration and `new ServerLevel(...)` | `protected`; startup after `initServer` invokes it | All registered non-overworld `LevelStem` entries are iterated and inserted into `levels`; predeclared slots become live owners at startup | No safe post-start call, no client sync, no individual removal. Calling it again is unsupported/implementation-dependent |
+| `MinecraftServer#levels: Map<ResourceKey<Level>, ServerLevel>`, line 223; `getLevel(ResourceKey<Level>)`, `getAllLevels()` lines 1271/1279 | field `private`; accessors `public` read only | Server owns active levels | Direct mutation requires reflection; `forgeGetWorldMap(): synchronized Map<...>` lines 1934–35 exposes the map but does not document or implement a complete add/remove lifecycle |
+| `MinecraftServer#createLevels` calls `new ServerLevel(...)` at lines 411/455 then `levels.put(...)`, `LevelEvent.Load` | protected startup code | Level load events occur **after** construction/storage ownership | No before-each-level event/hook for safely replacing its dimension tree |
+| `ServerLevel#ServerLevel(MinecraftServer, Executor, LevelStorageAccess, ServerLevelData, ResourceKey<Level>, LevelStem, ChunkProgressListener, boolean, long, List<CustomSpawner>, boolean, RandomSequences)` lines 218–300 | `public` constructor but engine-owned dependency graph | Required server, executor, storage, data, stem, listener, seed, spawners/random services | Public constructor is not a supported registration API; it does not update server/client/portal/player lifecycle |
+| `LevelStorageSource.LevelStorageAccess#getDimensionPath(ResourceKey<Level>)` used by `ServerLevel` line 241, `ServerChunkCache` line 97, `ChunkMap` lines 180/184 | public usage; construction-time | Storage path is opened/resolved while level is constructed | No mod hook before all slots’ owners open files |
+| `ServerLevel#chunkSource`; `ServerChunkCache#close(): void`, lines 323–327 | field inherited/internal; close `public` | cache saves, closes `DimensionDataStorage`, light engine, `ChunkMap` | Independent close while still in `MinecraftServer.levels` is not a supported lifecycle |
+| `ChunkMap#close(): void`, lines 438–445 | `public`; called from cache close | closes worldgen/light dispatchers, POI manager, parent chunk storage | Does not remove tickets, players, server map ownership, entity manager |
+| `ServerLevel#entityManager: PersistentEntitySectionManager<Entity>`, lines 193/241–249; `ServerLevel#close()` lines 1787–89 | field `private`; close `public` | entity storage under `dimension/entities`; close eventually closes entity manager | No public accessor/independent orchestration contract; live memory can remain until close |
+| `IOWorker#synchronize(boolean): CompletableFuture<Void>` lines 154–166; `close()` lines 238–246 | public | pending writes may be flushed; close executor and `RegionFileStorage` | A flush does not retire the owner or rebuild it from replaced files |
+| `RegionFileStorage#close()` lines 93–103; `SectionStorage#close()` lines 301–302 | public | cached region files / section storage close | Only after owner invokes close |
+| `ServerChunkCache` data storage (`dimension/data`); `ChunkMap` POI (`dimension/poi`) and region storage; structure manager supplied to constructor | constructor-owned | data/POI/chunk/structure services bind to a level path | Exact standalone structure-close API was not located; conclusion is **unproven**, not assumed |
+| `ServerLevel#getForcedChunks`, `ServerChunkCache` distance manager/tickets; `ServerLevel#portalForcer: PortalForcer`, lines 198/264 and `getPortalForcer()` line 1311 | public getters / private owner | forced chunks/tickets and portal state are level-associated cleanup concerns | No audited public one-level teardown sequence proves their independent release |
+| `MinecraftServer#close(): void`, lines 655–710, loops `getAllLevels()`, posts `LevelEvent.Unload`, calls `ServerLevel.close()` | `public`; full server shutdown | Normal close sequence is global shutdown, then storage source close | No public `removeLevel`/`closeLevel` API was found |
+| `ServerLifecycleHooks#handleServerStarting/Started/Stopping/Stopped`; `ServerAboutToStartEvent`, `ServerStartingEvent`, `ServerStartedEvent` | public events | lifecycle notifications exist; Started is after server is ready; Level.Load after construction | No exact supported per-level pre-construction/pre-storage-open hook found; safe clone during those events is **unproven** |
+| Client login classes searched: `ClientboundLoginPacket`, `ClientboundRespawnPacket`, `ClientboundPlayerPositionPacket`; change uses `ServerPlayer#teleportTo(ServerLevel,...)` | protocol classes / public teleport | login/respawn carries known dimension context; teleport changes player level | No post-login registry/LevelStem-add or level-forget protocol/API found; connected-client dynamic addition/removal is **unproven** |
+| NeoForge runtime API search: `DimensionManager`, `createLevel`, `removeLevel`, `unloadLevel`, `registerLevel` across `net.neoforged.neoforge` | source search | no such supported runtime lifecycle API located | Absence is scoped negative evidence; do not infer API exists |
 
-`LevelStem` is a data-driven registry value; that proves startup dimension definitions, not post-start mutation. `MinecraftServer` owns the active level map and constructs levels during startup; `ServerLevel` construction takes server, executor, storage access, level data, key, stem, listener, debug flag, seed sequences, and random-sequence state—proof it is not a trivial `new` operation. The map/constructor access required for A is implementation-dependent/private. No inspected class proves safe connected-client addition/removal. A login/respawn client packet carrying dimensions does not prove a protocol for adding/removing them after connection.
+**Private/reflective surfaces dynamic code would otherwise need:** `MinecraftServer.levels`; registry internals for level stems/dimension types; `ServerChunkCache.chunkMap`; `ChunkMap.visibleChunkMap`; entity/chunk storage caches. These are forbidden as lifecycle mechanisms. `DungeonWorldSnapshotService` already uses reflective access to the latter two; that is evidence of fragility, not precedent.
 
-## 5. Proposed instance identity
+## 3. Option comparison and coherent Option B lifecycle
 
-Future persisted descriptor (not added here): `templateDungeonId="dungeon_1"`; monotonically allocated `runId`; opaque `instanceId`; `primaryPhysicalDimensionId`; `netherPhysicalDimensionId`; explicit `PRIMARY`/`NETHER` role map; immutable published paired `templateSnapshotId`; lifecycle state; owner party/member UUIDs; manifest version and canonical contained paths; creation, state-transition, evacuation, close, deletion-attempt, and cleanup timestamps. The manifest must state the exact slot keys and be required before any deletion; no legacy static record alone authorizes template or slot deletion.
+| Option | Verdict | Exact lifecycle / compromises |
+| --- | --- | --- |
+| A. Unique keys per run | Unsupported | Requires new stem/key after startup, live map mutation, connection registry sync, and independent removal/close; no complete supported API evidence |
+| B. Bounded predeclared pairs | Requires approval; operationally changed | Every stem becomes a live `ServerLevel` during `createLevels`; storage opens in construction. Only coherent evidence-respecting model is external stopped-server seed + one lease per uptime + quarantine to restart. Not a no-restart solution |
+| C. Other fresh isolated world | No source-supported candidate | Shared coordinates rejected; any genuine world still needs a registered live level and the same lifecycle problem |
 
-## 6. Lifecycle state machine
+**Answer to the required B questions.** (1) Yes: `createLevels` iterates stems and constructs all. (2) During `ServerLevel` construction, when entity/cache/map constructors resolve dimension paths. (3) No supported before-each-level/pre-storage-open hook was found. (4–5) Therefore safe in-mod clone/select-at-hook is unproven. (6) A snapshot published after startup cannot prepare a clean live slot without restart; no. (7) A preseeded, already-loaded slot can be leased after startup only as a normal already-existing world; routing and starter-room/index work are future server policy/normal gameplay changes, but fresh-copy provenance must have been established before startup. (8) normal block/index writes are possible but do not prove transaction safety; future implementation must test. (9) quarantine/inaccessibility until restart is policy-feasible, not engine cleanup. (10) no supported same-process close/wipe/reuse. (11) thus single-use per uptime. (12) initial seed: one pre-start preparation/start; new snapshot: stop, seed, start; reclaim: stop, verify/delete/seed, start; crash: stop/start reconciliation; locked cleanup: stopped retry, then start. (13) yes. (14) no, not entirely in mod. (15) when exhausted, deny new runs until an operator performs the stopped-server cycle.
 
-`CREATING -> ACTIVE -> ENDING -> DELETE_PENDING ->` removed is the normal sequence. `CREATING`, `ENDING`, or `DELETE_PENDING` may transition to `FAILED` with a diagnostic and no template fallback. Creation checkpoints are identity reservation, manifest durable, both paths staged, both paths validated, physical levels enterable, indexes rebuilt, then ACTIVE. A member may re-enter only ACTIVE and only the descriptor's complete pair. Startup reconciles durable records first: incomplete/unknown ownership becomes FAILED/diagnostic, not automatically deleted; DELETE_PENDING is retried only after ownership/path validation at a safe stopped/startup phase.
+## 4. Product requirements delta
 
-## 7. Paired template publication
-
-Future `/world save dungeon_1` must publish one pair, not independent arbitrary live-folder copies. It must gate authored template mutation, evacuate or reject active template use, force the normal server save/chunk save path, validate both canonical levels, capture blocks/block entities and intentionally authored entities from a controlled snapshot representation, and preserve Cosmic Spawner NBT unchanged. Door/key state, rift anchors/tiles/configuration, canonical RD destinations, and a manifest must be captured with role-qualified identifiers. Write to a unique staging directory, validate hashes/counts/role pair, atomically publish the manifest last, retain the prior published pair for rollback, and never publish a half pair. Existing `DungeonWorldSnapshotService` folder copy is evidence of current behavior, not approval to copy under live owners.
-
-## 8. Runtime creation and staging
-
-The required transaction is: reserve CREATING; choose an unused registered slot pair; normalize and containment-check manifest-owned paths; stage both copies outside live paths; write ownership markers; validate pair/hash/role metadata; reconstruct only instance-local indexes; atomically place storage only when no live `ServerLevel`/worker owns either path; load through supported startup ownership; validate both levels and routing; then mark ACTIVE before any player teleport. On failure, do not teleport and retain uncertain data for diagnostics. **Important:** Phase 0 found no source-supported same-running-server `ServerLevel` creation/client synchronization transaction. Thus actual activation is limited to startup until an approved supported API exists.
-
-## 9. Runtime unload and deletion
-
-A future implementation must block entry/writes; evacuate every member including those outside the pair; close containers/session state; clear temporary run state; release forced chunks/tickets; unload chunks/entities; flush and close entity/chunk/POI/structure/region/data IO; remove level ownership; prove no player, server map, cache, worker, or handle remains; remove only instance-owned indexes; and delete only normalized manifest-owned paths. Locked files cause `DELETE_PENDING`, with retries only in a safe startup/stopped phase. `ServerChunkCache.close`, `ChunkMap.close`, `IOWorker.close`, `RegionFileStorage.close`, and `SectionStorage.close` show why deletion before closure is forbidden. Windows can refuse open handles; Linux unlink semantics do not make deletion safe because an open descriptor can still reference/defer writes. No inspected public API proves the required removal/closure sequence for one live level.
-
-## 10. Canonical versus physical destination model
-
-Keep stable canonical records: canonical template dungeon ID, logical role, authored position/orientation. Server resolver inputs are authenticated player, lifecycle membership, physical-origin ownership, destination record, and an explicit AccessPolicy-approved developer template-bypass context. It resolves a physical `ServerLevel` only after membership/descriptor/role checks and returns structured `Success`, `Denied`, `RecoveryRequired`, or `Unavailable`; the client never supplies an instance ID/key. Origin ownership mismatching membership fails closed.
-
-## 11. Mandatory routing matrix
-
-| Situation | Required result |
+| Approved criterion | Restart-only preseeded slots verdict |
 | --- | --- |
-| Active PRIMARY -> canonical D1 Nether | own NETHER |
-| Active NETHER -> canonical D1 | own PRIMARY |
-| Active -> external | external unchanged; membership retained |
-| Active outside pair -> canonical D1 / Nether | own PRIMARY / NETHER |
-| Party A/B use one external return rift | resolver returns each party's own pair |
-| Nonmember uses canonical D1 destination | authored template destination |
-| Explicit AccessPolicy developer bypass | deliberate canonical template destination |
-| Creating/ending/delete-pending/failed/missing/partial | deny/recover; never template fallback |
-| Origin instance A, membership B/none | fail closed and recover |
-| Nonmember physically in disposable instance | no implicit membership |
-| Run ends while member is external | revoke return, evacuate/recover member |
+| Fresh isolated paired worlds / distinct roles | Supported with bounded capacity, after restart/preparation |
+| Two concurrent parties | Supported with bounded capacity: at least two preseeded pairs |
+| Same-pair rift/RD, shared external return, template protection, no cross-instance access | Still unproven pending resolver PR; architecture can support it |
+| Completion while members are external | Still unproven pending persisted membership/recovery policy |
+| Same-process unload/deletion; monsters disappear with deleted instance | Unsupported |
+| No required restart; capacity reuse | Unsupported / operationally changed |
+| Crash recovery / active-run restart | Supported only after restart, but full reconciliation implementation remains unproven |
+| Existing-world compatibility | Still unproven until migration PR; ADR requires additive loader |
+| Client synchronization | Supported for predeclared login-time levels; dynamic update unsupported/unproven |
+| No reflection / no engine patch | Supported by this fallback only if it remains stopped-server prepared |
+| Dedicated / integrated server | Still unproven; both use startup construction but require separate QA |
 
-## 12. Rift and RD model
+## 5. PR #181 failure analysis
 
-Canonical destination names remain stable authoring identifiers; physical instance resolution happens server-side. `RiftRegistryData` currently persists `cosmicdungeon_rifts_v2` and has a legacy loader, destinations, and portal records; future instance-qualified portal/tile indexes likely require an additive schema/manifest-index design and migration review. Derive indexes from the paired snapshot and role/instance descriptor, rebuild on startup, and delete only records matching that descriptor. Template portals and legacy destinations remain canonical. Reject persistent authoring inside disposable worlds unless explicitly instance-scoped. No payload or client-provided string may name a physical instance.
+PR #181 implementation (`DungeonWorldSnapshotService`) calls `MinecraftServer.saveEverything`, `ServerLevel.save`, `ServerChunkCache.save`, then `prepareLevelForFilesystemRestore`, `clearForcedChunks`, `driveUnloadPasses`, `flushChunkIoWorker`, `invalidateChunkAndEntityIoCaches`, `clearRuntimeChunkAccessCaches`, `purgeLoadedNonPlayerEntities`, and `enforcePostRestoreChunkDrain`. It reflects `ServerChunkCache.chunkMap`, `ChunkMap.visibleChunkMap`, holder `getLatestChunk`/`getTickingChunk`/`getChunkToSend`, and chunk-map worker/cache members via `Field#setAccessible`/`Method#invoke`.
 
-## 13. Access Policy and template access
+**Proven:** these operations do not call `ServerLevel.close`, `PersistentEntitySectionManager.close`, `ServerChunkCache.close`, `ChunkMap.close`, `IOWorker.close`, `RegionFileStorage.close`, or remove the level from `MinecraftServer.levels`; relogging changes a player connection, not the live `ServerLevel`; full restart runs the server-wide close sequence and reconstructs levels. **Possible remaining writers/state:** `IOWorker` pending writes, `ChunkMap`/POI/chunk caches, entity manager sections/entities, tickets/forced chunks, and portal state. **Unproven:** which one produced the reported surviving monster. Therefore another cache-clearing patch is prohibited: it would again mutate private internals without retiring every owner.
 
-Ordinary active routing is membership-based and server authoritative. Nonmembers retain canonical authored routing. Template access requires a separate explicit diagnostic/bypass intent checked through `AccessPolicy`; developer rank/`Authority` alone must not turn ordinary rifts into a bypass. Future design should choose `AccessPolicy` as the one authoritative destination authorization boundary and have commands/rifts call it; this is a recommendation, not an implementation. All unavailable/ambiguous paths deny with server diagnostics.
+## 6. Current repository call graph and routing ownership
 
-## 14. Persistence and migration
+All listed paths exist on audited main. “Resolver” means future canonical destination resolver; “No physical select” is always Yes for player-facing paths.
 
-Future work must add backward-compatible fields to `DungeonRunRegistryData` (`cosmicdungeon_dungeon_runs`): descriptors, roles, snapshot ID, lifecycle checkpoints, ownership manifest reference, and player lookup semantics. Existing `dungeon_dimension_ids`, static run records/states, `PendingDungeonRecoveryData`, `DungeonRunProgressData` bloom/completion data, door records, selector state, and possible `RiftRegistryData` indexes require an explicit old-shape loader and round-trip tests. Preserve existing SavedData IDs/field names; old static records are template references only and **must never grant deletion authority**. Phase 0 changes no schema, ID, NBT, migration, Cosmic Spawner format, preset, or player data.
+| Path / class / exact method | Current behavior and assumption | Future PR / resolver |
+| --- | --- | --- |
+| `dungeon/DungeonDefinition.java` `containsDimension`; `DungeonDefinitions.java` `DUNGEON_1`, `byDimension` | static canonical keys; physical location denotes dungeon | persistence/routing; Yes / Yes |
+| `DungeonRunState.java`; `DungeonRunRegistryData.java` `RunRecord`, `startRun`, `findActiveOrResettingRun`, `hasActiveOrResettingRun` | static `dungeon_dimension_ids`; one active/resetting run | contract PR; Yes / Yes |
+| `DungeonLifecycleService.java` `startRun`, `kickRunMember`, `onPlayerExitedThroughResetRift`, `performPendingRecoveryIfNeeded`, `finishRun`, `evacuatePlayersInDungeon`, `applyRecoveryToLivePlayer`, `teleportToSafeOverworld` | membership/physical containment; direct `teleportTo`; party/kick/recovery | routing/reclamation; Yes / Yes |
+| `DungeonWorldSnapshotService.java` `saveSnapshot`, `resetToSnapshot`, reflection helpers | copies static template paths beneath live owners | publication; forbidden from instance physical selection |
+| `PendingDungeonRecoveryData.java` `RecoveryRecord`; `DungeonRunProgressData.java` `BloomMaskRecord`, `CompletionRecord` | recovery and bloom/completion keyed to static run | contract PR; Yes / Yes |
+| `command/WorldCommand.java` RD teleport lambda, `save`, `reset`, `runs` | direct target-level teleport and static dungeon commands | routing/command PR; Yes / Yes |
+| `block/custom/ClassSelectorBlock.java`; `block/entity/ClassSelectorBlockEntity.java`; `ClassSelectorReadyManager.java`; `ClassSelectorTeleportUtil.java` | selector starts party/teleports configured destination | routing PR; Yes / Yes |
+| `DungeonStarterRoomPaster.java` `pasteStarterRoom` | pastes into selected dungeon level | staging PR; no direct resolver, no physical select |
+| `rift/RiftRegistryData.java` `DestinationRecord`, `PortalRecord`, `getDestination`; `block/custom/CosmicRiftTileBlock.java` use/teleport path | global canonical RD/portal records | routing/rift PR; Yes / Yes |
+| `command/RiftCommand.java`; `RiftDestinationCommand.java`; `ClassSelectorDestinationCommand.java` | create/configure portal/RD names | rift PR; command validation / Yes |
+| `rift/SafeTeleportUtil.java` `findSafeTeleportPos`, `teleportSafely` | direct `ServerPlayer.teleportTo` helper | must receive resolved level only / Yes |
+| `door/DoorPassageTracker.java`; `DoorLockData.java`; `DoorPassageData.java` | persistent door/passage state keyed by existing world context | contract/reclamation; not resolver / no physical select |
+| `auth/AccessPolicy.java`; `Authority.java` | permission/rank checks | routing PR; AccessPolicy authoritative / Yes |
+| `DungeonLifecycleEvents.java`, `DungeonRespawnEvents.java`, `DungeonGroupSplitEvents.java`, `ClassCloneEvents.java`, `CosmicDungeonMod.java` server events | login/logout/death/respawn/dimension/server lifecycle registrations | recovery PR; Yes where teleporting |
+| `potion/CompanionshipTeleportService.java`; `DefaultRiftDestinations.java#teleportToMainVillage`; `progression/ProgressionService.java`; `achievement/plantflags/*`, `advancement/BloomSharedAdvancements.java` | external travel/progression/Plant Flags/Lesser Bloom/achievements | routing contract must preserve membership; no physical selection |
+| `network/ModNetwork.java`, `client/ModNetworkClient.java`, `client/CosmicDungeonClient.java` | payload/client bootstrap; no audited runtime dimension sync | network only if future contract needs it; client never selects physical key |
 
-## 15. Crash and restart recovery
+**Direct `ServerPlayer.teleportTo` call sites identified:** `WorldCommand`, `DungeonLifecycleService`, `SafeTeleportUtil`, and `CompanionshipTeleportService`. Any future call resolving canonical Dungeon 1/D1 Nether must call the resolver; none may independently choose an instance.
 
-At startup: inspect manifests and registry first; validate canonical containment and paired completeness; reconcile CREATING staging, post-folder/pre-load, post-load/pre-teleport, ACTIVE, evacuation-before-delete, locked DELETE_PENDING, orphan, missing/partial pair, stale/missing portal index, and externally located members. Known manifest-owned incomplete data may be quarantined/diagnosed; uncertain ownership is never automatically deleted. Active runs reconstruct slots using startup-registered keys; failed/missing storage denies re-entry and schedules member recovery. Restart is the only source-supported reconstruction boundary found.
+## 7. Persistence and migration inventory
 
-## 16. Command contract
+| Surface | Current ID/fields/default/legacy | Proposed additive data and loader/failure/test | Authority for deletion |
+| --- | --- | --- | --- |
+| `DungeonRunRegistryData.java` | `cosmicdungeon_dungeon_runs`; `next_run_id`, runs: run/dungeon/dimension IDs/state/members/leader/reason/started/completion exits/snapshots; optional defaults; no version | descriptor, role map, snapshot/manifest IDs, checkpoints; old loader produces legacy-template-only record; malformed -> FAILED/diagnostic; codec round trip/migration tests | **Never** legacy IDs; only compatible run + validated manifest |
+| `PendingDungeonRecoveryData.java` | `cosmicdungeon_pending_dungeon_recovery`; recovery entries optional list | run/instance checkpoint reference; old recovery remains safe recovery; test old/new | never |
+| `DungeonRunProgressData.java` | `cosmicdungeon_dungeon_progress_v1`; bloom masks, completions default lists | instance-aware derived linkage only if needed; old preserved; tests | never |
+| `RiftRegistryData.java` | `cosmicdungeon_rifts_v2`; destinations/portals; legacy `cosmicdungeon_rifts` loader | derived instance index keyed by manifest/role, rebuildable; old canonical records preserved; migration/rebuild tests | **never**; derived indexes never authorize deletion |
+| `DoorLockData.java`, `DoorPassageData.java`, `DoorPassageTracker.java` | existing door SavedData names/records; no audited version | descriptor-qualified data or derived cleanup rules; old data retained; tests | never |
+| selector/class player NBT (`ClassNbtUtil.java`, `DungeonLifecycleService` temporary tags) | player root `cosmicdungeon`; `class_id`, `extra`, temporary run keys | membership pointer only with recovery fallback; clone/logout tests | never |
+| future instance ownership manifest | new, versioned, exact normalized pair paths, slot keys, hashes, run/template IDs | strict parser; missing/mismatch -> retain/quarantine/diagnose; containment/symlink tests | **only** validated manifest + compatible run may authorize cleanup |
+| future template snapshot manifest | new immutable paired snapshot hash/roles | atomic publish/rollback; invalid -> no activation; pair tests | never authorizes deletion |
 
-Future contracts: `/world save dungeon_1` publishes one validated paired template snapshot; `/world reset dungeon_1` remains an explicit canonical-template operation and must reject ambiguity/active instances; `/world runs [dungeon_1]` lists descriptors/states; termination/reset requires one run ID; routing diagnostics reports canonical input, membership, resolved role/key, and denial reason; template access is explicit and AccessPolicy-gated; orphan cleanup requires verified manifest ownership and should default to diagnostics. Commands must never fan out to multiple instances implicitly.
+Uncertain data is retained and diagnosed. Legacy static dimension IDs never authorize template deletion. Derived rift indexes never authorize filesystem deletion.
 
-## 17. Exact future serial PR decomposition
+## 8. Future serial task records
 
-1. **“Define paired-instance persistence contract”** (`codex/d1-instance-contract`): codecs/migrations/tests for descriptors, manifest references, and legacy safe loader. Owns SavedData/migration hotspots; depends on this approval; forbids registry/routing/world IO; build/GameTests plus codec tests; dedicated migration backup QA; release fragment required. Must precede all consumers.
-2. **“Canonical Dungeon 1 destination resolver”** (`codex/d1-routing-policy`): pure server policy, all direct rift/RD/class-selector/reset-return paths, AccessPolicy boundary, diagnostics. Owns rift/RD/teleport/access hotspots; depends on 1; forbids level lifecycle; pure tests/GameTests and multiplayer QA; fragment required. Cannot parallelize with 1 or lifecycle work.
-3. **“Publish paired template snapshots”** (`codex/d1-paired-template-publication`): manifest/staging/validation/rollback while preserving spawner NBT. Owns dungeon snapshot/persistence hotspots; depends on 1; forbids runtime instance creation; filesystem tests and dedicated-server save QA; fragment required. Serial with 1 and 4.
-4. **“Predeclared Dungeon 1 slot-pair bootstrap”** (`codex/d1-slot-pool-bootstrap`): data-driven declared slots and startup reconciliation only. Owns dimension registration/server startup hotspot; depends on explicit product approval and 1/3; forbids dynamic registry mutation and in-process reuse; integration/dedicated client login QA; fragment required. Cannot parallelize with any registry/startup task.
-5. **“Paired-instance staging and startup activation”** (`codex/d1-instance-staging`): CREATING/ACTIVE transaction, indexes, recovery. Owns dungeon/rift persistence and startup lifecycle; depends on 2–4; forbids deletion/reuse; filesystem tests, restart and multi-client QA; fragment required.
-6. **“Run ending and conservative reclamation”** (`codex/d1-instance-reclamation`): ENDING/DELETE_PENDING, evacuation/session cleanup, stopped-server deletion. Owns lifecycle/rift/access hotspots; depends on 5; forbids reflection/private map mutation; locked-file and crash QA; fragment required. Same-process reuse remains forbidden unless a later source-supported API audit changes the decision.
+All future tasks require explicit product choice; launch/merge order is listed and adjacent tasks are serial because they share persistence, routing, lifecycle, or registry hotspots.
 
-## 18. Test strategy
+### 1. Paired-instance persistence contract — `codex/d1-instance-contract`
+* **Behavior/dependencies/order:** additive descriptors/manifests and safe legacy reader; depends on approval, launch/merge 1, cannot parallelize with tasks 2–6 (their schema consumers).
+* **Files/hotspots/forbidden:** `dungeon/DungeonRunRegistryData.java`, `PendingDungeonRecoveryData.java`, tests; owns SavedData/migration; possible `CosmicDungeonMod`; forbids registry, rift routing, world IO, commands, client.
+* **Effects/risk:** SavedData+migration HIGH; no registry/network; shared jar server/client safe.
+* **Validation:** `./gradlew clean build`; deterministic codec old/new/invalid tests; `./gradlew runGameTestServer`; JSON scan; no datagen; dedicated backup/upgrade/rollback QA; release fragment required.
 
-Pure deterministic tests cover identity, role routing, all matrix denials, and containment. Codec/migration tests load every old run/rift shape and prove static records cannot delete templates. Filesystem tests cover staging, atomic manifest publish, hash validation, traversal/symlink rejection, and uncertain-orphan preservation. GameTests can cover in-server policy/teleport behavior but cannot honestly prove connected-client dynamic dimension protocol, OS locks, crash timing, or private-engine lifecycle. Real dedicated-server tests need two parties, external return rifts, restart during each checkpoint, Windows/Linux locks, client joins before/after activation, disconnect/death/logout, and server stop. Manual evidence remains required for client disappearance and live-world backup/restore.
+### 2. Canonical destination policy — `codex/d1-routing-policy`
+* **Behavior/dependencies/order:** resolver and fail-closed policy; depends 1, launch/merge 2; cannot parallelize with 1/3/5/6, owns rift/RD/teleport/AccessPolicy hotspot.
+* **Files/hotspots/forbidden:** `rift/*`, selector paths, `WorldCommand`, `AccessPolicy`; possible `ModNetwork`; forbids level creation/deletion, registry, migration format changes.
+* **Effects/risk:** server authorization/network audit HIGH; no registry; deterministic matrix tests + build/GameTests/JSON scan, no datagen; dedicated two-party/external-rift/death/logout QA; fragment required.
 
-## 19. Approval gates and unresolved decisions
+### 3. Paired template publisher — `codex/d1-paired-template-publication`
+* **Behavior/dependencies/order:** atomic pair manifest publication; depends 1, launch/merge 3; cannot parallelize with 4/5/6 due snapshot/lifecycle ownership.
+* **Files/hotspots/forbidden:** `DungeonWorldSnapshotService`, commands/tests; owns snapshot/persistence; forbids runtime slots, registry, client/network.
+* **Effects/risk/validation:** filesystem persistence HIGH; build/GameTests, deterministic atomic/rollback/Spawner-NBT tests, JSON scan, no datagen; dedicated template backup/restore QA; fragment required.
 
-Product owner must approve the bounded predeclared-slot compromise (capacity, restart-only activation/reuse, operational downtime) or reject it. Decide completion-exited re-entry semantics, legacy active-run recovery, verified-orphan retention/deletion policy, template bypass authorization/audit, and whether the campaign stops permanently without supported same-process lifecycle APIs. Dynamic A is not silently replaced by B.
+### 4. Approved slot provisioning boundary — `codex/d1-slot-provisioning`
+* **Behavior/dependencies/order:** only if product accepts external stopped-server tool; define manifests/tool/operator process, not in-mod runtime load; depends 1/3, launch/merge 4; serial with 3/5.
+* **Files/hotspots/forbidden:** new tool/docs/manifest tests (exact files chosen after approval); owns storage operation; possible Gradle packaging; forbids server map mutation, reflection, registry hot changes unless separately approved.
+* **Effects/risk/validation:** operational HIGH; no in-mod network; build/tool tests, containment tests, JSON if manifests JSON, datagen N/A; Windows/Linux stopped-server lock QA; fragment required.
 
-## 20. Backup, update, rollback, and campaign stop conditions
+### 5. Startup lease/routing integration — `codex/d1-slot-leasing`
+* **Behavior/dependencies/order:** lease preseeded pair once, indexes/starter room/routing; depends 1–4, launch/merge 5; serial with all adjacent.
+* **Files/hotspots/forbidden:** lifecycle, rift, selector, starter room, events/tests; owns travel/lifecycle; possible `CosmicDungeonMod`; forbids same-process deletion/reuse and dynamic registry mutation.
+* **Effects/risk/validation:** persistence/routing HIGH; build/GameTests/matrix tests/JSON scan/no datagen; dedicated two-party, reconnect, active-run restart QA; fragment required.
 
-Before any future migration, back up complete world folders, template snapshots, rift/RD data, doors, Cosmic Spawners/presets, player data, and `cosmicdungeon_*` SavedData. Existing 1.5.0/1.5.1 templates, static dimensions, rifts, RD destinations, doors, spawners, presets, player data, and legacy records remain untouched by this ADR. Upgrade must retain old readers and use manifests before deleting anything; rollback must restore the backup and retain uncertain instance folders. Stop the campaign if source-supported server/client creation/removal/closure cannot be demonstrated, if ownership is uncertain, if canonical containment fails, or if tests show a path can enter a template/other party's pair.
+### 6. Quarantine and stopped-server reclamation — `codex/d1-slot-reclamation`
+* **Behavior/dependencies/order:** ENDING/DELETE_PENDING, member recovery, verified manifest handoff; depends 5, launch/merge 6; cannot parallelize because it changes lifecycle semantics.
+* **Files/hotspots/forbidden:** lifecycle/recovery/rift indexes/tests; owns cleanup; forbids live map reflection/close/reuse and template deletion.
+* **Effects/risk/validation:** destructive-world-data HIGH; build/GameTests, crash/manifest/containment tests, JSON scan/no datagen; dedicated crash/locked-path/manual backup QA; fragment required.
 
-## Repository audit inventory and future write hotspots
+## 9. Test strategy
 
-Current static definitions are `DungeonDefinition`, `DungeonDefinitions`, `DungeonRunState`, `DungeonRunRegistryData`, `DungeonLifecycleService`, `DungeonWorldSnapshotService`, `PendingDungeonRecoveryData`, `WorldCommand`, `RiftRegistryData`, `SafeTeleportUtil`, `DoorPassageTracker`, `DoorLockData`, and `DoorPassageData`. Lifecycle events/respawn code, class-selector destination command/block paths, `CosmicRiftTileBlock`, `RiftCommand`, `RiftDestinationCommand`, reset-trigger rifts, progression/Plant Flags/Lesser Bloom/achievement paths, party leadership/kicking, disconnect/death/logout/dimension-change/server-stop listeners, `CosmicDungeonMod`, networking/client bootstrap, and dedicated-server classloading boundaries are future read/write audit hotspots.
+Deterministic tests: identity/routing matrix, authorization denials, manifest containment, legacy codec loading. Filesystem tests: atomic staging, hashes, rollback, symlink traversal, uncertain-orphan retention. GameTests: policy and existing-world teleport behavior only; they cannot prove OS locks, process crashes, connected-client registry mutation, or independent `ServerLevel` teardown. Real dedicated/integrated QA: two parties, client login, external return, logout/death/respawn, restart at every checkpoint, Windows/Linux locks, backup/rollback. No runtime behavior was tested by this ADR.
 
-Known static assumptions: `DungeonDefinitions.DUNGEON_1` fixes `cosmicdungeon:dungeon_1` and `cosmicdungeon:dungeon_1_nether`; run registry stores `dungeon_dimension_ids`; `findActiveOrResettingRun(dungeonId)` and `hasActiveOrResettingRun` impose one run per dungeon; lifecycle evacuation and recovery use physical dimension containment; snapshot service resolves the static definition's levels. Direct destinations include rift/RD teleports, class-selector destination resolution, `WorldCommand` RD teleport, safe teleport helpers, lifecycle evacuation/recovery, and reset rifts; each requires the future resolver audit before implementation.
+## 10. Approval options and stop conditions
+
+**OPTION 1 — Preserve no-restart requirement.** Campaign remains blocked; launch no implementation PR. Wait for a supported NeoForge runtime API, approve separately scoped engine modification, or revise product architecture.
+
+**OPTION 2 — Approve bounded predeclared slots.** Capacity equals configured paired slots; each is single-use per uptime; restarts are required for initial seed, a newly published snapshot, reclamation, crash recovery, and locked cleanup; external stopped-server preparation is required. Waive/modify no-restart deletion/reuse and immediate new-snapshot requirements. Remaining unknowns include complete routing/migration and dedicated/integrated operational validation; do not approve until these operational compromises are explicitly accepted.
+
+**OPTION 3 — Reject both.** Stop the campaign and retain this ADR as evidence.
+
+Existing 1.5.0/1.5.1 worlds, templates, rifts, RD destinations, doors, spawners/presets, player data, and legacy runs remain untouched by this documentation change. No implementation phase is authorized by this ADR.
