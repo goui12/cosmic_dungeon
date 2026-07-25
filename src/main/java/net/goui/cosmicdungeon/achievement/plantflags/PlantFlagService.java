@@ -3,6 +3,7 @@ package net.goui.cosmicdungeon.achievement.plantflags;
 import net.goui.cosmicdungeon.achievement.CosmicAchievementIds;
 import net.goui.cosmicdungeon.achievement.CosmicAdvancementUtil;
 import net.goui.cosmicdungeon.dungeon.DungeonLifecycleService;
+import net.goui.cosmicdungeon.dungeon.DungeonInstanceSlots;
 import net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData;
 import net.goui.cosmicdungeon.playerclass.api.ClassItemUtil;
 import net.goui.cosmicdungeon.playerclass.api.ClassNbtUtil;
@@ -119,7 +120,9 @@ public final class PlantFlagService {
 
     public static boolean isInsideConfiguredRegion(ServerPlayer sp, BlockPos pos, PlantFlagData data) {
         if (sp == null || pos == null || data == null || !isRegionConfigured(data)) return false;
-        if (!sp.level().dimension().location().toString().equals(data.regionDimensionId())) return false;
+        String dimensionId = DungeonInstanceSlots.templateDimensionForPhysical(
+                sp.level().getServer(), sp.level().dimension()).location().toString();
+        if (!dimensionId.equals(data.regionDimensionId())) return false;
         BlockPos a = data.regionPos1(), b = data.regionPos2();
         return pos.getX() >= Math.min(a.getX(), b.getX()) && pos.getX() <= Math.max(a.getX(), b.getX())
                 && pos.getY() >= Math.min(a.getY(), b.getY()) && pos.getY() <= Math.max(a.getY(), b.getY())

@@ -9,6 +9,7 @@ import net.goui.cosmicdungeon.dungeon.DungeonDefinitions;
 import net.goui.cosmicdungeon.dungeon.DungeonLifecycleService;
 import net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData;
 import net.goui.cosmicdungeon.dungeon.DungeonWorldSnapshotService;
+import net.goui.cosmicdungeon.dungeon.DungeonTravelRouter;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -69,14 +70,21 @@ public final class WorldCommand {
                                 return 0;
                             }
 
-                            ServerLevel dest = source.getServer().getLevel(dimKey);
-                            if (dest == null) {
+                            ServerLevel requested = source.getServer().getLevel(dimKey);
+                            if (requested == null) {
                                 source.sendFailure(Component.literal("Dimension not loaded: " + dimKey.location()));
                                 return 0;
                             }
 
-                            var rd = dest.getLevelData().getRespawnData();
-                            BlockPos spawn = rd.pos();
+                            var rd = requested.getLevelData().getRespawnData();
+                            DungeonTravelRouter.Result route = DungeonTravelRouter.resolve(player, dimKey, rd.pos());
+                            if (route instanceof DungeonTravelRouter.Result.Rejected rejected) {
+                                source.sendFailure(Component.literal(rejected.message()));
+                                return 0;
+                            }
+                            DungeonTravelRouter.Result.Allowed allowed = (DungeonTravelRouter.Result.Allowed) route;
+                            ServerLevel dest = allowed.level();
+                            BlockPos spawn = allowed.pos();
                             BlockPos safe = ensureStandable(dest, spawn);
 
                             player.teleportTo(dest, safe.getX() + 0.5D, safe.getY(), safe.getZ() + 0.5D, Set.of(), rd.yaw(), rd.pitch(), false);

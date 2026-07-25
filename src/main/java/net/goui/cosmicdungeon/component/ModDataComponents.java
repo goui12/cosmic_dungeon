@@ -3,6 +3,7 @@ package net.goui.cosmicdungeon.component;
 import com.mojang.serialization.Codec;
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.common.color.AmethystColor;
+import net.goui.cosmicdungeon.dungeon.DungeonReturnTarget;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
@@ -50,6 +51,10 @@ public final class ModDataComponents {
     /** Trace sell value for attuned class gear. */
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Long>> CLASS_ITEM_TRACE_VALUE =
             register("class_item_trace_value", b -> b.persistent(Codec.LONG));
+
+    /** Owner-bound, active-run return point captured by Beatrix's Campfire. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<DungeonReturnTarget>> DUNGEON_RETURN_TARGET =
+            register("dungeon_return_target", b -> b.persistent(DungeonReturnTarget.CODEC));
 
     private static <T> DeferredHolder<DataComponentType<?>, DataComponentType<T>> register(
             String name, UnaryOperator<DataComponentType.Builder<T>> builderOp) {

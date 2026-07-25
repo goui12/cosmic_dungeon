@@ -5,16 +5,17 @@ Beatrix Farrow's restored Village food-and-travel loop centers on a special camp
 ## Player behavior
 
 - Raw Farrow's Chop is cooked through Beatrix's Campfire, not through ordinary campfire recipes.
-- Farrow's Chop is consumed only after a successful server-side teleport.
-- A successful use returns the dungeoneer to the Main Village rift destination, preferring `main_village`, then `village`, then `Main Village`.
+- Cooking Raw Farrow's Chop while inside the player's active dungeon binds the cooked chop to the exact location and returns the player to the Main Village destination, preferring `main_village`, then `village`, then `Main Village`.
+- Dungeon and outside inventories remain separate for the round trip: cooking escrows the dungeon inventory, returning restores it, and ending the run while outside retains only the outside inventory. Currency transactions are unavailable during the outside visit.
+- Eating that cooked chop returns its owner to the recorded active-instance position. The chop is consumed only after a successful server-side return.
 - If the destination is missing, invalid, unloaded, unsafe, or blocked, the chop is not consumed and the player receives a failure message.
-- A successful return grants **Nostalgia Bait**: "Teleport back to the Main Village using Farrow's Chop."
+- A successful campfire trip grants **Nostalgia Bait**: "Cook Farrow's Chop to return to the Main Village."
 
 Flavor line: _Smells like home. Costs like nostalgia._
 
 ## Destination contract
 
-Farrow's Chop resolves the normal rift destination data through `DefaultRiftDestinations`, preferring `main_village`, then `village`, then `Main Village`. The destination lives in the existing `cosmicdungeon_rifts_v2` saved data alongside other rift destinations; no parallel registry or extra saved-data file is used. Server-start seeding creates `main_village` only if missing, and item use does not create or overwrite destinations.
+The campfire departure resolves normal rift destination data through `DefaultRiftDestinations`. The cooked item stores an owner-bound return component containing the active run id and exact physical instance location. Eating revalidates the active run, membership, dimension ownership, inventory escrow, and safety on the server; it never accepts a client-selected instance.
 
 ## Beatrix Campfire compatibility
 

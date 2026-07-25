@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.goui.cosmicdungeon.auth.Authority;
 import net.goui.cosmicdungeon.block.ModBlocks;
 import net.goui.cosmicdungeon.dungeon.DungeonLifecycleService;
+import net.goui.cosmicdungeon.dungeon.DungeonTravelRouter;
 import net.goui.cosmicdungeon.network.ModNetwork;
 import net.goui.cosmicdungeon.network.RiftPayloads;
 import net.goui.cosmicdungeon.rift.RiftRegistryData;
@@ -160,10 +161,16 @@ public class CosmicRiftTileBlock extends Block {
         }
 
         ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, dimId);
-        ServerLevel targetLevel = currentLevel.getServer().getLevel(dimKey);
-        if (targetLevel == null) return;
-
         BlockPos rawTarget = dest.pos();
+        DungeonTravelRouter.Result route = DungeonTravelRouter.resolve(sp, dimKey, rawTarget);
+        if (route instanceof DungeonTravelRouter.Result.Rejected rejected) {
+            sp.sendSystemMessage(net.minecraft.network.chat.Component.literal(rejected.message())
+                    .withStyle(net.minecraft.ChatFormatting.RED));
+            return;
+        }
+        DungeonTravelRouter.Result.Allowed allowed = (DungeonTravelRouter.Result.Allowed) route;
+        ServerLevel targetLevel = allowed.level();
+        rawTarget = allowed.pos();
         BlockPos safe = SafeTeleportUtil.findSafeTeleportPos(targetLevel, rawTarget);
         if (safe == null) return;
 

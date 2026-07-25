@@ -29,6 +29,7 @@ public final class DungeonRunRegistryData extends SavedData {
             String selectorDimensionId,
             long selectorPosLong,
             List<String> dungeonDimensionIds,
+            int instanceSlot,
             String state,
             String resetReason,
             long startedAtEpochMillis,
@@ -42,6 +43,7 @@ public final class DungeonRunRegistryData extends SavedData {
                 Codec.STRING.fieldOf("selector_dimension").forGetter(RunRecord::selectorDimensionId),
                 Codec.LONG.fieldOf("selector_pos").forGetter(RunRecord::selectorPosLong),
                 Codec.STRING.listOf().fieldOf("dungeon_dimension_ids").forGetter(RunRecord::dungeonDimensionIds),
+                Codec.INT.optionalFieldOf("instance_slot", 0).forGetter(RunRecord::instanceSlot),
                 Codec.STRING.fieldOf("state").forGetter(RunRecord::state),
                 Codec.STRING.optionalFieldOf("reset_reason", "").forGetter(RunRecord::resetReason),
                 Codec.LONG.optionalFieldOf("started_at", 0L).forGetter(RunRecord::startedAtEpochMillis),
@@ -96,6 +98,7 @@ public final class DungeonRunRegistryData extends SavedData {
                     selectorDimensionId,
                     selectorPosLong,
                     dungeonDimensionIds,
+                    instanceSlot,
                     state,
                     resetReason,
                     startedAtEpochMillis,
@@ -127,6 +130,7 @@ public final class DungeonRunRegistryData extends SavedData {
                     selectorDimensionId,
                     selectorPosLong,
                     dungeonDimensionIds,
+                    instanceSlot,
                     state,
                     resetReason,
                     startedAtEpochMillis,
@@ -143,6 +147,7 @@ public final class DungeonRunRegistryData extends SavedData {
                     selectorDimensionId,
                     selectorPosLong,
                     dungeonDimensionIds,
+                    instanceSlot,
                     newState.name(),
                     reason == null ? "" : reason.name(),
                     startedAtEpochMillis,
@@ -150,6 +155,12 @@ public final class DungeonRunRegistryData extends SavedData {
                     completionExitedPlayers,
                     playerSnapshots
             );
+        }
+
+        public RunRecord withInstance(int slot, List<String> dimensions) {
+            return new RunRecord(runId, dungeonId, selectorDimensionId, selectorPosLong,
+                    List.copyOf(dimensions), slot, state, resetReason, startedAtEpochMillis,
+                    orderedPlayers, completionExitedPlayers, playerSnapshots);
         }
     }
 
@@ -203,14 +214,17 @@ public final class DungeonRunRegistryData extends SavedData {
     public long startRun(ResourceKey<Level> selectorDimension,
                          long selectorPosLong,
                          DungeonDefinition def,
+                         int instanceSlot,
+                         java.util.Collection<String> instanceDimensionIds,
                          java.util.Collection<UUID> orderedPlayers,
                          java.util.Collection<DungeonPlayerRunSnapshot> snapshots) {
         if (selectorDimension == null || def == null || orderedPlayers == null || orderedPlayers.isEmpty()) {
             return -1L;
         }
 
-        Optional<RunRecord> existing = findActiveOrResettingRun(def.id());
-        if (existing.isPresent()) {
+        if (instanceSlot < 1 || instanceSlot > DungeonInstanceSlots.SLOT_COUNT
+                || instanceDimensionIds == null || instanceDimensionIds.isEmpty()
+                || isSlotOccupied(instanceSlot)) {
             return -1L;
         }
 
@@ -230,7 +244,8 @@ public final class DungeonRunRegistryData extends SavedData {
                 def.id(),
                 selectorDimension.location().toString(),
                 selectorPosLong,
-                def.dimensionIds(),
+                new ArrayList<>(instanceDimensionIds),
+                instanceSlot,
                 DungeonRunState.ACTIVE.name(),
                 "",
                 System.currentTimeMillis(),
@@ -264,6 +279,29 @@ public final class DungeonRunRegistryData extends SavedData {
         return runsById.values().stream()
                 .filter(r -> r.dungeonId().equalsIgnoreCase(dungeonId)
                         && (r.stateEnum() == DungeonRunState.ACTIVE || r.stateEnum() == DungeonRunState.RESETTING))
+                .sorted(Comparator.comparingLong(RunRecord::runId))
+                .findFirst();
+    }
+
+    public boolean isSlotOccupied(int slot) {
+        return runsById.values().stream().anyMatch(r -> r.instanceSlot() == slot
+                && (r.stateEnum() == DungeonRunState.ACTIVE
+                || r.stateEnum() == DungeonRunState.RESETTING
+                || r.stateEnum() == DungeonRunState.FAILED));
+    }
+
+    public Optional<Integer> firstAvailableSlot() {
+        for (int slot = 1; slot <= DungeonInstanceSlots.SLOT_COUNT; slot++) {
+            if (!isSlotOccupied(slot)) return Optional.of(slot);
+        }
+        return Optional.empty();
+    }
+
+    public Optional<RunRecord> findRunForInstanceDimension(ResourceKey<Level> dimension) {
+        if (dimension == null) return Optional.empty();
+        return runsById.values().stream()
+                .filter(r -> (r.stateEnum() == DungeonRunState.ACTIVE || r.stateEnum() == DungeonRunState.RESETTING)
+                        && r.containsDimension(dimension))
                 .sorted(Comparator.comparingLong(RunRecord::runId))
                 .findFirst();
     }
@@ -326,6 +364,14 @@ public final class DungeonRunRegistryData extends SavedData {
 
         RunRecord updated = old.withState(state, reason);
         runsById.put(runId, updated);
+        setDirty();
+        return true;
+    }
+
+    public boolean assignInstance(long runId, int slot, List<String> dimensions) {
+        RunRecord old = runsById.get(runId);
+        if (old == null || slot < 1 || dimensions == null || dimensions.isEmpty() || isSlotOccupied(slot)) return false;
+        runsById.put(runId, old.withInstance(slot, dimensions));
         setDirty();
         return true;
     }

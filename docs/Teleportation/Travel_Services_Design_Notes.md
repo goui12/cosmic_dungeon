@@ -17,4 +17,4 @@ Broader travel-service notes are future expansion planning unless source code ex
 
 ## Farrow's Chop return-home destination
 
-Farrow's Chop return travel targets the normal rift destination `main_village`. The destination is auto-created only if missing, stored in existing rift destination saved data, and never overwrites developer edits. Use `/rd info main_village` to inspect it and `/rd move main_village` to update it in-game.
+Cooking Raw Farrow's Chop inside an active dungeon uses the normal rift destination `main_village` for the trip out and binds the cooked item to the owner's exact instance location. Eating the bound chop performs the validated return trip. The Village destination is auto-created only if missing, stored in existing rift destination saved data, and never overwrites developer edits. Use `/rd info main_village` to inspect it and `/rd move main_village` to update it in-game.

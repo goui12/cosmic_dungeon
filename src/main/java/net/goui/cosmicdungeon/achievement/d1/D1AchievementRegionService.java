@@ -1,5 +1,6 @@
 package net.goui.cosmicdungeon.achievement.d1;
 
+import net.goui.cosmicdungeon.dungeon.DungeonInstanceSlots;
 import net.goui.cosmicdungeon.region.RegionRegistryData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -13,8 +14,10 @@ public final class D1AchievementRegionService {
 
     public static boolean inRegion(ServerLevel level, BlockPos pos, String regionName) {
         RegionRegistryData data = RegionRegistryData.get(level);
+        String dimensionId = DungeonInstanceSlots.templateDimensionForPhysical(level.getServer(), level.dimension())
+                .location().toString();
         return data.get(regionName)
-                .filter(r -> r.dimensionId().equals(level.dimension().location().toString()))
+                .filter(r -> r.dimensionId().equals(dimensionId))
                 .filter(r -> data.contains(r, pos))
                 .isPresent();
     }

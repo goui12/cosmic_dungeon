@@ -6,6 +6,7 @@ import net.goui.cosmicdungeon.auth.OpUtil;
 import net.goui.cosmicdungeon.auth.PasswordStore;
 import net.goui.cosmicdungeon.auth.Rank;
 import net.goui.cosmicdungeon.auth.RankStore;
+import net.goui.cosmicdungeon.dungeon.DungeonTravelRouter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -103,6 +104,7 @@ public final class RankCommand {
                                                                 SpawnerLabelServerState.sync(online);
                                                             } else {
                                                                 SpawnerLabelServerState.revoke(online);
+                                                                DungeonTravelRouter.evacuateUnauthorizedLocation(online);
                                                             }
                                                         }
                                                     }
