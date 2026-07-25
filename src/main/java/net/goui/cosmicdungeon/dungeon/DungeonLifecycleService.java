@@ -116,6 +116,8 @@ public final class DungeonLifecycleService {
         DungeonPlayerRunSnapshot snapshot = run.snapshotFor(target.getUUID())
                 .orElseGet(() -> snapshotPlayer(target));
 
+        snapshot = cleanupSnapshot(server, run, target, snapshot);
+
         applyRecoveryToLivePlayer(server, target, def, snapshot, true, "KICKED");
         PendingDungeonRecoveryData.get(server).remove(target.getUUID());
         runs.removePlayer(run.runId(), target.getUUID());
@@ -523,15 +525,17 @@ public final class DungeonLifecycleService {
             seen.add(snap.playerId());
 
             ServerPlayer online = server.getPlayerList().getPlayer(snap.playerId());
+            DungeonPlayerRunSnapshot cleanupSnapshot = cleanupSnapshot(server, run, online, snap);
+            String recoveryReason = cleanupReason(reason, cleanupSnapshot != snap);
             if (online != null) {
-                applyRecoveryToLivePlayer(server, online, def, snap, false, reason.name());
+                applyRecoveryToLivePlayer(server, online, def, cleanupSnapshot, false, recoveryReason);
             } else {
                 pending.put(new PendingDungeonRecoveryData.RecoveryRecord(
-                        snap.playerId(),
+                        cleanupSnapshot.playerId(),
                         run.runId(),
                         run.dungeonId(),
-                        reason.name(),
-                        snap.inventoryNbt().copy()
+                        recoveryReason,
+                        cleanupSnapshot.inventoryNbt().copy()
                 ));
             }
         }
@@ -540,21 +544,38 @@ public final class DungeonLifecycleService {
             if (seen.contains(id)) continue;
 
             ServerPlayer online = server.getPlayerList().getPlayer(id);
+            DungeonPlayerRunSnapshot fallback = online == null
+                    ? new DungeonPlayerRunSnapshot(id, new CompoundTag()) : snapshotPlayer(online);
+            DungeonPlayerRunSnapshot cleanupSnapshot = cleanupSnapshot(server, run, online, fallback);
+            String recoveryReason = cleanupReason(reason, cleanupSnapshot != fallback);
             if (online != null) {
-                DungeonPlayerRunSnapshot fallback = snapshotPlayer(online);
-                applyRecoveryToLivePlayer(server, online, def, fallback, false, reason.name());
+                applyRecoveryToLivePlayer(server, online, def, cleanupSnapshot, false, recoveryReason);
             } else {
                 pending.put(new PendingDungeonRecoveryData.RecoveryRecord(
                         id,
                         run.runId(),
                         run.dungeonId(),
-                        reason.name(),
-                        new CompoundTag()
+                        recoveryReason,
+                        cleanupSnapshot.inventoryNbt().copy()
                 ));
             }
         }
 
         progress.clearRun(run.runId());
+    }
+
+    private static DungeonPlayerRunSnapshot cleanupSnapshot(MinecraftServer server,
+                                                              DungeonRunRegistryData.RunRecord run,
+                                                              ServerPlayer online,
+                                                              DungeonPlayerRunSnapshot fallback) {
+        return FarrowsChopTravelService.takeOutsideInventoryForCleanup(
+                        online, server, run.runId(), fallback.playerId())
+                .map(inventory -> new DungeonPlayerRunSnapshot(fallback.playerId(), inventory))
+                .orElse(fallback);
+    }
+
+    private static String cleanupReason(DungeonResetReason reason, boolean usedEscrow) {
+        return reason == DungeonResetReason.COMPLETED && usedEscrow ? "COMPLETED_ESCROW" : reason.name();
     }
 
     private static void onSuccessfulReset(MinecraftServer server,

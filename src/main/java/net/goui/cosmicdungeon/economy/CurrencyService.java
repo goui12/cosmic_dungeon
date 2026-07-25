@@ -2,6 +2,7 @@ package net.goui.cosmicdungeon.economy;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.goui.cosmicdungeon.dungeon.FarrowsChopTravelService;
 
 public final class CurrencyService {
     private CurrencyService() {}
@@ -16,16 +17,19 @@ public final class CurrencyService {
     }
 
     public static boolean tryDeposit(ServerPlayer player, long traceAmount) {
+        if (FarrowsChopTravelService.isOutsideEscrow(player)) return false;
         PlayerCurrencyData data = getData(player);
         return data != null && data.tryDeposit(player.getUUID(), traceAmount);
     }
 
     public static boolean tryWithdraw(ServerPlayer player, long traceAmount) {
+        if (FarrowsChopTravelService.isOutsideEscrow(player)) return false;
         PlayerCurrencyData data = getData(player);
         return data != null && data.tryWithdraw(player.getUUID(), traceAmount);
     }
 
     public static boolean canDeposit(ServerPlayer player, long traceAmount) {
+        if (FarrowsChopTravelService.isOutsideEscrow(player)) return false;
         PlayerCurrencyData data = getData(player);
         return data != null && data.canDeposit(player.getUUID(), traceAmount);
     }

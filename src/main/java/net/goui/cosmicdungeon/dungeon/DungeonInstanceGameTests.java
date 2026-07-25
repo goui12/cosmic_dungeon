@@ -5,6 +5,8 @@ import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.MapCodec;
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.minecraft.core.Holder;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.gametest.framework.FunctionGameTestInstance;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.GameTestInstance;
@@ -28,6 +30,7 @@ public final class DungeonInstanceGameTests {
         register(event, environment, "slot_mapping", DungeonInstanceGameTests::slotMapping);
         register(event, environment, "legacy_run_codec", DungeonInstanceGameTests::legacyRunCodec);
         register(event, environment, "farrows_chop_target_codec", DungeonInstanceGameTests::farrowsChopTargetCodec);
+        register(event, environment, "inventory_escrow_codec", DungeonInstanceGameTests::inventoryEscrowCodec);
     }
 
     private static void slotMapping(GameTestHelper helper) {
@@ -61,6 +64,24 @@ public final class DungeonInstanceGameTests {
         DungeonReturnTarget decoded = encoded == null ? null
                 : DungeonReturnTarget.CODEC.parse(JsonOps.INSTANCE, encoded).result().orElse(null);
         helper.assertTrue(expected.equals(decoded), net.minecraft.network.chat.Component.literal("Farrow's Chop return target did not round-trip"));
+        helper.succeed();
+    }
+
+    private static void inventoryEscrowCodec(GameTestHelper helper) {
+        CompoundTag dungeon = new CompoundTag();
+        dungeon.putString("marker", "dungeon");
+        CompoundTag outside = new CompoundTag();
+        outside.putString("marker", "outside");
+        DungeonInventoryEscrowData.Entry expected = new DungeonInventoryEscrowData.Entry(42L,
+                UUID.fromString("00000000-0000-0000-0000-000000000002"), dungeon, outside, true);
+        var encoded = DungeonInventoryEscrowData.Entry.CODEC.encodeStart(NbtOps.INSTANCE, expected).result().orElse(null);
+        DungeonInventoryEscrowData.Entry decoded = encoded == null ? null
+                : DungeonInventoryEscrowData.Entry.CODEC.parse(NbtOps.INSTANCE, encoded).result().orElse(null);
+        helper.assertTrue(decoded != null && decoded.runId() == expected.runId()
+                        && decoded.playerId().equals(expected.playerId()) && decoded.outsideActive()
+                        && "dungeon".equals(decoded.dungeonInventory().getString("marker").orElse(""))
+                        && "outside".equals(decoded.outsideInventory().getString("marker").orElse("")),
+                net.minecraft.network.chat.Component.literal("inventory escrow did not round-trip"));
         helper.succeed();
     }
 

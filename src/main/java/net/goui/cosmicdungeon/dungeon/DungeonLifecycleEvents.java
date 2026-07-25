@@ -39,6 +39,7 @@ public final class DungeonLifecycleEvents {
     @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent e) {
         if (!(e.getEntity() instanceof ServerPlayer sp)) return;
+        FarrowsChopTravelService.syncOutsideInventory(sp);
         DungeonAfkService.onPlayerLoggedOut(sp);
         reevaluateSoon = true;
     }
@@ -68,6 +69,7 @@ public final class DungeonLifecycleEvents {
         DungeonAfkService.tick(server);
         if (doPeriodic) {
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                FarrowsChopTravelService.syncOutsideInventory(player);
                 DungeonTravelRouter.evacuateUnauthorizedLocation(player);
             }
         }

@@ -19,7 +19,6 @@ public class FarrowsChopItem extends Item {
         if (!FarrowsChopTravelService.returnToDungeon(sp, stack)) return stack;
 
         sp.awardStat(Stats.ITEM_USED.get(this));
-        if (!sp.getAbilities().instabuild) stack.shrink(1);
         return stack;
     }
 }

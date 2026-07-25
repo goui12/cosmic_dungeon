@@ -25,9 +25,8 @@ public class BeatrixCampfireBlock extends CampfireBlock {
         if (stack.is(ModItems.RAW_FARROWS_CHOP.get()) && Boolean.TRUE.equals(state.getValue(LIT))) {
             if (!level.isClientSide()) {
                 if (!(player instanceof ServerPlayer serverPlayer)) return InteractionResult.FAIL;
-                var cookedResult = FarrowsChopTravelService.cookAndLeaveDungeon(serverPlayer);
+                var cookedResult = FarrowsChopTravelService.cookAndLeaveDungeon(serverPlayer, stack);
                 if (cookedResult.isEmpty()) return InteractionResult.FAIL;
-                if (!player.getAbilities().instabuild) stack.shrink(1);
                 ItemStack cooked = cookedResult.get();
                 if (!player.getInventory().add(cooked)) player.drop(cooked, false);
                 level.playSound(null, pos, SoundEvents.CAMPFIRE_CRACKLE, SoundSource.BLOCKS, 1.0F, 1.0F);
