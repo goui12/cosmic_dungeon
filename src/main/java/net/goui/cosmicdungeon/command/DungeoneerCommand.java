@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import net.goui.cosmicdungeon.auth.*;
 import net.goui.cosmicdungeon.dungeon.DungeonAfkService;
 import net.goui.cosmicdungeon.dungeon.DungeonLifecycleService;
+import net.goui.cosmicdungeon.dungeon.DungeonTravelRouter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -83,6 +84,7 @@ public final class DungeoneerCommand {
                                     // Apply deop immediately and revoke developer-only label access.
                                     OpUtil.setOperator(server, p, false);
                                     SpawnerLabelServerState.revoke(p);
+                                    DungeonTravelRouter.evacuateUnauthorizedLocation(p);
 
                                     src.sendSuccess(() -> Component.literal("You are now DUNGEONEER.")
                                             .withStyle(ChatFormatting.GREEN), true);
@@ -109,6 +111,7 @@ public final class DungeoneerCommand {
                             // Apply deop immediately and revoke developer-only label access.
                             OpUtil.setOperator(server, p, false);
                             SpawnerLabelServerState.revoke(p);
+                            DungeonTravelRouter.evacuateUnauthorizedLocation(p);
 
                             src.sendSuccess(() -> Component.literal("You are now DUNGEONEER.")
                                     .withStyle(ChatFormatting.GREEN), true);

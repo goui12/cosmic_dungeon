@@ -76,7 +76,7 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Naton Whitlock offers general supplies: food, fire, light, and container basics."),
             HelpBlock.bullet("Elias Centvin sells weapons, tools, and Dragoon repair materials; direct shop repair service is future-only."),
             HelpBlock.bullet("Eon Penrose runs the Brewing Store for ingredients, bottles, equipment, and potions."),
-            HelpBlock.bullet("Beatrix Farrow provides food, Beatrix's Campfire, and Farrow's Chop for a safe return home."),
+            HelpBlock.bullet("Beatrix Farrow provides food, Beatrix's Campfire, and Farrow's Chop for a safe trip home and return to your active dungeon."),
             HelpBlock.bullet("See Brewing Store, Travel, and Village Souls for the short field guide."),
             HelpBlock.tip("Purchases and sales are server-authoritative and atomic: they either complete safely or do not complete.")));
 
@@ -191,9 +191,9 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Rifts are world-travel structures when presented by the dungeon."),
             HelpBlock.heading("Farrow's Chop"),
             HelpBlock.bullet("Beatrix's Campfire cooks Raw Farrow's Chop into Farrow's Chop."),
-            HelpBlock.bullet("Eating Farrow's Chop returns you to the Main Village when the route is available and safe."),
+            HelpBlock.bullet("Cook Raw Farrow's Chop inside your active dungeon to remember your exact location and travel to Main Village; eat the bound chop to return."),
             HelpBlock.bullet("The chop is consumed only after a successful return, unless creative-mode rules preserve it."),
-            HelpBlock.bullet("A successful return grants the Nostalgia Bait achievement."),
+            HelpBlock.bullet("A successful campfire trip to Main Village grants the Nostalgia Bait achievement."),
             HelpBlock.tip("Only use teleport options offered by the dungeon, a potion, visible in-world travel structures, or Farrow's Chop.")));
 
     public static final Page ACHIEVEMENTS = page("achievements", "Achievements", true, List.of(
@@ -201,7 +201,7 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Achievements are server-side advancements that reward notable dungeon milestones."),
             HelpBlock.bullet("First Trace grants 5 Trace and explains currency abbreviations and value."),
             HelpBlock.bullet("Handshake Protocol is awarded after your first successful player trade."),
-            HelpBlock.bullet("Nostalgia Bait is live: return to the Main Village with Farrow's Chop."),
+            HelpBlock.bullet("Nostalgia Bait is live: cook Farrow's Chop to return to Main Village."),
             HelpBlock.bullet("The Tamsin Tax is coming soon: repay Tamsin after your first dungeon once a payment interface exists."),
             HelpBlock.bullet("Plant Flags tracks class-attuned banner planting during Dungeon 1 where configured."),
             HelpBlock.bullet("Binding Idol and Vital Exchange support dungeon progression and support-role milestone hooks where relevant."),

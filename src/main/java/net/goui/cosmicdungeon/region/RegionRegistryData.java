@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
+import net.goui.cosmicdungeon.dungeon.DungeonInstanceSlots;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -255,7 +256,7 @@ public final class RegionRegistryData extends SavedData {
     public List<Region> regionsAt(ServerLevel level, BlockPos pos) {
         if (level == null || pos == null) return List.of();
 
-        String dim = level.dimension().location().toString();
+        String dim = DungeonInstanceSlots.templateDimensionForPhysical(level.getServer(), level.dimension()).location().toString();
         if (regionsByName.isEmpty()) return List.of();
 
         ArrayList<Region> out = new ArrayList<>();

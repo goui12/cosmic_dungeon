@@ -12,6 +12,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.ServerChatEvent;
 import net.neoforged.neoforge.event.CommandEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
 
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID)
 public final class DungeonLifecycleEvents {
@@ -20,12 +21,18 @@ public final class DungeonLifecycleEvents {
     private static volatile boolean reevaluateSoon = false;
 
     @SubscribeEvent
+    public static void onServerStarted(ServerStartedEvent event) {
+        DungeonLifecycleService.recoverInstancePoolOnServerStarted(event.getServer());
+    }
+
+    @SubscribeEvent
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent e) {
         if (!(e.getEntity() instanceof ServerPlayer sp)) return;
         if (sp.level().isClientSide()) return;
 
         DungeonAfkService.markActivity(sp);
         DungeonLifecycleService.performPendingRecoveryIfNeeded(sp);
+        DungeonTravelRouter.evacuateUnauthorizedLocation(sp);
         reevaluateSoon = true;
     }
 
@@ -38,7 +45,8 @@ public final class DungeonLifecycleEvents {
 
     @SubscribeEvent
     public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent e) {
-        if (!(e.getEntity() instanceof ServerPlayer)) return;
+        if (!(e.getEntity() instanceof ServerPlayer sp)) return;
+        DungeonTravelRouter.evacuateUnauthorizedLocation(sp);
         reevaluateSoon = true;
     }
 
@@ -58,6 +66,11 @@ public final class DungeonLifecycleEvents {
         DungeonLifecycleService.processPendingResets(server);
         PlantFlagService.completeIfReady(server);
         DungeonAfkService.tick(server);
+        if (doPeriodic) {
+            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                DungeonTravelRouter.evacuateUnauthorizedLocation(player);
+            }
+        }
 
         if (!reevaluateSoon && !doPeriodic) return;
 

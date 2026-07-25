@@ -4,6 +4,8 @@
 
 Rifts are authored as placer+tile constructs and registry-backed destinations.
 
+Dungeon-template destinations are interpreted server-side. An active lifecycle member is routed to the corresponding physical dimension in their leased instance slot; a developer without an active lifecycle reaches the literal template; an ordinary non-member is denied template/instance access. Destinations in the Overworld and other non-dungeon worlds remain literal. Instance portal linkage is copied from the template at allocation and restored from the template before slot release.
+
 - `cosmic_rift` acts as placement/control surface.
 - `cosmic_rift_tile` acts as anchor tile membership for a rift structure.
 - Rift destinations and lookup data are stored in registry data.

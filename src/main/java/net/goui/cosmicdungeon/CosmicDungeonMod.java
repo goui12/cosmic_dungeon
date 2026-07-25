@@ -22,6 +22,7 @@ import net.goui.cosmicdungeon.rift.DefaultRiftDestinations;
 import net.goui.cosmicdungeon.region.RegionWandEvents;
 import net.goui.cosmicdungeon.sound.ModSounds;
 import net.goui.cosmicdungeon.trade.TradeFinalizationGameTests;
+import net.goui.cosmicdungeon.dungeon.DungeonInstanceGameTests;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.level.Spawner;
 import net.neoforged.api.distmarker.Dist;
@@ -57,6 +58,7 @@ public class CosmicDungeonMod {
         // networking payloads
         modEventBus.addListener(ModNetwork::registerPayloadHandlers);
         modEventBus.addListener(TradeFinalizationGameTests::register);
+        modEventBus.addListener(DungeonInstanceGameTests::register);
         modEventBus.addListener(this::addCreative);
 
 

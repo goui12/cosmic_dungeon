@@ -1,8 +1,6 @@
 package net.goui.cosmicdungeon.item.custom;
 
-import net.goui.cosmicdungeon.achievement.CosmicAchievementIds;
-import net.goui.cosmicdungeon.achievement.CosmicAdvancementUtil;
-import net.goui.cosmicdungeon.rift.DefaultRiftDestinations;
+import net.goui.cosmicdungeon.dungeon.FarrowsChopTravelService;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.entity.LivingEntity;
@@ -18,10 +16,9 @@ public class FarrowsChopItem extends Item {
     @Override
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
         if (!(entity instanceof ServerPlayer sp)) return stack;
-        if (!DefaultRiftDestinations.teleportToMainVillage(sp)) return stack;
+        if (!FarrowsChopTravelService.returnToDungeon(sp, stack)) return stack;
 
         sp.awardStat(Stats.ITEM_USED.get(this));
-        CosmicAdvancementUtil.grant(sp, CosmicAchievementIds.NOSTALGIA_BAIT);
         if (!sp.getAbilities().instabuild) stack.shrink(1);
         return stack;
     }

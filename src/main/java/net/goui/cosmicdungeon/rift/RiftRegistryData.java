@@ -423,6 +423,37 @@ public final class RiftRegistryData extends SavedData {
         }
     }
 
+    public void copyTemplatePortals(Map<ResourceKey<Level>, ResourceKey<Level>> dimensionMapping) {
+        if (dimensionMapping == null || dimensionMapping.isEmpty()) return;
+        Set<String> targets = dimensionMapping.values().stream()
+                .map(key -> normalizeDimensionId(key.location().toString())).collect(Collectors.toSet());
+        clearPortalStateForDimensions(targets);
+
+        Map<String, String> ids = new HashMap<>();
+        for (Map.Entry<ResourceKey<Level>, ResourceKey<Level>> entry : dimensionMapping.entrySet()) {
+            ids.put(normalizeDimensionId(entry.getKey().location().toString()),
+                    normalizeDimensionId(entry.getValue().location().toString()));
+        }
+        List<PortalRecord> templatePortals = new ArrayList<>(portals.values());
+        for (PortalRecord portal : templatePortals) {
+            String targetDimension = ids.get(normalizeDimensionId(portal.dimensionId()));
+            if (targetDimension == null) continue;
+            PosKey targetKey = new PosKey(targetDimension, portal.anchorLong());
+            PortalRecord copied = new PortalRecord(targetDimension, portal.anchorLong(), portal.portalName(),
+                    portal.destinationName(), portal.resetTrigger());
+            portals.put(targetKey, copied);
+            addDestinationAnchorIndex(copied.destinationName(), targetKey);
+        }
+        List<Map.Entry<PosKey, PosKey>> templateTiles = new ArrayList<>(tileToAnchor.entrySet());
+        for (Map.Entry<PosKey, PosKey> tile : templateTiles) {
+            String targetDimension = ids.get(normalizeDimensionId(tile.getKey().dimensionId()));
+            if (targetDimension == null) continue;
+            tileToAnchor.put(new PosKey(targetDimension, tile.getKey().posLong()),
+                    new PosKey(targetDimension, tile.getValue().posLong()));
+        }
+        setDirty();
+    }
+
     private void applyPostLoadMigrations(MinecraftServer server) {
         boolean changed = false;
 

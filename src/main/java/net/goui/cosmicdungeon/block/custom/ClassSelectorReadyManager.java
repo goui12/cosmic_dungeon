@@ -1,8 +1,6 @@
 package net.goui.cosmicdungeon.block.custom;
 
 import net.goui.cosmicdungeon.block.entity.ClassSelectorBlockEntity;
-import net.goui.cosmicdungeon.dungeon.DungeonDefinition;
-import net.goui.cosmicdungeon.dungeon.DungeonDefinitions;
 import net.goui.cosmicdungeon.dungeon.DungeonLifecycleService;
 import net.goui.cosmicdungeon.dungeon.DungeonStarterRoomPaster;
 import net.goui.cosmicdungeon.rift.RiftRegistryData;
@@ -235,7 +233,6 @@ public final class ClassSelectorReadyManager {
         List<RiftRegistryData.DestinationRecord> resolved = new ArrayList<>(max);
         List<Integer> missingSlots = new ArrayList<>();
         List<Integer> invalidSlots = new ArrayList<>();
-        List<TeleportTarget> teleportTargets = new ArrayList<>(max);
 
         for (int slot = 1; slot <= max; slot++) {
             String name = csbe.getSlotDestination(slot);
@@ -247,7 +244,6 @@ public final class ClassSelectorReadyManager {
             if (name == null || name.isBlank()) {
                 missingSlots.add(slot);
                 resolved.add(null);
-                teleportTargets.add(null);
                 continue;
             }
 
@@ -255,22 +251,15 @@ public final class ClassSelectorReadyManager {
             if (destOpt.isEmpty()) {
                 invalidSlots.add(slot);
                 resolved.add(null);
-                teleportTargets.add(null);
                 continue;
             }
 
             RiftRegistryData.DestinationRecord dest = destOpt.get();
             resolved.add(dest);
 
-            ServerLevel targetLevel = ClassSelectorTeleportUtil.resolveLevel(server, dest.dimensionId());
-            if (targetLevel == null) {
+            if (ClassSelectorTeleportUtil.resolveLevel(server, dest.dimensionId()) == null) {
                 invalidSlots.add(slot);
-                teleportTargets.add(null);
-                continue;
             }
-
-            BlockPos safe = ensureStandable(targetLevel, dest.pos());
-            teleportTargets.add(new TeleportTarget(targetLevel, safe));
         }
 
         if (!missingSlots.isEmpty() || !invalidSlots.isEmpty()) {
@@ -320,14 +309,31 @@ public final class ClassSelectorReadyManager {
             return false;
         }
 
-        String lifecycleBlocker = DungeonLifecycleService.getStartRunBlocker(server, dungeonLevel.dimension(), st.ordered);
-        if (lifecycleBlocker != null) {
-            Component msg = Component.literal(lifecycleBlocker).withStyle(ChatFormatting.RED);
+        DungeonLifecycleService.InstancePreparation preparationResult =
+                DungeonLifecycleService.prepareRunInstance(server, dungeonLevel.dimension(), st.ordered);
+        if (preparationResult instanceof DungeonLifecycleService.PreparationError preparationError) {
+            Component msg = Component.literal(preparationError.message()).withStyle(ChatFormatting.RED);
             for (ServerPlayer p : finalParty) {
                 p.sendSystemMessage(msg);
             }
             return false;
         }
+        DungeonLifecycleService.PreparedInstance prepared = (DungeonLifecycleService.PreparedInstance) preparationResult;
+        List<TeleportTarget> teleportTargets = new ArrayList<>(max);
+        for (RiftRegistryData.DestinationRecord destination : resolved) {
+            ServerLevel templateLevel = ClassSelectorTeleportUtil.resolveLevel(server, destination.dimensionId());
+            ServerLevel instanceLevel = templateLevel == null ? null : prepared.resolve(server, templateLevel.dimension());
+            if (instanceLevel == null) {
+                for (ServerPlayer p : finalParty) {
+                    p.sendSystemMessage(Component.literal("A class-selector destination is outside the selected dungeon template.")
+                            .withStyle(ChatFormatting.RED));
+                }
+                return false;
+            }
+            teleportTargets.add(new TeleportTarget(instanceLevel, ensureStandable(instanceLevel, destination.pos())));
+        }
+        dungeonLevel = prepared.resolve(server, prepared.definition().primaryDimension());
+        if (dungeonLevel == null) return false;
 
         String[] slotClasses = new String[6];
         int idx = 0;
@@ -358,7 +364,8 @@ public final class ClassSelectorReadyManager {
                 server,
                 selectorLevel.dimension(),
                 selectorPos.asLong(),
-                dungeonLevel.dimension(),
+                prepared.definition().primaryDimension(),
+                prepared,
                 finalParty
         );
 
@@ -375,7 +382,7 @@ public final class ClassSelectorReadyManager {
             TeleportTarget tp = teleportTargets.get(slotIndex);
             if (tp == null || tp.level() == null || tp.safePos() == null) {
                 p.sendSystemMessage(Component.literal("Teleport target missing for your slot.").withStyle(ChatFormatting.RED));
-                DungeonLifecycleService.manualReset(server, DungeonDefinitions.byDimension(dungeonLevel.dimension()).map(DungeonDefinition::id).orElse(dungeonLevel.dimension().location().getPath()), null);
+                DungeonLifecycleService.abortActiveRunForPlayer(finalParty.getFirst());
                 return false;
             }
 
@@ -393,7 +400,7 @@ public final class ClassSelectorReadyManager {
 
             if (!ok) {
                 p.sendSystemMessage(Component.literal("Teleport failed for your slot.").withStyle(ChatFormatting.RED));
-                DungeonLifecycleService.manualReset(server, DungeonDefinitions.byDimension(dungeonLevel.dimension()).map(DungeonDefinition::id).orElse(dungeonLevel.dimension().location().getPath()), null);
+                DungeonLifecycleService.abortActiveRunForPlayer(finalParty.getFirst());
                 return false;
             }
 

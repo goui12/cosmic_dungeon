@@ -41,7 +41,7 @@ Use [Commands: Achievement](../commands/In_Game_Commands.md#achievement-15-advan
 ## Nostalgia Bait
 
 - **Title:** Nostalgia Bait
-- **Description:** Teleport back to the Main Village using Farrow's Chop.
+- **Description:** Cook Farrow's Chop to return to the Main Village.
 - **Trigger:** Granted only after a successful Farrow's Chop teleport to `main_village`. Failed destination lookups or unsafe teleports do not grant it.
 
 ## The Tamsin Tax

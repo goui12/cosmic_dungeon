@@ -52,6 +52,7 @@ public final class DungeonLifecycleService {
             String dungeonId,
             long runId,
             DungeonResetReason reason,
+            int instanceSlot,
             String snapshotIdOrNull,
             long nextAttemptTick,
             int attemptsRemaining
@@ -60,6 +61,16 @@ public final class DungeonLifecycleService {
     private static final Map<String, PendingReset> PENDING_RESETS = new HashMap<>();
     private static final long RESET_RETRY_DELAY_TICKS = 100L; // 5 seconds
     private static final int RESET_MAX_ATTEMPTS = 12;         // 60 seconds total retry window
+    public sealed interface InstancePreparation permits PreparedInstance, PreparationError {}
+    public record PreparationError(String message) implements InstancePreparation {}
+    public record PreparedInstance(DungeonDefinition definition, int slot,
+                                   Map<net.minecraft.resources.ResourceKey<Level>, net.minecraft.resources.ResourceKey<Level>> dimensions)
+            implements InstancePreparation {
+        public ServerLevel resolve(MinecraftServer server, net.minecraft.resources.ResourceKey<Level> template) {
+            var physical = dimensions.get(template);
+            return physical == null ? null : server.getLevel(physical);
+        }
+    }
     public static Optional<DungeonRunRegistryData.RunRecord> findActiveRunForPlayer(ServerPlayer sp) {
         if (sp == null || !(sp.level() instanceof ServerLevel sl)) return Optional.empty();
 
@@ -134,15 +145,8 @@ public final class DungeonLifecycleService {
             return "No logical dungeon definition is registered for " + dungeonDimension.location();
         }
 
-        if (PENDING_RESETS.containsKey(def.id())) {
-            return "Dungeon already has a queued reset in progress: " + def.id();
-        }
-
         DungeonRunRegistryData runs = DungeonRunRegistryData.get(server);
-
-        if (runs.findActiveOrResettingRun(def.id()).isPresent()) {
-            return "Dungeon already has an active/resetting run: " + def.id();
-        }
+        if (runs.firstAvailableSlot().isEmpty()) return "All " + DungeonInstanceSlots.SLOT_COUNT + " dungeon instance slots are occupied.";
 
         if (party != null) {
             for (UUID id : party) {
@@ -157,10 +161,30 @@ public final class DungeonLifecycleService {
         return null;
     }
 
+    public static InstancePreparation prepareRunInstance(MinecraftServer server,
+                                                         net.minecraft.resources.ResourceKey<Level> dungeonDimension,
+                                                         Collection<UUID> party) {
+        String blocker = getStartRunBlocker(server, dungeonDimension, party);
+        if (blocker != null) return new PreparationError(blocker);
+        DungeonDefinition definition = DungeonDefinitions.byDimension(dungeonDimension).orElse(null);
+        if (definition == null) return new PreparationError("No logical dungeon definition is registered for " + dungeonDimension.location());
+        int slot = DungeonRunRegistryData.get(server).firstAvailableSlot().orElse(-1);
+        if (slot < 1) return new PreparationError("All dungeon instance slots are occupied.");
+        DungeonWorldSnapshotService.SnapshotResult refresh = DungeonWorldSnapshotService.refreshInstanceSlot(server, definition, slot);
+        if (refresh instanceof DungeonWorldSnapshotService.SnapshotResult.Error error) {
+            return new PreparationError("Could not prepare dungeon instance slot " + slot + ": " + error.message());
+        }
+        Map<net.minecraft.resources.ResourceKey<Level>, net.minecraft.resources.ResourceKey<Level>> mapping =
+                DungeonInstanceSlots.mapping(definition, slot);
+        net.goui.cosmicdungeon.rift.RiftRegistryData.get(server).copyTemplatePortals(mapping);
+        return new PreparedInstance(definition, slot, mapping);
+    }
+
     public static String startRun(MinecraftServer server,
                                   net.minecraft.resources.ResourceKey<Level> selectorDimension,
                                   long selectorPosLong,
                                   net.minecraft.resources.ResourceKey<Level> dungeonDimension,
+                                  PreparedInstance prepared,
                                   Collection<ServerPlayer> players) {
         if (server == null || selectorDimension == null || dungeonDimension == null) {
             return "Server or dimension was null.";
@@ -170,6 +194,7 @@ public final class DungeonLifecycleService {
         if (def == null) {
             return "No logical dungeon definition is registered for " + dungeonDimension.location();
         }
+        if (prepared == null || prepared.definition() != def) return "Prepared dungeon instance did not match the selected dungeon.";
 
         List<ServerPlayer> party = new ArrayList<>();
         List<UUID> ids = new ArrayList<>();
@@ -198,6 +223,8 @@ public final class DungeonLifecycleService {
                 selectorDimension,
                 selectorPosLong,
                 def,
+                prepared.slot(),
+                prepared.dimensions().values().stream().map(key -> key.location().toString()).toList(),
                 ids,
                 snapshots
         );
@@ -209,7 +236,8 @@ public final class DungeonLifecycleService {
         PlantFlagService.initializeRun(server, runId);
 
         notifyDevelopers(server, Component.literal(
-                "[DungeonLifecycle] Started run " + runId + " for " + def.id() + " with " + party.size() + " player(s)."
+                "[DungeonLifecycle] Started run " + runId + " for " + def.id() + " in slot "
+                        + prepared.slot() + " with " + party.size() + " player(s)."
         ).withStyle(ChatFormatting.AQUA));
 
         return null;
@@ -252,6 +280,46 @@ public final class DungeonLifecycleService {
                 finishRun(server, run.runId(), DungeonResetReason.ABANDONED, null);
             }
         }
+    }
+
+    public static void recoverInstancePoolOnServerStarted(MinecraftServer server) {
+        if (server == null) return;
+        DungeonRunRegistryData runs = DungeonRunRegistryData.get(server);
+        for (DungeonRunRegistryData.RunRecord run : runs.listAllRuns()) {
+            if (run.instanceSlot() == 0
+                    && (run.stateEnum() == DungeonRunState.ACTIVE || run.stateEnum() == DungeonRunState.RESETTING)) {
+                DungeonDefinition definition = DungeonDefinitions.byId(run.dungeonId()).orElse(null);
+                int slot = runs.firstAvailableSlot().orElse(-1);
+                if (definition == null || slot < 1) {
+                    notifyDevelopers(server, Component.literal("[DungeonLifecycle] Could not migrate legacy active run "
+                            + run.runId() + " into an instance slot.").withStyle(ChatFormatting.RED));
+                    continue;
+                }
+                DungeonWorldSnapshotService.SnapshotResult refreshed = DungeonWorldSnapshotService.refreshInstanceSlot(server, definition, slot);
+                if (refreshed instanceof DungeonWorldSnapshotService.SnapshotResult.Error error
+                        || !runs.assignInstance(run.runId(), slot,
+                        DungeonInstanceSlots.mapping(definition, slot).values().stream().map(k -> k.location().toString()).toList())) {
+                    String detail = refreshed instanceof DungeonWorldSnapshotService.SnapshotResult.Error error ? error.message() : "slot assignment failed";
+                    notifyDevelopers(server, Component.literal("[DungeonLifecycle] Legacy run migration failed: " + detail)
+                            .withStyle(ChatFormatting.RED));
+                    continue;
+                }
+                net.goui.cosmicdungeon.rift.RiftRegistryData.get(server)
+                        .copyTemplatePortals(DungeonInstanceSlots.mapping(definition, slot));
+            }
+        }
+        for (DungeonRunRegistryData.RunRecord run : runs.listAllRuns()) {
+            if (run.stateEnum() == DungeonRunState.RESETTING && run.instanceSlot() > 0) {
+                DungeonResetReason reason;
+                try { reason = DungeonResetReason.valueOf(run.resetReason()); }
+                catch (RuntimeException ignored) { reason = DungeonResetReason.ABANDONED; }
+                queueReset(server, run.dungeonId(), run.runId(), reason, run.instanceSlot(), null, RESET_RETRY_DELAY_TICKS);
+            }
+        }
+    }
+
+    public static void abortActiveRunForPlayer(ServerPlayer player) {
+        findActiveRunForPlayer(player).ifPresent(run -> finishRun(player.level().getServer(), run.runId(), DungeonResetReason.ABANDONED, null));
     }
 
     public static boolean performPendingRecoveryIfNeeded(ServerPlayer sp) {
@@ -298,16 +366,9 @@ public final class DungeonLifecycleService {
             return new DungeonWorldSnapshotService.SnapshotResult.Error("Unknown dungeon: " + dungeonId);
         }
 
-        DungeonRunRegistryData runs = DungeonRunRegistryData.get(server);
-        Optional<DungeonRunRegistryData.RunRecord> existing = runs.findActiveOrResettingRun(def.id());
-
-        if (existing.isPresent() && existing.get().stateEnum() == DungeonRunState.ACTIVE) {
-            runs.setState(existing.get().runId(), DungeonRunState.RESETTING, DungeonResetReason.MANUAL);
-        }
-
         evacuatePlayersInDungeon(server, def, "Dungeon reset queued. You were moved to safety.");
-        long runId = existing.map(DungeonRunRegistryData.RunRecord::runId).orElse(-1L);
-        queueReset(server, def.id(), runId, DungeonResetReason.MANUAL, snapshotIdOrNull, 0L);
+        long runId = -1L; // Template maintenance never mutates or completes leased instance runs.
+        queueReset(server, def.id(), runId, DungeonResetReason.MANUAL, 0, snapshotIdOrNull, 0L);
 
         notifyDevelopers(server, Component.literal(
                 "[DungeonLifecycle] Manual reset queued for " + def.id()
@@ -317,7 +378,7 @@ public final class DungeonLifecycleService {
         ).withStyle(ChatFormatting.YELLOW));
 
         processPendingResets(server);
-        PendingReset pending = PENDING_RESETS.get(def.id());
+        PendingReset pending = PENDING_RESETS.get("template-" + def.id());
         if (pending != null) {
             return new DungeonWorldSnapshotService.SnapshotResult.Error(
                     "Reset is still pending for " + def.id()
@@ -402,8 +463,8 @@ public final class DungeonLifecycleService {
             return;
         }
 
-        evacuatePlayersInDungeon(server, def, "Dungeon run reset queued. You were moved to safety.");
-        queueReset(server, def.id(), resetting.runId(), reason, explicitSnapshotIdOrNull, RESET_RETRY_DELAY_TICKS);
+        evacuatePlayersInRun(server, resetting, "Dungeon run reset queued. You were moved to safety.");
+        queueReset(server, def.id(), resetting.runId(), reason, resetting.instanceSlot(), explicitSnapshotIdOrNull, RESET_RETRY_DELAY_TICKS);
 
         notifyDevelopers(server, Component.literal(
                 "[DungeonLifecycle] " + reason + " reset queued for " + def.id()
@@ -422,6 +483,19 @@ public final class DungeonLifecycleService {
 
             if (message != null && !message.isBlank()) {
                 p.sendSystemMessage(Component.literal(message).withStyle(ChatFormatting.YELLOW));
+            }
+        }
+    }
+
+    private static void evacuatePlayersInRun(MinecraftServer server,
+                                             DungeonRunRegistryData.RunRecord run,
+                                             String message) {
+        if (server == null || run == null) return;
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            if (!run.containsDimension(player.level().dimension())) continue;
+            teleportToSafeOverworld(player);
+            if (message != null && !message.isBlank()) {
+                player.sendSystemMessage(Component.literal(message).withStyle(ChatFormatting.YELLOW));
             }
         }
     }
@@ -491,7 +565,15 @@ public final class DungeonLifecycleService {
                 ? DungeonRunRegistryData.get(server).getRun(runId).orElse(null)
                 : null;
 
-        if (def != null) {
+        if (run != null) {
+            DoorPassageTracker.clearRecentForDimensions(run.dungeonDimensionIds());
+            if (def != null && run.instanceSlot() > 0) {
+                net.goui.cosmicdungeon.rift.RiftRegistryData.get(server)
+                        .copyTemplatePortals(DungeonInstanceSlots.mapping(def, run.instanceSlot()));
+            } else {
+                net.goui.cosmicdungeon.rift.RiftRegistryData.get(server).rebuildForDimensions(server, run.dungeonDimensionIds());
+            }
+        } else if (def != null) {
             DoorPassageTracker.clearRecentForDimensions(def.dimensionIds());
             net.goui.cosmicdungeon.rift.RiftRegistryData.get(server).rebuildForDimensions(server, def.dimensionIds());
         } else {
@@ -530,30 +612,9 @@ public final class DungeonLifecycleService {
 
     private static boolean shouldAbandonRun(MinecraftServer server,
                                             DungeonRunRegistryData.RunRecord run) {
-        int onlineTracked = 0;
-        int onlineInsideRun = 0;
-        int onlineCompletionExited = 0;
-
-        for (UUID id : run.orderedPlayers()) {
-            ServerPlayer p = server.getPlayerList().getPlayer(id);
-            if (p == null) continue;
-
-            onlineTracked++;
-
-            if (run.isCompletionExited(id)) {
-                onlineCompletionExited++;
-                continue;
-            }
-
-            if (run.containsDimension(p.level().dimension())) {
-                onlineInsideRun++;
-            }
-        }
-
-        if (onlineInsideRun > 0) return false;
-        if (onlineTracked > 0 && onlineTracked == onlineCompletionExited) return false;
-
-        return onlineTracked == 0 || onlineInsideRun == 0;
+        // Active instances intentionally survive logout, restart, and temporary travel to Main Village.
+        // Completion rifts and explicit member removal remain the authoritative end conditions.
+        return run.orderedPlayers().isEmpty();
     }
 
     private static DungeonPlayerRunSnapshot snapshotPlayer(ServerPlayer sp) {
@@ -590,7 +651,8 @@ public final class DungeonLifecycleService {
         MetalmancerResonanceTracker.clearForPlayer(sp.getUUID());
         clearOwnedGolems(server, sp.getUUID());
 
-        boolean playerInsideRun = def != null && def.containsDimension(sp.level().dimension());
+        boolean playerInsideRun = DungeonRunRegistryData.get(server).findRunForPlayer(sp.getUUID())
+                .map(run -> run.containsDimension(sp.level().dimension())).orElse(false);
         if (forceTeleportToRecovery || playerInsideRun) {
             teleportToSafeOverworld(sp);
         }
@@ -687,6 +749,10 @@ public final class DungeonLifecycleService {
         }
     }
 
+    public static void teleportToMainWorldSpawn(ServerPlayer sp) {
+        teleportToSafeOverworld(sp);
+    }
+
     private static void teleportToSafeOverworld(ServerPlayer sp) {
         if (sp == null || !(sp.level() instanceof ServerLevel current)) return;
 
@@ -750,17 +816,19 @@ public final class DungeonLifecycleService {
             }
         }
 
-        for (String dungeonId : ready) {
-            PendingReset pr = PENDING_RESETS.get(dungeonId);
+        for (String resetKey : ready) {
+            PendingReset pr = PENDING_RESETS.get(resetKey);
             if (pr == null) continue;
 
-            DungeonWorldSnapshotService.SnapshotResult result =
-                    (pr.snapshotIdOrNull() == null || pr.snapshotIdOrNull().isBlank())
+            DungeonDefinition resetDefinition = DungeonDefinitions.byId(pr.dungeonId()).orElse(null);
+            DungeonWorldSnapshotService.SnapshotResult result = pr.instanceSlot() > 0 && resetDefinition != null
+                    ? DungeonWorldSnapshotService.refreshInstanceSlot(server, resetDefinition, pr.instanceSlot())
+                    : (pr.snapshotIdOrNull() == null || pr.snapshotIdOrNull().isBlank())
                             ? DungeonWorldSnapshotService.resetToLatest(server, pr.dungeonId())
                             : DungeonWorldSnapshotService.resetToSnapshot(server, pr.dungeonId(), pr.snapshotIdOrNull());
 
             if (result instanceof DungeonWorldSnapshotService.SnapshotResult.Ok ok) {
-                PENDING_RESETS.remove(dungeonId);
+                PENDING_RESETS.remove(resetKey);
 
                 if (pr.runId() > 0L) {
                     DungeonRunRegistryData runs = DungeonRunRegistryData.get(server);
@@ -783,10 +851,11 @@ public final class DungeonLifecycleService {
 
             int remaining = pr.attemptsRemaining() - 1;
             if (remaining > 0) {
-                PENDING_RESETS.put(dungeonId, new PendingReset(
+                PENDING_RESETS.put(resetKey, new PendingReset(
                         pr.dungeonId(),
                         pr.runId(),
                         pr.reason(),
+                        pr.instanceSlot(),
                         pr.snapshotIdOrNull(),
                         nowTick + RESET_RETRY_DELAY_TICKS,
                         remaining
@@ -797,16 +866,13 @@ public final class DungeonLifecycleService {
                                 + " (" + remaining + " attempts left): " + err.message()
                 ).withStyle(ChatFormatting.GOLD));
             } else {
-                PENDING_RESETS.remove(dungeonId);
+                PENDING_RESETS.remove(resetKey);
 
                 if (pr.runId() > 0L) {
                     DungeonRunRegistryData runs = DungeonRunRegistryData.get(server);
                     runs.setState(pr.runId(), DungeonRunState.FAILED, pr.reason());
                     runs.getRun(pr.runId()).ifPresent(run -> performMemberCleanup(server, run, pr.reason()));
                 }
-
-                DungeonDefinition def = DungeonDefinitions.byId(pr.dungeonId()).orElse(null);
-                onSuccessfulReset(server, def, pr.runId(), pr.reason());
 
                 notifyDevelopers(server, Component.literal(
                         "[DungeonLifecycle] Reset failed permanently for " + pr.dungeonId()
@@ -821,6 +887,7 @@ public final class DungeonLifecycleService {
                                    String dungeonId,
                                    long runId,
                                    DungeonResetReason reason,
+                                   int instanceSlot,
                                    String snapshotIdOrNull,
                                    long initialDelayTicks) {
         long nowTick = 0L;
@@ -829,10 +896,12 @@ public final class DungeonLifecycleService {
             nowTick = overworld.getGameTime();
         }
 
-        PENDING_RESETS.put(dungeonId, new PendingReset(
+        String resetKey = instanceSlot > 0 ? "slot-" + instanceSlot : "template-" + dungeonId;
+        PENDING_RESETS.put(resetKey, new PendingReset(
                 dungeonId,
                 runId,
                 reason,
+                instanceSlot,
                 snapshotIdOrNull,
                 nowTick + Math.max(0L, initialDelayTicks),
                 RESET_MAX_ATTEMPTS

@@ -146,6 +146,85 @@ public final class DungeonWorldSnapshotService {
         return resetToSnapshot(server, dungeonId, latest.get());
     }
 
+    /**
+     * Replaces the physical worlds belonging to a free instance slot with byte-for-byte copies of
+     * the selected template worlds. Target levels must not contain players. The fixed slot worlds
+     * are registered by datapack, so clients never need a runtime registry update.
+     */
+    public static SnapshotResult refreshInstanceSlot(MinecraftServer server, DungeonDefinition definition, int slot) {
+        if (server == null || definition == null) return new SnapshotResult.Error("Server or dungeon definition was null.");
+
+        Map<ResourceKey<Level>, ResourceKey<Level>> mapping;
+        try {
+            mapping = DungeonInstanceSlots.mapping(definition, slot);
+        } catch (RuntimeException e) {
+            return new SnapshotResult.Error("Invalid instance mapping: " + e.getMessage());
+        }
+
+        try {
+            List<Map.Entry<ServerLevel, ServerLevel>> levels = new ArrayList<>();
+            for (Map.Entry<ResourceKey<Level>, ResourceKey<Level>> entry : mapping.entrySet()) {
+                ServerLevel source = server.getLevel(entry.getKey());
+                ServerLevel target = server.getLevel(entry.getValue());
+                if (source == null || target == null) {
+                    return new SnapshotResult.Error("Template or slot dimension is not loaded: "
+                            + entry.getKey().location() + " -> " + entry.getValue().location());
+                }
+                List<String> occupants = new ArrayList<>();
+                for (var player : server.getPlayerList().getPlayers()) {
+                    if (player.level().dimension().equals(target.dimension())) occupants.add(player.getGameProfile().name());
+                }
+                if (!occupants.isEmpty()) {
+                    return new SnapshotResult.Error("Cannot refresh occupied instance dimension "
+                            + target.dimension().location() + ": " + occupants);
+                }
+                levels.add(Map.entry(source, target));
+            }
+
+            server.saveEverything(true, false, true);
+            for (Map.Entry<ServerLevel, ServerLevel> pair : levels) {
+                pair.getKey().save(null, true, false);
+                pair.getKey().getChunkSource().save(true);
+                flushChunkIoWorker(pair.getKey());
+                flushAuxiliaryIoWorkers(pair.getKey());
+                pair.getValue().save(null, true, false);
+                pair.getValue().getChunkSource().save(true);
+                Optional<String> blocker = prepareLevelForFilesystemRestore(pair.getValue());
+                if (blocker.isPresent()) return new SnapshotResult.Error(blocker.get());
+            }
+
+            for (Map.Entry<ServerLevel, ServerLevel> pair : levels) {
+                ServerLevel source = pair.getKey();
+                ServerLevel target = pair.getValue();
+                Path sourcePath = getDimensionFolder(server, source.dimension());
+                Path targetPath = getDimensionFolder(server, target.dimension());
+                if (!Files.exists(sourcePath)) {
+                    return new SnapshotResult.Error("Template dimension folder does not exist: " + sourcePath);
+                }
+
+                flushChunkIoWorker(target);
+                flushAuxiliaryIoWorkers(target);
+                deleteDirectoryContents(targetPath);
+                copyDirectory(sourcePath, targetPath);
+                clearDimensionDataCache(target);
+                invalidateChunkIoCaches(target);
+                invalidateAuxiliaryIoCaches(target);
+                clearEntityManagerHotCaches(target);
+                restoreSnapshotEntityStorage(sourcePath, targetPath);
+                clearChunkSourceHotCaches(target);
+                purgeLoadedNonPlayerEntities(target, "instance-refresh-stale-runtime");
+                clearEntityManagerHotCaches(target);
+                Optional<String> blocker = enforcePostRestoreChunkDrain(target);
+                if (blocker.isPresent()) return new SnapshotResult.Error(blocker.get());
+            }
+
+            return new SnapshotResult.Ok("instance-slot-" + slot, getDimensionFolder(server, DungeonInstanceSlots.primary(slot)));
+        } catch (Exception e) {
+            LOGGER.error("[DungeonInstance] Failed refreshing slot {} from {}", slot, definition.id(), e);
+            return new SnapshotResult.Error("Instance slot refresh failed: " + e.getMessage());
+        }
+    }
+
     public static SnapshotResult resetToLatest(MinecraftServer server, ResourceKey<Level> dimensionKey) {
         DungeonDefinition def = DungeonDefinitions.byDimension(dimensionKey).orElse(null);
         if (def == null) {

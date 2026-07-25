@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
+import net.goui.cosmicdungeon.dungeon.DungeonInstanceSlots;
 
 import java.util.*;
 
@@ -151,6 +152,10 @@ public final class DoorLockData extends SavedData {
     public record DoorRef(ResourceLocation dimension, BlockPos lowerPos, LockInfo info) {}
 
     private static Key key(Level level, BlockPos lowerDoorPos) {
-        return new Key(level.dimension().location(), lowerDoorPos.immutable());
+        ResourceLocation dimension = level.dimension().location();
+        if (level instanceof ServerLevel serverLevel) {
+            dimension = DungeonInstanceSlots.templateDimensionForPhysical(serverLevel.getServer(), serverLevel.dimension()).location();
+        }
+        return new Key(dimension, lowerDoorPos.immutable());
     }
 }
