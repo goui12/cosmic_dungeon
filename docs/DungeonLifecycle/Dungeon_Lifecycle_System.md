@@ -8,6 +8,8 @@ Dungeon lifecycle is built around snapshot-driven recovery, run-state tracking, 
 
 - Dungeon runs track participant and progression state separate from static world layout.
 - A class-selector start leases the first free slot, refreshes it from the selected template, copies template rift linkage, and teleports the party into the physical instance. Multiple groups may run the same dungeon profile concurrently.
+- Before Dungeon 1 run registration, the server executes one synchronous 36-operation schematic batch against the primary `ServerLevel` resolved from the prepared physical instance. The reusable template world is never the paste target, and the executor does not depend on a player actor, player clipboard, or WorldEdit local session.
+- `startRun(...)` is gated on an explicit 36-operation paste success. A pre-registration failure creates no persistent slot lease and prevents party teleportation; an unexpected mid-batch failure may leave partial physical changes until the existing next preparation refresh restores that still-unregistered slot.
 - Active run records persist their slot and physical dimension ids. Logout and server restart do not abandon the run; members reconnect in place when they logged out inside the instance and may otherwise return through a lifecycle-aware rift or their bound Farrow's Chop.
 - Farrow's Chop visits to Main Village persist separate dungeon and outside inventory snapshots. Lifecycle cleanup retains the outside snapshot for a member who is away when the run ends, preventing dungeon items from escaping through village storage.
 - Template-bound rifts resolve to the member's active instance. Developers outside a lifecycle retain literal template access; ordinary players without a matching lifecycle are rejected. Non-dungeon destinations remain literal.
@@ -35,6 +37,8 @@ Dungeon lifecycle is built around snapshot-driven recovery, run-state tracking, 
 Run SavedData keeps the existing `cosmicdungeon_dungeon_runs` id and adds an optional `instance_slot` field. Older records decode with slot `0`; on server start, active/resetting legacy records are copied into an available fixed slot and updated only after a successful refresh. Back up the entire world before upgrading. Rollback to a jar without instance support should use that backup because older code does not understand physical instance dimensions.
 
 The feature does not change Cosmic Spawner block-entity NBT, preset NBT/JSON, registry ids, door/key codecs, region codecs, rift destination records, currency, faction, progression, achievement, or class storage. Template block entities—including placed Cosmic Spawners—are copied with the template dimension data, so no spawner migration or manual recreation is required.
+
+The Dungeon 1 startup schematic pipeline adds no SavedData, NBT, registry, network, snapshot, or migration format changes. Existing 1.5.0 and 1.5.1 worlds remain storage-compatible and require no world migration.
 
 ## Dungeon AFK handling
 

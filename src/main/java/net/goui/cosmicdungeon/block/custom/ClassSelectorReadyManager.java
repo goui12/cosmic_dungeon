@@ -1,8 +1,10 @@
 package net.goui.cosmicdungeon.block.custom;
 
+import com.mojang.logging.LogUtils;
 import net.goui.cosmicdungeon.block.entity.ClassSelectorBlockEntity;
 import net.goui.cosmicdungeon.dungeon.DungeonLifecycleService;
-import net.goui.cosmicdungeon.dungeon.DungeonStarterRoomPaster;
+import net.goui.cosmicdungeon.dungeon.DungeonStartupSchematicPlan;
+import net.goui.cosmicdungeon.dungeon.DungeonStartupSchematicPipeline;
 import net.goui.cosmicdungeon.rift.RiftRegistryData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -11,10 +13,13 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.levelgen.Heightmap;
+import org.slf4j.Logger;
 
 import java.util.*;
 
 public final class ClassSelectorReadyManager {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private ClassSelectorReadyManager() {}
 
     private static final int COUNTDOWN_SECONDS = 5;
@@ -335,27 +340,29 @@ public final class ClassSelectorReadyManager {
         dungeonLevel = prepared.resolve(server, prepared.definition().primaryDimension());
         if (dungeonLevel == null) return false;
 
-        String[] slotClasses = new String[6];
-        int idx = 0;
-        for (UUID id : st.ordered) {
-            if (idx >= 6) break;
-            slotClasses[idx] = st.classByPlayer.getOrDefault(id, "blankslot");
-            idx++;
-        }
-        for (; idx < 6; idx++) {
-            slotClasses[idx] = "blankslot";
+        List<String> orderedClasses = new ArrayList<>(finalParty.size());
+        for (ServerPlayer partyMember : finalParty) {
+            orderedClasses.add(st.classByPlayer.get(partyMember.getUUID()));
         }
 
-        ServerPlayer pasteActor = finalParty.getFirst();
-
+        DungeonStartupSchematicPlan.StartupPastePlan pastePlan;
         try {
-            DungeonStarterRoomPaster.pasteRooms(dungeonLevel, pasteActor, slotClasses);
-        } catch (Exception e) {
-            System.err.println("[CosmicDungeon] Paste failed:");
-            e.printStackTrace();
-
+            pastePlan = DungeonStartupSchematicPlan.buildPlan(orderedClasses);
+        } catch (IllegalArgumentException exception) {
+            LOGGER.error("[DungeonStartupSchematics] Could not build the 36-operation startup plan.", exception);
             for (ServerPlayer p : finalParty) {
                 p.sendSystemMessage(Component.literal("Dungeon paste failed.").withStyle(ChatFormatting.RED));
+            }
+            return false;
+        }
+
+        DungeonStartupSchematicPipeline.PasteBatchResult pasteResult =
+                DungeonStartupSchematicPipeline.execute(dungeonLevel, pastePlan);
+        if (!(pasteResult instanceof DungeonStartupSchematicPipeline.PasteBatchSuccess success)
+                || success.completedOperations() != DungeonStartupSchematicPlan.EXPECTED_OPERATION_COUNT) {
+            for (ServerPlayer p : finalParty) {
+                p.sendSystemMessage(Component.literal("Dungeon paste failed. Please try again.")
+                        .withStyle(ChatFormatting.RED));
             }
             return false;
         }
