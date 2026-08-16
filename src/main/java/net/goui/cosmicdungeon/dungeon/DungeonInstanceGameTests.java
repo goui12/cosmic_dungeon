@@ -4,6 +4,7 @@ import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.MapCodec;
 import net.goui.cosmicdungeon.CosmicDungeonMod;
+import net.goui.cosmicdungeon.block.custom.ClassSelectorTeleportUtil;
 import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
@@ -41,6 +42,8 @@ public final class DungeonInstanceGameTests {
         register(event, environment, "startup_definition_integrity", DungeonInstanceGameTests::startupDefinitionIntegrity);
         register(event, environment, "startup_plan_party_counts", DungeonInstanceGameTests::startupPlanPartyCounts);
         register(event, environment, "startup_plan_blank_entry", DungeonInstanceGameTests::startupPlanBlankEntry);
+        register(event, environment, "class_selector_ready_eligibility", DungeonInstanceGameTests::classSelectorReadyEligibility);
+        register(event, environment, "startup_plan_rejects_none", DungeonInstanceGameTests::startupPlanRejectsNone);
     }
 
     private static void slotMapping(GameTestHelper helper) {
@@ -223,6 +226,34 @@ public final class DungeonInstanceGameTests {
                 "null class entry did not normalize to blankslot");
         assertTest(helper, DungeonStartupSchematicPlan.BLANK_SLOT_CLASS.equals(withBlank.normalizedClassSlots().get(1)),
                 "blank class entry did not normalize to blankslot");
+        helper.succeed();
+    }
+
+    private static void classSelectorReadyEligibility(GameTestHelper helper) {
+        assertTest(helper, !ClassSelectorTeleportUtil.isReadyEligibleClass(null), "null class was ready-eligible");
+        assertTest(helper, !ClassSelectorTeleportUtil.isReadyEligibleClass(""), "blank class was ready-eligible");
+        assertTest(helper, !ClassSelectorTeleportUtil.isReadyEligibleClass("none"), "none class was ready-eligible");
+        assertTest(helper, !ClassSelectorTeleportUtil.isReadyEligibleClass("unknown"), "unknown class was ready-eligible");
+        assertTest(helper, !ClassSelectorTeleportUtil.isReadyEligibleClass("deadeye"), "disabled class was ready-eligible");
+        assertTest(helper, ClassSelectorTeleportUtil.isReadyEligibleClass("pyroclast"),
+                "playable class was not ready-eligible");
+        helper.succeed();
+    }
+
+    private static void startupPlanRejectsNone(GameTestHelper helper) {
+        assertRejected(helper, List.of("none"), "none class was accepted by startup planning");
+        for (int partySize = 1; partySize <= DungeonStartupSchematicPlan.LOGICAL_SLOT_COUNT; partySize++) {
+            List<String> classes = java.util.Collections.nCopies(partySize, "pyroclast");
+            var plan = DungeonStartupSchematicPlan.buildPlan(classes);
+            assertPlanSize(helper, plan);
+            assertTest(helper, plan.requests().stream()
+                            .noneMatch(request -> request.schematicFilename().endsWith("_none.schem")),
+                    "valid startup plan contained a none schematic");
+            long blanks = plan.normalizedClassSlots().stream()
+                    .filter(DungeonStartupSchematicPlan.BLANK_SLOT_CLASS::equals).count();
+            assertTest(helper, blanks == DungeonStartupSchematicPlan.LOGICAL_SLOT_COUNT - partySize,
+                    "one-to-six-player blankslot behavior changed");
+        }
         helper.succeed();
     }
 

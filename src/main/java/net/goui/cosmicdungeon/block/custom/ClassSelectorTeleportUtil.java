@@ -3,6 +3,8 @@ package net.goui.cosmicdungeon.block.custom;
 
 import net.goui.cosmicdungeon.auth.AccessPolicy;
 import net.goui.cosmicdungeon.block.entity.ClassSelectorBlockEntity;
+import net.goui.cosmicdungeon.playerclass.api.ClassNet;
+import net.goui.cosmicdungeon.playerclass.api.ClassItemUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
@@ -75,8 +77,17 @@ public final class ClassSelectorTeleportUtil {
         BlockEntity be = selectorLevel.getBlockEntity(selectorPos);
         if (!(be instanceof ClassSelectorBlockEntity csbe)) return;
 
+        if (!isReadyEligibleClass(classId)) {
+            ClassSelectorReadyManager.rejectReadySelection(sp, selectorLevel, selectorPos, csbe);
+            return;
+        }
+
         // Register ready; teleports everyone automatically when ready hits max.
         ClassSelectorReadyManager.markReady(sp, selectorLevel, selectorPos, csbe, classId);
+    }
+
+    public static boolean isReadyEligibleClass(String classId) {
+        return ClassItemUtil.isPlayableClass(classId) && !ClassNet.isDisabledClassSelection(classId);
     }
 
     private static void clearPending(CompoundTag playerPd) {
