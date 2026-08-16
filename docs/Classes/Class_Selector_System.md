@@ -8,6 +8,8 @@ Class selector is a block+block-entity+menu+screen workflow that assigns class a
 - Selector supports fallback destination.
 - Selector supports max-player configuration for dungeon entry targeting.
 - Teleport utility and ready-state tick manager coordinate handoff behavior.
+- `None` remains the no-class/reset choice, but it is never ready-eligible. Selecting it removes the player from this selector's ready state, cancels a countdown if the party is no longer full, and asks the player to select a class before readying.
+- Ready eligibility is enforced at the server handoff and defensively by the ready manager: null, blank, unknown, disabled, and `none` class IDs cannot ready a player.
 - Dungeon 1 parties may contain one through six players. Ready order remains authoritative: startup constructs six logical class slots in that order and fills every unoccupied slot with the literal `blankslot` class token.
 - Dungeon 1 startup builds six ordered schematic groups with six logical-slot operations each. All 36 operations must complete against the prepared physical instance before the run is registered or any party member is teleported.
 - The first player to ready up is announced as the **Group Leader** for that dungeon run. The run keeps this same leader by using the first UUID in the ordered ready list.

@@ -50,6 +50,11 @@ public final class ClassSelectorReadyManager {
                                 BlockPos selectorPos,
                                 ClassSelectorBlockEntity csbe,
                                 String classId) {
+        if (!ClassSelectorTeleportUtil.isReadyEligibleClass(classId)) {
+            rejectReadySelection(sp, selectorLevel, selectorPos, csbe);
+            return -1;
+        }
+
         MinecraftServer server = selectorLevel.getServer();
         if (server == null) return -1;
 
@@ -109,6 +114,34 @@ public final class ClassSelectorReadyManager {
         }
 
         return slot;
+    }
+
+    public static void rejectReadySelection(ServerPlayer sp,
+                                            ServerLevel selectorLevel,
+                                            BlockPos selectorPos,
+                                            ClassSelectorBlockEntity csbe) {
+        if (sp == null || selectorLevel == null || selectorPos == null || csbe == null) return;
+
+        MinecraftServer server = selectorLevel.getServer();
+        if (server == null) return;
+
+        SelectorKey key = new SelectorKey(selectorLevel.dimension().location().toString(), selectorPos.asLong());
+        ReadyState st = STATES.get(key);
+        if (st != null && st.ordered.remove(sp.getUUID())) {
+            st.classByPlayer.remove(sp.getUUID());
+            int max = Math.max(1, Math.min(6, csbe.getMaxPlayers()));
+            int ready = st.ordered.size();
+            broadcastReadyProgress(server, st, ready, max);
+            if (st.countdownEndTick >= 0L && ready < max) {
+                cancelCountdown(server, st, "Countdown canceled (party not full).");
+            }
+            if (st.ordered.isEmpty()) STATES.remove(key);
+        }
+
+        sp.displayClientMessage(
+                Component.literal("Select a class before readying for the dungeon.").withStyle(ChatFormatting.RED),
+                false
+        );
     }
 
     public static void tick(MinecraftServer server) {

@@ -12,6 +12,7 @@ public final class DungeonStartupSchematicPlan {
     public static final int LOGICAL_SLOT_COUNT = 6;
     public static final int EXPECTED_OPERATION_COUNT = 36;
     public static final String BLANK_SLOT_CLASS = "blankslot";
+    private static final String NONE_CLASS = "none";
 
     private static final List<String> REQUIRED_GROUP_ORDER = List.of(
             "d1_start", "d1_b1_chests", "d1_b2_chests",
@@ -87,6 +88,9 @@ public final class DungeonStartupSchematicPlan {
 
         List<String> normalized = new ArrayList<>(LOGICAL_SLOT_COUNT);
         for (String classId : orderedOccupiedClasses) {
+            if (NONE_CLASS.equals(classId)) {
+                throw new IllegalArgumentException("Dungeon startup cannot use the none class.");
+            }
             normalized.add(classId == null || classId.isBlank() ? BLANK_SLOT_CLASS : classId);
         }
         while (normalized.size() < LOGICAL_SLOT_COUNT) {
@@ -138,6 +142,9 @@ public final class DungeonStartupSchematicPlan {
             if (classId == null || classId.isBlank()) {
                 throw new IllegalArgumentException("Normalized class slots must not be blank.");
             }
+            if (NONE_CLASS.equals(classId)) {
+                throw new IllegalArgumentException("Normalized class slots must not use the none class.");
+            }
         }
         Set<String> logicalRequests = new HashSet<>();
         for (PasteRequest request : plan.requests()) {
@@ -146,6 +153,7 @@ public final class DungeonStartupSchematicPlan {
                     || !SUPPORTED_ROTATIONS.contains(request.rotationDegrees())
                     || request.logicalSlot() < 1 || request.logicalSlot() > LOGICAL_SLOT_COUNT
                     || request.classId() == null || request.classId().isBlank()
+                    || NONE_CLASS.equals(request.classId()) || request.schematicFilename().endsWith("_none.schem")
                     || !logicalRequests.add(request.groupId() + ":" + request.logicalSlot())) {
                 throw new IllegalArgumentException("Invalid or duplicate dungeon startup paste request.");
             }
