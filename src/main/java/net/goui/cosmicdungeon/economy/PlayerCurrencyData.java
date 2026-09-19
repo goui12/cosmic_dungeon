@@ -31,7 +31,8 @@ public final class PlayerCurrencyData extends SavedData {
             Codec.unboundedMap(UUID_CODEC,TradeCommitPlan.CODEC).optionalFieldOf("trade_plans",Map.of()).forGetter(data->data.tradePlans),
             Codec.unboundedMap(UUID_CODEC,AccountOperation.CODEC).optionalFieldOf("operations",Map.of()).forGetter(data->data.operations),
             CompoundTag.CODEC.optionalFieldOf("ledger",new CompoundTag()).forGetter(data->data.ledger),
-            CompoundTag.CODEC.optionalFieldOf("death_currency",new DeathCurrencyState().save()).forGetter(data->data.deaths.save())
+            CompoundTag.CODEC.optionalFieldOf("death_currency",new DeathCurrencyState().save()).forGetter(data->data.deaths.save()),
+            CompoundTag.CODEC.optionalFieldOf("wealth_review",new CompoundTag()).forGetter(data->data.wealthReviews.save())
     ).apply(inst, PlayerCurrencyData::fromCodec));
 
     public static final SavedDataType<PlayerCurrencyData> TYPE = new SavedDataType<>(
@@ -55,17 +56,29 @@ public final class PlayerCurrencyData extends SavedData {
     private final Map<UUID,UUID> operationByOwner=new HashMap<>();
     private CompoundTag ledger=new CompoundTag();
     private DeathCurrencyState deaths=new DeathCurrencyState();
+    private WealthReviewState wealthReviews=new WealthReviewState();
+    private final Map<UUID,Set<Long>> legacyWealthThresholds=new HashMap<>();
+    private final Deque<UUID> wealthObservationQueue=new ArrayDeque<>();
+    private long[] observedThresholds;
     private final Map<UUID,Long> heldDebit=new HashMap<>(),heldCredit=new HashMap<>();
     private static final Set<MinecraftServer> VALIDATED=Collections.newSetFromMap(new WeakHashMap<>());
     private MinecraftServer server;
     private PlayerCurrencyData() {}
 
     private static PlayerCurrencyData fromCodec(Map<UUID, Long> balances, Map<UUID, Long> overrides,
-                                                Map<String,Long> receipts,java.util.List<String> crossings,Map<UUID,AccountTransfer> transfers,Map<UUID,RepairCommitPlan> repairPlans,Map<UUID,TradeCommitPlan> tradePlans,Map<UUID,AccountOperation> operations,CompoundTag ledger,CompoundTag deathCurrency) {
+                                                Map<String,Long> receipts,java.util.List<String> crossings,Map<UUID,AccountTransfer> transfers,Map<UUID,RepairCommitPlan> repairPlans,Map<UUID,TradeCommitPlan> tradePlans,Map<UUID,AccountOperation> operations,CompoundTag ledger,CompoundTag deathCurrency,CompoundTag wealthReview) {
         PlayerCurrencyData data = new PlayerCurrencyData();
         if (balances != null) data.balanceByPlayer.putAll(balances);
         if (overrides != null) data.capacityOverrideByPlayer.putAll(overrides);
         data.receipts.putAll(receipts);data.wealthCrossings.addAll(crossings);
+        for(String marker:crossings){
+            String[] parts=marker.split("\\|",-1);
+            if(parts.length!=2)throw new IllegalArgumentException("Invalid legacy wealth marker");
+            UUID owner=UUID.fromString(parts[0]);long threshold=Long.parseLong(parts[1]);
+            if(threshold<1||!marker.equals(owner+"|"+threshold))throw new IllegalArgumentException("Invalid legacy wealth marker");
+            data.legacyWealthThresholds.computeIfAbsent(owner,k->new TreeSet<>()).add(threshold);
+        }
+        data.wealthReviews=WealthReviewState.load(wealthReview);
         if(data.balanceByPlayer.values().stream().anyMatch(v->v<0)
                 ||data.capacityOverrideByPlayer.values().stream().anyMatch(v->v<0)
                 ||data.receipts.values().stream().anyMatch(v->v<0))
@@ -77,7 +90,7 @@ public final class PlayerCurrencyData extends SavedData {
             data.validateRepairPlan(id,plan);data.repairPlans.put(id,plan);data.indexRepair(id,plan);
         });
         tradePlans.forEach((id,plan)->{data.validateTradePlan(id,plan);data.tradePlans.put(id,plan);data.indexTrade(id,plan);});
-        data.ledger=ledger.copy();data.validateLedger();
+        data.ledger=ledger.copy();data.validateLedger();data.validateFinalReviews();
         data.deaths=DeathCurrencyState.load(deathCurrency);
         for(var record:data.deaths.entries.values())if(!record.active()&&record.before()!=data.getBalanceTrace(record.owner()))
             throw new IllegalArgumentException("Pending death account image mismatch");
@@ -114,7 +127,8 @@ public final class PlayerCurrencyData extends SavedData {
             boolean matches=balanceByPlayer.equals(saved.balanceByPlayer)&&capacityOverrideByPlayer.equals(saved.capacityOverrideByPlayer)
                     &&receipts.equals(saved.receipts)&&wealthCrossings.equals(saved.wealthCrossings)&&transfers.equals(saved.transfers)
                     &&repairPlans.equals(saved.repairPlans)&&tradePlans.equals(saved.tradePlans)
-                    &&operations.equals(saved.operations)&&ledger.equals(saved.ledger)&&deaths.save().equals(saved.deaths.save());
+                    &&operations.equals(saved.operations)&&ledger.equals(saved.ledger)&&deaths.save().equals(saved.deaths.save())
+                    &&wealthReviews.save().equals(saved.wealthReviews.save());
             if(!matches){setDirty();return false;}
             var pending=ledger.getCompoundOrEmpty("outbox");
             if(!pending.isEmpty()){
@@ -303,10 +317,10 @@ public final class PlayerCurrencyData extends SavedData {
         var terms=receipt.terms();var details=new CompoundTag();details.putLong("first_pays",terms.firstPays());details.putLong("second_pays",terms.secondPays());details.putString("first_owner",terms.first().toString());
         if(tradePlans.containsKey(id))details.put("trade_plan",TradeCommitPlan.CODEC.encodeStart(NbtOps.INSTANCE,tradePlans.get(id)).getOrThrow());
         if(repairPlans.containsKey(id))details.put("repair_plan",RepairCommitPlan.CODEC.encodeStart(NbtOps.INSTANCE,repairPlans.get(id)).getOrThrow());
-        var savedLedger=ledger.copy();try{
+        var savedLedger=ledger.copy();var savedReviews=wealthReviews;try{
             journal(EconomyLedger.row(id.toString(),terms.first(),accountName(terms.first()),terms.type(),terms.secondPays()-terms.firstPays(),receipt.firstBefore(),receipt.firstAfter(),terms.second().toString(),terms.run(),receipt.status(),receipt.timestamp(),details));
             journal(EconomyLedger.row(id.toString(),terms.second(),accountName(terms.second()),terms.type(),terms.firstPays()-terms.secondPays(),receipt.secondBefore(),receipt.secondAfter(),terms.first().toString(),terms.run(),receipt.status(),receipt.timestamp(),details));
-        }catch(RuntimeException failure){ledger=savedLedger;throw failure;}
+        }catch(RuntimeException failure){ledger=savedLedger;wealthReviews=savedReviews;throw failure;}
     }
     public void recordAttempt(String id,UUID owner,String type,String related,long run,String status,CompoundTag details){
         long balance=getBalanceTrace(owner);journal(EconomyLedger.row(id,owner,accountName(owner),type,0,balance,balance,related,run,status,System.currentTimeMillis(),details));
@@ -421,6 +435,13 @@ public final class PlayerCurrencyData extends SavedData {
             EconomyLedger.validateRow(row);
         }
     }
+    private void validateFinalReviews(){
+        for(String owner:ledger.getCompoundOrEmpty("final_reviews").keySet()){
+            UUID id=UUID.fromString(owner);var row=ledger.getCompoundOrEmpty("final_reviews").getCompoundOrEmpty(owner).copy();
+            if(!id.toString().equals(owner)||!owner.equals(row.getStringOr("player","")))throw new IllegalArgumentException("Invalid final review owner");
+            row.put("details",new CompoundTag());EconomyLedger.validateRow(row);
+        }
+    }
     private void journal(CompoundTag row){
         initializeLedger();EconomyLedger.validateRow(row);var outbox=ledger.getCompoundOrEmpty("outbox");
         if(outbox.size()>=4096)throw new IllegalStateException("Economy ledger backlog requires recovery before more transactions");
@@ -437,9 +458,22 @@ public final class PlayerCurrencyData extends SavedData {
         var total=new java.math.BigInteger(ledger.getStringOr(category,"0")).add(java.math.BigInteger.valueOf(adjustment));
         var days=EconomyReports.daily(ledger.getCompoundOrEmpty("recent_days"),row,adjustment);
         var reviews=EconomyReports.finalReviews(ledger.getCompoundOrEmpty("final_reviews"),row,D1EconomyConfig.WEALTH_MAX.get());
+        var nextWealth=wealthReviews;
+        if(row.getStringOr("status","").equals(AccountTransfer.COMMITTED)&&!row.getStringOr("type","").equals("wealth_review")){
+            // A review-only decision replaces its immutable inbox snapshot below; legacy observation
+            // belongs to the separate observer or a real balance transaction, never a discarded side effect.
+            // Observe the BEFORE balance/old markers first: an early debit/reset must not erase a legacy cap.
+            UUID owner=UUID.fromString(row.getStringOr("player",""));
+            nextWealth=observedWealth(owner,row.getLongOr("before",0),row.getStringOr("name",""),row.getLongOr("timestamp",0),row.getStringOr("transaction",""));
+            nextWealth=nextWealth.capture(row,wealthThresholds(),D1EconomyConfig.WEALTH_MAX.get());
+            var maximum=nextWealth.find(owner,D1EconomyConfig.WEALTH_MAX.get());
+            if(!reviews.contains(owner.toString())&&maximum.isPresent()){
+                var evidence=maximum.get().evidence();evidence.remove("details");evidence.putString("review_origin",maximum.get().origin());reviews=reviews.copy();reviews.put(owner.toString(),evidence);
+            }
+        }
         // Compute everything that can reject before changing either balance or authoritative outbox.
         outbox.put(Long.toString(sequence),row.copy());ledger.putLong("sequence",sequence);ledger.put("outbox",outbox);
-        ledger.putString(category,total.toString());ledger.put("recent_days",days);ledger.put("final_reviews",reviews);
+        ledger.putString(category,total.toString());ledger.put("recent_days",days);ledger.put("final_reviews",reviews);wealthReviews=nextWealth;
         if(row.getStringOr("status","").equals(AccountTransfer.COMMITTED)){
             var last=ledger.getCompoundOrEmpty("last_transactions");last.putString(row.getStringOr("player",""),row.getStringOr("transaction",""));ledger.put("last_transactions",last);
         }
@@ -485,12 +519,71 @@ public final class PlayerCurrencyData extends SavedData {
         var op=operations.get(id);if(op==null||!op.owner().equals(owner))throw new IllegalArgumentException("Foreign operation acknowledgement");
         putOperation(id,op.acknowledge());operationByOwner.remove(owner,id);setDirty();
     }
+    static long[] wealthThresholds(){return new long[]{D1EconomyConfig.WEALTH_EARLY.get(),D1EconomyConfig.WEALTH_HIGH.get(),D1EconomyConfig.WEALTH_MAX.get()};}
+    public WealthReviewState wealthReviews(){return wealthReviews;}
+    /** One-time owner index on load/config change, followed by bounded observation batches. No player files opened. */
+    public boolean observeLegacyWealth(int limit,long now){
+        if(limit<1||limit>128)throw new IllegalArgumentException("Invalid wealth observation budget");
+        long[] thresholds=wealthThresholds();
+        if(!Arrays.equals(observedThresholds,thresholds)){
+            var owners=new LinkedHashSet<>(balanceByPlayer.keySet());owners.addAll(legacyWealthThresholds.keySet());
+            for(String key:ledger.getCompoundOrEmpty("final_reviews").keySet())owners.add(UUID.fromString(key));
+            wealthObservationQueue.clear();wealthObservationQueue.addAll(owners);observedThresholds=thresholds;
+        }
+        boolean changed=false;
+        for(int i=0;i<limit&&!wealthObservationQueue.isEmpty();i++){
+            changed|=observeWealth(wealthObservationQueue.peekFirst(),now);
+            wealthObservationQueue.removeFirst(); // Keep the owner queued if journaling rejects.
+        }
+        return changed;
+    }
+    private WealthReviewState observedWealth(UUID owner,long balance,String name,long now,String reference){
+        long maximum=D1EconomyConfig.WEALTH_MAX.get();
+        var observed=EconomyLedger.row("wealth-observation:"+reference,owner,name,"wealth_observation",
+                0,balance,balance,"",0,AccountTransfer.COMMITTED,now,new CompoundTag());
+        var oldFinal=ledger.getCompoundOrEmpty("final_reviews").getCompoundOrEmpty(owner.toString());
+        var thresholds=new TreeSet<Long>(legacyWealthThresholds.getOrDefault(owner,Set.of()));
+        for(long threshold:wealthThresholds())if(balance>=threshold)thresholds.add(threshold);
+        if(!oldFinal.isEmpty())thresholds.add(maximum);
+        var next=wealthReviews;
+        for(long threshold:thresholds){
+            boolean finalReview=threshold==maximum;
+            String origin=legacyWealthThresholds.getOrDefault(owner,Set.of()).contains(threshold)?"legacy_marker":"legacy_balance";
+            var evidence=observed;
+            if(finalReview&&!oldFinal.isEmpty()){
+                evidence=oldFinal.copy();evidence.put("details",new CompoundTag());origin="legacy_final";
+            }
+            next=next.ensure(owner,threshold,finalReview,origin,evidence);
+        }
+        return next;
+    }
+    public boolean observeWealth(UUID owner,long now){
+        initializeLedger();if(now<0)throw new IllegalArgumentException("Invalid observation time");
+        var next=observedWealth(owner,getBalanceTrace(owner),accountName(owner),now,UUID.randomUUID().toString());
+        if(next==wealthReviews)return false;
+        long balance=getBalanceTrace(owner);
+        // The zero-value observation row uses the same journal path as a credit/debit, including its BEFORE image.
+        journal(EconomyLedger.row("wealth-observation:"+UUID.randomUUID(),owner,accountName(owner),"wealth_observation",
+                0,balance,balance,"",0,AccountTransfer.COMMITTED,now,new CompoundTag()));
+        return true;
+    }
+    public boolean decideWealth(UUID owner,long threshold,long revision,String action,String actor,String note,long now){
+        var next=wealthReviews.decide(owner,threshold,revision,action,actor,note,now);
+        if(next==wealthReviews)return false;
+        var details=new CompoundTag();details.put("before_review",wealthReviews.find(owner,threshold).orElseThrow().save());
+        details.put("after_review",next.find(owner,threshold).orElseThrow().save());
+        long balance=getBalanceTrace(owner);
+        journal(EconomyLedger.row("wealth-decision:"+owner+":"+threshold+":"+revision,owner,accountName(owner),"wealth_review",
+                0,balance,balance,actor,0,AccountTransfer.COMMITTED,now,details));
+        wealthReviews=next;setDirty();return true;
+    }
     public boolean ledgerPending(){return !ledger.getCompoundOrEmpty("outbox").isEmpty();}
     public CompoundTag finalReviews(){initializeLedger();return ledger.getCompoundOrEmpty("final_reviews").copy();}
     public boolean claimDailyReport(long day){initializeLedger();if(ledger.getLongOr("report_day",Long.MIN_VALUE)>=day)return false;ledger.putLong("report_day",day);setDirty();return true;}
     public CompoundTag supplySnapshot(){initializeLedger();var result=new CompoundTag();
         for(String key:ledger.keySet())if(!Set.of("outbox","last_transactions","final_reviews").contains(key))result.put(key,ledger.get(key).copy());
         result.putInt("final_review_count",ledger.getCompoundOrEmpty("final_reviews").size());result.remove("final_reviews");
+        result.putInt("wealth_notifications_pending",wealthReviews.pendingCount());result.putLong("final_reviews_open",wealthReviews.openFinalCount(D1EconomyConfig.WEALTH_MAX.get()));
         java.math.BigInteger balances=java.math.BigInteger.ZERO;for(long amount:balanceByPlayer.values())balances=balances.add(java.math.BigInteger.valueOf(amount));
         var expected=new java.math.BigInteger(ledger.getStringOr("baseline","0")).add(new java.math.BigInteger(ledger.getStringOr("generation","0"))).subtract(new java.math.BigInteger(ledger.getStringOr("sink","0"))).add(new java.math.BigInteger(ledger.getStringOr("administrative","0")));
         var amounts=balanceByPlayer.values().stream().sorted().toList();
@@ -581,9 +674,6 @@ public final class PlayerCurrencyData extends SavedData {
         return amount;
     }
     public boolean hasReceipt(String transaction,UUID player){return receipts.containsKey(transaction+"|"+player);}
-    public boolean markThreshold(UUID player,long threshold){
-        boolean changed=wealthCrossings.add(player+"|"+threshold);if(changed)setDirty();return changed;
-    }
     /** Drop finished-run receipt details after the run is removed; full structured evidence remains in the account outbox or verified ledger pages. */
     public void clearRunReceipts(long run){
         if(receipts.keySet().removeIf(key->key.startsWith("mob:"+run+":")))setDirty();

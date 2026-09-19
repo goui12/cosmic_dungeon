@@ -180,3 +180,21 @@ Detailed legacy physical-currency and ambiguous Chop TODOs remain in code; no mi
 See ../D1_BATCH_30.md and ../D1_REMAINING.md; private evidence D1_Batch_30_2026-09-19.
 No new required PNG, datagen, active config/world edit, launch/GameTest, deployment or push.
 Final local commit follows all notes and staged allowlist review. Batch31 awaits Cameron.
+
+Batch31 (2026-09-19): authorized Batch31 only, checks, final local commit and STOP before32.
+Verified parent30: bf091702f67deb48e2f57061df028cadaac2204f.
+Single writer owns account CODEC/ledger, economy review commands/events and server economy config.
+Optional wealth_review schema1 preserves old account IDs, balances, overrides and old markers.
+First-threshold evidence shares every journaled balance decision; paired-row rollback includes it.
+Explicit developer/direct-console decisions are revision checked, audited and idempotent.
+Bounded legacy observation runs before new balance changes and in the background for offline owners.
+Notifications remain pending until acknowledgment; chat may replay after reconnect or interruption.
+Two relevant live Docs unchanged; debloated MASTER and Q&A hashes still match the sealed baseline.
+8,597 offline checks (135 new wealth,5 new config), two config round trips and Java21 build passed.
+M02 moves to implemented_unverified:44 implemented/21 partial D1/9 preserved/27 deferred=101.
+Seven planned implementation/review batches remain (32-38), then cumulative licensed gameplay QA.
+The count is an estimate distinct from audit IDs. AGENTS now requires the count and a short
+summary of every remaining batch after each completion, as Cameron requested.
+See ../D1_BATCH_31.md and ../D1_REMAINING.md; private evidence D1_Batch_31_2026-09-19.
+No new required PNG, datagen, active config/world edit, launch/GameTest, deployment or push.
+Final local commit follows notes and staged allowlist review. Batch32 awaits Cameron.

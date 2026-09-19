@@ -52,7 +52,7 @@ public final class EconomyLedger {
             case "player_trade","dragoon_repair","death_debit","death_pickup" -> "transfer";
             case "vendor_retail","direct_repair","inn","inn_fee","death_despawn" -> "sink";
             case "vendor_sale","mob_reward","mob","first_trace","quest_reward","system_reward" -> "generation";
-            case "credit","debit","legacy_credit","legacy_debit","admin_or_rollback","admin_adjustment" -> "administrative";
+            case "credit","debit","legacy_credit","legacy_debit","admin_or_rollback","admin_adjustment","wealth_review","wealth_observation" -> "administrative";
             default -> delta>=0?"generation":"sink";
         };
     }

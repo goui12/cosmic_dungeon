@@ -199,6 +199,13 @@ Compilation alone does not prove that runtime behavior, transactions, persistenc
 
 ## Completion Report
 
+- Cameron requested on 2026-09-19: after each completed D1 batch, state the number of planned
+  implementation/review batches remaining and give one short summary of every remaining batch.
+  Keep the numbered plan in docs/ai/D1_REMAINING.md current. Distinguish this estimate from
+  audit-ID counts and the separate cumulative licensed gameplay-testing phase.
+- Honor the currently authorized batch limit and the queued breakpoint
+  "finish what you're doing and stop"; do not infer permission for the next batch from the plan.
+
 At the end of every task, report:
 
 1. What changed.

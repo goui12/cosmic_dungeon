@@ -1,11 +1,45 @@
 # D1 remaining work
 
-Updated 2026-09-19 after Batch30. Cameron authorized Batch30, checks and a final local commit, then STOP.
-Batch29 baseline commit: 06336504483e26b294ebedb8bea6934d4b4a1e2b.
+Updated 2026-09-19 after Batch31. Cameron authorized Batch31, checks and final local commit; STOP before32.
+Verified Batch30 baseline: bf091702f67deb48e2f57061df028cadaac2204f.
 Gameplay/multiplayer testing remains deferred for the cumulative licensed TEST pass.
-All101 original audit IDs remain intact. Code implementation is not runtime acceptance.
-Current dispositions: Google Docs and Sheet/Audit/D1_Batch_30_2026-09-19/implementation_findings.json.
-Latest report: [Batch30](D1_BATCH_30.md). Prior reports: [Batch29](D1_BATCH_29.md), [Batch28](D1_BATCH_28.md).
+All 101 original audit IDs remain intact. Code implementation is not runtime acceptance.
+Current dispositions: Google Docs and Sheet/Audit/D1_Batch_31_2026-09-19/implementation_findings.json.
+Latest report: [Batch31](D1_BATCH_31.md). Prior reports: [Batch30](D1_BATCH_30.md), [Batch29](D1_BATCH_29.md).
+
+## Planned batches remaining: 7
+
+These are estimated implementation/review batches, not seven more gameplay testing rounds.
+There were eight including31. Review may close already-implemented items without new code,
+or reveal a concrete issue requiring a split. Update the count and each summary after every
+completion. Actual world/multiplayer/performance acceptance belongs to the cumulative TEST
+phase afterward; no gameplay launch or deployment is authorized by this plan.
+
+| Batch | Work remaining | Audit IDs / boundary |
+| --- | --- | --- |
+| 32 | Legacy physical currency, safe receipt retention, and older recovery evidence. | M03/M20; preserve ambiguous saves and historical totals |
+| 33 | Trusted legacy item, ammunition, loadout, and drop adoption mappings. | M10/M72/M55, M64-M71; D1 portions only, preserve authored stacks |
+| 34 | Authored mob rewards and stable NPC/profile bindings. | M05/M17/M41/M103; inspect source/code, reserve live-world edits for authorization |
+| 35 | Pricing conversions, retained catalogue exceptions, and calculator fixtures. | M12/M106/M107; use local checked source data |
+| 36 | Final source/code review of D1 class effects and ammunition. | M55/M58/M60/M63; separate code gaps from runtime-only checks |
+| 37 | Achievement rewards, quest/progression bindings, and travel gates. | M79/M81/M93/M101; preserve instance/lifetime separation |
+| 38 | Help and balance displays, performance bounds, and cumulative-test handoff. | M09/M104/M105; prepare acceptance steps, measure live performance later |
+
+Remaining21 partial IDs can span multiple batches; nine preserved-content IDs need verification.
+The27 D2+ entries remain TODO-only and are excluded from this D1 batch estimate.
+Several labels below are original audit titles; consult each disposition before writing code.
+
+## Batch31 completed in code
+
+B31-1: First threshold notices now share the authoritative account/ledger image. Bounded
+developer delivery waits for save readback and replays unacknowledged notices after reconnect.
+B31-2: Developer/direct-console acknowledgment, resolution and reopening use expected revisions,
+exact retry detection and a zero-value ledger decision retaining the original evidence.
+B31-3: Older balances/markers/final-review rows become honest observations, including before
+an immediate debit/reset. Existing over-cap money and capacity overrides remain intact.
+8,597 offline checks (135 wealth plus5 new config), two config round trips and Java21 build passed.
+M02 is implemented/runtime-unverified. Counts44/21/9/27=101. No new required PNG.
+Legacy physical currency remains scheduled for32; it was not folded into this M02 pass.
 
 ## Batch30 completed in code
 
@@ -122,9 +156,8 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M03: Finish legacy currency/Watson evidence review and safe account receipt retention
 - M79: Complete remaining achievement and reward bindings
 
-## Other D1 follow-ups (18)
+## Other D1 follow-ups (17)
 
-- M02: Finish threshold-delivery recovery, legacy cap review and operator disposition
 - M05: Replace health-derived payouts with approved mob reward definitions
 - M09: Verify native balance-display resync and stale-packet behavior
 - M12: Complete production-cost/conversion review and named-drop runtime pricing acceptance
@@ -143,7 +176,9 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M106: Validate the retained item catalogue and repair broken references
 - M107: Use the linked calculator as a checked pricing reference, not a runtime web dependency
 
-## Implemented; runtime acceptance pending (43)
+## Implemented; runtime acceptance pending (44)
+
+- M02: Durable wealth notifications, reviewed dispositions and legacy-cap observations
 
 - M43: Durable Chop run-end entitlement and inventory handoff
 - M102: Durable startup rollback, cleanup and stored-item claims
@@ -242,13 +277,11 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 
 ## Next work (await Cameron)
 
-31. Proposed: legacy physical-currency recovery and account-cap/threshold evidence (M03/M02).
-    Revalidate sources and choose concrete issues; preserve ambiguous entity and save records.
-Later: remaining class mechanics, achievement rewards, pricing and authored world bindings.
-These are proposals, not authorization to continue.
+32. Review legacy physical-currency custody, account receipt retention and older recovery evidence.
+Revalidate relevant sources, inspect current code, and choose concrete issues from the plan above.
+Do not force bulk migrations, guess old grants, rewrite authored content, or delete recovery evidence.
 
-STOP after the validated Batch30 local commit. Batch31 has not started.
-Remaining22 partial D1 IDs stay listed above; runtime-only acceptance is listed separately.
+STOP after the validated Batch31 local commit. Batch32 has not started.
 The queued breakpoint remains: "finish what you're doing and stop".
 No launch/GameTest/deployment/push or active-world/config edit occurred.
 

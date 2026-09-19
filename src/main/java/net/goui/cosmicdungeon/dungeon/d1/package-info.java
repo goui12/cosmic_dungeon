@@ -10,11 +10,14 @@
  * inventory, currency, death, reconnect, menus, effects, reset and old-save loading.
  * Datagen and offline fixtures do not prove multiplayer or crash-atomic behavior.
  *
- * TODO(M02, partial_D1): Implement wealth alerts and economic review state
- * Current: Persistent first-crossing alerts, final-cap review evidence, daily/lifetime generation,
- * sinks/transfers, percentiles and ledger-backed account supply. /currency report and review <UUID>.
- * Required: Verify notification delivery through native save interruptions and developer-offline
- * periods; add explicit review disposition tooling without resetting lifetime first-crossing state.
+ * TODO(M02, licensed TEST acceptance): Verify durable wealth alerts and economic review state
+ * Current: Batch31 inbox shares each account/ledger decision; developer/direct-console ack,
+ * resolve and reopen use audited expected revisions. Offline/reconnect delivery is bounded
+ * and waits for native save readback. Legacy observations preserve balances, old markers and
+ * original final evidence. /currency review pending and review <UUID> expose the durable state.
+ * Required: verify actual save failures, offline developers, reconnect, concurrent reviewers,
+ * stale permission/session attempts and debits at cap. Chat may repeat until acknowledgment;
+ * never describe network delivery as exactly-once or reset lifetime first-threshold evidence.
  * Source: https://docs.google.com/document/d/17ufIuIy0VhLmB_V-6sZ7sCaUCZuGZUkHrgJLVpEcS28
  * Source modified: 2026-08-18T21:01:23.864Z
  *
@@ -36,10 +39,11 @@
  * TODO(M03, bounded account history): page/prune compact terminal operation/transfer receipts only
  * after proving old transaction IDs cannot replay. Full item evidence is already archived; preserve
  * current receipts until a checked index/migration exists. Measure long-run save size on licensed TEST.
- * TODO(M02, legacy review): inspect pre-ledger accounts already at the configured cap without
- * fabricating a historical crossing timestamp; retain first-notification state and add explicit
- * operator review disposition separately. Persist/replay pending developer notifications across
- * actual save interruptions before claiming exactly-once notification delivery.
+ * TODO(M02, legacy TEST fixtures): exercise pre-ledger over-cap balances, existing capacity
+ * overrides, old delivery markers after spending, and immediate debit/reset before polling.
+ * Batch31 labels these observations honestly and retains any surviving original final transaction.
+ * Confirm complete-backup upgrade/rollback and failed native writes before runtime acceptance;
+ * never infer original earning dates or restore mismatched player/account/world files.
  * Source: https://docs.google.com/document/d/17ufIuIy0VhLmB_V-6sZ7sCaUCZuGZUkHrgJLVpEcS28
  * Source modified: 2026-08-18T21:01:23.864Z
  * Source: https://docs.google.com/document/d/1byHfuC0G_lb0IRrgO3kblLYP06AY8gJWm9bJOMlrFIc

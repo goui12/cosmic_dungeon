@@ -24,12 +24,8 @@ public final class EconomyLedgerEvents {
         return report.toString();
     }
     @SubscribeEvent public static void commands(RegisterCommandsEvent event){
-        event.getDispatcher().register(Commands.literal("currency").then(Commands.literal("review").requires(AccessPolicy::requireDeveloperOrConsole)
-                .then(Commands.argument("player",net.minecraft.commands.arguments.UuidArgument.uuid()).executes(context->{
-                    var owner=net.minecraft.commands.arguments.UuidArgument.getUuid(context,"player");
-                    var row=PlayerCurrencyData.get(context.getSource().getServer()).finalReviews().getCompoundOrEmpty(owner.toString());
-                    context.getSource().sendSuccess(()->Component.literal(row.isEmpty()?"No final economic review record for "+owner:row.toString()),false);return 1;
-                }))).then(Commands.literal("report").requires(AccessPolicy::requireDeveloperOrConsole)
+        WealthReviewCommands.register(event.getDispatcher());
+        event.getDispatcher().register(Commands.literal("currency").then(Commands.literal("report").requires(AccessPolicy::requireDeveloperOrConsole)
                 .executes(context->{String text=report(context.getSource().getServer());context.getSource().sendSuccess(()->Component.literal(text),false);return 1;})));
     }
 }

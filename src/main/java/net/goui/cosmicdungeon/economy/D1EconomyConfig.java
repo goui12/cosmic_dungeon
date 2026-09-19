@@ -3,7 +3,7 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 import java.util.*;
 public final class D1EconomyConfig {
     public static ModConfigSpec.DoubleValue REWARD_RADIUS,DEATH_PERCENT;
-    public static ModConfigSpec.IntValue VENDOR_QUOTE_TICKS,LEDGER_FLUSH_TICKS,LEDGER_ROWS_PER_FLUSH,DEATH_WORK_PER_TICK,DEATH_SNAPSHOT_TICKS,DEATH_RETRY_TICKS;
+    public static ModConfigSpec.IntValue VENDOR_QUOTE_TICKS,LEDGER_FLUSH_TICKS,LEDGER_ROWS_PER_FLUSH,WEALTH_REVIEW_TICKS,WEALTH_REVIEW_BUDGET,DEATH_WORK_PER_TICK,DEATH_SNAPSHOT_TICKS,DEATH_RETRY_TICKS;
     public static ModConfigSpec.LongValue FIRST_TRACE,WEALTH_EARLY,WEALTH_HIGH,WEALTH_MAX,DEATH_THRESHOLD,DEATH_MIN;
     public static final Map<String,ModConfigSpec.LongValue> REWARDS=new LinkedHashMap<>();
     public static ModConfigSpec.ConfigValue<List<? extends String>> MOB_CATEGORIES;
@@ -13,6 +13,8 @@ public final class D1EconomyConfig {
                 .push("Economy");
         LEDGER_FLUSH_TICKS=b.comment("Background ledger archive cadence; explicit commerce commits verify their own writes immediately.").defineInRange("ledgerFlushIntervalTicks",1200,20,24000);
         LEDGER_ROWS_PER_FLUSH=b.comment("Maximum evidence rows archived in one flush; remaining rows are retained in the account outbox.").defineInRange("ledgerRowsPerFlush",256,16,1024);
+        WEALTH_REVIEW_TICKS=b.comment("Wealth review retry/delivery cadence. Pending notices survive offline developers and require explicit acknowledgment.").defineInRange("wealthReviewIntervalTicks",100,20,24000);
+        WEALTH_REVIEW_BUDGET=b.comment("Maximum legacy accounts observed and maximum developer messages sent per review interval (separate global budgets).").defineInRange("wealthReviewWorkPerInterval",8,1,128);
         VENDOR_QUOTE_TICKS=b.comment("Ticks before a displayed vendor sale quote expires; 20 ticks per second. No items move until confirmation.")
                 .defineInRange("vendorQuoteLifetimeTicks",600,20,6000);
         REWARD_RADIUS=b.comment("Inclusive block distance, using a dead unrespawned member's death position.")

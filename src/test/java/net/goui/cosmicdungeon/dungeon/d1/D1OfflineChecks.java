@@ -46,6 +46,7 @@ public final class D1OfflineChecks {
         net.goui.cosmicdungeon.trade.TradeCommitChecks.main(args);
         net.goui.cosmicdungeon.vendor.CommerceChecks.main(args);
         net.goui.cosmicdungeon.economy.EconomyLedgerChecks.main(args);
+        net.goui.cosmicdungeon.economy.WealthReviewChecks.main(args);
         net.goui.cosmicdungeon.economy.DeathCurrencyChecks.main(args);
         net.goui.cosmicdungeon.npc.inn.InnChecks.main(args);
         net.goui.cosmicdungeon.npc.inn.InnHookChecks.main(args);
@@ -73,6 +74,15 @@ public final class D1OfflineChecks {
         check(((Number)gameplay.get("Economy.deathDropRecoveryRetryTicks")).intValue()==100,"No every-tick disk retry");
         gameplay.set("Economy.deathDropWorkPerTick",3);Config.SPEC.correct(gameplay);
         check(((Number)gameplay.get("Economy.deathDropWorkPerTick")).intValue()==3,"Developer recovery budget retained");
+        check(((Number)gameplay.get("Economy.earlyWealthReviewTrace")).longValue()==500_000
+                &&((Number)gameplay.get("Economy.highWealthReviewTrace")).longValue()==80_000_000
+                &&((Number)gameplay.get("Economy.maximumWealthReviewTrace")).longValue()==100_000_000,"Canonical three wealth thresholds");
+        check(((Number)gameplay.get("Economy.wealthReviewIntervalTicks")).intValue()==100,"Wealth review cadence");
+        check(((Number)gameplay.get("Economy.wealthReviewWorkPerInterval")).intValue()==8,"Wealth review global budget");
+        gameplay.set("Economy.wealthReviewWorkPerInterval",0);Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("Economy.wealthReviewWorkPerInterval")).intValue()==1,"Zero review budget rejected");
+        gameplay.set("Economy.wealthReviewIntervalTicks",400);Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("Economy.wealthReviewIntervalTicks")).intValue()==400,"Developer review cadence retained");
         check(((Number)gameplay.get("Economy.ledgerFlushIntervalTicks")).intValue()==1200,"Ledger flush defaults to one minute");
         check(((Number)gameplay.get("Economy.ledgerRowsPerFlush")).intValue()==256,"Ledger archive work is bounded");
         gameplay.set("Economy.ledgerRowsPerFlush",64);Config.SPEC.correct(gameplay);
