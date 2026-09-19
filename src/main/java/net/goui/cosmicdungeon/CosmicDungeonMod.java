@@ -104,7 +104,9 @@ public class CosmicDungeonMod {
         });
 
         // config
-        modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+        Config.registerFileFormat();
+        modContainer.registerConfig(ModConfig.Type.SERVER, Config.SPEC, "CosmicDungeon.config");
+        modContainer.registerConfig(ModConfig.Type.SERVER, net.goui.cosmicdungeon.config.VendorPricesConfig.SPEC, "all_vendors_prices.config");
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
@@ -142,6 +144,9 @@ public class CosmicDungeonMod {
         CurrencyCommand.register(event.getDispatcher());
         FactionCommand.register(event.getDispatcher());
         ProgressionCommand.register(event.getDispatcher());
+        D1Command.register(event.getDispatcher());
+        net.goui.cosmicdungeon.achievement.d1.D1ObjectiveBindings.register(event.getDispatcher());
+        net.goui.cosmicdungeon.npc.inn.InnService.register(event.getDispatcher());
         AchievementCommand.register(event.getDispatcher(), event.getBuildContext());
         VendorCommand.register(event.getDispatcher());
         TradeCommand.register(event.getDispatcher());

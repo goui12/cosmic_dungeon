@@ -20,15 +20,17 @@ public class DragoonRepairMenu extends AbstractContainerMenu {
         for (int row=0; row<3; row++) for (int col=0; col<9; col++) addSlot(new Slot(inv, col + row*9 + 9, 47 + col*18, 174 + row*18));
         for (int col=0; col<9; col++) addSlot(new Slot(inv, col, 47 + col*18, 232));
     }
+    public boolean belongsTo(DragoonRepairSessionData.RepairSession expected){return session==expected;}
     @Override public boolean stillValid(Player p) { return session != null && session.isValidFor(p); }
     @Override public ItemStack quickMoveStack(Player p, int idx) {
+        if (session!=null && session.locked()) return ItemStack.EMPTY;
         if (idx < 0 || idx >= slots.size()) return ItemStack.EMPTY; Slot slot=slots.get(idx); if (!slot.hasItem()) return ItemStack.EMPTY; ItemStack in=slot.getItem(); ItemStack original=in.copy();
         if (idx == REPAIR_SLOT) { if (!mayEditRepair(p) || !moveItemStackTo(in, PLAYER_INV_START, HOTBAR_START+HOTBAR_COUNT, true)) return ItemStack.EMPTY; }
         else if (mayEditRepair(p) && DragoonRepairRules.isValidRepairItemShape(in) && !moveItemStackTo(in, REPAIR_SLOT, REPAIR_SLOT+1, false)) return ItemStack.EMPTY; else if (!mayEditRepair(p)) return ItemStack.EMPTY;
         if (in.isEmpty()) slot.setByPlayer(ItemStack.EMPTY, original); else slot.setChanged(); if (in.getCount()==original.getCount()) return ItemStack.EMPTY; slot.onTake(p,in); return original;
     }
-    @Override public void clicked(int slotId, int button, ClickType clickType, Player player) { if (slotId == REPAIR_SLOT && !mayEditRepair(player)) return; super.clicked(slotId, button, clickType, player); }
-    @Override public void removed(Player player) { super.removed(player); if (!player.level().isClientSide() && session != null && player instanceof ServerPlayer sp && session.canCancelFromMenuClose(sp)) session.cancelFromMenuClose(sp); }
+    @Override public void clicked(int slotId, int button, ClickType clickType, Player player) { if (session!=null && session.locked()) return; if (slotId == REPAIR_SLOT && !mayEditRepair(player)) return; super.clicked(slotId, button, clickType, player); if(player instanceof ServerPlayer sp)RepairCustody.capture(sp); }
+    @Override public void removed(Player player) { if (!player.level().isClientSide() && session != null && player instanceof ServerPlayer sp && session.canCancelFromMenuClose(sp)) session.cancelFromMenuClose(sp); super.removed(player); }
     @Override public void slotsChanged(Container c) { super.slotsChanged(c); if (c == repairContainer && session != null) session.onRepairItemChanged(self); }
     private boolean mayEditRepair(Player p) { return session != null && session.canEditRepairSlot(p); }
     private class RepairSlot extends Slot { RepairSlot(Container c,int slot,int x,int y){super(c,slot,x,y);} @Override public boolean mayPlace(ItemStack s){ return mayEditRepair(self) && DragoonRepairRules.isValidRepairItemShape(s); } @Override public boolean mayPickup(Player p){ return mayEditRepair(p); } @Override public int getMaxStackSize(){return 1;} @Override public void setChanged(){super.setChanged(); if (session != null) session.onRepairItemChanged(self);} }

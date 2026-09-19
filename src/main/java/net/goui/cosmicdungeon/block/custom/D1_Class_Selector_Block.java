@@ -1,4 +1,4 @@
-// file: src/main/java/net/goui/cosmicdungeon/block/custom/ClassSelectorBlock.java
+// file: src/main/java/net/goui/cosmicdungeon/block/custom/D1_Class_Selector_Block.java
 package net.goui.cosmicdungeon.block.custom;
 
 import net.goui.cosmicdungeon.auth.AccessPolicy;
@@ -24,9 +24,9 @@ import net.minecraft.world.phys.BlockHitResult;
 
 import javax.annotation.Nullable;
 
-public class ClassSelectorBlock extends Block implements EntityBlock {
+public class D1_Class_Selector_Block extends Block implements EntityBlock {
 
-    public ClassSelectorBlock(Properties props) {
+    public D1_Class_Selector_Block(Properties props) {
         super(props);
     }
 
@@ -46,6 +46,10 @@ public class ClassSelectorBlock extends Block implements EntityBlock {
             return InteractionResult.CONSUME;
         }
 
+        if (!net.goui.cosmicdungeon.npc.tamsin.TamsinService.accepted(sp)) {
+            sp.sendSystemMessage(Component.literal("Speak with Tamsin Vane and accept her offer first."));
+            return InteractionResult.CONSUME;
+        }
         // Dungeoneer: open normal menu and remember which selector it came from
         ClassSelectorTeleportUtil.markPendingSelectorSource(sp, sl, pos);
 

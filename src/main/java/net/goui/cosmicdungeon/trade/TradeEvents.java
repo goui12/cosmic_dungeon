@@ -19,6 +19,25 @@ public final class TradeEvents {
         }
     }
 
+    @SubscribeEvent(priority=net.neoforged.bus.api.EventPriority.HIGHEST)
+    public static void death(net.neoforged.neoforge.event.entity.living.LivingDeathEvent e){
+        if(e.getEntity() instanceof ServerPlayer p&&TradeSessionData.get(p)!=null)TradeSessionData.cancel(p,"Player died");
+    }
+    @SubscribeEvent public static void dimension(PlayerEvent.PlayerChangedDimensionEvent e){
+        if(e.getEntity() instanceof ServerPlayer p&&TradeSessionData.get(p)!=null)TradeSessionData.cancel(p,"Player changed dimension");
+    }
+    @SubscribeEvent public static void respawn(PlayerEvent.PlayerRespawnEvent e){
+        if(e.getEntity() instanceof ServerPlayer p)TradeCustody.claim(p);
+    }
+    @SubscribeEvent public static void started(net.neoforged.neoforge.event.server.ServerStartedEvent e){
+        var data=net.goui.cosmicdungeon.economy.PlayerCurrencyData.get(e.getServer());
+        if(data.cancelReservations("player_trade",System.currentTimeMillis(),"server restarted before trade commit")>0&&!data.flushVerified())
+            throw new IllegalStateException("Trade startup cancellation needs save recovery");
+    }
+    @SubscribeEvent public static void stopping(net.neoforged.neoforge.event.server.ServerStoppingEvent e){
+        for(var p:e.getServer().getPlayerList().getPlayers())if(TradeSessionData.get(p)!=null)TradeSessionData.cancel(p,"Server stopping");
+    }
+
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post e) {
         MinecraftServer server = e.getServer();

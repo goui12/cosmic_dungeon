@@ -13,7 +13,7 @@ import net.goui.cosmicdungeon.block.custom.BarrierBlock;
 import net.goui.cosmicdungeon.block.custom.BeatrixCampfireBlock;
 import net.goui.cosmicdungeon.block.custom.ChickenBlock;
 import net.goui.cosmicdungeon.block.custom.CavernResidueBlock;
-import net.goui.cosmicdungeon.block.custom.ClassSelectorBlock;
+import net.goui.cosmicdungeon.block.custom.D1_Class_Selector_Block;
 import net.goui.cosmicdungeon.block.custom.CosmicMobSpawnerBlock;
 import net.goui.cosmicdungeon.block.custom.CosmicRiftPlacerBlock;
 import net.goui.cosmicdungeon.block.custom.CosmicRiftTileBlock;
@@ -109,7 +109,7 @@ public class ModBlocks {
     // ===== Class Selector Block (custom block opens GUI) =====
     public static final DeferredBlock<Block> CLASS_SELECTOR_BLOCK = BLOCKS.registerBlock(
             "class_selector_block",
-            (BlockBehaviour.Properties props) -> new ClassSelectorBlock(
+            (BlockBehaviour.Properties props) -> new D1_Class_Selector_Block(
                     props.strength(0.8F).sound(SoundType.WOOD).noOcclusion()
             )
     );

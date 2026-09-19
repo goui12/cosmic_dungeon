@@ -137,12 +137,12 @@ public final class ModAdvancementProvider implements AdvancementSubProvider {
                 .display(
                         icon,
                         Component.translatable(translationBase + ".title"),
-                        Component.translatable(translationBase + ".desc"),
+                        Component.empty(), // Debloated Achievements!A2: expose names only.
                         null,
                         AdvancementType.TASK,
                         true,
-                        true,
-                        false
+                        false,
+                        id.equals(CosmicAchievementIds.TAMSIN_TAX)
                 )
                 .addCriterion(criterionName, new Criterion<>(CriteriaTriggers.IMPOSSIBLE, new ImpossibleTrigger.TriggerInstance()))
                 .requirements(AdvancementRequirements.allOf(List.of(criterionName)))

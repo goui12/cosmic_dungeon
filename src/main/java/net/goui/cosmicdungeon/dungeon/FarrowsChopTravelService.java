@@ -31,43 +31,49 @@ import java.util.UUID;
 public final class FarrowsChopTravelService {
     private FarrowsChopTravelService() {}
 
-    public static Optional<ItemStack> cookAndLeaveDungeon(ServerPlayer player, ItemStack rawChop) {
-        Optional<DungeonRunRegistryData.RunRecord> runOpt = DungeonLifecycleService.findActiveRunForPlayer(player);
-        if (runOpt.isEmpty() || !runOpt.get().containsDimension(player.level().dimension())) {
-            player.sendSystemMessage(Component.literal("Farrow's Chop can only bind while you are inside your active dungeon.")
-                    .withStyle(ChatFormatting.RED));
+    /** Successful delivery is performed here; the empty stack result keeps old callers compatible. */
+    public static Optional<ItemStack> cookAndLeaveDungeon(ServerPlayer player, ItemStack rawChop, BlockPos campfire) {
+        if(!net.goui.cosmicdungeon.progression.ProgressionService.hasVillageAccess(player))return Optional.empty();
+        var runOpt=DungeonLifecycleService.findActiveRunForPlayer(player);
+        if(runOpt.isEmpty()||!runOpt.get().dungeonId().equals("dungeon_1")
+                ||!runOpt.get().containsDimension(player.level().dimension())
+                ||!rawChop.is(ModItems.RAW_FARROWS_CHOP.get())||!ChopOwnershipService.owned(player,rawChop))
             return Optional.empty();
-        }
-
-        DungeonRunRegistryData.RunRecord run = runOpt.get();
-        DungeonInventoryEscrowData escrow = DungeonInventoryEscrowData.get(player.level().getServer());
-        Optional<DungeonInventoryEscrowData.Entry> previous = escrow.get(run.runId(), player.getUUID());
-        if (previous.filter(DungeonInventoryEscrowData.Entry::outsideActive).isPresent()) return Optional.empty();
-
-        DungeonReturnTarget target = new DungeonReturnTarget(player.getUUID(), run.runId(),
-                player.level().dimension().location().toString(), player.getX(), player.getY(), player.getZ(),
-                player.getYRot(), player.getXRot());
-
-        CompoundTag before = saveInventory(player);
-        if (!player.getAbilities().instabuild) rawChop.shrink(1);
-        CompoundTag dungeonInventory = saveInventory(player);
-        CompoundTag outsideInventory = previous.map(DungeonInventoryEscrowData.Entry::outsideInventory)
-                .orElseGet(() -> run.snapshotFor(player.getUUID()).map(DungeonPlayerRunSnapshot::inventoryNbt)
+        var state=player.level().getBlockState(campfire);
+        if(!(state.getBlock() instanceof net.minecraft.world.level.block.CampfireBlock)
+                ||!state.getValue(net.minecraft.world.level.block.CampfireBlock.LIT))return Optional.empty();
+        var run=runOpt.get();var escrow=DungeonInventoryEscrowData.get(player.level().getServer());
+        var previous=escrow.get(run.runId(),player.getUUID());
+        if(previous.filter(DungeonInventoryEscrowData.Entry::outsideActive).isPresent())return Optional.empty();
+        if(!net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.beforeInventoryChange(player))return Optional.empty();
+        var target=new DungeonReturnTarget(player.getUUID(),run.runId(),player.level().dimension().location().toString(),
+                player.getX(),player.getY(),player.getZ(),player.getYRot(),player.getXRot());
+        var cooked=new ItemStack(ModItems.FARROWS_CHOP.get());
+        cooked.set(ModDataComponents.DUNGEON_RETURN_TARGET.get(),target);
+        cooked.set(ModDataComponents.COORDINATES.get(),campfire.immutable());
+        cooked.set(ModDataComponents.CHOP_OWNER.get(),player.getUUID());
+        cooked.set(ModDataComponents.CHOP_TOKEN.get(),rawChop.get(ModDataComponents.CHOP_TOKEN.get()));
+        CompoundTag before=saveInventory(player);
+        rawChop.shrink(1);
+        CompoundTag dungeonInventory=saveInventory(player);
+        CompoundTag outsideInventory=previous.map(DungeonInventoryEscrowData.Entry::outsideInventory)
+                .orElseGet(()->run.snapshotFor(player.getUUID()).map(DungeonPlayerRunSnapshot::inventoryNbt)
                         .map(CompoundTag::copy).orElseGet(CompoundTag::new));
-
-        restoreInventory(player, outsideInventory);
-        escrow.put(new DungeonInventoryEscrowData.Entry(run.runId(), player.getUUID(), dungeonInventory,
-                outsideInventory, true));
-        if (!DefaultRiftDestinations.teleportToMainVillage(player)) {
-            restoreInventory(player, before);
-            previous.ifPresentOrElse(escrow::put, () -> escrow.remove(run.runId(), player.getUUID()));
+        restoreInventory(player,outsideInventory);
+        if(!player.getInventory().add(cooked)||!cooked.isEmpty()){
+            restoreInventory(player,before);
+            player.sendSystemMessage(Component.literal("Your outside inventory needs a free slot for the return Chop."));
             return Optional.empty();
         }
-
-        ItemStack cooked = new ItemStack(ModItems.FARROWS_CHOP.get());
-        cooked.set(ModDataComponents.DUNGEON_RETURN_TARGET.get(), target);
-        CosmicAdvancementUtil.grant(player, CosmicAchievementIds.NOSTALGIA_BAIT);
-        return Optional.of(cooked);
+        escrow.put(new DungeonInventoryEscrowData.Entry(run.runId(),player.getUUID(),dungeonInventory,outsideInventory,true));
+        if(!DefaultRiftDestinations.teleportToMainVillage(player)){
+            restoreInventory(player,before);
+            previous.ifPresentOrElse(escrow::put,()->escrow.remove(run.runId(),player.getUUID()));
+            return Optional.empty();
+        }
+        ChopOwnershipData.get(player.level().getServer()).bindRun(player.getUUID(),run.runId());
+        CosmicAdvancementUtil.grant(player,CosmicAchievementIds.NOSTALGIA_BAIT);
+        return Optional.of(ItemStack.EMPTY);
     }
 
     public static boolean returnToDungeon(ServerPlayer player, ItemStack chop) {
@@ -81,6 +87,10 @@ public final class FarrowsChopTravelService {
         ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, id);
         ServerLevel level = player.level().getServer().getLevel(key);
         if (level == null) return false;
+        BlockPos campfire=chop.get(ModDataComponents.COORDINATES.get());
+        if(campfire!=null && !(level.getBlockState(campfire).getBlock() instanceof net.minecraft.world.level.block.CampfireBlock)){
+            player.sendSystemMessage(Component.literal("The bound campfire no longer exists."));return false;
+        }
         BlockPos rememberedBlock = BlockPos.containing(target.x(), target.y(), target.z());
         BlockPos safe = SafeTeleportUtil.findSafeTeleportPos(level, rememberedBlock);
         if (safe == null || !safe.equals(rememberedBlock)) {
@@ -97,8 +107,10 @@ public final class FarrowsChopTravelService {
             return false;
         }
 
+        if(!net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.beforeInventoryChange(player))return false;
+        ItemStack consumedChop=chop.copy();
         CompoundTag outsideBefore = saveInventory(player);
-        if (!player.getAbilities().instabuild) chop.shrink(1);
+        chop.shrink(1);
         CompoundTag outsideAfter = saveInventory(player);
         restoreInventory(player, entry.dungeonInventory());
         escrow.put(entry.withOutsideInventory(outsideAfter, false));
@@ -108,6 +120,7 @@ public final class FarrowsChopTravelService {
             restoreInventory(player, outsideBefore);
             escrow.put(entry);
         }
+        if(teleported)ChopOwnershipService.consumed(player,consumedChop);
         return teleported;
     }
 
@@ -141,7 +154,7 @@ public final class FarrowsChopTravelService {
 
     private static DungeonReturnTarget validateTarget(ServerPlayer player, ItemStack chop) {
         DungeonReturnTarget target = chop.get(ModDataComponents.DUNGEON_RETURN_TARGET.get());
-        if (target == null || !player.getUUID().equals(target.owner())) {
+        if (target == null || !player.getUUID().equals(target.owner()) || !ChopOwnershipService.owned(player,chop)) {
             player.sendSystemMessage(Component.literal(target == null
                     ? "This Farrow's Chop has no remembered dungeon location."
                     : "This Farrow's Chop remembers another dungeoneer.").withStyle(ChatFormatting.RED));

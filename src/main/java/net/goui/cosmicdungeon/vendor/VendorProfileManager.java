@@ -148,9 +148,13 @@ public final class VendorProfileManager extends SimplePreparableReloadListener<M
 
             VendorOffer.Cost cost = parseCost(GsonHelper.getAsJsonObject(obj, "cost"));
 
+            var resultStack = resultDef.toStack();
+            var resultJson = GsonHelper.getAsJsonObject(obj, "result");
+            if (resultJson.has("repairComponent")) net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairComponents.mark(
+                    resultStack, GsonHelper.getAsString(resultJson, "repairComponent"));
             offers.add(new VendorOffer(
                     offerId,
-                    resultDef.toStack(),
+                    resultStack,
                     cost,
                     obj.has("maxUses") ? positiveInt(obj, "maxUses") : null,
                     obj.has("maxPurchasesPerPlayer") ? positiveInt(obj, "maxPurchasesPerPlayer") : null,
@@ -235,7 +239,7 @@ public final class VendorProfileManager extends SimplePreparableReloadListener<M
     }
 
     private static void validateItemExists(ResourceLocation itemId) {
-        if (BuiltInRegistries.ITEM.getValue(itemId) == null) {
+        if (!BuiltInRegistries.ITEM.containsKey(itemId)) {
             throw new JsonParseException("Unknown item id: " + itemId);
         }
     }

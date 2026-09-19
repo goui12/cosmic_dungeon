@@ -32,7 +32,7 @@ public final class ModNetwork {
     private ModNetwork() {}
 
     public static void registerPayloadHandlers(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("1");
+        final PayloadRegistrar registrar = event.registrar("5");
 
         /* =====================================================================================
          * RF (central registration; feature-local packet definitions)
@@ -259,15 +259,18 @@ public final class ModNetwork {
                 }
         );
 
+        registrar.playToServer(ClassPayloads.C2S_TamsinAction.TYPE, ClassPayloads.C2S_TamsinAction.STREAM_CODEC,
+                (payload, ctx) -> {
+                    if (ctx.player() instanceof ServerPlayer sp)
+                        net.goui.cosmicdungeon.npc.tamsin.TamsinService.action(sp, payload.containerId(), payload.action());
+                });
+
         registrar.playToServer(
                 ClassPayloads.C2S_RequestSelectorData.TYPE,
                 ClassPayloads.C2S_RequestSelectorData.STREAM_CODEC,
                 (payload, ctx) -> {
                     if (!(ctx.player() instanceof ServerPlayer sp)) return;
-                    ctx.reply(new ClassPayloads.S2C_SelectorData(
-                            Objects.requireNonNullElse(ClassNbtUtil.getClassId(sp), ClassKeys.CLASS_ID_NONE),
-                            ClassNet.getSelectableClasses(sp)
-                    ));
+                    ClassNet.sendSelectorDataTo(sp);
                 }
         );
 
@@ -277,25 +280,37 @@ public final class ModNetwork {
                 (payload, ctx) -> {
                     if (!(ctx.player() instanceof ServerPlayer sp)) return;
 
+                    if (sp.containerMenu.containerId != payload.containerId()
+                            || !net.goui.cosmicdungeon.block.custom.ClassSelectorTeleportUtil.validSelectionSession(sp)){
+                        ctx.reply(new ClassPayloads.S2C_SelectResult(false,"Reopen a nearby Dungeon 1 selector.",ClassData.getClassId(sp)));return;
+                    }
                     String requested = payload.classId();
                     String clamped = ClassKeys.clamp(requested);
 
                     if (ClassNet.isDisabledClassSelection(clamped)) {
                         String now = Objects.requireNonNullElse(ClassNbtUtil.getClassId(sp), ClassKeys.CLASS_ID_NONE);
                         ctx.reply(new ClassPayloads.S2C_SelectResult(false, "Class is currently disabled: " + clamped, now));
-                        ctx.reply(new ClassPayloads.S2C_SelectorData(now, ClassNet.getSelectableClasses(sp)));
+                        ClassNet.sendSelectorDataTo(sp);
                         return;
                     }
 
                     String normalized = ClassNet.normalizeRequestedClass(sp, requested);
 
+                    if (ClassKeys.CLASS_ID_NONE.equals(normalized)) {
+                        ctx.reply(new ClassPayloads.S2C_SelectResult(false, "Select a Dungeon 1 class.", ClassData.getClassId(sp)));
+                        return;
+                    }
+                    net.goui.cosmicdungeon.block.custom.ClassSelectorReadyManager.withdraw(sp);
                     ClassNet.applySelectedClass(sp, normalized);
+                    var selectorMenu = (net.goui.cosmicdungeon.menu.ClassSelectorMenu) sp.containerMenu;
+                    if (selectorMenu.tamsinNpc() != null)
+                        selectorMenu.setStage(net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.READY);
 
                     String now = Objects.requireNonNullElse(ClassNbtUtil.getClassId(sp), ClassKeys.CLASS_ID_NONE);
                     ctx.reply(new ClassPayloads.S2C_SelectResult(true, "Class selected: " + now, now));
-                    ctx.reply(new ClassPayloads.S2C_SelectorData(now, ClassNet.getSelectableClasses(sp)));
+                    ClassNet.sendSelectorDataTo(sp);
 
-                    net.goui.cosmicdungeon.block.custom.ClassSelectorTeleportUtil.onClassSelected(sp, now);
+
                 }
         );
 
@@ -316,7 +331,32 @@ public final class ModNetwork {
         );
 
 
+        registrar.playToServer(TamsinTaxPayloads.Action.TYPE, TamsinTaxPayloads.Action.STREAM_CODEC,
+                (payload, ctx) -> {
+                    if (ctx.player() instanceof ServerPlayer sp)
+                        net.goui.cosmicdungeon.npc.tamsin.TamsinTaxService.action(sp, payload);
+                });
+        registrar.playToClient(TamsinTaxPayloads.View.TYPE, TamsinTaxPayloads.View.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() -> ClientNetworkDispatch.dispatch("onTamsinTaxView", payload)));
+
+        registrar.playToServer(PartyPayloads.Action.TYPE, PartyPayloads.Action.STREAM_CODEC,
+                (payload, ctx) -> {
+                    if (ctx.player() instanceof ServerPlayer sp)
+                        net.goui.cosmicdungeon.npc.tamsin.D1PartyService.action(sp, payload);
+                });
+        registrar.playToClient(PartyPayloads.View.TYPE, PartyPayloads.View.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() -> ClientNetworkDispatch.dispatch("onD1PartyView", payload)));
+
         /* ===================== VENDOR ===================== */
+
+        registrar.playToServer(VendorPayloads.C2S_VendorSaleDecision.TYPE, VendorPayloads.C2S_VendorSaleDecision.STREAM_CODEC,
+                (payload, ctx) -> {
+                    if (!(ctx.player() instanceof ServerPlayer sp)) return;
+                    ctx.reply(net.goui.cosmicdungeon.vendor.VendorService.confirmSale(sp, payload.containerId(), payload.token(), payload.confirm()));
+                });
+        registrar.playToClient(VendorPayloads.S2C_VendorSaleQuote.TYPE, VendorPayloads.S2C_VendorSaleQuote.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() -> ClientNetworkDispatch.dispatch("onVendorSaleQuote", payload)));
+
 
         registrar.playToServer(
                 VendorPayloads.C2S_RequestVendorPurchase.TYPE,

@@ -181,6 +181,10 @@ public final class DungeonWorldSnapshotService {
                 levels.add(Map.entry(source, target));
             }
 
+            for (var pair : levels) {
+                var companionBlocker=net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCompanions.resetBlocker(pair.getValue());
+                if(companionBlocker.isPresent())return new SnapshotResult.Error(companionBlocker.get());
+            }
             server.saveEverything(true, false, true);
             for (Map.Entry<ServerLevel, ServerLevel> pair : levels) {
                 pair.getKey().save(null, true, false);
@@ -293,6 +297,11 @@ public final class DungeonWorldSnapshotService {
                             "Snapshot is missing data for " + level.dimension().location() + ": " + dimSnapshot
                     );
                 }
+            }
+
+            for (var level : levels) {
+                var companionBlocker=net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCompanions.resetBlocker(level);
+                if(companionBlocker.isPresent())return new SnapshotResult.Error(companionBlocker.get());
             }
 
             debug("[DUNGEON DEBUG] resetToSnapshot calling server.saveEverything");
@@ -472,6 +481,9 @@ public final class DungeonWorldSnapshotService {
             debug("[DUNGEON DEBUG] prepareLevelForFilesystemRestore: level was null");
             return Optional.of("Reset aborted because a linked level reference was null.");
         }
+
+        var companionBlocker=net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCompanions.resetBlocker(level);
+        if(companionBlocker.isPresent())return companionBlocker;
 
         String dimId = level.dimension().location().toString();
         ServerChunkCache chunkSource = level.getChunkSource();

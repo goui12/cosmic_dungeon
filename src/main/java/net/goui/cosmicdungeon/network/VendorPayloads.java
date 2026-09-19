@@ -27,7 +27,7 @@ public final class VendorPayloads {
         public static final Type<C2S_RequestVendorSellSelected> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "vendor_sell_selected_request"));
         public static final StreamCodec<ByteBuf, C2S_RequestVendorSellSelected> STREAM_CODEC = StreamCodec.composite(
                 ByteBufCodecs.INT, C2S_RequestVendorSellSelected::vendorEntityId,
-                ByteBufCodecs.INT.apply(ByteBufCodecs.list()), C2S_RequestVendorSellSelected::slotIndexes,
+                ByteBufCodecs.INT.apply(ByteBufCodecs.list(41)), C2S_RequestVendorSellSelected::slotIndexes,
                 C2S_RequestVendorSellSelected::new
         );
 
@@ -78,6 +78,40 @@ public final class VendorPayloads {
                 ByteBufCodecs.VAR_LONG, S2C_VendorPurchaseResult::newBalanceTrace,
                 S2C_VendorPurchaseResult::new
         );
+        @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    }
+
+    public record C2S_VendorSaleDecision(int containerId, String token, boolean confirm) implements CustomPacketPayload {
+        public static final Type<C2S_VendorSaleDecision> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "vendor_sale_decision"));
+        public static final StreamCodec<ByteBuf, C2S_VendorSaleDecision> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.INT, C2S_VendorSaleDecision::containerId,
+                ByteBufCodecs.stringUtf8(36), C2S_VendorSaleDecision::token,
+                ByteBufCodecs.BOOL, C2S_VendorSaleDecision::confirm,
+                C2S_VendorSaleDecision::new);
+        @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    }
+
+    public record S2C_VendorSaleQuote(int containerId, String token, long totalTrace, List<Line> lines) implements CustomPacketPayload {
+        public record Line(ItemStack stack, net.goui.cosmicdungeon.economy.pricing.VendorPriceBreakdown breakdown) {
+            public long trace() { return breakdown.total(); }
+        }
+        private static final StreamCodec<io.netty.buffer.ByteBuf, net.goui.cosmicdungeon.economy.pricing.VendorPriceBreakdown>
+                BREAKDOWN_CODEC = StreamCodec.composite(
+                ByteBufCodecs.VAR_LONG, net.goui.cosmicdungeon.economy.pricing.VendorPriceBreakdown::base,
+                ByteBufCodecs.VAR_LONG, net.goui.cosmicdungeon.economy.pricing.VendorPriceBreakdown::enchantments,
+                ByteBufCodecs.VAR_LONG, net.goui.cosmicdungeon.economy.pricing.VendorPriceBreakdown::curses,
+                ByteBufCodecs.VAR_LONG, net.goui.cosmicdungeon.economy.pricing.VendorPriceBreakdown::adjustments,
+                ByteBufCodecs.VAR_LONG, net.goui.cosmicdungeon.economy.pricing.VendorPriceBreakdown::total,
+                net.goui.cosmicdungeon.economy.pricing.VendorPriceBreakdown::new);
+        private static final StreamCodec<RegistryFriendlyByteBuf, Line> LINE_CODEC = StreamCodec.composite(
+                ItemStack.STREAM_CODEC, Line::stack, BREAKDOWN_CODEC, Line::breakdown, Line::new);
+        public static final Type<S2C_VendorSaleQuote> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "vendor_sale_quote"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, S2C_VendorSaleQuote> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.INT, S2C_VendorSaleQuote::containerId,
+                ByteBufCodecs.stringUtf8(36), S2C_VendorSaleQuote::token,
+                ByteBufCodecs.VAR_LONG, S2C_VendorSaleQuote::totalTrace,
+                LINE_CODEC.apply(ByteBufCodecs.list(41)), S2C_VendorSaleQuote::lines,
+                S2C_VendorSaleQuote::new);
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 }

@@ -1,0 +1,54 @@
+{
+  "sources": [
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/weakness",
+      "sprite": "cosmicdungeon:black_bubo"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/poison",
+      "sprite": "cosmicdungeon:bushmaster"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/slowness",
+      "sprite": "cosmicdungeon:deathly_stupor"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/poison",
+      "sprite": "cosmicdungeon:fer_de_lance"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/slowness",
+      "sprite": "cosmicdungeon:melancholia"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/regeneration",
+      "sprite": "cosmicdungeon:mending_sting"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/weakness",
+      "sprite": "cosmicdungeon:pestis"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/poison",
+      "sprite": "cosmicdungeon:tree_viper"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/slowness",
+      "sprite": "cosmicdungeon:vapours"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/regeneration",
+      "sprite": "cosmicdungeon:verdant_jolt"
+    }
+  ]
+}

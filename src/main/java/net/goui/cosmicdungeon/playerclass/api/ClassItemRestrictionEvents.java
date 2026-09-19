@@ -5,7 +5,6 @@ import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -86,11 +85,11 @@ public final class ClassItemRestrictionEvents {
         ItemStack stack = sp.getItemBySlot(slot);
         if (stack == null || stack.isEmpty()) return;
         if (ClassItemEquipmentGuard.canWear(sp, stack)) return;
+        net.goui.cosmicdungeon.item.identity.ProtectedItemRecovery.validateSerializable(sp, stack);
         ItemStack copy = stack.copy();
         sp.setItemSlot(slot, ItemStack.EMPTY);
-        Inventory inv = sp.getInventory();
-        boolean inserted = inv.add(copy);
-        if (!inserted) sp.drop(copy, false);
-        ClassItemEquipmentGuard.denyWear(sp, copy);
+        // Preserve the exact remainder; never make a world drop after forced unequip.
+        net.goui.cosmicdungeon.item.identity.ProtectedItemRecovery.returnDetached(sp, copy);
+        ClassItemEquipmentGuard.denyWear(sp, stack);
     }
 }

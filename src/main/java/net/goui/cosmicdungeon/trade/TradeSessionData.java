@@ -111,6 +111,13 @@ public final class TradeSessionData {
             return false;
         }
 
+        if (!net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairTransactions.beforeInventoryChange(inviter)
+                || !net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairTransactions.beforeInventoryChange(accepter)
+                || !TradeCustody.beforeInventoryChange(inviter) || !TradeCustody.beforeInventoryChange(accepter)
+                || inviter.level()!=accepter.level()
+                || net.goui.cosmicdungeon.item.identity.ProtectedItemRecovery.scope(inviter)
+                    !=net.goui.cosmicdungeon.item.identity.ProtectedItemRecovery.scope(accepter)
+                || !CurrencyService.transactionsAllowed(inviter)||!CurrencyService.transactionsAllowed(accepter)) return false;
         invites.remove(key);
         removePendingInvitesInvolving(inviter.getUUID());
         removePendingInvitesInvolving(accepter.getUUID());
@@ -236,6 +243,15 @@ public final class TradeSessionData {
         public TradeSession(ServerPlayer a, ServerPlayer b) {
             this.a = a.getUUID();
             this.b = b.getUUID();
+            aOffer.addListener(container->persistOffers());
+            bOffer.addListener(container->persistOffers());
+        }
+        public UUID id(){return sessionId;}
+        private net.minecraft.nbt.CompoundTag aAccepted,bAccepted;
+        private void persistOffers(){
+            if(ended)return;var srv=server();if(srv==null)return;
+            var left=srv.getPlayerList().getPlayer(a);if(left!=null)TradeCustody.capture(left);
+            var right=srv.getPlayerList().getPlayer(b);if(right!=null)TradeCustody.capture(right);
         }
 
         public boolean contains(net.minecraft.world.entity.player.Player p) {
@@ -247,9 +263,12 @@ public final class TradeSessionData {
             if (p == null || ended || !contains(p)) return false;
             MinecraftServer srv = p.level().getServer();
             if (srv == null) srv = server();
-            return srv != null
-                    && srv.getPlayerList().getPlayer(a) != null
-                    && srv.getPlayerList().getPlayer(b) != null;
+            if(srv==null)return false;
+            var first=srv.getPlayerList().getPlayer(a);var second=srv.getPlayerList().getPlayer(b);
+            return first!=null&&second!=null&&first.isAlive()&&second.isAlive()&&!first.isSpectator()&&!second.isSpectator()
+                    &&first.level()==second.level()&&sessions.get(a)==this&&sessions.get(b)==this
+                    &&net.goui.cosmicdungeon.item.identity.ProtectedItemRecovery.scope(first)
+                        ==net.goui.cosmicdungeon.item.identity.ProtectedItemRecovery.scope(second);
         }
 
         public boolean canEditOffer(net.minecraft.world.entity.player.Player p) {
@@ -290,8 +309,12 @@ public final class TradeSessionData {
             if (sa == null || sb == null) {
                 return false;
             }
+            TradeCustody.begin(sa,sessionId,b);TradeCustody.begin(sb,sessionId,a);
             sa.openMenu(new SimpleMenuProvider((id, inv, pl) -> new TradeMenu(id, inv, this), Component.literal("Trading with: " + sb.getName().getString())));
             sb.openMenu(new SimpleMenuProvider((id, inv, pl) -> new TradeMenu(id, inv, this), Component.literal("Trading with: " + sa.getName().getString())));
+            if(!(sa.containerMenu instanceof TradeMenu ma)||!ma.belongsTo(this)
+                    ||!(sb.containerMenu instanceof TradeMenu mb)||!mb.belongsTo(this))return false;
+            persistOffers();
             syncAll("");
             sa.sendSystemMessage(Component.literal("Trade opened with " + sb.getName().getString() + "."));
             sb.sendSystemMessage(Component.literal("Trade opened with " + sa.getName().getString() + "."));
@@ -319,7 +342,7 @@ public final class TradeSessionData {
                 return;
             }
             if (amt < 0L) amt = 0L;
-            long balance = CurrencyService.getBalanceTrace(p);
+            long balance = CurrencyService.getAvailableTrace(p);
             if (amt > balance) amt = balance;
             if (p.getUUID().equals(a)) {
                 if (aCurrency == amt) return;
@@ -360,10 +383,14 @@ public final class TradeSessionData {
 
         public void setReady(ServerPlayer p, boolean v) {
             if (ended || finalizing || p == null || !contains(p)) return;
+            if(!isValidFor(p)||!(p.containerMenu instanceof TradeMenu menu)||!menu.belongsTo(this))return;
+            TradeCustody.capture(p);
             if (p.getUUID().equals(a)) {
+                aAccepted=v?TradeCustody.read(p):null;
                 aReady = v;
                 aConfirm = false;
             } else if (p.getUUID().equals(b)) {
+                bAccepted=v?TradeCustody.read(p):null;
                 bReady = v;
                 bConfirm = false;
             } else {
@@ -410,114 +437,32 @@ public final class TradeSessionData {
                 return;
             }
 
-            TradeFinalizationService.Result result = TradeFinalizationService.finalizeTrade(
-                    participant(sa, aCurrency),
-                    participant(sb, bCurrency),
-                    offeredItems(aOffer),
-                    offeredItems(bOffer)
-            );
-            if (result != TradeFinalizationService.Result.SUCCESS) {
-                cancel(cancelReason(result));
-                return;
+            persistOffers();
+            if(!isValidFor(sa)||!(sa.containerMenu instanceof TradeMenu ma)||!ma.belongsTo(this)
+                    ||!(sb.containerMenu instanceof TradeMenu mb)||!mb.belongsTo(this)
+                    ||aAccepted==null||bAccepted==null||!aAccepted.equals(TradeCustody.read(sa))||!bAccepted.equals(TradeCustody.read(sb))){
+                cancel("The accepted offer or session changed.");return;
             }
-
-            syncAll("Trade completed.");
-            sa.sendSystemMessage(Component.literal("Trade completed."));
-            sb.sendSystemMessage(Component.literal("Trade completed."));
-            TradeAchievementService.onSuccessfulTrade(sa, sb);
-            end();
-            closeMenus(sa, sb);
-        }
-
-        private TradeFinalizationService.TradeParticipant participant(ServerPlayer player, long offeredCurrencyTrace) {
-            return new ServerBackedParticipant() {
-                @Override
-                public ServerPlayer player() {
-                    return player;
-                }
-
-                @Override
-                public long offeredCurrencyTrace() {
-                    return offeredCurrencyTrace;
-                }
-
-                @Override
-                public long balanceTrace() {
-                    return CurrencyService.getBalanceTrace(player);
-                }
-
-                @Override
-                public long capacityTrace() {
-                    return CurrencyService.getCapacity(player);
-                }
-
-                @Override
-                public boolean tryWithdraw(long traceAmount) {
-                    return CurrencyService.tryWithdraw(player, traceAmount);
-                }
-
-                @Override
-                public boolean tryDeposit(long traceAmount) {
-                    return CurrencyService.tryDeposit(player, traceAmount);
-                }
-
-                @Override
-                public void setBalanceTrace(long traceAmount) {
-                    CurrencyService.setBalanceTrace(player, traceAmount);
-                }
-
-                @Override
-                public boolean canReceiveItems(TradeFinalizationService.OfferedItems items) {
-                    return items.canMoveInto(this);
-                }
-
-                @Override
-                public void receiveItems(TradeFinalizationService.OfferedItems items) {
-                    items.moveInto(this);
-                }
-            };
-        }
-
-        private TradeFinalizationService.OfferedItems offeredItems(SimpleContainer container) {
-            return new TradeFinalizationService.OfferedItems() {
-                @Override
-                public boolean canMoveInto(TradeFinalizationService.TradeParticipant receiver) {
-                    return receiverCanAcceptItems(receiver, container);
-                }
-
-                @Override
-                public void moveInto(TradeFinalizationService.TradeParticipant receiver) {
-                    receiverAcceptItems(receiver, container);
-                }
-            };
-        }
-
-        private boolean receiverCanAcceptItems(TradeFinalizationService.TradeParticipant receiver, SimpleContainer container) {
-            if (receiver instanceof ServerBackedParticipant serverBacked) {
-                return hasCapacityFor(serverBacked.player(), container);
+            if(!CurrencyService.transactionsAllowed(sa)||!CurrencyService.transactionsAllowed(sb)){
+                cancel("Wait for the dungeon reset to finish.");return;
             }
-            return container.getContainerSize() == 0;
-        }
-
-        private void receiverAcceptItems(TradeFinalizationService.TradeParticipant receiver, SimpleContainer container) {
-            if (receiver instanceof ServerBackedParticipant serverBacked) {
-                moveAll(container, serverBacked.player());
+            for (var offer : java.util.List.of(aOffer,bOffer)) {
+                for (int slot=0;slot<offer.getContainerSize();slot++) {
+                    var stack=offer.getItem(slot);
+                    if(!stack.isEmpty() && !net.goui.cosmicdungeon.economy.pricing.ItemTransferRules.tradeEligible(stack)) {
+                        cancel("A protected item cannot be traded."); return;
+                    }
+                }
             }
-        }
-
-        private String cancelReason(TradeFinalizationService.Result result) {
-            return switch (result) {
-                case INSUFFICIENT_BALANCE -> "Insufficient balance";
-                case CANNOT_RECEIVE_CURRENCY -> "Cannot receive offered currency";
-                case NOT_ENOUGH_INVENTORY_SPACE -> "Not enough inventory space";
-                case CURRENCY_WITHDRAWAL_FAILED -> "Currency withdrawal failed";
-                case CURRENCY_TRANSFER_FAILED -> "Currency transfer failed";
-                case SUCCESS -> "Trade completed";
-            };
-        }
-
-        private interface ServerBackedParticipant extends TradeFinalizationService.TradeParticipant {
-            ServerPlayer player();
+            var result=TradeFinalizationService.validate(aCurrency,bCurrency,
+                    CurrencyService.getAvailableTrace(sa),CurrencyService.getAvailableTrace(sb),
+                    CurrencyService.getAvailableCapacity(sa),CurrencyService.getAvailableCapacity(sb),
+                    hasCapacityFor(sa,bOffer),hasCapacityFor(sb,aOffer));
+            if(result!=TradeFinalizationService.Result.SUCCESS){cancel(result.toString());return;}
+            boolean committed=TradeTransactions.decide(sa,sb,sessionId,aCurrency,bCurrency);
+            // Custody stays unchanged until menus detach; reconciliation follows the saved decision.
+            end();releaseOwner(sa);releaseOwner(sb);
+            if(committed){sa.sendSystemMessage(Component.literal("Trade completed."));sb.sendSystemMessage(Component.literal("Trade completed."));}
         }
 
         private void syncAll(String statusMessage) {
@@ -562,7 +507,7 @@ public final class TradeSessionData {
 
 
         private boolean hasCapacityFor(ServerPlayer p, SimpleContainer src) {
-            ItemStack[] simulated = new ItemStack[p.getInventory().getContainerSize()];
+            ItemStack[] simulated = new ItemStack[Math.min(36,p.getInventory().getContainerSize())];
             for (int i = 0; i < simulated.length; i++) {
                 simulated[i] = p.getInventory().getItem(i).copy();
             }
@@ -596,78 +541,29 @@ public final class TradeSessionData {
             return true;
         }
 
-        private void moveAll(SimpleContainer c, ServerPlayer to) {
-            for (int i = 0; i < c.getContainerSize(); i++) {
-                var s = c.removeItemNoUpdate(i);
-                if (!s.isEmpty()) to.getInventory().placeItemBackInInventory(s);
-            }
-        }
-
         private MinecraftServer server() {
             return ServerLifecycleHooks.getCurrentServer();
         }
 
-        public void cancelBecausePlayerLeft(ServerPlayer departed) {
-            if (ended) return;
-            markEnded();
-            UUID departedId = departed.getUUID();
-            UUID remainingId = departedId.equals(a) ? b : a;
-            MinecraftServer srv = departed.level().getServer();
-            ServerPlayer remaining = srv == null ? null : srv.getPlayerList().getPlayer(remainingId);
-
-            if (departedId.equals(a)) {
-                moveAll(aOffer, departed);
-                if (remaining != null) moveAll(bOffer, remaining);
-            } else {
-                moveAll(bOffer, departed);
-                if (remaining != null) moveAll(aOffer, remaining);
-            }
-
-            departed.closeContainer();
-            if (remaining != null) {
-                remaining.closeContainer();
-                remaining.sendSystemMessage(Component.literal("Trade cancelled: other player disconnected"));
-            }
-            clear(aOffer);
-            clear(bOffer);
-        }
+        public void cancelBecausePlayerLeft(ServerPlayer departed) { cancel("Other player disconnected"); }
 
         public void cancel(String reason) {
-            if (ended) return;
-            syncAll("Trade cancelled: " + reason);
-            MinecraftServer srv = server();
-            markEnded();
-            if (srv == null) {
-                clear(aOffer);
-                clear(bOffer);
-                return;
+            if(ended)return;persistOffers();syncAll("Trade cancelled: "+reason);
+            var srv=server();markEnded();clear(aOffer);clear(bOffer);
+            if(srv==null)return;
+            for(UUID owner:java.util.List.of(a,b)){
+                var player=srv.getPlayerList().getPlayer(owner);if(player==null)continue;
+                releaseOwner(player);player.sendSystemMessage(Component.literal("Trade cancelled: "+reason));
             }
-            ServerPlayer sa = srv.getPlayerList().getPlayer(a);
-            ServerPlayer sb = srv.getPlayerList().getPlayer(b);
-            if (sa != null) {
-                moveAll(aOffer, sa);
-                sa.closeContainer();
-                sa.sendSystemMessage(Component.literal("Trade cancelled: " + reason));
-            }
-            if (sb != null) {
-                moveAll(bOffer, sb);
-                sb.closeContainer();
-                sb.sendSystemMessage(Component.literal("Trade cancelled: " + reason));
-            }
-            clear(aOffer);
-            clear(bOffer);
         }
-
-        private void closeMenus(ServerPlayer sa, ServerPlayer sb) {
-            sa.closeContainer();
-            sb.closeContainer();
+        private void releaseOwner(ServerPlayer player){
+            if(player.containerMenu instanceof TradeMenu menu&&menu.belongsTo(this)){
+                menu.setCarried(ItemStack.EMPTY);player.closeContainer();
+            }
+            if(TradeCustody.reconcile(player)&&player.isAlive()&&!player.hasDisconnected())TradeCustody.claim(player);
         }
-
         private void end() {
-            if (ended) return;
-            markEnded();
-            clear(aOffer);
-            clear(bOffer);
+            if(ended)return;markEnded();clear(aOffer);clear(bOffer);
         }
 
         private void markEnded() {

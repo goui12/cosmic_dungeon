@@ -60,9 +60,9 @@ public class ModItems {
     public static final DeferredItem<Item> CHAIN_LINK = ITEMS.registerSimpleItem("chain_link");
     public static final DeferredItem<Item> NETHERITE_REPAIR_FRAGMENT = ITEMS.registerSimpleItem("netherite_repair_fragment");
     public static final DeferredItem<Item> RAW_FARROWS_CHOP = ITEMS.registerItem("raw_farrows_chop",
-            props -> new Item(props.food(new FoodProperties.Builder().nutrition(3).saturationModifier(0.3F).build())));
+            props -> new Item(props.stacksTo(1).food(new FoodProperties.Builder().nutrition(3).saturationModifier(0.3F).build())));
     public static final DeferredItem<FarrowsChopItem> FARROWS_CHOP = ITEMS.registerItem("farrows_chop",
-            props -> new FarrowsChopItem(props.food(new FoodProperties.Builder().nutrition(8).saturationModifier(0.8F).build())));
+            props -> new FarrowsChopItem(props.stacksTo(1).food(new FoodProperties.Builder().nutrition(8).saturationModifier(0.8F).alwaysEdible().build())));
 
     public static final DeferredItem<Item> ATTUNEMENT_TRACE = ITEMS.registerSimpleItem("attunement_trace");
     public static final DeferredItem<Item> ATTUNEMENT_MARK = ITEMS.registerSimpleItem("attunement_mark");

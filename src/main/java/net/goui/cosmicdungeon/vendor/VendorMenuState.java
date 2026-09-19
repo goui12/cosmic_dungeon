@@ -19,6 +19,9 @@ public final class VendorMenuState {
     }
 
     public static boolean isOfferUnlocked(ServerPlayer sp, VendorProfile profile, VendorOffer offer) {
+        if (!net.goui.cosmicdungeon.faction.NpcFactionService.canRetail(sp)) return false;
+        if (net.goui.cosmicdungeon.config.VendorPricesConfig.retail(profile.id(), offer) < 0) return false;
+        if (VendorStock.exhausted(sp, profile, offer)) return false;
         if (offer.requiredClasses() != null && !offer.requiredClasses().isEmpty()) {
             String playerClass = ClassItemEquipmentGuard.getPlayerClass(sp);
             if (!offer.requiredClasses().contains(playerClass)) return false;

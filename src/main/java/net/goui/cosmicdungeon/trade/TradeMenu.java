@@ -67,6 +67,8 @@ public class TradeMenu extends AbstractContainerMenu {
         }
     }
 
+    public boolean belongsTo(TradeSessionData.TradeSession expected){return session==expected;}
+
     @Override
     public boolean stillValid(Player p) {
         return session != null && session.isValidFor(p);
@@ -74,7 +76,7 @@ public class TradeMenu extends AbstractContainerMenu {
 
     @Override
     public ItemStack quickMoveStack(Player p, int idx) {
-        if (idx < 0 || idx >= this.slots.size()) {
+        if (!canEditOwnOffer(p) || idx < 0 || idx >= this.slots.size()) {
             return ItemStack.EMPTY;
         }
         if (isOtherOfferSlot(idx)) {
@@ -94,7 +96,7 @@ public class TradeMenu extends AbstractContainerMenu {
                 return ItemStack.EMPTY;
             }
         } else if (isPlayerInventorySlot(idx) || isHotbarSlot(idx)) {
-            if (!canEditOwnOffer(p)) {
+            if (!canEditOwnOffer(p) || !net.goui.cosmicdungeon.economy.pricing.ItemTransferRules.tradeEligible(inSlot)) {
                 return ItemStack.EMPTY;
             }
             if (!moveItemStackTo(inSlot, OWN_OFFER_START, OWN_OFFER_START + OWN_OFFER_COUNT, false)) {
@@ -124,15 +126,17 @@ public class TradeMenu extends AbstractContainerMenu {
         if (isOwnOfferSlot(slotId) && !canEditOwnOffer(player)) {
             return;
         }
+        if (!canEditOwnOffer(player)) return;
         super.clicked(slotId, button, clickType, player);
+        if(player instanceof ServerPlayer p)TradeCustody.capture(p);
     }
 
     @Override
     public void removed(Player player) {
-        super.removed(player);
         if (!player.level().isClientSide() && session != null && player instanceof ServerPlayer serverPlayer && session.canCancelFromMenuClose(serverPlayer)) {
             session.cancelFromMenuClose(serverPlayer);
         }
+        super.removed(player);
     }
 
     @Override
@@ -176,7 +180,7 @@ public class TradeMenu extends AbstractContainerMenu {
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return canEditOwnOffer(self);
+            return canEditOwnOffer(self) && net.goui.cosmicdungeon.economy.pricing.ItemTransferRules.tradeEligible(stack);
         }
 
         @Override

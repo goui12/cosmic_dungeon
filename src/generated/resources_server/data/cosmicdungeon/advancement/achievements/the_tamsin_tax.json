@@ -1,0 +1,26 @@
+{
+  "parent": "cosmicdungeon:root",
+  "criteria": {
+    "triggered": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": "",
+    "hidden": true,
+    "icon": {
+      "count": 1,
+      "id": "minecraft:paper"
+    },
+    "title": {
+      "translate": "advancements.cosmicdungeon.achievements.the_tamsin_tax.title"
+    }
+  },
+  "requirements": [
+    [
+      "triggered"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

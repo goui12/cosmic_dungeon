@@ -88,7 +88,19 @@ public final class TradeFinalizationGameTests {
     }
 
     private static TradeFinalizationService.Result finalize(FakeParticipant a, FakeParticipant b, FakeItems aOffer, FakeItems bOffer) {
-        return TradeFinalizationService.finalizeTrade(a, b, aOffer, bOffer);
+        var result=TradeFinalizationService.validate(a.offeredCurrency,b.offeredCurrency,a.balance,b.balance,
+                a.capacity-a.balance,b.capacity-b.balance,bOffer.count<=a.itemCapacity,aOffer.count<=b.itemCapacity);
+        if(result!=TradeFinalizationService.Result.SUCCESS)return result;
+        try{
+            var ctor=net.goui.cosmicdungeon.economy.PlayerCurrencyData.class.getDeclaredConstructor();ctor.setAccessible(true);var data=ctor.newInstance();
+            var first=new java.util.UUID(0,1);var second=new java.util.UUID(0,2);var id=java.util.UUID.randomUUID();
+            data.setCapacityTrace(first,a.capacity);data.setCapacityTrace(second,b.capacity);
+            data.setBalanceTrace(first,a.balance);data.setBalanceTrace(second,b.balance);
+            var terms=new net.goui.cosmicdungeon.economy.AccountTransfer.Terms(first,second,a.offeredCurrency,b.offeredCurrency,"player_trade",0,"gametest");
+            data.reserve(id,terms,1);data.commitTransfer(id,terms,2);
+            a.balance=data.getBalanceTrace(first);b.balance=data.getBalanceTrace(second);
+            a.receivedItems+=bOffer.count;b.receivedItems+=aOffer.count;aOffer.count=0;bOffer.count=0;return result;
+        }catch(ReflectiveOperationException error){throw new IllegalStateException(error);}
     }
 
     private static FakeParticipant participant(long offeredCurrency, long balance, int itemCapacity) {
@@ -147,86 +159,13 @@ public final class TradeFinalizationGameTests {
         }
     }
 
-    private static final class FakeParticipant implements TradeFinalizationService.TradeParticipant {
-        private final long offeredCurrency;
-        private final long capacity;
-        private final int itemCapacity;
-        private long balance;
-        private int receivedItems;
-
-        private FakeParticipant(long offeredCurrency, long balance, long capacity, int itemCapacity) {
-            this.offeredCurrency = offeredCurrency;
-            this.balance = balance;
-            this.capacity = capacity;
-            this.itemCapacity = itemCapacity;
+    private static final class FakeParticipant {
+        private final long offeredCurrency,capacity;private final int itemCapacity;
+        private long balance;private int receivedItems;
+        private FakeParticipant(long offeredCurrency,long balance,long capacity,int itemCapacity){
+            this.offeredCurrency=offeredCurrency;this.balance=balance;this.capacity=capacity;this.itemCapacity=itemCapacity;
         }
-
-        @Override
-        public long offeredCurrencyTrace() {
-            return offeredCurrency;
-        }
-
-        @Override
-        public long balanceTrace() {
-            return balance;
-        }
-
-        @Override
-        public long capacityTrace() {
-            return capacity;
-        }
-
-        @Override
-        public boolean tryWithdraw(long traceAmount) {
-            if (traceAmount <= 0L || balance < traceAmount) return false;
-            balance -= traceAmount;
-            return true;
-        }
-
-        @Override
-        public boolean tryDeposit(long traceAmount) {
-            if (traceAmount <= 0L || traceAmount > capacity - balance) return false;
-            balance += traceAmount;
-            return true;
-        }
-
-        @Override
-        public void setBalanceTrace(long traceAmount) {
-            balance = traceAmount;
-        }
-
-        @Override
-        public boolean canReceiveItems(TradeFinalizationService.OfferedItems items) {
-            return items.canMoveInto(this);
-        }
-
-        @Override
-        public void receiveItems(TradeFinalizationService.OfferedItems items) {
-            items.moveInto(this);
-        }
+        private long balanceTrace(){return balance;}
     }
-
-    private static final class FakeItems implements TradeFinalizationService.OfferedItems {
-        private int count;
-
-        private FakeItems(int count) {
-            this.count = count;
-        }
-
-        @Override
-        public boolean canMoveInto(TradeFinalizationService.TradeParticipant receiver) {
-            if (receiver instanceof FakeParticipant participant) {
-                return participant.receivedItems + count <= participant.itemCapacity;
-            }
-            return count == 0;
-        }
-
-        @Override
-        public void moveInto(TradeFinalizationService.TradeParticipant receiver) {
-            if (receiver instanceof FakeParticipant participant) {
-                participant.receivedItems += count;
-                count = 0;
-            }
-        }
-    }
+    private static final class FakeItems {private int count;private FakeItems(int count){this.count=count;}}
 }

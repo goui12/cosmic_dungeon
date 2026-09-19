@@ -82,6 +82,7 @@ public final class BloomSharedAdvancements {
             return;
         }
 
+        if(run.dungeonId().equals("dungeon_1")&&!net.goui.cosmicdungeon.dungeon.d1.D1Members.inside(sp,run))return;
         long curr = computeBloomMask(sp);
         long prev = LAST_MASK.getOrDefault(sp.getUUID(), -1L);
 
@@ -92,6 +93,38 @@ public final class BloomSharedAdvancements {
             }
             LAST_MASK.put(sp.getUUID(), curr);
         }
+        if (run.dungeonId().equals("dungeon_1")) {
+            var server=sp.level().getServer();
+            var objectives=net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(server);
+            long now=server.overworld().getGameTime();
+            for(Bloom bloom:Bloom.values()){
+                if((curr&(1L<<bloom.ordinal()))!=0&&objectives.recordUnique(run.runId(),"spectral_seen",bloom.name()))
+                    objectives.setValue(run.runId(),"spectral_time:"+bloom.name(),Long.toString(now));
+            }
+            if(net.goui.cosmicdungeon.dungeon.d1.D1Members.inside(sp,run)){
+                long lastActive=net.goui.cosmicdungeon.dungeon.DungeonAfkService.lastActive(sp.getUUID());
+                long window=net.goui.cosmicdungeon.Config.BLOOM_ACTIVITY_WINDOW_SECONDS.get()*20L;
+                String credit="spectral_credit:"+sp.getUUID();
+                for(Bloom bloom:Bloom.values()){
+                    var times=objectives.values(run.runId(),"spectral_time:"+bloom.name());
+                    if(times.isEmpty())continue;
+                    long collected;
+                    try{collected=Long.parseLong(times.getFirst());}catch(NumberFormatException bad){continue;}
+                    if(lastActive>=collected-window&&lastActive<=collected+window
+                            &&objectives.recordUnique(run.runId(),credit,bloom.name())){
+                        var holder=getAdvancement(server,bloom);
+                        if(holder!=null)sp.getAdvancements().award(holder,"shared");
+                    }
+                }
+                net.goui.cosmicdungeon.dungeon.d1.D1Scoreboards.update(sp,objectives.values(run.runId(),credit).size(),
+                        objectives.count(run.runId(),"lesser:"+sp.getUUID()));
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void stopped(net.neoforged.neoforge.event.server.ServerStoppedEvent event){
+        LAST_MASK.clear();ADV_CACHE.clear();
     }
 
     public static void clearTemporaryBloomProgress(MinecraftServer server, ServerPlayer sp) {

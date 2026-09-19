@@ -12,9 +12,15 @@ public final class FactionDefinitions {
     public static final ResourceLocation JHW_ID = ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "jhw");
 
     public static final FactionDefinition JHW = buildJhw();
+    public static final ResourceLocation NPC_ID = ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "npc_vendor");
+    public static final FactionDefinition NPC = new FactionDefinition(NPC_ID, -100, 100, 0, Map.of(
+            FactionTier.HOSTILE, new FactionDefinition.Range(-100, 4),
+            FactionTier.CORDIAL, new FactionDefinition.Range(5, 49),
+            FactionTier.WARMLY, new FactionDefinition.Range(50, 99),
+            FactionTier.ALLY, new FactionDefinition.Range(100, 100)));
 
     private static final Map<ResourceLocation, FactionDefinition> BY_ID = Map.of(
-            JHW.id(), JHW
+            JHW.id(), JHW, NPC.id(), NPC
     );
 
     public static FactionDefinition get(ResourceLocation id) {

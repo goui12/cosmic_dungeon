@@ -18,7 +18,8 @@ public final class VendorPurchaseLimitData extends SavedData {
     private static final Codec<Map<String, Integer>> PURCHASES_CODEC = Codec.unboundedMap(Codec.STRING, Codec.INT);
 
     private static final Codec<VendorPurchaseLimitData> CODEC = RecordCodecBuilder.create(inst -> inst.group(
-            PURCHASES_CODEC.optionalFieldOf("purchases", Map.of()).forGetter(data -> data.purchasesByKey)
+            PURCHASES_CODEC.optionalFieldOf("purchases", Map.of()).forGetter(data -> data.purchasesByKey),
+            Codec.LONG.optionalFieldOf("stock_day", Long.MIN_VALUE).forGetter(data -> data.stockDay)
     ).apply(inst, VendorPurchaseLimitData::fromCodec));
 
     public static final SavedDataType<VendorPurchaseLimitData> TYPE = new SavedDataType<>(
@@ -29,10 +30,17 @@ public final class VendorPurchaseLimitData extends SavedData {
 
     private final Map<String, Integer> purchasesByKey = new HashMap<>();
 
+    private long stockDay = Long.MIN_VALUE;
     private VendorPurchaseLimitData() {}
+    private void morning(long day) {
+        if (stockDay == Long.MIN_VALUE) { stockDay = day; setDirty(); }
+        else if (day > stockDay) { purchasesByKey.clear(); stockDay = day; setDirty(); }
+        // Time rollback cannot manufacture extra stock.
+    }
 
-    private static VendorPurchaseLimitData fromCodec(Map<String, Integer> purchases) {
+    private static VendorPurchaseLimitData fromCodec(Map<String, Integer> purchases, long stockDay) {
         VendorPurchaseLimitData data = new VendorPurchaseLimitData();
+        data.stockDay = stockDay;
         if (purchases != null) {
             purchases.forEach((key, count) -> {
                 if (key != null && !key.isBlank() && count != null && count > 0) {
@@ -46,8 +54,12 @@ public final class VendorPurchaseLimitData extends SavedData {
     public static VendorPurchaseLimitData get(MinecraftServer server) {
         if (server == null) throw new IllegalArgumentException("server is null");
         ServerLevel overworld = server.overworld();
-        return overworld.getDataStorage().computeIfAbsent(TYPE);
+        var data = overworld.getDataStorage().computeIfAbsent(TYPE);
+        data.morning(Math.floorDiv(overworld.getDayTime(), 24000L));
+        return data;
     }
+
+    public long stockDay(){return stockDay;}
 
     public int getPurchaseCount(UUID playerId, ResourceLocation profileId, ResourceLocation offerId) {
         if (playerId == null || profileId == null || offerId == null) return 0;

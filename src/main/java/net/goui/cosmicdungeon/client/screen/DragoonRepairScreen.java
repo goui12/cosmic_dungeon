@@ -56,7 +56,7 @@ public class DragoonRepairScreen extends AbstractContainerScreen<DragoonRepairMe
             final int units = i;
             addRenderableWidget(repairButton(x + 24 + (i - 1) * 52, y + 116, label(i), () -> canCustomerEdit() && hasRepairItem(), () -> currentUnits() == units, () -> ModNetwork.sendToServer(new DragoonRepairPayloads.C2S_SelectUnits(units))));
         }
-        addRenderableWidget(repairButton(x + 34, y + 140, "Ready", () -> canCustomerEdit(), () -> currentViewReady(), () -> ModNetwork.sendToServer(new DragoonRepairPayloads.C2S_TargetReady(true))));
+        addRenderableWidget(repairButton(x + 34, y + 140, "Ready", () -> canConfirmReady(), () -> currentViewReady(), () -> ModNetwork.sendToServer(new DragoonRepairPayloads.C2S_TargetReady(true))));
         addRenderableWidget(repairButton(x + 158, y + 140, "Repair", () -> canDragoonRepair(), () -> false, () -> ModNetwork.sendToServer(new DragoonRepairPayloads.C2S_Repair())));
         addRenderableWidget(repairButton(x + 96, y + 8, "Cancel", () -> RepairClientState.currentFor(menu.containerId) != null, () -> false, () -> ModNetwork.sendToServer(new DragoonRepairPayloads.C2S_Cancel())));
     }
@@ -81,12 +81,16 @@ public class DragoonRepairScreen extends AbstractContainerScreen<DragoonRepairMe
 
     private boolean canCustomerEdit() {
         RepairClientState.View view = RepairClientState.currentFor(menu.containerId);
-        return view != null && !view.viewerDragoon() && !view.targetReady() && !view.dragoonRepairing();
+        return view != null && !view.viewerDragoon() && !view.targetReady() && !view.dragoonReady() && !view.dragoonRepairing();
     }
 
+    private boolean canConfirmReady() {
+        var view=RepairClientState.currentFor(menu.containerId);
+        return view!=null && !view.dragoonRepairing() && !(view.viewerDragoon()?view.dragoonReady():view.targetReady());
+    }
     private boolean canDragoonRepair() {
         RepairClientState.View view = RepairClientState.currentFor(menu.containerId);
-        return view != null && view.viewerDragoon() && view.targetReady() && !view.dragoonRepairing();
+        return view != null && view.viewerDragoon() && view.targetReady() && view.dragoonReady() && !view.dragoonRepairing();
     }
 
     private boolean hasRepairItem() {
@@ -101,7 +105,7 @@ public class DragoonRepairScreen extends AbstractContainerScreen<DragoonRepairMe
 
     private boolean currentViewReady() {
         RepairClientState.View view = RepairClientState.currentFor(menu.containerId);
-        return view != null && view.targetReady();
+        return view != null && (view.viewerDragoon()?view.dragoonReady():view.targetReady());
     }
 
     private static String label(int i) { return switch (i) { case 1 -> "Light"; case 2 -> "Standard"; case 3 -> "Heavy"; default -> "Full"; }; }
@@ -121,7 +125,7 @@ public class DragoonRepairScreen extends AbstractContainerScreen<DragoonRepairMe
         g.drawString(font, "Fee: " + CurrencyAmount.ofTrace(v.offeredFeeTrace()).formatNormalized(), 22, 82, 0x404040, false);
         g.drawString(font, "Dragoon: " + v.dragoonName(), 132, 48, 0x404040, false);
         g.drawString(font, "Material: " + v.materialDisplay() + " x" + v.requiredMaterialCount(), 132, 66, v.dragoonHasMaterial() ? 0x007700 : 0xAA0000, false);
-        g.drawString(font, "Units: " + v.selectedUnits() + "/" + v.requiredUnitsToFull(), 94, 111, 0x404040, false);
+        g.drawString(font, "Repair: " + (v.selectedUnits()*25) + "%", 94, 111, 0x404040, false);
         g.drawString(font, v.targetReady() ? "Customer ready" : "Customer not ready", 132, 84, v.targetReady() ? 0x007700 : 0xAA0000, false);
         g.drawString(font, v.statusMessage(), 22, 154, 0x404040, false);
     }
@@ -171,6 +175,6 @@ public class DragoonRepairScreen extends AbstractContainerScreen<DragoonRepairMe
         public static View current() { return current; }
         public static View currentFor(int containerId) { return current != null && current.containerId() == containerId ? current : null; }
         private static boolean isCurrentRepairContainer(int containerId) { Screen screen = Minecraft.getInstance().screen; return screen instanceof DragoonRepairScreen repairScreen && repairScreen.containerId() == containerId; }
-        public record View(int containerId, UUID sessionId, String dragoonName, String targetName, boolean viewerDragoon, long offeredFeeTrace, long targetBalanceTrace, long dragoonCapacityTrace, int selectedUnits, int requiredUnitsToFull, String materialItemId, String materialDisplay, int requiredMaterialCount, boolean dragoonHasMaterial, boolean targetReady, boolean dragoonRepairing, String statusMessage) {}
+        public record View(int containerId, UUID sessionId, String dragoonName, String targetName, boolean viewerDragoon, long offeredFeeTrace, long targetBalanceTrace, long dragoonCapacityTrace, int selectedUnits, int requiredUnitsToFull, String materialItemId, String materialDisplay, int requiredMaterialCount, boolean dragoonHasMaterial, boolean targetReady, boolean dragoonReady, boolean dragoonRepairing, String statusMessage) {}
     }
 }

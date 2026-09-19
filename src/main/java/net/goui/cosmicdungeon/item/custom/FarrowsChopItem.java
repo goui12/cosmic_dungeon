@@ -16,9 +16,10 @@ public class FarrowsChopItem extends Item {
     @Override
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
         if (!(entity instanceof ServerPlayer sp)) return stack;
+        var hand=sp.getUsedItemHand();
         if (!FarrowsChopTravelService.returnToDungeon(sp, stack)) return stack;
 
         sp.awardStat(Stats.ITEM_USED.get(this));
-        return stack;
+        return sp.getItemInHand(hand);
     }
 }

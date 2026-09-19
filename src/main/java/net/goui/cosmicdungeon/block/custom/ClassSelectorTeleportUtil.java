@@ -36,54 +36,42 @@ public final class ClassSelectorTeleportUtil {
         CompoundTag pend = new CompoundTag();
         pend.putString(PD_DIM, level.dimension().location().toString());
         pend.putLong(PD_POS, pos.asLong());
-        pend.putLong(PD_EXPIRES, level.getGameTime() + 20L * 30L); // 30s TTL
+        pend.putLong(PD_EXPIRES, level.getGameTime() + 20L * net.goui.cosmicdungeon.Config.SELECTOR_SESSION_SECONDS.get()); // Configured session TTL
 
         root.put(PD_PENDING_SEL, pend);
         sp.getPersistentData().put(PD_ROOT, root);
     }
 
-    /**
-     * Called after class selection succeeds on server.
-     * Now: registers "ready" for this selector block; teleports only when ready hits max.
-     */
-    public static void onClassSelected(ServerPlayer sp, String classId) {
-        if (sp == null) return;
-        if (!(sp.level() instanceof ServerLevel currentLevel)) return;
+    public static boolean validSession(ServerPlayer player) {
+        return !AccessPolicy.isDeveloper(player)
+                && player.containerMenu instanceof net.goui.cosmicdungeon.menu.ClassSelectorMenu menu
+                && menu.stillValid(player)
+                && net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.canReady(
+                        net.goui.cosmicdungeon.npc.tamsin.TamsinService.accepted(player), menu.stage());
+    }
 
-        CompoundTag pd = sp.getPersistentData();
-        CompoundTag root = pd.getCompoundOrEmpty(PD_ROOT);
-        CompoundTag pend = root.getCompoundOrEmpty(PD_PENDING_SEL);
-        if (pend.isEmpty()) return;
+    public static boolean validSelectionSession(ServerPlayer player) {
+        return validSession(player)
+                && ((net.goui.cosmicdungeon.menu.ClassSelectorMenu) player.containerMenu).stage()
+                == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.SELECTOR;
+    }
 
-        long expires = pend.getLongOr(PD_EXPIRES, -1L);
-        if (expires < 0L || currentLevel.getGameTime() > expires) {
-            clearPending(pd);
-            return;
-        }
+    public static boolean validSourceSession(ServerPlayer player){
+        if(!(player.containerMenu instanceof net.goui.cosmicdungeon.menu.ClassSelectorMenu)||!player.isAlive()||player.isSpectator())return false;
+        if(net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData.get(player.level().getServer()).findRunForPlayer(player.getUUID()).isPresent())return false;
+        var pending=player.getPersistentData().getCompoundOrEmpty(PD_ROOT).getCompoundOrEmpty(PD_PENDING_SEL);
+        if(pending.isEmpty()||pending.getLongOr(PD_EXPIRES,-1)<player.level().getGameTime()
+                ||!pending.getStringOr(PD_DIM,"").equals(player.level().dimension().location().toString()))return false;
+        var pos=BlockPos.of(pending.getLongOr(PD_POS,0));
+        double range=net.goui.cosmicdungeon.Config.SELECTOR_RANGE.get();
+        return player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(pos))<=range*range
+                &&player.level().getBlockEntity(pos) instanceof ClassSelectorBlockEntity;
+    }
 
-        String dimStr = pend.getStringOr(PD_DIM, "");
-        long posLong = pend.getLongOr(PD_POS, 0L);
-        clearPending(pd);
-
-        if (dimStr.isBlank() || posLong == 0L) return;
-
-        MinecraftServer server = currentLevel.getServer();
-        if (server == null) return;
-
-        ServerLevel selectorLevel = resolveLevel(server, dimStr);
-        if (selectorLevel == null) return;
-
-        BlockPos selectorPos = BlockPos.of(posLong);
-        BlockEntity be = selectorLevel.getBlockEntity(selectorPos);
-        if (!(be instanceof ClassSelectorBlockEntity csbe)) return;
-
-        if (!isReadyEligibleClass(classId)) {
-            ClassSelectorReadyManager.rejectReadySelection(sp, selectorLevel, selectorPos, csbe);
-            return;
-        }
-
-        // Register ready; teleports everyone automatically when ready hits max.
-        ClassSelectorReadyManager.markReady(sp, selectorLevel, selectorPos, csbe, classId);
+    public record SelectorSource(String dimId, long posLong) {}
+    public static SelectorSource pendingSource(ServerPlayer player) {
+        var pending = player.getPersistentData().getCompoundOrEmpty(PD_ROOT).getCompoundOrEmpty(PD_PENDING_SEL);
+        return pending.isEmpty() ? null : new SelectorSource(pending.getStringOr(PD_DIM, ""), pending.getLongOr(PD_POS, 0));
     }
 
     public static boolean isReadyEligibleClass(String classId) {

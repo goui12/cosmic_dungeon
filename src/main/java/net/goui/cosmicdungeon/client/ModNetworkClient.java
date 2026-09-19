@@ -47,6 +47,14 @@ public final class ModNetworkClient {
         ClassSelectorScreen.onSelectorData(payload);
     }
 
+    public static void onTamsinTaxView(net.goui.cosmicdungeon.network.TamsinTaxPayloads.View payload) {
+        ClassSelectorScreen.onTaxView(payload);
+    }
+
+    public static void onD1PartyView(net.goui.cosmicdungeon.network.PartyPayloads.View payload) {
+        ClassSelectorScreen.onPartyView(payload);
+    }
+
     public static void onClassSelectorResult(ClassPayloads.S2C_SelectResult payload) {
         ClassSelectorScreen.onSelectResult(payload);
     }
@@ -89,6 +97,10 @@ public final class ModNetworkClient {
         ));
     }
 
+    public static void onVendorSaleQuote(VendorPayloads.S2C_VendorSaleQuote payload) {
+        if (Minecraft.getInstance().screen instanceof VendorScreen screen) screen.showSaleQuote(payload);
+    }
+
     public static void onVendorPurchaseResult(VendorPayloads.S2C_VendorPurchaseResult payload) {
         var current = VendorClientState.current();
         if (current != null) {
@@ -122,7 +134,7 @@ public final class ModNetworkClient {
     public static void onDragoonRepairState(DragoonRepairPayloads.S2C_State payload) {
         boolean accepted = RepairClientState.setIfCurrent(
                 payload.containerId(),
-                new RepairClientState.View(payload.containerId(), payload.sessionId(), payload.dragoonName(), payload.targetName(), payload.viewerDragoon(), payload.offeredFeeTrace(), payload.targetBalanceTrace(), payload.dragoonCapacityTrace(), payload.selectedUnits(), payload.requiredUnitsToFull(), payload.materialItemId(), payload.materialDisplay(), payload.requiredMaterialCount(), payload.dragoonHasMaterial(), payload.targetReady(), payload.dragoonRepairing(), payload.statusMessage())
+                new RepairClientState.View(payload.containerId(), payload.sessionId(), payload.dragoonName(), payload.targetName(), payload.viewerDragoon(), payload.offeredFeeTrace(), payload.targetBalanceTrace(), payload.dragoonCapacityTrace(), payload.selectedUnits(), payload.requiredUnitsToFull(), payload.materialItemId(), payload.materialDisplay(), payload.requiredMaterialCount(), payload.dragoonHasMaterial(), payload.targetReady(), payload.dragoonReady(), payload.dragoonRepairing(), payload.statusMessage())
         );
         if (!accepted) {
             LOGGER.debug("Ignoring Dragoon Repair state for inactive container {}", payload.containerId());

@@ -8,5 +8,35 @@
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "mixins": [
+    "RepairIngredientMixin",
+    "RepairRecipeMixin",
+    "RepairFuelMixin",
+    "BogatyrTeleportMixin",
+    "BogatyrFollowMixin",
+    "BogatyrBreedMixin",
+    "D1ArrowMixin",
+    "D1SpectralArrowMixin",
+    "D1RocketMixin",
+    "InnRespawnMixin",
+    "D1CandleMixin",
+    "VendorRemainderMixin",
+    "ProtectedItemMenuMixin",
+    "ProtectedItemDropMixin",
+    "ProtectedItemDeathMixin",
+    "ProtectedItemCloneMixin",
+    "OwnedItemPickupMixin",
+    "ProtectedItemHopperMixin",
+    "ProtectedItemDispenserMixin",
+    "OwnedItemMobPickupMixin",
+    "ProtectedItemOverflowMixin",
+    "ProtectedItemReturnMenuMixin",
+    "D1BellMixin",
+    "D1JournalOpenMixin",
+    "BogatyrGrowthMixin",
+    "BogatyrMateMixin",
+    "BogatyrLifecycleMixin",
+    "RepairCustodySaveMixin"
+  ]
 }

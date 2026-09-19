@@ -198,3 +198,16 @@ if (cfToken && cfProjectId) {
 } else {
     logger.lifecycle("[curseforge] Token or projectId not provided; publish task will be skipped.")
 }
+
+
+// NeoForge attaches its compile API to main; offline tests need that same existing API.
+sourceSets.test.compileClasspath += sourceSets.main.compileClasspath
+sourceSets.test.runtimeClasspath += sourceSets.main.compileClasspath
+
+// Offline D1 rule/config checks. Does not start Minecraft, a client, or a server.
+tasks.register('d1OfflineChecks', JavaExec) {
+    dependsOn tasks.testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'net.goui.cosmicdungeon.dungeon.d1.D1OfflineChecks'
+    args layout.projectDirectory.dir('docs/config-examples').asFile.absolutePath
+}

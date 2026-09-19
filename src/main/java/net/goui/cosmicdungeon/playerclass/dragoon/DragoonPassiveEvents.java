@@ -1,6 +1,7 @@
 package net.goui.cosmicdungeon.playerclass.dragoon;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
+import net.goui.cosmicdungeon.Config;
 import net.goui.cosmicdungeon.particle.ModParticleTypes;
 import net.goui.cosmicdungeon.playerclass.api.ClassData;
 import net.goui.cosmicdungeon.playerclass.api.ClassKeys;
@@ -23,13 +24,12 @@ import java.util.Set;
 
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID)
 public final class DragoonPassiveEvents {
-    private static final double CHANCE = 0.03D;
-    private static final double RANGE = 3.0D;
-    private static final int MAX_TARGETS = 7;
     private static final int PARTICLES_PER_ARC = 10;
     private static final ThreadLocal<Boolean> CHAINING = ThreadLocal.withInitial(() -> false);
 
     private DragoonPassiveEvents() {}
+    public static boolean chaining() { return CHAINING.get(); }
+
 
     @SubscribeEvent
     public static void onLivingDamagePost(LivingDamageEvent.Post event) {
@@ -39,8 +39,11 @@ public final class DragoonPassiveEvents {
         DamageSource source = event.getSource();
         if (!(source.getEntity() instanceof ServerPlayer dragoon)) return;
         if (!ClassKeys.CLASS_ID_DRAGOON.equals(ClassData.getClassId(dragoon))) return;
-        float damage = event.getNewDamage();
-        if (damage <= 0.0F || dragoon.getRandom().nextDouble() >= CHANCE) return;
+        boolean trident = source.getDirectEntity() instanceof net.minecraft.world.entity.projectile.ThrownTrident
+                || source.getDirectEntity() == dragoon && dragoon.getMainHandItem().is(net.minecraft.world.item.Items.TRIDENT);
+        if (!trident) return;
+        float damage = (float)(event.getNewDamage() * Config.CHAIN_DAMAGE.get());
+        if (damage <= 0.0F || dragoon.getRandom().nextDouble() >= Config.CHAIN_CHANCE.get()) return;
 
         List<Mob> targets = collectTargets(level, dragoon, initialTarget);
         if (targets.isEmpty()) return;
@@ -59,25 +62,32 @@ public final class DragoonPassiveEvents {
     }
 
     private static List<Mob> collectTargets(ServerLevel level, ServerPlayer dragoon, Mob initialTarget) {
-        AABB box = dragoon.getBoundingBox().inflate(RANGE, RANGE, RANGE);
-        List<Mob> nearby = level.getEntitiesOfClass(Mob.class, box, mob ->
-                mob.isAlive()
-                        && mob != initialTarget
-                        && !mob.isAlliedTo(dragoon)
-                        && dragoon.distanceToSqr(mob) <= RANGE * RANGE
-        );
-        for (int i = nearby.size() - 1; i > 0; i--) {
-            Collections.swap(nearby, i, dragoon.getRandom().nextInt(i + 1));
+        double range=Config.CHAIN_RADIUS.get();
+        return level.getEntitiesOfClass(Mob.class, dragoon.getBoundingBox().inflate(range), mob ->
+                mob.isAlive() && mob != initialTarget && mob instanceof net.minecraft.world.entity.monster.Enemy
+                        && !mob.isAlliedTo(dragoon) && dragoon.distanceToSqr(mob)<=range*range
+                        && dragoon.hasLineOfSight(mob))
+                .stream().sorted(java.util.Comparator.comparingDouble(dragoon::distanceToSqr))
+                .limit(Config.CHAIN_TARGET_LIMIT.get()).toList();
+    }
+
+    @SubscribeEvent
+    public static void passiveRepair(net.neoforged.neoforge.event.tick.PlayerTickEvent.Post event) {
+        if (!(event.getEntity() instanceof ServerPlayer player) || !ClassKeys.CLASS_ID_DRAGOON.equals(ClassData.getClassId(player))
+                || !player.isAlive() || player.isSpectator()
+                || player.level().getServer().overworld().getGameTime() % (20L*Config.REPAIR_POLL_SECONDS.get()) != 0) return;
+        for (var slot : new net.minecraft.world.entity.EquipmentSlot[]{
+                net.minecraft.world.entity.EquipmentSlot.HEAD,net.minecraft.world.entity.EquipmentSlot.CHEST,
+                net.minecraft.world.entity.EquipmentSlot.LEGS,net.minecraft.world.entity.EquipmentSlot.FEET}) {
+            var stack=player.getItemBySlot(slot);
+            double cost=Config.PASSIVE_REPAIR_HEALTH_COST.get();
+            if (player.getHealth() <= player.getMaxHealth()*Config.PASSIVE_REPAIR_HEALTH_GATE.get()
+                    || player.getHealth() <= cost) break;
+            if (!net.goui.cosmicdungeon.playerclass.dragoon.repair.DragoonRepairRules.isSupportedDamagedItem(stack)) continue;
+            stack.setDamageValue(stack.getDamageValue()-1);
+            player.setHealth((float)(player.getHealth()-cost));
+            player.getInventory().setChanged();
         }
-        List<Mob> ordered = new ArrayList<>(Math.min(MAX_TARGETS, nearby.size() + 1));
-        Set<Mob> used = new HashSet<>();
-        ordered.add(initialTarget);
-        used.add(initialTarget);
-        for (Mob mob : nearby) {
-            if (ordered.size() >= MAX_TARGETS) break;
-            if (used.add(mob)) ordered.add(mob);
-        }
-        return ordered;
     }
 
     private static void spawnLightningArc(ServerLevel level, LivingEntity from, LivingEntity to) {

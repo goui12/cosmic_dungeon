@@ -56,6 +56,27 @@ public final class ModDataComponents {
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<DungeonReturnTarget>> DUNGEON_RETURN_TARGET =
             register("dungeon_return_target", b -> b.persistent(DungeonReturnTarget.CODEC));
 
+    /** Authoritative shop repair identity; ordinary materials and starter chest contents remain unmarked. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<String>> REPAIR_COMPONENT =
+            register("repair_component", b -> b.persistent(Codec.STRING));
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<UUID>> CHOP_OWNER =
+            register("chop_owner", b -> b.persistent(UUID_STRING_CODEC));
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<UUID>> CHOP_TOKEN =
+            register("chop_token", b -> b.persistent(UUID_STRING_CODEC));
+
+    /** Stable optional ability identity; existing authored vanilla ammunition keeps its data unchanged. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<String>> D1_ABILITY =
+            register("d1_ability", b -> b.persistent(Codec.STRING));
+
+    /** Conversion provenance: maximum vendor purchase value per unit; player trade remains unrestricted. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Long>> VENDOR_PURCHASE_CAP =
+            register("vendor_purchase_cap", b -> b.persistent(Codec.LONG));
+
+    /** Additive trusted origin/identity; unknown versions stay stored and fail closed in transactions. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<String>> ITEM_PROVENANCE =
+            register("item_provenance", b -> b.persistent(Codec.STRING));
+
     private static <T> DeferredHolder<DataComponentType<?>, DataComponentType<T>> register(
             String name, UnaryOperator<DataComponentType.Builder<T>> builderOp) {
         return DATA_COMPONENT_TYPES.register(name, () -> builderOp.apply(DataComponentType.builder()).build());

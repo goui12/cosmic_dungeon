@@ -21,7 +21,7 @@ public final class ClassSelectorBlockEntity extends BlockEntity {
             Codec.unboundedMap(Codec.STRING, Codec.STRING);
 
     private String destinationName = ""; // legacy/fallback
-    private int maxPlayers = 2; // default
+    private int maxPlayers = 3; // default
 
     /** slotNumber (1..64) -> destination name */
     private final Map<String, String> slotDestinations = new HashMap<>();
@@ -48,11 +48,11 @@ public final class ClassSelectorBlockEntity extends BlockEntity {
     /* ---------------- Max players ---------------- */
 
     public int getMaxPlayers() {
-        return Math.max(1, maxPlayers);
+        return Math.max(net.goui.cosmicdungeon.Config.MIN_PARTY.get(), Math.min(6,maxPlayers));
     }
 
     public void setMaxPlayers(int count) {
-        this.maxPlayers = Math.max(1, Math.min(6, count));
+        this.maxPlayers = Math.max(net.goui.cosmicdungeon.Config.MIN_PARTY.get(), Math.min(6, count));
         markChangedAndSync();
     }
 
@@ -125,7 +125,7 @@ public final class ClassSelectorBlockEntity extends BlockEntity {
         super.loadAdditional(input);
 
         this.destinationName = input.getString(TAG_DEST).orElse("");
-        this.maxPlayers = input.getIntOr(TAG_MAX_PLAYERS, 2);
+        this.maxPlayers = input.getIntOr(TAG_MAX_PLAYERS, 3);
         if (this.maxPlayers < 1) this.maxPlayers = 1;
         if (this.maxPlayers > 6) this.maxPlayers = 6;
 

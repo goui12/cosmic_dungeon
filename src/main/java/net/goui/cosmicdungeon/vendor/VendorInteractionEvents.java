@@ -33,6 +33,9 @@ public final class VendorInteractionEvents {
             return;
         }
 
+        if(net.goui.cosmicdungeon.npc.inn.InnService.isBeluzon(vendor)){
+            net.goui.cosmicdungeon.npc.inn.InnService.offer(sp,vendor);return;
+        }
         VendorMenuState.UnlockResult unlockResult = VendorMenuState.unlockState(sp, profile);
         if (!unlockResult.unlocked()) {
             sp.sendSystemMessage(Component.literal("Vendor locked: ").withStyle(ChatFormatting.RED)
@@ -43,13 +46,13 @@ public final class VendorInteractionEvents {
         }
 
         VendorPayloads.S2C_OpenVendor open = VendorService.buildOpenPayload(sp, vendor, profile);
-        sp.openMenu(new VendorProvider(profile.displayName()));
+        sp.openMenu(new VendorProvider(profile.displayName(),vendor));
         sp.connection.send(open);
     }
 
-    private record VendorProvider(String title) implements MenuProvider {
+    private record VendorProvider(String title,Entity vendor) implements MenuProvider {
         @Override public Component getDisplayName() { return Component.literal(title); }
-        @Override public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) { return new VendorMenu(id, inv); }
+        @Override public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) { return new VendorMenu(id, inv,vendor); }
         @Override public void writeClientSideData(AbstractContainerMenu menu, net.minecraft.network.RegistryFriendlyByteBuf buf) {}
         @Override public boolean shouldTriggerClientSideContainerClosingOnOpen() { return true; }
     }
