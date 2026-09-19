@@ -25,7 +25,7 @@ public final class Config {
     public static final ModConfigSpec.IntValue MUSIC_DISC_COUNT;
     public static final ModConfigSpec.IntValue CANDLE_COLOR_COUNT;
     public static final ModConfigSpec.DoubleValue WATSON_RADIUS;
-    public static final ModConfigSpec.IntValue WATSON_POLL_TICKS;
+    public static final ModConfigSpec.IntValue WATSON_POLL_TICKS, WATSON_RECOVERY_POLL_TICKS;
     public static final ModConfigSpec.BooleanValue INSTANT_BREWING;
     public static final ModConfigSpec.IntValue BREW_TICKS;
     public static final ModConfigSpec.DoubleValue CHAIN_CHANCE;
@@ -135,6 +135,8 @@ public final class Config {
                 .defineInRange("gatheringRadius", 16.0, 1.0, 128.0);
         WATSON_POLL_TICKS = B.comment("Server ticks between bounded checks of configured Watson locations.")
                 .defineInRange("gatheringPollTicks", 20, 1, 1200);
+        WATSON_RECOVERY_POLL_TICKS = B.comment("Ticks between recovery attempts; at most one pending outcome per poll. Offline inputs wait without disk retries.")
+                .defineInRange("outcomeRecoveryPollTicks", 100, 20, 1200);
         B.pop();
         B.push("Economy");
         ACCOUNT_CAPACITY = B.comment("Trace; source 17ufIuIy0VhLmB_V-6sZ7sCaUCZuGZUkHrgJLVpEcS28.",

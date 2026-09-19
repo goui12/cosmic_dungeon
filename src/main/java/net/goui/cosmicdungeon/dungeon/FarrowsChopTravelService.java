@@ -152,7 +152,7 @@ public final class FarrowsChopTravelService {
     }
 
     public static void syncOutsideInventory(ServerPlayer player) {
-        if (player == null || ChopTravelRecovery.blocked(player) || DungeonInventoryHandoffs.blocked(player)) return;
+        if (player == null || net.goui.cosmicdungeon.dungeon.d1.D1WatsonRecovery.blocked(player) || ChopTravelRecovery.blocked(player) || DungeonInventoryHandoffs.blocked(player)) return;
         DungeonLifecycleService.findActiveRunForPlayer(player).ifPresent(run -> {
             DungeonInventoryEscrowData data = DungeonInventoryEscrowData.get(player.level().getServer());
             data.get(run.runId(), player.getUUID()).filter(DungeonInventoryEscrowData.Entry::outsideActive)

@@ -33,11 +33,14 @@ public final class TamsinTaxProgress {
                 state.getLongOr("success_run", 0), state.contains("receipt"));
     }
     public static void successfulRun(ServerPlayer player, long runId) {
-        var state = read(player).copy();
+        write(player, successfulImage(read(player), runId));
+    }
+    public static CompoundTag successfulImage(CompoundTag before, long runId) {
+        var state = before.copy();
         long camp = state.getLongOr("camp_run", 0);
-        if (camp > 0 && runId >= camp && state.getLongOr("success_run", 0) == 0) {
-            state.putLong("success_run", runId); write(player, state);
-        }
+        if (camp > 0 && runId >= camp && state.getLongOr("success_run", 0) == 0)
+            state.putLong("success_run", runId);
+        return state;
     }
     @SubscribeEvent
     public static void tick(PlayerTickEvent.Post event) {

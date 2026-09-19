@@ -54,6 +54,7 @@ public final class DungeonInventoryHandoffs {
     }
     /** Freeze one decision, including offline owners. Existing decisions are never replaced. */
     public static boolean cleanup(MinecraftServer server, DungeonRunRegistryData.RunRecord run, UUID owner, String reason) {
+        if (!net.goui.cosmicdungeon.dungeon.d1.D1WatsonRecovery.permitsCleanup(server, run.runId(), reason)) return false;
         var d = PendingDungeonRecoveryData.get(server);
         var online = server.getPlayerList().getPlayer(owner);
         try {
@@ -65,7 +66,7 @@ public final class DungeonInventoryHandoffs {
                 if (online != null) {
                     if (!online.isAlive() || HOLDS.contains(online)) return false;
                     online.closeContainer();
-                    if (!InventoryTransactionGuard.beforeInventoryChange(online)) return false;
+                    if (!InventoryTransactionGuard.beforeDungeonCleanup(online, run.runId(), reason)) return false;
                 }
                 var original = run.snapshotFor(owner).orElseThrow(() -> new IllegalStateException("Missing pre-entry snapshot"));
                 var escrow = DungeonInventoryEscrowData.get(server).get(run.runId(), owner).orElse(null);
@@ -131,6 +132,11 @@ public final class DungeonInventoryHandoffs {
             if (d.get(p.getUUID()).isPresent()) throw new IllegalStateException("Legacy recovery has no player receipt; review complete save before adoption");
             var plan = d.handoff(p.getUUID());
             if (plan == null) return true;
+            var outcomes = net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(p.level().getServer());
+            if (outcomes.outcomeFor(p.getUUID()) != null
+                    && (!plan.kind().equals("cleanup")
+                    || !net.goui.cosmicdungeon.dungeon.d1.D1WatsonRecovery.permitsCleanup(p.level().getServer(), plan.run(), plan.reason())))
+                throw new IllegalStateException("Inventory handoff conflicts with Watson outcome");
             if (!d.flushVerified()) throw new IllegalStateException("Handoff decision not verified");
             // A partial backup containing overlapping custody is held, never resolved by choosing a winner.
             if (ChopTravelRecovery.blocked(p) || net.goui.cosmicdungeon.economy.DeathCurrencyService.blocked(p)
@@ -216,6 +222,7 @@ public final class DungeonInventoryHandoffs {
         for (var run : DungeonRunRegistryData.get(server).listAllRuns()) {
             if (!run.dungeonId().equals("dungeon_1") || !run.dungeonDimensionIds().contains(dimension)) continue;
             if (run.stateEnum() != DungeonRunState.RESETTING && run.stateEnum() != DungeonRunState.FAILED) return false;
+            if (!net.goui.cosmicdungeon.dungeon.d1.D1WatsonRecovery.permitsCleanup(server, run.runId(), run.resetReason())) return false;
             for (UUID owner : run.orderedPlayers()) {
                 if (!d.durable(owner, run.runId())) return false;
                 var player = server.getPlayerList().getPlayer(owner);

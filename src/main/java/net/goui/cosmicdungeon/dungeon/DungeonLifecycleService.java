@@ -341,6 +341,8 @@ public final class DungeonLifecycleService {
         PENDING_RESETS.clear();
         DungeonRunRegistryData runs = DungeonRunRegistryData.get(server);
         for (DungeonRunRegistryData.RunRecord run : runs.listAllRuns()) {
+            if (run.dungeonId().equals("dungeon_1")
+                    && net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(server).sealed(run.runId())) continue;
             if (runs.starting(run.runId()) && run.stateEnum() == DungeonRunState.ACTIVE) {
                 finishRun(server, run.runId(), DungeonResetReason.ABANDONED, null);
                 continue;
@@ -507,7 +509,9 @@ public final class DungeonLifecycleService {
         var run = DungeonRunRegistryData.get(server).getRun(runId).orElse(null);
         if (run == null || !run.dungeonId().equals("dungeon_1") || run.stateEnum() != DungeonRunState.ACTIVE) return false;
         finishRun(server, runId, success ? DungeonResetReason.COMPLETED : DungeonResetReason.ABANDONED, null);
-        return true;
+        var updated = DungeonRunRegistryData.get(server).getRun(runId).orElse(null);
+        return updated != null && updated.stateEnum() == DungeonRunState.RESETTING
+                && updated.resetReason().equals(success ? "COMPLETED" : "ABANDONED");
     }
 
     private static void finishRun(MinecraftServer server,
@@ -520,6 +524,8 @@ public final class DungeonLifecycleService {
         DungeonRunRegistryData.RunRecord run = runs.getRun(runId).orElse(null);
         if (run == null) return;
         if (run.stateEnum() == DungeonRunState.RESETTING) return;
+        if (run.dungeonId().equals("dungeon_1")
+                && !net.goui.cosmicdungeon.dungeon.d1.D1WatsonRecovery.permitsCleanup(server, runId, reason.name())) return;
 
         if(!ChopTravelRecovery.readyForCleanup(server,run.orderedPlayers())){
             notifyDevelopers(server,Component.literal("[DungeonLifecycle] Chop travel recovery is pending; run and inventory escrow retained."));
@@ -585,6 +591,7 @@ public final class DungeonLifecycleService {
         if (server == null || run == null) return;
         var d1=net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(server);
         if (run.dungeonId().equals("dungeon_1")) {
+            if (!net.goui.cosmicdungeon.dungeon.d1.D1WatsonRecovery.permitsCleanup(server, run.runId(), reason.name())) return;
             if (!net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.readyForCleanup(server, run.orderedPlayers())
                     || !net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCompanions.preserveBeforeCleanup(server, run)) return;
             for (UUID owner : run.orderedPlayers())
@@ -738,6 +745,9 @@ public final class DungeonLifecycleService {
             if (!registry.retireVerified(runId)) {
                 notifyDevelopers(server, Component.literal("[DungeonLifecycle] Run retirement save failed; reconnect/restart before reusing its slot."));
                 return;
+            }
+            if (!net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(server).retireOutcomeVerified(runId)) {
+                notifyDevelopers(server, Component.literal("[DungeonLifecycle] Watson retirement is pending; owner receipts remain protected."));
             }
             net.goui.cosmicdungeon.economy.PlayerCurrencyData.get(server).clearRunReceipts(runId);
             DungeonRunProgressData.get(server).clearRun(runId);
@@ -1006,7 +1016,9 @@ public final class DungeonLifecycleService {
 
             var companionRun=pr.runId()>0?DungeonRunRegistryData.get(server).getRun(pr.runId()).orElse(null):null;
             if(companionRun!=null){
-                boolean repairsReady=(!companionRun.dungeonId().equals("dungeon_1") || DungeonRunRegistryData.get(server).flushVerified())
+                boolean repairsReady=(!companionRun.dungeonId().equals("dungeon_1")
+                        || (net.goui.cosmicdungeon.dungeon.d1.D1WatsonRecovery.permitsCleanup(server, companionRun.runId(), pr.reason().name())
+                        && DungeonRunRegistryData.get(server).flushVerified()))
                         && net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.readyForCleanup(server,companionRun.orderedPlayers());
                 if(repairsReady&&companionRun.dungeonId().equals("dungeon_1"))performMemberCleanup(server,companionRun,pr.reason());
                 if(!repairsReady||(companionRun.dungeonId().equals("dungeon_1")

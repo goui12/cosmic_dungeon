@@ -11,7 +11,8 @@ public final class D1Members {
     private D1Members() {}
     public static Optional<DungeonRunRegistryData.RunRecord> run(ServerLevel level) {
         return DungeonRunRegistryData.get(level.getServer()).findRunForInstanceDimension(level.dimension())
-                .filter(r -> r.stateEnum() == DungeonRunState.ACTIVE && r.dungeonId().equals("dungeon_1"));
+                .filter(r -> r.stateEnum() == DungeonRunState.ACTIVE && r.dungeonId().equals("dungeon_1")
+                        && !D1RunData.get(level.getServer()).sealed(r.runId()));
     }
     public static List<ServerPlayer> active(MinecraftServer server, DungeonRunRegistryData.RunRecord run) {
         List<ServerPlayer> members = new ArrayList<>();

@@ -53,12 +53,21 @@ public final class D1LesserBloomEvents {
                 String key = "lesser:" + member.getUUID();
                 int old = data.count(run.runId(), key);
                 data.setCount(run.runId(), key, old == Integer.MAX_VALUE ? old : old + 1);
-                D1LifetimeData.get(level.getServer()).recordLesserBlooms(member.getUUID(), 1);
+                // Q&A D20 overrides the older failure-retention rule. Commit these actual
+                // harvest statistics only on Watson success. Legacy already-counted totals remain intact.
+                String pending = "lesser_success:" + member.getUUID();
+                int count = data.count(run.runId(), pending);
+                data.setCount(run.runId(), pending, count == Integer.MAX_VALUE ? count : count + 1);
                 net.goui.cosmicdungeon.faction.NpcFactionService.blooms(member, 1);
                 D1Scoreboards.lifetime(member);
             }
         }
     }
+    // TODO(M03/M18, legacy review): pre-Batch29 lifetime Lesser Blooms include failed runs.
+    // Q&A D20 (2026-09-16) requires success-only new statistics. Preserve historical totals;
+    // there is no receipt to infer or subtract their failed-run portion. In an upgraded active
+    // run, only lesser_success counts are newly committed; older harvested counts were credited
+    // by the prior code. Review a complete backup before any retrospective correction.
     @SubscribeEvent
     public static void stopped(ServerStoppedEvent event) { PENDING.clear(); }
 }

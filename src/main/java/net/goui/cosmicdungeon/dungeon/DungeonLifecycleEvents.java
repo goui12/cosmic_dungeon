@@ -36,6 +36,7 @@ public final class DungeonLifecycleEvents {
         if (!(e.getEntity() instanceof ServerPlayer sp)) return;
         if (sp.level().isClientSide()) return;
 
+        if (!net.goui.cosmicdungeon.dungeon.d1.D1WatsonRecovery.login(sp)) return;
         if (!net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.otherTransactionsReady(sp)
                 || !DungeonInventoryHandoffs.reconcile(sp)) return;
         DungeonAfkService.markActivity(sp);
@@ -74,6 +75,7 @@ public final class DungeonLifecycleEvents {
             doPeriodic = (overworld.getGameTime() % 20L) == 0L;
         }
 
+        net.goui.cosmicdungeon.dungeon.d1.D1WatsonRecovery.tick(server);
         DungeonLifecycleService.processPendingResets(server);
         PlantFlagService.completeIfReady(server);
         DungeonAfkService.tick(server);

@@ -26,8 +26,12 @@
  * drops join supply totals. Only ordinary destruction or dimension reset is a sink.
  * Batch27: Inn fee/bed readback and committed Chop inventory/location/ownership recovery.
  * Batch28: saved D1 cleanup/claim receipts, offline escrow handoff and full-roster entry rollback.
- * Required: older physical-currency pickup migration, Watson outcome/Bloom/reward transaction,
- * and native interrupted-save acceptance on licensed TEST.
+ * Batch29: Watson's saved six-Bloom outcome precedes owner deductions and receipt-protected
+ * lifetime/progression/faction projections; settled outcomes alone authorize final cleanup.
+ * Required: older physical-currency pickup migration and native interrupted-save acceptance.
+ * Q&A D20/D23 (2026-09-16) supersedes older failure-retained statistics/three-flower thresholds.
+ * Legacy Watson flags and historical failed-run Lesser totals lack receipts: review complete
+ * backups without replaying grants, subtracting guessed totals or changing completed-run history.
  * Preserve uncertain partial/manual-restored records for full-save review; never guess replacements.
  * TODO(M03, bounded account history): page/prune compact terminal operation/transfer receipts only
  * after proving old transaction IDs cannot replay. Full item evidence is already archived; preserve
@@ -868,10 +872,12 @@
  * TODO(M93, partial_D1): Implement physical progression-item retention under the approved exit policy
  * Current: Successful D1 inventory is retained, outside inventory remains claimable; failed/exited
  * runs restore the original inventory; instance objectives reset independently of lifetime counters.
- * Required: Verify progression item retention across death, rollback, full inventory and interrupted
- * cleanup. Per-player hostile kills now accumulate in the run and commit on successful Watson
- * completion (Q&A D20); failure/exit discards pending kills. Verify companion attribution and
- * second-instance reset in TEST without turning instance objectives into cumulative objectives.
+ * Batch29: the preceding Watson outcome now freezes physical Bloom deductions, Tax eligibility,
+ * success-only lifetime kills/actual Lesser Blooms, rounded contribution and faction bonus.
+ * Owner and projection receipts recover interrupted saves; failure grants no permanent statistics.
+ * Required: verify authored physical progression bindings, companion kill attribution, death,
+ * full inventories, offline inputs and native interruption across outcome plus cleanup on TEST.
+ * Q&A D20/D23 (2026-09-16) governs D1. Keep second-instance resets independent; D2+ stays deferred.
  * Source: https://docs.google.com/document/d/1oXHIKtIdWlQDwzf1JaHzBut08g4tytXs6rCYRY-89NY
  * Source modified: 2025-08-22T22:56:40.140Z
  * Source: https://docs.google.com/document/d/1u1xeNikxn02KkeFeFytocLguV869XPxW89KZW5jc1nM

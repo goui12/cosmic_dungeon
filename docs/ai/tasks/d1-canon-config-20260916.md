@@ -151,3 +151,17 @@ M43/M102 implemented_unverified;43 implemented,22partial D1,9preserved,27deferre
 M03/M93 retain Watson outcome/Bloom/lifetime/progression/faction transaction work with code TODOs.
 No runtime/GameTest/deployment/push, active config/world edit, datagen or required PNG.
 Details: ../D1_BATCH_28.md. Final local commit after all notes/staged review, then STOP.
+
+Batch29 (2026-09-19): authorized Batch29 only, focused checks, final local commit and STOP.
+Verified parent28: 77d257f101f818597f64dc687a3451d9f151fbe1.
+Single writer owns existing objective/lifetime/progression/faction save extensions, Watson
+interaction, inventory/currency guards, login and final cleanup/reset integration. One saved
+outcome captures physical Blooms, Tax proof and reward amounts; per-owner/native projection
+receipts resume once before matching cleanup. New Lesser statistics are success-only; old
+totals stay intact. Optional fields preserve old save IDs; no spawner, registry or protocol change.
+7,951 offline checks (4,112 Watson,3 new config), two config round trips and Java21 build passed.
+Four relevant live Docs unchanged; Q&A D11/D20/D23 overrides older thresholds/failure retention.
+See ../D1_BATCH_29.md and ../D1_REMAINING.md; private evidence D1_Batch_29_2026-09-19.
+Totals43 implemented/22 partial D1/9 preserved/27 deferred=101; native gameplay remains untested.
+No new PNG, datagen, active config/world edit, launch, deployment or push. Final local commit
+follows completion notes and staged allowlist review. Batch30 is proposed and awaits Cameron.

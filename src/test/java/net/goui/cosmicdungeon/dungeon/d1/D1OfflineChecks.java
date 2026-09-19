@@ -38,6 +38,7 @@ public final class D1OfflineChecks {
         net.goui.cosmicdungeon.vendor.VendorSaleQuoteChecks.main(args);
         D1ObjectiveRulesTest.main(args);
         D1SavedDataChecks.main(args);
+        WatsonOutcomeChecks.main(args);
         net.goui.cosmicdungeon.economy.AccountTransferChecks.main(args);
         net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairCustodyChecks.main(args);
         net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairCommitChecks.main(args);
@@ -113,6 +114,11 @@ public final class D1OfflineChecks {
         check(((Number)gameplay.get("Dragoon.repairReadyTicks")).intValue()==20,"Ready lifetime must be positive");
         check(((Number) gameplay.get("Dragoon.chainLightningChance")).doubleValue() == 0.03, "Canon chain probability");
         check(((Number) gameplay.get("JohnWatson.gatheringRadius")).doubleValue() == 16.0, "Watson radius");
+        check(((Number)gameplay.get("JohnWatson.outcomeRecoveryPollTicks")).intValue()==100,"Watson save recovery cadence");
+        gameplay.set("JohnWatson.outcomeRecoveryPollTicks",200);Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("JohnWatson.outcomeRecoveryPollTicks")).intValue()==200,"Watson recovery override retained");
+        gameplay.set("JohnWatson.outcomeRecoveryPollTicks",0);Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("JohnWatson.outcomeRecoveryPollTicks")).intValue()==20,"Watson cannot retry disk every tick");
         check(((Number) gameplay.get("Economy.defaultAccountCapacityTrace")).longValue() == 100000000L, "Account capacity");
         check(((Number)gameplay.get("Theurgist.verdant_jolt.power")).doubleValue()==0.8,"Newest Verdant overview wins");
         check(((Number)gameplay.get("Pyroclast.cindermaul.power")).doubleValue()==15,"Newest rocket overview wins");

@@ -1,11 +1,22 @@
 # D1 remaining work
 
-Updated 2026-09-19 after Batch28. Cameron authorized Batch28, checks and a final local commit, then STOP.
-Batch27 baseline commit: 7b05883d8c2e5fd4fa6a37b51848e68932f007d3.
+Updated 2026-09-19 after Batch29. Cameron authorized Batch29, checks and a final local commit, then STOP.
+Batch28 baseline commit: 77d257f101f818597f64dc687a3451d9f151fbe1.
 Gameplay/multiplayer testing remains deferred for the cumulative licensed TEST pass.
 All101 original audit IDs remain intact. Code implementation is not runtime acceptance.
-Current dispositions: Google Docs and Sheet/Audit/D1_Batch_28_2026-09-19/implementation_findings.json.
-Latest report: [Batch28](D1_BATCH_28.md). Prior reports: [Batch27](D1_BATCH_27.md), [Batch26](D1_BATCH_26.md).
+Current dispositions: Google Docs and Sheet/Audit/D1_Batch_29_2026-09-19/implementation_findings.json.
+Latest report: [Batch29](D1_BATCH_29.md). Prior reports: [Batch28](D1_BATCH_28.md), [Batch27](D1_BATCH_27.md).
+
+## Batch29 completed in code
+
+One saved Watson decision now controls exact physical Bloom inputs, Tax eligibility and
+receipt-protected lifetime/progression/faction projections. Matching settled outcomes alone
+authorize final cleanup; login/poll recovery handles interrupted inputs without repeated awards.
+New Lesser harvest statistics commit only on success, while immediate harvest faction remains.
+Old totals stay intact; old unreceipted Watson flags and uncertain historical counts require review.
+7,951 offline checks (4,112 Watson plus3 new config), two config round trips and Java21 build passed.
+M03/M93 retain their broader legacy/world/runtime follow-ups. Counts remain43/22/9/27=101.
+No new required PNG. See Batch29 for save compatibility, configuration and licensed TEST steps.
 
 ## Batch28 completed in code
 
@@ -96,7 +107,7 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 
 - M10: Finish legacy item adoption and no-drop/world-container protections
 - M72: Extend trusted identity adoption to reviewed legacy containers and drop definitions
-- M03: Journal Watson outcome projections; finish legacy currency boundaries and receipt retention
+- M03: Finish legacy currency/Watson evidence review and safe account receipt retention
 - M79: Complete remaining achievement and reward bindings
 
 ## Other D1 follow-ups (18)
@@ -113,7 +124,7 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M60: Reconcile Dragoon trident enchantments and chain lightning with bounded targeting
 - M63: Align Pyroclast rockets and launchers with exact payload/damage rules
 - M81: Reconcile every D1 quest, region, key and startup-room binding
-- M93: Journal Watson Bloom/reward outcomes and verify authored physical progression bindings
+- M93: Verify authored physical progression bindings and native outcome/cleanup recovery
 - M101: Validate personal travel gates and existing destination isolation
 - M104: Put explicit budgets around new AI, auras, snapshots and client effects
 - M105: Update help, commands and player terminology only alongside approved behavior
@@ -219,13 +230,12 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 
 ## Next work (await Cameron)
 
-29. Watson outcome transaction (M03/M93): one durable decision for physical Bloom consumption,
-    lifetime kills/Blooms/completion, progression/faction projections and final cleanup trigger.
-    The Batch28 journal begins after that earlier outcome decision; it does not make those writes atomic.
-Later: legacy currency/Chop/item identity review, remaining class mechanics, rewards and world bindings.
+30. Proposed: legacy currency/Chop/item identity recovery (M03/M20/M10/M72). Revalidate
+    sources and choose the next2-5 concrete issues; preserve ambiguous records for review.
+Later: remaining class mechanics, achievement rewards, pricing and authored world bindings.
 These are proposals, not authorization to continue.
 
-STOP after the validated Batch28 local commit. Batch29 has not started.
+STOP after the validated Batch29 local commit. Batch30 has not started.
 Remaining22 partial D1 IDs stay listed above; runtime-only acceptance is listed separately.
 The queued breakpoint remains: "finish what you're doing and stop".
 No launch/GameTest/deployment/push or active-world/config edit occurred.
