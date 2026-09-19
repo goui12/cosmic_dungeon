@@ -1,9 +1,8 @@
-Latest checkpoint: **Batches32 and33 (2026-09-19)** add legacy currency review holds,
-safe retired-run receipt compaction, trusted D1 ammunition adoption and named-loot signatures.
-**10,617 offline checks**, two config round trips,1,963 source JSON checks and Java21 build
-passed. Runtime remains untested. See [combined checkpoint](D1_BATCHES_32-33.md),
-[Batch32](D1_BATCH_32.md), [Batch33](D1_BATCH_33.md) and [five remaining batches](D1_REMAINING.md).
-Stop after the final local commit; Batch34 awaits Cameron.
+Latest checkpoint: **Batch34 (2026-09-19)** preserves authored spawn data, validates
+per-spawner rewards, protects NPC/profile assignments and separates personal offer tiers.
+**10,794 offline checks**, two config round trips,1,963 source JSON checks and Java21 build
+passed. Runtime remains untested. See [Batch34](D1_BATCH_34.md) and
+[four remaining batches](D1_REMAINING.md). Stop after the final local commit;35 awaits Cameron.
 Older notes below are historical and do not override this checkpoint.
 
 # Dungeon 1 implementation â€” 2026-09-16

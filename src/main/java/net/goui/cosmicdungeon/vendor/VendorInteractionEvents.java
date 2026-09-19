@@ -18,14 +18,18 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 public final class VendorInteractionEvents {
     @SubscribeEvent
     public void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
-        if (event.getHand() != InteractionHand.MAIN_HAND) return;
         Entity vendor = event.getTarget();
+        if (!VendorAssignmentService.hasAssignedProfile(vendor)) return;
         ResourceLocation profileId = VendorAssignmentService.getProfileId(vendor);
-        if (profileId == null) return;
         if (!(event.getEntity() instanceof ServerPlayer sp)) return;
 
         event.setCanceled(true);
+        if (event.getHand() != InteractionHand.MAIN_HAND) return;
 
+        if (profileId == null || VendorAssignmentService.hasOtherRole(vendor)) {
+            sp.sendSystemMessage(Component.literal("This NPC binding needs developer review.").withStyle(ChatFormatting.RED));
+            return;
+        }
         VendorProfile profile = VendorProfileManager.INSTANCE.get(profileId);
         if (profile == null) {
             sp.sendSystemMessage(Component.literal("Vendor shell has unknown profile: ").withStyle(ChatFormatting.RED)

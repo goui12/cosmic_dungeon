@@ -37,6 +37,7 @@ public final class D1OfflineChecks {
         net.goui.cosmicdungeon.npc.tamsin.TamsinChecks.main(args);
         net.goui.cosmicdungeon.economy.pricing.VendorPriceBreakdownChecks.main(args);
         net.goui.cosmicdungeon.vendor.VendorSaleQuoteChecks.main(args);
+        D1AuthoredBindingChecks.main(args);
         D1ObjectiveRulesTest.main(args);
         D1SavedDataChecks.main(args);
         WatsonOutcomeChecks.main(args);
@@ -68,6 +69,13 @@ public final class D1OfflineChecks {
         check(((Number)gameplay.get("Beluzon.bondInteractionRange")).doubleValue()==12,"Developer Inn range retained");
         gameplay.set("BeatrixFarrow.chopRecoveryPollTicks",0);Config.SPEC.correct(gameplay);
         check(((Number)gameplay.get("BeatrixFarrow.chopRecoveryPollTicks")).intValue()==10,"Zero Chop polling interval rejected");
+        check(((Number)gameplay.get("NpcFaction.vendorBindingRange")).doubleValue()==6,"Vendor authoring range default");
+        gameplay.set("NpcFaction.vendorBindingRange",12.0);Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("NpcFaction.vendorBindingRange")).doubleValue()==12,"Developer binding range retained");
+        check(((java.util.List<?>)gameplay.get("Economy.registeredSpawnerRewards")).isEmpty(),"No guessed encounter coordinates");
+        gameplay.set("Economy.registeredSpawnerRewards",java.util.List.of("cosmic_spawner_-1_64_3=miniboss"));
+        Config.SPEC.correct(gameplay);
+        check(((java.util.List<?>)gameplay.get("Economy.registeredSpawnerRewards")).size()==1,"Authored encounter config retained");
         check(((Number)gameplay.get("Economy.deathLossThresholdTrace")).longValue()==20,"Death threshold default");
         check(((Number)gameplay.get("Economy.deathLossFraction")).doubleValue()==.02,"Death percentage default");
         check(((Number)gameplay.get("Economy.minimumDeathLossTrace")).longValue()==1,"Death minimum default");

@@ -6,7 +6,7 @@ public final class D1EconomyConfig {
     public static ModConfigSpec.IntValue VENDOR_QUOTE_TICKS,LEDGER_FLUSH_TICKS,LEDGER_ROWS_PER_FLUSH,WEALTH_REVIEW_TICKS,WEALTH_REVIEW_BUDGET,DEATH_WORK_PER_TICK,DEATH_SNAPSHOT_TICKS,DEATH_RETRY_TICKS;
     public static ModConfigSpec.LongValue FIRST_TRACE,WEALTH_EARLY,WEALTH_HIGH,WEALTH_MAX,DEATH_THRESHOLD,DEATH_MIN;
     public static final Map<String,ModConfigSpec.LongValue> REWARDS=new LinkedHashMap<>();
-    public static ModConfigSpec.ConfigValue<List<? extends String>> MOB_CATEGORIES;
+    public static ModConfigSpec.ConfigValue<List<? extends String>> MOB_CATEGORIES,SPAWNER_REWARDS;
     private D1EconomyConfig(){}
     public static void define(ModConfigSpec.Builder b){
         b.comment("Attunement Fragment Economy Internal, 17ufIuIy0VhLmB_V-6sZ7sCaUCZuGZUkHrgJLVpEcS28, 2026-08-18.")
@@ -49,6 +49,13 @@ public final class D1EconomyConfig {
                     "minecraft:magma_cube=common","minecraft:slime=weak","minecraft:endermite=weak",
                     "minecraft:guardian=tough","minecraft:elder_guardian=miniboss","minecraft:warden=boss","minecraft:wither=boss",
                     "minecraft:ender_dragon=boss"),()->"minecraft:zombie=common",v->v instanceof String s&&s.matches("[a-z0-9_.-]+:[a-z0-9_./-]+=[a-z0-9_]+"));
+        SPAWNER_REWARDS=b.comment("Optional D1 authored encounter overrides: cosmic_spawner_X_Y_Z=category or wholeTrace.",
+                "Coordinates are the existing provenance tag and apply to matching copies of D1; no world/preset migration.",
+                "Exactly one spawner origin is required. Duplicate entries or malformed values award zero with a warning.",
+                "Per-entity persistent overrides take priority, then this table, then registeredMobRewards.",
+                "Empty by default: actual encounter coordinates must be reviewed; never guess from health or names.")
+                .defineListAllowEmpty("registeredSpawnerRewards",List.<String>of(),
+                        ()->"cosmic_spawner_0_64_0=common",D1MobRewardRules::spawnerEntry);
         b.pop();
     }
 }

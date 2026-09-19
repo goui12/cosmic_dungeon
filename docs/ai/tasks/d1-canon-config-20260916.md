@@ -216,3 +216,16 @@ Counts44 implemented/21partial D1/9preserved/27deferred=101. Five planned batche
 No runtime/GameTest/datagen/deployment/push or new required PNG. Optional Tamsin map512x256 remains.
 See ../D1_BATCHES_32-33.md, ../D1_BATCH_32.md, ../D1_BATCH_33.md and ../D1_REMAINING.md.
 Final local commit follows all completion notes and staged allowlist review. Await Cameron for34.
+
+Batch34, 2026-09-19: Cameron authorized34 only; final local commit, STOP before35.
+Single-writer hotspots: spawner load/provenance, server config/economy rewards, vendor
+commands/identity/access, dependent Tamsin/Inn/direct-repair service guards and offline tests.
+B34-1 preserves native SpawnData/potentials and pauses malformed tags without rewriting them.
+B34-2 adds validated coordinate reward registrations; no inferred or guessed encounter payouts.
+B34-3 binds the crosshair NPC with line of sight, preserves original state and refuses other roles.
+B34-4 blocks legacy conflicting services and cross-dungeon offer-tier leakage.
+No network/save/registry ID change; optional entity vendor_binding_before schema1 only on
+future explicit assignment. No live bindings, spawners, worlds, presets or configs edited.
+10,794 checks, two config round trips,1,963 source JSON and Java21 offline build passed.
+Full native SpawnData/weighted preset and entity unload/restart acceptance remains licensed TEST.
+Four planned batches remain; report and exact inventory: ../D1_BATCH_34.md.

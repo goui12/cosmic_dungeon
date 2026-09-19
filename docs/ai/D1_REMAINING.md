@@ -1,24 +1,22 @@
 # D1 remaining work
 
-Updated 2026-09-19 after Batches32 and33. Cameron authorized both, validation and final
-local commit; STOP before34. Verified Batch31 parent: fcccd96a20c55d162db0f07cf7a1318fa7c689d5.
+Updated 2026-09-19 after Batch34. Cameron authorized34 only, offline validation and
+final local commit; STOP before35. Verified parent: a0174968d4af5b6a7dacb0cf0dd53c34c5447f1e.
 Gameplay/multiplayer testing remains deferred for the cumulative licensed TEST pass.
 All101 original audit IDs remain intact. Code implementation is not runtime acceptance.
-Current dispositions: Google Docs and Sheet/Audit/D1_Batch_32_2026-09-19/implementation_findings.json.
-Latest: [combined32-33 checkpoint](D1_BATCHES_32-33.md), [Batch32](D1_BATCH_32.md),
-[Batch33](D1_BATCH_33.md) and [source mappings](D1_BATCH_33_MAPPINGS.md).
+Current dispositions: Google Docs and Sheet/Audit/D1_Batch_34_2026-09-19/implementation_findings.json.
+Latest: [Batch34](D1_BATCH_34.md); previous [combined32-33 checkpoint](D1_BATCHES_32-33.md).
 
-## Planned batches remaining: 5
+## Planned batches remaining: 4
 
-These are estimated implementation/review batches, not five gameplay testing rounds.
-Both32 and33 are now completed in code; neither is pending. Review may close already
-implemented items or reveal a concrete issue requiring a split. Update the count and each
-summary after every completion. World/multiplayer/performance acceptance belongs to the
-cumulative licensed TEST phase afterward; this plan authorizes no launch or deployment.
+These are estimated implementation/review batches, not four gameplay testing rounds.
+Batch34's four fixes are complete in code. Review may close already implemented items
+or reveal a concrete issue requiring a split. Update the count and every summary after
+each completion. Native world/multiplayer/performance acceptance belongs to the separate
+cumulative licensed TEST phase; this plan authorizes no launch or deployment.
 
 | Batch | Work remaining | Audit IDs / boundary |
 | --- | --- | --- |
-| 34 | Authored mob rewards and stable NPC/profile bindings. | M05/M17/M41/M103; preserve live-world data |
 | 35 | Pricing conversions, catalogue exceptions and calculator fixtures. | M12/M106/M107; checked source data |
 | 36 | Final source/code review of D1 class effects and ammunition. | M55/M58/M60/M63; native effects remain untested |
 | 37 | Achievement rewards, progression bindings and travel gates. | M79/M81/M93/M101; preserve instance/lifetime separation |
@@ -27,6 +25,19 @@ cumulative licensed TEST phase afterward; this plan authorizes no launch or depl
 Remaining21 partial IDs can span these batches or explicit legacy/world TEST acceptance.
 Nine preserved-content IDs still need native verification. The27 D2+ entries remain
 TODO-only and excluded from the estimate. Consult dispositions before writing more code.
+
+## Batch34 completed in code
+
+B34-1: native SpawnData/weighted potentials and authored NBT preserved when provenance is added.
+B34-2: exact typed rewards, optional per-spawner config, ambiguous registrations blocked, NPCs excluded.
+B34-3: ray-targeted developer binding, role/type checks, original-state evidence and safe clear.
+B34-4: shared role-conflict guards and personal offer tiers isolated to their dungeon system.
+10,794 offline checks (173 new reward/binding plus4 config), two config round trips,
+Java21 offline build and1,963 source JSON checks passed. No new required PNG.
+M05/M17/M41 remain partial for authored-world/legacy acceptance; M103 still needs native
+spawner/preset loading verification. Counts44 implemented/21partial/9preserved/27deferred=101.
+No world edits or assumed NPC/encounter mappings. Full native SpawnData codec needs
+Minecraft registry bootstrap and is explicitly reserved for licensed TEST.
 
 ## Batches32 and33 completed in code
 

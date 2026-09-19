@@ -37,6 +37,7 @@ public final class InnService {
         return data.hasReceipt("inn:bond",player.getUUID());
     }
     public static void offer(ServerPlayer player,Entity vendor){
+        if(!isBeluzon(vendor)||VendorAssignmentService.hasOtherRole(vendor)){say(player,"The Inn NPC binding needs developer review.");return;}
         if(!ProgressionService.hasVillageAccess(player)){say(player,"Village access is required.");return;}
         if(vendor.getType()!=EntityType.CREAKING){say(player,"Beluzon's native Creaking placement needs developer setup.");return;}
         if(!InnData.get(player.level().getServer()).contains(player.level(),vendor.blockPosition())){say(player,"The Inn region needs developer setup.");return;}
@@ -51,7 +52,7 @@ public final class InnService {
         if(offer==null||!offer.token().toString().equals(token)||offer.expires()<player.level().getServer().overworld().getGameTime())return fail(player,"That offer expired. Speak to Beluzon again.");
         if(bonded(player))return 1;
         Entity vendor=player.level().getEntity(offer.vendor());
-        if(vendor==null||!isBeluzon(vendor)||vendor.getType()!=EntityType.CREAKING||player.distanceToSqr(vendor)>Math.pow(net.goui.cosmicdungeon.Config.INN_RANGE.get(),2)
+        if(vendor==null||!isBeluzon(vendor)||VendorAssignmentService.hasOtherRole(vendor)||vendor.getType()!=EntityType.CREAKING||player.distanceToSqr(vendor)>Math.pow(net.goui.cosmicdungeon.Config.INN_RANGE.get(),2)
                 ||!InnData.get(player.level().getServer()).contains(player.level(),vendor.blockPosition())
                 ||!ProgressionService.hasVillageAccess(player)||!CurrencyService.transactionsAllowed(player)
                 ||offer.price()!=VendorPricesConfig.INN_BOND.get())return fail(player,"The Inn bond offer is no longer available.");

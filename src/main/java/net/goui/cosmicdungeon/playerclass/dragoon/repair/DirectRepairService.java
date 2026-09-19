@@ -36,6 +36,7 @@ public final class DirectRepairService {
         if(vendor==null||!vendor.isAlive()||player.distanceToSqr(vendor)>64||!player.isAlive()||player.isSpectator()
                 || DragoonRepairSessionData.isBusy(player) || net.goui.cosmicdungeon.trade.TradeSessionData.isBusy(player))return false;
         if(DungeonLifecycleService.findActiveRunForPlayer(player).filter(r->r.containsDimension(player.level().dimension())).isPresent())return false;
+        if(VendorAssignmentService.hasOtherRole(vendor))return false;
         var id=VendorAssignmentService.getProfileId(vendor);
         if(id==null||!id.toString().equals("cosmicdungeon:d1/weapon_supplier"))return false;
         var profile=VendorProfileManager.INSTANCE.get(id);

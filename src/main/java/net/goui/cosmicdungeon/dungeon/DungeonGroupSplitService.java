@@ -7,7 +7,7 @@ import net.goui.cosmicdungeon.economy.*;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.*;
 import net.minecraft.world.entity.*;
-import net.minecraft.world.entity.monster.Enemy;
+
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.network.chat.Component;
 import com.mojang.logging.LogUtils;
@@ -17,11 +17,13 @@ public final class DungeonGroupSplitService {
     private static final Set<String> WARNED=new HashSet<>();
     private DungeonGroupSplitService(){}
     public static void onMobKilled(LivingEntity mob){
-        if(!(mob.level() instanceof ServerLevel level)||!(mob instanceof Enemy)
+        if(!(mob.level() instanceof ServerLevel level)||!(mob instanceof Mob)
                 ||mob.getTags().stream().noneMatch(t->t.startsWith(CosmicSpawnerBlockEntity.COSMIC_SPAWNER_TAG_PREFIX)))return;
         var run=DungeonRunRegistryData.get(level.getServer()).findRunForInstanceDimension(level.dimension())
                 .filter(r->r.stateEnum()==DungeonRunState.ACTIVE&&r.dungeonId().equals("dungeon_1")).orElse(null);
-        if(run==null)return;
+        if(run==null||net.goui.cosmicdungeon.vendor.VendorAssignmentService.hasAssignedProfile(mob)
+                ||mob.getPersistentData().contains("cosmicdungeon_d1_watson_run")
+                ||net.goui.cosmicdungeon.npc.tamsin.TamsinData.get(level.getServer()).binding(mob.getUUID())!=null)return;
         var data=D1RunData.get(level.getServer());
         if(!data.recordUnique(run.runId(),"reward_mobs",mob.getUUID().toString()))return;
         long pool=reward(mob);if(pool<=0)return;
@@ -52,23 +54,11 @@ public final class DungeonGroupSplitService {
     }
     private static long reward(LivingEntity mob){
         String entity=BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).toString();
-        var tag=mob.getPersistentData();
-        boolean category=tag.contains("cosmicdungeon.reward_category"),amount=tag.contains("cosmicdungeon.reward_trace");
-        if(category&&amount)return warn(entity,"encounter defines both category and explicit Trace");
-        if(amount)return Math.max(0,tag.getLongOr("cosmicdungeon.reward_trace",0));
-        String configured=category?tag.getStringOr("cosmicdungeon.reward_category",""):null;
-        if(configured==null){
-            for(String line:D1EconomyConfig.MOB_CATEGORIES.get()){
-                String[] pair=line.split("=",2);
-                if(pair.length==2&&pair[0].equals(entity)){
-                    if(configured!=null)return warn(entity,"duplicate reward registration");
-                    configured=pair[1];
-                }
-            }
-        }
-        if(configured==null)return warn(entity,"unregistered dungeon mob");
-        var value=D1EconomyConfig.REWARDS.get(configured);if(value!=null)return value.get();
-        try{return Math.max(0,Long.parseLong(configured));}catch(NumberFormatException invalid){return warn(entity,"unknown reward category "+configured);}
+        var categories=new LinkedHashMap<String,Long>();
+        D1EconomyConfig.REWARDS.forEach((key,value)->categories.put(key,value.get()));
+        var result=D1MobRewardRules.resolve(entity,mob.getTags(),mob.getPersistentData(),
+                D1EconomyConfig.MOB_CATEGORIES.get(),D1EconomyConfig.SPAWNER_REWARDS.get(),categories);
+        return result.valid()?result.trace():warn(entity,result.warning());
     }
     private static long warn(String entity,String reason){
         if(WARNED.add(entity+"|"+reason))LogUtils.getLogger().warn("D1 currency: {}: {}; awarding zero Trace",entity,reason);

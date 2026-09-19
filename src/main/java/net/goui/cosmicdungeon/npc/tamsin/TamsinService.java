@@ -56,6 +56,11 @@ public final class TamsinService {
         var binding = TamsinData.get(player.level().getServer()).binding(npc.getUUID());
         if (binding == null) return false;
         if (hand != InteractionHand.MAIN_HAND) return true;
+        if (net.goui.cosmicdungeon.vendor.VendorAssignmentService.hasAssignedProfile(npc)
+                || npc.getPersistentData().contains("cosmicdungeon_d1_watson_run")) {
+            player.sendSystemMessage(Component.literal("This NPC has conflicting role bindings and needs developer review."));
+            return true;
+        }
         if (AccessPolicy.isDeveloper(player)) {
             player.sendSystemMessage(Component.literal("Tamsin is bound to a D1 selector. Use /d1 tamsin status to inspect bindings."));
             return true;
@@ -93,7 +98,10 @@ public final class TamsinService {
                 || !binding.dimension().equals(player.level().dimension().location().toString())) return false;
         var npc = player.level().getEntity(menu.tamsinNpc());
         double range = Config.SELECTOR_RANGE.get();
-        return npc instanceof LivingEntity && npc.isAlive() && player.distanceToSqr(npc) <= range * range;
+        return npc instanceof LivingEntity && npc.isAlive()
+                && !net.goui.cosmicdungeon.vendor.VendorAssignmentService.hasAssignedProfile(npc)
+                && !npc.getPersistentData().contains("cosmicdungeon_d1_watson_run")
+                && player.distanceToSqr(npc) <= range * range;
     }
     public static void action(ServerPlayer player, int containerId, String action) {
         if (!(player.containerMenu instanceof ClassSelectorMenu menu) || menu.containerId != containerId
@@ -119,6 +127,8 @@ public final class TamsinService {
                                     var pos = BlockPosArgument.getLoadedBlockPos(ctx, "selector");
                                     var template = DungeonInstanceSlots.templateDimensionForPhysical(source.getServer(), source.getLevel().dimension());
                                     if (!(npc instanceof LivingEntity) || npc instanceof Player || !npc.isAlive()
+                                            || net.goui.cosmicdungeon.vendor.VendorAssignmentService.hasAssignedProfile(npc)
+                                            || npc.getPersistentData().contains("cosmicdungeon_d1_watson_run")
                                             || npc.level() != source.getLevel()
                                             || DungeonDefinitions.DUNGEON_1.containsDimension(template)
                                             || !(source.getLevel().getBlockEntity(pos) instanceof ClassSelectorBlockEntity)

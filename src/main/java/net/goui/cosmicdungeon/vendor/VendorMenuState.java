@@ -34,9 +34,8 @@ public final class VendorMenuState {
             }
         }
         if (offer.requiredNpcTier() != null) {
-            int d1Tier = ProgressionService.getD1NpcUnlockTier(sp);
-            int d2Tier = ProgressionService.getD2NpcUnlockTier(sp);
-            if (Math.max(d1Tier, d2Tier) < offer.requiredNpcTier()) return false;
+            if (profile == null || VendorAccessService.npcTierForSystem(sp, profile.requiredNpcSystem())
+                    < offer.requiredNpcTier()) return false;
         }
         if (offer.requiredFactionTier() != null) {
             if (profile == null || profile.requiredFactionId() == null) return false;

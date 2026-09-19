@@ -179,6 +179,8 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     private final CosmicBaseSpawner spawner = new CosmicBaseSpawner();
 
     private final class CosmicBaseSpawner extends BaseSpawner {
+        private SpawnData currentSpawnData;
+        private boolean warnedMalformedTags;
         @Override
         public void broadcastEvent(Level level, BlockPos pos, int id) {
             level.blockEvent(pos, CosmicSpawnerBlockEntity.this.getBlockState().getBlock(), id, 0);
@@ -186,8 +188,16 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
 
         @Override
         protected void setNextSpawnData(@Nullable Level level, BlockPos pos, SpawnData nextSpawnData) {
-            // Force Cosmic spawner to ignore vanilla spawn placement rules (including light)
-            super.setNextSpawnData(level, pos, forceFullBrightRules(nextSpawnData));
+            // Decorate each selected potential without discarding authored NBT or equipment.
+            var tagged = CosmicSpawnDataRules.tagged(nextSpawnData.getEntityToSpawn(),
+                    oneShotSpawnTag(), configuredSpawnEntity());
+            currentSpawnData = forceFullBrightRules(new SpawnData(tagged,
+                    nextSpawnData.getCustomSpawnRules(), nextSpawnData.getEquipment()));
+            super.setNextSpawnData(level, pos, currentSpawnData);
+            boolean malformed = !CosmicSpawnDataRules.canTag(currentSpawnData.getEntityToSpawn());
+            if (malformed && !warnedMalformedTags)
+                LOGGER.warn("CosmicSpawner at {} has malformed authored Tags; preserve data and pause spawning for developer review", pos);
+            warnedMalformedTags = malformed;
         }
         public void setNextSpawnDataPublic(@Nullable Level level, BlockPos pos, SpawnData nextSpawnData) {
             this.setNextSpawnData(level, pos, nextSpawnData);
@@ -224,6 +234,8 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
 
     public void setSpawnerEntityId(String id) {
         this.spawnerEntityId = (id == null || id.isBlank()) ? "none" : id.trim();
+        if (this.spawner.currentSpawnData != null && !"none".equals(this.spawnerEntityId))
+            this.spawner.currentSpawnData.getEntityToSpawn().putString("id", this.spawnerEntityId);
         this.clientSpawnerDirty = true;
         invalidatePreviewEntityCache();
         this.setChanged();
@@ -446,6 +458,12 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         this.spawnerMobCap = Math.max(0, input.getIntOr("SpawnerMobCap", 0));
         this.clientSpawnerDirty = true;
 
+        // Native load restores SpawnData and weighted SpawnPotentials, previously omitted here.
+        // Seed old saves lacking these optional fields; keep the existing numeric compatibility reads.
+        this.spawner.setNextSpawnDataPublic(this.level, this.worldPosition,
+                new SpawnData(CosmicSpawnDataRules.tagged(new CompoundTag(), oneShotSpawnTag(),
+                        configuredSpawnEntity()), Optional.empty(), Optional.empty()));
+        this.spawner.load(this.level, this.worldPosition, input);
         restoreSpawnerFieldsFromSavedNbt(input);
     }
 
@@ -571,31 +589,19 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
                 + this.worldPosition.getZ();
     }
 
+    private String configuredSpawnEntity() {
+        ResourceLocation id = this.spawnerPreset != null
+                ? this.spawnerPreset.getEntityTypeId() : ResourceLocation.tryParse(this.spawnerEntityId);
+        return id == null || "none".equals(this.spawnerEntityId) ? null : id.toString();
+    }
+
     private void applySpawnTagToSpawnerData() {
-        CompoundTag base = new CompoundTag();
-        ResourceLocation entityId = this.spawnerPreset != null
-                ? this.spawnerPreset.getEntityTypeId()
-                : ResourceLocation.tryParse(this.spawnerEntityId);
-        if (entityId != null) {
-            base.putString("id", entityId.toString());
-        }
-
-        List<String> tags = new java.util.ArrayList<>();
-        base.getList("Tags").ifPresent(in -> {
-            for (int i = 0; i < in.size(); i++) {
-                in.getString(i).ifPresent(tags::add);
-            }
-        });
-        String marker = oneShotSpawnTag();
-        if (!tags.contains(marker)) {
-            var out = new ListTag();
-            for (String t : tags) out.add(net.minecraft.nbt.StringTag.valueOf(t));
-            out.add(net.minecraft.nbt.StringTag.valueOf(marker));
-            base.put("Tags", out);
-        }
-
-        SpawnData spawnData = forceFullBrightRules(new SpawnData(base, Optional.empty(), Optional.empty()));
-        this.spawner.setNextSpawnDataPublic(this.level, this.worldPosition, spawnData);
+        // The setter also covers later weighted-potential selections. Do not rebuild per tick.
+        if (this.spawner.currentSpawnData != null) return;
+        CompoundTag entity = CosmicSpawnDataRules.tagged(new CompoundTag(),
+                oneShotSpawnTag(), configuredSpawnEntity());
+        this.spawner.setNextSpawnDataPublic(this.level, this.worldPosition,
+                new SpawnData(entity, Optional.empty(), Optional.empty()));
         invalidatePreviewEntityCache();
     }
 
@@ -654,8 +660,9 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         }
 
         // Tag every Cosmic Spawner mob, including legacy/base-entity-only spawners with no preset, cap, or boss flag.
-        // This is a runtime SpawnData upgrade only; existing block-entity config is preserved.
+        // Saved SpawnData/potentials and preset fields remain authoritative.
         be.applySpawnTagToSpawnerData();
+        if (!CosmicSpawnDataRules.canTag(be.spawner.currentSpawnData.getEntityToSpawn())) return;
         if (be.oneShotTaggedCount < 0) be.oneShotTaggedCount = be.countTaggedEntities(sl);
 
         int before = be.countTaggedEntities(sl);

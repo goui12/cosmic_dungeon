@@ -225,6 +225,7 @@ public final class VendorService {
         }
         if (sp.distanceToSqr(vendor) > 64.0D) return VendorContext.fail("Too far from vendor.");
 
+        if (VendorAssignmentService.hasOtherRole(vendor)) return VendorContext.fail("NPC binding needs developer review.");
         ResourceLocation profileId = VendorAssignmentService.getProfileId(vendor);
         if (profileId == null) return VendorContext.fail("Vendor is not assigned.");
 

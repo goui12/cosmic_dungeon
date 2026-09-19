@@ -54,6 +54,7 @@ public final class Config {
     public static final ModConfigSpec.IntValue REPAIR_STEP_TICKS, REPAIR_READY_TICKS;
     public static final ModConfigSpec.DoubleValue REPAIR_RANGE;
     public static final ModConfigSpec.IntValue NPC_BLOOM_GAIN, NPC_KILL_LOSS;
+    public static final ModConfigSpec.DoubleValue VENDOR_BINDING_RANGE;
     public static final ModConfigSpec.DoubleValue CORDIAL_RETAIL, WARM_RETAIL, ALLY_RETAIL;
     public static final ModConfigSpec.IntValue MIN_PARTY, READY_COUNTDOWN_SECONDS, SELECTOR_SESSION_SECONDS;
     public static final ModConfigSpec.DoubleValue SELECTOR_RANGE;
@@ -231,6 +232,8 @@ public final class Config {
         B.pop();
         B.comment("NPC and Vendor Faction, 11Cwgha2loiAQfMJwKLWEC_dD3jir3VybyfFvrNZBUyY, 2026-08-18.")
                 .push("NpcFaction");
+        VENDOR_BINDING_RANGE = B.comment("Maximum block distance for developer vendor assign, clear and info; line of sight is required.")
+                .defineInRange("vendorBindingRange", 6.0, 1.0, 32.0);
         NPC_BLOOM_GAIN = B.defineInRange("pointsPerLesserBloom", 1, 0, 100);
         NPC_KILL_LOSS = B.defineInRange("pointsLostPerNpcKill", 26, 0, 200);
         CORDIAL_RETAIL = B.comment("Faction 5-49. Applied once to complete subtotal, half-up whole Trace.")
