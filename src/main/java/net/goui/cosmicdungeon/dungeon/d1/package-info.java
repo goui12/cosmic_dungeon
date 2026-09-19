@@ -25,8 +25,9 @@
  * Batch26: logical death intent/debit/drop/pickup/despawn share the same account image; active
  * drops join supply totals. Only ordinary destruction or dimension reset is a sink.
  * Batch27: Inn fee/bed readback and committed Chop inventory/location/ownership recovery.
- * Required: Run-end stored-inventory handoff (M102), older physical-currency pickup migration.
- * Verify native interrupted saves on licensed TEST.
+ * Batch28: saved D1 cleanup/claim receipts, offline escrow handoff and full-roster entry rollback.
+ * Required: older physical-currency pickup migration, Watson outcome/Bloom/reward transaction,
+ * and native interrupted-save acceptance on licensed TEST.
  * Preserve uncertain partial/manual-restored records for full-save review; never guess replacements.
  * TODO(M03, bounded account history): page/prune compact terminal operation/transfer receipts only
  * after proving old transaction IDs cannot replay. Full item evidence is already archived; preserve
@@ -259,13 +260,14 @@
  * Source: https://docs.google.com/document/d/1aDUTh-_AmrB3kMHKeyTDQKdIeJHBtqdyp11FPBg3vmY
  * Source modified: 2026-08-23T20:33:27.547Z
  *
- * TODO(M43, partial_D1): Finish Chop lifecycle and native acceptance
+ * TODO(M43, implemented_unverified): Licensed Chop lifecycle acceptance
  * Current: Batch27 freezes exact before/after inventory, position, ownership and escrow images.
  * A verified world decision plus owner custody/receipt recovers leave/return/adoption/Raw delivery.
  * No-space or invalid campfire refuses before reservation; uncertain saves retain evidence.
  * Pending journeys block member removal, reset and direct dimension restore, including offline owners.
- * Required: M102 must journal success/failure/logout/deleted-run inventory handoff before retiring
- * the ordinary escrow. Ambiguous legacy copies remain M20; native dedicated/integrated interruption,
+ * Batch28 journals success/failure/offline inventory and Raw entitlement before retiring escrow;
+ * player receipts and completed-run watermarks prevent repeat delivery. Required: M20 legacy review,
+ * native dedicated/integrated interruption,
  * two-owner pickup, death outside D1, lost campfire and full-inventory acceptance are still pending.
  * Source: https://docs.google.com/document/d/1fyiehjysrKWM0RilTxXpccmEQzdqc65Wmz0XuQRrUio
  * Source modified: 2026-07-07T22:42:25.125Z
@@ -928,16 +930,16 @@
  * Source: https://docs.google.com/document/d/1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4
  * Source modified: 2026-08-19T22:35:48.808Z
  *
- * TODO(M102, partial_D1): Startup rollback and final inventory handoff
- * Current: Entry roster and safe landing are rechecked; cancellation clears readiness.
- * Batch27 prevents destructive reset while a Chop transfer remains unacknowledged.
- * Required: Journal cleanupSnapshot/takeOutsideInventoryForCleanup and cleanupRecoverySnapshot
- * through PendingDungeonRecoveryData, D1StoredInventoryData and verified player-file receipts.
- * Success retains current loot and stores the other inventory; failure restores entry/outside
- * belongings. Do not retire escrow before its destination is durably receipted. Preserve
- * Cooked-to-Raw entitlement and all item components through offline completion and restart.
- * Test every paste/class-room/teleport boundary on world copies; prove no orphan run, duplicate
- * inventory or trapped player. No live-world preparation or destructive runtime test has run.
+ * TODO(M102, implemented_unverified): Licensed startup and final inventory handoff acceptance
+ * Current: Batch28 retains immutable cleanup/claim decisions in PendingDungeonRecoveryData,
+ * exact player receipts, bounded stored claims and full pre-entry startup images in the run save.
+ * Offline cleanup retires escrow only after its independent recovery/stash/Raw entitlement is
+ * verified. Incomplete startup rolls back the entire roster after restart; committed entry retains
+ * no rollback marker. Pre-registration paste failure touches no player inventory; refresh precedes reuse.
+ * Required: interrupt native player/world saves and all 36 paste/class-room/teleport boundaries
+ * on complete TEST copies. Verify offline success/failure, full inventories, custom components,
+ * respawn/position, no duplicated loot and no trapped member. Pre-journal unreceipted records are
+ * retained for review. No actual world preparation, game launch or destructive runtime test ran.
  * Source: https://docs.google.com/document/d/1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4
  * Source modified: 2026-08-19T22:35:48.808Z
  * Source: https://docs.google.com/document/d/10fv5JCue39bZq8ENdDdz7QtJdJKH67f8oCIzGcAyc2Y

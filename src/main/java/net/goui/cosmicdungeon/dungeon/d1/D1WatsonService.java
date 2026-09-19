@@ -133,6 +133,11 @@ public final class D1WatsonService {
         }
         if (!data.values(runId, "watson_outcome").isEmpty()) return;
         members.forEach(ServerPlayer::closeContainer);
+        if (!net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.readyForCleanup(server, run.orderedPlayers())
+                || DungeonRunRegistryData.get(server).starting(runId)) {
+            player.sendSystemMessage(Component.literal("Finish pending item recovery before handing in the Blooms."));
+            return;
+        }
         record Slot(ServerPlayer player, int index) {}
         Map<String, Slot> found = new LinkedHashMap<>();
         for (var member : members) {
@@ -145,6 +150,11 @@ public final class D1WatsonService {
             }
         }
         boolean success = found.size() == BLOOMS.size();
+        // TODO(M93/M03, final outcome transaction): Q&A D20/D23 (2026-09-16) requires
+        // success-only lifetime kills/Blooms/completion and consumption of all six physical Blooms.
+        // Batch28 journals the resulting inventory cleanup, not this earlier multi-store reward
+        // decision. Persist one outcome and receipt its Bloom inputs, lifetime/progression/faction
+        // projections before accepting native interrupted-save QA; do not reset lifetime totals.
         data.setValue(runId, "watson_outcome", success ? "success" : "failure");
         // All validation completes before any Bloom is removed.
         found.values().forEach(slot -> slot.player().getInventory().getItem(slot.index()).shrink(1));

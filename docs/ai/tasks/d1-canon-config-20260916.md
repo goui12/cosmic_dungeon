@@ -139,3 +139,15 @@ Existing save IDs gain optional fields; no registry/network/spawner change or au
 M40 implemented_unverified; M20/M43/M102 retain explicit legacy/final-handoff TODOs.
 Final local commit after all notes and staged review, then STOP before Batch28. No push/deployment.
 Details: ../D1_BATCH_27.md; remaining work: ../D1_REMAINING.md.
+
+
+Batch28, 2026-09-19: Cameron authorized28, checks and a final local commit, then STOP before29.
+Implemented immutable cleanup/claim decisions, native owner receipts, offline escrow/stash/Raw
+handoffs and full pre-entry startup rollback. Single writer owns run/pending/stored SavedData,
+inventory/Chop/lifecycle/reset/travel gates, entry coordinator and player save proof.
+Existing save IDs gain optional maps/player keys; no registry/network/spawner migration.
+3,836 offline checks (683 new), two config round trips, Java21 build and1,963 JSON checks passed.
+M43/M102 implemented_unverified;43 implemented,22partial D1,9preserved,27deferred=101.
+M03/M93 retain Watson outcome/Bloom/lifetime/progression/faction transaction work with code TODOs.
+No runtime/GameTest/deployment/push, active config/world edit, datagen or required PNG.
+Details: ../D1_BATCH_28.md. Final local commit after all notes/staged review, then STOP.

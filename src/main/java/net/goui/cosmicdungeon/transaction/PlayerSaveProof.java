@@ -21,7 +21,8 @@ public final class PlayerSaveProof {
     }
     public static boolean matchesLocation(CompoundTag expected,CompoundTag actual){
         return matches(expected,actual)&&Objects.equals(expected.get("Dimension"),actual.get("Dimension"))
-                &&Objects.equals(expected.get("Pos"),actual.get("Pos"))&&Objects.equals(expected.get("Rotation"),actual.get("Rotation"));
+                &&Objects.equals(expected.get("Pos"),actual.get("Pos"))&&Objects.equals(expected.get("Rotation"),actual.get("Rotation"))
+                &&Objects.equals(expected.get("respawn"),actual.get("respawn"));
     }
     public static boolean save(ServerPlayer player){return save(player,false);}
     public static boolean saveWithLocation(ServerPlayer player){return save(player,true);}

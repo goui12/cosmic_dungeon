@@ -84,6 +84,7 @@ public final class ProtectedItemRecovery {
                 : "Stored protected belongings are waiting for their original inventory context."));
     }
     public static int claim(ServerPlayer player) {
+        if (!net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.beforeInventoryChange(player)) return 0;
         if (player.containerMenu != player.inventoryMenu || !player.inventoryMenu.getCarried().isEmpty()) {
             player.sendSystemMessage(Component.literal("Close the open interface before recovering items."));
             return 0;

@@ -1,3 +1,9 @@
+> Latest checkpoint: **Batch28 (2026-09-19)** implements durable D1 cleanup/stored claims
+> and full-roster startup rollback. **3,836 offline checks**, two config round trips and Java21
+> build passed. Runtime remains untested. See [Batch28](D1_BATCH_28.md) and
+> [remaining work](D1_REMAINING.md). Stop after the final local commit; Batch29 awaits Cameron.
+> Older notes below are historical and do not override this checkpoint.
+
 # Dungeon 1 implementation â€” 2026-09-16
 
 Status: implementation candidate, not release-ready. No deployment or gameplay testing occurred.

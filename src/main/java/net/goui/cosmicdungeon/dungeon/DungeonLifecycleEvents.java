@@ -36,7 +36,8 @@ public final class DungeonLifecycleEvents {
         if (!(e.getEntity() instanceof ServerPlayer sp)) return;
         if (sp.level().isClientSide()) return;
 
-        if(net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.blocked(sp))return;
+        if (!net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.otherTransactionsReady(sp)
+                || !DungeonInventoryHandoffs.reconcile(sp)) return;
         DungeonAfkService.markActivity(sp);
         DungeonLifecycleService.performPendingRecoveryIfNeeded(sp);
         if(net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.blocked(sp))return;

@@ -49,6 +49,7 @@ public final class D1OfflineChecks {
         net.goui.cosmicdungeon.npc.inn.InnChecks.main(args);
         net.goui.cosmicdungeon.npc.inn.InnHookChecks.main(args);
         net.goui.cosmicdungeon.dungeon.ChopTravelChecks.main(args);
+        net.goui.cosmicdungeon.dungeon.InventoryHandoffChecks.main(args);
         var gameplay = TomlFormat.newConfig();
         Config.SPEC.correct(gameplay);
         check(((Number)gameplay.get("ItemProtection.recoveryStacksPerClaim")).intValue()==32,

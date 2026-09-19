@@ -65,7 +65,7 @@ public final class DungeonTravelRouter {
     }
 
     public static boolean evacuateUnauthorizedLocation(ServerPlayer player) {
-        if (player == null || ChopTravelRecovery.blocked(player)) return false;
+        if (player == null || ChopTravelRecovery.blocked(player) || DungeonInventoryHandoffs.blocked(player)) return false;
         ResourceKey<Level> current = player.level().dimension();
         boolean templateViolation = DungeonDefinitions.byDimension(current).isPresent() && !AccessPolicy.isDeveloper(player);
         boolean instanceViolation = DungeonInstanceSlots.slotOf(current).isPresent()

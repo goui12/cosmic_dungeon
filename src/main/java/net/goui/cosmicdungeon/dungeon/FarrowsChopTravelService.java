@@ -152,7 +152,7 @@ public final class FarrowsChopTravelService {
     }
 
     public static void syncOutsideInventory(ServerPlayer player) {
-        if (player == null || ChopTravelRecovery.blocked(player)) return;
+        if (player == null || ChopTravelRecovery.blocked(player) || DungeonInventoryHandoffs.blocked(player)) return;
         DungeonLifecycleService.findActiveRunForPlayer(player).ifPresent(run -> {
             DungeonInventoryEscrowData data = DungeonInventoryEscrowData.get(player.level().getServer());
             data.get(run.runId(), player.getUUID()).filter(DungeonInventoryEscrowData.Entry::outsideActive)
@@ -166,6 +166,8 @@ public final class FarrowsChopTravelService {
     public static Optional<CompoundTag> takeOutsideInventoryForCleanup(ServerPlayer onlinePlayer,
                                                                        net.minecraft.server.MinecraftServer server,
                                                                        long runId, UUID playerId) {
+        if (DungeonRunRegistryData.get(server).getRun(runId).map(run -> run.dungeonId().equals("dungeon_1")).orElse(false))
+            throw new IllegalStateException("D1 cleanup must use its durable inventory handoff");
         DungeonInventoryEscrowData data = DungeonInventoryEscrowData.get(server);
         DungeonInventoryEscrowData.Entry entry = data.get(runId, playerId).orElse(null);
         if (entry == null) return Optional.empty();
@@ -198,8 +200,8 @@ public final class FarrowsChopTravelService {
     }
 
     private static CompoundTag saveInventory(ServerPlayer player){return ChopTravelRecovery.saveInventory(player);}
-    // TODO(M43/M102, cleanup handoff): the run-completion/abort coordinator must journal receipt
-    // delivery of outside inventory before retiring escrow. This batch journals Chop travel itself;
-    // next batch must cover PendingDungeonRecoveryData and D1StoredInventoryData across restart.
-    // Q&A D20/D24 requires failed/completed/deleted runs to return belongings and stale Chops as Raw.
+    // TODO(M43/M102, licensed TEST): Batch28 routes D1 cleanup through DungeonInventoryHandoffs.
+    // Q&A D20/D24 requires success/failure/offline delivery and Raw entitlement across native
+    // restarts. Inject failure at journal/stash/owner/escrow/player/ack writes on complete save copies.
+    // The old helper above is retained only for deferred non-D1 lifecycle compatibility.
 }

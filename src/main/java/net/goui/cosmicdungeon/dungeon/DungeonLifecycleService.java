@@ -117,14 +117,18 @@ public final class DungeonLifecycleService {
 
         if(!net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.readyForCleanup(server,List.of(target.getUUID())))
             return "This member has pending inventory recovery; finish it before removing them.";
-        snapshot = cleanupSnapshot(server, run, target, snapshot);
-
-        applyRecoveryToLivePlayer(server, target, def, snapshot, true, "KICKED", run.runId());
-        PendingDungeonRecoveryData.get(server).remove(target.getUUID());
-        ChopOwnershipData.get(server).finishOwnerRun(target.getUUID(),run.runId());
-        runs.removePlayer(run.runId(), target.getUUID());
-        DungeonRunProgressData.get(server).clearPlayerFromRun(run.runId(), target.getUUID());
-        PlantFlagService.clearPlayerForRun(server, run.runId(), target.getUUID());
+        if (run.dungeonId().equals("dungeon_1")) {
+            if (runs.starting(run.runId())) return "Dungeon entry is still recovering.";
+            if (!DungeonInventoryHandoffs.cleanup(server, run, target.getUUID(), "KICKED"))
+                return "This member's saved inventory handoff needs recovery.";
+        } else {
+            snapshot = cleanupSnapshot(server, run, target, snapshot);
+            applyRecoveryToLivePlayer(server, target, def, snapshot, true, "KICKED", run.runId());
+            PendingDungeonRecoveryData.get(server).remove(target.getUUID());
+            runs.removePlayer(run.runId(), target.getUUID());
+            DungeonRunProgressData.get(server).clearPlayerFromRun(run.runId(), target.getUUID());
+            PlantFlagService.clearPlayerForRun(server, run.runId(), target.getUUID());
+        }
 
         target.sendSystemMessage(Component.literal("You were kicked from the dungeon by the Group Leader.").withStyle(ChatFormatting.RED));
         leader.sendSystemMessage(Component.literal("Kicked " + target.getName().getString() + " from the dungeon.").withStyle(ChatFormatting.YELLOW));
@@ -144,15 +148,7 @@ public final class DungeonLifecycleService {
         if(run==null||!run.dungeonId().equals("dungeon_1")||run.stateEnum()!=DungeonRunState.ACTIVE
                 ||!run.containsPlayer(playerId)||server.getPlayerList().getPlayer(playerId)!=null)return;
         if(!net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.readyForCleanup(server,List.of(playerId)))return;
-        var original=run.snapshotFor(playerId).orElse(new DungeonPlayerRunSnapshot(playerId,new CompoundTag()));
-        var snapshot=cleanupSnapshot(server,run,null,original);
-        PendingDungeonRecoveryData.get(server).put(new PendingDungeonRecoveryData.RecoveryRecord(
-                playerId,runId,run.dungeonId(),"LINK_DEAD",snapshot.inventoryNbt().copy()));
-        ChopOwnershipData.get(server).finishOwnerRun(playerId,runId);
-        net.goui.cosmicdungeon.trade.TradeRecoveryData.get(server).clearOwnerRun(playerId,runId);
-        runs.removePlayer(runId,playerId);
-        DungeonRunProgressData.get(server).clearPlayerFromRun(runId,playerId);
-        PlantFlagService.clearPlayerForRun(server,runId,playerId);
+        if (runs.starting(runId) || !DungeonInventoryHandoffs.cleanup(server, run, playerId, "LINK_DEAD")) return;
         var updated=runs.getRun(runId).orElse(null);
         if(updated!=null&&updated.orderedPlayers().isEmpty())finishRun(server,runId,DungeonResetReason.ABANDONED,null);
     }
@@ -173,6 +169,11 @@ public final class DungeonLifecycleService {
         if (party != null) {
             for (UUID id : party) {
                 if (id == null) continue;
+                var pending = PendingDungeonRecoveryData.get(server);
+                if (pending.handoff(id) != null || pending.get(id).isPresent()) return "A selected player has pending inventory recovery.";
+                var player = server.getPlayerList().getPlayer(id);
+                if (player != null && !net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.beforeInventoryChange(player))
+                    return "A selected player has pending item or payment recovery.";
                 Optional<DungeonRunRegistryData.RunRecord> other = runs.findRunForPlayer(id);
                 if (other.isPresent()) {
                     return "A selected player is already tracked in run " + other.get().runId() + ".";
@@ -236,8 +237,19 @@ public final class DungeonLifecycleService {
         String blocker = getStartRunBlocker(server, dungeonDimension, ids);
         if (blocker != null) return blocker;
 
+        CompoundTag startup = new CompoundTag();
         List<DungeonPlayerRunSnapshot> snapshots = new ArrayList<>(party.size());
         for (ServerPlayer sp : party) {
+            sp.closeContainer();
+            if (!sp.isAlive() || !net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.beforeInventoryChange(sp))
+                return "Party inventory recovery must finish before entry.";
+            var image = new CompoundTag();
+            image.put("inventory", ChopTravelRecovery.saveInventory(sp));
+            image.put("ownership", ChopOwnershipData.get(server).image(sp.getUUID()));
+            var entitlement = ChopOwnershipData.get(server).entry(sp.getUUID());
+            if (entitlement != null && (entitlement.deliver() || entitlement.runId() != 0))
+                return "Collect your pending Chop before starting another dungeon.";
+            startup.put(sp.getStringUUID(), image);
             snapshots.add(def == DungeonDefinitions.DUNGEON_1 ? ChopOwnershipService.snapshotForRun(sp,snapshotPlayer(sp)) : snapshotPlayer(sp));
         }
 
@@ -255,8 +267,19 @@ public final class DungeonLifecycleService {
             return "Run registration failed.";
         }
 
-        if(def == DungeonDefinitions.DUNGEON_1)
-            for(var member:party)ChopOwnershipData.get(server).bindRun(member.getUUID(),runId);
+        if (def == DungeonDefinitions.DUNGEON_1) {
+            var registry = DungeonRunRegistryData.get(server);
+            registry.prepareStartup(runId, startup);
+            if (!registry.flushVerified()) return "Entry preparation could not be verified; the roster and snapshots remain reserved.";
+            for (var member : party) {
+                var ownership = ChopOwnershipData.get(server);
+                ownership.bindRun(member.getUUID(), runId);
+                if (!ownership.flushVerified()) {
+                    finishRun(server, runId, DungeonResetReason.ABANDONED, null);
+                    return "Chop entry ownership needs recovery; startup rollback queued.";
+                }
+            }
+        }
         PlantFlagService.initializeRun(server, runId);
         net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(server).clearRun(runId);
         if (def == DungeonDefinitions.DUNGEON_1) party.forEach(net.goui.cosmicdungeon.dungeon.d1.D1Scoreboards::resetRun);
@@ -315,8 +338,13 @@ public final class DungeonLifecycleService {
 
     public static void recoverInstancePoolOnServerStarted(MinecraftServer server) {
         if (server == null) return;
+        PENDING_RESETS.clear();
         DungeonRunRegistryData runs = DungeonRunRegistryData.get(server);
         for (DungeonRunRegistryData.RunRecord run : runs.listAllRuns()) {
+            if (runs.starting(run.runId()) && run.stateEnum() == DungeonRunState.ACTIVE) {
+                finishRun(server, run.runId(), DungeonResetReason.ABANDONED, null);
+                continue;
+            }
             if (run.instanceSlot() == 0
                     && (run.stateEnum() == DungeonRunState.ACTIVE || run.stateEnum() == DungeonRunState.RESETTING)) {
                 DungeonDefinition definition = DungeonDefinitions.byId(run.dungeonId()).orElse(null);
@@ -359,6 +387,7 @@ public final class DungeonLifecycleService {
         MinecraftServer server = sl.getServer();
         if (server == null) return false;
 
+        if (DungeonInventoryHandoffs.blocked(sp)) return DungeonInventoryHandoffs.reconcile(sp);
         if(!net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.beforeInventoryChange(sp))return false;
         PendingDungeonRecoveryData pending = PendingDungeonRecoveryData.get(server);
         Optional<PendingDungeonRecoveryData.RecoveryRecord> opt = pending.get(sp.getUUID());
@@ -496,8 +525,12 @@ public final class DungeonLifecycleService {
             notifyDevelopers(server,Component.literal("[DungeonLifecycle] Chop travel recovery is pending; run and inventory escrow retained."));
             return;
         }
-        if(run.dungeonId().equals("dungeon_1"))ChopOwnershipData.get(server).finishRun(runId);
         runs.setState(runId, DungeonRunState.RESETTING, reason);
+        if (run.dungeonId().equals("dungeon_1") && !runs.flushVerified()) {
+            notifyDevelopers(server, Component.literal("[DungeonLifecycle] Reset decision needs save recovery; run and inventories retained."));
+            queueReset(server, run.dungeonId(), runId, reason, run.instanceSlot(), explicitSnapshotIdOrNull, RESET_RETRY_DELAY_TICKS);
+            return;
+        }
         DungeonRunRegistryData.RunRecord resetting = runs.getRun(runId).orElse(run);
 
         DungeonDefinition def = DungeonDefinitions.byId(resetting.dungeonId()).orElse(null);
@@ -508,7 +541,7 @@ public final class DungeonLifecycleService {
             return;
         }
 
-        evacuatePlayersInRun(server, resetting, "Dungeon run reset queued. You were moved to safety.");
+        if (def != DungeonDefinitions.DUNGEON_1) evacuatePlayersInRun(server, resetting, "Dungeon run reset queued. You were moved to safety.");
         if(def == DungeonDefinitions.DUNGEON_1)performMemberCleanup(server,resetting,reason);
         queueReset(server, def.id(), resetting.runId(), reason, resetting.instanceSlot(), explicitSnapshotIdOrNull, RESET_RETRY_DELAY_TICKS);
 
@@ -551,7 +584,18 @@ public final class DungeonLifecycleService {
                                              DungeonResetReason reason) {
         if (server == null || run == null) return;
         var d1=net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(server);
-        if(run.dungeonId().equals("dungeon_1")&&!d1.values(run.runId(),"cleanup_done").isEmpty())return;
+        if (run.dungeonId().equals("dungeon_1")) {
+            if (!net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.readyForCleanup(server, run.orderedPlayers())
+                    || !net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCompanions.preserveBeforeCleanup(server, run)) return;
+            for (UUID owner : run.orderedPlayers())
+                if (!DungeonInventoryHandoffs.cleanup(server, run, owner, reason.name())) return;
+            DungeonRunProgressData.get(server).clearRun(run.runId());
+            net.goui.cosmicdungeon.trade.TradeRecoveryData.get(server).clearRun(run.runId());
+            d1.clearRun(run.runId());
+            d1.setValue(run.runId(), "cleanup_done", "true");
+            PendingDungeonRecoveryData.get(server).flushVerified();
+            return;
+        }
         if(!net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.readyForCleanup(server,run.orderedPlayers())){
             notifyDevelopers(server,Component.literal("[DungeonLifecycle] Repair receipt recovery is pending; inventory cleanup retained.")
                     .withStyle(ChatFormatting.RED));return;
@@ -690,7 +734,11 @@ public final class DungeonLifecycleService {
 
         if (runId > 0L) {
             PlantFlagService.clearForRun(server, runId);
-            DungeonRunRegistryData.get(server).removeRun(runId);
+            var registry = DungeonRunRegistryData.get(server);
+            if (!registry.retireVerified(runId)) {
+                notifyDevelopers(server, Component.literal("[DungeonLifecycle] Run retirement save failed; reconnect/restart before reusing its slot."));
+                return;
+            }
             net.goui.cosmicdungeon.economy.PlayerCurrencyData.get(server).clearRunReceipts(runId);
             DungeonRunProgressData.get(server).clearRun(runId);
             net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(server).clearRun(runId);
@@ -728,6 +776,38 @@ public final class DungeonLifecycleService {
 
     private static DungeonPlayerRunSnapshot snapshotPlayer(ServerPlayer sp) {
         return new DungeonPlayerRunSnapshot(sp.getUUID(),ChopTravelRecovery.saveInventory(sp));
+    }
+
+    static void applyHandoffCleanup(ServerPlayer player, InventoryHandoffPlan plan) {
+        var server = player.level().getServer();
+        var overworld = server.overworld();
+        var spawn = overworld.getLevelData().getRespawnData();
+        var safe = net.goui.cosmicdungeon.rift.SafeTeleportUtil.findSafeTeleportPos(overworld, spawn.pos());
+        if (safe == null || !player.teleportTo(overworld, safe.getX() + .5, safe.getY(), safe.getZ() + .5,
+                Set.of(), spawn.yaw(), spawn.pitch(), false))
+            throw new IllegalStateException("Cleanup destination is unavailable; handoff remains pending");
+        net.goui.cosmicdungeon.item.identity.ProtectedItemRecovery.finishRun(player, plan.run(), plan.reason().equals("COMPLETED"));
+        setPlayerRespawnTo(player, overworld, safe, spawn.yaw(), spawn.pitch());
+        // Failed preparation returns the group to class-ready setup; its personally chosen class stays.
+        if (!plan.reason().equals("STARTUP_ABORT")) clearTemporaryPlayerState(player);
+        BloomSharedAdvancements.clearTemporaryBloomProgress(server, player);
+        net.goui.cosmicdungeon.dungeon.d1.D1Scoreboards.resetRun(player);
+        MetalmancerResonanceTracker.clearForPlayer(player.getUUID());
+        // D1 has no Metalmancer golems. Deferred D2 cleanup remains in the existing non-D1 path.
+    }
+
+    /** Commit only after every native player inventory/location save succeeded. */
+    public static boolean completeStartup(MinecraftServer server, long runId) {
+        var runs = DungeonRunRegistryData.get(server);
+        var run = runs.getRun(runId).orElse(null);
+        if (run == null || !runs.starting(runId) || run.stateEnum() != DungeonRunState.ACTIVE) return false;
+        for (UUID owner : run.orderedPlayers()) {
+            var p = server.getPlayerList().getPlayer(owner);
+            if (p == null || !p.isAlive() || !p.connection.isAcceptingMessages() || !run.containsDimension(p.level().dimension())
+                    || !net.goui.cosmicdungeon.transaction.PlayerSaveProof.saveWithLocation(p)) return false;
+        }
+        server.saveEverything(true, true, true);
+        return runs.completeStartupVerified(runId);
     }
 
     private static void applyRecoveryToLivePlayer(MinecraftServer server,
@@ -775,13 +855,8 @@ public final class DungeonLifecycleService {
     private static void restoreInventoryFromSnapshot(ServerPlayer sp, CompoundTag inventoryNbt) {
         if (sp == null) return;
 
-        int size = sp.getInventory().getContainerSize();
-        NonNullList<ItemStack> list = NonNullList.withSize(size, ItemStack.EMPTY);
-
-        if (inventoryNbt != null && !inventoryNbt.isEmpty()) {
-            ValueInput in = TagValueInput.create(ProblemReporter.DISCARDING, sp.level().registryAccess(), inventoryNbt);
-            ContainerHelper.loadAllItems(in, list);
-        }
+        var list = ChopTravelRecovery.decode(sp, inventoryNbt == null ? new CompoundTag() : inventoryNbt);
+        int size = list.size();
 
         for (int i = 0; i < size; i++) {
             sp.getInventory().setItem(i, list.get(i));
@@ -931,10 +1006,12 @@ public final class DungeonLifecycleService {
 
             var companionRun=pr.runId()>0?DungeonRunRegistryData.get(server).getRun(pr.runId()).orElse(null):null;
             if(companionRun!=null){
-                boolean repairsReady=net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.readyForCleanup(server,companionRun.orderedPlayers());
+                boolean repairsReady=(!companionRun.dungeonId().equals("dungeon_1") || DungeonRunRegistryData.get(server).flushVerified())
+                        && net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.readyForCleanup(server,companionRun.orderedPlayers());
                 if(repairsReady&&companionRun.dungeonId().equals("dungeon_1"))performMemberCleanup(server,companionRun,pr.reason());
                 if(!repairsReady||(companionRun.dungeonId().equals("dungeon_1")
-                        &&net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(server).values(companionRun.runId(),"cleanup_done").isEmpty())){
+                        && (net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(server).values(companionRun.runId(),"cleanup_done").isEmpty()
+                        || companionRun.dungeonDimensionIds().stream().anyMatch(dim -> !DungeonInventoryHandoffs.dimensionReady(server, dim))))){
                     // Outstanding ownership recovery is a hold, never permission to purge a world.
                     PENDING_RESETS.put(resetKey,new PendingReset(pr.dungeonId(),pr.runId(),pr.reason(),pr.instanceSlot(),
                             pr.snapshotIdOrNull(),nowTick+RESET_RETRY_DELAY_TICKS,pr.attemptsRemaining()));continue;

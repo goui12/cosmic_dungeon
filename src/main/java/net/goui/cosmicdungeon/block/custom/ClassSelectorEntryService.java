@@ -27,6 +27,26 @@ public final class ClassSelectorEntryService {
                                 List<UUID> ordered, Map<UUID, String> classes,
                                 java.util.function.BooleanSupplier validRoster) {
         if (!server.isSameThread() || !validRoster.getAsBoolean()) return false;
+        try {
+            return enterPrepared(server, anchor, ordered, classes, validRoster);
+        } catch (RuntimeException failure) {
+            LOGGER.error("D1 entry interrupted; registered rollback and saved inventories retained", failure);
+            rollbackRegistered(server, ordered);
+            return false;
+        }
+    }
+    private static void rollbackRegistered(MinecraftServer server, List<UUID> ordered) {
+        var runs = net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData.get(server);
+        for (UUID owner : ordered) {
+            var run = runs.findRunForPlayer(owner).orElse(null);
+            if (run != null && runs.starting(run.runId())) {
+                var online = server.getPlayerList().getPlayer(owner);
+                if (online != null) { DungeonLifecycleService.abortActiveRunForPlayer(online); return; }
+            }
+        }
+    }
+    private static boolean enterPrepared(MinecraftServer server, net.goui.cosmicdungeon.npc.tamsin.D1PartyLobby.Anchor anchor,
+            List<UUID> ordered, Map<UUID, String> classes, java.util.function.BooleanSupplier validRoster) {
         ServerLevel selectorLevel = ClassSelectorTeleportUtil.resolveLevel(server, anchor.dimension());
         BlockPos selectorPos = BlockPos.of(anchor.selector());
         if (selectorLevel == null || !(selectorLevel.getBlockEntity(selectorPos) instanceof ClassSelectorBlockEntity csbe)) return false;
@@ -196,6 +216,7 @@ public final class ClassSelectorEntryService {
         );
 
         if (err != null) {
+            rollbackRegistered(server, ordered);
             Component msg = Component.literal(err).withStyle(ChatFormatting.RED);
             for (ServerPlayer p : finalParty) {
                 p.sendSystemMessage(msg);
@@ -234,12 +255,21 @@ public final class ClassSelectorEntryService {
             DungeonLifecycleService.setPlayerRespawnTo(p, tp.level(), safe, p.getYRot(), p.getXRot());
         }
 
+        var run = net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData.get(server)
+                .findRunForPlayer(finalParty.getFirst().getUUID()).orElseThrow();
+        if (!DungeonLifecycleService.completeStartup(server, run.runId())) {
+            DungeonLifecycleService.abortActiveRunForPlayer(finalParty.getFirst());
+            return false;
+        }
         return true;
     }
 
     // TODO(M102): licensed TEST failure-injection at snapshot refresh, each paste, run registration
-    // and each teleport. This synchronous pipeline preserves existing rollback but does not prove
-    // power-loss atomicity. A failed pre-registration paste is refreshed before the slot is reused.
+    // and each teleport/player save, including failures before/after the final startup receipt.
+    // Tamsin 1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4 (2026-08-19) requires one locked
+    // roster. Its full pre-entry inventories remain saved until every owner entered. On restart an
+    // incomplete marker rolls back the entire roster. Pre-registration paste failures change no
+    // inventory; the unused slot is refreshed before reuse. Actual authored 36-room bindings remain M81.
     private static BlockPos ensureStandable(ServerLevel level, BlockPos pos) {
         if (isStandable(level, pos)) return pos;
 

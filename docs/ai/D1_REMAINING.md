@@ -1,12 +1,24 @@
 # D1 remaining work
 
-Updated 2026-09-19 after Batch27. Cameron authorized Batch27 only, then a local commit and STOP.
-Batch26 was committed as a11d98983c815ba2a26a3d7150afbcbe53531e2f before this pass.
-Gameplay/multiplayer testing remains deferred for a cumulative pass; static/build checks continue.
+Updated 2026-09-19 after Batch28. Cameron authorized Batch28, checks and a final local commit, then STOP.
+Batch27 baseline commit: 7b05883d8c2e5fd4fa6a37b51848e68932f007d3.
+Gameplay/multiplayer testing remains deferred for the cumulative licensed TEST pass.
 All101 original audit IDs remain intact. Code implementation is not runtime acceptance.
-Detailed current dispositions: Google Docs and Sheet/Audit/D1_Batch_27_2026-09-19/implementation_findings.json.
-Latest completion and manual QA: [Batch27](D1_BATCH_27.md). Prior: [Batch26](D1_BATCH_26.md).
-Historical completion: [Batches23-25](D1_BATCHES_23-25.md).
+Current dispositions: Google Docs and Sheet/Audit/D1_Batch_28_2026-09-19/implementation_findings.json.
+Latest report: [Batch28](D1_BATCH_28.md). Prior reports: [Batch27](D1_BATCH_27.md), [Batch26](D1_BATCH_26.md).
+
+## Batch28 completed in code
+
+D1 success/failure/kick/offline cleanup now saves an owner decision before retiring run escrow.
+Success stores the other inventory; failure restores outside belongings. Raw Chop entitlement
+shares that decision. Player receipts and per-owner completed-run watermarks prevent replay.
+Stored claims are bounded, component-preserving and recover their exact remainder.
+Startup retains full pre-entry inventories and ownership until all members' entry saves verify;
+an incomplete startup rolls back the roster after restart and retains personally chosen classes.
+Reset/direct restore waits for durable handoffs. Legacy unreceipted copies remain held for review.
+3,836 offline checks (683 new), two config round trips and Java21 build passed; runtime untested.
+M43/M102 are implemented/runtime-unverified. M03/M93 retain Watson's earlier reward transaction.
+Totals:43 implemented,22 partial D1,9 preserved,27 deferred=101. No new required PNG.
 
 ## Batch27 completed in code
 
@@ -84,10 +96,10 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 
 - M10: Finish legacy item adoption and no-drop/world-container protections
 - M72: Extend trusted identity adoption to reviewed legacy containers and drop definitions
-- M03: Complete final inventory handoff and legacy currency boundaries; Inn/travel decisions implemented
+- M03: Journal Watson outcome projections; finish legacy currency boundaries and receipt retention
 - M79: Complete remaining achievement and reward bindings
 
-## Other D1 follow-ups (20)
+## Other D1 follow-ups (18)
 
 - M02: Finish threshold-delivery recovery, legacy cap review and operator disposition
 - M05: Replace health-derived payouts with approved mob reward definitions
@@ -96,21 +108,22 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M17: Correct the Beatrix/Beluzon profile roles and unlock mapping
 - M20: Review ambiguous legacy Chops without deleting counts, components or ownership evidence
 - M41: Establish stable NPC identity and global spawn/personal-access separation
-- M43: Finish final lifecycle handoff and native Chop travel acceptance; journey journal implemented
 - M55: Implement exact restorative/vision/marking arrow identities and tier effects
 - M58: Add the approved Venefex attack, debuff and movement mechanics
 - M60: Reconcile Dragoon trident enchantments and chain lightning with bounded targeting
 - M63: Align Pyroclast rockets and launchers with exact payload/damage rules
 - M81: Reconcile every D1 quest, region, key and startup-room binding
-- M93: Implement physical progression-item retention under the approved exit policy
+- M93: Journal Watson Bloom/reward outcomes and verify authored physical progression bindings
 - M101: Validate personal travel gates and existing destination isolation
-- M102: Journal end-of-run inventory handoff and verify startup/class-room rollback
 - M104: Put explicit budgets around new AI, auras, snapshots and client effects
 - M105: Update help, commands and player terminology only alongside approved behavior
 - M106: Validate the retained item catalogue and repair broken references
 - M107: Use the linked calculator as a checked pricing reference, not a runtime web dependency
 
-## Implemented; runtime acceptance pending (41)
+## Implemented; runtime acceptance pending (43)
+
+- M43: Durable Chop run-end entitlement and inventory handoff
+- M102: Durable startup rollback, cleanup and stored-item claims
 
 - M40: Verified Inn bond/bed persistence, respawn fallback and protected First Heart
 
@@ -206,14 +219,16 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 
 ## Next work (await Cameron)
 
-28. Final D1 inventory handoff and startup rollback: M102/M43/M03; success/failure/offline cleanup receipts.
-    Keep legacy Chop review (M20) and existing placed NPC identity (M17) visible as separate follow-ups.
+29. Watson outcome transaction (M03/M93): one durable decision for physical Bloom consumption,
+    lifetime kills/Blooms/completion, progression/faction projections and final cleanup trigger.
+    The Batch28 journal begins after that earlier outcome decision; it does not make those writes atomic.
+Later: legacy currency/Chop/item identity review, remaining class mechanics, rewards and world bindings.
+These are proposals, not authorization to continue.
 
-STOP after the validated Batch27 local commit. Batch28 is not started or authorized in this pass.
-Remaining24 partial D1 IDs stay listed above; later batch sizing is not new authorization.
+STOP after the validated Batch28 local commit. Batch29 has not started.
+Remaining22 partial D1 IDs stay listed above; runtime-only acceptance is listed separately.
 The queued breakpoint remains: "finish what you're doing and stop".
-Gameplay/multiplayer testing is deferred to a cumulative pass. Focused code/build checks continue.
-Deployment/game launches and actual world migrations still require their existing authorization.
+No launch/GameTest/deployment/push or active-world/config edit occurred.
 
-Before runtime release: authored world/NPC/objective bindings, actual menu/mixin behavior,
-old saves, failure resets, packet replay, receipt recovery and licensed multiplayer QA.
+Before release: authored world/NPC/objective bindings, actual menus/mixins and all36 startup
+pastes, legacy saves, full inventories/offline players, native save interruption and licensed multiplayer QA.

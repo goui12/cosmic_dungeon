@@ -93,7 +93,7 @@ public final class Config {
                 .defineInRange("partyActionCooldownTicks",4,1,20);
         B.pop();
         B.comment("Protected equipment recovery and developer-only adoption.").push("ItemProtection");
-        PROTECTED_RECOVERY_BATCH=B.comment("Maximum eligible protected overflow stacks decoded by one /d1 recover command.")
+        PROTECTED_RECOVERY_BATCH=B.comment("Maximum eligible overflow or stored-inventory stacks processed by one /d1 recover or /d1 claim command.")
                 .defineInRange("recoveryStacksPerClaim",32,1,128);
         ITEM_AUTHORING_SECONDS=B.comment("Seconds to apply or undo one explicit held/container item adoption.")
                 .defineInRange("authoringPreviewSeconds",120,10,1800);
