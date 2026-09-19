@@ -198,3 +198,21 @@ summary of every remaining batch after each completion, as Cameron requested.
 See ../D1_BATCH_31.md and ../D1_REMAINING.md; private evidence D1_Batch_31_2026-09-19.
 No new required PNG, datagen, active config/world edit, launch/GameTest, deployment or push.
 Final local commit follows notes and staged allowlist review. Batch32 awaits Cameron.
+
+
+Batches32-33 (2026-09-19): Cameron expanded "Proceed with33" to complete both32 and33.
+Verified parent31: fcccd96a20c55d162db0f07cf7a1318fa7c689d5. Final combined local commit then STOP before34.
+Single writer owns currency pickup, account CODEC/receipt retirement, currency review commands,
+item identity/adoption/movement/transfer guards and their focused offline checks.
+Optional retired_reward_runs schema1 preserves old balances and receipt schemas; no new item,
+network payload, spawner format or active-world/config edit. New held-ammo authoring adds only
+the existing stable component; no authoring command or migration was executed.
+Combined10,617 offline checks (1,400 new32,620 new33), two config round trips, four new native
+account images, Java21 build and1,963 source JSON checks passed. Source artifacts verified.
+Unknown legacy entitlements and world mappings remain detailed code TODOs, not guessed grants.
+33 refreshed33Docs (18body reviews);32 refreshed four unchanged Docs. Workbooks unchanged.
+Counts44 implemented/21partial D1/9preserved/27deferred=101. Five planned batches remain:
+34 mobs/NPCs;35 pricing;36 D1 effects/ammo;37 progression/travel;38 displays/performance/QA handoff.
+No runtime/GameTest/datagen/deployment/push or new required PNG. Optional Tamsin map512x256 remains.
+See ../D1_BATCHES_32-33.md, ../D1_BATCH_32.md, ../D1_BATCH_33.md and ../D1_REMAINING.md.
+Final local commit follows all completion notes and staged allowlist review. Await Cameron for34.

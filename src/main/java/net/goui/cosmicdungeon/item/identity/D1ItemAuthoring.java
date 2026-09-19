@@ -29,6 +29,12 @@ public final class D1ItemAuthoring {
                 : ItemProvenanceService.present(stack) ? "Unknown/invalid provenance; item retained, transfers blocked."
                 : "Unclassified. Display names establish no identity.";
         source.sendSuccess(() -> Component.literal(status), false);
+        if (!stack.isEmpty()) {
+            var marker=stack.get(net.goui.cosmicdungeon.component.ModDataComponents.D1_ABILITY.get());
+            var ability=net.goui.cosmicdungeon.playerclass.d1.D1AbilityIdentity.identify(stack);
+            source.sendSuccess(() -> Component.literal("Ammunition: marker="+marker+", recognized="+ability
+                    +"; applied enchantments="+ItemProvenanceService.enchantments(stack)),false);
+        }
         return 1;
     }
     private static int approve(CommandSourceStack source, String identity) {

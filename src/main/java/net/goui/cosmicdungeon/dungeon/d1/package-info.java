@@ -36,9 +36,14 @@
  * Legacy Watson flags and historical failed-run Lesser totals lack receipts: review complete
  * backups without replaying grants, subtracting guessed totals or changing completed-run history.
  * Preserve uncertain partial/manual-restored records for full-save review; never guess replacements.
- * TODO(M03, bounded account history): page/prune compact terminal operation/transfer receipts only
- * after proving old transaction IDs cannot replay. Full item evidence is already archived; preserve
- * current receipts until a checked index/migration exists. Measure long-run save size on licensed TEST.
+ * Batch32: legacy physical denomination pickup is review-only, with no deposit/discard pair.
+ * Bounded /currency legacy inspection exposes nominal items and retained receipt counts without
+ * awarding money. Exact retired-run intervals replace only known finished-run mob receipt rows;
+ * native account round trips reject later replay while preserving active-run and lifetime evidence.
+ * TODO(M03, bounded account history): paired/operation terminal IDs remain retained after their
+ * large item plans are acknowledged. Archive/prune only after an exact online replay index exists.
+ * Never reconstruct previously pruned runs, old pickups or missing historical grants from balances.
+ * Full ledger evidence remains archived; measure long-run save size during licensed TEST.
  * TODO(M02, legacy TEST fixtures): exercise pre-ledger over-cap balances, existing capacity
  * overrides, old delivery markers after spending, and immediate debit/reset before polling.
  * Batch31 labels these observations honestly and retains any surviving original final transaction.
@@ -89,7 +94,14 @@
  * Batch 06 blocks voluntary protected drops and unsafe menu/portable-container insertion before
  * mutation. Developer preview/apply/undo protects exact original held or loaded-container stacks.
  * Preserve quantities/components; finish death/clone, cursor spill, automated and owner-pickup routes.
+ * Batch33: reviewed vanilla ammunition can receive one stable ability marker through held
+ * preview/apply/undo; exact components/counts and D1 class metadata are retained. Unknown markers,
+ * wrong bases/potions and foreign registered items cannot fall back to name-based abilities.
+ * Legacy recognized ammunition now shares no-drop/private-storage protections. New named loot
+ * adoption checks all23 approved enchantment signatures; existing receipts are not rewritten.
  * Unloaded/preset adoption still requires reviewed authoring mappings; never launder identity.
+ * Six class source lists, uncertain names and drop-placement gaps are recorded in
+ * docs/ai/D1_BATCH_33_MAPPINGS.md. Q&A D79 prohibits automatic chest or quantity edits.
  * Source: https://docs.google.com/document/d/1byHfuC0G_lb0IRrgO3kblLYP06AY8gJWm9bJOMlrFIc
  * Source modified: 2026-08-18T22:35:34.052Z
  * Source: https://docs.google.com/document/d/1aDUTh-_AmrB3kMHKeyTDQKdIeJHBtqdyp11FPBg3vmY

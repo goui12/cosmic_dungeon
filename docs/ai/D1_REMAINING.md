@@ -1,33 +1,48 @@
 # D1 remaining work
 
-Updated 2026-09-19 after Batch31. Cameron authorized Batch31, checks and final local commit; STOP before32.
-Verified Batch30 baseline: bf091702f67deb48e2f57061df028cadaac2204f.
+Updated 2026-09-19 after Batches32 and33. Cameron authorized both, validation and final
+local commit; STOP before34. Verified Batch31 parent: fcccd96a20c55d162db0f07cf7a1318fa7c689d5.
 Gameplay/multiplayer testing remains deferred for the cumulative licensed TEST pass.
-All 101 original audit IDs remain intact. Code implementation is not runtime acceptance.
-Current dispositions: Google Docs and Sheet/Audit/D1_Batch_31_2026-09-19/implementation_findings.json.
-Latest report: [Batch31](D1_BATCH_31.md). Prior reports: [Batch30](D1_BATCH_30.md), [Batch29](D1_BATCH_29.md).
+All101 original audit IDs remain intact. Code implementation is not runtime acceptance.
+Current dispositions: Google Docs and Sheet/Audit/D1_Batch_32_2026-09-19/implementation_findings.json.
+Latest: [combined32-33 checkpoint](D1_BATCHES_32-33.md), [Batch32](D1_BATCH_32.md),
+[Batch33](D1_BATCH_33.md) and [source mappings](D1_BATCH_33_MAPPINGS.md).
 
-## Planned batches remaining: 7
+## Planned batches remaining: 5
 
-These are estimated implementation/review batches, not seven more gameplay testing rounds.
-There were eight including31. Review may close already-implemented items without new code,
-or reveal a concrete issue requiring a split. Update the count and each summary after every
-completion. Actual world/multiplayer/performance acceptance belongs to the cumulative TEST
-phase afterward; no gameplay launch or deployment is authorized by this plan.
+These are estimated implementation/review batches, not five gameplay testing rounds.
+Both32 and33 are now completed in code; neither is pending. Review may close already
+implemented items or reveal a concrete issue requiring a split. Update the count and each
+summary after every completion. World/multiplayer/performance acceptance belongs to the
+cumulative licensed TEST phase afterward; this plan authorizes no launch or deployment.
 
 | Batch | Work remaining | Audit IDs / boundary |
 | --- | --- | --- |
-| 32 | Legacy physical currency, safe receipt retention, and older recovery evidence. | M03/M20; preserve ambiguous saves and historical totals |
-| 33 | Trusted legacy item, ammunition, loadout, and drop adoption mappings. | M10/M72/M55, M64-M71; D1 portions only, preserve authored stacks |
-| 34 | Authored mob rewards and stable NPC/profile bindings. | M05/M17/M41/M103; inspect source/code, reserve live-world edits for authorization |
-| 35 | Pricing conversions, retained catalogue exceptions, and calculator fixtures. | M12/M106/M107; use local checked source data |
-| 36 | Final source/code review of D1 class effects and ammunition. | M55/M58/M60/M63; separate code gaps from runtime-only checks |
-| 37 | Achievement rewards, quest/progression bindings, and travel gates. | M79/M81/M93/M101; preserve instance/lifetime separation |
-| 38 | Help and balance displays, performance bounds, and cumulative-test handoff. | M09/M104/M105; prepare acceptance steps, measure live performance later |
+| 34 | Authored mob rewards and stable NPC/profile bindings. | M05/M17/M41/M103; preserve live-world data |
+| 35 | Pricing conversions, catalogue exceptions and calculator fixtures. | M12/M106/M107; checked source data |
+| 36 | Final source/code review of D1 class effects and ammunition. | M55/M58/M60/M63; native effects remain untested |
+| 37 | Achievement rewards, progression bindings and travel gates. | M79/M81/M93/M101; preserve instance/lifetime separation |
+| 38 | Help, balance displays, performance bounds and cumulative-test handoff. | M09/M104/M105; measure live performance later |
 
-Remaining21 partial IDs can span multiple batches; nine preserved-content IDs need verification.
-The27 D2+ entries remain TODO-only and are excluded from this D1 batch estimate.
-Several labels below are original audit titles; consult each disposition before writing code.
+Remaining21 partial IDs can span these batches or explicit legacy/world TEST acceptance.
+Nine preserved-content IDs still need native verification. The27 D2+ entries remain
+TODO-only and excluded from the estimate. Consult dispositions before writing more code.
+
+## Batches32 and33 completed in code
+
+B32-1: unverified physical denominations no longer auto-credit/discard; existing items
+remain review evidence. Managed logical death currency retains its current journal.
+B32-2: bounded developer/direct-console legacy inventory/entity and receipt inspection.
+B32-3: exact retired-run intervals preserve replay rejection when mob receipt rows compact;
+active/lifetime/paired/operation receipts and all balances remain intact.
+B33-1: eighteen D1 ammunition identities, canonical/legacy aliases and strict marker/signature checks.
+B33-2: explicit held-ammunition preview/apply/undo; recognized legacy ammo shares no-drop guards.
+B33-3: all23 named-drop enchantment signatures verified during new named adoption.
+B33-4: six class loadout/source mappings, preserved quantities and explicit unknown world assignments.
+Combined10,617 offline checks (1,400 new32;620 new33), two config round trips, Java21 build,
+four new native account images and1,963 source JSON checks passed. No new required PNG.
+Counts remain44 implemented/21partial D1/9preserved/27deferred=101. Runtime remains untested.
+Legacy bulk conversion, unknown templates/spawners and historical grants were not guessed.
 
 ## Batch31 completed in code
 
@@ -152,8 +167,8 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 ## Priority D1 items remaining (4)
 
 - M10: Finish legacy item adoption and no-drop/world-container protections
-- M72: Extend trusted identity adoption to reviewed legacy containers and drop definitions
-- M03: Finish legacy currency/Watson evidence review and safe account receipt retention
+- M72: Verify reviewed adoption against actual templates, containers and drop definitions
+- M03: Verify legacy evidence and native replay guards; retain ambiguous historical grants
 - M79: Complete remaining achievement and reward bindings
 
 ## Other D1 follow-ups (17)
@@ -277,11 +292,9 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 
 ## Next work (await Cameron)
 
-32. Review legacy physical-currency custody, account receipt retention and older recovery evidence.
-Revalidate relevant sources, inspect current code, and choose concrete issues from the plan above.
-Do not force bulk migrations, guess old grants, rewrite authored content, or delete recovery evidence.
-
-STOP after the validated Batch31 local commit. Batch32 has not started.
+34. Review authored mob reward registrations and stable NPC/profile bindings against current sources.
+Do not guess spawner ownership or mutate live placements. Native world changes require explicit scope.
+STOP after the validated32-33 local commit. Batch34 has not started.
 The queued breakpoint remains: "finish what you're doing and stop".
 No launch/GameTest/deployment/push or active-world/config edit occurred.
 

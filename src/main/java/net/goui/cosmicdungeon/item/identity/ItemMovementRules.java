@@ -20,10 +20,14 @@ public final class ItemMovementRules {
     public static Flags flags(ItemStack stack) { return inspect(stack, 0, new int[]{MAX_STACKS}); }
     private static Flags inspect(ItemStack stack, int depth, int[] budget) {
         if (stack == null || stack.isEmpty()) return FREE;
-        if (net.goui.cosmicdungeon.economy.DeathCurrencyService.marked(stack)) return RESTRICTED;
+        if (net.goui.cosmicdungeon.economy.DeathCurrencyService.marked(stack)
+                || net.goui.cosmicdungeon.economy.LegacyCurrencyPolicy.denomination(
+                    net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString()) != null)
+            return RESTRICTED;
         if (depth > MAX_DEPTH || --budget[0] < 0) return RESTRICTED;
         boolean issued = ClassItemUtil.hasAnyAttunementMetadata(stack) || stack.getItem() instanceof ClassBoundItem
                 || stack.has(ModDataComponents.D1_ABILITY.get())
+                || net.goui.cosmicdungeon.playerclass.d1.D1AbilityIdentity.identify(stack) != null
                 || stack.is(ModTags.Items.CLASS_RESTRICTED_JUDICATOR) || stack.is(ModTags.Items.CLASS_RESTRICTED_BOGATYR)
                 || stack.is(ModTags.Items.CLASS_RESTRICTED_DRAGOON) || stack.is(ModTags.Items.CLASS_RESTRICTED_PYROCLAST)
                 || stack.is(ModTags.Items.CLASS_RESTRICTED_THEURGIST) || stack.is(ModTags.Items.CLASS_RESTRICTED_VENEFEX)

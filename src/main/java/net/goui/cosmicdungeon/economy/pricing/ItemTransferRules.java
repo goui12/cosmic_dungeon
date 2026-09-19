@@ -39,6 +39,7 @@ public final class ItemTransferRules {
                 || ClassItemUtil.hasAnyAttunementMetadata(stack) || stack.getItem() instanceof ClassBoundItem
                 || stack.has(ModDataComponents.DUNGEON_RETURN_TARGET.get())) return true;
         var id=BuiltInRegistries.ITEM.getKey(stack.getItem());
+        if(net.goui.cosmicdungeon.economy.LegacyCurrencyPolicy.denomination(id.toString())!=null)return true;
         if (id.getNamespace().equals("cosmicdungeon") && (id.getPath().contains("farrows_chop")
                 || id.getPath().startsWith("bloom_") || id.getPath().equals("lesser_bloom"))) return true;
         if (stack.is(ModTags.Items.CLASS_RESTRICTED_JUDICATOR) || stack.is(ModTags.Items.CLASS_RESTRICTED_METALMANCER)

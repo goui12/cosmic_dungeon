@@ -1,8 +1,9 @@
-Latest checkpoint: **Batch31 (2026-09-19)** adds durable wealth notifications, audited
-developer decisions and non-destructive legacy-cap observations in the account save.
-**8,597 offline checks**, two config round trips and Java21 build passed. Runtime remains
-untested. See [Batch31](D1_BATCH_31.md) and the [seven remaining batches](D1_REMAINING.md).
-Stop after the final local commit; Batch32 awaits Cameron.
+Latest checkpoint: **Batches32 and33 (2026-09-19)** add legacy currency review holds,
+safe retired-run receipt compaction, trusted D1 ammunition adoption and named-loot signatures.
+**10,617 offline checks**, two config round trips,1,963 source JSON checks and Java21 build
+passed. Runtime remains untested. See [combined checkpoint](D1_BATCHES_32-33.md),
+[Batch32](D1_BATCH_32.md), [Batch33](D1_BATCH_33.md) and [five remaining batches](D1_REMAINING.md).
+Stop after the final local commit; Batch34 awaits Cameron.
 Older notes below are historical and do not override this checkpoint.
 
 # Dungeon 1 implementation â€” 2026-09-16

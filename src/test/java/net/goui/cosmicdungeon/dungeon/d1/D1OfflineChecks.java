@@ -32,6 +32,7 @@ public final class D1OfflineChecks {
         net.goui.cosmicdungeon.item.identity.ProtectedRecoveryChecks.main(args);
         net.goui.cosmicdungeon.npc.tamsin.TamsinTaxChecks.main(args);
         net.goui.cosmicdungeon.item.identity.D1ItemIdentityChecks.main(args);
+        net.goui.cosmicdungeon.item.identity.D1AdoptionChecks.main(args);
         net.goui.cosmicdungeon.npc.tamsin.D1PartyChecks.main(args);
         net.goui.cosmicdungeon.npc.tamsin.TamsinChecks.main(args);
         net.goui.cosmicdungeon.economy.pricing.VendorPriceBreakdownChecks.main(args);
@@ -47,6 +48,7 @@ public final class D1OfflineChecks {
         net.goui.cosmicdungeon.vendor.CommerceChecks.main(args);
         net.goui.cosmicdungeon.economy.EconomyLedgerChecks.main(args);
         net.goui.cosmicdungeon.economy.WealthReviewChecks.main(args);
+        net.goui.cosmicdungeon.economy.LegacyCurrencyChecks.main(args);
         net.goui.cosmicdungeon.economy.DeathCurrencyChecks.main(args);
         net.goui.cosmicdungeon.npc.inn.InnChecks.main(args);
         net.goui.cosmicdungeon.npc.inn.InnHookChecks.main(args);

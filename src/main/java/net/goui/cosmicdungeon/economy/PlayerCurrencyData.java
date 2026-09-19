@@ -32,7 +32,8 @@ public final class PlayerCurrencyData extends SavedData {
             Codec.unboundedMap(UUID_CODEC,AccountOperation.CODEC).optionalFieldOf("operations",Map.of()).forGetter(data->data.operations),
             CompoundTag.CODEC.optionalFieldOf("ledger",new CompoundTag()).forGetter(data->data.ledger),
             CompoundTag.CODEC.optionalFieldOf("death_currency",new DeathCurrencyState().save()).forGetter(data->data.deaths.save()),
-            CompoundTag.CODEC.optionalFieldOf("wealth_review",new CompoundTag()).forGetter(data->data.wealthReviews.save())
+            CompoundTag.CODEC.optionalFieldOf("wealth_review",new CompoundTag()).forGetter(data->data.wealthReviews.save()),
+            CompoundTag.CODEC.optionalFieldOf("retired_reward_runs",new CompoundTag()).forGetter(data->data.retiredRewards.save())
     ).apply(inst, PlayerCurrencyData::fromCodec));
 
     public static final SavedDataType<PlayerCurrencyData> TYPE = new SavedDataType<>(
@@ -57,6 +58,7 @@ public final class PlayerCurrencyData extends SavedData {
     private CompoundTag ledger=new CompoundTag();
     private DeathCurrencyState deaths=new DeathCurrencyState();
     private WealthReviewState wealthReviews=new WealthReviewState();
+    private RetiredRewardRuns retiredRewards=new RetiredRewardRuns();
     private final Map<UUID,Set<Long>> legacyWealthThresholds=new HashMap<>();
     private final Deque<UUID> wealthObservationQueue=new ArrayDeque<>();
     private long[] observedThresholds;
@@ -66,11 +68,12 @@ public final class PlayerCurrencyData extends SavedData {
     private PlayerCurrencyData() {}
 
     private static PlayerCurrencyData fromCodec(Map<UUID, Long> balances, Map<UUID, Long> overrides,
-                                                Map<String,Long> receipts,java.util.List<String> crossings,Map<UUID,AccountTransfer> transfers,Map<UUID,RepairCommitPlan> repairPlans,Map<UUID,TradeCommitPlan> tradePlans,Map<UUID,AccountOperation> operations,CompoundTag ledger,CompoundTag deathCurrency,CompoundTag wealthReview) {
+                                                Map<String,Long> receipts,java.util.List<String> crossings,Map<UUID,AccountTransfer> transfers,Map<UUID,RepairCommitPlan> repairPlans,Map<UUID,TradeCommitPlan> tradePlans,Map<UUID,AccountOperation> operations,CompoundTag ledger,CompoundTag deathCurrency,CompoundTag wealthReview,CompoundTag retiredRewards) {
         PlayerCurrencyData data = new PlayerCurrencyData();
         if (balances != null) data.balanceByPlayer.putAll(balances);
         if (overrides != null) data.capacityOverrideByPlayer.putAll(overrides);
         data.receipts.putAll(receipts);data.wealthCrossings.addAll(crossings);
+        data.retiredRewards=RetiredRewardRuns.load(retiredRewards);
         for(String marker:crossings){
             String[] parts=marker.split("\\|",-1);
             if(parts.length!=2)throw new IllegalArgumentException("Invalid legacy wealth marker");
@@ -128,7 +131,8 @@ public final class PlayerCurrencyData extends SavedData {
                     &&receipts.equals(saved.receipts)&&wealthCrossings.equals(saved.wealthCrossings)&&transfers.equals(saved.transfers)
                     &&repairPlans.equals(saved.repairPlans)&&tradePlans.equals(saved.tradePlans)
                     &&operations.equals(saved.operations)&&ledger.equals(saved.ledger)&&deaths.save().equals(saved.deaths.save())
-                    &&wealthReviews.save().equals(saved.wealthReviews.save());
+                    &&wealthReviews.save().equals(saved.wealthReviews.save())
+                    &&retiredRewards.save().equals(saved.retiredRewards.save());
             if(!matches){setDirty();return false;}
             var pending=ledger.getCompoundOrEmpty("outbox");
             if(!pending.isEmpty()){
@@ -650,6 +654,7 @@ public final class PlayerCurrencyData extends SavedData {
     /** Returns absolute amount committed, or -1 on rejection. All callers run on the server thread. */
     public long change(UUID playerId,String name,long delta,String type,String related,long run,String tx,boolean partial){
         if(playerId==null||tx==null||delta==Long.MIN_VALUE||deathBlocked(playerId))return -1;
+        if(retiredRewards.blocks(tx,run))return -1;
         String key=tx+"|"+playerId;
         if(receipts.containsKey(key))return receipts.get(key);
         long before=getBalanceTrace(playerId),amount=delta<0?-delta:delta,rejected=0,after=before;
@@ -673,11 +678,31 @@ public final class PlayerCurrencyData extends SavedData {
         CurrencyAudit.report(server,playerId,name,tx,type,delta,before,after,rejected,related,run,"committed");
         return amount;
     }
-    public boolean hasReceipt(String transaction,UUID player){return receipts.containsKey(transaction+"|"+player);}
-    /** Drop finished-run receipt details after the run is removed; full structured evidence remains in the account outbox or verified ledger pages. */
-    public void clearRunReceipts(long run){
-        if(receipts.keySet().removeIf(key->key.startsWith("mob:"+run+":")))setDirty();
+    public boolean hasReceipt(String transaction,UUID player){
+        return retiredRewards.blocks(transaction,0)||receipts.containsKey(transaction+"|"+player);
     }
+    /** Called only after verified run retirement. Guard and pruning share the same account image. */
+    public void clearRunReceipts(long run){
+        boolean changed=retiredRewards.retire(run);
+        changed |= receipts.keySet().removeIf(key->key.startsWith("mob:"+run+":"));
+        if(changed)setDirty();
+    }
+    /** Constant-time developer diagnostics: no history walk, evidence deletion or currency grant. */
+    public CompoundTag receiptRetentionSummary(){
+        var result=new CompoundTag();
+        result.putInt("individual_reward_receipts",receipts.size());
+        result.putInt("retired_run_intervals",retiredRewards.rangeCount());
+        result.putInt("paired_transfer_receipts",transfers.size());
+        result.putInt("operation_receipts",operations.size());
+        result.putInt("unsettled_repair_plans",repairPlans.size());
+        result.putInt("unsettled_trade_plans",tradePlans.size());
+        result.putInt("unsettled_operations",operationByOwner.size());
+        return result;
+    }
+    // TODO(M03, terminal receipt archive): retain every paired/operation ID after item-plan
+    // acknowledgment. A ledger page alone is not an online replay index. Do not add age/count
+    // eviction until exact old-ID lookup and coherent backup/rollback have been implemented
+    // and native failure-tested. Only known retired-run mob details can compact into intervals.
     // TODO(M03, remaining legacy boundaries): Economy Internal (2026-08-18),
     // 17ufIuIy0VhLmB_V-6sZ7sCaUCZuGZUkHrgJLVpEcS28. Merchant/repair/trade owner receipts
     // and paged native item ledger now exist. Verify native interrupted saves on licensed TEST;

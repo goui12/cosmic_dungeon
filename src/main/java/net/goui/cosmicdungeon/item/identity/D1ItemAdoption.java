@@ -6,6 +6,8 @@ import net.goui.cosmicdungeon.Config;
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.auth.AccessPolicy;
 import net.goui.cosmicdungeon.economy.pricing.ItemTransferRules;
+import net.goui.cosmicdungeon.playerclass.d1.D1AbilityIdentity;
+import net.goui.cosmicdungeon.playerclass.d1.D1AmmunitionCatalog;
 import net.minecraft.commands.*;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
@@ -34,6 +36,9 @@ public final class D1ItemAdoption {
                 .then(Commands.literal("preview").then(Commands.argument("identity",StringArgumentType.word())
                         .suggests((c,b)->SharedSuggestionProvider.suggest(D1LootCatalog.ids(),b))
                         .executes(c->previewHeld(c.getSource(),StringArgumentType.getString(c,"identity")))))
+                .then(Commands.literal("ability").then(Commands.argument("identity",StringArgumentType.word())
+                        .suggests((c,b)->SharedSuggestionProvider.suggest(D1AmmunitionCatalog.ids(),b))
+                        .executes(c->previewAbility(c.getSource(),StringArgumentType.getString(c,"identity")))))
                 .then(Commands.literal("container").then(Commands.argument("position",BlockPosArgument.blockPos())
                         .then(Commands.argument("slot",IntegerArgumentType.integer(0,255))
                                 .then(Commands.argument("identity",StringArgumentType.word())
@@ -58,6 +63,18 @@ public final class D1ItemAdoption {
     }
     public static int previewHeld(CommandSourceStack source,String identity) {
         var p=developer(source);return p==null?0:preview(source,p,null,p.getInventory(),p.getInventory().getSelectedSlot(),identity);
+    }
+    private static int previewAbility(CommandSourceStack source,String identity) {
+        var p=developer(source);if(p==null)return 0;
+        PENDING.remove(p);
+        int slot=p.getInventory().getSelectedSlot();
+        var before=p.getInventory().getItem(slot);
+        try {
+            var after=D1AbilityIdentity.adoptCopy(before,identity);
+            return stage(source,p,null,p.getInventory(),slot,before,after,"cosmicdungeon:d1_ability="+identity);
+        } catch(IllegalArgumentException invalid) {
+            source.sendFailure(Component.literal(invalid.getMessage()+". Unchanged."));return 0;
+        }
     }
     private static int previewContainer(CommandSourceStack source,BlockPos pos,int slot,String identity) {
         var p=developer(source);if(p==null)return 0;
@@ -93,15 +110,19 @@ public final class D1ItemAdoption {
             if(!identity.isEmpty()&&named==null)throw new IllegalArgumentException("Unknown identity");
             var provenance=new ItemProvenance(ItemProvenance.LOOT,identity,named==null?ItemProvenanceService.itemKey(before):named.baseItem());
             var after=ItemProvenanceService.adoptCopy(before,provenance);
-            String token=UUID.randomUUID().toString();
-            var edit=new ItemAuthoringPlan<>(token,now(p)+Config.ITEM_AUTHORING_SECONDS.get()*20L,before.copy(),after);
-            PENDING.put(p,new Pending(p.level().dimension().location().toString(),scope(p),pos,c,slot,edit));
-            source.sendSuccess(()->Component.literal("PREVIEW ONLY: "+before.getCount()+" x "+ItemProvenanceService.itemKey(before)
-                    +" at "+(pos==null?"held slot "+slot:pos.toShortString()+" slot "+slot)
-                    +" -> "+provenance.encode()+". Counts and existing components unchanged. Apply: /d1 item apply "+token
-                    +". Exact undo available until preview expiry: /d1 item undo "+token),false);
-            return 1;
+            return stage(source,p,pos,c,slot,before,after,provenance.encode());
         } catch(IllegalArgumentException invalid) {source.sendFailure(Component.literal(invalid.getMessage()+". Unchanged."));return 0;}
+    }
+    private static int stage(CommandSourceStack source,ServerPlayer p,BlockPos pos,Container c,int slot,
+                             ItemStack before,ItemStack after,String classification) {
+        String token=UUID.randomUUID().toString();
+        var edit=new ItemAuthoringPlan<>(token,now(p)+Config.ITEM_AUTHORING_SECONDS.get()*20L,before.copy(),after);
+        PENDING.put(p,new Pending(p.level().dimension().location().toString(),scope(p),pos,c,slot,edit));
+        source.sendSuccess(()->Component.literal("PREVIEW ONLY: "+before.getCount()+" x "+ItemProvenanceService.itemKey(before)
+                +" at "+(pos==null?"held slot "+slot:pos.toShortString()+" slot "+slot)
+                +" -> "+classification+". Counts and existing components unchanged; one marker added."
+                +" Apply: /d1 item apply "+token+". Exact undo until expiry: /d1 item undo "+token),false);
+        return 1;
     }
     private static int change(CommandSourceStack source,String token,boolean undo) {
         var p=developer(source);if(p==null)return 0;

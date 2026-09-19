@@ -29,9 +29,23 @@ public final class ItemProvenanceService {
             throw new IllegalArgumentException("Wrong base item or already classified");
         if (!requiresProvenance(original) || RepairComponents.marked(original))
             throw new IllegalArgumentException("Not ordinary authored equipment");
+        if (!provenance.itemId().isEmpty()
+                && !D1LootSignatures.matches(provenance.itemId(), itemKey(original), enchantments(original)))
+            throw new IllegalArgumentException("Named loot requires documented enchantments " + D1LootSignatures.expected(provenance.itemId()));
         var copy = original.copy();
         copy.set(ModDataComponents.ITEM_PROVENANCE.get(), provenance.encode());
         return copy;
+    }
+    /** Full namespaced, applied enchantments; unregistered holders cannot match an approved map. */
+    public static java.util.Map<String,Integer> enchantments(ItemStack stack) {
+        var values = new java.util.HashMap<String,Integer>();
+        var applied = stack.get(net.minecraft.core.component.DataComponents.ENCHANTMENTS);
+        if (applied != null) for (var e : applied.entrySet()) {
+            var key = e.getKey().unwrapKey();
+            if (key.isEmpty()) return java.util.Map.of("<unregistered>", -1);
+            values.put(key.get().location().toString(), e.getIntValue());
+        }
+        return java.util.Map.copyOf(values);
     }
     /** Only the server's configured vendor-delivery path calls this; never a client stack. */
     public static ItemStack vendorCopy(ItemStack configured) {
