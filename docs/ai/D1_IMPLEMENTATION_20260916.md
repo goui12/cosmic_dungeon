@@ -1,8 +1,8 @@
-Latest checkpoint: **Batch29 (2026-09-19)** implements the saved Watson Bloom/outcome
-transaction, receipt-protected permanent projections and success-only new Lesser statistics.
-**7,951 offline checks**, two config round trips and Java21 build passed. Runtime remains
-untested. See [Batch29](D1_BATCH_29.md) and [remaining work](D1_REMAINING.md).
-Stop after the final local commit; Batch30 awaits Cameron.
+Latest checkpoint: **Batch30 (2026-09-19)** adds developer-reviewed orphan Chop recovery,
+old-custody issuance guards and session/transaction-safe item-adoption commands.
+**8,457 offline checks**, two config round trips and Java21 build passed. Runtime remains
+untested. See [Batch30](D1_BATCH_30.md) and [remaining work](D1_REMAINING.md).
+Stop after the final local commit; Batch31 awaits Cameron.
 Older notes below are historical and do not override this checkpoint.
 
 # Dungeon 1 implementation â€” 2026-09-16

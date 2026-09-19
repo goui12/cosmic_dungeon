@@ -49,6 +49,13 @@ public final class CurrencyPickupEvents {
             return;
         }
 
+        // TODO(M03, Gear Trading and Vendor Sales 2.0, 2026-08-18): replace this older
+        // denomination deposit/discard pair with verified account/entity custody and receipts.
+        // Preserve exact count/components/UUID/owner target; cover merge/split, chunk versus
+        // player save order, cap rejection, held/Ender Chest variants and interrupted restart.
+        // One receipt for a merged entity does not prove its earlier source entities were
+        // durably removed. Batch26's logical death-drop journal covers only managed new drops.
+        // Review complete save copies; never delete physical currency to guess a migration.
         if (CurrencyService.tryDeposit(serverPlayer, traceAmount)) {
             event.setCanPickup(TriState.FALSE);
             itemEntity.discard();

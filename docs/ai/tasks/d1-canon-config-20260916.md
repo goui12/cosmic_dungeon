@@ -165,3 +165,18 @@ See ../D1_BATCH_29.md and ../D1_REMAINING.md; private evidence D1_Batch_29_2026-
 Totals43 implemented/22 partial D1/9 preserved/27 deferred=101; native gameplay remains untested.
 No new PNG, datagen, active config/world edit, launch, deployment or push. Final local commit
 follows completion notes and staged allowlist review. Batch30 is proposed and awaits Cameron.
+
+Batch30 (2026-09-19): authorized Batch30 only, checks, final local commit and STOP before31.
+Verified parent29: 06336504483e26b294ebedb8bea6934d4b4a1e2b.
+Single writer owns Chop command registration, existing ownership/escrow journal validation and
+inventory issuance/adoption guards. One explicit orphan review preserves exact item images,
+self-owned token and developer evidence; older custody blocks a conflicting new entitlement.
+Item authoring rechecks pending recovery, live session/cursor and original run scope.
+Optional review metadata preserves old plan shapes; no new store/registry/network/spawner ID.
+8,457 offline checks (506 new), two config round trips and Java21 build passed.
+Four relevant live Docs unchanged; current Q&A D01/D02/D04/D24/D25 overrides older Chop prose.
+M03/M20/M10/M72 retain broader follow-ups; totals43 implemented/22 partial/9 preserved/27 deferred.
+Detailed legacy physical-currency and ambiguous Chop TODOs remain in code; no migration ran.
+See ../D1_BATCH_30.md and ../D1_REMAINING.md; private evidence D1_Batch_30_2026-09-19.
+No new required PNG, datagen, active config/world edit, launch/GameTest, deployment or push.
+Final local commit follows all notes and staged allowlist review. Batch31 awaits Cameron.

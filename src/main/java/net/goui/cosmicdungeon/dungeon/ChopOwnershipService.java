@@ -30,10 +30,18 @@ public final class ChopOwnershipService {
     private ChopOwnershipService(){}
     public static boolean isChop(ItemStack stack){return stack.is(ModItems.RAW_FARROWS_CHOP.get())||stack.is(ModItems.FARROWS_CHOP.get());}
     public static boolean canBuy(ServerPlayer player){
-        if(ChopTravelRecovery.blocked(player)||ChopOwnershipData.get(player.level().getServer()).entry(player.getUUID())!=null)return false;
+        if(net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.blocked(player)||hasStoredRecovery(player)
+                ||ChopOwnershipData.get(player.level().getServer()).entry(player.getUUID())!=null)return false;
         for(int i=0;i<player.getInventory().getContainerSize();i++)if(isChop(player.getInventory().getItem(i)))return false;
         for(int i=0;i<player.getEnderChestInventory().getContainerSize();i++)if(isChop(player.getEnderChestInventory().getItem(i)))return false;
         return true;
+    }
+    /** Do not issue/adopt another token while older custody may still contain its original. */
+    public static boolean hasStoredRecovery(ServerPlayer player){
+        var server=player.level().getServer();
+        return DungeonInventoryEscrowData.get(server).hasOwner(player.getUUID())
+                ||net.goui.cosmicdungeon.dungeon.d1.D1StoredInventoryData.get(server).hasPending(player.getUUID())
+                ||net.goui.cosmicdungeon.item.identity.ProtectedItemRecovery.pending(player);
     }
     public static ItemStack preparePurchase(ServerPlayer player,ItemStack stack){
         stack.set(ModDataComponents.CHOP_OWNER.get(),player.getUUID());
@@ -97,9 +105,13 @@ public final class ChopOwnershipService {
         }
         for(int i=0;i<player.getEnderChestInventory().getContainerSize();i++)if(isChop(player.getEnderChestInventory().getItem(i)))return;
         boolean tracked=DungeonRunRegistryData.get(player.level().getServer()).findRunForPlayer(player.getUUID()).isPresent();
-        if(entry==null&&(slot<0||!player.getInventory().getItem(slot).is(ModItems.RAW_FARROWS_CHOP.get())
+        if(!tracked&&(hasStoredRecovery(player)||DungeonInstanceSlots.slotOf(player.level().dimension()).isPresent()
+                ||DungeonDefinitions.byDimension(player.level().dimension()).isPresent()))return;
+        if(entry==null&&(tracked||slot<0||!player.getInventory().getItem(slot).is(ModItems.RAW_FARROWS_CHOP.get())
                 ||player.getInventory().getItem(slot).has(ModDataComponents.CHOP_OWNER.get())
-                ||player.getInventory().getItem(slot).has(ModDataComponents.CHOP_TOKEN.get())))return;
+                ||player.getInventory().getItem(slot).has(ModDataComponents.CHOP_TOKEN.get())
+                ||player.getInventory().getItem(slot).has(ModDataComponents.DUNGEON_RETURN_TARGET.get())
+                ||player.getInventory().getItem(slot).has(ModDataComponents.COORDINATES.get())))return;
         if(entry!=null&&(entry.deliver()?tracked:tracked||slot<0||!player.getInventory().getItem(slot).is(ModItems.FARROWS_CHOP.get())))return;
         var before=ChopTravelRecovery.saveInventory(player);
         var items=ChopTravelRecovery.inventory(player);
@@ -123,8 +135,12 @@ public final class ChopOwnershipService {
             var old=player.getInventory().getItem(slot);
             if(!old.is(ModItems.FARROWS_CHOP.get())||!owned(player,old))return;
             var target=old.get(ModDataComponents.DUNGEON_RETURN_TARGET.get());
-            if(target!=null&&DungeonRunRegistryData.get(player.level().getServer()).getRun(target.runId())
-                    .filter(r->r.stateEnum()==DungeonRunState.ACTIVE&&r.containsPlayer(player.getUUID())).isPresent())return;
+            var runs=DungeonRunRegistryData.get(player.level().getServer());
+            boolean retained=entry.runId()>0&&runs.getRun(entry.runId()).isPresent()
+                    ||target!=null&&runs.getRun(target.runId()).isPresent();
+            if(!ChopRecoveryReview.rejection(new ChopRecoveryReview.Evidence(player.getUUID(),1,1,0,
+                    old.get(ModDataComponents.CHOP_OWNER.get()),old.get(ModDataComponents.CHOP_TOKEN.get()),entry,
+                    target==null?null:target.owner(),target==null?0:target.runId(),retained,false,false)).isEmpty())return;
             next=new ChopOwnershipData.Entry(entry.token(),0,false);kind="refresh";
             items.set(slot,rawFrom(old,player.getUUID(),next));
         }else return;
@@ -135,15 +151,18 @@ public final class ChopOwnershipService {
                 pose,pose,new CompoundTag(),new CompoundTag(),data.image(player.getUUID()),ChopOwnershipData.entryImage(next),null);
         ChopTravelRecovery.execute(player,plan);
     }
-    private static ItemStack rawFrom(ItemStack previous,UUID owner,ChopOwnershipData.Entry entry){
+    static ItemStack rawFrom(ItemStack previous,UUID owner,ChopOwnershipData.Entry entry){
         var raw=previous.transmuteCopy(ModItems.RAW_FARROWS_CHOP.get(),1);
         raw.remove(ModDataComponents.DUNGEON_RETURN_TARGET.get());raw.remove(ModDataComponents.COORDINATES.get());
         raw.set(ModDataComponents.CHOP_OWNER.get(),owner);raw.set(ModDataComponents.CHOP_TOKEN.get(),UUID.fromString(entry.token()));return raw;
     }
     // TODO(M20/M43, legacy review): Q&A D02 allows ONE personal Chop. Do not delete extras,
     // split an overstack, adopt an unknown dropped owner, or replace a Cooked stack with one Raw.
-    // Preserve all counts/custom components and old return/escrow images for explicit developer
-    // preview/adoption. Only one untagged held Raw stack of count one can migrate automatically.
+    // /d1 chop inspect/preview/apply handles a single reviewed orphan outside any retained run.
+    // Duplicate, overstacked, partial/foreign markers, stored/orphan escrow and unknown dropped
+    // ownership still need complete-save review. Never use a force-delete or ownership guess.
+    // Q&A D24 changes unused Cooked to Raw only after its old run is gone; D04 protects its owner.
+    // Automatic adoption accepts only one untagged Raw without old return metadata or stored custody.
     @SubscribeEvent public static void toss(ItemTossEvent event){
         if(!(event.getPlayer() instanceof ServerPlayer player)||!isChop(event.getEntity().getItem()))return;
         var stack=event.getEntity().getItem();

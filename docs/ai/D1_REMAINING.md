@@ -1,11 +1,23 @@
 # D1 remaining work
 
-Updated 2026-09-19 after Batch29. Cameron authorized Batch29, checks and a final local commit, then STOP.
-Batch28 baseline commit: 77d257f101f818597f64dc687a3451d9f151fbe1.
+Updated 2026-09-19 after Batch30. Cameron authorized Batch30, checks and a final local commit, then STOP.
+Batch29 baseline commit: 06336504483e26b294ebedb8bea6934d4b4a1e2b.
 Gameplay/multiplayer testing remains deferred for the cumulative licensed TEST pass.
 All101 original audit IDs remain intact. Code implementation is not runtime acceptance.
-Current dispositions: Google Docs and Sheet/Audit/D1_Batch_29_2026-09-19/implementation_findings.json.
-Latest report: [Batch29](D1_BATCH_29.md). Prior reports: [Batch28](D1_BATCH_28.md), [Batch27](D1_BATCH_27.md).
+Current dispositions: Google Docs and Sheet/Audit/D1_Batch_30_2026-09-19/implementation_findings.json.
+Latest report: [Batch30](D1_BATCH_30.md). Prior reports: [Batch29](D1_BATCH_29.md), [Batch28](D1_BATCH_28.md).
+
+## Batch30 completed in code
+
+B30-1: Developer inspect/preview/apply recovers one reviewed orphan Chop through the existing
+save journal, retaining exact original item/ownership evidence in the owner receipt.
+B30-2: Purchases and automatic recovery respect old escrow/stored belongings and conflicting
+return/ownership data. Orphan escrow has a constant-time owner index.
+B30-3: Item-adoption preview/apply/undo rechecks pending recovery, live session, empty cursor
+and original dungeon scope. Unknown mappings and ambiguous items remain untouched.
+8,457 offline checks (506 new), two config round trips and Java21 build passed.
+M03/M20/M10/M72 remain partial for their broader legacy/world/runtime follow-ups.
+Counts remain43/22/9/27=101. No new required PNG. See Batch30 for exact files and TEST steps.
 
 ## Batch29 completed in code
 
@@ -117,7 +129,7 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M09: Verify native balance-display resync and stale-packet behavior
 - M12: Complete production-cost/conversion review and named-drop runtime pricing acceptance
 - M17: Correct the Beatrix/Beluzon profile roles and unlock mapping
-- M20: Review ambiguous legacy Chops without deleting counts, components or ownership evidence
+- M20: Review duplicate/foreign Chops and orphan escrow; single-item preview/apply is implemented
 - M41: Establish stable NPC identity and global spawn/personal-access separation
 - M55: Implement exact restorative/vision/marking arrow identities and tier effects
 - M58: Add the approved Venefex attack, debuff and movement mechanics
@@ -230,12 +242,12 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 
 ## Next work (await Cameron)
 
-30. Proposed: legacy currency/Chop/item identity recovery (M03/M20/M10/M72). Revalidate
-    sources and choose the next2-5 concrete issues; preserve ambiguous records for review.
+31. Proposed: legacy physical-currency recovery and account-cap/threshold evidence (M03/M02).
+    Revalidate sources and choose concrete issues; preserve ambiguous entity and save records.
 Later: remaining class mechanics, achievement rewards, pricing and authored world bindings.
 These are proposals, not authorization to continue.
 
-STOP after the validated Batch29 local commit. Batch30 has not started.
+STOP after the validated Batch30 local commit. Batch31 has not started.
 Remaining22 partial D1 IDs stay listed above; runtime-only acceptance is listed separately.
 The queued breakpoint remains: "finish what you're doing and stop".
 No launch/GameTest/deployment/push or active-world/config edit occurred.

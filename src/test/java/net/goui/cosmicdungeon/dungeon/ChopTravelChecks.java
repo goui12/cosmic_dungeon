@@ -39,14 +39,17 @@ public final class ChopTravelChecks {
         if(prepared&&!applied)p.put("custody",plan.reservation());
         if(applied)p.put("receipt",plan.receipt());return p;
     }
-    private static void interruptions(String kind)throws Exception{
-        var plan=plan(kind);var data=codec().parse(NbtOps.INSTANCE,new CompoundTag()).getOrThrow();data.reserve(plan);
+    public static int reviewedInterruptions(ChopTravelPlan plan)throws Exception{
+        int before=checks;interruptions(plan);return checks-before;
+    }
+    private static void interruptions(ChopTravelPlan plan)throws Exception{
+        String kind=plan.kind();UUID ownerId=plan.owner();var data=codec().parse(NbtOps.INSTANCE,new CompoundTag()).getOrThrow();data.reserve(plan);
         var cuts=new ArrayList<Cut>();
         cuts.add(new Cut("reservation only",encode(data),player(plan,false,false),plan.tag("ownership_before")));
         cuts.add(new Cut("owner preparation unsaved",encode(data),player(plan,false,false),plan.tag("ownership_before")));
         cuts.add(new Cut("owner preparation saved",encode(data),player(plan,true,false),plan.tag("ownership_before")));
         cuts.add(new Cut("commit not saved",encode(data),player(plan,true,false),plan.tag("ownership_before")));
-        data.commit(OWNER,plan.id());plan=data.transition(OWNER);
+        data.commit(ownerId,plan.id());plan=data.transition(ownerId);
         var committedImage=encode(data);
         cuts.add(new Cut("commit saved",committedImage,player(plan,true,false),plan.tag("ownership_before")));
         cuts.add(new Cut("ownership saved",encode(data),player(plan,true,false),plan.tag("ownership_after")));
@@ -56,7 +59,7 @@ public final class ChopTravelChecks {
         cuts.add(new Cut("owner receipt saved",encode(data),player(plan,false,true),plan.tag("ownership_after")));
         cuts.add(new Cut("receipt with earlier committed world image",committedImage,player(plan,false,true),plan.tag("ownership_after")));
         cuts.add(new Cut("ack not saved",encode(data),player(plan,false,true),plan.tag("ownership_after")));
-        data.acknowledge(OWNER,plan.id());
+        data.acknowledge(ownerId,plan.id());
         cuts.add(new Cut("ack saved",encode(data),player(plan,false,true),plan.tag("ownership_after")));
         Path dir=Files.createTempDirectory("chop-save-cuts-");
         try{
@@ -65,7 +68,7 @@ public final class ChopTravelChecks {
                 NbtIo.writeCompressed(cut.world(),worldFile);NbtIo.writeCompressed(cut.player(),playerFile);NbtIo.writeCompressed(cut.ownership(),ownerFile);
                 var loaded=codec().parse(NbtOps.INSTANCE,NbtIo.readCompressed(worldFile,NbtAccounter.unlimitedHeap())).getOrThrow();
                 var p=NbtIo.readCompressed(playerFile,NbtAccounter.unlimitedHeap());var owner=NbtIo.readCompressed(ownerFile,NbtAccounter.unlimitedHeap());
-                var pending=loaded.transition(OWNER);boolean committed=pending==null||pending.committed();
+                var pending=loaded.transition(ownerId);boolean committed=pending==null||pending.committed();
                 String label=kind+" / "+cut.label();
                 if(pending!=null){
                     check(pending.recoverable(p.getCompoundOrEmpty("custody"),p.getCompoundOrEmpty("receipt")),label+" recovery evidence accepted");
@@ -83,21 +86,21 @@ public final class ChopTravelChecks {
                         p.remove("custody");p.put("receipt",pending.receipt());
                     }
                     check(pending.receipted(p.getCompoundOrEmpty("receipt")),label+" repeat delivery is receipted");
-                    loaded.acknowledge(OWNER,pending.id());
+                    loaded.acknowledge(ownerId,pending.id());
                 }
                 check(p.getCompoundOrEmpty("inventory").equals(plan.tag(committed?"after":"before")),label+" inventory counts and custom components preserved exactly once");
                 check(p.getCompoundOrEmpty("pose").equals(plan.tag(committed?"destination":"source")),label+" inventory and location share outcome");
                 check(owner.equals(plan.tag(committed?"ownership_after":"ownership_before")),label+" token entitlement shares outcome");
-                check(!p.contains("custody")&&loaded.transition(OWNER)==null,label+" pending owner index cleared only after receipt");
-                check(codec().parse(NbtOps.INSTANCE,encode(loaded)).getOrThrow().transition(OWNER)==null,label+" settled native codec round trip");
-                if(plan.run()>0)check(loaded.get(plan.run(),OWNER).isPresent()==committed,label+" escrow decision retained");
+                check(!p.contains("custody")&&loaded.transition(ownerId)==null,label+" pending owner index cleared only after receipt");
+                check(codec().parse(NbtOps.INSTANCE,encode(loaded)).getOrThrow().transition(ownerId)==null,label+" settled native codec round trip");
+                if(plan.run()>0)check(loaded.get(plan.run(),ownerId).isPresent()==committed,label+" escrow decision retained");
             }
         }finally{
             Files.deleteIfExists(dir.resolve("escrow.dat"));Files.deleteIfExists(dir.resolve("player.dat"));Files.deleteIfExists(dir.resolve("ownership.dat"));Files.deleteIfExists(dir);
         }
     }
     public static void main(String[] args)throws Exception{
-        for(String kind:List.of("leave","return","adopt","refresh"))interruptions(kind);
+        for(String kind:List.of("leave","return","adopt","refresh"))interruptions(plan(kind));
         var plan=plan("leave");var copy=plan.image();copy.getCompoundOrEmpty("before").putString("changed","outside mutation");
         check(!plan.tag("before").contains("changed"),"Journal input is defensively copied");
         copy=plan.tag("after");copy.putString("changed","outside mutation");

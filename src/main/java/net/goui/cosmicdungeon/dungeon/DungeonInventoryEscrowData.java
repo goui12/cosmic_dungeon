@@ -48,6 +48,7 @@ public final class DungeonInventoryEscrowData extends SavedData {
             new SavedDataType<>(SAVE_ID, DungeonInventoryEscrowData::new, CODEC);
 
     private final Map<Key, Entry> entries = new HashMap<>();
+    private final Map<UUID,Integer> ownerEntries = new HashMap<>();
     private final Map<String,ChopTravelPlan> transitions = new HashMap<>();
     private MinecraftServer server;
 
@@ -63,16 +64,22 @@ public final class DungeonInventoryEscrowData extends SavedData {
     }
 
     public void put(Entry entry) {
-        entries.put(new Key(entry.runId(), entry.playerId()), entry);
+        if(entry.runId()<=0)throw new IllegalArgumentException("Invalid Chop escrow run");
+        if(entries.put(new Key(entry.runId(), entry.playerId()), entry)==null)
+            ownerEntries.merge(entry.playerId(),1,Integer::sum);
         setDirty();
     }
 
     public Optional<Entry> remove(long runId, UUID playerId) {
         Entry removed = entries.remove(new Key(runId, playerId));
-        if (removed != null) setDirty();
+        if (removed != null) {
+            ownerEntries.computeIfPresent(playerId,(owner,count)->count==1?null:count-1);setDirty();
+        }
         return Optional.ofNullable(removed);
     }
 
+    /** Includes orphan rows whose run has already disappeared; no full scan during player polling. */
+    public boolean hasOwner(UUID owner){return ownerEntries.containsKey(owner);}
     public boolean flushVerified(){return net.goui.cosmicdungeon.transaction.SavedDataProof.save(server,SAVE_ID,CODEC,this);}
     public boolean pendingDimension(String dimension){
         return transitions.values().stream().anyMatch(plan->plan.tag("source").getStringOr("dimension","").equals(dimension)
@@ -109,6 +116,7 @@ public final class DungeonInventoryEscrowData extends SavedData {
         for (Entry entry : persisted.entries()) {
             if(entry.runId()<=0||data.entries.put(new Key(entry.runId(), entry.playerId()),entry)!=null)
                 throw new IllegalArgumentException("Duplicate or invalid Chop inventory escrow");
+            data.ownerEntries.merge(entry.playerId(),1,Integer::sum);
         }
         persisted.transitions().forEach((owner,plan)->{
             if(!UUID.fromString(owner).equals(plan.owner()))throw new IllegalArgumentException("Foreign Chop transition");

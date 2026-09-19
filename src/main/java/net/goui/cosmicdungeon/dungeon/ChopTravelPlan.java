@@ -33,6 +33,7 @@ public final class ChopTravelPlan {
         if((kind.equals("adopt")||kind.equals("refresh"))&&(!tag("source").equals(tag("destination"))
                 ||!tag("escrow_before").isEmpty()||!tag("escrow_after").isEmpty()))
             throw new IllegalArgumentException("Local Chop recovery cannot teleport or replace escrow");
+        if(image.contains("review"))ChopRecoveryReview.validate(this);
         if(kind.equals("return")){
             var fire=image.getCompound("campfire").orElseThrow();
             net.minecraft.core.BlockPos.CODEC.parse(NbtOps.INSTANCE,fire.get("pos")).getOrThrow();
@@ -47,10 +48,15 @@ public final class ChopTravelPlan {
     public CompoundTag tag(String key){return image.getCompoundOrEmpty(key).copy();}
     public CompoundTag image(){return image.copy();}
     public ChopTravelPlan commit(){var next=image();next.putBoolean("committed",true);return new ChopTravelPlan(next);}
+    public ChopTravelPlan reviewed(UUID developer,int slot){
+        var next=image();next.put("review",ChopRecoveryReview.audit(this,developer,slot));return new ChopTravelPlan(next);
+    }
     public CompoundTag reservation(){var next=image();next.putBoolean("committed",false);return next;}
     public CompoundTag receipt(){
         var receipt=new CompoundTag();receipt.putString("id",id().toString());receipt.putString("owner",owner().toString());
-        receipt.putBoolean("committed",committed());return receipt;
+        receipt.putBoolean("committed",committed());
+        if(image.contains("review"))receipt.put("review",tag("review"));
+        return receipt;
     }
     public boolean receipted(CompoundTag receipt){return receipt().equals(receipt);}
     public boolean recoverable(CompoundTag custody,CompoundTag receipt){

@@ -14,6 +14,7 @@ public final class D1Command {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCompanions.register(dispatcher);
         net.goui.cosmicdungeon.item.identity.D1ItemAuthoring.register(dispatcher);
+         net.goui.cosmicdungeon.dungeon.ChopRecoveryCommand.register(dispatcher);
         net.goui.cosmicdungeon.achievement.d1.D1JournalAuthoring.register(dispatcher);
         net.goui.cosmicdungeon.npc.tamsin.TamsinService.register(dispatcher);
         net.goui.cosmicdungeon.npc.tamsin.D1PartyService.register(dispatcher);
