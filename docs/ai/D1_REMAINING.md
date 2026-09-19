@@ -1,12 +1,24 @@
 # D1 remaining work
 
-Updated 2026-09-19 after Batch26. Cameron authorized Batch26 only, then a local commit and STOP.
-Batch25 was committed as d96118247ffe101fba8d7de511387c1f45b9414e before this pass.
+Updated 2026-09-19 after Batch27. Cameron authorized Batch27 only, then a local commit and STOP.
+Batch26 was committed as a11d98983c815ba2a26a3d7150afbcbe53531e2f before this pass.
 Gameplay/multiplayer testing remains deferred for a cumulative pass; static/build checks continue.
 All101 original audit IDs remain intact. Code implementation is not runtime acceptance.
-Detailed current dispositions: Google Docs and Sheet/Audit/D1_Batch_26_2026-09-19/implementation_findings.json.
-Latest completion and manual QA: [Batch26](D1_BATCH_26.md).
+Detailed current dispositions: Google Docs and Sheet/Audit/D1_Batch_27_2026-09-19/implementation_findings.json.
+Latest completion and manual QA: [Batch27](D1_BATCH_27.md). Prior: [Batch26](D1_BATCH_26.md).
 Historical completion: [Batches23-25](D1_BATCHES_23-25.md).
+
+## Batch27 completed in code
+
+Verified Inn bond/bed writes, both-half bed approval, per-bed dimensions, valid respawn priority,
+and native protection/First Heart hooks. No authored world or NPC was changed.
+Chop travel now has exact inventory/location/ownership/escrow decisions with owner save receipts.
+Single Raw adoption and run-end Raw delivery use that journal; ambiguous legacy stacks remain intact.
+Direct world restore, member removal and reset wait for unresolved journeys.
+3,153 offline checks, two config round trips and Java21 build passed. Runtime testing remains pending.
+M40 is implemented/runtime-unverified. M20/M43 retain legacy review and final lifecycle handoff;
+M17 remains world identity verification. Totals:41 implemented,24 partial D1,9 preserved,27 deferred.
+No new required PNG. See the Batch27 report for native TEST steps and migration/rollback limits.
 
 ## Batch26 completed in code
 
@@ -68,12 +80,11 @@ Optional: tamsin_d1_map.png, 512 x 256, a winding map ending at Base Camp, signe
 Place in src/main/resources/assets/cosmicdungeon/textures/gui/. A drawn fallback already works.
 Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48.
 
-## Priority D1 items remaining (5)
+## Priority D1 items remaining (4)
 
 - M10: Finish legacy item adoption and no-drop/world-container protections
 - M72: Extend trusted identity adoption to reviewed legacy containers and drop definitions
-- M03: Complete Inn/travel and legacy currency boundaries; ledger and death supply implemented
-- M40: Implement Beluzon’s Inn bed binding and protected Heart relationship
+- M03: Complete final inventory handoff and legacy currency boundaries; Inn/travel decisions implemented
 - M79: Complete remaining achievement and reward bindings
 
 ## Other D1 follow-ups (20)
@@ -83,9 +94,9 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M09: Verify native balance-display resync and stale-packet behavior
 - M12: Complete production-cost/conversion review and named-drop runtime pricing acceptance
 - M17: Correct the Beatrix/Beluzon profile roles and unlock mapping
-- M20: Choose and migrate one Chop/campfire/travel state machine
+- M20: Review ambiguous legacy Chops without deleting counts, components or ownership evidence
 - M41: Establish stable NPC identity and global spawn/personal-access separation
-- M43: Make Chop return entitlement and full-inventory failure owner-safe
+- M43: Finish final lifecycle handoff and native Chop travel acceptance; journey journal implemented
 - M55: Implement exact restorative/vision/marking arrow identities and tier effects
 - M58: Add the approved Venefex attack, debuff and movement mechanics
 - M60: Reconcile Dragoon trident enchantments and chain lightning with bounded targeting
@@ -93,13 +104,15 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M81: Reconcile every D1 quest, region, key and startup-room binding
 - M93: Implement physical progression-item retention under the approved exit policy
 - M101: Validate personal travel gates and existing destination isolation
-- M102: Make startup preparation failure-safe and verify every class room paste
+- M102: Journal end-of-run inventory handoff and verify startup/class-room rollback
 - M104: Put explicit budgets around new AI, auras, snapshots and client effects
 - M105: Update help, commands and player terminology only alongside approved behavior
 - M106: Validate the retained item catalogue and repair broken references
 - M107: Use the linked calculator as a checked pricing reference, not a runtime web dependency
 
-## Implemented; runtime acceptance pending (40)
+## Implemented; runtime acceptance pending (41)
+
+- M40: Verified Inn bond/bed persistence, respawn fallback and protected First Heart
 
 - M08: Canonical death debit, recoverable logical drop and supply reconciliation
 
@@ -193,10 +206,11 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 
 ## Next work (await Cameron)
 
-27. Beluzon's Inn binding and Chop travel recovery. M40/M17/M20/M43; original inventory/return entitlement.
+28. Final D1 inventory handoff and startup rollback: M102/M43/M03; success/failure/offline cleanup receipts.
+    Keep legacy Chop review (M20) and existing placed NPC identity (M17) visible as separate follow-ups.
 
-STOP after the validated Batch26 local commit. Batch27 is not started or authorized in this pass.
-Remaining25 partial D1 IDs stay listed above; later batch sizing is not new authorization.
+STOP after the validated Batch27 local commit. Batch28 is not started or authorized in this pass.
+Remaining24 partial D1 IDs stay listed above; later batch sizing is not new authorization.
 The queued breakpoint remains: "finish what you're doing and stop".
 Gameplay/multiplayer testing is deferred to a cumulative pass. Focused code/build checks continue.
 Deployment/game launches and actual world migrations still require their existing authorization.

@@ -128,3 +128,14 @@ death_currency_life_v1 preserve legacy saves; no registry/network/spawner change
 interruptions and licensed multiplayer acceptance remain pending. No launch/deployment/new PNG.
 M08 implemented_unverified; M03 retains Inn/travel and legacy pickup follow-ups. Batch27 awaits Cameron.
 See ../D1_BATCH_26.md for exact files, compatibility, backup/rollback and cumulative QA.
+
+
+Batch27, 2026-09-19: Inn verified bond/bed persistence, approved-bed halves/dimensions, native
+protection/Heart hooks; Chop full-inventory/location/ownership/escrow recovery and lossless legacy
+holds. Single writer owns Inn/Chop SavedData, shared save proof and inventory/currency gates,
+dungeon lifecycle/direct-restore blockers, common mixins and server config.
+Existing save IDs gain optional fields; no registry/network/spawner change or authored-world edit.
+3,153 offline checks + two config round trips + Java21 build passed; runtime deferred.
+M40 implemented_unverified; M20/M43/M102 retain explicit legacy/final-handoff TODOs.
+Final local commit after all notes and staged review, then STOP before Batch28. No push/deployment.
+Details: ../D1_BATCH_27.md; remaining work: ../D1_REMAINING.md.

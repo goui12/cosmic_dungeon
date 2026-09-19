@@ -182,6 +182,8 @@ public final class DungeonWorldSnapshotService {
             }
 
             for (var pair : levels) {
+                if(DungeonInventoryEscrowData.get(server).pendingDimension(pair.getValue().dimension().location().toString()))
+                    return new SnapshotResult.Error("Chop journey recovery must settle before replacing this instance.");
                 var companionBlocker=net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCompanions.resetBlocker(pair.getValue());
                 if(companionBlocker.isPresent())return new SnapshotResult.Error(companionBlocker.get());
             }
@@ -302,6 +304,8 @@ public final class DungeonWorldSnapshotService {
             }
 
             for (var level : levels) {
+                if(DungeonInventoryEscrowData.get(server).pendingDimension(level.dimension().location().toString()))
+                    return new SnapshotResult.Error("Chop journey recovery must settle before restoring this dimension.");
                 var companionBlocker=net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCompanions.resetBlocker(level);
                 if(companionBlocker.isPresent())return new SnapshotResult.Error(companionBlocker.get());
             }

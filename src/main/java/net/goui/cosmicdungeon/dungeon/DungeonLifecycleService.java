@@ -115,6 +115,8 @@ public final class DungeonLifecycleService {
         DungeonPlayerRunSnapshot snapshot = run.snapshotFor(target.getUUID())
                 .orElseGet(() -> snapshotPlayer(target));
 
+        if(!net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.readyForCleanup(server,List.of(target.getUUID())))
+            return "This member has pending inventory recovery; finish it before removing them.";
         snapshot = cleanupSnapshot(server, run, target, snapshot);
 
         applyRecoveryToLivePlayer(server, target, def, snapshot, true, "KICKED", run.runId());
@@ -141,6 +143,7 @@ public final class DungeonLifecycleService {
         var runs=DungeonRunRegistryData.get(server);var run=runs.getRun(runId).orElse(null);
         if(run==null||!run.dungeonId().equals("dungeon_1")||run.stateEnum()!=DungeonRunState.ACTIVE
                 ||!run.containsPlayer(playerId)||server.getPlayerList().getPlayer(playerId)!=null)return;
+        if(!net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.readyForCleanup(server,List.of(playerId)))return;
         var original=run.snapshotFor(playerId).orElse(new DungeonPlayerRunSnapshot(playerId,new CompoundTag()));
         var snapshot=cleanupSnapshot(server,run,null,original);
         PendingDungeonRecoveryData.get(server).put(new PendingDungeonRecoveryData.RecoveryRecord(
@@ -489,6 +492,10 @@ public final class DungeonLifecycleService {
         if (run == null) return;
         if (run.stateEnum() == DungeonRunState.RESETTING) return;
 
+        if(!ChopTravelRecovery.readyForCleanup(server,run.orderedPlayers())){
+            notifyDevelopers(server,Component.literal("[DungeonLifecycle] Chop travel recovery is pending; run and inventory escrow retained."));
+            return;
+        }
         if(run.dungeonId().equals("dungeon_1"))ChopOwnershipData.get(server).finishRun(runId);
         runs.setState(runId, DungeonRunState.RESETTING, reason);
         DungeonRunRegistryData.RunRecord resetting = runs.getRun(runId).orElse(run);
@@ -720,15 +727,7 @@ public final class DungeonLifecycleService {
     }
 
     private static DungeonPlayerRunSnapshot snapshotPlayer(ServerPlayer sp) {
-        NonNullList<ItemStack> list = NonNullList.withSize(sp.getInventory().getContainerSize(), ItemStack.EMPTY);
-        for (int i = 0; i < list.size(); i++) {
-            list.set(i, sp.getInventory().getItem(i).copy());
-        }
-
-        TagValueOutput out = TagValueOutput.createWithoutContext(ProblemReporter.DISCARDING);
-        ContainerHelper.saveAllItems(out, list);
-
-        return new DungeonPlayerRunSnapshot(sp.getUUID(), out.buildResult());
+        return new DungeonPlayerRunSnapshot(sp.getUUID(),ChopTravelRecovery.saveInventory(sp));
     }
 
     private static void applyRecoveryToLivePlayer(MinecraftServer server,

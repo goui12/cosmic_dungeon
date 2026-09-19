@@ -47,7 +47,7 @@ public final class ChopCampfireEvents {
         for(var id:new ArrayList<>(PENDING.keySet())){
             var pending=PENDING.get(id);var player=server.getPlayerList().getPlayer(id);
             if(player==null||!player.isAlive()||!player.level().dimension().equals(pending.dimension())
-                    ||player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(pending.pos()))>36
+                    ||player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(pending.pos()))>Math.pow(Config.CHOP_COOK_RANGE.get(),2)
                     ||!ItemStack.matches(player.getItemInHand(pending.hand()),pending.item())){
                 PENDING.remove(id);continue;
             }

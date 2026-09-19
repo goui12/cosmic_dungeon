@@ -19,16 +19,24 @@ public final class PlayerSaveProof {
                 &&expected.getCompoundOrEmpty("NeoForgeData").getCompoundOrEmpty(ClassData.ROOT_TAG)
                 .equals(actual.getCompoundOrEmpty("NeoForgeData").getCompoundOrEmpty(ClassData.ROOT_TAG));
     }
-    public static boolean save(ServerPlayer player){
+    public static boolean matchesLocation(CompoundTag expected,CompoundTag actual){
+        return matches(expected,actual)&&Objects.equals(expected.get("Dimension"),actual.get("Dimension"))
+                &&Objects.equals(expected.get("Pos"),actual.get("Pos"))&&Objects.equals(expected.get("Rotation"),actual.get("Rotation"));
+    }
+    public static boolean save(ServerPlayer player){return save(player,false);}
+    public static boolean saveWithLocation(ServerPlayer player){return save(player,true);}
+    private static boolean save(ServerPlayer player,boolean location){
         try{
             var expected=snapshot(player);var server=player.level().getServer();
             boolean owner=server.isSingleplayerOwner(player.nameAndId());
             if(owner)server.saveEverything(true,true,true);else server.getPlayerList().getPlayerIo().save(player);
             var path=server.getWorldPath(LevelResource.PLAYER_DATA_DIR).resolve(player.getStringUUID()+".dat");
-            if(!matches(expected,NbtIo.readCompressed(path,NbtAccounter.create(64L*1024*1024))))return false;
+            var actual=NbtIo.readCompressed(path,NbtAccounter.create(64L*1024*1024));
+            if(!(location?matchesLocation(expected,actual):matches(expected,actual)))return false;
             if(owner){
                 var level=NbtIo.readCompressed(server.getWorldPath(LevelResource.LEVEL_DATA_FILE),NbtAccounter.create(64L*1024*1024));
-                return matches(expected,level.getCompoundOrEmpty("Data").getCompoundOrEmpty("Player"));
+                var integrated=level.getCompoundOrEmpty("Data").getCompoundOrEmpty("Player");
+                return location?matchesLocation(expected,integrated):matches(expected,integrated);
             }
             return true;
         }catch(Exception error){com.mojang.logging.LogUtils.getLogger().error("Player inventory/escrow save requires reconciliation: {}",player.getUUID(),error);return false;}

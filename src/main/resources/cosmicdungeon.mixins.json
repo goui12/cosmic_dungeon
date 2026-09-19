@@ -40,6 +40,9 @@
     "RepairCustodySaveMixin",
     "DeathCurrencyPlayerMixin",
     "DeathCurrencyItemMixin",
-    "DeathCurrencyEntityMixin"
+    "DeathCurrencyEntityMixin",
+    "InnHeartMixin",
+    "InnFluidMixin",
+    "InnFireMixin"
   ]
 }

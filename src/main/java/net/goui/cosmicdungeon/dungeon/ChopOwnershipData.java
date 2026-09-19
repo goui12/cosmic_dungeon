@@ -9,6 +9,7 @@ import java.util.*;
 /** One concurrent personal Chop, including dropped/stored items and the temporary return state. */
 public final class ChopOwnershipData extends SavedData {
     public record Entry(String token,long runId,boolean deliver) {
+        public Entry { UUID.fromString(token);if(runId<0||deliver&&runId!=0)throw new IllegalArgumentException("Invalid Chop ownership state"); }
         static final Codec<Entry> CODEC=RecordCodecBuilder.create(i->i.group(
                 Codec.STRING.fieldOf("token").forGetter(Entry::token),
                 Codec.LONG.optionalFieldOf("run_id",0L).forGetter(Entry::runId),
@@ -20,7 +21,7 @@ public final class ChopOwnershipData extends SavedData {
     private static final SavedDataType<ChopOwnershipData> TYPE=new SavedDataType<>("cosmicdungeon_chop_owners_v1",ChopOwnershipData::new,CODEC);
     private final Map<String,Entry> owners=new HashMap<>();
     private ChopOwnershipData() {}
-    private static ChopOwnershipData load(Map<String,Entry> owners){var d=new ChopOwnershipData();d.owners.putAll(owners);return d;}
+    private static ChopOwnershipData load(Map<String,Entry> owners){var d=new ChopOwnershipData();owners.forEach((owner,e)->{UUID.fromString(owner);d.owners.put(owner,e);});return d;}
     private MinecraftServer server;
     private static final Set<MinecraftServer> VALIDATED=Collections.newSetFromMap(new WeakHashMap<>());
     private static java.nio.file.Path path(MinecraftServer s){return s.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/cosmicdungeon_chop_owners_v1.dat");}
@@ -42,6 +43,10 @@ public final class ChopOwnershipData extends SavedData {
         }catch(Exception failure){setDirty();return false;}
     }
     public static net.minecraft.nbt.CompoundTag issuedImage(UUID token){return (net.minecraft.nbt.CompoundTag)Entry.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE,new Entry(token.toString(),0,false)).getOrThrow();}
+    public static net.minecraft.nbt.CompoundTag entryImage(Entry entry){
+        return entry==null?new net.minecraft.nbt.CompoundTag():(net.minecraft.nbt.CompoundTag)Entry.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE,entry).getOrThrow();
+    }
+    public boolean flushVerified(){return net.goui.cosmicdungeon.transaction.SavedDataProof.save(server,"cosmicdungeon_chop_owners_v1",CODEC,this);}
     public Entry entry(UUID owner){return owners.get(owner.toString());}
     public void issue(UUID owner,UUID token){owners.put(owner.toString(),new Entry(token.toString(),0,false));setDirty();}
     public void bindRun(UUID owner,long run){var e=entry(owner);if(e!=null){owners.put(owner.toString(),new Entry(e.token(),run,e.deliver()));setDirty();}}

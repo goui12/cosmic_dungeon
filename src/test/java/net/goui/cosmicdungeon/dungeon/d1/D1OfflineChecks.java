@@ -46,11 +46,22 @@ public final class D1OfflineChecks {
         net.goui.cosmicdungeon.vendor.CommerceChecks.main(args);
         net.goui.cosmicdungeon.economy.EconomyLedgerChecks.main(args);
         net.goui.cosmicdungeon.economy.DeathCurrencyChecks.main(args);
+        net.goui.cosmicdungeon.npc.inn.InnChecks.main(args);
+        net.goui.cosmicdungeon.npc.inn.InnHookChecks.main(args);
+        net.goui.cosmicdungeon.dungeon.ChopTravelChecks.main(args);
         var gameplay = TomlFormat.newConfig();
         Config.SPEC.correct(gameplay);
         check(((Number)gameplay.get("ItemProtection.recoveryStacksPerClaim")).intValue()==32,
                 "Protected return processing has a bounded configurable claim budget");
         check(Config.SPEC.isCorrect(gameplay), "Generated gameplay defaults validate");
+        check(((Number)gameplay.get("Beluzon.bondQuoteSeconds")).intValue()==30,"Inn quote lifetime default");
+        check(((Number)gameplay.get("Beluzon.bondInteractionRange")).doubleValue()==8,"Inn server range default");
+        check(((Number)gameplay.get("BeatrixFarrow.chopRecoveryPollTicks")).intValue()==20,"Chop recovery local poll interval");
+        check(((Number)gameplay.get("BeatrixFarrow.chopCookRange")).doubleValue()==6,"Chop cooking range default");
+        gameplay.set("Beluzon.bondInteractionRange",12.0);Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("Beluzon.bondInteractionRange")).doubleValue()==12,"Developer Inn range retained");
+        gameplay.set("BeatrixFarrow.chopRecoveryPollTicks",0);Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("BeatrixFarrow.chopRecoveryPollTicks")).intValue()==10,"Zero Chop polling interval rejected");
         check(((Number)gameplay.get("Economy.deathLossThresholdTrace")).longValue()==20,"Death threshold default");
         check(((Number)gameplay.get("Economy.deathLossFraction")).doubleValue()==.02,"Death percentage default");
         check(((Number)gameplay.get("Economy.minimumDeathLossTrace")).longValue()==1,"Death minimum default");

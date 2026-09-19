@@ -17,7 +17,8 @@ public class FarrowsChopItem extends Item {
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
         if (!(entity instanceof ServerPlayer sp)) return stack;
         var hand=sp.getUsedItemHand();
-        if (!FarrowsChopTravelService.returnToDungeon(sp, stack)) return stack;
+        if (!FarrowsChopTravelService.returnToDungeon(sp, stack))
+            return net.goui.cosmicdungeon.dungeon.ChopTravelRecovery.blocked(sp)?sp.getItemInHand(hand):stack;
 
         sp.awardStat(Stats.ITEM_USED.get(this));
         return sp.getItemInHand(hand);

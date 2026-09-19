@@ -33,7 +33,17 @@ public final class InnEvents {
     @SubscribeEvent public static void placed(BlockEvent.EntityPlaceEvent event){
         if(event.getLevel() instanceof ServerLevel level
                 &&(!(event.getEntity() instanceof ServerPlayer player)||!AccessPolicy.isDeveloper(player))
-                &&InnData.get(level.getServer()).contains(level,event.getPos()))event.setCanceled(true);
+                &&(InnData.get(level.getServer()).contains(level,event.getPos())
+                ||event instanceof BlockEvent.EntityMultiPlaceEvent multi&&multi.getReplacedBlockSnapshots().stream()
+                    .anyMatch(snapshot->InnData.get(level.getServer()).contains(level,snapshot.getPos()))))event.setCanceled(true);
+    }
+    @SubscribeEvent public static void fluidBlock(BlockEvent.FluidPlaceBlockEvent event){
+        if(event.getLevel() instanceof ServerLevel level&&InnData.get(level.getServer()).contains(level,event.getPos()))
+            event.setCanceled(true);
+    }
+    @SubscribeEvent public static void mobBreak(net.neoforged.neoforge.event.entity.living.LivingDestroyBlockEvent event){
+        if(event.getEntity().level() instanceof ServerLevel level&&InnData.get(level.getServer()).contains(level,event.getPos()))
+            event.setCanceled(true);
     }
     @SubscribeEvent public static void explosion(ExplosionEvent.Detonate event){
         if(event.getLevel() instanceof ServerLevel level)
@@ -46,7 +56,30 @@ public final class InnEvents {
     }
     @SubscribeEvent public static void hurt(LivingIncomingDamageEvent event){if(InnService.isBeluzon(event.getEntity()))event.setCanceled(true);}
     @SubscribeEvent public static void stopped(ServerStoppedEvent event){InnService.clear();}
-    // TODO(M40, protection integration): bind the Inn cuboid to the project's full region movement/
-    // fluid/piston controls before public play. Break/place, tool modification, explosions and new
-    // hostile spawns are blocked here; test the First Heart for a full night as Dad's document requires.
+    @SubscribeEvent public static void piston(net.neoforged.neoforge.event.level.PistonEvent.Pre event){
+        if(!(event.getLevel() instanceof ServerLevel level))return;
+        var inn=InnData.get(level.getServer());
+        if(inn.contains(level,event.getPos())||inn.contains(level,event.getFaceOffsetPos())){event.setCanceled(true);return;}
+        var resolver=event.getStructureHelper();if(resolver==null||!resolver.resolve())return;
+        var direction=event.getPistonMoveType().isExtend?event.getDirection():event.getDirection().getOpposite();
+        if(resolver.getToDestroy().stream().anyMatch(pos->inn.contains(level,pos))
+                ||resolver.getToPush().stream().anyMatch(pos->inn.contains(level,pos)||inn.contains(level,pos.relative(direction))))
+            event.setCanceled(true);
+    }
+    @SubscribeEvent(priority=EventPriority.HIGHEST)
+    public static void itemUse(net.neoforged.neoforge.event.entity.player.UseItemOnBlockEvent event){
+        var context=event.getUseOnContext();
+        if(!(context.getPlayer() instanceof ServerPlayer player)||AccessPolicy.isDeveloper(player))return;
+        var inn=InnData.get(player.level().getServer());
+        var item=context.getItemInHand().getItem();
+        if((item instanceof net.minecraft.world.item.BlockItem||item instanceof net.minecraft.world.item.BucketItem
+                ||item instanceof net.minecraft.world.item.FlintAndSteelItem||item instanceof net.minecraft.world.item.FireChargeItem)
+                &&(inn.contains(player.level(),context.getClickedPos())
+                ||inn.contains(player.level(),context.getClickedPos().relative(context.getClickedFace()))))
+            event.cancelWithResult(InteractionResult.FAIL);
+    }
+    // TODO(M40, native runtime QA): full-night Heart activation and every Inn boundary must be
+    // exercised on an authored-world COPY. NPC Beluzon Internal (Aug 29) requires a native
+    // Creaking and protected Pale Oak pillar/Heart/beds; no automatic placement or NPC replacement.
+    // These hooks protect local mechanisms, not other mods' direct world writes or operator commands.
 }

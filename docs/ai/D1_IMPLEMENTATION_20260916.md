@@ -3,6 +3,10 @@
 Status: implementation candidate, not release-ready. No deployment or gameplay testing occurred.
 Branch: feature/d1-canon-config-20260916; baseline 94e13b182bb8756935125af753940d1cbaee6b52.
 
+Current checkpoint: [Batch27](D1_BATCH_27.md), 2026-09-19. Inn/First Heart implementation and
+Chop travel recovery are complete in code; end-of-run inventory handoff and legacy review remain.
+See [remaining work](D1_REMAINING.md) for current dispositions. Older sections retain implementation history.
+
 ## Authority and scope
 
 Current direct instructions override the supplied Q&A, which overrides older conflicting source text.

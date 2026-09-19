@@ -24,7 +24,8 @@
  * a verified account outbox survives archive interruptions. Daily/lifetime account supply reconciles.
  * Batch26: logical death intent/debit/drop/pickup/despawn share the same account image; active
  * drops join supply totals. Only ordinary destruction or dimension reset is a sink.
- * Required: Inn/travel entitlements and older physical-currency pickup migration.
+ * Batch27: Inn fee/bed readback and committed Chop inventory/location/ownership recovery.
+ * Required: Run-end stored-inventory handoff (M102), older physical-currency pickup migration.
  * Verify native interrupted saves on licensed TEST.
  * Preserve uncertain partial/manual-restored records for full-save review; never guess replacements.
  * TODO(M03, bounded account history): page/prune compact terminal operation/transfer receipts only
@@ -112,12 +113,13 @@
  * Source: https://docs.google.com/document/d/1pqYKxtwoV74C-pdJJqNfl4ZPwoZe3cnQOSuTdVzJA2I
  * Source modified: 2026-08-19T21:23:31.822Z
  *
- * TODO(M20, partial_D1): Choose and migrate one Chop/campfire/travel state machine
- * Current: One owner-bound Chop token, normal/temporary inventory escrow and run-end Cooked-to-Raw
- * entitlement.
- * Required: Specify and test lossless adoption of legacy overstacked or duplicate Raw/Cooked Chops.
- * Preserve all unrelated inventory and avoid deleting an entire legacy stack when adopting one
- * token; choose an explicit duplicate-entitlement migration before live updates.
+ * TODO(M20, partial_D1): Lossless legacy Chop review
+ * Current: Q&A D01/D02/D24/D25 (Sep16) selects one personal round-trip token and return-to-Raw.
+ * Batch27 journals single held untagged Raw adoption; duplicate/overstacked/foreign/old Cooked
+ * stacks remain intact. Cooking and Raw conversion retain unrelated custom components.
+ * Required: Explicit developer preview/apply for ambiguous old stacks and orphan return targets.
+ * Never shrink/delete extras or invent ownership from a display name; retain exact old escrow.
+ * Test dropped and Ender Chest copies, menus, death outside the instance and full inventories.
  * Source: https://docs.google.com/document/d/1pqYKxtwoV74C-pdJJqNfl4ZPwoZe3cnQOSuTdVzJA2I
  * Source modified: 2026-08-19T21:23:31.822Z
  * Source: https://docs.google.com/document/d/18McISr9dcvMGp3-VjLDVsISosKBfkaidUTPzHxlw1Pc
@@ -219,12 +221,14 @@
  * Source: https://docs.google.com/document/d/1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4
  * Source modified: 2026-08-19T22:35:48.808Z; live rechecked 2026-09-18.
  *
- * TODO(M40, partial_D1): Implement Beluzonâ€™s Inn bed binding and protected Heart relationship
- * Current: Native Beluzon identity, one-time 15-Trace bond, /home and respawn fallback plus initial
- * Inn protection hooks.
- * Required: Bind and inspect the authored Inn, approved beds and protected Creaking Heart. Finish
- * piston/fluid/fire/explosion and hostile-entry boundaries, validate stronger valid respawn priority
- * and a full night cycle; never rewrite world structures automatically.
+ * TODO(M40, implemented_unverified): Licensed Inn/First Heart acceptance
+ * Current: Verified one-time 15-Trace bond, personal bed save and free bed changes; both halves
+ * must be intact inside the Inn. Existing valid respawn wins; unavailable worlds may fall back.
+ * Batch27 covers piston sources/destinations, fluids, burning/lava ignition, explosions and
+ * hostile block destruction/spawning. Protected Hearts cannot spawn protectors outside the region.
+ * Required: Bind/inspect the existing native Creaking, Pale Oak pillar, Heart and approved beds
+ * on a backed-up TEST copy; run a full night and native respawn/save interruption checks.
+ * No automatic world/bed/NPC replacement, mob-entry wall or developer-command rewrite.
  * Source: https://docs.google.com/document/d/1FT6k2MFKgQf_tQ5UcBn0wmqJ9-yY_Wdpjna4USdVOZA
  * Source modified: 2026-08-29T14:49:42.290Z
  * Source: https://docs.google.com/document/d/1EHoM1a5Yui1hSj8nC6MNDnfo99URDKAxdhv0IwidpXg
@@ -255,12 +259,14 @@
  * Source: https://docs.google.com/document/d/1aDUTh-_AmrB3kMHKeyTDQKdIeJHBtqdyp11FPBg3vmY
  * Source modified: 2026-08-23T20:33:27.547Z
  *
- * TODO(M43, partial_D1): Make Chop return entitlement and full-inventory failure owner-safe
- * Current: Owner-only pickups, safe no-space refusal, return-token validation and run-end raw
- * entitlement.
- * Required: Include Chop/world/escrow state in the cross-file crash journal and lossless legacy-
- * stack migration (M20). Verify logout, dying outside the instance, deleted campfires and full
- * inventories with two owners.
+ * TODO(M43, partial_D1): Finish Chop lifecycle and native acceptance
+ * Current: Batch27 freezes exact before/after inventory, position, ownership and escrow images.
+ * A verified world decision plus owner custody/receipt recovers leave/return/adoption/Raw delivery.
+ * No-space or invalid campfire refuses before reservation; uncertain saves retain evidence.
+ * Pending journeys block member removal, reset and direct dimension restore, including offline owners.
+ * Required: M102 must journal success/failure/logout/deleted-run inventory handoff before retiring
+ * the ordinary escrow. Ambiguous legacy copies remain M20; native dedicated/integrated interruption,
+ * two-owner pickup, death outside D1, lost campfire and full-inventory acceptance are still pending.
  * Source: https://docs.google.com/document/d/1fyiehjysrKWM0RilTxXpccmEQzdqc65Wmz0XuQRrUio
  * Source modified: 2026-07-07T22:42:25.125Z
  * Source: https://docs.google.com/document/d/1pqYKxtwoV74C-pdJJqNfl4ZPwoZe3cnQOSuTdVzJA2I
@@ -922,12 +928,16 @@
  * Source: https://docs.google.com/document/d/1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4
  * Source modified: 2026-08-19T22:35:48.808Z
  *
- * TODO(M102, partial_D1): Make startup preparation failure-safe and verify every class room paste
- * Current: Entry roster and safe landing positions are rechecked; cancellation clears readiness and
- * refuses unsafe entry.
- * Required: Test preparation failures at each schematic paste/class room/teleport boundary using
- * world copies. Prove rollback leaves no orphan active run, duplicated inventory or trapped player;
- * no live-world preparation test has run.
+ * TODO(M102, partial_D1): Startup rollback and final inventory handoff
+ * Current: Entry roster and safe landing are rechecked; cancellation clears readiness.
+ * Batch27 prevents destructive reset while a Chop transfer remains unacknowledged.
+ * Required: Journal cleanupSnapshot/takeOutsideInventoryForCleanup and cleanupRecoverySnapshot
+ * through PendingDungeonRecoveryData, D1StoredInventoryData and verified player-file receipts.
+ * Success retains current loot and stores the other inventory; failure restores entry/outside
+ * belongings. Do not retire escrow before its destination is durably receipted. Preserve
+ * Cooked-to-Raw entitlement and all item components through offline completion and restart.
+ * Test every paste/class-room/teleport boundary on world copies; prove no orphan run, duplicate
+ * inventory or trapped player. No live-world preparation or destructive runtime test has run.
  * Source: https://docs.google.com/document/d/1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4
  * Source modified: 2026-08-19T22:35:48.808Z
  * Source: https://docs.google.com/document/d/10fv5JCue39bZq8ENdDdz7QtJdJKH67f8oCIzGcAyc2Y

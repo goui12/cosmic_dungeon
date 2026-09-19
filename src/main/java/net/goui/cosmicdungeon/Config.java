@@ -17,7 +17,8 @@ public final class Config {
     public static final ModConfigSpec.DoubleValue ITEM_AUTHORING_RANGE;
     public static final ModConfigSpec.IntValue BASE_CAMP_POLL_TICKS, TAX_CONFIRM_SECONDS;
     public static final ModConfigSpec.DoubleValue BASE_CAMP_RADIUS;
-    public static final ModConfigSpec.IntValue CHOP_COOK_TICKS;
+    public static final ModConfigSpec.IntValue CHOP_COOK_TICKS, CHOP_RECOVERY_POLL_TICKS, INN_QUOTE_SECONDS;
+    public static final ModConfigSpec.DoubleValue INN_RANGE, CHOP_COOK_RANGE;
     public static final ModConfigSpec.IntValue BLOOM_ACTIVITY_WINDOW_SECONDS, LINK_DEAD_SECONDS, FLAG_DISCONNECT_GRACE_SECONDS;
     public static final ModConfigSpec.IntValue BELL_WINDOW_TICKS, BELL_COUNT;
     public static final ModConfigSpec.IntValue CANDLE_SCAN_BUDGET, CANDLE_SCAN_MAX_VOLUME;
@@ -115,9 +116,19 @@ public final class Config {
         CANDLE_COLOR_COUNT = B.comment("Different lit candle colors on chiseled tuff. Q&A D71; Wither variants deferred.")
                 .defineInRange("sixfoldVigilColors", 6, 1, 16);
         B.pop();
+        B.push("Beluzon");
+        INN_QUOTE_SECONDS=B.comment("Seconds before a one-time bond quote expires. Implementation default; price lives in all_vendors_prices.config.")
+                .defineInRange("bondQuoteSeconds",30,5,300);
+        INN_RANGE=B.comment("Blocks from the existing profiled Creaking when confirming a bond. Implementation default.")
+                .defineInRange("bondInteractionRange",8.0,1.0,32.0);
+        B.pop();
         B.push("BeatrixFarrow");
         CHOP_COOK_TICKS=B.comment("Farrow Chop Internal: approximately four seconds. Q&A D25 permits any lit campfire.")
                 .defineInRange("chopCookTicks",80,1,1200);
+        CHOP_RECOVERY_POLL_TICKS=B.comment("Ticks between owner-local stale-return checks. No world scan.")
+                .defineInRange("chopRecoveryPollTicks",20,10,200);
+        CHOP_COOK_RANGE=B.comment("Blocks allowed from the lit campfire while cooking. Implementation default.")
+                .defineInRange("chopCookRange",6.0,1.0,16.0);
         B.pop();
         B.push("JohnWatson");
         WATSON_RADIUS = B.comment("Blocks: every active instance member must gather within this radius. Q&A D23/D56.")

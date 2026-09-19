@@ -33,6 +33,14 @@ public final class FarrowsChopTravelService {
 
     /** Successful delivery is performed here; the empty stack result keeps old callers compatible. */
     public static Optional<ItemStack> cookAndLeaveDungeon(ServerPlayer player, ItemStack rawChop, BlockPos campfire) {
+        try { return cookAndLeaveDungeonChecked(player,rawChop,campfire); }
+        catch(RuntimeException failure){
+            com.mojang.logging.LogUtils.getLogger().error("Chop travel refused; inventory evidence retained for {}",player.getUUID(),failure);
+            player.sendSystemMessage(Component.literal("This Chop journey needs a developer save check; your stored items are retained."));
+            return Optional.empty();
+        }
+    }
+    private static Optional<ItemStack> cookAndLeaveDungeonChecked(ServerPlayer player, ItemStack rawChop, BlockPos campfire) {
         if(!net.goui.cosmicdungeon.progression.ProgressionService.hasVillageAccess(player))return Optional.empty();
         var runOpt=DungeonLifecycleService.findActiveRunForPlayer(player);
         if(runOpt.isEmpty()||!runOpt.get().dungeonId().equals("dungeon_1")
@@ -48,35 +56,49 @@ public final class FarrowsChopTravelService {
         if(!net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.beforeInventoryChange(player))return Optional.empty();
         var target=new DungeonReturnTarget(player.getUUID(),run.runId(),player.level().dimension().location().toString(),
                 player.getX(),player.getY(),player.getZ(),player.getYRot(),player.getXRot());
-        var cooked=new ItemStack(ModItems.FARROWS_CHOP.get());
+        var cooked=rawChop.transmuteCopy(ModItems.FARROWS_CHOP.get(),1);
         cooked.set(ModDataComponents.DUNGEON_RETURN_TARGET.get(),target);
         cooked.set(ModDataComponents.COORDINATES.get(),campfire.immutable());
         cooked.set(ModDataComponents.CHOP_OWNER.get(),player.getUUID());
         cooked.set(ModDataComponents.CHOP_TOKEN.get(),rawChop.get(ModDataComponents.CHOP_TOKEN.get()));
-        CompoundTag before=saveInventory(player);
-        rawChop.shrink(1);
-        CompoundTag dungeonInventory=saveInventory(player);
-        CompoundTag outsideInventory=previous.map(DungeonInventoryEscrowData.Entry::outsideInventory)
-                .orElseGet(()->run.snapshotFor(player.getUUID()).map(DungeonPlayerRunSnapshot::inventoryNbt)
-                        .map(CompoundTag::copy).orElseGet(CompoundTag::new));
-        restoreInventory(player,outsideInventory);
-        if(!player.getInventory().add(cooked)||!cooked.isEmpty()){
-            restoreInventory(player,before);
+        int slot=ChopTravelRecovery.slot(player,rawChop);if(slot<0)return Optional.empty();
+        var before=ChopTravelRecovery.saveInventory(player);
+        var dungeonItems=ChopTravelRecovery.inventory(player);dungeonItems.get(slot).shrink(1);
+        var dungeonInventory=ChopTravelRecovery.encode(player,dungeonItems);
+        var outsideInventory=previous.map(DungeonInventoryEscrowData.Entry::outsideInventory)
+                .orElseGet(()->run.snapshotFor(player.getUUID()).map(DungeonPlayerRunSnapshot::inventoryNbt).map(CompoundTag::copy).orElse(null));
+        if(outsideInventory==null)return Optional.empty();
+        var outsideItems=ChopTravelRecovery.decode(player,outsideInventory);
+        if(outsideItems.stream().anyMatch(ChopOwnershipService::isChop)){
+            player.sendSystemMessage(Component.literal("Your outside inventory contains an older Chop; a developer must review it before travel."));
+            return Optional.empty();
+        }
+        if(!ChopTravelRecovery.insert(outsideItems,cooked)){
             player.sendSystemMessage(Component.literal("Your outside inventory needs a free slot for the return Chop."));
             return Optional.empty();
         }
-        escrow.put(new DungeonInventoryEscrowData.Entry(run.runId(),player.getUUID(),dungeonInventory,outsideInventory,true));
-        if(!DefaultRiftDestinations.teleportToMainVillage(player)){
-            restoreInventory(player,before);
-            previous.ifPresentOrElse(escrow::put,()->escrow.remove(run.runId(),player.getUUID()));
-            return Optional.empty();
-        }
-        ChopOwnershipData.get(player.level().getServer()).bindRun(player.getUUID(),run.runId());
-        CosmicAdvancementUtil.grant(player,CosmicAchievementIds.NOSTALGIA_BAIT);
-        return Optional.of(ItemStack.EMPTY);
+        var village=DefaultRiftDestinations.resolveMainVillage(player.level().getServer()).orElse(null);
+        if(village==null)return Optional.empty();
+        var safe=SafeTeleportUtil.findSafeTeleportPos(village.level(),village.pos());if(safe==null)return Optional.empty();
+        var after=ChopTravelRecovery.encode(player,outsideItems);
+        var nextEscrow=new DungeonInventoryEscrowData.Entry(run.runId(),player.getUUID(),dungeonInventory,after,true);
+        var owners=ChopOwnershipData.get(player.level().getServer());var owner=owners.entry(player.getUUID());
+        var plan=ChopTravelPlan.create(player.getUUID(),run.runId(),"leave",before,after,ChopTravelRecovery.pose(player),
+                ChopTravelPlan.pose(village.level().dimension().location().toString(),safe.getX()+0.5,safe.getY(),safe.getZ()+0.5,player.getYRot(),player.getXRot()),
+                DungeonInventoryEscrowData.image(previous.orElse(null)),DungeonInventoryEscrowData.image(nextEscrow),
+                owners.image(player.getUUID()),ChopOwnershipData.entryImage(new ChopOwnershipData.Entry(owner.token(),run.runId(),false)),null);
+        return ChopTravelRecovery.execute(player,plan)?Optional.of(ItemStack.EMPTY):Optional.empty();
     }
 
     public static boolean returnToDungeon(ServerPlayer player, ItemStack chop) {
+        try { return returnToDungeonChecked(player,chop); }
+        catch(RuntimeException failure){
+            com.mojang.logging.LogUtils.getLogger().error("Chop travel refused; inventory evidence retained for {}",player.getUUID(),failure);
+            player.sendSystemMessage(Component.literal("This Chop journey needs a developer save check; your stored items are retained."));
+            return false;
+        }
+    }
+    private static boolean returnToDungeonChecked(ServerPlayer player, ItemStack chop) {
         DungeonReturnTarget target = validateTarget(player, chop);
         if (target == null) return false;
 
@@ -88,7 +110,7 @@ public final class FarrowsChopTravelService {
         ServerLevel level = player.level().getServer().getLevel(key);
         if (level == null) return false;
         BlockPos campfire=chop.get(ModDataComponents.COORDINATES.get());
-        if(campfire!=null && !(level.getBlockState(campfire).getBlock() instanceof net.minecraft.world.level.block.CampfireBlock)){
+        if(campfire==null || !(level.getBlockState(campfire).getBlock() instanceof net.minecraft.world.level.block.CampfireBlock)){
             player.sendSystemMessage(Component.literal("The bound campfire no longer exists."));return false;
         }
         BlockPos rememberedBlock = BlockPos.containing(target.x(), target.y(), target.z());
@@ -108,20 +130,18 @@ public final class FarrowsChopTravelService {
         }
 
         if(!net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.beforeInventoryChange(player))return false;
-        ItemStack consumedChop=chop.copy();
-        CompoundTag outsideBefore = saveInventory(player);
-        chop.shrink(1);
-        CompoundTag outsideAfter = saveInventory(player);
-        restoreInventory(player, entry.dungeonInventory());
-        escrow.put(entry.withOutsideInventory(outsideAfter, false));
-
-        boolean teleported = player.teleportTo(level, target.x(), target.y(), target.z(), Set.of(), target.yaw(), target.pitch(), true);
-        if (!teleported) {
-            restoreInventory(player, outsideBefore);
-            escrow.put(entry);
-        }
-        if(teleported)ChopOwnershipService.consumed(player,consumedChop);
-        return teleported;
+        int slot=ChopTravelRecovery.slot(player,chop);if(slot<0)return false;
+        var before=ChopTravelRecovery.saveInventory(player);
+        var outsideItems=ChopTravelRecovery.inventory(player);outsideItems.get(slot).shrink(1);
+        var outsideAfter=ChopTravelRecovery.encode(player,outsideItems);
+        // Decode before reservation so a bad legacy image cannot consume the return entitlement.
+        var after=ChopTravelRecovery.encode(player,ChopTravelRecovery.decode(player,entry.dungeonInventory()));
+        var fire=new CompoundTag();fire.put("pos",BlockPos.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE,campfire).getOrThrow());
+        var plan=ChopTravelPlan.create(player.getUUID(),run.runId(),"return",before,after,ChopTravelRecovery.pose(player),
+                ChopTravelPlan.pose(target.dimensionId(),target.x(),target.y(),target.z(),target.yaw(),target.pitch()),
+                DungeonInventoryEscrowData.image(entry),DungeonInventoryEscrowData.image(entry.withOutsideInventory(outsideAfter,false)),
+                ChopOwnershipData.get(player.level().getServer()).image(player.getUUID()),new CompoundTag(),fire);
+        return ChopTravelRecovery.execute(player,plan);
     }
 
     public static boolean isOutsideEscrow(ServerPlayer player) {
@@ -132,11 +152,14 @@ public final class FarrowsChopTravelService {
     }
 
     public static void syncOutsideInventory(ServerPlayer player) {
-        if (player == null) return;
+        if (player == null || ChopTravelRecovery.blocked(player)) return;
         DungeonLifecycleService.findActiveRunForPlayer(player).ifPresent(run -> {
             DungeonInventoryEscrowData data = DungeonInventoryEscrowData.get(player.level().getServer());
             data.get(run.runId(), player.getUUID()).filter(DungeonInventoryEscrowData.Entry::outsideActive)
-                    .ifPresent(entry -> data.put(entry.withOutsideInventory(saveInventory(player), true)));
+                    .ifPresent(entry -> {
+                        var current=saveInventory(player);
+                        if(!entry.outsideInventory().equals(current))data.put(entry.withOutsideInventory(current,true));
+                    });
         });
     }
 
@@ -148,6 +171,7 @@ public final class FarrowsChopTravelService {
         if (entry == null) return Optional.empty();
         CompoundTag outside = entry.outsideActive() && onlinePlayer != null
                 ? saveInventory(onlinePlayer) : entry.outsideInventory().copy();
+        if(ChopTravelRecovery.pending(server,playerId))throw new IllegalStateException("Chop journey must settle before cleanup");
         data.remove(runId, playerId);
         return Optional.of(outside);
     }
@@ -173,23 +197,9 @@ public final class FarrowsChopTravelService {
         return target;
     }
 
-    private static CompoundTag saveInventory(ServerPlayer player) {
-        NonNullList<ItemStack> items = NonNullList.withSize(player.getInventory().getContainerSize(), ItemStack.EMPTY);
-        for (int i = 0; i < items.size(); i++) items.set(i, player.getInventory().getItem(i).copy());
-        TagValueOutput output = TagValueOutput.createWithoutContext(ProblemReporter.DISCARDING);
-        ContainerHelper.saveAllItems(output, items);
-        return output.buildResult();
-    }
-
-    private static void restoreInventory(ServerPlayer player, CompoundTag inventory) {
-        NonNullList<ItemStack> items = NonNullList.withSize(player.getInventory().getContainerSize(), ItemStack.EMPTY);
-        if (inventory != null && !inventory.isEmpty()) {
-            ValueInput input = TagValueInput.create(ProblemReporter.DISCARDING, player.level().registryAccess(), inventory);
-            ContainerHelper.loadAllItems(input, items);
-        }
-        for (int i = 0; i < items.size(); i++) player.getInventory().setItem(i, items.get(i));
-        player.getInventory().setChanged();
-        player.inventoryMenu.broadcastChanges();
-        player.containerMenu.broadcastChanges();
-    }
+    private static CompoundTag saveInventory(ServerPlayer player){return ChopTravelRecovery.saveInventory(player);}
+    // TODO(M43/M102, cleanup handoff): the run-completion/abort coordinator must journal receipt
+    // delivery of outside inventory before retiring escrow. This batch journals Chop travel itself;
+    // next batch must cover PendingDungeonRecoveryData and D1StoredInventoryData across restart.
+    // Q&A D20/D24 requires failed/completed/deleted runs to return belongings and stale Chops as Raw.
 }
