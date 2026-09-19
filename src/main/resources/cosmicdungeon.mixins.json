@@ -37,6 +37,9 @@
     "BogatyrGrowthMixin",
     "BogatyrMateMixin",
     "BogatyrLifecycleMixin",
-    "RepairCustodySaveMixin"
+    "RepairCustodySaveMixin",
+    "DeathCurrencyPlayerMixin",
+    "DeathCurrencyItemMixin",
+    "DeathCurrencyEntityMixin"
   ]
 }

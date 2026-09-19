@@ -35,5 +35,5 @@ public final class CurrencyAudit {
     // TODO(M02/M03, licensed TEST): verify threshold notifications and persistent final-review
     // entries against the native ledger on reconnect, with developers offline and at cap.
     // Final review is diagnostic, never a debit freeze. /currency report exposes daily totals;
-    // /currency review <UUID> reads preserved cap-crossing evidence. Death-drop supply is Batch26.
+    // /currency review <UUID> reads preserved cap-crossing evidence. Reports include active logical death drops; only destruction is a sink.
 }

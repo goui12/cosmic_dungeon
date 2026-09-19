@@ -1,13 +1,22 @@
 # D1 remaining work
 
-Updated 2026-09-19 after Batch25. Cameron authorized completion through25, validation23-25,
-then a final local commit and STOP. Batch26 is NOT started or authorized in this pass.
-Batches23-25 trade custody/commit and vendor/direct-shop ledger work are complete in code.
-Gameplay/multiplayer testing is deferred for a cumulative pass; static/build checks continue.
-The 101 original audit IDs remain intact. A code implementation is not runtime acceptance.
-Closed audits remain unchanged; current detailed dispositions are in
-Google Docs and Sheet/Audit/D1_Batches_23-25_Final_2026-09-19/implementation_findings.json.
-Combined completion and manual QA: [D1 batches23-25](D1_BATCHES_23-25.md).
+Updated 2026-09-19 after Batch26. Cameron authorized Batch26 only, then a local commit and STOP.
+Batch25 was committed as d96118247ffe101fba8d7de511387c1f45b9414e before this pass.
+Gameplay/multiplayer testing remains deferred for a cumulative pass; static/build checks continue.
+All101 original audit IDs remain intact. Code implementation is not runtime acceptance.
+Detailed current dispositions: Google Docs and Sheet/Audit/D1_Batch_26_2026-09-19/implementation_findings.json.
+Latest completion and manual QA: [Batch26](D1_BATCH_26.md).
+Historical completion: [Batches23-25](D1_BATCHES_23-25.md).
+
+## Batch26 completed in code
+
+Canonical configured death loss, unique persisted intent, one recoverable logical Trace drop,
+whole-amount pickup and ordinary destruction/expiry accounting now share the account save.
+Recovery is bounded and does not force-load chunks. Dimension reset covers unloaded records.
+Active-drop value joins supply reports; older account shapes load an empty extension.
+2,549 offline checks, two config round trips and Java21 build passed;116 new death checks and7 config checks.
+M08 is implemented/runtime-unverified; M03 retains Inn/travel, legacy physical-currency and native QA work.
+No required PNG, new registry/network protocol, active config/world edit, launch or deployment.
 
 ## Batch25 completed in code
 
@@ -59,12 +68,11 @@ Optional: tamsin_d1_map.png, 512 x 256, a winding map ending at Base Camp, signe
 Place in src/main/resources/assets/cosmicdungeon/textures/gui/. A drawn fallback already works.
 Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48.
 
-## Priority D1 items remaining (6)
+## Priority D1 items remaining (5)
 
 - M10: Finish legacy item adoption and no-drop/world-container protections
 - M72: Extend trusted identity adoption to reviewed legacy containers and drop definitions
-- M03: Complete death supply, Inn/travel and legacy currency boundaries; ledger now implemented
-- M08: Implement the canonical death debit and protected logical drop
+- M03: Complete Inn/travel and legacy currency boundaries; ledger and death supply implemented
 - M40: Implement Beluzon’s Inn bed binding and protected Heart relationship
 - M79: Complete remaining achievement and reward bindings
 
@@ -91,7 +99,9 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M106: Validate the retained item catalogue and repair broken references
 - M107: Use the linked calculator as a checked pricing reference, not a runtime web dependency
 
-## Implemented; runtime acceptance pending (39)
+## Implemented; runtime acceptance pending (40)
+
+- M08: Canonical death debit, recoverable logical drop and supply reconciliation
 
 - M118: Exact consented zero-Trace surrender with durable item/account recovery
 
@@ -183,12 +193,10 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 
 ## Next work (await Cameron)
 
-26. Canonical death losses and recoverable logical Trace drops. M08/M03; debit/drop receipts,
-    pickup/despawn and active-drop supply reconciliation.
 27. Beluzon's Inn binding and Chop travel recovery. M40/M17/M20/M43; original inventory/return entitlement.
 
-Batch26 is next, but STOP now after the validated local commit. Do not resume automatically.
-Remaining26 partial D1 IDs stay listed above; later batch sizing is not a new authorization.
+STOP after the validated Batch26 local commit. Batch27 is not started or authorized in this pass.
+Remaining25 partial D1 IDs stay listed above; later batch sizing is not new authorization.
 The queued breakpoint remains: "finish what you're doing and stop".
 Gameplay/multiplayer testing is deferred to a cumulative pass. Focused code/build checks continue.
 Deployment/game launches and actual world migrations still require their existing authorization.

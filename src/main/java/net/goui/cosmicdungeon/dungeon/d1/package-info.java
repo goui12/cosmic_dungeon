@@ -22,8 +22,10 @@
  * Current: Account reservations and owner-file receipts now cover repair, trade, vendor sales,
  * retail and direct repairs. Paged native-NBT evidence retains exact items and quote breakdowns;
  * a verified account outbox survives archive interruptions. Daily/lifetime account supply reconciles.
- * Required: Batch26 logical death debit/drop/despawn integration, then Inn/travel entitlements
- * and older physical-currency pickup migration. Verify native interrupted saves on licensed TEST.
+ * Batch26: logical death intent/debit/drop/pickup/despawn share the same account image; active
+ * drops join supply totals. Only ordinary destruction or dimension reset is a sink.
+ * Required: Inn/travel entitlements and older physical-currency pickup migration.
+ * Verify native interrupted saves on licensed TEST.
  * Preserve uncertain partial/manual-restored records for full-save review; never guess replacements.
  * TODO(M03, bounded account history): page/prune compact terminal operation/transfer receipts only
  * after proving old transaction IDs cannot replay. Full item evidence is already archived; preserve
@@ -46,13 +48,15 @@
  * Source: https://docs.google.com/document/d/17ufIuIy0VhLmB_V-6sZ7sCaUCZuGZUkHrgJLVpEcS28
  * Source modified: 2026-08-18T21:01:23.864Z
  *
- * TODO(M08, partial_D1): Implement the canonical death debit and protected logical drop
- * Current: Canonical death-loss settings are documented in the server config; no death debit/drop
- * behavior is active.
- * Required: Implement threshold 20 Trace and loss max(1,floor(balance*0.02)) as configured, then an
- * owner-protected logical world drop rather than inventory currency. Apply the source's ordinary
- * expiration and recovery rules; atomically connect debit, location, owner and claim receipt. Test
- * death, restart, duplicate claim, full account and run deletion before enabling.
+ * TODO(M08, implemented_unverified): licensed TEST acceptance for logical death currency.
+ * Current: configurable threshold/floor/minimum; one UUID-bound logical drop owned by the account
+ * save, carrying owner, amount, death transaction, run, timestamp and native item image.
+ * Anyone with full receiving capacity can collect once. Native aging, expiry hooks, physics and
+ * damage remain; no inventory/hopper/mob pickup, merging, or independent world-file currency copy.
+ * Required: actual death cancellation, keepInventory, concurrent pickup, cap changes, unload,
+ * restart, portals, ordinary expiry/fire/void, IO failures and occupied/failed/successful resets.
+ * Verify native life-token/player saves on dedicated and integrated servers; restore all save
+ * files together. Normal checkpoints preserve last saved age/position, not unsaved crash-time ticks.
  * Source: https://docs.google.com/document/d/17ufIuIy0VhLmB_V-6sZ7sCaUCZuGZUkHrgJLVpEcS28
  * Source modified: 2026-08-18T21:01:23.864Z
  *
@@ -215,7 +219,7 @@
  * Source: https://docs.google.com/document/d/1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4
  * Source modified: 2026-08-19T22:35:48.808Z; live rechecked 2026-09-18.
  *
- * TODO(M40, partial_D1): Implement Beluzon’s Inn bed binding and protected Heart relationship
+ * TODO(M40, partial_D1): Implement Beluzonâ€™s Inn bed binding and protected Heart relationship
  * Current: Native Beluzon identity, one-time 15-Trace bond, /home and respawn fallback plus initial
  * Inn protection hooks.
  * Required: Bind and inspect the authored Inn, approved beds and protected Creaking Heart. Finish
@@ -327,7 +331,7 @@
  * Source: https://docs.google.com/document/d/1EBc7RDMA5Sm8TQ1uEG4kkPeiFRHBwOygAW_WLtGiUjg
  * Source modified: 2026-04-04T14:33:10.842Z
  *
- * TODO(M48, deferred_D2_plus): Unify Metalmancer’s four-tier staff and golem statistics
+ * TODO(M48, deferred_D2_plus): Unify Metalmancerâ€™s four-tier staff and golem statistics
  * Current: No later Metalmancer mechanics were enabled; privileged commands now require developer
  * access.
  * Required: Implement this finding's newest tier-specific staff/golem/ore/equipment/bag contract
@@ -712,7 +716,7 @@
  * Source: https://docs.google.com/document/d/1OCn7biuflB5sOvD9rdWJKvX7tXm27PZeJjRHH2eSO8k
  * Source modified: 2026-08-29T14:50:01.277Z
  *
- * TODO(M74, deferred_D2_plus): Correct Vital Exchange I–IV to real transfer events and the right tier identities
+ * TODO(M74, deferred_D2_plus): Correct Vital Exchange Iâ€“IV to real transfer events and the right tier identities
  * Current: Incorrect D1 Vital Exchange hooks were removed; future Binding Idol milestones remain
  * inactive.
  * Required: Implement real later-tier transfer/provider/return events using canonical identities and
@@ -823,7 +827,7 @@
  * Source: https://docs.google.com/document/d/1Y1T-L7qRv3GWr11fcq9vuq_rO6yORnbqc1WmYplGVWg
  * Source modified: 2025-10-03T22:50:35.453Z
  *
- * TODO(M90, deferred_D2_plus): Implement D3’s water/pressure puzzles and Dagon–Hydra state sequence
+ * TODO(M90, deferred_D2_plus): Implement D3â€™s water/pressure puzzles and Dagonâ€“Hydra state sequence
  * Current: No new D2-D5 dungeon content was implemented.
  * Required: Keep the finding's linked rooms, encounters, puzzles, endings, persistent outcomes and
  * inter-dungeon progression as future work. Use newest source revisions when resumed; do not revive
@@ -833,7 +837,7 @@
  * Source: https://docs.google.com/document/d/10DA4A5DyglUecj3ezDzmp6Kj2EtTwUpvkKNSHS3MT9M
  * Source modified: 2025-10-08T03:01:00.829Z
  *
- * TODO(M91, deferred_D2_plus): Implement D4’s portal maze, reflection encounters and Web completion
+ * TODO(M91, deferred_D2_plus): Implement D4â€™s portal maze, reflection encounters and Web completion
  * Current: No new D2-D5 dungeon content was implemented.
  * Required: Keep the finding's linked rooms, encounters, puzzles, endings, persistent outcomes and
  * inter-dungeon progression as future work. Use newest source revisions when resumed; do not revive
@@ -841,7 +845,7 @@
  * Source: https://docs.google.com/document/d/1WYUMIw4dH2z3LHeL-_n3hbJ7wCox_MRWnn12yXUbf5M
  * Source modified: 2026-08-29T12:55:53.787Z
  *
- * TODO(M92, deferred_D2_plus): Implement D5’s trap construction, boss endings and persistent outcomes
+ * TODO(M92, deferred_D2_plus): Implement D5â€™s trap construction, boss endings and persistent outcomes
  * Current: No new D2-D5 dungeon content was implemented.
  * Required: Keep the finding's linked rooms, encounters, puzzles, endings, persistent outcomes and
  * inter-dungeon progression as future work. Use newest source revisions when resumed; do not revive

@@ -3,7 +3,7 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 import java.util.*;
 public final class D1EconomyConfig {
     public static ModConfigSpec.DoubleValue REWARD_RADIUS,DEATH_PERCENT;
-    public static ModConfigSpec.IntValue VENDOR_QUOTE_TICKS,LEDGER_FLUSH_TICKS,LEDGER_ROWS_PER_FLUSH;
+    public static ModConfigSpec.IntValue VENDOR_QUOTE_TICKS,LEDGER_FLUSH_TICKS,LEDGER_ROWS_PER_FLUSH,DEATH_WORK_PER_TICK,DEATH_SNAPSHOT_TICKS,DEATH_RETRY_TICKS;
     public static ModConfigSpec.LongValue FIRST_TRACE,WEALTH_EARLY,WEALTH_HIGH,WEALTH_MAX,DEATH_THRESHOLD,DEATH_MIN;
     public static final Map<String,ModConfigSpec.LongValue> REWARDS=new LinkedHashMap<>();
     public static ModConfigSpec.ConfigValue<List<? extends String>> MOB_CATEGORIES;
@@ -22,7 +22,10 @@ public final class D1EconomyConfig {
         WEALTH_EARLY=b.defineInRange("earlyWealthReviewTrace",500_000L,1L,Long.MAX_VALUE);
         WEALTH_HIGH=b.defineInRange("highWealthReviewTrace",80_000_000L,1L,Long.MAX_VALUE);
         WEALTH_MAX=b.defineInRange("maximumWealthReviewTrace",100_000_000L,1L,Long.MAX_VALUE);
-        DEATH_THRESHOLD=b.comment("Reserved canonical death-drop settings; see source-backed death transaction TODO.")
+        DEATH_WORK_PER_TICK=b.comment("Maximum logical drop records checked per server tick; never force-load chunks.").defineInRange("deathDropWorkPerTick",8,1,128);
+        DEATH_SNAPSHOT_TICKS=b.comment("Minimum ticks between live projection checkpoints into account memory. Native item aging/despawn is unchanged.").defineInRange("deathDropSnapshotIntervalTicks",100,20,1200);
+        DEATH_RETRY_TICKS=b.comment("Retry cadence after an uncertain save; no per-tick disk retries.").defineInRange("deathDropRecoveryRetryTicks",100,20,1200);
+        DEATH_THRESHOLD=b.comment("Death loss is zero below this balance; otherwise floor(balance*fraction), with the minimum capped at available balance.")
                 .defineInRange("deathLossThresholdTrace",20L,0L,Long.MAX_VALUE);
         DEATH_PERCENT=b.defineInRange("deathLossFraction",0.02,0.0,1.0);
         DEATH_MIN=b.defineInRange("minimumDeathLossTrace",1L,0L,Long.MAX_VALUE);

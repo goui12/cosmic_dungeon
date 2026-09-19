@@ -30,7 +30,8 @@ public final class PlayerCurrencyData extends SavedData {
             Codec.unboundedMap(UUID_CODEC,RepairCommitPlan.CODEC).optionalFieldOf("repair_plans",Map.of()).forGetter(data->data.repairPlans),
             Codec.unboundedMap(UUID_CODEC,TradeCommitPlan.CODEC).optionalFieldOf("trade_plans",Map.of()).forGetter(data->data.tradePlans),
             Codec.unboundedMap(UUID_CODEC,AccountOperation.CODEC).optionalFieldOf("operations",Map.of()).forGetter(data->data.operations),
-            CompoundTag.CODEC.optionalFieldOf("ledger",new CompoundTag()).forGetter(data->data.ledger)
+            CompoundTag.CODEC.optionalFieldOf("ledger",new CompoundTag()).forGetter(data->data.ledger),
+            CompoundTag.CODEC.optionalFieldOf("death_currency",new DeathCurrencyState().save()).forGetter(data->data.deaths.save())
     ).apply(inst, PlayerCurrencyData::fromCodec));
 
     public static final SavedDataType<PlayerCurrencyData> TYPE = new SavedDataType<>(
@@ -45,6 +46,7 @@ public final class PlayerCurrencyData extends SavedData {
     private final Map<String,Long> receipts=new HashMap<>();
     private final java.util.Set<String> wealthCrossings=new java.util.HashSet<>();
     private final Map<UUID,AccountTransfer> transfers=new LinkedHashMap<>();
+    private final Map<UUID,Set<UUID>> reservedTransfersByOwner=new HashMap<>();
     private final Map<UUID,RepairCommitPlan> repairPlans=new LinkedHashMap<>();
     private final Map<UUID,UUID> repairByOwner=new HashMap<>();
     private final Map<UUID,TradeCommitPlan> tradePlans=new LinkedHashMap<>();
@@ -52,13 +54,14 @@ public final class PlayerCurrencyData extends SavedData {
     private final Map<UUID,AccountOperation> operations=new LinkedHashMap<>();
     private final Map<UUID,UUID> operationByOwner=new HashMap<>();
     private CompoundTag ledger=new CompoundTag();
+    private DeathCurrencyState deaths=new DeathCurrencyState();
     private final Map<UUID,Long> heldDebit=new HashMap<>(),heldCredit=new HashMap<>();
     private static final Set<MinecraftServer> VALIDATED=Collections.newSetFromMap(new WeakHashMap<>());
     private MinecraftServer server;
     private PlayerCurrencyData() {}
 
     private static PlayerCurrencyData fromCodec(Map<UUID, Long> balances, Map<UUID, Long> overrides,
-                                                Map<String,Long> receipts,java.util.List<String> crossings,Map<UUID,AccountTransfer> transfers,Map<UUID,RepairCommitPlan> repairPlans,Map<UUID,TradeCommitPlan> tradePlans,Map<UUID,AccountOperation> operations,CompoundTag ledger) {
+                                                Map<String,Long> receipts,java.util.List<String> crossings,Map<UUID,AccountTransfer> transfers,Map<UUID,RepairCommitPlan> repairPlans,Map<UUID,TradeCommitPlan> tradePlans,Map<UUID,AccountOperation> operations,CompoundTag ledger,CompoundTag deathCurrency) {
         PlayerCurrencyData data = new PlayerCurrencyData();
         if (balances != null) data.balanceByPlayer.putAll(balances);
         if (overrides != null) data.capacityOverrideByPlayer.putAll(overrides);
@@ -75,6 +78,9 @@ public final class PlayerCurrencyData extends SavedData {
         });
         tradePlans.forEach((id,plan)->{data.validateTradePlan(id,plan);data.tradePlans.put(id,plan);data.indexTrade(id,plan);});
         data.ledger=ledger.copy();data.validateLedger();
+        data.deaths=DeathCurrencyState.load(deathCurrency);
+        for(var record:data.deaths.entries.values())if(!record.active()&&record.before()!=data.getBalanceTrace(record.owner()))
+            throw new IllegalArgumentException("Pending death account image mismatch");
         operations.forEach(data::loadOperation);
         if(data.heldDebit.entrySet().stream().anyMatch(e->e.getValue()>data.getBalanceTrace(e.getKey())))throw new IllegalArgumentException("Operation reservations exceed balance");
         return data;
@@ -108,7 +114,7 @@ public final class PlayerCurrencyData extends SavedData {
             boolean matches=balanceByPlayer.equals(saved.balanceByPlayer)&&capacityOverrideByPlayer.equals(saved.capacityOverrideByPlayer)
                     &&receipts.equals(saved.receipts)&&wealthCrossings.equals(saved.wealthCrossings)&&transfers.equals(saved.transfers)
                     &&repairPlans.equals(saved.repairPlans)&&tradePlans.equals(saved.tradePlans)
-                    &&operations.equals(saved.operations)&&ledger.equals(saved.ledger);
+                    &&operations.equals(saved.operations)&&ledger.equals(saved.ledger)&&deaths.save().equals(saved.deaths.save());
             if(!matches){setDirty();return false;}
             var pending=ledger.getCompoundOrEmpty("outbox");
             if(!pending.isEmpty()){
@@ -142,7 +148,87 @@ public final class PlayerCurrencyData extends SavedData {
     private void recordTransfer(UUID id,AccountTransfer transfer){
         var old=transfers.get(id);if(old!=null)index(old,-1);
         transfers.put(id,transfer);index(transfer,1);
+        if(old!=null&&old.reserved())for(UUID owner:List.of(old.terms().first(),old.terms().second())){
+            var ids=reservedTransfersByOwner.get(owner);
+            if(ids!=null){ids.remove(id);if(ids.isEmpty())reservedTransfersByOwner.remove(owner);}
+        }
+        if(transfer.reserved())for(UUID owner:List.of(transfer.terms().first(),transfer.terms().second()))
+            reservedTransfersByOwner.computeIfAbsent(owner,k->new HashSet<>()).add(id);
     }
+
+    public Optional<DeathCurrencyRecord> deathDrop(UUID id){return Optional.ofNullable(deaths.entries.get(id));}
+    public List<UUID> deathIds(){return List.copyOf(deaths.entries.keySet());}
+    public boolean pendingDeath(UUID owner){return deaths.pending.containsKey(owner);}
+    public boolean deathSeen(UUID owner,UUID life){return life.equals(deaths.latest.get(owner));}
+    private boolean deathBlocked(UUID owner){
+        return pendingDeath(owner)||(server!=null&&DeathCurrencyService.suspended(server));
+    }
+    private void requireDeathReady(UUID owner){
+        if(deathBlocked(owner))throw new IllegalStateException("Death currency awaits durable reconciliation");
+    }
+    /** A frozen death intent prevents later spending while existing commerce reservations unwind. */
+    public boolean prepareDeath(DeathCurrencyRecord record){
+        var existing=deaths.entries.get(record.id());
+        if(existing!=null){
+            if(!existing.owner().equals(record.owner()))throw new IllegalArgumentException("Foreign death ID");
+            return false;
+        }
+        if(deathSeen(record.owner(),record.id()))return false;
+        if(pendingDeath(record.owner())||record.active()||record.before()!=getBalanceTrace(record.owner()))
+            throw new IllegalStateException("Previous death or changed account requires reconciliation");
+        deaths.entries.put(record.id(),record);deaths.latest.put(record.owner(),record.id());
+        deaths.pending.put(record.owner(),record.id());setDirty();return true;
+    }
+    /** Debit, logical drop, and ledger become one authoritative image. No separate entity-file commit. */
+    public boolean commitDeath(UUID id){
+        var record=deaths.entries.get(id);if(record==null||record.active())return false;
+        UUID owner=record.owner();
+        // Death cancels only undecided money reservations. Existing item custody plans remain
+        // for their normal owner-local return/acknowledgement path, including offline participants.
+        for(UUID transaction:List.copyOf(reservedTransfersByOwner.getOrDefault(owner,Set.of()))){
+            var transfer=transfers.get(transaction);
+            cancelTransfer(transaction,transfer.terms(),System.currentTimeMillis(),"player_death");
+        }
+        UUID operationId=operationByOwner.get(owner);
+        if(operationId!=null&&operations.get(operationId).reserved())
+            decideOperation(operationId,false,System.currentTimeMillis());
+        if(reservedDebit(owner)!=0||reservedCredit(owner)!=0)return false;
+        if(getBalanceTrace(owner)!=record.before())throw new IllegalStateException("Pending death balance changed");
+        long after=record.before()-record.amount();
+        journal(EconomyLedger.row(id.toString(),owner,accountName(owner),"death_debit",-record.amount(),
+                record.before(),after,id.toString(),record.run(),"committed",record.created(),record.save()));
+        balanceByPlayer.put(owner,after);deaths.pending.remove(owner,id);
+        if(record.amount()==0)deaths.entries.remove(id);else deaths.entries.put(id,record.activate());
+        setDirty();return true;
+    }
+    /** Entire amount transfers directly into the collecting account, with no partial pickup. */
+    public boolean collectDeath(UUID id,UUID collector,long now){
+        var record=deaths.entries.get(id);
+        if(record==null||!record.active()||deathBlocked(collector)||!canDeposit(collector,record.amount()))return false;
+        long before=getBalanceTrace(collector),after=Math.addExact(before,record.amount());
+        var details=record.save();details.putString("collector",collector.toString());
+        journal(EconomyLedger.row(id.toString(),collector,accountName(collector),"death_pickup",record.amount(),
+                before,after,record.owner().toString(),record.run(),"committed",now,details));
+        balanceByPlayer.put(collector,after);deaths.entries.remove(id);setDirty();
+        CurrencyAudit.report(server,collector,accountName(collector),id.toString(),"death_pickup",record.amount(),
+                before,after,0,record.owner().toString(),record.run(),"committed");
+        return true;
+    }
+    /** Destruction removes supply, not a second debit from the original owner's account. */
+    public boolean destroyDeath(UUID id,String reason,long now){
+        var record=deaths.entries.get(id);if(record==null||!record.active())return false;
+        var details=record.save();details.putLong("drop_destroyed_trace",record.amount());details.putString("reason",reason);
+        long balance=getBalanceTrace(record.owner());
+        journal(EconomyLedger.row(id.toString(),record.owner(),accountName(record.owner()),"death_despawn",-record.amount(),
+                balance,balance,id.toString(),record.run(),"committed",now,details));
+        deaths.entries.remove(id);setDirty();return true;
+    }
+    public void snapshotDeath(UUID id,String dimension,CompoundTag image){
+        var old=deaths.entries.get(id);if(old==null||!old.active())return;
+        var next=old.snapshot(dimension,image);
+        if(!next.equals(old)){deaths.entries.put(id,next);setDirty();}
+    }
+
     public Optional<AccountTransfer> transfer(UUID id){return Optional.ofNullable(transfers.get(id));}
     public long reservedDebit(UUID player){return heldDebit.getOrDefault(player,0L);}
     public long reservedCredit(UUID player){return heldCredit.getOrDefault(player,0L);}
@@ -154,6 +240,7 @@ public final class PlayerCurrencyData extends SavedData {
     }
     public AccountTransfer reserve(UUID id,AccountTransfer.Terms terms,long timestamp){
         Objects.requireNonNull(id);Objects.requireNonNull(terms);
+        requireDeathReady(terms.first());requireDeathReady(terms.second());
         var previous=transfers.get(id);
         if(previous!=null){
             if(!previous.terms().equals(terms))throw new IllegalArgumentException("Transaction identifier reused with different terms");
@@ -180,6 +267,7 @@ public final class PlayerCurrencyData extends SavedData {
         var previous=transfers.get(id);
         if(previous==null||!previous.terms().equals(terms))throw new IllegalArgumentException("Missing or mismatched reserved transfer");
         if(previous.status().equals(AccountTransfer.COMMITTED))return previous;
+        requireDeathReady(terms.first());requireDeathReady(terms.second());
         if(!reservationValid(id,terms))return previous;
         long first=getBalanceTrace(terms.first()),second=getBalanceTrace(terms.second());
         long firstAfter=Math.addExact(first-terms.firstPays(),terms.secondPays());
@@ -338,13 +426,14 @@ public final class PlayerCurrencyData extends SavedData {
         if(outbox.size()>=4096)throw new IllegalStateException("Economy ledger backlog requires recovery before more transactions");
         long sequence=Math.addExact(ledger.getLongOr("sequence",0),1);
         long delta=Math.subtractExact(row.getLongOr("after",0),row.getLongOr("before",0));
-        String category=row.getStringOr("category","");long transferred=Math.max(0,delta);
+        String category=row.getStringOr("category","");long transferred=row.getStringOr("type","").equals("death_debit")?-delta:Math.max(0,delta);
         if(category.equals("transfer")&&row.getStringOr("status","").equals(AccountTransfer.COMMITTED)){
             var detail=row.getCompoundOrEmpty("details");
             if(detail.contains("first_pays"))transferred=detail.getStringOr("first_owner","").equals(row.getStringOr("player",""))
                     ?detail.getLongOr("second_pays",0):detail.getLongOr("first_pays",0);
         }
-        long adjustment=switch(category){case "sink" -> -delta;case "transfer" -> transferred;default -> delta;};
+        long adjustment=switch(category){case "sink" -> row.getStringOr("type","").equals("death_despawn")
+                ?row.getCompoundOrEmpty("details").getLongOr("drop_destroyed_trace",0):-delta;case "transfer" -> transferred;default -> delta;};
         var total=new java.math.BigInteger(ledger.getStringOr(category,"0")).add(java.math.BigInteger.valueOf(adjustment));
         var days=EconomyReports.daily(ledger.getCompoundOrEmpty("recent_days"),row,adjustment);
         var reviews=EconomyReports.finalReviews(ledger.getCompoundOrEmpty("final_reviews"),row,D1EconomyConfig.WEALTH_MAX.get());
@@ -374,6 +463,7 @@ public final class PlayerCurrencyData extends SavedData {
     public Optional<UUID> pendingOperation(UUID owner){return Optional.ofNullable(operationByOwner.get(owner));}
     public AccountOperation reserveOperation(UUID id,UUID owner,long delta,String kind,String related,long run,CompoundTag plan,long now){
         var old=operations.get(id);if(old!=null){if(!old.owner().equals(owner)||old.delta()!=delta||!old.kind().equals(kind)||!old.related().equals(related)||old.run()!=run||(!old.acknowledged()&&!old.plan().equals(plan)))throw new IllegalArgumentException("Operation ID reused with changed terms");return old;}
+        requireDeathReady(owner);
         net.goui.cosmicdungeon.vendor.CommerceCustodyImages.validate(plan,owner);
         if(!id.toString().equals(plan.getStringOr("transaction",""))||run!=plan.getLongOr("run",-1))throw new IllegalArgumentException("Wrong operation plan");
         if(operationByOwner.containsKey(owner)||repairByOwner.containsKey(owner)||tradeByOwner.containsKey(owner))throw new IllegalStateException("Prior item transaction awaits recovery");
@@ -385,6 +475,7 @@ public final class PlayerCurrencyData extends SavedData {
     public AccountOperation prepareOperation(UUID id){var op=operations.get(id);if(op==null)throw new IllegalStateException("Missing operation");var next=op.armed();putOperation(id,next);return next;}
     public AccountOperation decideOperation(UUID id,boolean commit,long now){
         var old=operations.get(id);if(old==null)throw new IllegalStateException("Missing operation");if(!old.reserved())return old;
+        if(commit)requireDeathReady(old.owner());
         boolean fits=old.delta()<0?getBalanceTrace(old.owner())>=reservedDebit(old.owner()):old.delta()==0||creditFits(old.owner());
         if(commit&&(!old.prepared()||!fits))throw new IllegalStateException("Operation not prepared or reservation no longer valid");
         var next=old.decide(commit?AccountTransfer.COMMITTED:AccountTransfer.CANCELLED,getBalanceTrace(old.owner()),now);
@@ -409,7 +500,9 @@ public final class PlayerCurrencyData extends SavedData {
         }
         result.putDouble("median_trace",amounts.isEmpty()?0.0:(amounts.size()%2==1?amounts.get(amounts.size()/2)
                 :amounts.get(amounts.size()/2-1)/2.0+amounts.get(amounts.size()/2)/2.0));
-        result.putInt("accounts",balanceByPlayer.size());result.putString("balances",balances.toString());result.putString("expected",expected.toString());result.putString("difference",balances.subtract(expected).toString());return result;
+        result.putInt("accounts",balanceByPlayer.size());result.putString("balances",balances.toString());result.putString("expected",expected.toString());result.putString("active_death_drops",deaths.activeSupply().toString());result.putInt("pending_deaths",deaths.pending.size());
+        result.putString("total_supply",balances.add(deaths.activeSupply()).toString());
+        result.putString("difference",balances.add(deaths.activeSupply()).subtract(expected).toString());return result;
     }
     public long getBalanceTrace(UUID playerId) {
         if (playerId == null) return 0L;
@@ -424,6 +517,7 @@ public final class PlayerCurrencyData extends SavedData {
 
     public void setBalanceTrace(UUID playerId, long traceAmount) {
         if (playerId == null) return;
+        requireDeathReady(playerId);
         long clamped = Math.max(0L, traceAmount);
         if(clamped<reservedDebit(playerId))throw new IllegalStateException("Balance is reserved by an active transaction");
         long previousBalance=getBalanceTrace(playerId);
@@ -462,7 +556,7 @@ public final class PlayerCurrencyData extends SavedData {
     }
     /** Returns absolute amount committed, or -1 on rejection. All callers run on the server thread. */
     public long change(UUID playerId,String name,long delta,String type,String related,long run,String tx,boolean partial){
-        if(playerId==null||tx==null||delta==Long.MIN_VALUE)return -1;
+        if(playerId==null||tx==null||delta==Long.MIN_VALUE||deathBlocked(playerId))return -1;
         String key=tx+"|"+playerId;
         if(receipts.containsKey(key))return receipts.get(key);
         long before=getBalanceTrace(playerId),amount=delta<0?-delta:delta,rejected=0,after=before;
@@ -499,15 +593,14 @@ public final class PlayerCurrencyData extends SavedData {
     // and paged native item ledger now exist. Verify native interrupted saves on licensed TEST;
     // migrate old physical denomination pickups and Inn/travel entitlement boundaries separately.
     // Never infer uniqueness from a partial manually restored player/account/world backup.
-    // TODO(M08, death currency): do not debit death loss until a single logical, non-inventory drop
-    // and its debit can be recovered together. Formula: below 20 Trace = zero; otherwise max(1,floor(2%)).
-    // Drop must record owner, amount, transaction, instance, creation time; full-amount capacity check;
-    // anyone may recover; no hoppers, mobs, merging, inventory use, or special/infinite lifetime.
-    // Reconcile unresolved death transactions before another loss. Use normal item aging/despawn.
-    // Canonical defaults are exposed in CosmicDungeon.config, but loss is not activated prematurely.
+    // TODO(M08, licensed TEST verification): the 2026-08-18 Economy Internal death protocol is
+    // implemented in this account image and DeathCurrencyService. Exercise native interrupted saves,
+    // simultaneous pickup, portal/chunk reload, item-expiry hooks, and full run reset on TEST.
+    // Restore playerdata, account/ledger, and dimensions together; partial manual restores are unsafe.
 
     public void clear(UUID playerId) {
         if (playerId == null) return;
+        requireDeathReady(playerId);
         if(reservedDebit(playerId)>0||reservedCredit(playerId)>0)
             throw new IllegalStateException("Account has active transaction reservations");
         long before=getBalanceTrace(playerId);

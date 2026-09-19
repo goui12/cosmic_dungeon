@@ -45,11 +45,20 @@ public final class D1OfflineChecks {
         net.goui.cosmicdungeon.trade.TradeCommitChecks.main(args);
         net.goui.cosmicdungeon.vendor.CommerceChecks.main(args);
         net.goui.cosmicdungeon.economy.EconomyLedgerChecks.main(args);
+        net.goui.cosmicdungeon.economy.DeathCurrencyChecks.main(args);
         var gameplay = TomlFormat.newConfig();
         Config.SPEC.correct(gameplay);
         check(((Number)gameplay.get("ItemProtection.recoveryStacksPerClaim")).intValue()==32,
                 "Protected return processing has a bounded configurable claim budget");
         check(Config.SPEC.isCorrect(gameplay), "Generated gameplay defaults validate");
+        check(((Number)gameplay.get("Economy.deathLossThresholdTrace")).longValue()==20,"Death threshold default");
+        check(((Number)gameplay.get("Economy.deathLossFraction")).doubleValue()==.02,"Death percentage default");
+        check(((Number)gameplay.get("Economy.minimumDeathLossTrace")).longValue()==1,"Death minimum default");
+        check(((Number)gameplay.get("Economy.deathDropWorkPerTick")).intValue()==8,"Death recovery has a global work budget");
+        check(((Number)gameplay.get("Economy.deathDropSnapshotIntervalTicks")).intValue()==100,"Death checkpoint cadence");
+        check(((Number)gameplay.get("Economy.deathDropRecoveryRetryTicks")).intValue()==100,"No every-tick disk retry");
+        gameplay.set("Economy.deathDropWorkPerTick",3);Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("Economy.deathDropWorkPerTick")).intValue()==3,"Developer recovery budget retained");
         check(((Number)gameplay.get("Economy.ledgerFlushIntervalTicks")).intValue()==1200,"Ledger flush defaults to one minute");
         check(((Number)gameplay.get("Economy.ledgerRowsPerFlush")).intValue()==256,"Ledger archive work is bounded");
         gameplay.set("Economy.ledgerRowsPerFlush",64);Config.SPEC.correct(gameplay);

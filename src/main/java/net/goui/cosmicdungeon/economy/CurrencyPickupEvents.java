@@ -31,6 +31,7 @@ public final class CurrencyPickupEvents {
 
         ItemEntity itemEntity = event.getItemEntity();
         ItemStack stack = itemEntity.getItem();
+        if(DeathCurrencyService.logical(itemEntity)){event.setCanPickup(TriState.FALSE);return;}
         CurrencyDenomination denomination = denominationForItem(stack.getItem());
         if (denomination == null) return;
 
@@ -54,7 +55,7 @@ public final class CurrencyPickupEvents {
         }
     }
 
-    private static void showCapacityDeniedMessage(ServerPlayer player) {
+    static void showCapacityDeniedMessage(ServerPlayer player) {
         long now = System.currentTimeMillis();
         long last = LAST_DENIAL_MESSAGE_MS.getOrDefault(player.getUUID(), 0L);
         if (now - last < DENIAL_MESSAGE_COOLDOWN_MS) return;

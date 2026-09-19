@@ -40,6 +40,11 @@ public final class EconomyLedger {
         for(String key:List.of("transaction","type","category","status"))if(row.getStringOr(key,"").isBlank())throw new IllegalArgumentException("Missing ledger "+key);
         for(String key:List.of("requested_trace","before","after","run","timestamp"))if(!(row.get(key) instanceof NumericTag))throw new IllegalArgumentException("Missing ledger number "+key);
         if(row.getLongOr("before",-1)<0||row.getLongOr("after",-1)<0||row.getLongOr("run",-1)<0||!(row.get("details") instanceof CompoundTag))throw new IllegalArgumentException("Invalid ledger values");
+        if(row.getStringOr("type","").equals("death_despawn")
+                &&(!(row.getCompoundOrEmpty("details").get("drop_destroyed_trace") instanceof NumericTag)
+                ||row.getCompoundOrEmpty("details").getLongOr("drop_destroyed_trace",0)<=0
+                ||row.getLongOr("before",-1)!=row.getLongOr("after",-1)))
+            throw new IllegalArgumentException("Invalid logical drop destruction evidence");
         if(!row.getStringOr("category","").equals(category(row.getStringOr("type",""),row.getLongOr("after",0)-row.getLongOr("before",0))))throw new IllegalArgumentException("Ledger category mismatch");
     }
     public static String category(String type,long delta){

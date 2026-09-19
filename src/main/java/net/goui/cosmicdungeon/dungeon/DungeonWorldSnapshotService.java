@@ -208,6 +208,8 @@ public final class DungeonWorldSnapshotService {
 
                 flushChunkIoWorker(target);
                 flushAuxiliaryIoWorkers(target);
+                if(!net.goui.cosmicdungeon.economy.DeathCurrencyService.resetDimension(target))
+                    return new SnapshotResult.Error("Death currency requires reconciliation before instance reset.");
                 deleteDirectoryContents(targetPath);
                 copyDirectory(sourcePath, targetPath);
                 clearDimensionDataCache(target);
@@ -338,6 +340,8 @@ public final class DungeonWorldSnapshotService {
                 debug("[DUNGEON DEBUG] resetToSnapshot deleting live contents for "
                         + level.dimension().location() + " path=" + livePath);
                 logDirectoryDiagnostics("live-before-delete", livePath);
+                if(!net.goui.cosmicdungeon.economy.DeathCurrencyService.resetDimension(level))
+                    return new SnapshotResult.Error("Death currency requires reconciliation before snapshot reset.");
                 deleteDirectoryContents(livePath);
                 logDirectoryDiagnostics("live-after-delete", livePath);
 

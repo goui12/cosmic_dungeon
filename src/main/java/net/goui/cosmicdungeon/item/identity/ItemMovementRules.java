@@ -20,6 +20,7 @@ public final class ItemMovementRules {
     public static Flags flags(ItemStack stack) { return inspect(stack, 0, new int[]{MAX_STACKS}); }
     private static Flags inspect(ItemStack stack, int depth, int[] budget) {
         if (stack == null || stack.isEmpty()) return FREE;
+        if (net.goui.cosmicdungeon.economy.DeathCurrencyService.marked(stack)) return RESTRICTED;
         if (depth > MAX_DEPTH || --budget[0] < 0) return RESTRICTED;
         boolean issued = ClassItemUtil.hasAnyAttunementMetadata(stack) || stack.getItem() instanceof ClassBoundItem
                 || stack.has(ModDataComponents.D1_ABILITY.get())

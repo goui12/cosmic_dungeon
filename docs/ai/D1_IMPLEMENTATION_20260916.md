@@ -934,3 +934,14 @@ Normal D1 Bogatyr mechanics are implemented; actual entity hooks, AI, loaded-wor
 multiplayer and crash/failure behavior remain licensed TEST work. Damaged or ambiguous legacy saves
 retain protected archives/holds for explicit backup investigation, with detailed code TODOs.
 Private receipt: Google Docs and Sheet/Audit/D1_Batch_19_2026-09-18.
+
+
+2026-09-19 Batch26 checkpoint: Cameron authorized Batch26 only, followed by a local commit and stop.
+Canonical death intents, debit/drop/pickup/despawn accounting and bounded projection recovery are
+implemented. Hotspots: account SavedData/ledger, native player/item/entity hooks, inventory guards,
+dimension reset boundary and server Economy config. Optional death_currency schema1 and player
+death_currency_life_v1 preserve legacy saves; no registry/network/spawner change.
+2,549 offline checks plus two config round trips and Java21 build passed. Runtime, native save
+interruptions and licensed multiplayer acceptance remain pending. No launch/deployment/new PNG.
+M08 implemented_unverified; M03 retains Inn/travel and legacy pickup follow-ups. Batch27 awaits Cameron.
+See D1_BATCH_26.md for exact files, compatibility, backup/rollback and cumulative QA.

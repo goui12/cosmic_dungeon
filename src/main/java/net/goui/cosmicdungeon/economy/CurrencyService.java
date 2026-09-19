@@ -78,7 +78,7 @@ public final class CurrencyService {
     }
 
     public static boolean transactionsAllowed(ServerPlayer player) {
-        if(player==null)return false;
+        if(player==null||DeathCurrencyService.blocked(player))return false;
         if(net.goui.cosmicdungeon.vendor.CommerceTransactions.blocked(player))return false;
         if(net.goui.cosmicdungeon.trade.TradeCustody.held(player)
                 ||(net.goui.cosmicdungeon.trade.TradeSessionData.get(player)==null&&net.goui.cosmicdungeon.trade.TradeTransactions.blocked(player)))return false;
