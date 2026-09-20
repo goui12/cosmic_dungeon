@@ -6,7 +6,7 @@ public final class D1AbilityConfig {
     public record Spell(ModConfigSpec.DoubleValue power,ModConfigSpec.IntValue duration){}
     public static final Map<String,Spell> SPELLS=new LinkedHashMap<>();
     public static ModConfigSpec.DoubleValue ROCKET_RADIUS,SPICULE_DEBUFF_SCALE;
-    public static ModConfigSpec.IntValue SPICULE_DEBUFF_CAP;
+    public static ModConfigSpec.IntValue SPICULE_DEBUFF_CAP,ROCKET_CANDIDATE_LIMIT;
     private D1AbilityConfig(){}
     public static void define(ModConfigSpec.Builder b){
         b.comment("D1 Theurgist overview 1l9ox2pQUSPy0_J3h7ljPOaVOFtMFkoHq_rFSGK4iqeM, 2026-04-05.",
@@ -45,6 +45,8 @@ public final class D1AbilityConfig {
         spell(b,"pyroclast","cindermaul",15,1,"Maximum explosion damage at the center; five-star authored vanilla rocket.");
         ROCKET_RADIUS=b.comment("Blocks. Vanilla square-root falloff and obstruction checks; no terrain damage.")
                 .defineInRange("rocketExplosionRadius",5.0,0.5,32.0);
+        ROCKET_CANDIDATE_LIMIT=b.comment("Maximum nearby living entities inspected per D1 explosion. At saturation some targets are omitted; at most two obstruction rays per candidate.")
+                .defineInRange("rocketCandidateLimit",256,1,1024);
         b.pop();
     }
     private static void spell(ModConfigSpec.Builder b,String section,String id,double power,int ticks,String comment){

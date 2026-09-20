@@ -31,6 +31,7 @@ public final class Config {
     public static final ModConfigSpec.DoubleValue CHAIN_CHANCE;
     public static final ModConfigSpec.DoubleValue CHAIN_RADIUS;
     public static final ModConfigSpec.IntValue CHAIN_TARGET_LIMIT;
+    public static final ModConfigSpec.IntValue CHAIN_CANDIDATE_LIMIT;
     public static final ModConfigSpec.DoubleValue CHAIN_DAMAGE;
     public static final ModConfigSpec.IntValue REPAIR_POLL_SECONDS;
     public static final ModConfigSpec.LongValue ACCOUNT_CAPACITY;
@@ -204,6 +205,8 @@ public final class Config {
                 .defineInRange("chainLightningRadius", 32.0, 1.0, 128.0);
         CHAIN_TARGET_LIMIT = B.comment("Safety bound on additional visible hostile targets; original victim is not hit twice.")
                 .defineInRange("chainLightningTargetLimit", 64, 1, 256);
+        CHAIN_CANDIDATE_LIMIT = B.comment("Maximum nearby mobs inspected per chain trigger; bounds candidate storage and LOS work. Crowded scenes may omit targets.")
+                .defineInRange("chainLightningCandidateLimit", 256, 1, 1024);
         CHAIN_DAMAGE = B.comment("Multiplier of the triggering hit's final damage.")
                 .defineInRange("chainLightningDamageMultiplier", 1.0, 0.0, 100.0);
         PASSIVE_REPAIR_HEALTH_COST = B.comment("Health points per durability point. Repair 2.0: one heart.")

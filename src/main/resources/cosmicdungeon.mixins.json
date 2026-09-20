@@ -17,6 +17,7 @@
     "BogatyrFollowMixin",
     "BogatyrBreedMixin",
     "D1ArrowMixin",
+    "D1SupportArrowMixin",
     "D1SpectralArrowMixin",
     "D1RocketMixin",
     "InnRespawnMixin",

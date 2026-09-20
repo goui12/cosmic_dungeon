@@ -1,14 +1,14 @@
 # D1 remaining work
 
-Updated after Batch35, finalized2026-09-20 UTC (September19 on the PC).
-Cameron authorized35 only, offline validation and final local commit; STOP before36.
-Verified parent:91075b5cb86a92ab648387e40c578d364d46cc07.
+Updated after Batch36 on2026-09-20 UTC.
+Cameron authorized36 only, offline validation and final local commit; STOP before37.
+Verified parent:c5678b7d169c738b11f51b889a4491db969d6646.
 Gameplay/multiplayer testing remains deferred for the cumulative licensed TEST pass.
 All101 original audit IDs remain intact. Code implementation is not runtime acceptance.
-Current dispositions: Google Docs and Sheet/Audit/D1_Batch_35_2026-09-19/implementation_findings.json.
-Latest: [Batch35](D1_BATCH_35.md); previous [Batch34](D1_BATCH_34.md).
+Current dispositions: Google Docs and Sheet/Audit/D1_Batch_36_2026-09-20/implementation_findings.json.
+Latest: [Batch36](D1_BATCH_36.md); previous [Batch35](D1_BATCH_35.md).
 
-## Planned batches remaining: 3
+## Planned batches remaining: 2
 
 These are estimated implementation/review batches, distinct from gameplay testing.
 Concrete findings may change scope; native/world/performance acceptance remains in the
@@ -16,13 +16,25 @@ separate cumulative licensed TEST phase. This plan authorizes no launch or deplo
 
 | Batch | Work remaining | Audit IDs / boundary |
 | --- | --- | --- |
-| 36 | Final source/code review of D1 class effects and ammunition. | M55/M58/M60/M63; native effects remain untested |
 | 37 | Achievement rewards, progression bindings and travel gates. | M79/M81/M93/M101; preserve instance/lifetime separation |
-| 38 | Help, balance displays, performance bounds and cumulative-test handoff. | M09/M104/M105; include Batch35 recipe/crafting release gates; measure live performance later |
+| 38 | Help, balance displays, performance bounds and cumulative-test handoff. | M09/M104/M105; include Batch35 recipe/crafting and Batch36 combat acceptance; measure live performance later |
 
 Remaining20 partial IDs can span these batches or explicit legacy/world TEST acceptance.
 Nine preserved-content IDs still need native verification. The27 D2+ entries remain
 TODO-only and excluded from this estimate. Consult dispositions before writing more code.
+
+## Batch36 completed in code
+
+B36-1: recognized ammo rechecks active D1 owner/class/attunement; denied effects cannot fall back.
+B36-2: restorative arrows aid teammates without ordinary wounds, including friendly-fire-disabled teams.
+B36-3: native poison/regeneration immunity; stronger effects win and equal power retains longer duration.
+B36-4: chain lightning requires a successful active-D1 trident hit; unrelated damage cannot trigger it.
+B36-5: configurable candidate caps bound rocket/chain storage and obstruction work.
+12,804 offline checks (866 new combat plus5 config), two config round trips, Java21 offline build
+and1,963 source JSON checks passed. Native mixin target verified by bytecode, not runtime launch.
+M55/M58/M60/M63 retain native/world acceptance: shields, teams, effects/vetoes, payloads and saturation.
+Counts45 implemented/20partial/9preserved/27deferred=101. No new required PNG; existing effect atlas aliases.
+No world, workbook or active config edits; no runtime launch, deployment or push.
 
 ## Batch35 completed in code
 

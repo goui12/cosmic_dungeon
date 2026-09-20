@@ -21,6 +21,7 @@ public final class D1OfflineChecks {
                 com.electronwill.nightconfig.core.CommentedConfig.class,Path.class,net.neoforged.fml.config.ModConfig.class);
         loadedConfig.setAccessible(true);
         Config.SPEC.acceptConfig((net.neoforged.fml.config.IConfigSpec.ILoadedConfig)loadedConfig.newInstance(runtimeDefaults,null,null));
+        net.goui.cosmicdungeon.playerclass.d1.D1CombatChecks.main(args);
         net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrBehaviourChecks.main(args);
         net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrArchiveChecks.main(args);
         net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrDirectoryChecks.main(args);
@@ -62,6 +63,18 @@ public final class D1OfflineChecks {
         check(((Number)gameplay.get("ItemProtection.recoveryStacksPerClaim")).intValue()==32,
                 "Protected return processing has a bounded configurable claim budget");
         check(Config.SPEC.isCorrect(gameplay), "Generated gameplay defaults validate");
+        gameplay.set("Dragoon.chainLightningCandidateLimit",64);Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("Dragoon.chainLightningCandidateLimit")).intValue()==64,"Dragoon candidate override retained");
+        gameplay.set("Dragoon.chainLightningCandidateLimit",0);Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("Dragoon.chainLightningCandidateLimit")).intValue()==1,"Zero candidate budget rejected");
+        gameplay.set("Pyroclast.rocketCandidateLimit",1025);Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("Pyroclast.rocketCandidateLimit")).intValue()==1024,"Rocket work cap enforced");
+        gameplay.set("Pyroclast.rocketCandidateLimit",32);Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("Pyroclast.rocketCandidateLimit")).intValue()==32,"Rocket candidate override retained");
+        gameplay.remove("Dragoon.chainLightningCandidateLimit");gameplay.remove("Pyroclast.rocketCandidateLimit");
+        Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("Dragoon.chainLightningCandidateLimit")).intValue()==256
+                &&((Number)gameplay.get("Pyroclast.rocketCandidateLimit")).intValue()==256,"Missing new keys receive defaults");
         check(((Number)gameplay.get("Beluzon.bondQuoteSeconds")).intValue()==30,"Inn quote lifetime default");
         check(((Number)gameplay.get("Beluzon.bondInteractionRange")).doubleValue()==8,"Inn server range default");
         check(((Number)gameplay.get("BeatrixFarrow.chopRecoveryPollTicks")).intValue()==20,"Chop recovery local poll interval");

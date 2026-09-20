@@ -243,3 +243,19 @@ deployment/push. No new required PNG. M107 tooling complete; M12/M106 retain exp
 Counts45/20/9/27=101. Three planned batches remain:36 effects/ammo;37 progression/travel;
 38 displays/performance and cumulative TEST handoff. Final local commit then STOP before36.
 Report/exact file inventory: ../D1_BATCH_35.md; tracker: ../D1_REMAINING.md.
+
+Batch36, 2026-09-20 UTC: authorized36 only; STOP before37 after final local commit.
+Single writer for class enforcement, class effects/projectiles and Config. Recognized
+ammo cannot fall back after D1 ownership/class/attunement denial; restorative teammate
+aid avoids ordinary wounds; native effect applicability and stronger/longer selection;
+genuine active-D1 trident trigger; configurable256-candidate rocket/chain limits.
+12,804 offline checks (866 new combat plus5 config), two config round trips, Java21 build,
+1,963 JSON and source/workbook/native-target integrity checks pass. No schema, registry,
+packet or world migration; no datagen asset change, runtime launch, deployment or push.
+See ../D1_BATCH_36.md for exact17-file inventory and native acceptance boundaries.
+M55/M58/M60/M63 remain partial for native/world verification. Counts45/20/9/27=101.
+Two planned batches remain:37 achievements/progression/travel;38 help/balance/performance
+and cumulative licensed TEST handoff. Existing effect icons alias vanilla; no new PNG.
+Commit title: Complete D1 batch 36: enforce class ammunition and bound combat effects.
+Final local commit follows validation, completion notes, allowlist and staged review;
+afterward read-only verification only, preserving the existing generated-resource cache.

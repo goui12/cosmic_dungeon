@@ -2,6 +2,11 @@ package net.goui.cosmicdungeon.playerclass.dragoon;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.Config;
+import net.goui.cosmicdungeon.dungeon.d1.D1Members;
+import net.goui.cosmicdungeon.playerclass.d1.D1CombatRules;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.util.AbortableIterationConsumer;
+import net.minecraft.world.level.entity.EntityTypeTest;
 import net.goui.cosmicdungeon.particle.ModParticleTypes;
 import net.goui.cosmicdungeon.playerclass.api.ClassData;
 import net.goui.cosmicdungeon.playerclass.api.ClassKeys;
@@ -39,9 +44,13 @@ public final class DragoonPassiveEvents {
         DamageSource source = event.getSource();
         if (!(source.getEntity() instanceof ServerPlayer dragoon)) return;
         if (!ClassKeys.CLASS_ID_DRAGOON.equals(ClassData.getClassId(dragoon))) return;
-        boolean trident = source.getDirectEntity() instanceof net.minecraft.world.entity.projectile.ThrownTrident
-                || source.getDirectEntity() == dragoon && dragoon.getMainHandItem().is(net.minecraft.world.item.Items.TRIDENT);
-        if (!trident) return;
+        var run = D1Members.run(level).orElse(null);
+        boolean active = run != null && dragoon.level() == level && D1Members.inside(dragoon, run);
+        boolean thrown = source.is(DamageTypes.TRIDENT)
+                && source.getDirectEntity() instanceof net.minecraft.world.entity.projectile.ThrownTrident;
+        boolean melee = source.is(DamageTypes.PLAYER_ATTACK) && source.getDirectEntity() == dragoon
+                && dragoon.getMainHandItem().is(net.minecraft.world.item.Items.TRIDENT);
+        if (!D1CombatRules.tridentHit(active, thrown, melee, event.getNewDamage())) return;
         float damage = (float)(event.getNewDamage() * Config.CHAIN_DAMAGE.get());
         if (damage <= 0.0F || dragoon.getRandom().nextDouble() >= Config.CHAIN_CHANCE.get()) return;
 
@@ -62,14 +71,34 @@ public final class DragoonPassiveEvents {
     }
 
     private static List<Mob> collectTargets(ServerLevel level, ServerPlayer dragoon, Mob initialTarget) {
-        double range=Config.CHAIN_RADIUS.get();
-        return level.getEntitiesOfClass(Mob.class, dragoon.getBoundingBox().inflate(range), mob ->
-                mob.isAlive() && mob != initialTarget && mob instanceof net.minecraft.world.entity.monster.Enemy
-                        && !mob.isAlliedTo(dragoon) && dragoon.distanceToSqr(mob)<=range*range
-                        && dragoon.hasLineOfSight(mob))
-                .stream().sorted(java.util.Comparator.comparingDouble(dragoon::distanceToSqr))
-                .limit(Config.CHAIN_TARGET_LIMIT.get()).toList();
+        double range = Config.CHAIN_RADIUS.get();
+        int limit = Config.CHAIN_CANDIDATE_LIMIT.get();
+        var candidates = new ArrayList<Mob>();
+        int[] visited = {0};
+        level.getEntities().get(EntityTypeTest.forClass(Mob.class), dragoon.getBoundingBox().inflate(range), mob -> {
+            visited[0]++;
+            if (mob.isAlive() && mob != initialTarget && mob instanceof net.minecraft.world.entity.monster.Enemy
+                    && !mob.isAlliedTo(dragoon) && dragoon.distanceToSqr(mob) <= range * range)
+                candidates.add(mob);
+            return visited[0] >= limit ? AbortableIterationConsumer.Continuation.ABORT
+                    : AbortableIterationConsumer.Continuation.CONTINUE;
+        });
+        candidates.sort(java.util.Comparator.<Mob>comparingDouble(dragoon::distanceToSqr)
+                .thenComparing(mob -> mob.getUUID().toString()));
+        var targets = new ArrayList<Mob>();
+        for (var mob : candidates) {
+            if (dragoon.hasLineOfSight(mob)) targets.add(mob);
+            if (targets.size() >= Config.CHAIN_TARGET_LIMIT.get()) break;
+        }
+        return targets;
     }
+    // TODO(M60, licensed TEST): Classes!S4 says approximately 3% and "everything on the screen".
+    // Q&A D21 delegates configurable defaults. This retains hostile-only, 32-block server LOS,
+    // 64 additional targets and configured final-hit multiplier; it does not infer client FOV.
+    // Candidate saturation can omit targets. Verify shields/armor, thrown/melee and no double
+    // original-victim damage in TEST. Classes!T4 riptide/channeling is an authored-equipment
+    // review against the newer Dragoon overview (1uG80jIWpLKZvTGCmbHStqJs565iqEvqhr6N5oYBIHOE,
+    // Aug 28) and exact chest stacks; do not rewrite their enchantments or manufacture gear.
 
     @SubscribeEvent
     public static void passiveRepair(net.neoforged.neoforge.event.tick.PlayerTickEvent.Post event) {
