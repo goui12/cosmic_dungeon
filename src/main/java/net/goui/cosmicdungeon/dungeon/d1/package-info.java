@@ -76,11 +76,15 @@
  * Source modified: 2026-08-18T21:01:23.864Z
  *
  * TODO(M09, partial_D1): Audit all balance displays without creating extra stores
- * Current: One authoritative account store remains; first-credit and vendor messages use committed
- * values.
- * Required: Inventory every HUD/menu/command balance display, denomination conversion and resync
- * path. Compare reconnect and capacity-change displays against the UUID account; do not add another
- * balance cache/store.
+ * Batch38: commands/vendor/trade/repair still read the same UUID account and denomination formatter.
+ * Open menus poll displayed scalar balances (Performance.menuBalancePollTicks, default20);
+ * unchanged values send nothing. Native menu opening nonces reject stale/reused-container state,
+ * including vendor results/quotes and trade/repair state. Caches are transient display snapshots.
+ * Required: native reconnect, GUI-scale, external reward and capacity-change acceptance in TEST.
+ * Source display rule also names HUD, ordinary inventory and class-chest surfaces: these do not
+ * yet have a dedicated balance panel. Defer that client layout/performance design explicitly;
+ * use /currency balance meanwhile. Do not create a second account or reset currency with a run.
+ * New client overlays require the repository's client-cost approval before implementation.
  * Source: https://docs.google.com/document/d/17ufIuIy0VhLmB_V-6sZ7sCaUCZuGZUkHrgJLVpEcS28
  * Source modified: 2026-08-18T21:01:23.864Z
  *
@@ -993,11 +997,20 @@
  * reward configuration must not require replacing spawners.
  *
  * TODO(M104, partial_D1): Put explicit budgets around new AI, auras, snapshots and client effects
- * Current: Work is event-driven or throttled/bounded; no heap increase, profiler, runtime dependency
- * or world-wide scan was introduced.
- * Required: Measure dedicated-server and client baseline/after behavior under a realistic D1 party,
- * including six-candle checks, wolf targeting and snapshot cleanup. Do not claim zero performance
- * cost from static bounds alone.
+ * Batch38: Cosmic Spawner caps read derived loaded-entity tag membership; three repeated full-level
+ * scans are removed. Admission applies defaults/presets immediately; later maintenance is a fair
+ * global queue capped by Performance.spawnerMaintenanceVisitsPerTick (default512). Native Tags,
+ * NBT versions, presets, wandering-mob caps and one-shot decisions retain their formats/meaning.
+ * Entity health/retag/load/remove hooks and level/server cleanup maintain the derived index.
+ * Required: native hook and old-world acceptance plus before/after server MSPT, client frame time,
+ * allocation/memory plateau and packet traffic under realistic D1 load. No zero-cost claim.
+ * Outside-inventory snapshots remain bounded to once per20 ticks for eligible outside-active
+ * players plus lifecycle captures. A future dirty optimization must catch in-place component,
+ * damage and cursor changes and retain save-proof recovery; never skip solely on inventory count.
+ * D2+ totem auras below remain TODO-only: tier radii10/12/14, durations20/30/60seconds,
+ * cooldowns17/15/13minutes; highest overlapping Bogatyr tier wins, other-class stacking only.
+ * Do not run them in D1. Current Q&A D25 any-lit-campfire travel overrides the older six-socket,
+ * three-player,15minute/6hour enhanced-campfire proposal. No new campfire block is implied.
  * Source: https://docs.google.com/document/d/1fyiehjysrKWM0RilTxXpccmEQzdqc65Wmz0XuQRrUio
  * Source modified: 2026-07-07T22:42:25.125Z
  * Source: https://docs.google.com/document/d/1WYUMIw4dH2z3LHeL-_n3hbJ7wCox_MRWnn12yXUbf5M
@@ -1014,11 +1027,14 @@
  * Source modified: 2026-01-20T21:31:43.346Z
  *
  * TODO(M105, partial_D1): Update help, commands and player terminology only alongside approved behavior
- * Current: Player help now describes implemented Ready, six-Bloom completion, 60-block rewards,
- * repair and travel behavior.
- * Required: Review actual translated menus and all related old documentation against the D1
- * implementation addendum. Keep unfinished mechanics and developer instructions out of player-facing
- * help; verify GUI layout with matching client/server jars.
+ * Batch38: help corrects invitation leadership, readiness, paid-at-drink Companionship cooldown,
+ * logical death versus legacy physical currency, per-run/lifetime progress and class-specific
+ * trident hits. Deferred classes and developer validation pages are absent from the D1 tree.
+ * Beluzon's service and current achievement names are listed; Tamsin is not a retail vendor.
+ * Required: read every translated menu/help page at supported GUI scales with matching protocol6
+ * jars. Verify no clipping, stale balances, unsupported commands or unintended lore spoilers.
+ * Existing long NPC backstories are preserved; this batch does not claim a fresh all-Doc audit.
+ * Keep D2+ mechanics, secret eligible Tax item lists and developer-only commands out of help.
  * Source: https://docs.google.com/document/d/1K8HbgtOvRTYugr_X4GTquXqnWP0we87wmIz1WWEhPxo
  * Source modified: 2025-09-15T00:52:41.819Z
  * Source: https://docs.google.com/document/d/1FT6k2MFKgQf_tQ5UcBn0wmqJ9-yY_Wdpjna4USdVOZA

@@ -42,7 +42,7 @@ public class DragoonRepairScreen extends AbstractContainerScreen<DragoonRepairMe
         if (!clearedInitialState) {
             // Clear stale data for a newly opened repair screen, but preserve the active
             // session view when Minecraft re-runs init() during resize/GUI-scale relayout.
-            RepairClientState.clear();
+            RepairClientState.retainFor(menu);
             clearedInitialState = true;
         }
         super.init();
@@ -170,11 +170,19 @@ public class DragoonRepairScreen extends AbstractContainerScreen<DragoonRepairMe
     public static final class RepairClientState {
         private static View current;
         public static void clear() { current = null; }
+        public static void retainFor(DragoonRepairMenu menu) {
+            if (current != null && !net.goui.cosmicdungeon.menu.SessionMenu.matches(menu, current.containerId(), current.sessionId()))
+                current = null;
+        }
         public static void set(View v) { current = v; }
-        public static boolean setIfCurrent(int containerId, View v) { if (!isCurrentRepairContainer(containerId)) return false; current = v; return true; }
-        public static View current() { return current; }
-        public static View currentFor(int containerId) { return current != null && current.containerId() == containerId ? current : null; }
-        private static boolean isCurrentRepairContainer(int containerId) { Screen screen = Minecraft.getInstance().screen; return screen instanceof DragoonRepairScreen repairScreen && repairScreen.containerId() == containerId; }
+        public static boolean setIfCurrent(int containerId, View v) { if (v == null || !isCurrentRepairContainer(containerId, v.sessionId())) return false; current = v; return true; }
+        public static View current() { return current != null && isCurrentRepairContainer(current.containerId(), current.sessionId()) ? current : null; }
+        public static View currentFor(int containerId) { View v = current(); return v != null && v.containerId() == containerId ? v : null; }
+        private static boolean isCurrentRepairContainer(int containerId, UUID sessionId) {
+            var player = Minecraft.getInstance().player;
+            return player != null && player.containerMenu instanceof DragoonRepairMenu
+                    && net.goui.cosmicdungeon.menu.SessionMenu.matches(player.containerMenu, containerId, sessionId);
+        }
         public record View(int containerId, UUID sessionId, String dragoonName, String targetName, boolean viewerDragoon, long offeredFeeTrace, long targetBalanceTrace, long dragoonCapacityTrace, int selectedUnits, int requiredUnitsToFull, String materialItemId, String materialDisplay, int requiredMaterialCount, boolean dragoonHasMaterial, boolean targetReady, boolean dragoonReady, boolean dragoonRepairing, String statusMessage) {}
     }
 }

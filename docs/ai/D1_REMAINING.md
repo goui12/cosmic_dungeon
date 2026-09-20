@@ -1,26 +1,49 @@
 # D1 remaining work
 
-Updated after Batch37 on2026-09-20 UTC.
-Cameron authorized37 only, offline validation and final local commit; STOP before38.
-Verified parent:2a4f5a3f6a0605b128808037daec2aafa140e535.
+Updated after Batch38 on2026-09-20 UTC.
+Cameron authorized38 only, offline validation and final local commit; stop after this checkpoint.
+Verified parent:bbdd8fe3e1211669595e1a88853ae61a8e4fae1c.
 Gameplay/multiplayer testing remains deferred for the cumulative licensed TEST pass.
 All101 original audit IDs remain intact. Code implementation is not runtime acceptance.
-Current dispositions: Google Docs and Sheet/Audit/D1_Batch_37_2026-09-20/implementation_findings.json.
-Latest: [Batch37](D1_BATCH_37.md); [binding handoff](D1_BATCH_37_BINDINGS.md); previous [Batch36](D1_BATCH_36.md).
+Current dispositions: Google Docs and Sheet/Audit/D1_Batch_38_2026-09-20/implementation_findings.json.
+Latest: [Batch38](D1_BATCH_38.md); [cumulative TEST handoff](D1_CUMULATIVE_TEST_HANDOFF.md);
+[Batch37 bindings](D1_BATCH_37_BINDINGS.md).
 
-## Planned batches remaining: 1
+## Planned implementation/review batches remaining: 0
 
-These are estimated implementation/review batches, distinct from gameplay testing.
-Concrete findings may change scope; native/world/performance acceptance remains in the
-separate cumulative licensed TEST phase. This plan authorizes no launch or deployment.
+Batch38 completes the currently numbered plan. No next numbered batch is authorized or scheduled.
+This is distinct from the cumulative licensed TEST phase and explicit deferred follow-ups.
+There are46 implemented/runtime-unverified,19 partial D1,9 preserved verification-pending and
+27 deferred D2+ audit IDs. None has been promoted to native acceptance merely by finishing38.
 
-| Batch | Work remaining | Audit IDs / boundary |
-| --- | --- | --- |
-| 38 | Help, balance displays, performance bounds and cumulative-test handoff. | M09/M104/M105; include Batch35 recipe/crafting, Batch36 combat and Batch37 travel/binding acceptance; measure live performance later |
+Remaining work outside that completed plan:
 
-Remaining19 partial IDs can span this batch or explicit legacy/world TEST acceptance.
-Nine preserved-content IDs still need native verification. The27 D2+ entries remain
-TODO-only and excluded from this estimate. Consult dispositions before writing more code.
+- Cumulative TEST: onboarding, equipment, two-run progress/lifetime isolation, accounts, prices,
+  custody/save interruptions, combat, achievements, travel, old-world spawners, menus and performance.
+  The handoff contains19 short acceptance passes and all101 dispositions.
+- M09 UI follow-up: dedicated HUD, ordinary-inventory and class-chest balance panels remain absent.
+  Their source-backed code TODO requires client layout/cost design; /currency balance is available.
+- Legacy/world review: unknown item/NPC/Chop/Watson history and authored bindings require a consistent
+  backup and evidence-based decisions. No bulk migration or guessed grant was performed.
+- M12/M106: custom/native recipe coverage, general crafting availability and three broken source
+  links remain recorded. The workbooks are unchanged.
+- M104: actual server/client measurements and any later safe snapshot dirty optimization remain.
+- D2+ work is still TODO-only. M70/M71 future-class preserved-loadout review stays outside D1.
+
+Any concrete issue found in TEST or the deferred UI design can produce a separately scoped task;
+zero scheduled batches does not mean all Dad's source requirements or acceptance checks are complete.
+
+## Batch38 completed in code
+
+B38-1: native menu opening identities reject stale/reused-container vendor/trade/repair views.
+B38-2: configurable scalar polls refresh open account state only when displayed values change.
+B38-3: visible-entity tag membership replaces full-level spawner scans; maintenance shares a fair budget.
+B38-4: D1 help corrects party/currency/travel/lifetime rules, adds Beluzon and hides deferred navigation.
+B38-5: cumulative licensed TEST handoff includes every audit disposition and explicit missing UI panels.
+15,615 offline checks (2,683 new), two config round trips, Java21 build and1,964 JSON passed.
+Counts remain46 implemented/19partial/9preserved/27deferred=101. No new required PNG.
+Protocol5->6 requires matching jars. No Batch38 save/preset/registry format change or spawner migration.
+No world, source workbook, active config, runtime launch, deployment or push.
 
 ## Batch37 completed in code
 

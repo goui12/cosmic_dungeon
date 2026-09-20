@@ -39,7 +39,7 @@ public final class VendorService {
         String pricingGroup = profile.buyback() != null && profile.buyback().pricingGroup() != null && !profile.buyback().pricingGroup().isBlank()
                 ? profile.buyback().pricingGroup()
                 : "default";
-        return new VendorPayloads.S2C_OpenVendor(vendor.getId(), profile.id().toString(), vendorDisplayName(vendor, profile), profile.storeDisplayName(), CurrencyService.getBalanceTrace(sp), pricingGroup, List.copyOf(offers), List.copyOf(unlocked));
+        return new VendorPayloads.S2C_OpenVendor(sp.containerMenu.containerId, vendorSession(sp), vendor.getId(), profile.id().toString(), vendorDisplayName(vendor, profile), profile.storeDisplayName(), CurrencyService.getBalanceTrace(sp), pricingGroup, List.copyOf(offers), List.copyOf(unlocked));
     }
 
     private static String vendorDisplayName(Entity vendor, VendorProfile profile) {
@@ -96,7 +96,7 @@ public final class VendorService {
                 .append(Component.literal(" for ").withStyle(ChatFormatting.WHITE))
                 .append(Component.literal(traceCost + " Trace").withStyle(ChatFormatting.AQUA))
                 .append(Component.literal(".").withStyle(ChatFormatting.WHITE)));
-        return new VendorPayloads.S2C_VendorPurchaseResult(true, "Purchase complete.", newBalance);
+        return new VendorPayloads.S2C_VendorPurchaseResult(sp.containerMenu.containerId, vendorSession(sp), true, "Purchase complete.", newBalance);
     }
 
     private static boolean canFitPurchase(ServerPlayer sp, ItemStack toGive) {
@@ -165,7 +165,7 @@ public final class VendorService {
         }
         if (!CurrencyService.canDeposit(sp, quote.total())) return fail(sp, "You do not have enough currency capacity.");
         ((net.goui.cosmicdungeon.menu.VendorMenu) sp.containerMenu).setSaleQuote(quote);
-        return new VendorPayloads.S2C_VendorSaleQuote(sp.containerMenu.containerId, quote.token(), quote.total(),
+        return new VendorPayloads.S2C_VendorSaleQuote(sp.containerMenu.containerId, vendorSession(sp), quote.token(), quote.total(),
                 quote.lines().stream().map(line -> new VendorPayloads.S2C_VendorSaleQuote.Line(line.stack(), line.breakdown())).toList());
     }
 
@@ -175,7 +175,7 @@ public final class VendorService {
         VendorSaleQuote<ItemStack> quote = menu.takeSaleQuote();
         if (quote == null || !quote.consume(token, sp.level().getGameTime()))
             return fail(sp, "Sale quote expired or changed. Request a new quote.");
-        if (!confirm) return new VendorPayloads.S2C_VendorPurchaseResult(false, "Sale cancelled.", CurrencyService.getBalanceTrace(sp));
+        if (!confirm) return new VendorPayloads.S2C_VendorPurchaseResult(sp.containerMenu.containerId, vendorSession(sp), false, "Sale cancelled.", CurrencyService.getBalanceTrace(sp));
         VendorContext context = validateVendor(sp, quote.vendorEntityId(), true);
         if (!context.ok()) return fail(sp, context.failMessage());
         for (VendorSaleQuote.Line<ItemStack> line : quote.lines()) {
@@ -211,7 +211,7 @@ public final class VendorService {
                 .append(Component.literal(" for ").withStyle(ChatFormatting.WHITE))
                 .append(Component.literal(payout + " Trace").withStyle(ChatFormatting.AQUA))
                 .append(Component.literal(".").withStyle(ChatFormatting.WHITE)));
-        return new VendorPayloads.S2C_VendorPurchaseResult(true, resultMessage, CurrencyService.getBalanceTrace(sp));
+        return new VendorPayloads.S2C_VendorPurchaseResult(sp.containerMenu.containerId, vendorSession(sp), true, resultMessage, CurrencyService.getBalanceTrace(sp));
     }
 
     private static VendorContext validateVendor(ServerPlayer sp, int vendorEntityId, boolean requireBuyback) {
@@ -239,9 +239,14 @@ public final class VendorService {
         return VendorContext.ok(profile);
     }
 
+    private static java.util.UUID vendorSession(ServerPlayer sp) {
+        return sp.containerMenu instanceof net.goui.cosmicdungeon.menu.VendorMenu menu
+                ? menu.sessionId() : new java.util.UUID(0, 0);
+    }
+
     private static VendorPayloads.S2C_VendorPurchaseResult fail(ServerPlayer sp, String msg) {
         sp.sendSystemMessage(Component.literal(msg).withStyle(ChatFormatting.RED));
-        return new VendorPayloads.S2C_VendorPurchaseResult(false, msg, CurrencyService.getBalanceTrace(sp));
+        return new VendorPayloads.S2C_VendorPurchaseResult(sp.containerMenu.containerId, vendorSession(sp), false, msg, CurrencyService.getBalanceTrace(sp));
     }
 
     private record VendorContext(boolean ok, String failMessage, VendorProfile profile) {

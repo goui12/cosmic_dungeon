@@ -21,6 +21,9 @@ public final class D1OfflineChecks {
                 com.electronwill.nightconfig.core.CommentedConfig.class,Path.class,net.neoforged.fml.config.ModConfig.class);
         loadedConfig.setAccessible(true);
         Config.SPEC.acceptConfig((net.neoforged.fml.config.IConfigSpec.ILoadedConfig)loadedConfig.newInstance(runtimeDefaults,null,null));
+        net.goui.cosmicdungeon.block.entity.SpawnerMembershipChecks.main(args);
+        net.goui.cosmicdungeon.menu.MenuBalanceChecks.main(args);
+        net.goui.cosmicdungeon.menu.D1HelpNavigationChecks.main(args);
         net.goui.cosmicdungeon.dungeon.DungeonTravelChecks.main(args);
         net.goui.cosmicdungeon.achievement.d1.D1PiglinChecks.main(args);
         net.goui.cosmicdungeon.playerclass.d1.D1CombatChecks.main(args);
@@ -65,6 +68,14 @@ public final class D1OfflineChecks {
         check(((Number)gameplay.get("ItemProtection.recoveryStacksPerClaim")).intValue()==32,
                 "Protected return processing has a bounded configurable claim budget");
         check(Config.SPEC.isCorrect(gameplay), "Generated gameplay defaults validate");
+        check(((Number)gameplay.get("Performance.menuBalancePollTicks")).intValue()==20,"Bounded open-menu poll default");
+        check(((Number)gameplay.get("Performance.spawnerMaintenanceVisitsPerTick")).intValue()==512,"Global spawner budget default");
+        gameplay.set("Performance.menuBalancePollTicks",0);
+        gameplay.set("Performance.spawnerMaintenanceVisitsPerTick",Integer.MAX_VALUE);
+        Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("Performance.menuBalancePollTicks")).intValue()==5,"Poll cannot become an every-tick packet stream");
+        check(((Number)gameplay.get("Performance.spawnerMaintenanceVisitsPerTick")).intValue()==4096,"Spawner budget cannot become unbounded");
+        gameplay.remove("Performance");Config.SPEC.correct(gameplay);
         check(((Number)gameplay.get("Achievements.piglinHeadPlayers")).intValue()==6,"Sheet six-character default");
         check(((Number)gameplay.get("SharedTravel.companionshipSeconds")).intValue()==300,"Legacy companionship duration retained");
         check(((Number)gameplay.get("SharedTravel.riftCooldownTicks")).intValue()==12,"Legacy successful rift cooldown retained");

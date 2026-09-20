@@ -582,7 +582,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         this.clientSpawnerDirty = false;
     }
 
-    private String oneShotSpawnTag() {
+    String oneShotSpawnTag() {
         return COSMIC_SPAWNER_TAG_PREFIX
                 + this.worldPosition.getX() + "_"
                 + this.worldPosition.getY() + "_"
@@ -606,35 +606,15 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     }
 
     private int countTaggedEntities(net.minecraft.server.level.ServerLevel sl) {
-        String marker = oneShotSpawnTag();
-        int count = 0;
-        for (Entity e : sl.getAllEntities()) {
-            if (e.getTags().contains(marker) && e.isAlive()) {
-                count++;
-            }
-        }
-        return count;
+        return CosmicSpawnerEntities.count(sl, oneShotSpawnTag());
     }
 
-
-    private void applySpawnDefaultsToTaggedEntities(net.minecraft.server.level.ServerLevel sl) {
-        String marker = oneShotSpawnTag();
-        for (Entity e : sl.getAllEntities()) {
-            if (e.getTags().contains(marker)) {
-                CosmicSpawnerSpawnDefaults.applyIfNeeded(e);
-            }
-        }
-    }
-
-    private void applyPresetToTaggedEntities(net.minecraft.server.level.ServerLevel sl) {
-        if (this.spawnerPreset == null) return;
-        String marker = oneShotSpawnTag();
-        ResourceLocation rl = this.spawnerPreset.getEntityTypeId();
-        for (Entity e : sl.getAllEntities()) {
-            if (e.getTags().contains(marker) && BuiltInRegistries.ENTITY_TYPE.getKey(e.getType()).equals(rl)) {
-                this.spawnerPreset.applyToEntity(e);
-            }
-        }
+    void maintainTaggedEntity(Entity entity) {
+        if ("none".equals(spawnerEntityId) || (bossOneShot && bossHasSpawned)
+                || !entity.getTags().contains(oneShotSpawnTag())) return;
+        CosmicSpawnerSpawnDefaults.applyIfNeeded(entity);
+        if (spawnerPreset != null && BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).equals(spawnerPreset.getEntityTypeId()))
+            spawnerPreset.applyToEntity(entity);
     }
     // ----------------------------
     // Tick hooks
@@ -665,10 +645,9 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         if (!CosmicSpawnDataRules.canTag(be.spawner.currentSpawnData.getEntityToSpawn())) return;
         if (be.oneShotTaggedCount < 0) be.oneShotTaggedCount = be.countTaggedEntities(sl);
 
+        CosmicSpawnerEntities.request(be, sl, be.oneShotSpawnTag());
         int before = be.countTaggedEntities(sl);
         if (be.spawnerMobCap > 0 && before >= be.spawnerMobCap) {
-            be.applySpawnDefaultsToTaggedEntities(sl);
-            be.applyPresetToTaggedEntities(sl);
             return;
         }
 
@@ -681,8 +660,6 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         if (be.spawnerMobCap > 0 && originalSpawnCount > 0) {
             int remaining = Math.max(0, be.spawnerMobCap - before);
             if (remaining <= 0) {
-                be.applySpawnDefaultsToTaggedEntities(sl);
-                be.applyPresetToTaggedEntities(sl);
                 return;
             }
             spawnLimit = Math.min(spawnLimit, remaining);
@@ -700,8 +677,6 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
             }
         }
 
-        be.applySpawnDefaultsToTaggedEntities(sl);
-        be.applyPresetToTaggedEntities(sl);
 
         if (be.bossOneShot) {
             int after = be.countTaggedEntities(sl);

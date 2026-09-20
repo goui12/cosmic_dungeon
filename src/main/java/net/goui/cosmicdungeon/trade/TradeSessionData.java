@@ -310,8 +310,8 @@ public final class TradeSessionData {
                 return false;
             }
             TradeCustody.begin(sa,sessionId,b);TradeCustody.begin(sb,sessionId,a);
-            sa.openMenu(new SimpleMenuProvider((id, inv, pl) -> new TradeMenu(id, inv, this), Component.literal("Trading with: " + sb.getName().getString())));
-            sb.openMenu(new SimpleMenuProvider((id, inv, pl) -> new TradeMenu(id, inv, this), Component.literal("Trading with: " + sa.getName().getString())));
+            sa.openMenu(new net.goui.cosmicdungeon.menu.SessionMenuProvider((id, inv, pl) -> new TradeMenu(id, inv, this), Component.literal("Trading with: " + sb.getName().getString())));
+            sb.openMenu(new net.goui.cosmicdungeon.menu.SessionMenuProvider((id, inv, pl) -> new TradeMenu(id, inv, this), Component.literal("Trading with: " + sa.getName().getString())));
             if(!(sa.containerMenu instanceof TradeMenu ma)||!ma.belongsTo(this)
                     ||!(sb.containerMenu instanceof TradeMenu mb)||!mb.belongsTo(this))return false;
             persistOffers();
@@ -465,7 +465,20 @@ public final class TradeSessionData {
             if(committed){sa.sendSystemMessage(Component.literal("Trade completed."));sb.sendSystemMessage(Component.literal("Trade completed."));}
         }
 
+        private String lastDisplayStatus = "";
+        public void refreshBalances(ServerPlayer viewer, net.goui.cosmicdungeon.menu.MenuBalanceRefresh refresh) {
+            var srv = server();
+            if (srv == null || ended || !isValidFor(viewer)) return;
+            var other = srv.getPlayerList().getPlayer(viewer.getUUID().equals(a) ? b : a);
+            if (other != null && refresh.changed(CurrencyService.getBalanceTrace(viewer), CurrencyService.getBalanceTrace(other))) {
+                boolean left = viewer.getUUID().equals(a);
+                syncTo(viewer, other, left ? aCurrency : bCurrency, left ? bCurrency : aCurrency,
+                        left ? aReady : bReady, left ? bReady : aReady,
+                        left ? aConfirm : bConfirm, left ? bConfirm : aConfirm, lastDisplayStatus);
+            }
+        }
         private void syncAll(String statusMessage) {
+            lastDisplayStatus = statusMessage == null ? "" : statusMessage;
             MinecraftServer srv = server();
             if (srv == null || ended) return;
             ServerPlayer sa = srv.getPlayerList().getPlayer(a);
@@ -487,7 +500,7 @@ public final class TradeSessionData {
                 boolean otherConfirmed,
                 String statusMessage
         ) {
-            if (!(self.containerMenu instanceof TradeMenu)) return;
+            if (!(self.containerMenu instanceof TradeMenu menu) || !menu.belongsTo(this)) return;
             ModNetwork.sendTo(self, new TradePayloads.S2C_TradeState(
                     self.containerMenu.containerId,
                     sessionId,

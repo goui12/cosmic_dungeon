@@ -32,7 +32,7 @@ public final class ModNetwork {
     private ModNetwork() {}
 
     public static void registerPayloadHandlers(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("5");
+        final PayloadRegistrar registrar = event.registrar("6");
 
         /* =====================================================================================
          * RF (central registration; feature-local packet definitions)
@@ -348,6 +348,8 @@ public final class ModNetwork {
                 (payload, ctx) -> ctx.enqueueWork(() -> ClientNetworkDispatch.dispatch("onD1PartyView", payload)));
 
         /* ===================== VENDOR ===================== */
+        registrar.playToClient(VendorPayloads.S2C_VendorBalance.TYPE, VendorPayloads.S2C_VendorBalance.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() -> ClientNetworkDispatch.dispatch("onVendorBalance", payload)));
 
         registrar.playToServer(VendorPayloads.C2S_VendorSaleDecision.TYPE, VendorPayloads.C2S_VendorSaleDecision.STREAM_CODEC,
                 (payload, ctx) -> {

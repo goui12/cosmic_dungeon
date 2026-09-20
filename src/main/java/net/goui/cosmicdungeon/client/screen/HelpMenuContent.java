@@ -12,14 +12,14 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Press H to reopen this help menu at any time."),
             HelpBlock.bullet("Pick an enabled class at the class selector before entering class-locked content."),
             HelpBlock.bullet("Stay with your party and watch chat, UI prompts, and in-world objectives."),
-            HelpBlock.bullet("Currency is stored in your account balance, not carried as loose coins after pickup."),
+            HelpBlock.bullet("Trace rewards enter one persistent account shared by your classes, runs, shops, and trades."),
             HelpBlock.bullet("Use dungeon rewards, vendors, and player trading to build toward the next unlock."),
             HelpBlock.tip("Esc closes this screen without pausing the game.")));
 
     public static final Page DUNGEONS = page("dungeons", "Dungeons", true, List.of(
             HelpBlock.heading("Dungeon Runs"),
             HelpBlock.bullet("Dungeon runs begin through the class selector flow."),
-            HelpBlock.bullet("The first player to ready up becomes Group Leader for that run."),
+            HelpBlock.bullet("The inviting group leader remains leader; every member confirms their own readiness."),
             HelpBlock.bullet("The active run party is used for rewards, teleportation, AFK handling, and completion checks."),
             HelpBlock.bullet("Follow objectives, collect key progression items, and avoid leaving party members behind."),
             HelpBlock.bullet("Hostile mobs spawned by Cosmic Mob Spawners can feed Group Split Trace rewards."),
@@ -34,13 +34,12 @@ public final class HelpMenuContent {
             HelpBlock.spacer(),
             HelpBlock.heading("Enabled Classes"),
             HelpBlock.bullet("Theurgist, Pyroclast, Bogatyr, Dragoon, Venefex, and Judicator."),
-            HelpBlock.heading("Dungeon 2 Classes"),
-            HelpBlock.bullet("Metalmancer and Deadeye are disabled for now and arrive in Dungeon 2."),
             HelpBlock.tip("Select a class name in the left index for a quick role page.")));
 
     public static final Page PARTY = page("party", "Party", true, List.of(
             HelpBlock.heading("Party Flow"),
-            HelpBlock.bullet("Choose a class, then press Ready. Dungeon 1 groups need three to six players."),
+            HelpBlock.bullet("Choose your class and assemble a group of three to six. The leader starts readiness; everyone confirms."),
+            HelpBlock.bullet("Changing group membership clears everyone's readiness. The leader queues the fully ready group."),
             HelpBlock.bullet("Group Leader can remove another active run member when needed."),
             HelpBlock.command("Group Leader", "/dungeoneer kick <player>"),
             HelpBlock.heading("AFK"),
@@ -71,7 +70,7 @@ public final class HelpMenuContent {
             HelpBlock.bullet("The Vendor Selling pane shows item, name, cost, and Buy controls."),
             HelpBlock.bullet("The Player Inventory pane shows inventory items that vendor can buy."),
             HelpBlock.bullet("Use Sell Selected or Sell All to sell eligible items."),
-            HelpBlock.bullet("Your currency balance updates after completed transactions."),
+            HelpBlock.bullet("Your displayed account balance refreshes while the shop is open."),
             HelpBlock.bullet("Retail prices reflect your NPC faction; personal stock refreshes each Overworld morning."),
             HelpBlock.bullet("Naton Whitlock offers general supplies: food, fire, light, and container basics."),
             HelpBlock.bullet("Elias Centvin sells weapons, tools, and repair components. Use /repair shop 1 through 4 nearby for direct repair."),
@@ -98,6 +97,7 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Elias Centvin: weapons, tools, marked Dragoon repair components, and direct shop repair."),
             HelpBlock.bullet("Eon Penrose: brewing ingredients, equipment, and potion work."),
             HelpBlock.bullet("Beatrix Farrow: food, campfire cooking, Farrow's Chop, and the memory of home."),
+            HelpBlock.bullet("Beluzon: the First Heart bond, an Inn home, and fallback respawn."),
             HelpBlock.bullet("Tamsin Vane: a starting-area treasure hunter who found a JHW map to Base Camp."),
             HelpBlock.bullet("John Hamish Watson: doomed scholar tied to the abandoned Base Camp, six spectral blooms, and later guidance."),
             HelpBlock.tip("Use each NPC's page in the left index for the full backstory. Vendor prices stay out of these lore pages.")));
@@ -113,6 +113,14 @@ public final class HelpMenuContent {
 
     public static final Page BEATRIX_FARROW = lorePage("npc.beatrix_farrow", "Beatrix Farrow", "Food and Farrow's Chop Vendor",
             "Beatrix sells food that can be cooked on a campfire, along with her special Farrow’s Chop. Beatrix Farrow grounds the campfire food system and Farrow’s Chop travel mechanic in restored-soul progression, Village recovery, and the lingering cosmic damage caused by Atlach-Nacha’s centuries-long search for an anchor on Earth.", beatrixBackstory(), beatrixNotes());
+
+    public static final Page BELUZON = page("npc.beluzon", "Beluzon", true, List.of(
+            HelpBlock.heading("Village Inn"),
+            HelpBlock.paragraph("Beluzon binds travelers to the First Heart, the Pale Oak remembered by the Village Inn."),
+            HelpBlock.bullet("After unlocking Village access, speak to Beluzon for the one-time bond."),
+            HelpBlock.bullet("Claim an approved Inn bed to set your home. Changing approved beds needs no second bond."),
+            HelpBlock.command("Return home", "/home"),
+            HelpBlock.tip("Your registered Inn bed remains a fallback when no stronger valid respawn point exists.")));
 
     public static final Page TAMSIN_VANE = lorePage("npc.tamsin_vane", "Tamsin Vane", "Dungeon Entry Broker",
             "Tamsin Vane found a map to Base Camp. She asks for a promised share of recovered treasure; Dungeon 1 entry is free.", tamsinBackstory(), tamsinNotes());
@@ -138,7 +146,7 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Purchases and sales use the same server-authoritative currency balance as other vendors."),
             HelpBlock.tip("If a vendor is locked, follow the reason shown in-game.")));
 
-    public static final Page TELEPORT_VENDOR = page("vendor.teleport", "Teleport Vendor", true, List.of(
+    public static final Page TELEPORT_VENDOR = page("vendor.teleport", "Dungeon Entry", true, List.of(
             HelpBlock.heading("Tamsin Vane"),
             HelpBlock.paragraph("Tamsin Vane found a map pointing toward Base Camp and the initials JHW."),
             HelpBlock.bullet("Dungeon 1 entry is free. Meet your party at the class selector."),
@@ -149,11 +157,12 @@ public final class HelpMenuContent {
             HelpBlock.paragraph("Trace is stabilized attunement residue recovered from dungeon-bound beings and valued by freed NPCs as protection against future binding."),
             HelpBlock.bullet("Your Attunement Fragment currency is stored in an account balance."),
             HelpBlock.bullet("Trace = 1, Mark = 10, Seal = 100, Crown = 1,000, Anchor = 10,000."),
-            HelpBlock.bullet("Your First Trace onboarding reward grants 5 Trace."),
+            HelpBlock.bullet("Your onboarding currency reward grants 5 Trace."),
             HelpBlock.bullet("Trace is used for purchases, upgrades, trades, and dungeon rewards."),
-            HelpBlock.bullet("Picking up currency deposits it into your account balance."),
-            HelpBlock.bullet("Pickup is all-or-nothing if the deposit would exceed account capacity."),
-            HelpBlock.bullet("Vendors and trades use the same balance."),
+            HelpBlock.bullet("Recoverable death currency returns to your account when collected."),
+            HelpBlock.bullet("Death-currency pickup waits if the entire amount would exceed your account capacity."),
+            HelpBlock.bullet("Vendors and trades use the same balance; open menus refresh as it changes."),
+            HelpBlock.bullet("Old physical currency items do not become account money automatically. Keep them for a developer to review."),
             HelpBlock.command("Balance", "/currency balance"),
             HelpBlock.command("Held Value", "/currency value"),
             HelpBlock.command("Inventory Value", "/currency value inventory")));
@@ -166,10 +175,12 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Village access unlocks from Dungeon 1 completion."),
             HelpBlock.bullet("Watson checks the group's inventories for all six spectral Blooms; everyone receives the same outcome."),
             HelpBlock.bullet("Dungeon 1 NPC unlock tiers derive from cumulative Lesser Blooms: tier 1 at 5, tier 2 at 10, tier 3 at 15, and tier 4 at 20."),
+            HelpBlock.bullet("Spectral Blooms, flags, and run objectives start fresh in each dungeon instance."),
+            HelpBlock.bullet("Lifetime Bloom contributions, completion totals, personal vendor unlocks, and your Trace account persist."),
             HelpBlock.command("Lifetime totals", "/d1 stats"),
             HelpBlock.command("Stored belongings", "/d1 claim"),
             HelpBlock.command("Read Progress", "/progression get <your_name>"),
-            HelpBlock.tip("Progression commands listed here are read-only for your own character unless you have elevated access.")));
+            HelpBlock.tip("Use /d1 claim to collect belongings held for you when inventory space is available.")));
 
     public static final Page FACTIONS = page("factions", "Factions", true, List.of(
             HelpBlock.heading("Faction Standing"),
@@ -184,21 +195,20 @@ public final class HelpMenuContent {
 
     public static final Page TELEPORTATION = page("teleportation", "Travel", true, List.of(
             HelpBlock.heading("Potion of Companionship"),
-            HelpBlock.bullet("Only works during an active dungeon run."),
-            HelpBlock.bullet("Opens Teleport to a Dungeoneer with online companions in the same active run, excluding you."),
-            HelpBlock.bullet("Choosing a companion teleports you to that dungeoneer."),
-            HelpBlock.bullet("Successful teleport applies a visible 5-minute Teleport Cooldown."),
-            HelpBlock.bullet("The potion is not consumed when the attempt is invalid or you are cooling down."),
+            HelpBlock.bullet("Drink inside your active dungeon with no travel cooldown and no unfinished item handoff."),
+            HelpBlock.bullet("Opens Teleport to a Dungeoneer with eligible online companions inside the same active run."),
+            HelpBlock.bullet("Choose a companion to travel to a safe position near them."),
+            HelpBlock.bullet("Drinking consumes the potion and starts Teleport Cooldown immediately; its default duration is five minutes."),
+            HelpBlock.bullet("If drinking is blocked, you keep the potion. After drinking, a blocked destination lets you retry within the selection window."),
             HelpBlock.heading("Beluzon's Inn"),
             HelpBlock.bullet("Beluzon offers a permanent Inn bond, paid once. Claim an approved Inn bed to use /home."),
             HelpBlock.bullet("Your Inn bed is a fallback when no stronger valid respawn point exists."),
             HelpBlock.heading("Rifts"),
             HelpBlock.bullet("Rifts are world-travel structures when presented by the dungeon."),
             HelpBlock.heading("Farrow's Chop"),
-            HelpBlock.bullet("Hold Raw Farrow's Chop at any lit campfire for four seconds."),
+            HelpBlock.bullet("Hold Raw Farrow's Chop at a lit campfire; the default cooking time is four seconds."),
             HelpBlock.bullet("Cook Raw Farrow's Chop inside your active dungeon to remember your exact location and travel to Main Village; eat the bound chop to return."),
             HelpBlock.bullet("You may own one Chop at a time. Its return campfire must still exist."),
-            HelpBlock.bullet("A successful campfire trip to Main Village grants the Nostalgia Bait achievement."),
             HelpBlock.tip("Only use teleport options offered by the dungeon, a potion, visible in-world travel structures, or Farrow's Chop.")));
 
     public static final Page ACHIEVEMENTS = page("achievements", "Achievements", true, List.of(
@@ -214,7 +224,10 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Librarian I"),
             HelpBlock.bullet("Shulker Express"),
             HelpBlock.bullet("Stairway To Heaven"),
-            HelpBlock.bullet("Tired, Not Broken")));
+            HelpBlock.bullet("Tired, Not Broken"),
+            HelpBlock.bullet("Wolves in Piglin Clothing"),
+            HelpBlock.bullet("Boom!"),
+            HelpBlock.bullet("The Tamsin Tax")));
 
     public static final Page REFERENCES = page("references", "References", true, List.of(
             HelpBlock.heading("Quick Reference"),
@@ -238,7 +251,7 @@ public final class HelpMenuContent {
             HelpBlock.paragraph("Once a battlefield medic turned biochemist, the Theurgist draws on care, chemistry, and the otherworldly to mend what others consider beyond saving."),
             HelpBlock.bullet("Role theme: healing and potion-brewing support."),
             HelpBlock.bullet("Only Theurgists can use brewing stands."),
-            HelpBlock.bullet("Valid potion brews complete instantly."),
+            HelpBlock.bullet("Keep the brewing stand open until brewing finishes; brew timing follows the server's rules."),
             HelpBlock.bullet("Eon Penrose sells Theurgist-only brewing equipment and advanced healing/regeneration potions."),
             HelpBlock.bullet("Can use Theurgist-attuned gear and class chests.")));
 
@@ -247,7 +260,6 @@ public final class HelpMenuContent {
             HelpBlock.paragraph("A former pyrotechnician and demolition hobbyist, the Pyroclast brings fire, fireworks, and controlled chaos to dungeon fights."),
             HelpBlock.bullet("Right-click flint with gravel in your inventory to make gunpowder (Pyroclast only)."),
             HelpBlock.bullet("A pickup reminder can appear while carrying matching materials."),
-            HelpBlock.bullet("Crafting this gunpowder grants the Boom! achievement."),
             HelpBlock.bullet("Can use Pyroclast-attuned gear and class chests.")));
 
     public static final Page BOGATYR = page("class.bogatyr", "Bogatyr", true, List.of(
@@ -270,7 +282,7 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Repair Affinity lets a Dragoon repair another player's supported damaged gear while the customer keeps item ownership."),
             HelpBlock.bullet("The customer may offer an optional account-currency labor fee; the Dragoon supplies Elias repair materials."),
             HelpBlock.bullet("Both players must stay nearby with the interface open. Commands: /repair <player>, /repair accept <player>, /repair deny <player>, /repair cancel."),
-            HelpBlock.bullet("Dragoon passive: 3% chance to trigger chain lightning."),
+            HelpBlock.bullet("Successful trident hits can trigger Dragoon chain lightning against nearby enemies."),
             HelpBlock.bullet("Can use Dragoon-attuned gear and class chests.")));
 
     public static final Page VENEFEX = page("class.venefex", "Venefex", true, List.of(
@@ -306,22 +318,20 @@ public final class HelpMenuContent {
                                     node(ELIAS_CENTVIN, node(WEAPONS_SUPPLIER)),
                                     node(EON_PENROSE, node(BREWING_STORE)),
                                     node(JOHN_HAMISH_WATSON),
+                                    node(BELUZON),
                                     node(NATON_WHITLOCK, node(GENERAL_SUPPLY_VENDOR)),
                                     node(TAMSIN_VANE, node(TELEPORT_VENDOR))))),
             node(CLASSES,
                     node(BOGATYR),
-                    node(DEADEYE),
                     node(DRAGOON),
                     node(JUDICATOR),
-                    node(METALMANCER),
                     node(PYROCLAST),
                     node(THEURGIST),
                     node(VENEFEX)),
             node(generalPage(),
                     node(ACHIEVEMENTS),
                     node(CURRENCY),
-                    node(TRADING),
-                    node(validationPage())),
+                    node(TRADING)),
             node(REFERENCES));
 
     public static final List<HelpNode> ROOT_ENTRIES = ROOT.children();
@@ -618,7 +628,7 @@ Once all six blooms are rescued from the dungeon, Watson’s soul is released. H
             HelpBlock.paragraph("Choose a directory entry on the left to get started."))); }
     private static Page generalPage() { return page("general", "General", true, List.of(
             HelpBlock.heading("General Reference"),
-            HelpBlock.paragraph("General topics cover achievements, currency, trading, and validation reminders."),
+            HelpBlock.paragraph("General topics cover achievements, currency, and trading."),
             HelpBlock.tip("Choose a child topic from the left directory."))); }
     private static Page validationPage() { return page("validation", "Validation", true, List.of(
             HelpBlock.heading("Server Validation"),

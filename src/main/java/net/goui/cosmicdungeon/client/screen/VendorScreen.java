@@ -480,7 +480,12 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
     public static final class VendorClientState {
         private static VendorView current;
         public static void set(VendorView state) { current = state; }
-        public static VendorView current() { return current; }
+        public static VendorView current() {
+            var player = net.minecraft.client.Minecraft.getInstance().player;
+            return current != null && player != null && player.containerMenu instanceof VendorMenu
+                    && net.goui.cosmicdungeon.menu.SessionMenu.matches(player.containerMenu, current.containerId(), current.sessionId())
+                    ? current : null;
+        }
 
         public static String descriptorFromProfileId(ResourceLocation profileId) {
             if (profileId == null) return "Vendor";
@@ -498,7 +503,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             return descriptor.isEmpty() ? "Vendor" : descriptor.toString();
         }
 
-        public record VendorView(int vendorEntityId, ResourceLocation profileId, String title, String storeDisplayName, long balanceTrace, String pricingGroup, List<VendorPayloads.S2C_OpenVendor.OfferView> offers, java.util.Set<String> unlockedOffers) {}
+        public record VendorView(int containerId, java.util.UUID sessionId, int vendorEntityId, ResourceLocation profileId, String title, String storeDisplayName, long balanceTrace, String pricingGroup, List<VendorPayloads.S2C_OpenVendor.OfferView> offers, java.util.Set<String> unlockedOffers) {}
     }
 
     private record SellableStackView(int slotIndex, ItemStack stack, long traceValue) {}

@@ -83,10 +83,17 @@ public final class ModNetworkClient {
         Minecraft.getInstance().setScreen(new CompanionshipTeleportScreen(payload.players()));
     }
 
+    private static boolean activeSession(int containerId, java.util.UUID sessionId, Class<?> menuType) {
+        var player = Minecraft.getInstance().player;
+        return player != null && menuType.isInstance(player.containerMenu)
+                && net.goui.cosmicdungeon.menu.SessionMenu.matches(player.containerMenu, containerId, sessionId);
+    }
+
     public static void onOpenVendor(VendorPayloads.S2C_OpenVendor payload) {
+        if (!activeSession(payload.containerId(), payload.sessionId(), net.goui.cosmicdungeon.menu.VendorMenu.class)) return;
         var profileId = ResourceLocation.tryParse(payload.profileId());
         VendorClientState.set(new VendorClientState.VendorView(
-                payload.vendorEntityId(),
+                payload.containerId(), payload.sessionId(), payload.vendorEntityId(),
                 profileId,
                 payload.vendorDisplayName(),
                 payload.storeDisplayName(),
@@ -98,15 +105,27 @@ public final class ModNetworkClient {
     }
 
     public static void onVendorSaleQuote(VendorPayloads.S2C_VendorSaleQuote payload) {
+        if (!activeSession(payload.containerId(), payload.sessionId(), net.goui.cosmicdungeon.menu.VendorMenu.class)) return;
         if (Minecraft.getInstance().screen instanceof VendorScreen screen) screen.showSaleQuote(payload);
     }
 
     public static void onVendorPurchaseResult(VendorPayloads.S2C_VendorPurchaseResult payload) {
-        var current = VendorClientState.current();
-        if (current != null) {
-            VendorClientState.set(new VendorClientState.VendorView(current.vendorEntityId(), current.profileId(), current.title(), current.storeDisplayName(), payload.newBalanceTrace(), current.pricingGroup(), current.offers(), current.unlockedOffers()));
-        }
+        if (!activeSession(payload.containerId(), payload.sessionId(), net.goui.cosmicdungeon.menu.VendorMenu.class)) return;
+        updateVendorBalance(payload.newBalanceTrace());
         if (payload.ok()) VendorScreen.clearSelectionsIfOpen();
+    }
+
+    public static void onVendorBalance(VendorPayloads.S2C_VendorBalance payload) {
+        if (activeSession(payload.containerId(), payload.sessionId(), net.goui.cosmicdungeon.menu.VendorMenu.class))
+            updateVendorBalance(payload.balanceTrace());
+    }
+
+    private static void updateVendorBalance(long balance) {
+        var current = VendorClientState.current();
+        if (current != null)
+            VendorClientState.set(new VendorClientState.VendorView(current.containerId(), current.sessionId(),
+                    current.vendorEntityId(), current.profileId(), current.title(), current.storeDisplayName(),
+                    balance, current.pricingGroup(), current.offers(), current.unlockedOffers()));
     }
 
     public static void onTradePromptState(TradePayloads.S2C_TradePromptState payload) {
@@ -114,6 +133,7 @@ public final class ModNetworkClient {
     }
 
     public static void onTradeState(TradePayloads.S2C_TradeState payload) {
+        if (!activeSession(payload.containerId(), payload.sessionId(), net.goui.cosmicdungeon.trade.TradeMenu.class)) return;
         TradeClientState.set(new TradeClientState.TradeView(
                 payload.containerId(),
                 payload.sessionId(),

@@ -11,11 +11,23 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
-public class DragoonRepairMenu extends AbstractContainerMenu {
+public class DragoonRepairMenu extends AbstractContainerMenu implements net.goui.cosmicdungeon.menu.SessionMenu {
     public static final int REPAIR_SLOT = 0, PLAYER_INV_START = 1, PLAYER_INV_COUNT = 27, HOTBAR_START = 28, HOTBAR_COUNT = 9;
     private final DragoonRepairSessionData.RepairSession session; private final Player self; private final Container repairContainer;
+    private final java.util.UUID sessionId;
+    private final net.goui.cosmicdungeon.menu.MenuBalanceRefresh balanceRefresh = new net.goui.cosmicdungeon.menu.MenuBalanceRefresh();
+    @Override public java.util.UUID sessionId() { return sessionId; }
+    @Override public void broadcastChanges() {
+        super.broadcastChanges();
+        if (session != null && self instanceof ServerPlayer sp && sp.containerMenu == this
+                && balanceRefresh.due(sp.level().getGameTime(), net.goui.cosmicdungeon.Config.MENU_BALANCE_POLL_TICKS.get()))
+            session.refreshBalances(sp, balanceRefresh);
+    }
     public DragoonRepairMenu(int id, Inventory inv, DragoonRepairSessionData.RepairSession session) {
-        super(ModMenus.DRAGOON_REPAIR.get(), id); this.session = session; this.self = inv.player; this.repairContainer = session == null ? new SimpleContainer(1) : session.repairContainer();
+        this(id, inv, session, session == null ? new java.util.UUID(0, 0) : session.id());
+    }
+    public DragoonRepairMenu(int id, Inventory inv, DragoonRepairSessionData.RepairSession session, java.util.UUID sessionId) {
+        super(ModMenus.DRAGOON_REPAIR.get(), id); this.sessionId = sessionId; this.session = session; this.self = inv.player; this.repairContainer = session == null ? new SimpleContainer(1) : session.repairContainer();
         addSlot(new RepairSlot(repairContainer, 0, 54, 48));
         for (int row=0; row<3; row++) for (int col=0; col<9; col++) addSlot(new Slot(inv, col + row*9 + 9, 47 + col*18, 174 + row*18));
         for (int col=0; col<9; col++) addSlot(new Slot(inv, col, 47 + col*18, 232));

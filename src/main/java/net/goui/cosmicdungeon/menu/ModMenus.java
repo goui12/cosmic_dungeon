@@ -31,27 +31,17 @@ public final class ModMenus {
 
     public static final Supplier<MenuType<VendorMenu>> VENDOR =
             MENUS.register("vendor",
-                    () -> new MenuType<>(VendorMenu::new, FeatureFlags.DEFAULT_FLAGS));
+                    () -> net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((id, inv, buf) -> new VendorMenu(id, inv, buf.readUUID())));
 
     public static final Supplier<MenuType<TradeMenu>> TRADE =
             MENUS.register("trade",
-                    () -> new MenuType<>((id, inv) -> {
-                        net.goui.cosmicdungeon.trade.TradeSessionData.TradeSession session = null;
-                        if (inv.player instanceof net.minecraft.server.level.ServerPlayer sp) {
-                            session = net.goui.cosmicdungeon.trade.TradeSessionData.get(sp);
-                        }
-                        return new TradeMenu(id, inv, session);
-                    }, FeatureFlags.DEFAULT_FLAGS));
+                    () -> net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create(
+                            (id, inv, buf) -> new TradeMenu(id, inv, null, buf.readUUID())));
 
     public static final Supplier<MenuType<DragoonRepairMenu>> DRAGOON_REPAIR =
             MENUS.register("dragoon_repair",
-                    () -> new MenuType<>((id, inv) -> {
-                        net.goui.cosmicdungeon.playerclass.dragoon.repair.DragoonRepairSessionData.RepairSession session = null;
-                        if (inv.player instanceof net.minecraft.server.level.ServerPlayer sp) {
-                            session = net.goui.cosmicdungeon.playerclass.dragoon.repair.DragoonRepairSessionData.get(sp);
-                        }
-                        return new DragoonRepairMenu(id, inv, session);
-                    }, FeatureFlags.DEFAULT_FLAGS));
+                    () -> net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create(
+                            (id, inv, buf) -> new DragoonRepairMenu(id, inv, null, buf.readUUID())));
 
     public static void register(IEventBus modBus) {
         MENUS.register(modBus);

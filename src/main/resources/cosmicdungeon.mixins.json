@@ -10,6 +10,9 @@
     "defaultRequire": 1
   },
   "mixins": [
+    "CosmicSpawnerEntityMixin",
+    "CosmicSpawnerTrackingMixin",
+    "CosmicSpawnerHealthMixin",
     "RepairIngredientMixin",
     "RepairRecipeMixin",
     "RepairFuelMixin",

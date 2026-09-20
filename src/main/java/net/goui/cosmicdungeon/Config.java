@@ -62,8 +62,15 @@ public final class Config {
     public static final ModConfigSpec.DoubleValue SELECTOR_RANGE;
     public static final ModConfigSpec.IntValue PARTY_INVITATION_SECONDS, PARTY_INVITE_COOLDOWN_TICKS,
             PARTY_POLL_TICKS, PARTY_ACTION_TICKS;
+    public static final ModConfigSpec.IntValue MENU_BALANCE_POLL_TICKS, SPAWNER_MAINTENANCE_BUDGET;
     public static final ModConfigSpec SPEC;
     static {
+        B.comment("Implementation work bounds; not lore or damage modifiers.").push("Performance");
+        MENU_BALANCE_POLL_TICKS=B.comment("Server ticks between open vendor/trade/repair balance polls; unchanged values send no packet.")
+                .defineInRange("menuBalancePollTicks",20,5,200);
+        SPAWNER_MAINTENANCE_BUDGET=B.comment("Global maximum queued spawner maintenance visits per server tick, shared fairly between loaded spawners. New entity presets apply at admission.")
+                .defineInRange("spawnerMaintenanceVisitsPerTick",512,16,4096);
+        B.pop();
         B.comment("D1 only. Run objectives reset with the instance; lifetime records remain.",
                 "Cameron Q&A D10/D20/D23/D69, 2026-09-16.").push("Dungeon1");
         ACTIVITY_POLL_SECONDS = B.comment("Seconds between player activity samples; Q&A D10.")

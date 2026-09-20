@@ -10,7 +10,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
-public class TradeMenu extends AbstractContainerMenu {
+public class TradeMenu extends AbstractContainerMenu implements net.goui.cosmicdungeon.menu.SessionMenu {
     public static final int OFFER_SLOTS = 9;
 
     public static final int OTHER_OFFER_START = 0;
@@ -38,8 +38,20 @@ public class TradeMenu extends AbstractContainerMenu {
     private final SimpleContainer otherFallback;
     private final Container ownContainer;
 
+    private final java.util.UUID sessionId;
+    private final net.goui.cosmicdungeon.menu.MenuBalanceRefresh balanceRefresh = new net.goui.cosmicdungeon.menu.MenuBalanceRefresh();
+    @Override public java.util.UUID sessionId() { return sessionId; }
+    @Override public void broadcastChanges() {
+        super.broadcastChanges();
+        if (session != null && self instanceof ServerPlayer sp && sp.containerMenu == this
+                && balanceRefresh.due(sp.level().getGameTime(), net.goui.cosmicdungeon.Config.MENU_BALANCE_POLL_TICKS.get()))
+            session.refreshBalances(sp, balanceRefresh);
+    }
     public TradeMenu(int id, Inventory inv, TradeSessionData.TradeSession session) {
-        super(ModMenus.TRADE.get(), id);
+        this(id, inv, session, session == null ? new java.util.UUID(0, 0) : session.id());
+    }
+    public TradeMenu(int id, Inventory inv, TradeSessionData.TradeSession session, java.util.UUID sessionId) {
+        super(ModMenus.TRADE.get(), id); this.sessionId = sessionId;
         this.session = session;
         this.self = inv.player;
         this.ownFallback = new SimpleContainer(OFFER_SLOTS);

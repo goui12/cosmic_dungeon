@@ -49,15 +49,15 @@ public final class VendorInteractionEvents {
             return;
         }
 
-        VendorPayloads.S2C_OpenVendor open = VendorService.buildOpenPayload(sp, vendor, profile);
         sp.openMenu(new VendorProvider(profile.displayName(),vendor));
-        sp.connection.send(open);
+        if (sp.containerMenu instanceof VendorMenu menu && menu.matches(vendor))
+            sp.connection.send(VendorService.buildOpenPayload(sp, vendor, profile));
     }
 
     private record VendorProvider(String title,Entity vendor) implements MenuProvider {
         @Override public Component getDisplayName() { return Component.literal(title); }
         @Override public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) { return new VendorMenu(id, inv,vendor); }
-        @Override public void writeClientSideData(AbstractContainerMenu menu, net.minecraft.network.RegistryFriendlyByteBuf buf) {}
+        @Override public void writeClientSideData(AbstractContainerMenu menu, net.minecraft.network.RegistryFriendlyByteBuf buf) { buf.writeUUID(((VendorMenu) menu).sessionId()); }
         @Override public boolean shouldTriggerClientSideContainerClosingOnOpen() { return true; }
     }
 }
