@@ -27,6 +27,18 @@ public final class D1WatsonData extends SavedData {
     public boolean configured() { return !dimension.isEmpty(); }
     public String dimension() { return dimension; }
     public BlockPos pos() { return BlockPos.of(position); }
+    /** Resolve the same authored template point in any leased D1 copy. */
+    public net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> instanceDimension(int slot) {
+        if (!configured() || slot < 1 || slot > net.goui.cosmicdungeon.dungeon.DungeonInstanceSlots.SLOT_COUNT) return null;
+        return net.goui.cosmicdungeon.dungeon.DungeonInstanceSlots.mapping(
+                net.goui.cosmicdungeon.dungeon.DungeonDefinitions.DUNGEON_1, slot).entrySet().stream()
+                .filter(e -> e.getKey().location().toString().equals(dimension))
+                .map(java.util.Map.Entry::getValue).findFirst().orElse(null);
+    }
+    public boolean matches(int slot, net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> actual,
+                           BlockPos position) {
+        return actual != null && actual.equals(instanceDimension(slot)) && pos().equals(position);
+    }
     public void set(String dimension, BlockPos pos) {
         this.dimension = dimension; this.position = pos.asLong(); setDirty();
     }

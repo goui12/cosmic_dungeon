@@ -49,8 +49,12 @@ Vendors are assigned NPC shops that use the Cosmic Dungeon Attunement Fragment c
 
 ## Vendor entity shells
 
-- `/vendor spawn <profileId>` still creates the default villager vendor shell.
-- `/vendor spawn <profileId> <mobType>` creates another mob shell, such as `/vendor spawn d1/general_supply_vendor horse`. Short vanilla IDs are interpreted as `minecraft:<id>`; full modded entity IDs are also accepted.
+- `/vendor spawn <profileId>` creates the profile at your position and replaces its previous NPC. Beluzon (`save_teleport_npc`) defaults to a native Creaking; other profiles default to villagers.
+- `/vendor spawn <profileId> <mobType>` chooses another compatible shell, such as `/vendor spawn general_supply_vendor horse`. Short vanilla IDs mean `minecraft:<id>`; full modded IDs are accepted. Beluzon requires `minecraft:creaking`.
+- Successful `/vendor assign <profileId>` also makes the selected mob the current NPC for that profile. Both placement commands require developer authority.
+- Identity is the stable profile ID and UUID. A loaded previous copy despawns, including in another dimension. An unloaded copy is rejected when its chunk loads. A refused new spawn preserves the previous NPC.
+- The first loaded legacy binding is adopted automatically. Later duplicates cannot replace it; explicit spawn or assign chooses the intended current copy. Clearing a binding leaves a retirement marker so old copies cannot return.
+- Personal unlocks, balances, purchases and Inn bonds remain independent of the NPC UUID. Regions, boundaries and coordinates remain authored in-game. See [in-game NPC placement](ai/D1_IN_GAME_NPC_PLACEMENT_2026-09-20.md).
 - Assigned vendor shells show the vendor profile display name as a bold bright neon-green overhead name, are persistent, invulnerable, and have AI disabled so they stand still instead of roaming.
 - Vendor opening and transaction validation are server-authoritative for any assigned mob shell, so client-side screen/network behavior continues to use the spawned entity id and cannot bypass distance, access-gate, profile, or buyback validation.
 

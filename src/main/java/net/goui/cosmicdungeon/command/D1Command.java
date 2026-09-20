@@ -55,8 +55,11 @@ public final class D1Command {
                                         return 0;
                                     }
                                     var pos = BlockPosArgument.getLoadedBlockPos(ctx, "position");
+                                    D1RunData.get(source.getServer()); // Validate before changing the authoring binding.
                                     D1WatsonData.get(source.getServer()).set(template.location().toString(), pos);
-                                    source.sendSuccess(() -> Component.literal("Watson D1 placement: " + template.location() + " " + pos.toShortString()), true);
+                                    D1WatsonService.placementChanged(source.getServer());
+                                    source.sendSuccess(() -> Component.literal("Watson D1 placement: " + template.location() + " "
+                                            + pos.toShortString() + "; shared by every D1 instance, with one Watson per run."), true);
                                     return 1;
                                 })))
                         .then(Commands.literal("status").executes(ctx -> {

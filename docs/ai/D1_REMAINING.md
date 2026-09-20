@@ -1,3 +1,28 @@
+# D1 in-game NPC placement checkpoint
+
+Updated2026-09-20: [NPC identity and placement](D1_IN_GAME_NPC_PLACEMENT_2026-09-20.md).
+Cameron's latest instruction keeps regions, boundaries, quest and NPC positions in-game.
+No coordinate config was added. Successful vendor spawn/assign and Tamsin bind replace
+their previous global identity; stale chunks remain retired. Watson keeps one saved
+template placement and a separate owner per D1 run.
+
+16,875 offline checks in46 groups, Java21 build, two config round trips and1,964 JSON passed.
+New independent NPC identity SavedData; existing vendor/Tamsin/Watson keys remain.
+Native replacement, restart, unload and two-instance acceptance remain unperformed.
+No new required PNG; no deployment/push. Final local commit follows validation.
+
+Remaining readiness areas:5; numbered batches scheduled:0.
+- R03: inspect authored Cinderkiss/Cinderbight payloads.
+- R04: implement approved-recipe server policy.
+- R05: add shared balance panels; settle any distinct treasure-credit path.
+- R07: redirect legacy item models to existing textures through datagen.
+- R08: verify actual world bindings and the new NPC identity behavior on licensed TEST.
+
+The101 broader audit dispositions remain unchanged; this completes the NPC authoring
+subtask, not world acceptance. See the cumulative handoff for exact manual steps.
+
+---
+
 # D1 readiness follow-ups after Batch38
 
 Updated2026-09-20 after Cameron's requested repair, Lux and class-chest fixes.

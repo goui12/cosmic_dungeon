@@ -41,6 +41,8 @@ public final class D1OfflineChecks {
         net.goui.cosmicdungeon.item.identity.D1AdoptionChecks.main(args);
         net.goui.cosmicdungeon.npc.tamsin.D1PartyChecks.main(args);
         net.goui.cosmicdungeon.npc.tamsin.TamsinChecks.main(args);
+        net.goui.cosmicdungeon.npc.NpcIdentityChecks.main(args);
+        WatsonPlacementChecks.main(args);
         net.goui.cosmicdungeon.economy.pricing.VendorPriceBreakdownChecks.main(args);
         net.goui.cosmicdungeon.economy.pricing.VendorPricingReferenceChecks.main(args);
         net.goui.cosmicdungeon.vendor.VendorSaleQuoteChecks.main(args);

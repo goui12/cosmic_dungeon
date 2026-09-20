@@ -31,6 +31,8 @@ public final class VendorAssignmentService {
         VendorProfile profile=VendorProfileManager.INSTANCE.get(profileId);
         if(profile==null||!VendorBindingRules.canAssign(entity.getPersistentData(),profileId.toString(),
                 BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString(),hasOtherRole(entity)))return false;
+        // Validate persisted identity before mutating the authored entity.
+        net.goui.cosmicdungeon.npc.NpcIdentityData.get(((ServerLevel)entity.level()).getServer());
         var ops=entity.registryAccess().createSerializationContext(NbtOps.INSTANCE);
         var name=entity.getCustomName();
         var encoded=name==null?null:ComponentSerialization.CODEC.encodeStart(ops,name).result().orElse(null);
@@ -41,6 +43,7 @@ public final class VendorAssignmentService {
                 Style.EMPTY.withColor(FRIENDLY_VENDOR_NAME_COLOR).withBold(true)));
         entity.setCustomNameVisible(true);entity.setInvulnerable(true);
         mob.setPersistenceRequired();mob.setNoAi(true);
+        net.goui.cosmicdungeon.npc.NpcIdentityService.placed(entity);
         return true;
     }
     /** Returns false without mutation if the retained original state cannot be decoded safely. */
@@ -56,6 +59,7 @@ public final class VendorAssignmentService {
                     before.name()).result().orElse(null);
             if(name==null)return false;
         }
+        net.goui.cosmicdungeon.npc.NpcIdentityService.cleared(entity);
         if(before!=null) {
             entity.setCustomName(name);entity.setCustomNameVisible(before.visible());
             entity.setInvulnerable(before.invulnerable());mob.setNoAi(before.noAi());

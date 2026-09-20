@@ -1,3 +1,21 @@
+# 2026-09-20 NPC placement acceptance addendum
+
+Latest code: [in-game NPC placement](D1_IN_GAME_NPC_PLACEMENT_2026-09-20.md).
+16,875 offline checks passed; native world acceptance has not been performed.
+
+Add these checks to the shared TEST pass:
+- Replace Beluzon across loaded dimensions, unloaded chunks and server restart.
+- Reject a failed new spawn without losing the old NPC.
+- Replace vendor/Tamsin and verify old menus/offers/ready anchors invalidate safely.
+- Preserve personal agreements, stock, Trace, Inn bonds and bed ownership.
+- Set Watson in-game once; run two D1 instances at corresponding positions.
+- Change Watson placement and reload old chunks; prevent stale copies and cross-run credit.
+- Back up the complete world and jars before deployment; rollback requires the matched backup.
+
+World authoring remains in-game. No new coordinate config or required PNG.
+
+---
+
 # September20 readiness-fix addendum
 
 Use the candidate hash and manual cases in [the readiness fix report](D1_READINESS_FIXES_2026-09-20.md)

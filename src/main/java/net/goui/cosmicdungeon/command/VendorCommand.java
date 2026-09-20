@@ -48,7 +48,7 @@ public final class VendorCommand {
                         .requires(AccessPolicy::requireDeveloperOrConsole)
                         .then(Commands.argument("profileId", StringArgumentType.word())
                                 .suggests((ctx, b) -> SharedSuggestionProvider.suggest(VendorProfileResolver.suggestions(), b))
-                                .executes(ctx -> spawn(ctx.getSource(), StringArgumentType.getString(ctx, "profileId"), "villager"))
+                                .executes(ctx -> spawn(ctx.getSource(), StringArgumentType.getString(ctx, "profileId"), null))
                                 .then(Commands.argument("mobType", StringArgumentType.word())
                                         .suggests((ctx, b) -> SharedSuggestionProvider.suggest(BuiltInRegistries.ENTITY_TYPE.keySet().stream()
                                                 .filter(id -> BuiltInRegistries.ENTITY_TYPE.getValue(id) != EntityType.PLAYER)
@@ -131,7 +131,8 @@ public final class VendorCommand {
         src.sendSuccess(() -> Component.literal("Assigned ").withStyle(ChatFormatting.GREEN)
                 .append(profileName(id))
                 .append(Component.literal(" to mob ").withStyle(ChatFormatting.WHITE))
-                .append(Component.literal(villager.getUUID().toString()).withStyle(ChatFormatting.DARK_GRAY)), true);
+                .append(Component.literal(villager.getUUID().toString()).withStyle(ChatFormatting.DARK_GRAY))
+                .append(Component.literal("; replaces the previous NPC for this profile.").withStyle(ChatFormatting.GRAY)), true);
         return 1;
     }
 
@@ -176,6 +177,8 @@ public final class VendorCommand {
     private static int spawn(CommandSourceStack src, String profileIdRaw, String mobTypeRaw) {
         ServerPlayer sp = src.getPlayer(); if (sp == null) { fail(src, "Player context required."); return 0; }
         ResourceLocation id = resolveOrFail(src, profileIdRaw); if (id == null) return 0;
+        if (mobTypeRaw == null) mobTypeRaw = id.toString().equals(net.goui.cosmicdungeon.vendor.VendorBindingRules.BELUZON)
+                ? "minecraft:creaking" : "minecraft:villager";
         ResourceLocation mobTypeId = parseEntityTypeId(mobTypeRaw);
         EntityType<?> entityType = mobTypeId == null ? null : BuiltInRegistries.ENTITY_TYPE.getOptional(mobTypeId).orElse(null);
         if (entityType == null) { fail(src, "Unknown mob type: " + mobTypeRaw); return 0; }
@@ -186,11 +189,12 @@ public final class VendorCommand {
             fail(src, "Profile incompatible with this entity; Beluzon requires a native Creaking.");
             return 0;
         }
-        if (!sp.level().addFreshEntity(vendorMob)) { fail(src, "Could not spawn vendor entity: " + mobTypeId); return 0; }
+        if (!net.goui.cosmicdungeon.npc.NpcIdentityService.spawn(vendorMob)) { fail(src, "Could not spawn vendor entity: " + mobTypeId); return 0; }
         src.sendSuccess(() -> Component.literal("Spawned vendor ").withStyle(ChatFormatting.GREEN)
                 .append(Component.literal(mobTypeId.toString()).withStyle(ChatFormatting.AQUA))
                 .append(Component.literal(" with profile ").withStyle(ChatFormatting.GREEN))
-                .append(profileName(id)), true);
+                .append(profileName(id))
+                .append(Component.literal("; replaces the previous NPC for this profile.").withStyle(ChatFormatting.GRAY)), true);
         return 1;
     }
 

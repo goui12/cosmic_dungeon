@@ -27,6 +27,7 @@ import java.util.*;
 public final class D1WatsonService {
     private static final String RUN_TAG = "cosmicdungeon_d1_watson_run";
     private static final String ENTITY_KEY = "watson_entity";
+    private static final String RETIRED = "retired";
     private D1WatsonService() {}
 
     @SubscribeEvent
@@ -37,19 +38,22 @@ public final class D1WatsonService {
         if (!binding.configured()) return;
         for (var run : DungeonRunRegistryData.get(server).listAllRuns()) {
             if (!run.dungeonId().equals("dungeon_1") || run.stateEnum() != DungeonRunState.ACTIVE || run.instanceSlot() < 1) continue;
-            var level = level(server, run, binding);
-            if (level == null || !level.hasChunkAt(binding.pos())) continue;
             var data = D1RunData.get(server);
-            Entity existing = existing(level, data, run.runId());
+            Entity existing = existing(server, data, run.runId());
             if (data.sealed(run.runId())) {
-                if (existing != null) existing.discard();
+                retire(data, run.runId(), existing);
                 continue;
             }
+            var level = level(server, run, binding);
+            if (existing != null && !binding.matches(run.instanceSlot(), existing.level().dimension(), existing.blockPosition())) {
+                retire(data, run.runId(), existing);
+                existing = null;
+            }
+            if (level == null || !level.hasChunkAt(binding.pos())) continue;
             var members = net.goui.cosmicdungeon.achievement.plantflags.PlantFlagData.get(server).completed(run.runId())
                     ? gathered(server, run, level, binding.pos()) : List.<ServerPlayer>of();
             if (members.isEmpty()) {
-                if (existing != null) existing.discard();
-                data.setValue(run.runId(), ENTITY_KEY, "");
+                retire(data, run.runId(), existing);
                 continue;
             }
             if (existing == null) {
@@ -63,15 +67,25 @@ public final class D1WatsonService {
                 watson.setSilent(true);
                 watson.setPersistenceRequired();
                 watson.getPersistentData().putLong(RUN_TAG, run.runId());
-                if (level.addFreshEntity(watson)) data.setValue(run.runId(), ENTITY_KEY, watson.getUUID().toString());
+                // Reserve before join validation; a stale chunk cannot claim the new placement.
+                var previous = data.values(run.runId(), ENTITY_KEY);
+                data.setValue(run.runId(), ENTITY_KEY, watson.getUUID().toString());
+                boolean added = false;
+                try {
+                    added = level.addFreshEntity(watson);
+                } finally {
+                    if (!added) {
+                        data.setValue(run.runId(), ENTITY_KEY, previous.isEmpty() ? "" : previous.getFirst());
+                        watson.discard();
+                    }
+                }
             }
         }
     }
 
     private static ServerLevel level(MinecraftServer server, DungeonRunRegistryData.RunRecord run, D1WatsonData binding) {
-        return DungeonInstanceSlots.mapping(DungeonDefinitions.DUNGEON_1, run.instanceSlot()).entrySet().stream()
-                .filter(e -> e.getKey().location().toString().equals(binding.dimension()))
-                .map(e -> server.getLevel(e.getValue())).filter(Objects::nonNull).findFirst().orElse(null);
+        var dimension = binding.instanceDimension(run.instanceSlot());
+        return dimension == null ? null : server.getLevel(dimension);
     }
     @SubscribeEvent public static void joined(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event){
         if(!(event.getLevel() instanceof ServerLevel level))return;
@@ -79,18 +93,40 @@ public final class D1WatsonService {
         if(runId<=0)return;
         var run=DungeonRunRegistryData.get(level.getServer()).getRun(runId).orElse(null);
         var data=D1RunData.get(level.getServer());var ids=data.values(runId,ENTITY_KEY);
-        if(run==null||run.stateEnum()!=DungeonRunState.ACTIVE||data.sealed(runId)||!run.containsDimension(level.dimension())
-                ||(!ids.isEmpty()&&!ids.getFirst().equals(entity.getUUID().toString()))){event.setCanceled(true);return;}
+        var binding = D1WatsonData.get(level.getServer());
+        if(run==null||!run.dungeonId().equals("dungeon_1")||run.stateEnum()!=DungeonRunState.ACTIVE
+                ||data.sealed(runId)||!run.containsDimension(level.dimension())
+                ||!binding.matches(run.instanceSlot(),level.dimension(),entity.blockPosition())
+                ||(!ids.isEmpty()&&!ids.getFirst().equals(entity.getUUID().toString()))){
+            event.setCanceled(true);entity.discard();return;
+        }
         data.setValue(runId,ENTITY_KEY,entity.getUUID().toString());
     }
 
-    private static Entity existing(ServerLevel level, D1RunData data, long runId) {
+    private static Entity existing(MinecraftServer server, D1RunData data, long runId) {
         var ids = data.values(runId, ENTITY_KEY);
-        if (ids.isEmpty()) return null;
+        if (ids.isEmpty() || ids.getFirst().equals(RETIRED)) return null;
         try {
-            Entity entity = level.getEntity(UUID.fromString(ids.getFirst()));
-            return entity != null && entity.isAlive() && entity.getPersistentData().getLongOr(RUN_TAG, 0L) == runId ? entity : null;
+            UUID id = UUID.fromString(ids.getFirst());
+            for (var level : server.getAllLevels()) {
+                Entity entity = level.getEntity(id);
+                if (entity != null && entity.isAlive()
+                        && entity.getPersistentData().getLongOr(RUN_TAG, 0L) == runId) return entity;
+            }
         } catch (IllegalArgumentException invalid) { return null; }
+        return null;
+    }
+    private static void retire(D1RunData data, long runId, Entity existing) {
+        data.setValue(runId, ENTITY_KEY, RETIRED);
+        if (existing != null) existing.discard();
+    }
+    /** Explicit in-game edits invalidate old UUIDs even when their chunks are unloaded. */
+    public static void placementChanged(MinecraftServer server) {
+        var data = D1RunData.get(server);
+        for (var run : DungeonRunRegistryData.get(server).listAllRuns()) {
+            if (run.dungeonId().equals("dungeon_1") && run.stateEnum() == DungeonRunState.ACTIVE)
+                retire(data, run.runId(), existing(server, data, run.runId()));
+        }
     }
 
     private static List<ServerPlayer> gathered(MinecraftServer server, DungeonRunRegistryData.RunRecord run,
@@ -124,7 +160,8 @@ public final class D1WatsonService {
         var binding = D1WatsonData.get(server);
         if (run == null || run.stateEnum() != DungeonRunState.ACTIVE || !run.containsPlayer(player.getUUID())
                 || !run.containsDimension(player.level().dimension()) || !binding.configured()
-                || existing(player.level(), data, runId) != watson || player.distanceToSqr(watson) > 64.0) return;
+                || !binding.matches(run.instanceSlot(), player.level().dimension(), watson.blockPosition())
+                || existing(server, data, runId) != watson || player.distanceToSqr(watson) > 64.0) return;
         var members = gathered(server, run, player.level(), binding.pos());
         if (!members.contains(player)) {
             player.sendSystemMessage(Component.literal("Every dungeoneer in this instance must gather near Watson."));

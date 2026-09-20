@@ -229,8 +229,22 @@ Profile ID usability:
 
 Scope boundary:
 - loads datapack vendor profiles from `data/cosmicdungeon/vendor_profiles/*.json`
-- supports default villager vendor spawning plus optional assigned mob vendor shells, for example `/vendor spawn <profileId> horse`
+- spawn/assign replaces the previous NPC for that exact profile, across dimensions and future chunk loads
+- default shell is villager, except native Creaking for Beluzon: `/vendor spawn save_teleport_npc`
+- supports compatible explicit shells, for example `/vendor spawn general_supply_vendor horse`
+- failed spawn preserves the current NPC; identity never comes from a display name
 - `/vendor access` explains whether the executing player can access a vendor profile and why
+
+### D1 NPC placement (developer authoring)
+
+- `/d1 watson set ~ ~ ~`: save your current block position in a D1 template or active D1 instance.
+- `/d1 watson status`: inspect the saved template dimension and coordinates.
+- Each D1 instance uses the same authored position in its own dimension. Watson remains gated by the existing party objective and gathering checks.
+- Setting a new Watson location retires previous copies. Each eligible run receives its own replacement.
+- `/d1 tamsin bind <npc> <selectorX> <selectorY> <selectorZ>`: bind a living starting-area NPC beside the selector; replaces the previous Tamsin.
+- `/d1 tamsin status`: show the current identity and retained legacy binding records.
+- `/d1 tamsin unbind <uuid>`: remove that role assignment; previous copies remain retired.
+- All world geometry and NPC locations remain managed in-game. See [placement and acceptance steps](../ai/D1_IN_GAME_NPC_PLACEMENT_2026-09-20.md).
 
 ## Changelog
 

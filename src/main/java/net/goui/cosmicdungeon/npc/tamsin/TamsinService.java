@@ -136,20 +136,33 @@ public final class TamsinService {
                                         source.sendFailure(Component.literal("Choose a living NPC beside a D1 selector in the starting area."));
                                         return 0;
                                     }
+                                    net.goui.cosmicdungeon.npc.NpcIdentityData.get(source.getServer());
                                     TamsinData.get(source.getServer()).bind(npc.getUUID(),
                                             new TamsinData.Binding(source.getLevel().dimension().location().toString(), pos.asLong()));
-                                    source.sendSuccess(() -> Component.literal("Tamsin bound: " + npc.getUUID() + " -> " + pos.toShortString()), true);
+                                    net.goui.cosmicdungeon.npc.NpcIdentityService.placed(npc);
+                                    source.sendSuccess(() -> Component.literal("Tamsin bound: " + npc.getUUID() + " -> "
+                                            + pos.toShortString() + "; replaces the previous Tamsin."), true);
                                     return 1;
                                 }))))
                         .then(Commands.literal("unbind").then(Commands.argument("npc", net.minecraft.commands.arguments.UuidArgument.uuid()).executes(ctx -> {
-                            boolean removed = TamsinData.get(ctx.getSource().getServer()).unbind(
-                                    net.minecraft.commands.arguments.UuidArgument.getUuid(ctx, "npc"));
+                            var npc = net.minecraft.commands.arguments.UuidArgument.getUuid(ctx, "npc");
+                            var data = TamsinData.get(ctx.getSource().getServer());
+                            if (data.binding(npc) != null) {
+                                var identities = net.goui.cosmicdungeon.npc.NpcIdentityData.get(ctx.getSource().getServer());
+                                identities.admit(net.goui.cosmicdungeon.npc.NpcIdentityService.TAMSIN, npc);
+                                identities.clear(net.goui.cosmicdungeon.npc.NpcIdentityService.TAMSIN, npc);
+                            }
+                            boolean removed = data.unbind(npc);
                             ctx.getSource().sendSuccess(() -> Component.literal(removed ? "Tamsin binding removed." : "That NPC is not bound."), true);
                             return removed ? 1 : 0;
                         })))
                         .then(Commands.literal("status").executes(ctx -> {
                             var data = TamsinData.get(ctx.getSource().getServer());
-                            ctx.getSource().sendSuccess(() -> Component.literal("Tamsin NPC bindings: " + data.bindingCount()), false);
+                            String owner = net.goui.cosmicdungeon.npc.NpcIdentityData.get(ctx.getSource().getServer())
+                                    .owner(net.goui.cosmicdungeon.npc.NpcIdentityService.TAMSIN);
+                            ctx.getSource().sendSuccess(() -> Component.literal("Current Tamsin: "
+                                    + (owner == null ? "adopted when loaded" : owner.isEmpty() ? "unbound" : owner)
+                                    + "; retained binding records: " + data.bindingCount()), false);
                             return data.bindingCount();
                         }))));
     }
@@ -157,5 +170,6 @@ public final class TamsinService {
     // personal ready checks, FIFO leader queue and preparation cancellation with 3-6 players.
     // Q&A D24 forbids party merges; active instance rosters remain governed by existing lifecycle.
     // TODO(M36/M41): verify the authored Starting Area NPC and selected destination in the
-    // licensed TEST world. Bind explicitly; never spawn, rename, move, or replace map NPCs.
+    // licensed TEST world. Cameron's 2026-09-20 rule: explicit bind replaces the previous
+    // Tamsin; ordinary names never identify NPCs. Retain old binding records to reject stale chunks.
 }

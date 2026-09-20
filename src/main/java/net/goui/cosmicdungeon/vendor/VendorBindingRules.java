@@ -50,6 +50,8 @@ public final class VendorBindingRules {
     // Inspect UUID, dimension, exact profile and native type before repairing any old placement.
     // Legacy assignments without BEFORE keep their name/AI/protection flags when cleared.
     // Global presence must not grant personal access. Do not infer an NPC from its display name,
-    // respawn unloaded villagers or automatically replace a Creaking/Heart. Gritch has no retained
+    // respawn unloaded villagers or automatically replace a Creaking/Heart. Cameron's 2026-09-20
+    // explicit spawn/assign now replaces that profile's previous UUID, including stale chunks.
+    // First Heart blocks remain authored independently. Gritch has no retained
     // role source: preserve its profile pending an explicit authored-world disposition.
 }
