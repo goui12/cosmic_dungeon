@@ -1,3 +1,29 @@
+# Authored class-chest boundary correction
+
+Cameron's2026-09-20 correction: class-chest contents are his work, including equipment,
+repair materials and renamed vanilla rockets. No AI content audit, reconstruction,
+rebalancing, payload inspection, marking or conversion is authorized.
+Requested menu/display/shift-transfer work must preserve the authored stacks.
+
+Removed the automatic Dragoon repair-marker hook and its helpers. Shift-click support
+and the NPC/Watson changes remain. R03 authored rocket inspection is outside AI work.
+R01 repair compatibility is reopened as a service-only issue; current validation still
+requires existing repair markers. Its solution must not rewrite the user's items.
+
+Remaining readiness areas:5; numbered batches scheduled:0.
+- R01: repair-service compatibility with unchanged authored materials.
+- R04: approved-recipe server policy.
+- R05: balance displays and the separate treasure-credit decision.
+- R07: legacy registered-item visuals using existing textures.
+- R08: world bindings, NPC replacement and simultaneous-instance acceptance.
+
+See [correction and validation](D1_AUTHORED_CHEST_CORRECTION_2026-09-20.md).
+Current101 dispositions:45 implemented-unverified,20 partial D1,1 preserved-verification-pending,
+8 author-owned/outside AI work,27 deferred D2+. Historical counts and class-chest content
+tasks below are superseded by this correction.
+
+---
+
 # D1 in-game NPC placement checkpoint
 
 Updated2026-09-20: [NPC identity and placement](D1_IN_GAME_NPC_PLACEMENT_2026-09-20.md).
@@ -12,7 +38,7 @@ Native replacement, restart, unload and two-instance acceptance remain unperform
 No new required PNG; no deployment/push. Final local commit follows validation.
 
 Remaining readiness areas:5; numbered batches scheduled:0.
-- R03: inspect authored Cinderkiss/Cinderbight payloads.
+- R01: resolve repair-service compatibility without marking or changing authored materials.
 - R04: implement approved-recipe server policy.
 - R05: add shared balance panels; settle any distinct treasure-credit path.
 - R07: redirect legacy item models to existing textures through datagen.
@@ -29,7 +55,7 @@ Updated2026-09-20 after Cameron's requested repair, Lux and class-chest fixes.
 Report: [readiness fixes and answers](D1_READINESS_FIXES_2026-09-20.md).
 Parent948cb6bd39030dfc6982a21c650e8a415035cdc0; final local commit follows validation.
 
-Completed: R01 source-strict run-chest repair supplies; R02 Judicator Lux;
+Completed: R02 Judicator Lux; R01 automatic supply marking was subsequently removed;
 R06 reviewed class-chest-to-owner shift transfer, including existing physical denomination stacks.
 Physical transfer does not redeem legacy coins or claim the displayed UUID account balance.
 15,944 offline checks in44 groups, two config round trips and Java21 build passed.
@@ -37,7 +63,7 @@ Native gameplay remains untested. No new required PNG.
 
 ## Remaining reviewed follow-ups:5; numbered batches scheduled:0
 
-- R03: inspect Cinderkiss/Cinderbight payloads; retained docs name stacks but define no extra mechanics.
+- R01: resolve repair-service compatibility without altering authored class-chest stacks.
 - R04: approved-recipe server policy across inventory, tables, automation and data packs.
 - R05: shared balance widget for HUD/inventory/class chests; decide any separate treasure claim.
 - R07: redirect retained legacy models to existing visuals through datagen, preserving IDs.

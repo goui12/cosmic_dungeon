@@ -619,12 +619,12 @@
  * Source: https://docs.google.com/document/d/16FD3wxi-Uen_DRzItDHdSrSZvkGNwa_r-ZeUYiswxoE
  * Source modified: 2026-03-26T14:08:42.520Z
  *
- * TODO(M64, preserved_verification_pending): Reconcile every Bogatyr loadout and named-item row
+ * Scope note (M64, author_owned_content): Preserve Bogatyr loadouts; no AI content task
  * Current: Authored vanilla equipment, chest contents and all existing IDs were preserved; no
  * automatic loadout rewrite.
- * Required: Compare retained class/tier chest rows with the actual authored containers on a world
- * copy. Reconcile newest-document naming and quantity without replacing equipment or duplicating
- * repeated rows. D2+ loadouts remain deferred; stable provenance is tracked in M72.
+ * Scope correction (Cameron, 2026-09-20): these contents are author-owned and outside AI work.
+ * Do not inspect/reconcile/rebuild the loadout or alter names, counts, payloads or components.
+ * Requested container access/display/shift-transfer code must preserve the authored stacks.
  * Source: https://docs.google.com/document/d/1lUy03lqDbeB4s_o5Nyvft40JMRj60pKMrY2jQ8Q0ncU
  * Source modified: 2026-04-04T20:46:47.612Z
  * Source: https://docs.google.com/document/d/1EBc7RDMA5Sm8TQ1uEG4kkPeiFRHBwOygAW_WLtGiUjg
@@ -632,78 +632,78 @@
  * Source: https://docs.google.com/document/d/1JeaYFihitgr-A6TxWD151R9Ma9SMUVjyVVx--sNK4Ow
  * Source modified: 2025-10-18T17:54:18.154Z
  *
- * TODO(M65, preserved_verification_pending): Reconcile every Dragoon loadout and named-item row
+ * Scope note (M65, author_owned_content): Preserve Dragoon loadouts; no AI content task
  * Current: Authored vanilla equipment, chest contents and all existing IDs were preserved; no
  * automatic loadout rewrite.
- * Required: Compare retained class/tier chest rows with the actual authored containers on a world
- * copy. Reconcile newest-document naming and quantity without replacing equipment or duplicating
- * repeated rows. D2+ loadouts remain deferred; stable provenance is tracked in M72.
+ * Scope correction (Cameron, 2026-09-20): these contents are author-owned and outside AI work.
+ * Do not inspect/reconcile/rebuild the loadout or alter names, counts, payloads or components.
+ * Requested container access/display/shift-transfer code must preserve the authored stacks.
  * Source: https://docs.google.com/document/d/1E6YgHK0CEpirhbvAmy9Ihg9oQpr-p_YUymbUbDEqhVI
  * Source modified: 2026-04-04T20:26:31.382Z
  * Source: https://docs.google.com/document/d/1uG80jIWpLKZvTGCmbHStqJs565iqEvqhr6N5oYBIHOE
  * Source modified: 2026-08-28T17:05:24.471Z
  *
- * TODO(M66, preserved_verification_pending): Reconcile every Judicator loadout and named-item row
+ * Scope note (M66, author_owned_content): Preserve Judicator loadouts; no AI content task
  * Current: Authored vanilla equipment, chest contents and all existing IDs were preserved; no
  * automatic loadout rewrite.
- * Required: Compare retained class/tier chest rows with the actual authored containers on a world
- * copy. Reconcile newest-document naming and quantity without replacing equipment or duplicating
- * repeated rows. D2+ loadouts remain deferred; stable provenance is tracked in M72.
+ * Scope correction (Cameron, 2026-09-20): these contents are author-owned and outside AI work.
+ * Do not inspect/reconcile/rebuild the loadout or alter names, counts, payloads or components.
+ * Requested container access/display/shift-transfer code must preserve the authored stacks.
  * Source: https://docs.google.com/document/d/1GY8_zURMNKZvxkV-PCkG82Rh1q7tErvFBWoSi3wvNWU
  * Source modified: 2026-04-04T21:12:05.781Z
  * Source: https://docs.google.com/document/d/1cY_czWEYbUEg_EQmaSANhOFe326gTDVKfL9XaEFGmQo
  * Source modified: 2026-04-04T14:39:30.851Z
  *
- * TODO(M67, preserved_verification_pending): Reconcile every Pyroclast loadout and named-item row
+ * Scope note (M67, author_owned_content): Preserve Pyroclast loadouts; no AI content task
  * Current: Authored vanilla equipment, chest contents and all existing IDs were preserved; no
  * automatic loadout rewrite.
- * Required: Compare retained class/tier chest rows with the actual authored containers on a world
- * copy. Reconcile newest-document naming and quantity without replacing equipment or duplicating
- * repeated rows. D2+ loadouts remain deferred; stable provenance is tracked in M72.
+ * Scope correction (Cameron, 2026-09-20): these contents are author-owned and outside AI work.
+ * Do not inspect/reconcile/rebuild the loadout or alter names, counts, payloads or components.
+ * Requested container access/display/shift-transfer code must preserve the authored stacks.
  * Source: https://docs.google.com/document/d/1CQTFJrQyW8YNvU9pIaJZcFEHGSTrVjA7jQS0aTTYMNg
  * Source modified: 2026-04-04T21:16:03.857Z
  * Source: https://docs.google.com/document/d/16FD3wxi-Uen_DRzItDHdSrSZvkGNwa_r-ZeUYiswxoE
  * Source modified: 2026-03-26T14:08:42.520Z
  *
- * TODO(M68, preserved_verification_pending): Reconcile every Theurgist loadout and named-item row
+ * Scope note (M68, author_owned_content): Preserve Theurgist loadouts; no AI content task
  * Current: Authored vanilla equipment, chest contents and all existing IDs were preserved; no
  * automatic loadout rewrite.
- * Required: Compare retained class/tier chest rows with the actual authored containers on a world
- * copy. Reconcile newest-document naming and quantity without replacing equipment or duplicating
- * repeated rows. D2+ loadouts remain deferred; stable provenance is tracked in M72.
+ * Scope correction (Cameron, 2026-09-20): these contents are author-owned and outside AI work.
+ * Do not inspect/reconcile/rebuild the loadout or alter names, counts, payloads or components.
+ * Requested container access/display/shift-transfer code must preserve the authored stacks.
  * Source: https://docs.google.com/document/d/12VsVNQCmCmFy65ROmubdzaD4Vg1UTeLuNyBe9HhDyKo
  * Source modified: 2026-04-05T14:20:07.501Z
  * Source: https://docs.google.com/document/d/1l9ox2pQUSPy0_J3h7ljPOaVOFtMFkoHq_rFSGK4iqeM
  * Source modified: 2026-04-05T14:27:08.267Z
  *
- * TODO(M69, preserved_verification_pending): Reconcile every Venefex loadout and named-item row
+ * Scope note (M69, author_owned_content): Preserve Venefex loadouts; no AI content task
  * Current: Authored vanilla equipment, chest contents and all existing IDs were preserved; no
  * automatic loadout rewrite.
- * Required: Compare retained class/tier chest rows with the actual authored containers on a world
- * copy. Reconcile newest-document naming and quantity without replacing equipment or duplicating
- * repeated rows. D2+ loadouts remain deferred; stable provenance is tracked in M72.
+ * Scope correction (Cameron, 2026-09-20): these contents are author-owned and outside AI work.
+ * Do not inspect/reconcile/rebuild the loadout or alter names, counts, payloads or components.
+ * Requested container access/display/shift-transfer code must preserve the authored stacks.
  * Source: https://docs.google.com/document/d/1yc3TyFu0HmD_P6TDO7I_z0SIYkiZwq7SVprj_zc8WcA
  * Source modified: 2026-04-04T20:51:06.663Z
  * Source: https://docs.google.com/document/d/1JXqPdwWxateRMGpAuoV1ub8asNL7iMeyrBtzqTuUwm8
  * Source modified: 2026-04-04T14:36:04.408Z
  *
- * TODO(M70, preserved_verification_pending): Reconcile every Metalmancer loadout and named-item row
+ * Scope note (M70, author_owned_content): Preserve Metalmancer loadouts; no AI content task
  * Current: Authored vanilla equipment, chest contents and all existing IDs were preserved; no
  * automatic loadout rewrite.
- * Required: Compare retained class/tier chest rows with the actual authored containers on a world
- * copy. Reconcile newest-document naming and quantity without replacing equipment or duplicating
- * repeated rows. D2+ loadouts remain deferred; stable provenance is tracked in M72.
+ * Scope correction (Cameron, 2026-09-20): these contents are author-owned and outside AI work.
+ * Do not inspect/reconcile/rebuild the loadout or alter names, counts, payloads or components.
+ * Requested container access/display/shift-transfer code must preserve the authored stacks.
  * Source: https://docs.google.com/document/d/16Eq0yp7NTI57AK22s8vXrkoRYFp6BYrcdNjfbehWrcw
  * Source modified: 2026-01-18T15:54:24.799Z
  * Source: https://docs.google.com/document/d/1hlDeYD6NQZGEn8UUzifas_KERzWvsf7D_-_KB33zHaQ
  * Source modified: 2025-10-26T23:53:41.488Z
  *
- * TODO(M71, preserved_verification_pending): Reconcile every Deadeye loadout and named-item row
+ * Scope note (M71, author_owned_content): Preserve Deadeye loadouts; no AI content task
  * Current: Authored vanilla equipment, chest contents and all existing IDs were preserved; no
  * automatic loadout rewrite.
- * Required: Compare retained class/tier chest rows with the actual authored containers on a world
- * copy. Reconcile newest-document naming and quantity without replacing equipment or duplicating
- * repeated rows. D2+ loadouts remain deferred; stable provenance is tracked in M72.
+ * Scope correction (Cameron, 2026-09-20): these contents are author-owned and outside AI work.
+ * Do not inspect/reconcile/rebuild the loadout or alter names, counts, payloads or components.
+ * Requested container access/display/shift-transfer code must preserve the authored stacks.
  * Source: https://docs.google.com/document/d/1Y1T-L7qRv3GWr11fcq9vuq_rO6yORnbqc1WmYplGVWg
  * Source modified: 2025-10-03T22:50:35.453Z
  *
@@ -712,7 +712,8 @@
  * held-stack developer adoption, and trusted vendor issuance are implemented. Named prices use
  * the 2026-08-28 final-item table in all_vendors_prices.config, without double enchantment value.
  * Required: review legacy template/container/spawner mappings, include unloaded storage and class-issued
- * stock, and preserve counts/components. Never infer identity from anvil text or auto-recreate chests.
+ * stock outside class chests, and preserve counts/components. Class-chest item work is excluded
+ * by Cameron's 2026-09-20 correction. Never infer identity from anvil text or auto-recreate chests.
  * Batch 05 implemented Tax with its own paired player snapshot. Batch 06 adds explicit one-slot
  * preview/apply/undo and a read-only inventory survey; no automatic legacy world migration.
  * Shared currency/trade journaling remains M03/M115.

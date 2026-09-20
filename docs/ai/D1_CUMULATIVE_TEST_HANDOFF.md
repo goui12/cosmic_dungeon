@@ -1,3 +1,15 @@
+# Authored chest scope correction,2026-09-20
+
+Class-chest contents belong to Cameron. The former repair-marker hook is removed.
+Current101 dispositions:45 implemented-unverified,20 partial D1,1 preserved-verification-pending,
+8 author-owned/outside AI work,27 deferred D2+. These supersede historical counts below.
+Only requested container/menu/display/shift-transfer behavior belongs in this acceptance
+pass; do not inspect/reconcile or convert the authored loadouts and rocket payloads.
+Repair-material compatibility remains an open service-only issue.
+See [correction](D1_AUTHORED_CHEST_CORRECTION_2026-09-20.md).
+
+---
+
 # 2026-09-20 NPC placement acceptance addendum
 
 Latest code: [in-game NPC placement](D1_IN_GAME_NPC_PLACEMENT_2026-09-20.md).
@@ -21,10 +33,8 @@ World authoring remains in-game. No new coordinate config or required PNG.
 Use the candidate hash and manual cases in [the readiness fix report](D1_READINESS_FIXES_2026-09-20.md)
 instead of the old Batch38 jar when testing the fixes. Native acceptance is still NOT RUN.
 
-- As a nondeveloper Dragoon in each active D1 slot, open its old class chest. Approved plain
-  materials receive the repair marker; names/counts/components remain. Repeat opening/reload,
-  perform/cancel a repair, and check developer/template/non-D1/other-class visits.
-  Oversized, bound, unknown-custom-data, nested or already-marked stacks remain unchanged.
+- Removed test requirement: class-chest opening must never add repair markers or convert
+  authored contents. Repair compatibility remains open in service logic, not chest authoring.
 - As Judicator, use Camp3 Lux on living/undead targets. Default8HP; override Judicator power
   and confirm Theurgist is independent. Test inactive/foreign-class/invalid-attunement denial.
 - Shift-click protected gear and old denomination stacks from class chest to owner inventory.
@@ -70,7 +80,7 @@ verification also stays outside D1 despite its preserved-content status.
 | --- | --- |
 | 1. Old worlds and bindings | Use Batch37 binding checklist. Load representative old spawners, weighted potentials, presets, doors, keys and rifts. Compare saved fields and equipment before/after restart. No placed-spawner recreation or guessed coordinates. |
 | 2. D1 onboarding | With fresh and returning players, test Tamsin Yes/No, interrupted map/class selection, all six classes, three/six-player bounds, invitations/merges, personal readiness, full queue, disconnect during preparation and entry failure recovery. No charge for entry; -JHW map route remains visible. |
-| 3. Authored equipment | Compare all retained D1 chest quantities and23 named drop signatures using Batch33 mappings. Test owner/class/tier restrictions, old aliases, preview/apply/undo, full inventory, cursor and nested/unloaded storage. Unknown provenance stays intact for review. D2 gear is excluded. |
+| 3. Requested container behavior | Test class access and shift-click transfer, including full inventory/cursor handling, while preserving existing stacks. Class-chest content audits, quantity reconciliation, payload inspection and item adoption are outside AI work. |
 | 4. Two simultaneous runs | Use separate instance IDs. Split/rejoin/AFK/disconnect players; verify objectives, flags, bells and spectral Blooms never cross runs. Complete/fail/reset one run while the other continues. Next run starts fresh; lifetime contributions, completion totals, vendor unlocks and account money persist. |
 | 5. Watson and cleanup | Test missing/duplicate six physical Blooms, full group near Watson, successful/failed outcome, repeated interaction, reconnect, full inventory, outside-active Chop ownership and interrupted save boundaries. One durable outcome controls reward projections, Tax eligibility and final cleanup without duplicate grants. |
 | 6. Account and rewards | Check12,345 Trace denominations, reward eligibility/radius, typed encounter payouts, remainder rotation, caps/threshold notices, over-cap historical balances and paired ledger supply. Cross-class/restart reads show one UUID account. Do not infer historical money or Watson grants. |
@@ -131,7 +141,7 @@ and the private Batch38 implementation_findings.json for exact source-backed rem
 | M20 | partial_D1 | Choose and migrate one Chop/campfire/travel state machine |
 | M21 | implemented_unverified | Reconcile temporary Village travel with the persistent currency account |
 | M22 | implemented_unverified | Replace the old material/gear whitelist with the revised repair matrix |
-| M23 | implemented_unverified | Require marked repair components and update Elias's catalogue |
+| M23 | partial_D1 | Repair-service compatibility with unchanged authored supplies; vendor-marked components remain |
 | M24 | implemented_unverified | Implement the timed two-party repair protocol |
 | M25 | implemented_unverified | Make repair reservation/cancellation and ownership recovery durable |
 | M26 | implemented_unverified | Implement direct shop repair and revised price formulas |
@@ -167,14 +177,14 @@ and the private Batch38 implementation_findings.json for exact source-backed rem
 | M61 | implemented_unverified | Add Dragoon passive health-for-durability repair under the revised exclusions |
 | M62 | implemented_unverified | Match Pyroclast transmutation to the explicit tool interaction |
 | M63 | partial_D1 | Align Pyroclast rockets and launchers with exact payload/damage rules |
-| M64 | preserved_verification_pending | Reconcile every Bogatyr loadout and named-item row |
-| M65 | preserved_verification_pending | Reconcile every Dragoon loadout and named-item row |
-| M66 | preserved_verification_pending | Reconcile every Judicator loadout and named-item row |
-| M67 | preserved_verification_pending | Reconcile every Pyroclast loadout and named-item row |
-| M68 | preserved_verification_pending | Reconcile every Theurgist loadout and named-item row |
-| M69 | preserved_verification_pending | Reconcile every Venefex loadout and named-item row |
-| M70 | preserved_verification_pending | Reconcile every Metalmancer loadout and named-item row |
-| M71 | preserved_verification_pending | Reconcile every Deadeye loadout and named-item row |
+| M64 | author_owned_no_ai_work | Cameron owns Bogatyr class-chest contents; no AI content task |
+| M65 | author_owned_no_ai_work | Cameron owns Dragoon class-chest contents; no AI content task |
+| M66 | author_owned_no_ai_work | Cameron owns Judicator class-chest contents; no AI content task |
+| M67 | author_owned_no_ai_work | Cameron owns Pyroclast class-chest contents; no AI content task |
+| M68 | author_owned_no_ai_work | Cameron owns Theurgist class-chest contents; no AI content task |
+| M69 | author_owned_no_ai_work | Cameron owns Venefex class-chest contents; no AI content task |
+| M70 | author_owned_no_ai_work | Cameron owns Metalmancer class-chest contents; no AI content task |
+| M71 | author_owned_no_ai_work | Cameron owns Deadeye class-chest contents; no AI content task |
 | M72 | partial_D1 | Create a canonical named-item factory/catalogue with provenance |
 | M73 | deferred_D2_plus | Populate all player-facing Codex and item descriptions with reveal controls |
 | M74 | deferred_D2_plus | Correct Vital Exchange I–IV to real transfer events and the right tier identities |

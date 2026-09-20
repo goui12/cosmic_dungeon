@@ -1,3 +1,15 @@
+# Correction to this historical checkpoint
+
+Cameron reiterated on2026-09-20 that class-chest items are outside AI work.
+R01's automatic supply-marking implementation described below has been removed.
+The previous interpretation of the newest-document instruction did not authorize
+rewriting authored items. Repair compatibility is open for a service-only solution.
+R03 rocket-content inspection is also outside scope. Requested shift-click and
+Judicator Lux ability access remain implemented.
+See [current correction](D1_AUTHORED_CHEST_CORRECTION_2026-09-20.md).
+
+---
+
 # D1 readiness fixes and answers
 
 Date2026-09-20. Parent948cb6bd39030dfc6982a21c650e8a415035cdc0.
@@ -57,7 +69,7 @@ The source spelling is Cinderbight, not Conderbright/Cinderbright.
 | Cinderbite | Four stars; six hearts maximum | Existing configured D1 effect |
 | Cindermaul | Five stars;7.5 hearts maximum | Existing configured D1 effect |
 
-No new item is necessary for a renamed rocket. Inspect actual payloads before inventing aliases.
+No new item is necessary for a renamed rocket. Cameron owns those payloads; no AI inspection, conversion or alias work is scheduled.
 No rocket or loadout edits occurred.
 
 ### R04: crafting

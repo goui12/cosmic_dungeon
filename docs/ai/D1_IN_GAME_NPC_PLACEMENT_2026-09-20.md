@@ -155,8 +155,8 @@ Candidate1.5.1 SHA256: 260c430cfb7eadbdedec3e770e793105ae1e9afee63f71a4ce6ee11bf
 
 ## Remaining work
 
-Numbered batches scheduled:0. Five readiness areas remain: R03 authored rocket
-payload review; R04 approved-recipes policy; R05 balance panels and treasure-claim
+Numbered batches scheduled:0. Five readiness areas remain: R01 service-only repair
+compatibility (automatic chest marking removed); R04 approved-recipes policy; R05 balance panels and treasure-claim
 decision; R07 legacy model textures; R08 native world/binding acceptance.
 This pass resolves R08's NPC placement/identity implementation subtask only.
 The101 audit dispositions and broader cumulative TEST requirements remain open

@@ -11,6 +11,14 @@ import java.util.Map;
 /** Repair 2.0 (2026-08-18): vanilla IDs + internal marker, including all four Repair Kits. */
 public final class RepairComponents {
     private RepairComponents() {}
+    // TODO(R01/M23, service-only compatibility): Q&A D08 and Cameron's 2026-09-20 correction
+    // prohibit changing authored class-chest items. Dragoon Class Chests
+    // 1E6YgHK0CEpirhbvAmy9Ihg9oQpr-p_YUymbUbDEqhVI (2026-04-04) lists vanilla supplies;
+    // Repair2.0 1Gbcq7Piqg2uHO1smx5oHOyeGxoT9g93cH-_G8WvhOoo (2026-08-18) expects markers.
+    // Current validation below still requires those markers. Resolve existing-material
+    // recognition inside repair quotation/reservation/commit without mutating the inputs,
+    // converting ordinary weapons into kits, or bypassing custody/rollback checks.
+    // Do not restore chest-open marking or move it to pickup, startup or migration hooks.
     private static final Map<String,String> ITEMS = Map.ofEntries(
             Map.entry("oak_planks","oak_planks"),Map.entry("spruce_planks","spruce_planks"),
             Map.entry("cobblestone","cobblestone"),Map.entry("leather","leather"),

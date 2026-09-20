@@ -82,8 +82,6 @@ public class ClassLockedChestBlockEntity extends RandomizableContainerBlockEntit
 
     @Override
     protected AbstractContainerMenu createMenu(int id, Inventory inv) {
-        if (inv.player instanceof ServerPlayer player)
-            net.goui.cosmicdungeon.playerclass.dragoon.repair.ClassChestRepairSupplies.prepare(player, this);
         return ChestMenu.threeRows(id, inv, this);
     }
 

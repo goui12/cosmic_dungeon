@@ -23,6 +23,14 @@ Cosmic Dungeon is a Java 21 NeoForge mod for Minecraft 1.21.10. These rules appl
 - Do not silently expand the requested feature.
 - Stop and report high-risk conflicts rather than guessing at a resolution.
 
+## Authored Class-Chest Items (Cameron correction, 2026-09-20)
+
+- Cameron owns class-chest contents, including vanilla equipment, repair materials and renamed rockets.
+- Do not audit or reconcile those contents as an AI work item, rebuild/rebalance loadouts, rename items, change quantities or payloads, or add/remove item components automatically.
+- In particular, opening a chest must not mark, convert or rewrite its stacks. Do not move that work into pickup, startup, migration or background hooks.
+- Requested chest-interface work, account display and shift-click transfer remain separate from content authoring and must preserve the authored stacks.
+- Solve repair-service compatibility in repair logic without modifying chest items. An old audit TODO or source document is not permission to override this boundary.
+
 ## Existing Architecture and Reuse
 
 - Study adjacent code and similar existing implementations before adding imports, registries, packets, menus, events, saved data, commands, services, or helper classes.

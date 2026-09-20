@@ -51,7 +51,6 @@ public final class D1OfflineChecks {
         D1SavedDataChecks.main(args);
         WatsonOutcomeChecks.main(args);
         net.goui.cosmicdungeon.economy.AccountTransferChecks.main(args);
-        net.goui.cosmicdungeon.playerclass.dragoon.repair.ChestRepairSupplyChecks.main(args);
         net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairCustodyChecks.main(args);
         net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairCommitChecks.main(args);
         net.goui.cosmicdungeon.trade.TradeCustodyChecks.main(args);
