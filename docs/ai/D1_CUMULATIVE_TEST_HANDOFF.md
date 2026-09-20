@@ -1,3 +1,22 @@
+# September20 readiness-fix addendum
+
+Use the candidate hash and manual cases in [the readiness fix report](D1_READINESS_FIXES_2026-09-20.md)
+instead of the old Batch38 jar when testing the fixes. Native acceptance is still NOT RUN.
+
+- As a nondeveloper Dragoon in each active D1 slot, open its old class chest. Approved plain
+  materials receive the repair marker; names/counts/components remain. Repeat opening/reload,
+  perform/cancel a repair, and check developer/template/non-D1/other-class visits.
+  Oversized, bound, unknown-custom-data, nested or already-marked stacks remain unchanged.
+- As Judicator, use Camp3 Lux on living/undead targets. Default8HP; override Judicator power
+  and confirm Theurgist is independent. Test inactive/foreign-class/invalid-attunement denial.
+- Shift-click protected gear and old denomination stacks from class chest to owner inventory.
+  Check partial/full inventory, repeated clicks, class changes, pending recovery and reverse transfer.
+  Denomination stacks do not add money; the source account balance is not a loot slot.
+
+The original cumulative handoff follows; its old jar reference is historical.
+
+---
+
 # D1 cumulative licensed TEST handoff after Batch 38
 
 Prepared only; every native acceptance item below is **NOT RUN**.

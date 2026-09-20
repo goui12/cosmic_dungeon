@@ -84,7 +84,10 @@
  * Source display rule also names HUD, ordinary inventory and class-chest surfaces: these do not
  * yet have a dedicated balance panel. Defer that client layout/performance design explicitly;
  * use /currency balance meanwhile. Do not create a second account or reset currency with a run.
- * New client overlays require the repository's client-cost approval before implementation.
+ * Cameron2026-09-20 asks about reusing the existing trade denomination widgets: proposed
+ * read-only shared renderer plus a delta-synchronized account view, not a PNG containing values.
+ * The account balance is not loot. Physical chest-reward credit needs a separate reviewed
+ * unpaid-reward identity and durable claim, never automatic conversion of old denomination stacks.
  * Source: https://docs.google.com/document/d/17ufIuIy0VhLmB_V-6sZ7sCaUCZuGZUkHrgJLVpEcS28
  * Source modified: 2026-08-18T21:01:23.864Z
  *

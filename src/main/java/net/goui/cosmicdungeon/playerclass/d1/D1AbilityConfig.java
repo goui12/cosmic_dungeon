@@ -18,6 +18,7 @@ public final class D1AbilityConfig {
         b.pop();
         b.comment("Judicator overview 1cY_czWEYbUEg_EQmaSANhOFe326gTDVKfL9XaEFGmQo, 2026-04-04.").push("Judicator");
         spell(b,"judicator","scintilla_vitalis",4,1,"Health points restored; damage instead for undead.");
+        spell(b,"judicator","lux_vitalis",8,1,"Newer Judicator Camp3 chest 1GY8_zURMNKZvxkV-PCkG82Rh1q7tErvFBWoSi3wvNWU, April4 21:12, includes Lux. Cameron September20 approves reconciliation. Same Lux healing-II default: four hearts restored, or eight magic damage to undead; independently configurable.");
         spell(b,"judicator","ebonsight",0,200,"Night vision duration; vanilla night vision also provides underwater visibility.");
         spell(b,"judicator","vielpiercer",0,200,"Glowing duration; Arrow Vielpiercer Internal.");
         b.pop();

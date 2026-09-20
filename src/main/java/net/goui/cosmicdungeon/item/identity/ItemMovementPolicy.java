@@ -9,8 +9,12 @@ public final class ItemMovementPolicy {
         return !restricted || privateDestination;
     }
     public static boolean mayShift(boolean restricted, boolean sourcePrivate, boolean privateMenu) {
-        // Unknown quick-move implementations may route between multiple external inventories.
-        return !restricted || privateMenu;
+        return mayShift(restricted, sourcePrivate, privateMenu, false);
+    }
+    public static boolean mayShift(boolean restricted, boolean sourcePrivate, boolean privateMenu,
+                                   boolean reviewedClassChestPickup) {
+        // The narrow exception proves a chest-to-owner destination, never the reverse route.
+        return !restricted || privateMenu || (!sourcePrivate && reviewedClassChestPickup);
     }
     public static boolean mayNest(boolean restricted, boolean portableContainer) {
         return !restricted || !portableContainer;

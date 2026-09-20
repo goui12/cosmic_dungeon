@@ -48,6 +48,10 @@ public final class CurrencyPickupEvents {
     // complete save copies before any conversion. Never infer unpaid money from an item UUID:
     // old merged/split entities may already have funded an account. Native entity aging,
     // damage/despawn remain unchanged; this is not a world backup or preservation archive.
+    // TODO(Cameron2026-09-20, chest currency): reviewed class-chest quick-move may transfer
+    // existing physical stacks into inventory, but does not redeem them or debit the displayed
+    // account. Before account-crediting treasure clicks, distinguish newly authored unpaid
+    // rewards from old potentially paid denominations and use the existing durable ledger.
     // Held/Ender/nested/unloaded legacy stacks and ambiguous Chop custody require full-save
     // review. No auto-conversion, denomination exchange, guessed refund or bulk deletion.
 }

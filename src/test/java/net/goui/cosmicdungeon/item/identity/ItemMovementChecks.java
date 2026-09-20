@@ -18,6 +18,10 @@ public final class ItemMovementChecks {
         check(!ItemMovementPolicy.mayShift(true,false,false),"Unknown multi-container quick-move needs deliberate pickup");
         check(ItemMovementPolicy.mayShift(true,true,true),"Own inventory/ender chest shift remains usable");
         check(ItemMovementPolicy.mayShift(false,true,false),"Ordinary shift-click remains usable");
+        check(ItemMovementPolicy.mayShift(true,false,false,true),"Reviewed class chest loot can enter owner inventory");
+        check(!ItemMovementPolicy.mayShift(true,true,false,true),"Class chest exception never permits depositing protected gear");
+        check(!ItemMovementPolicy.mayShift(true,false,false,false),"Unreviewed chest/container still rejected");
+        check(ItemMovementPolicy.mayShift(false,false,false,true),"Ordinary class chest loot remains usable");
         var before=Map.of("item","minecraft:bow","count","1","damage","37","lore","authored");
         var after=Map.of("item","minecraft:bow","count","1","damage","37","lore","authored","identity","loophole");
         var p=new ItemAuthoringPlan<>("token",100,before,after);

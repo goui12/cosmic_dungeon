@@ -1,3 +1,29 @@
+# D1 readiness follow-ups after Batch38
+
+Updated2026-09-20 after Cameron's requested repair, Lux and class-chest fixes.
+Report: [readiness fixes and answers](D1_READINESS_FIXES_2026-09-20.md).
+Parent948cb6bd39030dfc6982a21c650e8a415035cdc0; final local commit follows validation.
+
+Completed: R01 source-strict run-chest repair supplies; R02 Judicator Lux;
+R06 reviewed class-chest-to-owner shift transfer, including existing physical denomination stacks.
+Physical transfer does not redeem legacy coins or claim the displayed UUID account balance.
+15,944 offline checks in44 groups, two config round trips and Java21 build passed.
+Native gameplay remains untested. No new required PNG.
+
+## Remaining reviewed follow-ups:5; numbered batches scheduled:0
+
+- R03: inspect Cinderkiss/Cinderbight payloads; retained docs name stacks but define no extra mechanics.
+- R04: approved-recipe server policy across inventory, tables, automation and data packs.
+- R05: shared balance widget for HUD/inventory/class chests; decide any separate treasure claim.
+- R07: redirect retained legacy models to existing visuals through datagen, preserving IDs.
+- R08: verify world bindings and legacy data on a consistent TEST backup before acceptance.
+
+These are issues, not five already-authorized numbered implementation batches.
+The101 audit totals remain46 implemented-unverified/19partial/9preserved/27deferred.
+Narrower readiness fixes do not close their wider runtime/world acceptance.
+
+---
+
 # D1 remaining work
 
 Updated after Batch38 on2026-09-20 UTC.

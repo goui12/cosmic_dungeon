@@ -42,7 +42,8 @@ public final class ItemMovementGuard {
                     || !ItemMovementPolicy.mayNest(cursor.privateStorage(), ItemMovementRules.portable(clicked))
                     || !ItemMovementPolicy.mayNest(clickedFlags.privateStorage(), ItemMovementRules.portable(carried)));
             case QUICK_MOVE -> slot != null && !ItemMovementPolicy.mayShift(clickedFlags.privateStorage(), ownerSlot,
-                    menu == player.inventoryMenu || menu.slots.stream().allMatch(s -> privateSlot(player, s)));
+                    menu == player.inventoryMenu || menu.slots.stream().allMatch(s -> privateSlot(player, s)),
+                    ClassChestTransfers.toPlayer(player, menu, slot));
             case SWAP -> {
                 var hotbar = button >= 0 && button < player.getInventory().getContainerSize()
                         ? player.getInventory().getItem(button) : ItemStack.EMPTY;

@@ -29,7 +29,7 @@ public final class D1AmmunitionCatalog {
             arrow("mending_sting", "Mending Sting", "regeneration", "theurgist"),
             arrow("verdant_jolt", "Verdant Jolt", "regeneration", "theurgist"),
             arrow("scintilla_vitalis", "Scintilla Vitalis", "healing", "theurgist", "judicator"),
-            arrow("lux_vitalis", "Lux Vitalis", "healing", "theurgist"),
+            arrow("lux_vitalis", "Lux Vitalis", "healing", "theurgist", "judicator"),
             arrow("ebonsight", "Ebonsight", "night_vision", "judicator"),
             new Entry("vielpiercer", "Vielpiercer", "minecraft:spectral_arrow", "", 0, Set.of("judicator")),
             arrow("tree_viper", "Venom of the Tree Viper", "poison", "venefex"),
@@ -101,6 +101,7 @@ public final class D1AmmunitionCatalog {
     // contents. Verify actual template stacks against docs/ai/D1_BATCH_33_MAPPINGS.md without
     // changing names, quantities or enchantments. Pyro chest doc 1CQTFJrQyW8YNvU9pIaJZcFEHGSTrVjA7jQS0aTTYMNg
     // (2026-04-04) contains Cinderkiss/Cinderbight but supplies no approved payload equivalence;
-    // do not invent aliases. Judicator chest Lux does not establish a Judicator healing ability.
+    // do not invent aliases. Cameron2026-09-20 resolves the newer Judicator Camp3 Lux supply
+    // as approved Judicator access, sharing Lux identity with class-specific configurable power.
     // D2+ Gusting Bolt/conduits/rockets stay deferred; do not infer them from a shared potion.
 }

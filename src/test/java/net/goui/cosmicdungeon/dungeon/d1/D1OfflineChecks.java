@@ -49,6 +49,7 @@ public final class D1OfflineChecks {
         D1SavedDataChecks.main(args);
         WatsonOutcomeChecks.main(args);
         net.goui.cosmicdungeon.economy.AccountTransferChecks.main(args);
+        net.goui.cosmicdungeon.playerclass.dragoon.repair.ChestRepairSupplyChecks.main(args);
         net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairCustodyChecks.main(args);
         net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairCommitChecks.main(args);
         net.goui.cosmicdungeon.trade.TradeCustodyChecks.main(args);
@@ -185,6 +186,12 @@ public final class D1OfflineChecks {
         check(((Number) gameplay.get("Economy.defaultAccountCapacityTrace")).longValue() == 100000000L, "Account capacity");
         check(((Number)gameplay.get("Theurgist.verdant_jolt.power")).doubleValue()==0.8,"Newest Verdant overview wins");
         check(((Number)gameplay.get("Pyroclast.cindermaul.power")).doubleValue()==15,"Newest rocket overview wins");
+        check(((Number)gameplay.get("Judicator.lux_vitalis.power")).doubleValue()==8,"Judicator Lux default");
+        gameplay.set("Judicator.lux_vitalis.power",6.0);Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("Judicator.lux_vitalis.power")).doubleValue()==6,"Judicator Lux override retained");
+        check(((Number)gameplay.get("Theurgist.lux_vitalis.power")).doubleValue()==8,"Judicator override leaves Theurgist unchanged");
+        gameplay.remove("Judicator.lux_vitalis");Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("Judicator.lux_vitalis.durationTicks")).intValue()==1,"Older configs gain Judicator Lux default");
         check(((Number)gameplay.get("Economy.partyRewardRadius")).doubleValue()==60,"Canon currency eligibility range");
         check(((Number)gameplay.get("TamsinVane.minimumPartySize")).intValue()==3,"D1 minimum party");
         check(((Number)gameplay.get("TamsinVane.invitationLifetimeSeconds")).intValue()==600,"Pending onboarding expiry default");

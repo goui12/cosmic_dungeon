@@ -35,7 +35,7 @@ Foreign namespaces and custom effects cannot satisfy vanilla signatures.
 | mending_sting | Mending Sting | Tipped arrow, regeneration family | Theurgist |
 | verdant_jolt | Verdant Jolt | Tipped arrow, regeneration family | Theurgist |
 | scintilla_vitalis | Scintilla Vitalis | Tipped arrow, healing family | Theurgist, Judicator |
-| lux_vitalis | Lux Vitalis | Tipped arrow, healing family | Theurgist |
+| lux_vitalis | Lux Vitalis | Tipped arrow, healing family | Theurgist, Judicator |
 | ebonsight | Ebonsight | Tipped arrow, night vision family | Judicator |
 | vielpiercer | Vielpiercer | Spectral arrow | Judicator |
 | tree_viper | Venom of the Tree Viper | Tipped arrow, poison family | Venefex |
@@ -114,8 +114,9 @@ full serialized stacks, each slot, player class and all 36 pastes in TEST.
 
 Preserve repeated Arrow rows in Bogatyr/Venefex lists and all authored quantities.
 Do not normalize Pyroclast Cinderkiss/Cinderbight or launcher names into new items.
-Judicator's chest includes Lux Vitalis, but that supplies no new Judicator ability
-definition; the chest is preserved and class-effect review remains Batch36.
+September20 readiness fix: Cameron explicitly requested the newest-document resolution.
+Judicator Camp3's later chest list now grants Lux access with an independent Judicator
+config entry, default8HP (four hearts), while preserving every authored chest stack.
 Theurgist's Tide's Turn and the named vanilla totems remain as authored, without
 constructing deferred conduits. Metalmancer and Deadeye loadouts stay D2+.
 

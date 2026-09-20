@@ -88,7 +88,8 @@ public final class D1CombatChecks {
         for (Object[] row : new Object[][]{
                 {"theurgist", "mending_sting", 2.0, 100}, {"theurgist", "verdant_jolt", .8, 40},
                 {"theurgist", "scintilla_vitalis", 4.0, 1}, {"theurgist", "lux_vitalis", 8.0, 1},
-                {"judicator", "scintilla_vitalis", 4.0, 1}, {"judicator", "ebonsight", 0.0, 200},
+                {"judicator", "scintilla_vitalis", 4.0, 1}, {"judicator", "lux_vitalis", 8.0, 1},
+                {"judicator", "ebonsight", 0.0, 200},
                 {"judicator", "vielpiercer", 0.0, 200}, {"venefex", "tree_viper", 4.0, 100},
                 {"venefex", "bushmaster", 8.0, 220}, {"venefex", "fer_de_lance", 3.0, 40},
                 {"venefex", "pestis", 4.0, 220}, {"venefex", "black_bubo", 4.0, 600},
@@ -100,7 +101,17 @@ public final class D1CombatChecks {
             close(spell.power().get(), (Double) row[2], "Newest source power " + row[1]);
             check(spell.duration().get().equals(row[3]), "Newest source duration " + row[1]);
         }
-        check(D1AbilityConfig.get("judicator", "lux_vitalis") == null, "Chest placement does not invent Judicator Lux ability");
+        // Cameron September20 explicitly resolves the newer Camp3 chest/overview mismatch.
+        check(D1CombatRules.ammunition("lux_vitalis", "judicator", true, true)
+                == D1CombatRules.Ammunition.ABILITY, "Newer Judicator Camp3 Lux is usable");
+        check(D1AbilityConfig.get("judicator", "lux_vitalis") != D1AbilityConfig.get("theurgist", "lux_vitalis"),
+                "Judicator Lux has its own configurable spell");
+        check(D1CombatRules.ammunition("lux_vitalis", "judicator", false, true)
+                == D1CombatRules.Ammunition.DENIED, "Inactive Judicator cannot use Lux");
+        check(D1CombatRules.ammunition("lux_vitalis", "judicator", true, false)
+                == D1CombatRules.Ammunition.DENIED, "Lux does not bypass attunement");
+        check(D1CombatRules.ammunition("lux_vitalis", "dragoon", true, true)
+                == D1CombatRules.Ammunition.DENIED, "Other class does not acquire Lux");
         check(D1AbilityConfig.get("pyroclast", "cinder_breeze") == null, "D2 rocket is deferred");
         System.out.println("D1 combat checks passed: " + checks);
     }
