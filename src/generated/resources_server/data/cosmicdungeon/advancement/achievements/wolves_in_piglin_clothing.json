@@ -1,0 +1,25 @@
+{
+  "parent": "cosmicdungeon:root",
+  "criteria": {
+    "triggered": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": "",
+    "icon": {
+      "count": 1,
+      "id": "minecraft:piglin_head"
+    },
+    "title": {
+      "translate": "advancements.cosmicdungeon.achievements.wolves_in_piglin_clothing.title"
+    }
+  },
+  "requirements": [
+    [
+      "triggered"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

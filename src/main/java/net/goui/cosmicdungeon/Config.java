@@ -24,6 +24,7 @@ public final class Config {
     public static final ModConfigSpec.IntValue CANDLE_SCAN_BUDGET, CANDLE_SCAN_MAX_VOLUME;
     public static final ModConfigSpec.IntValue MUSIC_DISC_COUNT;
     public static final ModConfigSpec.IntValue CANDLE_COLOR_COUNT;
+    public static final ModConfigSpec.IntValue PIGLIN_HEAD_COUNT, PIGLIN_POLL_TICKS, COMPANIONSHIP_SECONDS, RIFT_COOLDOWN_TICKS, RIFT_RETRY_TICKS;
     public static final ModConfigSpec.DoubleValue WATSON_RADIUS;
     public static final ModConfigSpec.IntValue WATSON_POLL_TICKS, WATSON_RECOVERY_POLL_TICKS;
     public static final ModConfigSpec.BooleanValue INSTANT_BREWING;
@@ -102,7 +103,20 @@ public final class Config {
         ITEM_AUTHORING_RANGE=B.comment("Maximum blocks to an already-loaded container selected for adoption.")
                 .defineInRange("authoringContainerRange",16.0,1.0,64.0);
         B.pop();
+        B.push("SharedTravel");
+        RIFT_COOLDOWN_TICKS=B.comment("Successful rift cooldown; preserves the existing twelve-tick delay.")
+                .defineInRange("riftCooldownTicks",12,1,1200);
+        RIFT_RETRY_TICKS=B.comment("Minimum delay after a denied or unsafe rift attempt; bounds repeated checks/messages.")
+                .defineInRange("riftRetryTicks",40,20,1200);
+        COMPANIONSHIP_SECONDS=B.comment("Legacy Potion of Companionship cooldown and selection lifetime, seconds.",
+                "Preserves the existing five-minute value; no new recipe or unlock is inferred.")
+                .defineInRange("companionshipSeconds",300,1,3600);
+        B.pop();
         B.push("Achievements");
+        PIGLIN_HEAD_COUNT=B.comment("Debloated Achievements!C20: six characters wearing vanilla Piglin Heads simultaneously at Camp 4.")
+                .defineInRange("piglinHeadPlayers",6,1,6);
+        PIGLIN_POLL_TICKS=B.comment("Ticks between bounded Camp 4 roster checks; no entity or block scan.")
+                .defineInRange("piglinHeadPollTicks",20,1,200);
         BELL_WINDOW_TICKS = B.comment("20 ticks = one second. Six DIFFERENT bells, same instance.",
                 "D70 mentions both two and six seconds. Default two seconds matches 'at once'; set 120 for six.",
                 "Source: 1L_CmsTIWQ9TADh_1T18G_ukG61y1oExpH6tgzM9IKUw.")

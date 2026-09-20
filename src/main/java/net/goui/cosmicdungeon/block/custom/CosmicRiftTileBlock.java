@@ -37,13 +37,22 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+@net.neoforged.fml.common.EventBusSubscriber(modid = net.goui.cosmicdungeon.CosmicDungeonMod.MOD_ID)
 public class CosmicRiftTileBlock extends Block {
     private static final VoxelShape SHAPE = Block.box(0, 0, 0, 16, 1, 16);
     private static final int MAX_BREAK_TILES = 64 * 64;
     private static final ThreadLocal<Boolean> BREAKING_WHOLE = ThreadLocal.withInitial(() -> Boolean.FALSE);
-    private static final long TELEPORT_COOLDOWN_TICKS = 12L;
     private static final Map<UUID, Long> NEXT_ALLOWED_TELEPORT = new ConcurrentHashMap<>();
     private static final int CONFIG_MAX_DIST = 16;
+
+    @net.neoforged.bus.api.SubscribeEvent
+    public static void logout(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent event) {
+        NEXT_ALLOWED_TELEPORT.remove(event.getEntity().getUUID());
+    }
+    @net.neoforged.bus.api.SubscribeEvent
+    public static void stopped(net.neoforged.neoforge.event.server.ServerStoppedEvent event) {
+        NEXT_ALLOWED_TELEPORT.clear();
+    }
 
     public CosmicRiftTileBlock(Properties props) {
         super(props);
@@ -129,7 +138,7 @@ public class CosmicRiftTileBlock extends Block {
     }
 
     private static void tryTeleportFromTile(ServerLevel currentLevel, BlockPos steppedTile, ServerPlayer sp) {
-        long now = currentLevel.getGameTime();
+        long now = currentLevel.getServer().overworld().getGameTime();
         UUID id = sp.getUUID();
 
         long nextOk = NEXT_ALLOWED_TELEPORT.getOrDefault(id, 0L);
@@ -162,7 +171,8 @@ public class CosmicRiftTileBlock extends Block {
 
         ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, dimId);
         BlockPos rawTarget = dest.pos();
-        DungeonTravelRouter.Result route = DungeonTravelRouter.resolve(sp, dimKey, rawTarget);
+        NEXT_ALLOWED_TELEPORT.put(id, now + net.goui.cosmicdungeon.Config.RIFT_RETRY_TICKS.get());
+        DungeonTravelRouter.Result route = DungeonTravelRouter.resolveRift(sp, destinationName, dimKey, rawTarget, portal.resetTrigger());
         if (route instanceof DungeonTravelRouter.Result.Rejected rejected) {
             sp.sendSystemMessage(net.minecraft.network.chat.Component.literal(rejected.message())
                     .withStyle(net.minecraft.ChatFormatting.RED));
@@ -171,6 +181,7 @@ public class CosmicRiftTileBlock extends Block {
         DungeonTravelRouter.Result.Allowed allowed = (DungeonTravelRouter.Result.Allowed) route;
         ServerLevel targetLevel = allowed.level();
         rawTarget = allowed.pos();
+        if (portal.resetTrigger() && DungeonTravelRouter.handleD1ResetExit(sp)) return;
         BlockPos safe = SafeTeleportUtil.findSafeTeleportPos(targetLevel, rawTarget);
         if (safe == null) return;
 
@@ -203,7 +214,7 @@ public class CosmicRiftTileBlock extends Block {
                 0.95F + targetLevel.getRandom().nextFloat() * 0.10F
         );
 
-        NEXT_ALLOWED_TELEPORT.put(id, now + TELEPORT_COOLDOWN_TICKS);
+        NEXT_ALLOWED_TELEPORT.put(id, now + net.goui.cosmicdungeon.Config.RIFT_COOLDOWN_TICKS.get());
 
         if (portal.resetTrigger()) {
             DungeonLifecycleService.setPlayerRespawnTo(sp, targetLevel, safe, sp.getYRot(), sp.getXRot());

@@ -16,7 +16,8 @@ import java.util.*;
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID)
 public final class D1InstanceAchievements {
     private static final Set<ResourceLocation> SHARED = Set.of(CosmicAchievementIds.SYNCHRONOUS_PEAL,
-            CosmicAchievementIds.SIXFOLD_VIGIL, CosmicAchievementIds.CYCLE_OF_RECORDED_SOUND);
+            CosmicAchievementIds.SIXFOLD_VIGIL, CosmicAchievementIds.CYCLE_OF_RECORDED_SOUND,
+            CosmicAchievementIds.WOLVES_IN_PIGLIN_CLOTHING);
     private D1InstanceAchievements() {}
     public static List<UUID> recipients(ServerLevel level, DungeonRunRegistryData.RunRecord run) {
         var result = new ArrayList<UUID>();
@@ -35,7 +36,7 @@ public final class D1InstanceAchievements {
         return recipients(level, run).stream().anyMatch(id -> level.getServer().getPlayerList().getPlayer(id) != null);
     }
     public static void grant(ServerLevel level, DungeonRunRegistryData.RunRecord run, ResourceLocation id) {
-        if (!SHARED.contains(id) || run.stateEnum() != DungeonRunState.ACTIVE || !run.dungeonId().equals("dungeon_1")) return;
+        if (D1RunData.get(level.getServer()).sealed(run.runId()) || !SHARED.contains(id) || run.stateEnum() != DungeonRunState.ACTIVE || !run.dungeonId().equals("dungeon_1")) return;
         var data = D1RunData.get(level.getServer());
         var recipients = recipients(level, run);
         if (!data.creditShared(run.runId(), id.toString(), recipients)) return;

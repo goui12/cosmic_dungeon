@@ -111,7 +111,8 @@ public final class ModAdvancementProvider implements AdvancementSubProvider {
 
     private static void saveGenericAchievement(Consumer<AdvancementHolder> saver, ResourceLocation id) {
         String key = id.getPath().substring("achievements/".length());
-        ItemLike icon = id.equals(CosmicAchievementIds.NOSTALGIA_BAIT) ? ModItems.FARROWS_CHOP.get() : Items.PAPER;
+        ItemLike icon = id.equals(CosmicAchievementIds.NOSTALGIA_BAIT) ? ModItems.FARROWS_CHOP.get()
+                : id.equals(CosmicAchievementIds.WOLVES_IN_PIGLIN_CLOTHING) ? Items.PIGLIN_HEAD : Items.PAPER;
         saveManualAchievement(saver, id, ROOT, icon, "advancements." + CosmicDungeonMod.MOD_ID + ".achievements." + key, "triggered");
     }
 

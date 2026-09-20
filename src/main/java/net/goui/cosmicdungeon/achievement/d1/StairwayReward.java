@@ -28,8 +28,13 @@ public final class StairwayReward {
             UUID.fromString(receipt.getStringOr("transaction", ""));
             var item = receipt.getCompoundOrEmpty("delivered");
             int slot = receipt.getIntOr("slot", -1);
-            return receipt.getIntOr("schema", 0) == 1 && owner.toString().equals(receipt.getStringOr("owner", ""))
-                    && slot >= 0 && slot < 36 && receipt.getLongOr("run", 0) > 0
+            int schema = receipt.getIntOr("schema", 0);
+            long run = receipt.getLongOr("run", -1);
+            boolean context = schema == 1 && run > 0
+                    || schema == 2 && receipt.get("run") instanceof LongTag && run == 0
+                    && receipt.getStringOr("dimension", "").equals("minecraft:overworld");
+            return context && owner.toString().equals(receipt.getStringOr("owner", ""))
+                    && slot >= 0 && slot < 36
                     && item.getStringOr("id", "").equals("minecraft:elytra") && item.getIntOr("count", 1) == 1;
         } catch (IllegalArgumentException invalid) { return false; }
     }
@@ -68,9 +73,13 @@ public final class StairwayReward {
         }
         return true;
     }
-    /** Caller verified the real bound chest menu and current D1 instance membership. */
+    /** Caller verified the real authored World Spawn chest menu (MASTER Achievements!B18/C18).
+     * Existing schema1 instance receipts remain valid; new schema2 claims are outside any run. */
     public static boolean deliver(ServerPlayer player, long runId, BlockPos chest) {
-        if (runId <= 0 || chest == null) return false;
+        if (player == null || runId != 0 || chest == null || !player.isAlive() || player.isSpectator()
+                || net.goui.cosmicdungeon.auth.AccessPolicy.isDeveloper(player)
+                || !player.level().dimension().equals(net.minecraft.world.level.Level.OVERWORLD)
+                || net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.blocked(player)) return false;
         var holder = player.level().getServer().getAdvancements().get(CosmicAchievementIds.STAIRWAY_TO_HEAVEN);
         if (holder == null) return false;
         var old = state(player);
@@ -93,7 +102,7 @@ public final class StairwayReward {
             output.store("delivered", ItemStack.CODEC, reward);
             if (!problems.isEmpty()) throw new IllegalStateException(problems.getReport());
             var receipt = output.buildResult();
-            receipt.putInt("schema", 1); receipt.putString("owner", player.getStringUUID());
+            receipt.putInt("schema", 2); receipt.putString("owner", player.getStringUUID());
             receipt.putString("transaction", UUID.randomUUID().toString()); receipt.putInt("slot", slot);
             receipt.putLong("run", runId); receipt.putLong("chest", chest.asLong());
             receipt.putString("dimension", player.level().dimension().location().toString());
@@ -121,7 +130,7 @@ public final class StairwayReward {
     @SubscribeEvent public static void login(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player && valid(state(player), player.getUUID())) award(player);
     }
-    // TODO(M79/M81, licensed TEST): bind the actual uppermost chest after template review.
+    // TODO(M79/M81, licensed TEST): bind the actual uppermost World Spawn chest after authored-world review.
     // Fault-inject at player save/readback boundaries on dedicated and integrated TEST.
     // Verify full inventory/reopen, clone, already-earned legacy saves, and failed-run item loss.
     // This receipt prevents duplicate delivery; it does not exempt the Elytra from D1 failure loss.

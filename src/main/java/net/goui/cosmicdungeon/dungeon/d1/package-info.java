@@ -786,15 +786,20 @@
  * Source: https://docs.google.com/document/d/1YkiyPfomO7rnSenj4A9tySkh3e5mcKy4JNXSXv3ScR0
  * Source modified: 2026-03-29T14:36:37.731Z
  *
- * TODO(M79, remaining authored setup / disguise definition): Batch10 implements marked canonical
+ * TODO(M79, remaining authored TEST acceptance): Batch10 implements marked canonical
  * handheld and lectern journals, per-player/run reading, persistent Librarian credit, and a
  * same-player one-Elytra receipt. Developer preview/apply/undo preserves matching legacy books.
  * Objective binding validates loaded chest/lectern types; either half of the bound double chest
  * qualifies after a real menu opens. Q&A D76 supplies one ordinary vanilla Elytra; no single-flight
  * behavior is inferred. Verify actual authored placements and dedicated/integrated save faults.
- * Wolves in Piglin Clothing remains an incomplete functional design ("six wolves, six stolen
- * snouts"). Newest companion cap and explicit disguise equipment/trigger need reconciliation
- * in the companion batch. Preserve existing achievement IDs; do not invent a raw mob-count award.
+ * Batch37 corrects earlier audit inference using MASTER Achievements!B18/C18 and B20/C20:
+ * Stairway is the World Spawn uppermost chest, with a schema2 run0 receipt; old positive-run
+ * schema1 receipts remain valid. Bind the actual Overworld chest; old D1 bindings remain intact
+ * but inactive. Wolves means six CHARACTERS wearing vanilla Piglin Heads simultaneously at Camp4.
+ * Its per-run roster sample and permanent entitlement use existing D1RunData, not wolf counts.
+ * Bind d1_camp_4 to reviewed camp bounds around source navigation coordinate 630 22 68.
+ * Verify both instances, head removal/death/escrow/developer exclusions and restart replay.
+ * No new equipment or PNG is needed; Wither variants and Vital Exchange D2 remain deferred.
  * Source: https://docs.google.com/document/d/1Bc1H58IC-VlS-ZyAm1YKLyHElAJ2EPMrB--M1IMe90o
  * Source modified: 2026-07-05T13:43:45.313Z
  * Source: https://docs.google.com/document/d/15r_3mHAj4hbIrcS9vUQ5BL57V88u6SX9JSgI-qzOA9c
@@ -828,6 +833,10 @@
  * Required: Verify every retained quest, room, key, region, reset and encounter binding against a
  * backed-up TEST world. Existing source coordinates are defaults, not proof that the actual world
  * matches. Preserve authored spawners, locks, rifts, schematics and unloaded chunks.
+ * Batch37 binding handoff: docs/ai/D1_BATCH_37_BINDINGS.md maps startup, journals, fire path,
+ * Camp4/5, Wither room, Manor, Plant Flags, Watson and World Spawn. Source chest lists contain
+ * repeated entries; Q&A D79 preserves developer-authored quantities. Do not run broad adoption,
+ * replace placed locks, or infer door/key IDs and cuboid bounds from navigation coordinates.
  * Source: https://docs.google.com/document/d/1x59OaQfNB1UNYXgLySdq5BBktq9brgcBBbqLeJYpBvU
  * Source modified: 2026-08-20T20:25:49.056Z
  * Source: https://docs.google.com/document/d/1Id13I12xr2XZgwzJX0ujnNvyIFu0AM87FUhc2qdmhJ4
@@ -894,6 +903,10 @@
  * Required: verify authored physical progression bindings, companion kill attribution, death,
  * full inventories, offline inputs and native interruption across outcome plus cleanup on TEST.
  * Q&A D20/D23 (2026-09-16) governs D1. Keep second-instance resets independent; D2+ stays deferred.
+ * Batch37 routes D1 reset-rift exits through the saved cleanup handoff before any tile teleport.
+ * Failed save must retain the player under lifecycle recovery; generic evacuation cannot bypass
+ * RESETTING ownership. Native fault injection remains required. Existing run/lifetime codecs
+ * and six-Bloom Watson receipts are unchanged; never subtract guessed old totals on upgrade.
  * Source: https://docs.google.com/document/d/1oXHIKtIdWlQDwzf1JaHzBut08g4tytXs6rCYRY-89NY
  * Source modified: 2025-08-22T22:56:40.140Z
  * Source: https://docs.google.com/document/d/1u1xeNikxn02KkeFeFytocLguV869XPxW89KZW5jc1nM
@@ -940,11 +953,17 @@
  * Source modified: 2026-08-29T14:49:42.290Z
  *
  * TODO(M101, partial_D1): Validate personal travel gates and existing destination isolation
- * Current: Current run, member, class, target safety and Chop travel conditions are checked server-
- * side.
- * Required: Exercise every physical and command travel path with locked progression, old destination
- * saves, wrong instance, death and reconnect; patch only observed missing gates without changing
- * authored destination identity.
+ * Current: Batch37 checks active run/roster/class, source physical ownership, completed exits,
+ * startup/outcome/transaction holds, outside/orphan escrow and personal named-village access.
+ * D1 reset rifts use the existing cleanup journal, while ordinary rifts cannot bypass Chop swaps.
+ * Companionship selection uses original run ID and Overworld clock; both endpoints revalidate,
+ * successful travel consumes selection, and target failure never removes the paid cooldown.
+ * Required: Exercise locked Main Village aliases, actual old destination records, two slots,
+ * death/logout/reconnect/restart, expired/cancelled selection and denied rift throttling.
+ * Review custom-named village aliases against authored worlds; do not infer location from spawn,
+ * because the legacy default main_village is seeded at World Spawn until explicitly authored.
+ * Notes Teleport (2026-07-07) is future design: no new waypoint/recall/recipe system is enabled.
+ * Preserve registered IDs, locations and original inventories; no partial-save automatic repair.
  * Source: https://docs.google.com/document/d/1x59OaQfNB1UNYXgLySdq5BBktq9brgcBBbqLeJYpBvU
  * Source modified: 2026-08-20T20:25:49.056Z
  * Source: https://docs.google.com/document/d/1FIcIf82rCAEAhbEE2gbR7jdoFA0BWSIcnzeOcKlUG4M

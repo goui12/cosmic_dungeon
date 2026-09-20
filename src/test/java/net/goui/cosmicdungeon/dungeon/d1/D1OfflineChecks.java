@@ -21,6 +21,8 @@ public final class D1OfflineChecks {
                 com.electronwill.nightconfig.core.CommentedConfig.class,Path.class,net.neoforged.fml.config.ModConfig.class);
         loadedConfig.setAccessible(true);
         Config.SPEC.acceptConfig((net.neoforged.fml.config.IConfigSpec.ILoadedConfig)loadedConfig.newInstance(runtimeDefaults,null,null));
+        net.goui.cosmicdungeon.dungeon.DungeonTravelChecks.main(args);
+        net.goui.cosmicdungeon.achievement.d1.D1PiglinChecks.main(args);
         net.goui.cosmicdungeon.playerclass.d1.D1CombatChecks.main(args);
         net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrBehaviourChecks.main(args);
         net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrArchiveChecks.main(args);
@@ -63,6 +65,21 @@ public final class D1OfflineChecks {
         check(((Number)gameplay.get("ItemProtection.recoveryStacksPerClaim")).intValue()==32,
                 "Protected return processing has a bounded configurable claim budget");
         check(Config.SPEC.isCorrect(gameplay), "Generated gameplay defaults validate");
+        check(((Number)gameplay.get("Achievements.piglinHeadPlayers")).intValue()==6,"Sheet six-character default");
+        check(((Number)gameplay.get("SharedTravel.companionshipSeconds")).intValue()==300,"Legacy companionship duration retained");
+        check(((Number)gameplay.get("SharedTravel.riftCooldownTicks")).intValue()==12,"Legacy successful rift cooldown retained");
+        check(((Number)gameplay.get("SharedTravel.riftRetryTicks")).intValue()==40,"Denied rift attempts are throttled");
+        gameplay.set("SharedTravel.riftRetryTicks",0);Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("SharedTravel.riftRetryTicks")).intValue()==20,"Denied retry interval has a bounded lower limit");
+        gameplay.remove("SharedTravel.riftRetryTicks");Config.SPEC.correct(gameplay);
+        gameplay.set("Achievements.piglinHeadPlayers",7);gameplay.set("Achievements.piglinHeadPollTicks",0);
+        gameplay.set("SharedTravel.companionshipSeconds",Long.MAX_VALUE);Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("Achievements.piglinHeadPlayers")).intValue()==6,"Head threshold cannot exceed D1 party cap");
+        check(((Number)gameplay.get("Achievements.piglinHeadPollTicks")).intValue()==1,"Poll interval cannot be zero");
+        check(((Number)gameplay.get("SharedTravel.companionshipSeconds")).intValue()<=3600,"Companionship duration remains bounded");
+        gameplay.remove("Achievements.piglinHeadPlayers");gameplay.remove("Achievements.piglinHeadPollTicks");
+        gameplay.remove("SharedTravel.companionshipSeconds");Config.SPEC.correct(gameplay);
+        check(((Number)gameplay.get("Achievements.piglinHeadPollTicks")).intValue()==20,"Old configs receive bounded poll default");
         gameplay.set("Dragoon.chainLightningCandidateLimit",64);Config.SPEC.correct(gameplay);
         check(((Number)gameplay.get("Dragoon.chainLightningCandidateLimit")).intValue()==64,"Dragoon candidate override retained");
         gameplay.set("Dragoon.chainLightningCandidateLimit",0);Config.SPEC.correct(gameplay);

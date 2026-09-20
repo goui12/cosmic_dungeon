@@ -21,7 +21,7 @@ public final class D1JournalRewardChecks {
         var equipment=new CompoundTag();equipment.putString("unchanged","authored equipment");player.put("equipment",equipment);
         return player;
     }
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         for(int number=1;number<=3;number++) {
             String id="journal_"+number;
             var entry=D1JournalCatalog.get(id);check(entry!=null,"Three approved sources are packaged");
@@ -69,6 +69,28 @@ public final class D1JournalRewardChecks {
         var malformed=expected.copy();malformed.remove("Inventory");
         check(!StairwayReward.savedSnapshotMatches(malformed,malformed.copy()),"Incomplete expected image fails closed");
         check(!StairwayReward.savedSnapshotMatches(new CompoundTag(),new CompoundTag()),"Two empty saves are not a reward commit");
+        var spawn=receipt(owner);spawn.putInt("schema",2);spawn.putLong("run",0);spawn.putString("dimension","minecraft:overworld");
+        check(StairwayReward.valid(spawn,owner),"World Spawn receipt requires no active dungeon");
+        check(StairwayReward.valid(receipt,owner),"Old schema1 positive-run receipt remains valid without rewrite");
+        for(String key:List.of("schema","owner","transaction","slot","run","dimension","delivered")){
+            var invalid=spawn.copy();invalid.remove(key);check(!StairwayReward.valid(invalid,owner),"Spawn receipt missing field fails closed: "+key);
+        }
+        for(String dimension:List.of("cosmicdungeon:dungeon_1","minecraft:the_nether","")){
+            var invalid=spawn.copy();invalid.putString("dimension",dimension);
+            check(!StairwayReward.valid(invalid,owner),"Spawn receipt cannot impersonate another dimension");
+        }
+        for(long run:new long[]{-1,1,42,Long.MAX_VALUE}){
+            var invalid=spawn.copy();invalid.putLong("run",run);check(!StairwayReward.valid(invalid,owner),"Spawn receipt is explicitly outside runs");
+        }
+        var invalid=spawn.copy();invalid.putString("run","0");check(!StairwayReward.valid(invalid,owner),"Mistyped run rejected");
+        invalid=spawn.copy();invalid.putInt("schema",3);check(!StairwayReward.valid(invalid,owner),"Future schema fails closed");
+        for(var image:List.of(snapshot(receipt),snapshot(spawn))){
+            var bytes=new java.io.ByteArrayOutputStream();NbtIo.writeCompressed(image,bytes);
+            var restored=NbtIo.readCompressed(new java.io.ByteArrayInputStream(bytes.toByteArray()),NbtAccounter.unlimitedHeap());
+            check(StairwayReward.savedSnapshotMatches(image,restored),"Old/new paired reward snapshot survives compressed native NBT");
+            restored.put("Inventory",new ListTag());
+            check(!StairwayReward.savedSnapshotMatches(image,restored),"Old/new receipt never substitutes for saved inventory");
+        }
         System.out.println(checks+" journal/reward checks passed");
     }
 }

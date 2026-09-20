@@ -24,20 +24,26 @@ public final class D1WorldAchievements {
     private D1WorldAchievements(){}
     @SubscribeEvent(priority=EventPriority.LOWEST) public static void clicked(PlayerInteractEvent.RightClickBlock event){
         if(!(event.getEntity() instanceof ServerPlayer player))return;
-        var run=D1Members.run(player.level()).orElse(null);if(run==null||!D1Members.inside(player,run))return;
+        if (!player.isAlive() || player.isSpectator() || AccessPolicy.isDeveloper(player)) return;
+        var run=D1Members.run(player.level()).orElse(null);
+        if (!player.level().dimension().equals(net.minecraft.world.level.Level.OVERWORLD)
+                && (run==null||!D1Members.inside(player,run))) return;
         OPENS.put(player.getUUID(),new OpenTarget(player.level().dimension().location().toString(),event.getPos().immutable(),player.level().getGameTime()));
     }
     @SubscribeEvent public static void opened(PlayerContainerEvent.Open event){
         if(!(event.getEntity() instanceof ServerPlayer player))return;
         var pending=OPENS.remove(player.getUUID());if(pending==null||player.level().getGameTime()-pending.tick()>2
                 ||!pending.dimension().equals(player.level().dimension().location().toString()))return;
-        var run=D1Members.run(player.level()).orElse(null);if(run==null||!D1Members.inside(player,run))return;
+        if (!player.isAlive() || player.isSpectator() || AccessPolicy.isDeveloper(player)
+                || net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.blocked(player)) return;
+        var run=D1Members.run(player.level()).orElse(null);
         var locations=D1ObjectiveBindings.get(player.level().getServer());
-        if(event.getContainer() instanceof LecternMenu&& !event.getContainer().getSlot(0).getItem().isEmpty()){
+        if(run!=null && D1Members.inside(player,run) && event.getContainer() instanceof LecternMenu&& !event.getContainer().getSlot(0).getItem().isEmpty()){
             for(String key:List.of("journal_1","journal_2","journal_3"))if(locations.matches(player.level(),pending.pos(),key)){
                 D1JournalService.opened(player, event.getContainer().getSlot(0).getItem(), key);
             }
         }
+        if (!player.level().dimension().equals(net.minecraft.world.level.Level.OVERWORLD)) return;
         if(!(event.getContainer() instanceof ChestMenu chest) || !chest.stillValid(player))return;
         var place=locations.location("stairway");
         if(place==null || !locations.matches(player.level(),place.pos(),"stairway") || !player.level().hasChunkAt(place.pos()))return;
@@ -45,7 +51,7 @@ public final class D1WorldAchievements {
         boolean correct=chest.getContainer()==bound
                 ||(chest.getContainer() instanceof net.minecraft.world.CompoundContainer compound&&bound instanceof net.minecraft.world.Container container&&compound.contains(container));
         if(!correct)return;
-        StairwayReward.deliver(player, run.runId(), place.pos());
+        StairwayReward.deliver(player, 0, place.pos());
     }
     @SubscribeEvent public static void path(PlayerTickEvent.Post event){
         if(!(event.getEntity() instanceof ServerPlayer player))return;
@@ -72,7 +78,7 @@ public final class D1WorldAchievements {
     // D1JournalService checks trusted edition + canonical body on actual book/lectern opens.
     // TODO(M79/M81, licensed TEST): review legacy books with explicit preview/apply and bind the
     // actual uppermost chest. Preserve authored placements/content and verify real opening packets.
-    // TODO(M79, Wolves in Piglin Clothing): 1xe-ikZsd0JoNlHZO_4b076AND7W6ow1ax4aWnVfuNPo
-    // only specifies "six wolves, six stolen snouts"; reconcile the six-wolf achievement with the
-    // current five-companion cap and define actual piglin-disguise equipment before adding a trigger.
+    // MASTER Achievements!C20 explicitly means six CHARACTERS wearing Piglin Heads at Camp 4.
+    // Linked 1xe-ikZsd0JoNlHZO_4b076AND7W6ow1ax4aWnVfuNPo is flavor, not a six-companion rule.
+    // D1PiglinAchievement implements that mechanic; the Bogatyr companion cap remains unchanged.
 }

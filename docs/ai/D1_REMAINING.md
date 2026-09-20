@@ -1,14 +1,14 @@
 # D1 remaining work
 
-Updated after Batch36 on2026-09-20 UTC.
-Cameron authorized36 only, offline validation and final local commit; STOP before37.
-Verified parent:c5678b7d169c738b11f51b889a4491db969d6646.
+Updated after Batch37 on2026-09-20 UTC.
+Cameron authorized37 only, offline validation and final local commit; STOP before38.
+Verified parent:2a4f5a3f6a0605b128808037daec2aafa140e535.
 Gameplay/multiplayer testing remains deferred for the cumulative licensed TEST pass.
 All101 original audit IDs remain intact. Code implementation is not runtime acceptance.
-Current dispositions: Google Docs and Sheet/Audit/D1_Batch_36_2026-09-20/implementation_findings.json.
-Latest: [Batch36](D1_BATCH_36.md); previous [Batch35](D1_BATCH_35.md).
+Current dispositions: Google Docs and Sheet/Audit/D1_Batch_37_2026-09-20/implementation_findings.json.
+Latest: [Batch37](D1_BATCH_37.md); [binding handoff](D1_BATCH_37_BINDINGS.md); previous [Batch36](D1_BATCH_36.md).
 
-## Planned batches remaining: 2
+## Planned batches remaining: 1
 
 These are estimated implementation/review batches, distinct from gameplay testing.
 Concrete findings may change scope; native/world/performance acceptance remains in the
@@ -16,12 +16,23 @@ separate cumulative licensed TEST phase. This plan authorizes no launch or deplo
 
 | Batch | Work remaining | Audit IDs / boundary |
 | --- | --- | --- |
-| 37 | Achievement rewards, progression bindings and travel gates. | M79/M81/M93/M101; preserve instance/lifetime separation |
-| 38 | Help, balance displays, performance bounds and cumulative-test handoff. | M09/M104/M105; include Batch35 recipe/crafting and Batch36 combat acceptance; measure live performance later |
+| 38 | Help, balance displays, performance bounds and cumulative-test handoff. | M09/M104/M105; include Batch35 recipe/crafting, Batch36 combat and Batch37 travel/binding acceptance; measure live performance later |
 
-Remaining20 partial IDs can span these batches or explicit legacy/world TEST acceptance.
+Remaining19 partial IDs can span this batch or explicit legacy/world TEST acceptance.
 Nine preserved-content IDs still need native verification. The27 D2+ entries remain
 TODO-only and excluded from this estimate. Consult dispositions before writing more code.
+
+## Batch37 completed in code
+
+B37-1: World Spawn Stairway chest and backward-compatible once-per-player Elytra receipts.
+B37-2: six simultaneous Piglin-head characters at authored Camp4, shared credit separate from run reset.
+B37-3: active instance/class/custody gates and personal named-Village access for ordinary travel.
+B37-4: D1 reset exits use saved cleanup before movement; denial attempts are bounded.
+B37-5: run-bound companion sessions, live endpoint validation, safe arrival and paid cooldown preservation.
+12,932 offline checks (128 new), two config round trips, Java21 build/server datagen and1,964 JSON passed.
+M79 is implemented/runtime-unverified; M81/M93/M101 retain authored/native/legacy acceptance.
+Counts46 implemented/19partial/9preserved/27deferred=101. No new required PNG.
+No world, workbook or active config edits; no game runtime launch, deployment or push.
 
 ## Batch36 completed in code
 

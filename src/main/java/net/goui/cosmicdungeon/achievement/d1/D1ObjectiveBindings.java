@@ -58,7 +58,9 @@ public final class D1ObjectiveBindings extends SavedData {
             var id = net.minecraft.resources.ResourceLocation.tryParse(place.dimension());
             var level = id == null ? null : source.getServer().getLevel(net.minecraft.resources.ResourceKey.create(
                     net.minecraft.core.registries.Registries.DIMENSION, id));
-            String state = level == null || !level.hasChunkAt(place.pos()) ? "unloaded; block not inspected"
+            String state = key.equals("stairway") && !place.dimension().equals("minecraft:overworld")
+                    ? "legacy D1 binding retained; rebind the World Spawn chest"
+                    : level == null || !level.hasChunkAt(place.pos()) ? "unloaded; block not inspected"
                     : validBlock(level, place.pos(), key) ? "loaded, expected block type" : "loaded, wrong block type";
             source.sendSuccess(() -> Component.literal(key + ": " + place.dimension() + " " + place.pos().toShortString()
                     + (data.locations.containsKey(key) ? " (configured; " : " (source default; ") + state + ")"), false);
@@ -76,8 +78,11 @@ public final class D1ObjectiveBindings extends SavedData {
                             if (!KEYS.contains(key)) return 0;
                             var source = c.getSource();
                             var dimension = DungeonInstanceSlots.templateDimensionForPhysical(source.getServer(),source.getLevel().dimension());
-                            if (!DungeonDefinitions.DUNGEON_1.containsDimension(dimension)) {
-                                source.sendFailure(Component.literal("Bind D1 objectives in a D1 template or instance.")); return 0;
+                            boolean allowed = key.equals("stairway")
+                                    ? dimension.equals(net.minecraft.world.level.Level.OVERWORLD)
+                                    : DungeonDefinitions.DUNGEON_1.containsDimension(dimension);
+                            if (!allowed) {
+                                source.sendFailure(Component.literal("Bind Stairway in World Spawn (Overworld); other objectives in D1.")); return 0;
                             }
                             var pos = BlockPosArgument.getLoadedBlockPos(c,"position");
                             if (!validBlock(source.getLevel(), pos, key)) {
