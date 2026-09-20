@@ -64,9 +64,13 @@ public final class VendorPricingService {
         long baseAdjustment = 0;
         long enchantmentPrice = 0;
         long cursePrice = 0;
-        // D83: drinking milk cannot turn a 3-Trace input into a 50-Trace output.
-        if(key.equals("bucket"))
-            baseAdjustment = Math.subtractExact(Math.min(basePrice, VendorCatalog.item("milk_bucket").purchase().get()), basePrice);
+        // Source prices are upper bounds when a reviewed conversion has cheaper inputs.
+        Long reviewedCap = null;
+        if (VendorConversionRules.appliesTo(key,action)) {
+            reviewedCap = VendorConversionRules.ceilings(VendorPricingService::configuredPurchase,
+                    VendorPricingService::lowestRetail).get(key);
+            if (reviewedCap == null || reviewedCap < 0) return new VendorPrice(0,"unpriced_conversion:" + key);
+        }
         var enchants=stack.getOrDefault(DataComponents.ENCHANTMENTS,ItemEnchantments.EMPTY);
         for(var entry:enchants.entrySet()) {
             var holder=entry.getKey(); int level=entry.getIntValue();
@@ -77,9 +81,21 @@ public final class VendorPricingService {
             else enchantmentPrice = Math.addExact(enchantmentPrice, amount);
         }
         Long conversionCap=stack.get(net.goui.cosmicdungeon.component.ModDataComponents.VENDOR_PURCHASE_CAP.get());
+        if (reviewedCap != null) conversionCap = conversionCap == null ? reviewedCap : Math.min(conversionCap,reviewedCap);
         var breakdown = VendorPriceBreakdown.calculate(basePrice, enchantmentPrice, cursePrice,
                 baseAdjustment, conversionCap, stack.getCount());
         return new VendorPrice(breakdown.total(), "catalog:" + key, true, breakdown);
+    }
+    private static long configuredPurchase(String key) {
+        var entry = VendorCatalog.item(key);
+        return entry == null ? -1 : entry.purchase().get();
+    }
+    private static long lowestRetail(String key) {
+        long listed = VendorPricesConfig.conversionRetail(key);
+        if (listed < 0) return -1;
+        double multiplier = Math.min(net.goui.cosmicdungeon.Config.CORDIAL_RETAIL.get(),
+                Math.min(net.goui.cosmicdungeon.Config.WARM_RETAIL.get(),net.goui.cosmicdungeon.Config.ALLY_RETAIL.get()));
+        return net.goui.cosmicdungeon.faction.NpcFactionService.adjusted(listed,multiplier);
     }
     /** The named table is not permission to sell impossible enchantments. */
     private static String validateEnchantments(ItemStack stack) {

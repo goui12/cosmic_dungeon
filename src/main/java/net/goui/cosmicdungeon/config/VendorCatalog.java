@@ -19,6 +19,7 @@ public final class VendorCatalog {
         }
         b.pop();
         b.comment("Pricing Master 2.0, 1B3hQLrrOkZeRPG1tomd54rd7v7OKQ_PDNozHH-DIffY, 2026-08-19.",
+                "Documented list prices. Reviewed conversion ceilings may reduce the final sale quote.",
                 "Universal purchase prices apply at every eligible vendor. -1 means unpriced/disabled.")
                 .push("Universal");
         item(b, "apple", 1L, 2L, "Apple");
@@ -120,7 +121,7 @@ public final class VendorCatalog {
         item(b, "arrow", 1L, 2L, "Arrow");
         item(b, "flint_and_steel", 30L, 36L, "Flint and Steel");
         item(b, "torch", 1L, 2L, "Torch");
-        item(b, "bucket", 3L, 60L, "Bucket");
+        item(b, "bucket", 50L, 60L, "Bucket");
         item(b, "nether_wart", 20L, 24L, "Nether Wart Standard");
         item(b, "sugar", 1L, 2L, "Sugar Standard");
         item(b, "spider_eye", 8L, 10L, "Spider Eye Standard");
@@ -209,7 +210,7 @@ public final class VendorCatalog {
     }
     private static void item(ModConfigSpec.Builder b,String key,long purchase,long retail,String name) {
         b.comment(name).push(key);
-        if(key.equals("bucket")) b.comment("Listed purchase 50; conversion ceiling 3 prevents the milk/bucket exploit (Q&A D83).");
+        if(key.equals("bucket")) b.comment("Documented list price; the live milk/container conversion ceiling may reduce the quote (Q&A D83).");
         ITEMS.put(key,new Entry(b.defineInRange("purchaseTrace",purchase,-1L,1_000_000_000L),
                 b.defineInRange("retailTrace",retail,-1L,1_000_000_000L)));
         b.pop();
@@ -223,7 +224,16 @@ public final class VendorCatalog {
     }
     public static ModConfigSpec.LongValue namedD1(String key) { return NAMED_D1.get(key); }
     public static Entry item(String key) { return ITEMS.get(key); }
-    public static Entry enchantment(String key) { return ENCHANTMENTS.get(key); }
+    public static Entry enchantment(String key) {
+        // Native 1.21.10 ID; retain the existing config section and developer overrides.
+        return ENCHANTMENTS.get(key.equals("sweeping_edge") ? "sweeping" : key);
+    }
+    // TODO(M106, authored-world catalogue review): the retained 2026-07-07 Non-Exhaustive
+    // Item List (1xT6KWQ_iLsygcQA-FwI0mH_79p0p4hv96l-aSlyf4rw) is a 26.2 candidate list,
+    // not approved stock. Keep admin items, unpriced rods/shovels/spears/books/rockets and
+    // deleted-tab references out of inferred offers. Resolve links against retained D1 item
+    // identities and authored containers without renaming equipment or restoring deleted tabs.
+    // Fortune has no approved adjustment; named final prices never receive a second premium.
     // TODO(M87, later-version data): Pricing Master lists Lunge from Minecraft 1.21.11.
     // Keep this 1.21.10 build unchanged; add its 20/200 Trace per-level schedule only
     // after an explicitly approved game-version upgrade and registry validation.

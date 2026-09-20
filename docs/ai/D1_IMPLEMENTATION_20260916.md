@@ -1,8 +1,8 @@
-Latest checkpoint: **Batch34 (2026-09-19)** preserves authored spawn data, validates
-per-spawner rewards, protects NPC/profile assignments and separates personal offer tiers.
-**10,794 offline checks**, two config round trips,1,963 source JSON checks and Java21 build
-passed. Runtime remains untested. See [Batch34](D1_BATCH_34.md) and
-[four remaining batches](D1_REMAINING.md). Stop after the final local commit;35 awaits Cameron.
+Latest checkpoint: **Batch35**, finalized2026-09-20 UTC, fixes native Sweeping Edge pricing,
+adds reviewed vendor conversion ceilings and preserves source/manual pricing references.
+**11,933 offline checks**, two config round trips,1,963 source JSON checks and Java21 build
+passed. Runtime remains untested. See [Batch35](D1_BATCH_35.md) and
+[three remaining batches](D1_REMAINING.md). Stop after the final local commit;36 awaits Cameron.
 Older notes below are historical and do not override this checkpoint.
 
 # Dungeon 1 implementation â€” 2026-09-16

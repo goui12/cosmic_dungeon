@@ -229,3 +229,17 @@ future explicit assignment. No live bindings, spawners, worlds, presets or confi
 10,794 checks, two config round trips,1,963 source JSON and Java21 offline build passed.
 Full native SpawnData/weighted preset and entity unload/restart acceptance remains licensed TEST.
 Four planned batches remain; report and exact inventory: ../D1_BATCH_34.md.
+
+
+Batch35, finalized2026-09-20 UTC: Cameron reattached the PC and authorized completion35 only.
+Single writer owns VendorCatalog/VendorPricesConfig/VendorPricingService, the pure conversion
+policy, price/reference fixtures and D1OfflineChecks integration. No saved-data/registry/network
+or active-world/config changes. Native sweeping_edge shares the existing sweeping config.
+Bounded conversion quotes preserve input/output/fuel/retail budgets, lower item caps and
+player-trade separation. Bucket's documented list default50 retains a live ceiling3.
+11,933 offline checks (1,139 new), two config round trips,1,963 JSON and Java21 build passed.
+13 refreshed Docs unchanged; original three workbooks unchanged; no runtime/GameTest/datagen/
+deployment/push. No new required PNG. M107 tooling complete; M12/M106 retain explicit code TODOs.
+Counts45/20/9/27=101. Three planned batches remain:36 effects/ammo;37 progression/travel;
+38 displays/performance and cumulative TEST handoff. Final local commit then STOP before36.
+Report/exact file inventory: ../D1_BATCH_35.md; tracker: ../D1_REMAINING.md.

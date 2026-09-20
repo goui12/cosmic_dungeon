@@ -130,6 +130,25 @@ public final class VendorPricesConfig {
         String offerId = offer.contains(":") ? offer : "minecraft:" + offer;
         OFFERS.put(profile + "|" + offerId, new Price(sell));
     }
+    /** Conservative listed floor; unstocked catalogue rows do not enable new offers. */
+    public static long conversionRetail(String key) {
+        var entry = VendorCatalog.item(key);
+        long lowest = entry == null ? -1 : entry.retail().get();
+        String offer = switch (key) {
+            case "beef", "chicken", "rabbit", "porkchop", "mutton", "cod", "salmon" -> "raw_" + key;
+            case "glistering_melon_slice" -> "golden_melon_slice";
+            case "potion__strong_healing" -> "potion_of_healing_ii";
+            case "potion__long_water_breathing" -> "potion_of_water_breathing";
+            default -> key.replace("__", "_of_");
+        };
+        for (var configured : OFFERS.entrySet()) {
+            if (!configured.getKey().endsWith("|minecraft:" + offer)
+                    && !configured.getKey().endsWith("|minecraft:" + key)) continue;
+            long value = configured.getValue().retail().get();
+            if (value >= 0 && (lowest < 0 || value < lowest)) lowest = value;
+        }
+        return lowest;
+    }
     public static Price find(ResourceLocation profile, ResourceLocation offer) {
         return OFFERS.get(profile + "|" + offer);
     }

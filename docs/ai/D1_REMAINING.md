@@ -1,30 +1,40 @@
 # D1 remaining work
 
-Updated 2026-09-19 after Batch34. Cameron authorized34 only, offline validation and
-final local commit; STOP before35. Verified parent: a0174968d4af5b6a7dacb0cf0dd53c34c5447f1e.
+Updated after Batch35, finalized2026-09-20 UTC (September19 on the PC).
+Cameron authorized35 only, offline validation and final local commit; STOP before36.
+Verified parent:91075b5cb86a92ab648387e40c578d364d46cc07.
 Gameplay/multiplayer testing remains deferred for the cumulative licensed TEST pass.
 All101 original audit IDs remain intact. Code implementation is not runtime acceptance.
-Current dispositions: Google Docs and Sheet/Audit/D1_Batch_34_2026-09-19/implementation_findings.json.
-Latest: [Batch34](D1_BATCH_34.md); previous [combined32-33 checkpoint](D1_BATCHES_32-33.md).
+Current dispositions: Google Docs and Sheet/Audit/D1_Batch_35_2026-09-19/implementation_findings.json.
+Latest: [Batch35](D1_BATCH_35.md); previous [Batch34](D1_BATCH_34.md).
 
-## Planned batches remaining: 4
+## Planned batches remaining: 3
 
-These are estimated implementation/review batches, not four gameplay testing rounds.
-Batch34's four fixes are complete in code. Review may close already implemented items
-or reveal a concrete issue requiring a split. Update the count and every summary after
-each completion. Native world/multiplayer/performance acceptance belongs to the separate
-cumulative licensed TEST phase; this plan authorizes no launch or deployment.
+These are estimated implementation/review batches, distinct from gameplay testing.
+Concrete findings may change scope; native/world/performance acceptance remains in the
+separate cumulative licensed TEST phase. This plan authorizes no launch or deployment.
 
 | Batch | Work remaining | Audit IDs / boundary |
 | --- | --- | --- |
-| 35 | Pricing conversions, catalogue exceptions and calculator fixtures. | M12/M106/M107; checked source data |
 | 36 | Final source/code review of D1 class effects and ammunition. | M55/M58/M60/M63; native effects remain untested |
 | 37 | Achievement rewards, progression bindings and travel gates. | M79/M81/M93/M101; preserve instance/lifetime separation |
-| 38 | Help, balance displays, performance bounds and cumulative-test handoff. | M09/M104/M105; measure live performance later |
+| 38 | Help, balance displays, performance bounds and cumulative-test handoff. | M09/M104/M105; include Batch35 recipe/crafting release gates; measure live performance later |
 
-Remaining21 partial IDs can span these batches or explicit legacy/world TEST acceptance.
+Remaining20 partial IDs can span these batches or explicit legacy/world TEST acceptance.
 Nine preserved-content IDs still need native verification. The27 D2+ entries remain
-TODO-only and excluded from the estimate. Consult dispositions before writing more code.
+TODO-only and excluded from this estimate. Consult dispositions before writing more code.
+
+## Batch35 completed in code
+
+B35-1: native Sweeping Edge maps to the retained config section and developer overrides.
+B35-2: reviewed conversion ceilings account for yield, fuel, returned containers and cheaper inputs.
+B35-3: disabled-input isolation, existing caps and player-trade separation preserved.
+B35-4:182 source price fixtures,23 named-price reconciliations and1509 calculator formulas reviewed.
+11,933 offline checks (1,139 new), two config round trips, Java21 build and1,963 source JSON passed.
+M107 reference tooling is implemented/runtime-unverified. M12/M106 retain custom/native recipe,
+crafting access, legacy/world and source-link checks explicitly recorded in code TODOs.
+Counts45 implemented/20partial/9preserved/27deferred=101. No new required PNG.
+No world, workbook or active config edits; no runtime launch, deployment or push.
 
 ## Batch34 completed in code
 
