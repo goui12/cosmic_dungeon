@@ -25,6 +25,12 @@ public class ModItemTagProvider extends BlockTagCopyingItemTagProvider {
 
     @Override
     protected void addTags(HolderLookup.Provider provider) {
+        // Bow/crossbow selection uses the native arrows tag; special ammunition stays finite.
+        var d1Arrows = this.tag(net.minecraft.tags.ItemTags.ARROWS);
+        ModItems.d1Ammunition().stream()
+                .filter(item -> item.get() instanceof net.goui.cosmicdungeon.item.custom.D1ArrowItem)
+                .forEach(item -> d1Arrows.add(item.get()));
+
         this.tag(ModTags.Items.TRANSFORMABLE_ITEMS)
                 .add(Items.COAL)
                 .add(Items.STICK)

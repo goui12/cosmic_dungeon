@@ -27,6 +27,7 @@ public final class D1OfflineChecks {
         net.goui.cosmicdungeon.dungeon.DungeonTravelChecks.main(args);
         net.goui.cosmicdungeon.achievement.d1.D1PiglinChecks.main(args);
         net.goui.cosmicdungeon.playerclass.d1.D1CombatChecks.main(args);
+        net.goui.cosmicdungeon.playerclass.d1.D1CustomAmmunitionChecks.main(args);
         net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrBehaviourChecks.main(args);
         net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrArchiveChecks.main(args);
         net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrDirectoryChecks.main(args);

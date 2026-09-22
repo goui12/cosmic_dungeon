@@ -47,6 +47,8 @@ public final class DataGenerators {
                 lookupProvider
         ));
 
+        generator.addProvider(true, new D1EntityTagProvider(packOutput, lookupProvider));
+
         // Recipes
         generator.addProvider(true, new ModRecipeProvider.Runner(packOutput, lookupProvider));
 

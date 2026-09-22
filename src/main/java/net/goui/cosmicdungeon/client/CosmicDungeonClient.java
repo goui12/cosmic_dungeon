@@ -123,6 +123,8 @@ public final class CosmicDungeonClient {
         // === Custom chest renderer (replaces ChestRenderer::new) ===
         e.registerBlockEntityRenderer(ModBlockEntities.CLASS_LOCKED_CHEST.get(), ClassLockedChestRenderer::new);
 
+        e.registerEntityRenderer(ModEntities.D1_ARROW.get(), D1ArrowRenderer::new);
+
         // Existing mobs
         e.registerEntityRenderer(ModEntities.MAGMA_GLOB.get(), MagmaGlobRenderer::new);
         e.registerEntityRenderer(ModEntities.STONE_WARDEN.get(), StoneWardenRenderer::new);

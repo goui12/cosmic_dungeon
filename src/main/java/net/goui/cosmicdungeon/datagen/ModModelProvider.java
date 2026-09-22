@@ -101,6 +101,22 @@ public class ModModelProvider extends ModelProvider {
         FLAT.accept(ModItems.ATTUNEMENT_CROWN.get());
         FLAT.accept(ModItems.ATTUNEMENT_ANCHOR.get());
 
+        // ===== Dedicated D1 ammunition; texture PNGs are supplied by Cameron after editing. =====
+        FLAT.accept(ModItems.MENDING_STING.get());
+        FLAT.accept(ModItems.VERDANT_JOLT.get());
+        FLAT.accept(ModItems.TREE_VIPER.get());
+        FLAT.accept(ModItems.PESTIS.get());
+        FLAT.accept(ModItems.VAPOURS.get());
+        FLAT.accept(ModItems.SPICULE_BREACH.get());
+        FLAT.accept(ModItems.BUSHMASTER.get());
+        FLAT.accept(ModItems.FER_DE_LANCE.get());
+        FLAT.accept(ModItems.BLACK_BUBO.get());
+        FLAT.accept(ModItems.MELANCHOLIA.get());
+        FLAT.accept(ModItems.DEATHLY_STUPOR.get());
+        FLAT.accept(ModItems.SPICULE_REND.get());
+        FLAT.accept(ModItems.CINDERBITE.get());
+        FLAT.accept(ModItems.CINDERMAUL.get());
+
         // ===== Judicator / Metalmancer (unchanged) =====
         MACE.accept(ModItems.EDICT_OF_SILENCE.get());
         registerExternalItem(itemModels, ModItems.VOWKEEPER.get(), rlMod("item/vowkeeper"));

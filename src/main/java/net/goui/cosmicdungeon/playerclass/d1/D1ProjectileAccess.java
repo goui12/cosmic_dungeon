@@ -14,7 +14,11 @@ public final class D1ProjectileAccess {
     private D1ProjectileAccess() {}
 
     public static D1CombatRules.Ammunition permission(Projectile projectile, ItemStack stack, String id) {
-        if (D1AmmunitionCatalog.find(id) == null) return D1CombatRules.Ammunition.VANILLA;
+        if (D1AmmunitionCatalog.find(id) == null) {
+            String item = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+            return D1AmmunitionCatalog.registered(item)
+                    ? D1CombatRules.Ammunition.DENIED : D1CombatRules.Ammunition.VANILLA;
+        }
         if (!(projectile.getOwner() instanceof ServerPlayer owner))
             return D1CombatRules.Ammunition.DENIED;
         var run = D1Members.run(owner.level()).orElse(null);

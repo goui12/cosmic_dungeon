@@ -2,52 +2,52 @@
   "sources": [
     {
       "type": "minecraft:single",
-      "resource": "minecraft:mob_effect/weakness",
+      "resource": "cosmicdungeon:mob_effect/black_bubo",
       "sprite": "cosmicdungeon:black_bubo"
     },
     {
       "type": "minecraft:single",
-      "resource": "minecraft:mob_effect/poison",
+      "resource": "cosmicdungeon:mob_effect/bushmaster",
       "sprite": "cosmicdungeon:bushmaster"
     },
     {
       "type": "minecraft:single",
-      "resource": "minecraft:mob_effect/slowness",
+      "resource": "cosmicdungeon:mob_effect/deathly_stupor",
       "sprite": "cosmicdungeon:deathly_stupor"
     },
     {
       "type": "minecraft:single",
-      "resource": "minecraft:mob_effect/poison",
+      "resource": "cosmicdungeon:mob_effect/fer_de_lance",
       "sprite": "cosmicdungeon:fer_de_lance"
     },
     {
       "type": "minecraft:single",
-      "resource": "minecraft:mob_effect/slowness",
+      "resource": "cosmicdungeon:mob_effect/melancholia",
       "sprite": "cosmicdungeon:melancholia"
     },
     {
       "type": "minecraft:single",
-      "resource": "minecraft:mob_effect/regeneration",
+      "resource": "cosmicdungeon:mob_effect/mending_sting",
       "sprite": "cosmicdungeon:mending_sting"
     },
     {
       "type": "minecraft:single",
-      "resource": "minecraft:mob_effect/weakness",
+      "resource": "cosmicdungeon:mob_effect/pestis",
       "sprite": "cosmicdungeon:pestis"
     },
     {
       "type": "minecraft:single",
-      "resource": "minecraft:mob_effect/poison",
+      "resource": "cosmicdungeon:mob_effect/tree_viper",
       "sprite": "cosmicdungeon:tree_viper"
     },
     {
       "type": "minecraft:single",
-      "resource": "minecraft:mob_effect/slowness",
+      "resource": "cosmicdungeon:mob_effect/vapours",
       "sprite": "cosmicdungeon:vapours"
     },
     {
       "type": "minecraft:single",
-      "resource": "minecraft:mob_effect/regeneration",
+      "resource": "cosmicdungeon:mob_effect/verdant_jolt",
       "sprite": "cosmicdungeon:verdant_jolt"
     }
   ]

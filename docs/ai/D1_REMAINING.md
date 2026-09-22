@@ -1,3 +1,29 @@
+# D1 custom ammunition checkpoint, 2026-09-22
+
+[Pre-texture implementation and exact item list](D1_CUSTOM_AMMUNITION_2026-09-22.md).
+
+Dedicated D1 ammunition now covers18 identities:14 new item IDs, four retained IDs and
+one shared arrow entity. All modifiers reuse the existing server configuration.
+Cameron's Desktop/CameronsNewPNGs9_22_26 contains44 exact vanilla1.21.10 PNG copies.
+Project textures are intentionally pending his edits and later import instruction.
+No class-chest contents, authored stacks, equipment, world data or active configs changed.
+
+Client/server datagen and Java21 build passed sequentially;17,165 offline checks,
+two config round trips and1,994 JSON checks passed. Native gameplay/render/save acceptance
+is still NOT RUN. Final local commit follows notes and staged review; no push/deployment.
+
+Remaining readiness areas:5; numbered batches scheduled:0.
+- R01: repair-service compatibility with unchanged authored materials.
+- R04: approved-recipe server policy.
+- R05: balance displays and the separate treasure-credit decision.
+- R07: import edited D1 ammunition textures, then verify visuals; later-dungeon assets stay deferred.
+- R08: world bindings, NPC replacement and simultaneous-instance acceptance.
+
+Current101 dispositions remain45 implemented-unverified/20 partial D1/1 preserved-verification-pending/
+8 author-owned outside AI work/27 deferred D2+. This supersedes older texture plans below.
+
+---
+
 # Authored class-chest boundary correction
 
 Cameron's2026-09-20 correction: class-chest contents are his work, including equipment,

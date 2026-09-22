@@ -1,3 +1,13 @@
+# September22 registered-ammunition update
+
+All18 identities in the historical mapping below now have dedicated custom item IDs.
+Four IDs were retained and14 added; vanilla signature compatibility remains unchanged.
+See [the current implementation and texture handoff](D1_CUSTOM_AMMUNITION_2026-09-22.md).
+The earlier four-only registry statement is historical. Creating custom items does not
+authorize inspecting, reconciling or converting Cameron's authored chest stacks.
+
+---
+
 # Batch33: D1 item adoption and source mappings
 
 This is a reviewed identity/authoring reference, not proof that live templates, chests or

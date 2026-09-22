@@ -1,3 +1,21 @@
+# D1 custom ammunition acceptance addendum, 2026-09-22
+
+[Current pre-texture report and candidate hash](D1_CUSTOM_AMMUNITION_2026-09-22.md).
+All native checks below are NOT RUN. Use the future post-import candidate for visual acceptance.
+The current44 PNG destinations intentionally do not exist yet. Datagen/build/offline checks pass;
+they do not establish live projectile behavior. No class-chest content work is authorized.
+
+1. After Cameron edits the PNGs and authorizes import, copy only manifest-mapped paths into src/main/resources/assets/cosmicdungeon/textures. Preserve original dimensions, transparency and arrow UV layout. Build and check every resource before the texture commit.
+2. On separately authorized licensed TEST, use identical client/server jars and a consistent full world/config/jar backup. Cameron controls Akliz stop/start. This pre-texture candidate is not a visual acceptance build.
+3. Create separate Creative Dungeon Items or /give test stacks for all18 IDs. Do not inspect, reconcile, replace or convert authored class-chest contents.
+4. Load all16 custom arrows in bows and crossbows. Check inventory icons, flight skins, native velocity/enchantments, Infinity consumption and missed-arrow pickup. Save/reload embedded arrows and compare exact item/components and owner permissions.
+5. In an active D1 run, exercise each effect with its allowed class against living/undead targets, native immunity/effect veto and friendly-fire rules. Confirm Judicator/Theurgist Scintilla/Lux use their separate configured power.
+6. Check denied class, inactive/foreign run, missing owner, conflicting marker and invalid attunement. No unintended native damage or custom effect may bypass the server gate.
+7. Load Cinderbite and Cindermaul from the offhand. Check the loaded-rocket crossbow icon, native1.6 launch speed and three-durability cost; test multishot, walls, shields, saved charged crossbows and one custom explosion per projectile. Defaults remain12/15HP with the existing radius/config rules.
+8. Verify ten custom status-effect icons. Compare separately created legacy named-vanilla test stacks for unchanged compatibility and visuals. This does not authorize any real chest/loadout inspection or changes.
+
+---
+
 # Authored chest scope correction,2026-09-20
 
 Class-chest contents belong to Cameron. The former repair-marker hook is removed.

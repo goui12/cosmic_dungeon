@@ -6,7 +6,7 @@ import java.util.concurrent.CompletableFuture;
 public final class D1EffectAtlasProvider implements DataProvider {
     private final PackOutput output;
     public D1EffectAtlasProvider(PackOutput output){this.output=output;}
-    @Override public String getName(){return "D1 custom effect vanilla sprite aliases";}
+    @Override public String getName(){return "D1 custom ammunition effect sprites";}
     @Override public CompletableFuture<?> run(CachedOutput cache){
         var root=new JsonObject();var sources=new JsonArray();
         var aliases=Map.of("mending_sting","regeneration","verdant_jolt","regeneration","tree_viper","poison",
@@ -14,7 +14,7 @@ public final class D1EffectAtlasProvider implements DataProvider {
                 "vapours","slowness","melancholia","slowness","deathly_stupor","slowness");
         aliases.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(entry->{
             var source=new JsonObject();source.addProperty("type","minecraft:single");
-            source.addProperty("resource","minecraft:mob_effect/"+entry.getValue());
+            source.addProperty("resource","cosmicdungeon:mob_effect/"+entry.getKey());
             source.addProperty("sprite","cosmicdungeon:"+entry.getKey());sources.add(source);
         });
         root.add("sources",sources);

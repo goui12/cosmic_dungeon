@@ -4,7 +4,8 @@
   "package": "net.goui.cosmicdungeon.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "client.OptionsScreenMixin"
+    "client.OptionsScreenMixin",
+    "client.D1CrossbowChargeMixin"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -23,6 +24,7 @@
     "D1SupportArrowMixin",
     "D1SpectralArrowMixin",
     "D1RocketMixin",
+    "D1CrossbowMixin",
     "InnRespawnMixin",
     "D1CandleMixin",
     "VendorRemainderMixin",

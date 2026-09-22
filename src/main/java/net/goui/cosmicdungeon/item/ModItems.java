@@ -132,8 +132,8 @@ public class ModItems {
                     .component(DataComponents.BLOCKS_ATTACKS, vanillaLikeShieldBlocksAttacks())
     ));
 
-    public static final DeferredItem<Item> VIELPIERCER = ITEMS.registerItem("vielpiercer", SpectralArrowItem::new);
-    public static final DeferredItem<Item> SCINTILLA_VITALIS = ITEMS.registerItem("scintilla_vitalis", TippedArrowItem::new);
+    public static final DeferredItem<Item> VIELPIERCER = ITEMS.registerItem("vielpiercer", D1ArrowItem::new);
+    public static final DeferredItem<Item> SCINTILLA_VITALIS = ITEMS.registerItem("scintilla_vitalis", D1ArrowItem::new);
     public static final DeferredItem<Item> GUSTING_BOLT = ITEMS.registerItem("gusting_bolt", ArrowItem::new);
     public static final DeferredItem<Item> SHARD_OF_THE_MAD_STRIDER = ITEMS.registerItem("shard_of_the_mad_strider", TippedArrowItem::new);
     public static final DeferredItem<Item> GONFALON_OF_JUDIFICATION = ITEMS.registerSimpleItem("gonfalon_of_judification");
@@ -150,8 +150,8 @@ public class ModItems {
                     .component(DataComponents.BLOCKS_ATTACKS, vanillaLikeShieldBlocksAttacks())
     ));
 
-    public static final DeferredItem<Item> LUX_VITALIS = ITEMS.registerItem("lux_vitalis", TippedArrowItem::new);
-    public static final DeferredItem<Item> EBONSIGHT = ITEMS.registerItem("ebonsight", TippedArrowItem::new);
+    public static final DeferredItem<Item> LUX_VITALIS = ITEMS.registerItem("lux_vitalis", D1ArrowItem::new);
+    public static final DeferredItem<Item> EBONSIGHT = ITEMS.registerItem("ebonsight", D1ArrowItem::new);
     public static final DeferredItem<Item> FANG_OF_THE_BRUTE = ITEMS.registerItem("fang_of_the_brute", TippedArrowItem::new);
     public static final DeferredItem<Item> ENSIGN_OF_THE_JUDICATOR = ITEMS.registerSimpleItem("ensign_of_the_judicator");
 
@@ -262,6 +262,27 @@ public class ModItems {
             p.stacksTo(1).durability(336)
                     .component(DataComponents.BLOCKS_ATTACKS, vanillaLikeShieldBlocksAttacks())
     ));
+
+    // Dedicated D1 ammunition (Cameron September22). Existing four registry IDs above are retained.
+    public static final DeferredItem<Item> MENDING_STING = ITEMS.registerItem("mending_sting", D1ArrowItem::new);
+    public static final DeferredItem<Item> VERDANT_JOLT = ITEMS.registerItem("verdant_jolt", D1ArrowItem::new);
+    public static final DeferredItem<Item> TREE_VIPER = ITEMS.registerItem("tree_viper", D1ArrowItem::new);
+    public static final DeferredItem<Item> PESTIS = ITEMS.registerItem("pestis", D1ArrowItem::new);
+    public static final DeferredItem<Item> VAPOURS = ITEMS.registerItem("vapours", D1ArrowItem::new);
+    public static final DeferredItem<Item> SPICULE_BREACH = ITEMS.registerItem("spicule_breach", D1ArrowItem::new);
+    public static final DeferredItem<Item> BUSHMASTER = ITEMS.registerItem("bushmaster", D1ArrowItem::new);
+    public static final DeferredItem<Item> FER_DE_LANCE = ITEMS.registerItem("fer_de_lance", D1ArrowItem::new);
+    public static final DeferredItem<Item> BLACK_BUBO = ITEMS.registerItem("black_bubo", D1ArrowItem::new);
+    public static final DeferredItem<Item> MELANCHOLIA = ITEMS.registerItem("melancholia", D1ArrowItem::new);
+    public static final DeferredItem<Item> DEATHLY_STUPOR = ITEMS.registerItem("deathly_stupor", D1ArrowItem::new);
+    public static final DeferredItem<Item> SPICULE_REND = ITEMS.registerItem("spicule_rend", D1ArrowItem::new);
+    public static final DeferredItem<Item> CINDERBITE = ITEMS.registerItem("cinderbite", p -> new D1FireworkItem(p, false));
+    public static final DeferredItem<Item> CINDERMAUL = ITEMS.registerItem("cindermaul", p -> new D1FireworkItem(p, true));
+
+    /** Explicit D1-only inventory, shared by creative display, datagen and dispenser registration. */
+    public static List<DeferredItem<Item>> d1Ammunition() {
+        return List.of(MENDING_STING, VERDANT_JOLT, SCINTILLA_VITALIS, LUX_VITALIS, EBONSIGHT, VIELPIERCER, TREE_VIPER, PESTIS, VAPOURS, SPICULE_BREACH, BUSHMASTER, FER_DE_LANCE, BLACK_BUBO, MELANCHOLIA, DEATHLY_STUPOR, SPICULE_REND, CINDERBITE, CINDERMAUL);
+    }
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

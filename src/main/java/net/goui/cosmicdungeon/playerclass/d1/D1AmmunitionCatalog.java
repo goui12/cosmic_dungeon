@@ -46,9 +46,8 @@ public final class D1AmmunitionCatalog {
             new Entry("cindermaul", "Cindermaul", "minecraft:firework_rocket", "", 5, Set.of("pyroclast")));
     private static final Map<String, Entry> BY_ID = new LinkedHashMap<>();
     private static final Map<String, String> ALIASES = new HashMap<>();
-    // Only these four existing registered items intrinsically identify D1 ammunition.
-    // Their unmodified registered TippedArrowItem defaults need no potion component.
-    private static final Set<String> REGISTERED = Set.of("vielpiercer", "scintilla_vitalis", "lux_vitalis", "ebonsight");
+    // September22 dedicated items share these existing identities. Legacy vanilla signatures
+    // remain read-only compatibility; intrinsic registry identity never depends on a display name.
     static {
         for (var e : ENTRIES) {
             BY_ID.put(e.id(), e); alias(e.id(), e.id()); alias(e.name(), e.id());
@@ -70,16 +69,20 @@ public final class D1AmmunitionCatalog {
     public static Entry find(String id) { return id == null ? null : BY_ID.get(id); }
     public static List<Entry> entries() { return ENTRIES; }
     public static Set<String> ids() { return Collections.unmodifiableSet(BY_ID.keySet()); }
+    public static boolean registered(String item) {
+        return item != null && item.startsWith("cosmicdungeon:")
+                && BY_ID.containsKey(item.substring("cosmicdungeon:".length()));
+    }
     public static boolean candidate(String item) {
         return item.equals("minecraft:tipped_arrow") || item.equals("minecraft:spectral_arrow")
                 || item.equals("minecraft:firework_rocket")
-                || item.startsWith("cosmicdungeon:") && REGISTERED.contains(item.substring("cosmicdungeon:".length()));
+                || registered(item);
     }
     public static String identify(Facts facts) {
         if (!candidate(facts.item())) return null;
         String registered = facts.item().startsWith("cosmicdungeon:")
                 ? facts.item().substring("cosmicdungeon:".length()) : "";
-        if (REGISTERED.contains(registered))
+        if (BY_ID.containsKey(registered))
             return facts.marker() == null || registered.equals(facts.marker()) ? registered : null;
         String id = facts.marker() != null ? facts.marker() : ALIASES.get(normalize(facts.name()));
         var entry = find(id);
@@ -97,11 +100,10 @@ public final class D1AmmunitionCatalog {
         return entry != null && (!present || complete && classId != null && entry.classes().contains(classId)
                 && Integer.valueOf(1).equals(dungeon) && (Integer.valueOf(3).equals(tier) || Integer.valueOf(4).equals(tier)));
     }
-    // TODO(M55/M63/M64-M69/M72, authored TEST inventory): Q&A D79 prohibits rewriting chest
-    // contents. Verify actual template stacks against docs/ai/D1_BATCH_33_MAPPINGS.md without
-    // changing names, quantities or enchantments. Pyro chest doc 1CQTFJrQyW8YNvU9pIaJZcFEHGSTrVjA7jQS0aTTYMNg
-    // (2026-04-04) contains Cinderkiss/Cinderbight but supplies no approved payload equivalence;
-    // do not invent aliases. Cameron2026-09-20 resolves the newer Judicator Camp3 Lux supply
-    // as approved Judicator access, sharing Lux identity with class-specific configurable power.
-    // D2+ Gusting Bolt/conduits/rockets stay deferred; do not infer them from a shared potion.
+    // TODO(M55/M63/M72, licensed TEST): verify the dedicated items' bow/crossbow firing,
+    // class/run denial, impact effects and saved projectile pickup with developer-created test stacks.
+    // Cameron owns every chest/template stack; do not inspect, reconcile, replace or migrate them.
+    // Pyro chest source 1CQTFJrQyW8YNvU9pIaJZcFEHGSTrVjA7jQS0aTTYMNg (April4) names
+    // Cinderkiss/Cinderbight without payload equivalence; do not invent aliases or mechanics.
+    // D2+ Gusting Bolt/conduits/rockets remain deferred, even where names recur in later dungeons.
 }

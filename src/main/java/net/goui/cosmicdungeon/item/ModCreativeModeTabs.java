@@ -23,6 +23,8 @@ public class ModCreativeModeTabs {
                             .icon(() -> new ItemStack(ModItems.BARNACLED_PEARL.get()))
                             .title(Component.translatable("creativetab.cosmicdungeon.dungeon_items"))
                             .displayItems((itemDisplayParameters, output) -> {
+                                // D1 ammunition variants are explicitly authored items, never chest replacements.
+                                ModItems.d1Ammunition().forEach(output::accept);
                                 // Dungeon items
                                 output.accept(ModItems.BARNACLED_PEARL);
                                 output.accept(ModItems.SEISMIC_CORE_FRAGMENT);
