@@ -1,3 +1,18 @@
+# D1 edited texture candidate, 2026-09-23
+
+All 44 edited D1 ammunition textures are imported and verified in the current candidate.
+Use [the latest report and jar hash](D1_TEXTURE_IMPORT_2026-09-23.md).
+This supersedes the previous pre-texture candidate: missing PNGs are no longer expected
+for the 18 D1 custom ammunition identities. Later-dungeon assets remain out of scope.
+
+17,165 offline checks and the Java 21 build passed. All live firing, rendering, class gates,
+effect behavior and projectile save/reload checks below remain NOT RUN. Create separate
+test stacks; never inspect/reconcile or convert Cameron's authored class-chest contents.
+The [next three proposed implementation passes](D1_READINESS_NEXT_STEPS_2026-09-23.md)
+can precede cumulative licensed TEST; this update performs no deployment or launch.
+
+---
+
 # D1 custom ammunition acceptance addendum, 2026-09-22
 
 [Current pre-texture report and candidate hash](D1_CUSTOM_AMMUNITION_2026-09-22.md).

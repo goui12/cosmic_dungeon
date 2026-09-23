@@ -11,10 +11,10 @@ import net.minecraft.resources.ResourceLocation;
 
 /**
  * Uses the vanilla arrow geometry and one texture selected when entity render state is extracted.
- * TODO(Cameron texture handoff, September22): import only the edited D1 PNGs from
- * Desktop/CameronsNewPNGs9_22_26 after Cameron requests it. The manifest maps18 item icons,
- * 16 projectile skins and10 effect icons to assets/cosmicdungeon/textures. Keep native UVs.
- * Pre-texture models intentionally point to missing assets; verify rendering after import.
+ * Cameron's edited D1 PNGs were imported September 23, 2026: 18 item icons,
+ * 16 projectile skins and 10 effect icons; dimensions and native UV/alpha masks retained.
+ * TODO(D1 licensed TEST): verify inventory/flight/effect rendering at multiple GUI scales,
+ * embedded-arrow save/reload and the corresponding server-configured effects.
  * Source scope: retained D1 Theurgist/Judicator/Venefex/Pyroclast documents, not later tiers.
  */
 public final class D1ArrowRenderer extends ArrowRenderer<D1ArrowEntity, D1ArrowRenderer.State> {

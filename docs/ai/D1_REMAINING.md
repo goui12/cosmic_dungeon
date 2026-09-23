@@ -1,3 +1,29 @@
+# D1 edited textures imported, 2026-09-23
+
+[Texture import and attribute verification](D1_TEXTURE_IMPORT_2026-09-23.md) |
+[Next three proposed passes](D1_READINESS_NEXT_STEPS_2026-09-23.md).
+
+All 44 edited PNGs are now in project assets and the built jar. All 18 custom ammunition
+identities retain their 20 class-specific server-config mappings. Existing effects were
+reviewed; no gameplay values, authored stacks or chest contents changed.
+Java 21 build, 17,165 offline checks, two config round trips and 1,994 JSON checks passed.
+Native firing/rendering/save acceptance remains NOT RUN.
+
+R07 asset import is complete. Its remaining visual checks are now part of R08.
+Remaining areas: 3 implementation passes proposed plus 1 cumulative TEST area.
+Numbered batches scheduled: 0; the next three passes were not started by this import.
+
+- R01: accept approved unmarked vanilla repair supplies in service logic; distinguish special kits safely.
+- R04: enforce approved recipe IDs on the server across crafting, reloads and automation.
+- R05: reuse existing currency icons for synchronized HUD/inventory/class-chest balance panels.
+- R08: cumulative licensed TEST for ammunition, interfaces, world bindings and NPC/instance behavior.
+
+The broad101 dispositions remain45 implemented-unverified/20 partial D1/
+1 preserved-verification-pending/8 author-owned outside AI work/27 deferred D2+.
+Earlier pending-import descriptions and five-area totals below are historical.
+
+---
+
 # D1 custom ammunition checkpoint, 2026-09-22
 
 [Pre-texture implementation and exact item list](D1_CUSTOM_AMMUNITION_2026-09-22.md).
