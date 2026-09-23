@@ -1,0 +1,172 @@
+{
+  "created_utc": "2026-09-23T16:22:03.410219+00:00",
+  "branch": "feature/menu-branding-assets-20260923",
+  "base_commit": "7df252362f257d001bbd43bbd0d891779fd4a72f",
+  "status": "prepared assets; runtime integration and rendered seam QA pending",
+  "crop": {
+    "left": 42,
+    "right": 42,
+    "top": 0,
+    "bottom": 0,
+    "intermediate_size": [
+      941,
+      941
+    ],
+    "output_size": [
+      1024,
+      1024
+    ],
+    "retained_pixels_verified": 5312886
+  },
+  "audio": {
+    "codec": "Vorbis",
+    "channels": 2,
+    "sample_rate_hz": 44100,
+    "duration_seconds": 221.0,
+    "ogg_pages_checked": 2427,
+    "all_page_crc_checks_passed": true,
+    "full_audio_decode_tested": false
+  },
+  "assets": [
+    {
+      "file": "src/main/resources/assets/cosmicdungeon/textures/gui/title/cd_minecraft.png",
+      "source": "01_Title/cd_minecraft.png",
+      "operation": "byte-for-byte copy",
+      "sha256": "9b8ab9d2d5adc57ce64ebe4b8193f52384814f87ceb82c23f5869437ee3bad90",
+      "bytes": 20030,
+      "size": [
+        1024,
+        256
+      ]
+    },
+    {
+      "file": "src/main/resources/assets/cosmicdungeon/textures/gui/title/cd_edition.png",
+      "source": "01_Title/cd_edition.png",
+      "operation": "byte-for-byte copy",
+      "sha256": "5f7ee98b08572f4c6db51248874713d21251a47b57a8738c90a57f882d010a3f",
+      "bytes": 6943,
+      "size": [
+        512,
+        64
+      ]
+    },
+    {
+      "file": "src/main/resources/assets/cosmicdungeon/textures/gui/loading/cd_progress_bar_bg.png",
+      "source": "03_Loading/cd_progress_bar_bg.png",
+      "operation": "byte-for-byte copy",
+      "sha256": "2f475dc51683bc5cbdb70dea34e5bd798f7353e436dc4228c4ba24d5a75b5151",
+      "bytes": 167,
+      "size": [
+        40,
+        20
+      ]
+    },
+    {
+      "file": "src/main/resources/assets/cosmicdungeon/textures/gui/loading/cd_progress_bar_fg.png",
+      "source": "03_Loading/cd_progress_bar_fg.png",
+      "operation": "byte-for-byte copy",
+      "sha256": "5a25dce64a42e59790f7e5c1f9b4955f73fcf8a5fdbafe16b4905eb13af4c5fe",
+      "bytes": 159,
+      "size": [
+        40,
+        20
+      ]
+    },
+    {
+      "file": "src/main/resources/assets/cosmicdungeon/texts/splashes.txt",
+      "source": "04_Splashes/splashes.txt",
+      "operation": "byte-for-byte copy",
+      "sha256": "7a0748d975a2253904c927755a02c6ab60924daaefa42b179fc48c2900a19e13",
+      "bytes": 307
+    },
+    {
+      "file": "src/main/resources/assets/cosmicdungeon/sounds/music/cd_menu_theme.ogg",
+      "source": "05_Music/cd_menu_theme.ogg",
+      "operation": "byte-for-byte copy",
+      "sha256": "00756eafc939879cab356bb9ef73d80807a3b84032ba23dd4166eb34b72555f0",
+      "bytes": 11145912
+    },
+    {
+      "file": "src/main/resources/assets/cosmicdungeon/textures/gui/title/background/panorama_0.png",
+      "source": "02_Panorama/north.png",
+      "operation": "crop 42 left/right, then uniform bicubic 941 to 1024",
+      "sha256": "7865d2e44b5715dc181b6e514361cd77c2f74c33ecbc8a673ec7ccb62aa936e1",
+      "bytes": 354658,
+      "size": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "file": "src/main/resources/assets/cosmicdungeon/textures/gui/title/background/panorama_1.png",
+      "source": "02_Panorama/east.png",
+      "operation": "crop 42 left/right, then uniform bicubic 941 to 1024",
+      "sha256": "ffd4445180927448ae86e904878f950d36e9e5b8b6768712fe418dccd5f35adf",
+      "bytes": 534822,
+      "size": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "file": "src/main/resources/assets/cosmicdungeon/textures/gui/title/background/panorama_2.png",
+      "source": "02_Panorama/south.png",
+      "operation": "crop 42 left/right, then uniform bicubic 941 to 1024",
+      "sha256": "bf273aec54f6eece52a8095db04f78f331cbc9672d254e8512c280f552f519ed",
+      "bytes": 622455,
+      "size": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "file": "src/main/resources/assets/cosmicdungeon/textures/gui/title/background/panorama_3.png",
+      "source": "02_Panorama/west.png",
+      "operation": "crop 42 left/right, then uniform bicubic 941 to 1024",
+      "sha256": "e4bd1335fe04d007c90dbb28724f8d6b9f05a657542a29ef79954147b5b0b986",
+      "bytes": 271072,
+      "size": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "file": "src/main/resources/assets/cosmicdungeon/textures/gui/title/background/panorama_4.png",
+      "source": "02_Panorama/up.png",
+      "operation": "crop 42 left/right, then uniform bicubic 941 to 1024",
+      "sha256": "8ade0365f13174ee40f3df45515607c89bc5a41667f37043d310cee354b4f879",
+      "bytes": 125280,
+      "size": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "file": "src/main/resources/assets/cosmicdungeon/textures/gui/title/background/panorama_5.png",
+      "source": "02_Panorama/down.png",
+      "operation": "crop 42 left/right, then uniform bicubic 941 to 1024",
+      "sha256": "cbd9eb1bbe06de1698cfbb781e029f3bab4418fd2fe73e5c346208188204c798",
+      "bytes": 333351,
+      "size": [
+        1024,
+        1024
+      ]
+    }
+  ],
+  "validation": {
+    "validated_utc": "2026-09-23T16:27:08.322646+00:00",
+    "java": "Eclipse Temurin 21.0.7",
+    "build": "gradlew.bat build --offline --console=plain: passed",
+    "clean": "Not run: existing local workflow protects tracked build artifacts; previous build jars backed up.",
+    "source_json_files_validated": 1994,
+    "packaged_assets_byte_matches": 12,
+    "png_crc_and_decompression_checks": "passed for all imported PNGs",
+    "source_and_backup_hash_checks": "passed",
+    "retained_crop_pixels_verified": 5312886,
+    "preexisting_tracked_changes_preserved": true,
+    "preexisting_staged_changes_preserved": true,
+    "rendered_preview": "Offline cubemap preview inspected. Visible mismatched floor/ceiling joins; seamlessness not passed. This does not establish whether the cause is capture position, effective projection, or pole orientation.",
+    "runtime_client_server_gametest": "not run; not authorized by this asset-only request",
+    "datagen": "not applicable to hand-authored art, text, and audio"
+  }
+}
