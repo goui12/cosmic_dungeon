@@ -1,0 +1,101 @@
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
+import org.gradle.work.DisableCachingByDefault
+
+/** Development-only setup: the early window cannot read a normal mod resource pack. */
+@DisableCachingByDefault(because = 'Prepares a local client config while preserving its unrelated settings')
+abstract class PrepareCosmicLoadingTheme extends DefaultTask {
+    @InputFile
+    abstract RegularFileProperty getThemeFile()
+
+    @InputDirectory
+    abstract DirectoryProperty getAssetsDirectory()
+
+    @Internal
+    abstract DirectoryProperty getConfigDirectory()
+
+    @TaskAction
+    void prepare() {
+        Path config = configDirectory.get().asFile.toPath()
+        Path themes = config.resolve('fml')
+        Path art = themes.resolve('cosmicdungeon')
+        Files.createDirectories(art)
+        writeIfChanged(themes.resolve('theme-cosmicdungeon.json'),
+                Files.readAllBytes(themeFile.get().asFile.toPath()))
+        Map<String, String> assets = [
+                'cd_minecraft.png': 'textures/gui/title/cd_minecraft.png',
+                'cd_progress_bar_bg.png': 'textures/gui/loading/cd_progress_bar_bg.png',
+                'cd_progress_bar_fg.png': 'textures/gui/loading/cd_progress_bar_fg.png'
+        ]
+        for (Map.Entry<String, String> asset : assets.entrySet()) {
+            writeIfChanged(art.resolve(asset.key),
+                    Files.readAllBytes(assetsDirectory.get().asFile.toPath().resolve(asset.value)))
+        }
+
+        Path fml = config.resolve('fml.toml')
+        String original = Files.exists(fml) ? Files.readString(fml, StandardCharsets.UTF_8) : ''
+        String setting = 'earlyLoadingScreenTheme = "cosmicdungeon"'
+        def pattern = ~/(?m)^[ \t]*earlyLoadingScreenTheme[ \t]*=[^\r\n]*/
+        String updated = pattern.matcher(original).find()
+                ? pattern.matcher(original).replaceFirst(setting)
+                : setting + System.lineSeparator() + original
+        writeIfChanged(fml, updated.getBytes(StandardCharsets.UTF_8))
+        logger.lifecycle('Cosmic Dungeon early-loading theme prepared in {}', themes)
+    }
+
+    private void writeIfChanged(Path target, byte[] contents) {
+        if (Files.exists(target)) {
+            if (Arrays.equals(Files.readAllBytes(target), contents)) {
+                return
+            }
+            // Keep each previous version beside the local run files for explicit rollback.
+            Path backup = Files.createTempFile(target.parent, target.fileName.toString() + '.before-cosmic-', '.bak')
+            Files.copy(target, backup, StandardCopyOption.REPLACE_EXISTING)
+        }
+        Path temporary = Files.createTempFile(target.parent, '.cosmic-theme-', '.tmp')
+        try {
+            Files.write(temporary, contents)
+            Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING)
+        } finally {
+            Files.deleteIfExists(temporary)
+        }
+    }
+}
+
+def menuAssets = layout.projectDirectory.dir('src/main/resources/assets/cosmicdungeon')
+def prepareCosmicLoadingTheme = tasks.register('prepareCosmicLoadingTheme', PrepareCosmicLoadingTheme) {
+    group = 'cosmic dungeon'
+    description = 'Prepares the Cosmic Dungeon loading theme for the development client without launching it.'
+    themeFile = layout.projectDirectory.file('src/main/loading-theme/theme-cosmicdungeon.json')
+    assetsDirectory = menuAssets
+    configDirectory = neoForge.runs.named('client').get().gameDirectory.dir('config')
+    outputs.upToDateWhen { false }
+}
+neoForge.runs.named('client') {
+    taskBefore prepareCosmicLoadingTheme
+}
+neoForge.ideSyncTask(prepareCosmicLoadingTheme)
+
+// Keep a single authored copy. These native-path aliases use Minecraft's existing panorama and splash loaders.
+tasks.named('processResources', ProcessResources) {
+    from(menuAssets.dir('textures/gui/title/background')) {
+        include 'panorama_*.png'
+        into 'assets/minecraft/textures/gui/title/background'
+    }
+    from(menuAssets.dir('texts')) {
+        include 'splashes.txt'
+        into 'assets/minecraft/texts'
+    }
+}
+
+tasks.register('menuBrandingChecks', JavaExec) {
+    group = 'verification'
+    description = 'Checks menu resource aliases and parses the startup theme with the installed FML, without launching Minecraft.'
+    dependsOn tasks.testClasses, tasks.processResources, prepareCosmicLoadingTheme
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'net.goui.cosmicdungeon.client.branding.MenuBrandingChecks'
+    args layout.projectDirectory.asFile.absolutePath,
+            neoForge.runs.named('client').get().gameDirectory.dir('config').get().asFile.absolutePath
+}

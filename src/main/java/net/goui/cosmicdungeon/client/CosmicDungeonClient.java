@@ -3,6 +3,7 @@ package net.goui.cosmicdungeon.client;
 
 import net.goui.cosmicdungeon.block.ModBlocks;
 import net.goui.cosmicdungeon.block.entity.ModBlockEntities;
+import net.goui.cosmicdungeon.client.branding.CosmicMenuMusic;
 import net.goui.cosmicdungeon.client.model.*;
 import net.goui.cosmicdungeon.client.particle.DragoonLightningParticle;
 import net.goui.cosmicdungeon.client.render.*;
@@ -64,6 +65,9 @@ public final class CosmicDungeonClient {
         modEventBus.addListener(SpawnerPresetKeybindClient::registerKeyMappings);
         modEventBus.addListener(TradeRequestKeybindClient::registerKeyMappings);
         modEventBus.addListener(HelpMenuKeybindClient::registerKeyMappings);
+
+        // Menu soundtrack uses the native music manager and ends when a world is joined.
+        NeoForge.EVENT_BUS.register(new CosmicMenuMusic());
 
         // Existing overlays
         NeoForge.EVENT_BUS.register(CosmicSpawnerHoverOverlay.class);

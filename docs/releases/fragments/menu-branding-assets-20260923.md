@@ -1,6 +1,12 @@
-# Menu branding asset preparation
+# Cosmic Dungeon menu branding
 
-Developer preparation only: imported Cameron's title/subtitle, loading-bar artwork,
-ten splash phrases, and menu soundtrack. Cropped and resized the six dungeon panorama
-faces while preserving originals. Client integration and rendered/audio acceptance
-remain pending; this preparation alone does not change the live menu or loading screen.
+Connect the authored title/subtitle, six-face dungeon panorama, ten splash phrases and
+streamed soundtrack to the client menu. Retain native menu controls, credits and volume
+settings; stop the menu soundtrack on world login.
+
+Development runClient prepares a Cosmic Dungeon NeoForge startup theme with authored
+progress bars, a muted lavender background and retained NeoForge fox/version/icon credit.
+An installed client needs those external theme files before startup as well as the mod JAR.
+
+Developer preview: panorama floor/ceiling seams and native visual/audio acceptance remain
+pending. No gameplay, registry, network or world-data migration changes.

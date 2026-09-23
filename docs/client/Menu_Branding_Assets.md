@@ -1,19 +1,53 @@
-# Menu branding assets
+# Menu branding and preview
 
-Status: assets imported for later client integration. These files do not yet replace
-Minecraft's title screen, splash selection, music, or early loading theme.
+Status: connected for development-client preview. Visual/audio acceptance remains pending.
+The supplied art, text and soundtrack are authoritative; no gameplay/canon decision is involved.
 
-Cameron's desktop kit is the authoritative source for this import. All six original
-screenshots remain intact. A ZIP backup of all 12 user inputs and pixel-exact 941 x 941
-crop masters remain in the desktop kit's timestamped preparation folder/backup.
+## Run the preview
+
+From the repository root with Java 21, run `./gradlew.bat runClient`, or use the Gradle
+runClient task in IntelliJ. Refresh the Gradle project first if using an existing generated
+IDE Client configuration. The early-loading theme is already prepared for this checkout.
+
+The `prepareCosmicLoadingTheme` task runs before the development client and on IDE sync.
+It copies the theme and three existing PNGs into `run/config/fml/`, then sets only
+`earlyLoadingScreenTheme = "cosmicdungeon"` in `run/config/fml.toml`.
+Modified existing files receive unique `.before-cosmic-*.bak` backups beside them.
+Unrelated FML settings are preserved. Nothing is launched by this preparation task.
+
+## Connected behavior
+
+- Title: a dedicated client renderer displays the complete 1024 x 256 title and 512 x 64
+  subtitle, scales them proportionally, and positions them above the native menu buttons.
+  A narrow client-only mixin replaces just TitleScreen's logo draw call.
+- Background: processResources copies the six authored faces to native Minecraft panorama
+  paths. Native rotation and the Panorama Speed setting remain in control. The authored
+  copies stay in the cosmicdungeon namespace; no PNG is altered by the integration.
+- Splashes: processResources aliases the authored ten-line text file to the native path.
+  Minecraft selects the phrase and honors Hide Splash Texts. Its date-specific holiday
+  phrases remain native behavior.
+- Music: only the `minecraft:music.menu` playlist is replaced, with a streamed reference
+  to `cosmicdungeon:music/cd_menu_theme`. A client event handler shortens the menu delay
+  to about one second under the default frequency setting, retains native Music/Master
+  controls, and stops the menu track on world login. The Constant music-frequency option
+  retains its native five-second spacing. In-world music definitions are unchanged.
+- Startup: the FML 10.0.32 theme replaces Mojang's startup logo with Cosmic Dungeon and uses
+  the authored progress bars. A muted lavender background provides contrast for the dark
+  supplied title. The inherited NeoForge fox, version and window icon remain, with an added
+  "Powered by NeoForge" label. NeoForge carries this theme through the initial resource-load
+  transition. Later resource-pack reload overlays retain Minecraft's existing behavior.
+
+The external early-loading theme is development configuration, not part of mod resource
+discovery. The built mod JAR contains the menu integration; a future installed-instance
+deployment also needs the theme files and FML setting before launch. This pass does not
+deploy to CurseForge or a server.
 
 ## Panorama preparation
 
-Remove exactly 42 pixels from the left and 42 from the right of each 1025 x 941 image.
-Crop rectangle: x=42, y=0, width=941, height=941. No top/bottom cropping.
-Every retained pixel was compared with its corresponding original pixel.
-Uniformly resize the square to 1024 x 1024 with System.Drawing HighQualityBicubic and
-TileFlipXY edge handling. Final imagery has no color, exposure, or generated-content edits.
+Original screenshots: 1025 x 941. Remove exactly 42 pixels from each side, leaving
+x=42, y=0, width=941, height=941. Preserve top/bottom. Every retained pixel was compared
+against its source. Uniformly resize to 1024 x 1024 with System.Drawing HighQualityBicubic
+and TileFlipXY edge handling. No color, exposure, rotation, warping or generated-content edits.
 
 | Face | Source direction |
 | --- | --- |
@@ -24,58 +58,57 @@ TileFlipXY edge handling. Final imagery has no color, exposure, or generated-con
 | panorama_4.png | Up |
 | panorama_5.png | Down |
 
-The user confirmed 90-degree capture FOV. The mapping follows Minecraft's native
-panorama capture order when the initial yaw faces north. Up/down orientation is
-preserved exactly as supplied, with no speculative rotations.
-An offline cubemap preview was rendered and inspected. Visible mismatched joins remain,
-especially at the floor/ceiling boundaries; seamlessness has NOT passed. The preview alone
-does not identify the cause. Preserve the requested crop and investigate capture position,
-effective projection, and pole orientation before enabling this panorama. The diagnostic
-preview is brightened 2.5x for inspection only; no imported image has an exposure adjustment.
-Native-client acceptance of all 12 joins remains pending.
+Cameron confirmed capture FOV=90 and explicitly requested activating these prepared images
+for inspection. The offline cubemap preview shows some mismatched floor/ceiling joins.
+Its cause is not established, and seamlessness has not passed. Originals, backup ZIP,
+941-square masters and the diagnostic preview remain in the desktop asset kit.
 
-## Imported files
+## Authored resource inventory
 
-All paths below are relative to src/main/resources/assets/cosmicdungeon/.
+Paths relative to `src/main/resources/assets/cosmicdungeon/`:
 
 | Asset | Format / size |
 | --- | --- |
-| textures/gui/title/cd_minecraft.png | 1024 x 256 |
-| textures/gui/title/cd_edition.png | 512 x 64 |
-| textures/gui/loading/cd_progress_bar_bg.png | 40 x 20 |
-| textures/gui/loading/cd_progress_bar_fg.png | 40 x 20 |
-| texts/splashes.txt | UTF-8 text |
-| sounds/music/cd_menu_theme.ogg | Stereo Ogg Vorbis |
-| textures/gui/title/background/panorama_0.png | 1024 x 1024 |
-| textures/gui/title/background/panorama_1.png | 1024 x 1024 |
-| textures/gui/title/background/panorama_2.png | 1024 x 1024 |
-| textures/gui/title/background/panorama_3.png | 1024 x 1024 |
-| textures/gui/title/background/panorama_4.png | 1024 x 1024 |
-| textures/gui/title/background/panorama_5.png | 1024 x 1024 |
+| textures/gui/title/cd_minecraft.png | 1024 x 256 PNG |
+| textures/gui/title/cd_edition.png | 512 x 64 PNG |
+| textures/gui/loading/cd_progress_bar_bg.png | 40 x 20 PNG |
+| textures/gui/loading/cd_progress_bar_fg.png | 40 x 20 PNG |
+| texts/splashes.txt | Ten UTF-8 phrases |
+| sounds/music/cd_menu_theme.ogg | Stereo Vorbis, 44.1 kHz, 3:41 |
+| textures/gui/title/background/panorama_0.png through panorama_5.png | Six 1024 x 1024 PNGs |
 
-The ten splash phrases are preserved byte-for-byte, including their original filename.
-The cd_ prefix is retained on authored title, loading-bar, and music files.
-Vanilla examples, the original music sample, and NeoForge credit artwork are not imported.
+See [asset provenance](menu_branding_assets.json) for the preserved original hashes.
 
-## Integration boundaries
+## Validation and manual acceptance
 
-This step adds client assets only. Existing help-menu art is unchanged.
-No Java classes, event handlers, registries, sound definitions, packets, client configs,
-world data, schemas, or migrations are changed. Dedicated-server behavior is unchanged.
-The images/music will remain unused until a dedicated client integration task wires them.
-That task must retain the NeoForge fox/icon and deliver early-loading theme files before
-startup. Gameplay systems, authored chest stacks, and all persistence are outside scope.
+Java 21 `build menuBrandingChecks --offline --console=plain` passed. The 29 offline checks
+use the installed FML ThemeLoader to parse the theme and check NeoForge credit retention,
+native resource aliases, PNG dimensions, soundtrack selection/streaming, and theme copies.
+All 1,996 source JSON files parsed. The built JAR contains the expected native aliases.
+The native TitleScreen bytecode has exactly one matching logo-render invocation.
+A runClient dry run confirms theme preparation precedes launch. No game was launched.
 
-## Verification
+Do these checks in the client:
 
-See menu_branding_assets.json for exact file hashes and Ogg integrity results.
-PNG dimensions and copy hashes passed; 941 x 941 crop pixels matched every source pixel.
-The original-input backup was CRC-tested and compared byte-for-byte.
-Ogg page checks verify file integrity, not audible playback quality.
-The task record lists build/JSON/package results and outstanding manual acceptance.
+1. Watch startup: Cosmic Dungeon logo and authored progress bars; NeoForge fox/credit remains.
+2. Inspect the title/subtitle and buttons at windowed/fullscreen sizes and your usual GUI scales.
+3. Let the panorama turn; check wall seams and any visible floor/ceiling joins.
+4. Reopen the title screen to inspect splash selection; test the Hide Splash Texts option.
+5. Listen for your song, adjust Music/Master, enter a world, then disconnect.
+   Confirm the menu song stops on login and returns in the menu.
+6. Reload resources and return to the title screen; check for missing textures or audio.
 
-Manual acceptance after wiring: launch the licensed client, inspect all panorama joins,
-confirm both logos at supported GUI scales, test splash selection and Music/Master sliders,
-and enter/leave a world to check music lifecycle and the early-loading transition.
-No client/server/GameTest was launched by this asset import. Datagen is unrelated to these
-hand-authored PNG, Ogg, and text assets.
+No saved-data/schema migration, registry IDs, common entry point, networking, authorization,
+or gameplay systems change. Dedicated servers do not load the client mixin or music handler.
+No datagen is applicable to these hand-authored images/audio/text or build-time aliases.
+GameTests were not launched under the local workflow; rendering and audio require the preview.
+
+## Development rollback
+
+Revert this task's source changes, restore the saved `fml.toml.before-cosmic-*.bak` as
+`run/config/fml.toml`, and remove only this task's `theme-cosmicdungeon.json` and
+`fml/cosmicdungeon/` copies. Do not restore a whole config directory or change world files.
+While this integration is active, the preparation task intentionally reselects its theme
+before development launches.
+
+Next improvement: use the native preview to settle panorama alignment and title contrast.

@@ -2,7 +2,7 @@
   "created_utc": "2026-09-23T16:22:03.410219+00:00",
   "branch": "feature/menu-branding-assets-20260923",
   "base_commit": "7df252362f257d001bbd43bbd0d891779fd4a72f",
-  "status": "prepared assets; runtime integration and rendered seam QA pending",
+  "status": "connected for development-client preview; rendered seam and audio QA pending",
   "crop": {
     "left": 42,
     "right": 42,
@@ -168,5 +168,23 @@
     "rendered_preview": "Offline cubemap preview inspected. Visible mismatched floor/ceiling joins; seamlessness not passed. This does not establish whether the cause is capture position, effective projection, or pole orientation.",
     "runtime_client_server_gametest": "not run; not authorized by this asset-only request",
     "datagen": "not applicable to hand-authored art, text, and audio"
+  },
+  "integration": {
+    "validated_utc": "2026-09-23T18:27:04.306524+00:00",
+    "base_commit": "3eb7dd94bd283a2dc64d3352389a1bc8fc914fbd",
+    "build": "Java21 build and menuBrandingChecks passed",
+    "offline_checks": 29,
+    "source_json_files_validated": 1996,
+    "native_title_render_callsite": "javap confirmed exactly one expected renderLogo invocation",
+    "run_client_dry_run": "passed; theme preparation precedes runClient",
+    "startup_theme": "run/config/fml/theme-cosmicdungeon.json",
+    "config_preservation": "only earlyLoadingScreenTheme differs from the saved fml.toml backup",
+    "native_client_server_gametest": "not launched; Cameron will runClient",
+    "datagen": "not applicable",
+    "migration": "none",
+    "jar_sha256": "f8cd8988d3c20fc340d5556ff6ef5b9881741f73070371c659a85f8289adce52",
+    "manual_QA": "panorama seams, title contrast/layout, audio/volume and world transition",
+    "deployment": "development run/config only",
+    "publishing": "local checkpoint only"
   }
 }

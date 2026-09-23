@@ -211,3 +211,6 @@ tasks.register('d1OfflineChecks', JavaExec) {
     mainClass = 'net.goui.cosmicdungeon.dungeon.d1.D1OfflineChecks'
     args layout.projectDirectory.dir('docs/config-examples').asFile.absolutePath
 }
+
+// Client title/menu assets and early-loading theme preparation.
+apply from: "gradle/menu-branding.gradle"

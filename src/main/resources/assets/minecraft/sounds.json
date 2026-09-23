@@ -1,0 +1,11 @@
+{
+  "music.menu": {
+    "replace": true,
+    "sounds": [
+      {
+        "name": "cosmicdungeon:music/cd_menu_theme",
+        "stream": true
+      }
+    ]
+  }
+}

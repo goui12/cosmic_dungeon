@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "extends": "builtin:default",
+  "colorScheme": {
+    "screenBackground": "#afa3bf",
+    "text": "#21192d"
+  },
+  "sprites": {
+    "progressBarBackground": {
+      "resource": "cosmicdungeon/cd_progress_bar_bg.png",
+      "scaling": {
+        "type": "nine_slice",
+        "width": 40,
+        "height": 20,
+        "left": 2,
+        "top": 2,
+        "right": 2,
+        "bottom": 2,
+        "stretchHorizontalFill": true,
+        "stretchVerticalFill": true,
+        "linearScaling": false
+      }
+    },
+    "progressBarForeground": {
+      "resource": "cosmicdungeon/cd_progress_bar_fg.png",
+      "scaling": {
+        "type": "nine_slice",
+        "width": 40,
+        "height": 20,
+        "left": 4,
+        "top": 4,
+        "right": 4,
+        "bottom": 4,
+        "stretchHorizontalFill": true,
+        "stretchVerticalFill": true,
+        "linearScaling": false
+      }
+    },
+    "progressBarIndeterminate": {
+      "resource": "cosmicdungeon/cd_progress_bar_fg.png",
+      "scaling": {
+        "type": "nine_slice",
+        "width": 40,
+        "height": 20,
+        "left": 4,
+        "top": 4,
+        "right": 4,
+        "bottom": 4,
+        "stretchHorizontalFill": true,
+        "stretchVerticalFill": true,
+        "linearScaling": false
+      }
+    }
+  },
+  "loadingScreen": {
+    "mojangLogo": {
+      "visible": false
+    },
+    "decoration": {
+      "cosmicTitle": {
+        "type": "image",
+        "texture": {
+          "resource": "cosmicdungeon/cd_minecraft.png",
+          "scaling": {
+            "type": "stretch",
+            "width": 512,
+            "height": 128,
+            "linearScaling": true
+          }
+        },
+        "top": 96,
+        "centerHorizontally": true,
+        "visible": true
+      },
+      "neoforgeCredit": {
+        "type": "label",
+        "text": "Powered by NeoForge",
+        "right": 16,
+        "bottom": 150,
+        "visible": true
+      }
+    }
+  }
+}
