@@ -145,3 +145,12 @@ The planner may add verified paths after reviewing this index; it must declare o
 - Static inspection cannot prove runtime registration order, dedicated-server classloading, packet safety, atomic transactions, complete lifecycle cleanup, or live-world migration success.
 - The repository contains only one discovered GameTest and no discovered conventional unit-test source tree; absence of a test is reported as “not found,” not as a guarantee of missing coverage.
 - Several persisted formats use codecs or implementation details not exhaustively enumerated here; consult the referenced class before changing any format.
+
+## D1 implementation addendum (2026-09-16)
+
+The historical audit above predates this task. See [D1 implementation](D1_IMPLEMENTATION_20260916.md)
+for current config, lifecycle, recovery, networking, migration and testing boundaries.
+D1 common code lives under dungeon/d1, playerclass/d1, economy and npc/inn; existing transaction
+services remain integration points. Source TODO register: dungeon/d1/package-info.java.
+src/test now has offline objective, config, persistence and reward checks; their success
+does not replace the still-pending licensed multiplayer acceptance.

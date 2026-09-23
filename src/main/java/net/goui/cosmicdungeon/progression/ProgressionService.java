@@ -19,7 +19,7 @@ public final class ProgressionService {
         if (player == null) return;
         PlayerProgressionData data = data(player);
         data.setD1LesserBloomsBest(player.getUUID(), Math.max(getD1LesserBloomsBest(player), lesserBloomCount));
-        if (lesserBloomCount >= 3) {
+        if (lesserBloomCount >= 6) {
             data.setD1Completed(player.getUUID(), true);
         }
     }
@@ -42,7 +42,7 @@ public final class ProgressionService {
     public static void addLesserBlooms(ServerPlayer player, int amount) {
         if (player == null || amount <= 0) return;
         PlayerProgressionData data = data(player);
-        data.setLesserBlooms(player.getUUID(), data.getLesserBlooms(player.getUUID()) + amount);
+        data.setLesserBlooms(player.getUUID(), (int) Math.min(Integer.MAX_VALUE, (long) data.getLesserBlooms(player.getUUID()) + amount));
     }
 
     public static void setLesserBlooms(ServerPlayer player, int amount) {

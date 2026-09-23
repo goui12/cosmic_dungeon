@@ -111,7 +111,8 @@ public final class ModAdvancementProvider implements AdvancementSubProvider {
 
     private static void saveGenericAchievement(Consumer<AdvancementHolder> saver, ResourceLocation id) {
         String key = id.getPath().substring("achievements/".length());
-        ItemLike icon = id.equals(CosmicAchievementIds.NOSTALGIA_BAIT) ? ModItems.FARROWS_CHOP.get() : Items.PAPER;
+        ItemLike icon = id.equals(CosmicAchievementIds.NOSTALGIA_BAIT) ? ModItems.FARROWS_CHOP.get()
+                : id.equals(CosmicAchievementIds.WOLVES_IN_PIGLIN_CLOTHING) ? Items.PIGLIN_HEAD : Items.PAPER;
         saveManualAchievement(saver, id, ROOT, icon, "advancements." + CosmicDungeonMod.MOD_ID + ".achievements." + key, "triggered");
     }
 
@@ -137,12 +138,12 @@ public final class ModAdvancementProvider implements AdvancementSubProvider {
                 .display(
                         icon,
                         Component.translatable(translationBase + ".title"),
-                        Component.translatable(translationBase + ".desc"),
+                        Component.empty(), // Debloated Achievements!A2: expose names only.
                         null,
                         AdvancementType.TASK,
                         true,
-                        true,
-                        false
+                        false,
+                        id.equals(CosmicAchievementIds.TAMSIN_TAX)
                 )
                 .addCriterion(criterionName, new Criterion<>(CriteriaTriggers.IMPOSSIBLE, new ImpossibleTrigger.TriggerInstance()))
                 .requirements(AdvancementRequirements.allOf(List.of(criterionName)))

@@ -23,7 +23,7 @@ public final class DoorPassLimitCommand {
         dispatcher.register(
                 Commands.literal("door")
                         .then(Commands.literal("pass_limit")
-                                .requires(src -> src.hasPermission(0)) // anyone can use; bump if you want
+                                .requires(net.goui.cosmicdungeon.auth.AccessPolicy::requireDeveloperOrConsole)
                                 .then(Commands.argument("limit", IntegerArgumentType.integer(0))
                                         .executes(ctx -> {
                                             final CommandSourceStack src = ctx.getSource();

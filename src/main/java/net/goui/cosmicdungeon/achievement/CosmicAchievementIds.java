@@ -9,6 +9,7 @@ public final class CosmicAchievementIds {
     private CosmicAchievementIds() {}
 
     /** Visible as First Trace; legacy path preserved for advancement-file compatibility. */
+    public static final ResourceLocation TAMSIN_TAX = id("achievements/the_tamsin_tax");
     public static final ResourceLocation FIRST_TRACE = id("achievements/im_rich");
     public static final ResourceLocation PLANT_FLAGS = id("achievements/plant_flags");
     public static final ResourceLocation CONTRACT_FULFILLED = id("achievements/contract_fulfilled");
@@ -36,7 +37,14 @@ public final class CosmicAchievementIds {
     public static final ResourceLocation NOSTALGIA_BAIT = id("achievements/nostalgia_bait");
     public static final ResourceLocation PYROCLAST_BOOM = id("pyroclast/boom");
 
+    public static final ResourceLocation WOLVES_IN_PIGLIN_CLOTHING=id("achievements/wolves_in_piglin_clothing");
+    public static final ResourceLocation FIRE_ESCAPE=id("achievements/fire_escape");
+    public static final ResourceLocation LIBRARIAN_1=id("achievements/librarian_1");
+    public static final ResourceLocation SHULKER_EXPRESS=id("achievements/shulker_express");
+    public static final ResourceLocation STAIRWAY_TO_HEAVEN=id("achievements/stairway_to_heaven");
+
     public static final List<ResourceLocation> ALL = List.of(
+            WOLVES_IN_PIGLIN_CLOTHING,TAMSIN_TAX,FIRE_ESCAPE,LIBRARIAN_1,SHULKER_EXPRESS,STAIRWAY_TO_HEAVEN,
             FIRST_TRACE, PLANT_FLAGS, CONTRACT_FULFILLED, ENTANGLED_OBLIGOR, VOTARY_OF_THE_IDOL, BOUND_DEVOTEE, BONDED_THRALL,
             CONTRACT_ENFORCED, BINDING_CREDITOR, VOTARY_OF_THE_LEDGER, WARDEN_OF_THE_LEDGER, SOVEREIGN_OF_THE_BOND,
             TIRED_NOT_BROKEN, VITAL_EXCHANGE_1, VITAL_EXCHANGE_2, VITAL_EXCHANGE_3, VITAL_EXCHANGE_4, SIXFOLD_VIGIL,

@@ -9,7 +9,7 @@ import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 public final class DungeonGroupSplitEvents {
     private DungeonGroupSplitEvents() {}
 
-    @SubscribeEvent
+    @SubscribeEvent(priority=net.neoforged.bus.api.EventPriority.LOWEST)
     public static void onLivingDeath(LivingDeathEvent event) {
         DungeonGroupSplitService.onMobKilled(event.getEntity());
     }

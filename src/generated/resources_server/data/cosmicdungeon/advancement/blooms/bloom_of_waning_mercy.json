@@ -6,9 +6,8 @@
     }
   },
   "display": {
-    "description": {
-      "translate": "advancements.cosmicdungeon.blooms.waning_mercy.desc"
-    },
+    "announce_to_chat": false,
+    "description": "",
     "icon": {
       "count": 1,
       "id": "cosmicdungeon:bloom_of_waning_mercy"

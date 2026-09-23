@@ -1,91 +1,69 @@
 package net.goui.cosmicdungeon.playerclass.pyroclast;
-
+import net.goui.cosmicdungeon.Config;
+import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.achievement.CosmicAchievementIds;
 import net.goui.cosmicdungeon.achievement.CosmicAdvancementUtil;
-import net.goui.cosmicdungeon.playerclass.api.ClassKeys;
-import net.goui.cosmicdungeon.playerclass.api.ClassNbtUtil;
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
-import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
+import net.goui.cosmicdungeon.playerclass.api.ClassData;
+import net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairComponents;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.Container;
-import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.chat.Component;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import java.util.ArrayList;
+import java.util.List;
 
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-
-import static net.goui.cosmicdungeon.CosmicDungeonMod.MOD_ID;
-
-@EventBusSubscriber(modid = MOD_ID)
+/** Debloated Classes!S6: right-click Flint with Gravel in inventory; all quantities are server config. */
+@EventBusSubscriber(modid=CosmicDungeonMod.MOD_ID)
 public final class PyroclastGunpowderEvents {
-    private static final String HINT_TEXT = "Craft: Gravel + Flint = Gunpowder";
-    private static final long HINT_COOLDOWN_MS = 5_000L;
-    private static final Map<UUID, Long> LAST_HINT_MESSAGE_MS = new ConcurrentHashMap<>();
-
     private PyroclastGunpowderEvents() {}
-
     @SubscribeEvent
-    public static void onItemPickupPre(ItemEntityPickupEvent.Pre event) {
-        if (!(event.getPlayer() instanceof ServerPlayer serverPlayer)) return;
-        if (!isPyroclast(serverPlayer)) return;
-
-        ItemEntity itemEntity = event.getItemEntity();
-        ItemStack stack = itemEntity.getItem();
-        if (!stack.is(Items.GRAVEL) && !stack.is(Items.FLINT)) return;
-
-        boolean hasOtherIngredient = stack.is(Items.GRAVEL)
-                ? serverPlayer.getInventory().contains(new ItemStack(Items.FLINT))
-                : serverPlayer.getInventory().contains(new ItemStack(Items.GRAVEL));
-        if (hasOtherIngredient) {
-            showCraftHint(serverPlayer);
+    public static void use(PlayerInteractEvent.RightClickItem event) {
+        if (!(event.getEntity() instanceof ServerPlayer player) || !event.getItemStack().is(Items.FLINT)
+                || !ClassData.getClassId(player).equals("pyroclast")) return;
+        event.setCanceled(true);
+        event.setCancellationResult(InteractionResult.SUCCESS);
+        if (player.getCooldowns().isOnCooldown(event.getItemStack())) return;
+        var inv=player.getInventory();
+        if (count(player,Items.FLINT)<Config.PYRO_FLINT_COST.get() || count(player,Items.GRAVEL)<Config.PYRO_GRAVEL_COST.get()) {
+            player.displayClientMessage(Component.literal("Flint Alchemy needs flint and gravel."),true); return;
         }
-    }
-
-    @SubscribeEvent
-    public static void onItemCrafted(PlayerEvent.ItemCraftedEvent event) {
-        if (!(event.getEntity() instanceof ServerPlayer serverPlayer)) return;
-        if (!isPyroclast(serverPlayer)) return;
-        if (!event.getCrafting().is(Items.GUNPOWDER)) return;
-        if (!isPyroclastGunpowderCraft(event.getInventory())) return;
-
-        CosmicAdvancementUtil.grant(serverPlayer, CosmicAchievementIds.PYROCLAST_BOOM);
-    }
-
-    private static boolean isPyroclast(ServerPlayer player) {
-        return ClassKeys.CLASS_ID_PYROCLAST.equals(ClassNbtUtil.getClassId(player));
-    }
-
-    private static boolean isPyroclastGunpowderCraft(Container inventory) {
-        int gravel = 0;
-        int flint = 0;
-        int other = 0;
-        for (int i = 0; i < inventory.getContainerSize(); i++) {
-            ItemStack stack = inventory.getItem(i);
-            if (stack.isEmpty()) continue;
-            if (stack.is(Items.GRAVEL)) gravel += stack.getCount();
-            else if (stack.is(Items.FLINT)) flint += stack.getCount();
-            else other += stack.getCount();
+        List<ItemStack> before=new ArrayList<>();
+        for(int i=0;i<inv.getContainerSize();i++) before.add(inv.getItem(i).copy());
+        consume(player,Items.FLINT,Config.PYRO_FLINT_COST.get());
+        consume(player,Items.GRAVEL,Config.PYRO_GRAVEL_COST.get());
+        var output=new ItemStack(Items.GUNPOWDER,Config.PYRO_GUNPOWDER_YIELD.get());
+        // Pricing Master conversion rule: unpriced alchemy inputs must not mint sellable output.
+        var provenance=new net.minecraft.nbt.CompoundTag();
+        output.set(net.goui.cosmicdungeon.component.ModDataComponents.VENDOR_PURCHASE_CAP.get(),0L);
+        provenance.putString("cosmicdungeon_origin","flint_alchemy");
+        output.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,net.minecraft.world.item.component.CustomData.of(provenance));
+        if(!inv.add(output) || !output.isEmpty()) {
+            for(int i=0;i<before.size();i++) inv.setItem(i,before.get(i));
+            player.displayClientMessage(Component.literal("Make room for the gunpowder."),true);
+        } else {
+            player.getCooldowns().addCooldown(new ItemStack(Items.FLINT),5);
+            CosmicAdvancementUtil.grant(player,CosmicAchievementIds.PYROCLAST_BOOM);
         }
-        return gravel == 1 && flint == 1 && other == 0;
+        inv.setChanged(); player.inventoryMenu.broadcastChanges();
     }
-
-    private static void showCraftHint(ServerPlayer player) {
-        long now = System.currentTimeMillis();
-        long last = LAST_HINT_MESSAGE_MS.getOrDefault(player.getUUID(), 0L);
-        if (now - last < HINT_COOLDOWN_MS) return;
-
-        LAST_HINT_MESSAGE_MS.put(player.getUUID(), now);
-        Component message = Component.literal(HINT_TEXT).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
-        player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 60, 20));
-        player.connection.send(new ClientboundSetTitleTextPacket(message));
-        player.displayClientMessage(message, false);
+    private static int count(ServerPlayer player,Item item) {
+        int count=0;
+        for(int i=0;i<player.getInventory().getContainerSize();i++) {
+            var s=player.getInventory().getItem(i);
+            if(s.is(item)&&!RepairComponents.marked(s)) count+=s.getCount();
+        }
+        return count;
+    }
+    private static void consume(ServerPlayer player,Item item,int count) {
+        for(int i=0;i<player.getInventory().getContainerSize()&&count>0;i++) {
+            var s=player.getInventory().getItem(i);
+            if(!s.is(item)||RepairComponents.marked(s)) continue;
+            int take=Math.min(count,s.getCount());s.shrink(take);count-=take;
+        }
     }
 }

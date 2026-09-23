@@ -17,6 +17,12 @@ import net.neoforged.neoforge.event.server.ServerStartedEvent;
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID)
 public final class DungeonLifecycleEvents {
     private DungeonLifecycleEvents() {}
+    @SubscribeEvent
+    public static void stopped(net.neoforged.neoforge.event.server.ServerStoppedEvent event) {
+        DungeonAfkService.clear();reevaluateSoon=false;
+        net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrRecovery.clear();
+        net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrThreats.clear();
+    }
 
     private static volatile boolean reevaluateSoon = false;
 
@@ -30,8 +36,13 @@ public final class DungeonLifecycleEvents {
         if (!(e.getEntity() instanceof ServerPlayer sp)) return;
         if (sp.level().isClientSide()) return;
 
+        if (!net.goui.cosmicdungeon.dungeon.d1.D1WatsonRecovery.login(sp)) return;
+        if (!net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.otherTransactionsReady(sp)
+                || !DungeonInventoryHandoffs.reconcile(sp)) return;
         DungeonAfkService.markActivity(sp);
         DungeonLifecycleService.performPendingRecoveryIfNeeded(sp);
+        if(net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.blocked(sp))return;
+        net.goui.cosmicdungeon.dungeon.d1.D1StoredInventoryData.get(sp.level().getServer()).claim(sp);
         DungeonTravelRouter.evacuateUnauthorizedLocation(sp);
         reevaluateSoon = true;
     }
@@ -64,6 +75,7 @@ public final class DungeonLifecycleEvents {
             doPeriodic = (overworld.getGameTime() % 20L) == 0L;
         }
 
+        net.goui.cosmicdungeon.dungeon.d1.D1WatsonRecovery.tick(server);
         DungeonLifecycleService.processPendingResets(server);
         PlantFlagService.completeIfReady(server);
         DungeonAfkService.tick(server);

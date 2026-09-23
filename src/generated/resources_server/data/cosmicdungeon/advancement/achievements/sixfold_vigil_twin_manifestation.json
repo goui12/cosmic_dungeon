@@ -6,9 +6,8 @@
     }
   },
   "display": {
-    "description": {
-      "translate": "advancements.cosmicdungeon.achievements.sixfold_vigil_twin_manifestation.desc"
-    },
+    "announce_to_chat": false,
+    "description": "",
     "icon": {
       "count": 1,
       "id": "minecraft:paper"

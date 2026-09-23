@@ -10,6 +10,8 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 public final class ClassSelectorReadyTickEvents {
     private ClassSelectorReadyTickEvents() {}
 
+    @SubscribeEvent public static void stopped(net.neoforged.neoforge.event.server.ServerStoppedEvent e){ClassSelectorReadyManager.clear();}
+
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post e) {
         if (!e.hasTime()) return; // keep timing consistent with server tick gating

@@ -18,9 +18,6 @@ public final class VendorAccessService {
             if (!ProgressionService.hasVillageAccess(sp)) {
                 return new AccessResult(false, "Village access is required.");
             }
-            if (ProgressionService.getD1LesserBloomsBest(sp) < 3) {
-                return new AccessResult(false, "Need D1 completion with at least 3 Lesser Blooms.");
-            }
         }
 
         if (profile.requiredNpcTier() != null) {
@@ -43,10 +40,9 @@ public final class VendorAccessService {
         return new AccessResult(true, "Access granted.");
     }
 
-    private static int npcTierForSystem(ServerPlayer sp, String system) {
-        if (system == null || system.isBlank() || system.equalsIgnoreCase("D1")) return ProgressionService.getD1NpcUnlockTier(sp);
-        if (system.equalsIgnoreCase("D2")) return ProgressionService.getD2NpcUnlockTier(sp);
-        return 0;
+    static int npcTierForSystem(ServerPlayer sp, String system) {
+        return VendorBindingRules.tier(system, ProgressionService.getD1NpcUnlockTier(sp),
+                ProgressionService.getD2NpcUnlockTier(sp));
     }
 
     static FactionTier factionTierFromOrdinal(int ordinal) {

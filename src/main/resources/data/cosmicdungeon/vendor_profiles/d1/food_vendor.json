@@ -5,7 +5,6 @@
   "vendorType": "food_vendor",
   "requiredVillageAccess": true,
   "requiredNpcSystem": "D1",
-  "requiredNpcTier": 1,
   "buyOffers": [
     {
       "offerId": "potato",
@@ -15,9 +14,10 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 1,
+        "amount": 2,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "kelp",
@@ -27,9 +27,10 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 1,
+        "amount": 2,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "raw_beef",
@@ -39,9 +40,10 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 2,
+        "amount": 3,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "raw_chicken",
@@ -51,9 +53,10 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 2,
+        "amount": 3,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "raw_rabbit",
@@ -63,9 +66,10 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 2,
+        "amount": 3,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "raw_porkchop",
@@ -75,9 +79,10 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 2,
+        "amount": 3,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "raw_mutton",
@@ -87,9 +92,10 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 2,
+        "amount": 3,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "raw_cod",
@@ -99,9 +105,10 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 2,
+        "amount": 3,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "raw_salmon",
@@ -111,9 +118,10 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 2,
+        "amount": 3,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "raw_farrows_chop",
@@ -123,33 +131,7 @@
         "maxStackSize": 1
       },
       "cost": {
-        "amount": 2,
-        "denomination": "crown"
-      },
-      "maxPurchasesPerPlayer": 1
-    },
-    {
-      "offerId": "farrows_chop",
-      "result": {
-        "item": "cosmicdungeon:farrows_chop",
-        "count": 1,
-        "maxStackSize": 1
-      },
-      "cost": {
-        "amount": 2,
-        "denomination": "crown"
-      },
-      "maxPurchasesPerPlayer": 1
-    },
-    {
-      "offerId": "beatrix_campfire",
-      "result": {
-        "item": "cosmicdungeon:beatrix_campfire",
-        "count": 1,
-        "maxStackSize": 1
-      },
-      "cost": {
-        "amount": 5,
+        "amount": 2000,
         "denomination": "trace"
       }
     }

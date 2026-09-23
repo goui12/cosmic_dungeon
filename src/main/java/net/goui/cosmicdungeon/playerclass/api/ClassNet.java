@@ -55,10 +55,8 @@ public final class ClassNet {
     }
 
     public static List<String> getSelectableClasses(ServerPlayer sp) {
-        // Server-authoritative list the selector UI will display.
-        // Expand/lock down later with ready-room rules if desired.
-        // Disabled classes remain listed so the client can shade them instead of hiding them.
-        return ClassKeys.ORDERED;
+        // Q&A D47: only the six D1 classes. Persisted IDs for later classes remain valid.
+        return ClassKeys.playableClassIds().stream().filter(id -> !isDisabledClassSelection(id)).toList();
     }
 
     /* ---------- seeding (server-side) ---------- */
@@ -133,9 +131,19 @@ public final class ClassNet {
         sendSync(sp, cls);
     }
 
+    public static ClassPayloads.S2C_SelectorData selectorData(ServerPlayer sp) {
+        var menu = (net.goui.cosmicdungeon.menu.ClassSelectorMenu) sp.containerMenu;
+        return new ClassPayloads.S2C_SelectorData(menu.containerId, menu.stage().name(),
+                Objects.requireNonNullElse(getActiveClass(sp), ClassKeys.CLASS_ID_NONE), getSelectableClasses(sp));
+    }
     public static void sendSelectorDataTo(ServerPlayer sp) {
-        String active = Objects.requireNonNullElse(getActiveClass(sp), ClassKeys.CLASS_ID_NONE);
-        ModNetwork.sendTo(sp, new ClassPayloads.S2C_SelectorData(active, getSelectableClasses(sp)));
+        if (sp.containerMenu instanceof net.goui.cosmicdungeon.menu.ClassSelectorMenu menu && menu.stillValid(sp)) {
+            if (menu.stage() != net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.TAX)
+                net.goui.cosmicdungeon.npc.tamsin.D1PartyService.resumeInvitation(sp);
+            ModNetwork.sendTo(sp, selectorData(sp));
+            net.goui.cosmicdungeon.npc.tamsin.TamsinTaxService.show(sp);
+            net.goui.cosmicdungeon.npc.tamsin.D1PartyService.show(sp, true);
+        }
     }
 
     public static String normalizeRequestedClass(ServerPlayer sp, String requested) {
@@ -189,7 +197,7 @@ public final class ClassNet {
         ModNetwork.sendToServer(new ClassPayloads.C2S_RequestSelectorData());
     }
 
-    public static void requestSelectClass(String classId) {
-        ModNetwork.sendToServer(new ClassPayloads.C2S_SelectClass(classId == null ? "" : classId));
+    public static void requestSelectClass(int containerId, String classId) {
+        ModNetwork.sendToServer(new ClassPayloads.C2S_SelectClass(containerId, classId == null ? "" : classId));
     }
 }

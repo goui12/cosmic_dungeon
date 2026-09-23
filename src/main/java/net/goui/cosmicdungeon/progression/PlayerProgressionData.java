@@ -1,6 +1,8 @@
 package net.goui.cosmicdungeon.progression;
 
 import com.mojang.serialization.Codec;
+import net.goui.cosmicdungeon.dungeon.d1.WatsonReceipt;
+import net.goui.cosmicdungeon.transaction.SavedDataProof;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -48,7 +50,8 @@ public final class PlayerProgressionData extends SavedData {
     private static final Codec<Map<UUID, Entry>> DATA_CODEC = Codec.unboundedMap(UUID_CODEC, Entry.CODEC);
 
     private static final Codec<PlayerProgressionData> CODEC = RecordCodecBuilder.create(inst -> inst.group(
-            DATA_CODEC.optionalFieldOf("player_progression", Map.of()).forGetter(d -> d.byPlayer)
+            DATA_CODEC.optionalFieldOf("player_progression", Map.of()).forGetter(d -> d.byPlayer),
+            WatsonReceipt.MAP_CODEC.optionalFieldOf("watson_receipts", Map.of()).forGetter(d -> d.watsonReceipts)
     ).apply(inst, PlayerProgressionData::fromCodec));
 
     public static final SavedDataType<PlayerProgressionData> TYPE = new SavedDataType<>(SAVE_ID, PlayerProgressionData::new, CODEC);
@@ -57,16 +60,34 @@ public final class PlayerProgressionData extends SavedData {
 
     private PlayerProgressionData() {}
 
-    private static PlayerProgressionData fromCodec(Map<UUID, Entry> values) {
+    private final Map<UUID, WatsonReceipt> watsonReceipts = new HashMap<>();
+    private MinecraftServer server;
+    private static PlayerProgressionData fromCodec(Map<UUID, Entry> values, Map<UUID, WatsonReceipt> receipts) {
+        WatsonReceipt.validate(receipts);
         PlayerProgressionData data = new PlayerProgressionData();
         if (values != null) data.byPlayer.putAll(values);
+        data.watsonReceipts.putAll(receipts);
         return data;
     }
 
     public static PlayerProgressionData get(MinecraftServer server) {
         if (server == null) throw new IllegalArgumentException("server is null");
+        SavedDataProof.validate(server, SAVE_ID, CODEC);
         ServerLevel overworld = server.overworld();
-        return overworld.getDataStorage().computeIfAbsent(TYPE);
+        var data = overworld.getDataStorage().computeIfAbsent(TYPE); data.server = server; return data;
+    }
+
+    public boolean flushVerified() { return SavedDataProof.save(server, SAVE_ID, CODEC, this); }
+    public void applyWatson(WatsonReceipt receipt, int rounded) {
+        if (rounded < 0) throw new IllegalArgumentException("Negative Watson progression reward");
+        if (!receipt.shouldApply(watsonReceipts.get(receipt.owner()))) return;
+        if (receipt.success()) {
+            var old = getEntry(receipt.owner());
+            int lesser = (int) Math.min(Integer.MAX_VALUE, (long) Math.max(0, old.lesserBlooms()) + rounded);
+            byPlayer.put(receipt.owner(), with(old, 6, true, lesser, old.cavernResidue(), true,
+                    tierFromLesserBlooms(lesser), old.npcUnlockTierD2(), old.flags()));
+        }
+        watsonReceipts.put(receipt.owner(), receipt); setDirty();
     }
 
     public int getD1LesserBloomsBest(UUID playerId) { return getEntry(playerId).d1LesserBloomsBest(); }

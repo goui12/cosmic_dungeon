@@ -23,6 +23,7 @@ public final class CurrencyCommand {
     private CurrencyCommand() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        net.goui.cosmicdungeon.economy.LegacyCurrencyReview.register(dispatcher);
         dispatcher.register(Commands.literal("currency")
                 .executes(ctx -> sendUsage(ctx.getSource()))
                 .then(Commands.literal("balance")

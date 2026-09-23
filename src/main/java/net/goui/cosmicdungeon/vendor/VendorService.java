@@ -32,14 +32,14 @@ public final class VendorService {
                     offer.result().copy(),
                     offer.result().getHoverName().getString(),
                     offer.result().getCount(),
-                    offer.cost().amount(),
-                    offer.cost().denomination().id()
+                    net.goui.cosmicdungeon.faction.NpcFactionService.retail(sp, net.goui.cosmicdungeon.config.VendorPricesConfig.retail(profile.id(), offer)),
+                    "trace"
             ));
         }
         String pricingGroup = profile.buyback() != null && profile.buyback().pricingGroup() != null && !profile.buyback().pricingGroup().isBlank()
                 ? profile.buyback().pricingGroup()
                 : "default";
-        return new VendorPayloads.S2C_OpenVendor(vendor.getId(), profile.id().toString(), vendorDisplayName(vendor, profile), profile.storeDisplayName(), CurrencyService.getBalanceTrace(sp), pricingGroup, List.copyOf(offers), List.copyOf(unlocked));
+        return new VendorPayloads.S2C_OpenVendor(sp.containerMenu.containerId, vendorSession(sp), vendor.getId(), profile.id().toString(), vendorDisplayName(vendor, profile), profile.storeDisplayName(), CurrencyService.getBalanceTrace(sp), pricingGroup, List.copyOf(offers), List.copyOf(unlocked));
     }
 
     private static String vendorDisplayName(Entity vendor, VendorProfile profile) {
@@ -51,6 +51,7 @@ public final class VendorService {
     }
 
     public static VendorPayloads.S2C_VendorPurchaseResult tryPurchase(ServerPlayer sp, int vendorEntityId, String offerIdRaw) {
+        if (sp.containerMenu instanceof net.goui.cosmicdungeon.menu.VendorMenu menu) menu.takeSaleQuote();
         VendorContext context = validateVendor(sp, vendorEntityId, false);
         if (!context.ok()) return fail(sp, context.failMessage());
         VendorProfile profile = context.profile();
@@ -61,37 +62,41 @@ public final class VendorService {
 
         if (!VendorMenuState.isOfferUnlocked(sp, profile, offer)) return fail(sp, "Offer locked.");
 
-        VendorPurchaseLimitData purchaseLimits = VendorPurchaseLimitData.get(sp.level().getServer());
-        if (purchaseLimits.hasReachedLimit(sp.getUUID(), profile.id(), offer.id(), offer.maxPurchasesPerPlayer())) {
+        if (VendorStock.exhausted(sp,profile,offer)) {
             return fail(sp, "Purchase limit reached.");
         }
 
-        long traceCost = offer.cost().denomination().toTrace(offer.cost().amount());
-        if (traceCost <= 0L) return fail(sp, "Invalid offer cost.");
-        if (CurrencyService.getBalanceTrace(sp) < traceCost) return fail(sp, "Not enough attunement fragments.");
+        long traceCost = net.goui.cosmicdungeon.faction.NpcFactionService.retail(sp, net.goui.cosmicdungeon.config.VendorPricesConfig.retail(profile.id(), offer));
+        if (traceCost < 0L) return fail(sp, "Invalid offer cost.");
+        if (CurrencyService.getBalanceTrace(sp) < traceCost) return fail(sp, "Not enough Trace.");
 
-        ItemStack toGive = offer.result().copy();
+        final ItemStack toGive;
+        try { toGive = net.goui.cosmicdungeon.item.identity.ItemProvenanceService.vendorCopy(offer.result()); }
+        catch (IllegalArgumentException invalid) { return fail(sp, "This offer is unavailable."); }
+        boolean rawChop = toGive.is(net.goui.cosmicdungeon.item.ModItems.RAW_FARROWS_CHOP.get());
+        if(rawChop && !net.goui.cosmicdungeon.dungeon.ChopOwnershipService.canBuy(sp))
+            return fail(sp,"You already own a Farrow's Chop.");
+        if(rawChop)net.goui.cosmicdungeon.dungeon.ChopOwnershipService.preparePurchase(sp,toGive);
+        ItemStack issued = toGive.copy();
         if (!canFitPurchase(sp, toGive)) {
             return fail(sp, "Inventory full.");
         }
 
-        if (!CurrencyService.tryWithdraw(sp, traceCost)) return fail(sp, "Purchase failed while deducting currency.");
-
-        boolean delivered = sp.getInventory().add(toGive);
-        if (!delivered) {
-            CurrencyService.tryDeposit(sp, traceCost);
-            return fail(sp, "Inventory full. No currency deducted.");
-        }
-
-        purchaseLimits.recordPurchase(sp.getUUID(), profile.id(), offer.id());
+        var id=java.util.UUID.randomUUID();var outputs=new net.minecraft.nbt.ListTag();
+        outputs.add(CommerceCustodyImages.lot(-1,net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairCustody.encode(sp,toGive)));
+        var details=new net.minecraft.nbt.CompoundTag();details.putString("profile",profile.id().toString());details.putString("offer",offer.id().toString());details.putLong("retail_trace",traceCost);
+        VendorStock.describe(sp,profile,offer,details);if(rawChop)CommerceTransactions.describeChop(sp,details,issued,false);
+        Component purchasedName=toGive.getHoverName();
+        if(!CommerceTransactions.execute(sp,id,-traceCost,"vendor_retail",sp.level().getEntity(vendorEntityId).getUUID().toString(),
+                CommerceTransactions.plan(sp,id,new net.minecraft.nbt.ListTag(),outputs,details)))return fail(sp,"Purchase did not complete. Any pending receipt is preserved for recovery.");
 
         long newBalance = CurrencyService.getBalanceTrace(sp);
         sp.sendSystemMessage(Component.literal("Purchased ").withStyle(ChatFormatting.GREEN)
-                .append(Component.literal(toGive.getHoverName().getString()).withStyle(ChatFormatting.YELLOW))
+                .append(Component.literal(purchasedName.getString()).withStyle(ChatFormatting.YELLOW))
                 .append(Component.literal(" for ").withStyle(ChatFormatting.WHITE))
-                .append(Component.literal(VendorMenuState.formatCost(offer)).withStyle(ChatFormatting.AQUA))
+                .append(Component.literal(traceCost + " Trace").withStyle(ChatFormatting.AQUA))
                 .append(Component.literal(".").withStyle(ChatFormatting.WHITE)));
-        return new VendorPayloads.S2C_VendorPurchaseResult(true, "Purchase complete.", newBalance);
+        return new VendorPayloads.S2C_VendorPurchaseResult(sp.containerMenu.containerId, vendorSession(sp), true, "Purchase complete.", newBalance);
     }
 
     private static boolean canFitPurchase(ServerPlayer sp, ItemStack toGive) {
@@ -116,88 +121,111 @@ public final class VendorService {
         return remaining <= 0;
     }
 
-    public static VendorPayloads.S2C_VendorPurchaseResult trySellSelected(ServerPlayer sp, int vendorEntityId, List<Integer> slotIndexes) {
+    public static net.minecraft.network.protocol.common.custom.CustomPacketPayload trySellSelected(
+            ServerPlayer sp, int vendorEntityId, List<Integer> slotIndexes) {
+        return quoteSale(sp, vendorEntityId, slotIndexes, false);
+    }
+
+    public static net.minecraft.network.protocol.common.custom.CustomPacketPayload trySellAll(ServerPlayer sp, int vendorEntityId) {
+        return quoteSale(sp, vendorEntityId, java.util.stream.IntStream.range(0, sp.getInventory().getContainerSize()).boxed().toList(), true);
+    }
+
+    private static net.minecraft.network.protocol.common.custom.CustomPacketPayload quoteSale(
+            ServerPlayer sp, int vendorEntityId, List<Integer> slots, boolean all) {
+        if (sp.containerMenu instanceof net.goui.cosmicdungeon.menu.VendorMenu menu) menu.takeSaleQuote();
         VendorContext context = validateVendor(sp, vendorEntityId, true);
         if (!context.ok()) return fail(sp, context.failMessage());
-        if (slotIndexes == null || slotIndexes.isEmpty()) return fail(sp, "No sellable items selected.");
-
-        List<Integer> slotsToSell = new ArrayList<>();
+        if (slots == null || slots.isEmpty() || slots.size() > 41) return fail(sp, "Select items to offer.");
+        List<VendorSaleQuote.Line<ItemStack>> lines = new ArrayList<>();
         Set<Integer> seen = new HashSet<>();
-        long payout = 0L;
-        for (Integer rawSlot : slotIndexes) {
-            if (rawSlot == null || !seen.add(rawSlot)) continue;
-            int slot = rawSlot;
-            if (slot < 0 || slot >= sp.getInventory().getContainerSize()) return fail(sp, "Selected item is no longer valid.");
+        for (Integer slot : slots) {
+            if (slot == null || slot < 0 || slot >= sp.getInventory().getContainerSize() || !seen.add(slot))
+                return fail(sp, "Invalid item selection.");
             ItemStack stack = sp.getInventory().getItem(slot);
-            if (stack.isEmpty()) return fail(sp, "Selected item is no longer available.");
             VendorPrice price = VendorPricingService.getSellValue(stack, context.vendorType());
-            if (price.traceValue() <= 0L) return fail(sp, "Selected item is no longer sellable.");
-            if (Long.MAX_VALUE - payout < price.traceValue()) return fail(sp, "Sale payout is too large.");
-            payout += price.traceValue();
-            slotsToSell.add(slot);
+            boolean owned = !stack.is(net.goui.cosmicdungeon.item.ModItems.RAW_FARROWS_CHOP.get())
+                    || net.goui.cosmicdungeon.dungeon.ChopOwnershipService.owned(sp, stack);
+            if (stack.isEmpty() || !owned || !price.approved() || price.traceValue() < 0) {
+                if (all) continue;
+                if (price.debugSource().equals("restricted:UNCLASSIFIED_EQUIPMENT"))
+                    return fail(sp, "This equipment has not been approved for sale.");
+                return fail(sp, "An item is unavailable, restricted, or has no approved price.");
+            }
+            // Bulk sales never silently include zero-value surrender.
+            if (all && price.traceValue() == 0) continue;
+            lines.add(new VendorSaleQuote.Line<>(slot, stack, price.traceValue(), price.breakdown(), ItemStack::copy, ItemStack::matches));
         }
-
-        if (slotsToSell.isEmpty() || payout <= 0L) return fail(sp, "No sellable items selected.");
-        return commitSale(sp, slotsToSell, payout, "Selected sale complete.");
+        if (lines.isEmpty()) return fail(sp, "No approved items selected.");
+        final VendorSaleQuote<ItemStack> quote;
+        try {
+            quote = new VendorSaleQuote<>(vendorEntityId, sp.level().getGameTime(),
+                    net.goui.cosmicdungeon.economy.D1EconomyConfig.VENDOR_QUOTE_TICKS.get(), lines);
+        } catch (ArithmeticException | IllegalArgumentException invalid) {
+            return fail(sp, "Sale value or selection is invalid.");
+        }
+        if (!CurrencyService.canDeposit(sp, quote.total())) return fail(sp, "You do not have enough currency capacity.");
+        ((net.goui.cosmicdungeon.menu.VendorMenu) sp.containerMenu).setSaleQuote(quote);
+        return new VendorPayloads.S2C_VendorSaleQuote(sp.containerMenu.containerId, vendorSession(sp), quote.token(), quote.total(),
+                quote.lines().stream().map(line -> new VendorPayloads.S2C_VendorSaleQuote.Line(line.stack(), line.breakdown())).toList());
     }
 
-    public static VendorPayloads.S2C_VendorPurchaseResult trySellAll(ServerPlayer sp, int vendorEntityId) {
-        VendorContext context = validateVendor(sp, vendorEntityId, true);
+    public static VendorPayloads.S2C_VendorPurchaseResult confirmSale(ServerPlayer sp, int containerId, String token, boolean confirm) {
+        if (!(sp.containerMenu instanceof net.goui.cosmicdungeon.menu.VendorMenu menu) || menu.containerId != containerId)
+            return fail(sp, "Vendor session changed. Request a new quote.");
+        VendorSaleQuote<ItemStack> quote = menu.takeSaleQuote();
+        if (quote == null || !quote.consume(token, sp.level().getGameTime()))
+            return fail(sp, "Sale quote expired or changed. Request a new quote.");
+        if (!confirm) return new VendorPayloads.S2C_VendorPurchaseResult(sp.containerMenu.containerId, vendorSession(sp), false, "Sale cancelled.", CurrencyService.getBalanceTrace(sp));
+        VendorContext context = validateVendor(sp, quote.vendorEntityId(), true);
         if (!context.ok()) return fail(sp, context.failMessage());
-
-        List<Integer> slotsToSell = new ArrayList<>();
-        long payout = 0L;
-        for (int slot = 0; slot < sp.getInventory().getContainerSize(); slot++) {
-            ItemStack stack = sp.getInventory().getItem(slot);
-            if (stack.isEmpty()) continue;
-            VendorPrice price = VendorPricingService.getSellValue(stack, context.vendorType());
-            if (price.traceValue() <= 0L) continue;
-            if (Long.MAX_VALUE - payout < price.traceValue()) return fail(sp, "Sale payout is too large.");
-            payout += price.traceValue();
-            slotsToSell.add(slot);
+        for (VendorSaleQuote.Line<ItemStack> line : quote.lines()) {
+            ItemStack current = sp.getInventory().getItem(line.slot());
+            VendorPrice price = VendorPricingService.getSellValue(current, context.vendorType());
+            if (!price.approved() || !line.matches(current, price))
+                return fail(sp, "An item or price changed. Request a new quote.");
+            if (current.is(net.goui.cosmicdungeon.item.ModItems.RAW_FARROWS_CHOP.get())
+                    && !net.goui.cosmicdungeon.dungeon.ChopOwnershipService.owned(sp, current))
+                return fail(sp, "Only the owner can sell this Raw Chop.");
         }
-
-        if (slotsToSell.isEmpty() || payout <= 0L) return fail(sp, "No sellable items found.");
-        return commitSale(sp, slotsToSell, payout, "Sell all complete.");
+        return commitSale(sp, quote, quote.total(), quote.token(),
+                sp.level().getEntity(quote.vendorEntityId()).getUUID().toString(), "Sale complete.");
     }
 
-    private static VendorPayloads.S2C_VendorPurchaseResult commitSale(ServerPlayer sp, List<Integer> slotsToSell, long payout, String resultMessage) {
+    private static VendorPayloads.S2C_VendorPurchaseResult commitSale(ServerPlayer sp, VendorSaleQuote<ItemStack> quote, long payout, String quoteId, String vendorId, String resultMessage) {
         if (!CurrencyService.canDeposit(sp, payout)) return fail(sp, "You do not have enough currency capacity.");
 
-        List<ItemStack> removed = new ArrayList<>();
-        for (int slot : slotsToSell) {
-            ItemStack original = sp.getInventory().getItem(slot);
-            removed.add(original.copy());
-            sp.getInventory().setItem(slot, ItemStack.EMPTY);
+        var inputs=new net.minecraft.nbt.ListTag();var details=new net.minecraft.nbt.CompoundTag();var prices=new net.minecraft.nbt.ListTag();
+        var slotsToSell=quote.lines().stream().map(VendorSaleQuote.Line::slot).toList();
+        for(var line:quote.lines()){
+            var stack=line.stack();inputs.add(CommerceCustodyImages.lot(line.slot(),net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairCustody.encode(sp,stack)));
+            var price=new net.minecraft.nbt.CompoundTag();price.putInt("slot",line.slot());price.putLong("base",line.breakdown().base());price.putLong("enchantments",line.breakdown().enchantments());price.putLong("curses",line.breakdown().curses());price.putLong("adjustments",line.breakdown().adjustments());price.putLong("total",line.trace());prices.add(price);
+            if(stack.is(net.goui.cosmicdungeon.item.ModItems.RAW_FARROWS_CHOP.get()))CommerceTransactions.describeChop(sp,details,stack,true);
         }
-
-        if (!CurrencyService.tryDeposit(sp, payout)) {
-            for (int i = 0; i < slotsToSell.size(); i++) {
-                sp.getInventory().setItem(slotsToSell.get(i), removed.get(i));
-            }
-            return fail(sp, "You do not have enough currency capacity.");
-        }
-
-        sp.getInventory().setChanged();
-        for (int slot : slotsToSell) {
-            sp.connection.send(new ClientboundSetPlayerInventoryPacket(slot, sp.getInventory().getItem(slot)));
-        }
+        details.put("prices",prices);var id=java.util.UUID.fromString(quoteId);
+        if(!CommerceTransactions.execute(sp,id,payout,"vendor_sale",vendorId,CommerceTransactions.plan(sp,id,inputs,new net.minecraft.nbt.ListTag(),details)))
+            return fail(sp,"Sale did not complete. Any pending receipt is preserved for recovery.");
+        for(int slot:slotsToSell)sp.connection.send(new ClientboundSetPlayerInventoryPacket(slot,sp.getInventory().getItem(slot)));
 
         sp.sendSystemMessage(Component.literal("Sold ").withStyle(ChatFormatting.GREEN)
                 .append(Component.literal(slotsToSell.size() + " stack" + (slotsToSell.size() == 1 ? "" : "s")).withStyle(ChatFormatting.YELLOW))
                 .append(Component.literal(" for ").withStyle(ChatFormatting.WHITE))
                 .append(Component.literal(payout + " Trace").withStyle(ChatFormatting.AQUA))
                 .append(Component.literal(".").withStyle(ChatFormatting.WHITE)));
-        return new VendorPayloads.S2C_VendorPurchaseResult(true, resultMessage, CurrencyService.getBalanceTrace(sp));
+        return new VendorPayloads.S2C_VendorPurchaseResult(sp.containerMenu.containerId, vendorSession(sp), true, resultMessage, CurrencyService.getBalanceTrace(sp));
     }
 
     private static VendorContext validateVendor(ServerPlayer sp, int vendorEntityId, boolean requireBuyback) {
+        if (!sp.isAlive() || sp.isSpectator()) return VendorContext.fail("Cannot trade right now.");
+        if (!CurrencyService.transactionsAllowed(sp)) return VendorContext.fail("Wait for the dungeon reset to finish.");
+        if (!(sp.containerMenu instanceof net.goui.cosmicdungeon.menu.VendorMenu))
+            return VendorContext.fail("Open the vendor interface first.");
         Entity vendor = sp.level().getEntity(vendorEntityId);
-        if (vendor == null) {
+        if (vendor == null || !vendor.isAlive() ||!((net.goui.cosmicdungeon.menu.VendorMenu)sp.containerMenu).matches(vendor)) {
             return VendorContext.fail("Vendor no longer exists.");
         }
         if (sp.distanceToSqr(vendor) > 64.0D) return VendorContext.fail("Too far from vendor.");
 
+        if (VendorAssignmentService.hasOtherRole(vendor)) return VendorContext.fail("NPC binding needs developer review.");
         ResourceLocation profileId = VendorAssignmentService.getProfileId(vendor);
         if (profileId == null) return VendorContext.fail("Vendor is not assigned.");
 
@@ -211,9 +239,14 @@ public final class VendorService {
         return VendorContext.ok(profile);
     }
 
+    private static java.util.UUID vendorSession(ServerPlayer sp) {
+        return sp.containerMenu instanceof net.goui.cosmicdungeon.menu.VendorMenu menu
+                ? menu.sessionId() : new java.util.UUID(0, 0);
+    }
+
     private static VendorPayloads.S2C_VendorPurchaseResult fail(ServerPlayer sp, String msg) {
         sp.sendSystemMessage(Component.literal(msg).withStyle(ChatFormatting.RED));
-        return new VendorPayloads.S2C_VendorPurchaseResult(false, msg, CurrencyService.getBalanceTrace(sp));
+        return new VendorPayloads.S2C_VendorPurchaseResult(sp.containerMenu.containerId, vendorSession(sp), false, msg, CurrencyService.getBalanceTrace(sp));
     }
 
     private record VendorContext(boolean ok, String failMessage, VendorProfile profile) {

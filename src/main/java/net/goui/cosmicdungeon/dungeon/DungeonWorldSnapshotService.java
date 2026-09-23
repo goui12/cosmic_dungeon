@@ -181,6 +181,14 @@ public final class DungeonWorldSnapshotService {
                 levels.add(Map.entry(source, target));
             }
 
+            for (var pair : levels) {
+                if (!DungeonInventoryHandoffs.dimensionReady(server, pair.getValue().dimension().location().toString()))
+                    return new SnapshotResult.Error("Dungeon inventory handoffs must settle before replacing this instance.");
+                if(DungeonInventoryEscrowData.get(server).pendingDimension(pair.getValue().dimension().location().toString()))
+                    return new SnapshotResult.Error("Chop journey recovery must settle before replacing this instance.");
+                var companionBlocker=net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCompanions.resetBlocker(pair.getValue());
+                if(companionBlocker.isPresent())return new SnapshotResult.Error(companionBlocker.get());
+            }
             server.saveEverything(true, false, true);
             for (Map.Entry<ServerLevel, ServerLevel> pair : levels) {
                 pair.getKey().save(null, true, false);
@@ -204,6 +212,8 @@ public final class DungeonWorldSnapshotService {
 
                 flushChunkIoWorker(target);
                 flushAuxiliaryIoWorkers(target);
+                if(!net.goui.cosmicdungeon.economy.DeathCurrencyService.resetDimension(target))
+                    return new SnapshotResult.Error("Death currency requires reconciliation before instance reset.");
                 deleteDirectoryContents(targetPath);
                 copyDirectory(sourcePath, targetPath);
                 clearDimensionDataCache(target);
@@ -295,6 +305,15 @@ public final class DungeonWorldSnapshotService {
                 }
             }
 
+            for (var level : levels) {
+                if (!DungeonInventoryHandoffs.dimensionReady(server, level.dimension().location().toString()))
+                    return new SnapshotResult.Error("Dungeon inventory handoffs must settle before restoring this dimension.");
+                if(DungeonInventoryEscrowData.get(server).pendingDimension(level.dimension().location().toString()))
+                    return new SnapshotResult.Error("Chop journey recovery must settle before restoring this dimension.");
+                var companionBlocker=net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCompanions.resetBlocker(level);
+                if(companionBlocker.isPresent())return new SnapshotResult.Error(companionBlocker.get());
+            }
+
             debug("[DUNGEON DEBUG] resetToSnapshot calling server.saveEverything");
             server.saveEverything(true, false, true);
 
@@ -329,6 +348,8 @@ public final class DungeonWorldSnapshotService {
                 debug("[DUNGEON DEBUG] resetToSnapshot deleting live contents for "
                         + level.dimension().location() + " path=" + livePath);
                 logDirectoryDiagnostics("live-before-delete", livePath);
+                if(!net.goui.cosmicdungeon.economy.DeathCurrencyService.resetDimension(level))
+                    return new SnapshotResult.Error("Death currency requires reconciliation before snapshot reset.");
                 deleteDirectoryContents(livePath);
                 logDirectoryDiagnostics("live-after-delete", livePath);
 
@@ -472,6 +493,9 @@ public final class DungeonWorldSnapshotService {
             debug("[DUNGEON DEBUG] prepareLevelForFilesystemRestore: level was null");
             return Optional.of("Reset aborted because a linked level reference was null.");
         }
+
+        var companionBlocker=net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCompanions.resetBlocker(level);
+        if(companionBlocker.isPresent())return companionBlocker;
 
         String dimId = level.dimension().location().toString();
         ServerChunkCache chunkSource = level.getChunkSource();

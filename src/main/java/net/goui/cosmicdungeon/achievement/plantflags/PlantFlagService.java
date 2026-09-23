@@ -75,7 +75,7 @@ public final class PlantFlagService {
         List<ServerPlayer> out = new ArrayList<>();
         for (UUID id : run.orderedPlayers()) {
             ServerPlayer sp = server.getPlayerList().getPlayer(id);
-            if (sp != null) out.add(sp);
+            if (sp != null && !sp.isSpectator() && !net.goui.cosmicdungeon.auth.AccessPolicy.isDeveloper(sp)) out.add(sp);
         }
         return out;
     }
@@ -86,12 +86,13 @@ public final class PlantFlagService {
         if (data.completed(runId) || !isRegionConfigured(data)) return false;
         DungeonRunRegistryData.RunRecord run = DungeonRunRegistryData.get(server).getRun(runId).orElse(null);
         if (run == null || run.stateEnum() != net.goui.cosmicdungeon.dungeon.DungeonRunState.ACTIVE) return false;
+        if(run.dungeonId().equals("dungeon_1")&&!net.goui.cosmicdungeon.dungeon.d1.D1MembershipService.flagsCanComplete(server,runId))return false;
         List<ServerPlayer> online = getOnlineEligiblePlayers(server, run);
         if (online.isEmpty()) return false;
         Set<UUID> planted = data.planted(runId);
         if (!online.stream().map(ServerPlayer::getUUID).allMatch(planted::contains)) return false;
         for (ServerPlayer sp : online) CosmicAdvancementUtil.grant(sp, CosmicAchievementIds.PLANT_FLAGS);
-        server.getPlayerList().broadcastSystemMessage(Component.literal("The planted banners stir. JHW answers.").withStyle(ChatFormatting.GOLD), false);
+        for(var member:online)member.sendSystemMessage(Component.literal("The planted banners stir. Gather near Watson.").withStyle(ChatFormatting.GOLD));
         data.setCompleted(runId, true);
         return true;
     }

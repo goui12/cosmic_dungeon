@@ -19,7 +19,15 @@ import java.util.List;
 public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSelectorMenu> {
 
     private boolean loading = true;
+    private final D1PartyPanel partyPanel = new D1PartyPanel();
+    private final TamsinTaxPanel taxPanel = new TamsinTaxPanel();
     private String activeClass = "";
+    private net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage stage =
+            net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.SELECTOR;
+    private static final net.minecraft.resources.ResourceLocation TAMSIN_MAP =
+            net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "textures/gui/tamsin_d1_map.png");
+    private boolean mapArtwork;
+
     private final List<String> available = new ArrayList<>();
 
     // --- scrolling list state ---
@@ -32,7 +40,7 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
 
     // layout tuning
     private static final int HEADER_H = 34;          // top padding + title/current text zone
-    private static final int LIST_PAD_BOTTOM = 10;   // bottom padding
+    private static final int LIST_PAD_BOTTOM = 36;   // bottom padding
     private static final int ROW_SPACING = 24;       // vertical step between buttons
     private static final int BTN_H = 20;
 
@@ -41,8 +49,8 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
 
     public ClassSelectorScreen(ClassSelectorMenu menu, Inventory inv, Component title) {
         super(menu, inv, Component.empty());
-        this.imageWidth = 230;
-        this.imageHeight = 190;
+        this.imageWidth = 360;
+        this.imageHeight = 240;
     }
 
     /* -------------------- localization helpers -------------------- */
@@ -78,6 +86,7 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
     @Override
     protected void init() {
         super.init();
+        this.mapArtwork = this.minecraft != null && this.minecraft.getResourceManager().getResource(TAMSIN_MAP).isPresent();
         this.loading = true;
         this.available.clear();
         this.scrollOffsetPx = 0;
@@ -126,9 +135,37 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
             return;
         }
 
+        if (stage == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.AGREEMENT) {
+            addRenderableWidget(Button.builder(Component.literal("Yes"), b -> tamsinAction("yes"))
+                    .bounds(x + 18, y + imageHeight - 27, 92, 20).build());
+            addRenderableWidget(Button.builder(Component.literal("No"), b -> tamsinAction("no"))
+                    .bounds(x + 120, y + imageHeight - 27, 92, 20).build());
+            return;
+        }
+        if (stage == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.MAP) {
+            addRenderableWidget(Button.builder(Component.literal("Continue"), b -> tamsinAction("continue"))
+                    .bounds(x + 18, y + imageHeight - 27, imageWidth - 36, 20).build());
+            return;
+        }
+
+        if (stage == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.TAX) {
+            taxPanel.build(font, widget -> addRenderableWidget(widget), this::rebuildSelectorWidgets, x, y, menu.containerId);
+            return;
+        }
+        if (stage == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.READY) {
+            partyPanel.build(font, widget -> addRenderableWidget(widget), x, y, menu.containerId);
+            return;
+        }
+        var group = addRenderableWidget(Button.builder(Component.literal("Group"), button ->
+                net.goui.cosmicdungeon.network.ModNetwork.sendToServer(
+                        new net.goui.cosmicdungeon.network.PartyPayloads.Action(menu.containerId, 0, "group", "")))
+                .bounds(x + 18, y + imageHeight - 27, imageWidth - 36, 20).build());
+        group.active = activeClass != null && !activeClass.isBlank() && !ClassKeys.CLASS_ID_NONE.equals(activeClass)
+                && !isDisabledClassSelection(activeClass);
         // Build class buttons (positions set in updateButtonLayout())
         int i = 0;
         for (String cls : available) {
+            if (isDisabledClassSelection(cls) || ClassKeys.CLASS_ID_NONE.equals(cls)) continue;
             boolean isActive = cls != null && cls.equals(activeClass);
 
             Button btn = Button.builder(classButtonLabel(cls, isActive), b -> {
@@ -138,7 +175,7 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
                         rebuildSelectorWidgets();
 
                         // IMPORTANT: still send the RAW ID to server
-                        ClassNet.requestSelectClass(cls);
+                        ClassNet.requestSelectClass(menu.containerId, cls);
                     })
                     // temporary bounds; real y is applied in updateButtonLayout()
                     .bounds(listX, listY + (i * ROW_SPACING), listW, BTN_H)
@@ -154,8 +191,64 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
         updateButtonLayout();
     }
 
+    private void tamsinAction(String action) {
+        this.loading = true;
+        rebuildSelectorWidgets();
+        net.goui.cosmicdungeon.network.ModNetwork.sendToServer(new ClassPayloads.C2S_TamsinAction(menu.containerId, action));
+    }
+
+    private int paragraph(GuiGraphics graphics, String text, int x, int y, int width, int color) {
+        for (var line : font.split(Component.literal(text), width)) {
+            graphics.drawString(font, line, x, y, color, false);
+            y += font.lineHeight + 3;
+        }
+        return y;
+    }
+
+    private boolean renderConversation(GuiGraphics g, int x, int y) {
+        switch (stage) {
+            case AGREEMENT -> {
+                int next = paragraph(g, "I found a map to something valuable underground.",
+                        x + 18, y + 43, imageWidth - 36, 0xFFFFFFFF);
+                next = paragraph(g, "If you survive, I want a cut of what you bring back.",
+                        x + 18, next + 12, imageWidth - 36, 0xFFFFFFFF);
+                paragraph(g, "Do we have an agreement?", x + 18, next + 12, imageWidth - 36, 0xFFFFFFAA);
+                return true;
+            }
+            case MAP -> {
+                g.drawString(font, "A route into the depths", x + 18, y + 32, 0xFFFFFFFF, false);
+                int mw = 206, mh = 103, mx = x + (imageWidth - mw) / 2, my = y + 51;
+                if (mapArtwork) {
+                    // UVs cover the whole optional 512 x 256 image; no inventory map is created.
+                    g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TAMSIN_MAP,
+                            mx, my, 0.0F, 0.0F, mw, mh, mw, mh);
+                } else {
+                    g.fill(mx, my, mx + mw, my + mh, 0xFFCFB987);
+                    // Authored schematic fallback, not a geographically accurate dungeon map.
+                    int[][] points = {{10, 16}, {60, 16}, {60, 39}, {27, 39},
+                            {27, 69}, {108, 69}, {108, 43}, {174, 43}, {174, 72}};
+                    for (int i = 1; i < points.length; i++) {
+                        int[] a = points[i - 1], b = points[i];
+                        g.fill(mx + Math.min(a[0], b[0]), my + Math.min(a[1], b[1]),
+                                mx + Math.max(a[0], b[0]) + 2, my + Math.max(a[1], b[1]) + 2, 0xFF654B32);
+                    }
+                    g.drawString(font, "Base Camp", mx + 141, my + 76, 0xFF302617, false);
+                    g.drawString(font, "-JHW", mx + mw - font.width("-JHW") - 7, my + mh - 13, 0xFF302617, false);
+                }
+                paragraph(g, "Choose a class before joining the expedition.", x + 18, y + 164, imageWidth - 36, 0xFFCCCCCC);
+                return true;
+            }
+            case TAX -> { taxPanel.render(g, font, x, y); return true; }
+            case READY -> {
+                partyPanel.render(g, font, x, y);
+                return true;
+            }
+            default -> { return false; }
+        }
+    }
+
     private void recomputeMaxScroll() {
-        int totalContentH = this.available.size() * ROW_SPACING;
+        int totalContentH = this.classButtons.size() * ROW_SPACING;
         this.maxScrollPx = Math.max(0, totalContentH - this.listH);
     }
 
@@ -175,9 +268,9 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
             btn.setY(y);
 
             // only show buttons inside (or slightly overlapping) the viewport
-            boolean inView = (y + BTN_H) > this.listY && y < (this.listY + this.listH);
+            boolean inView = y >= this.listY && y + BTN_H <= this.listY + this.listH;
             btn.visible = inView;
-            btn.active = !isDisabledClassSelection(this.available.get(i)); // disabled class buttons stay shaded and unclickable
+            btn.active = true; // disabled class buttons stay shaded and unclickable
         }
     }
 
@@ -213,8 +306,10 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
         g.fill(x1, y1, x2, y2, 0xAA000000);
 
         // header text
-        g.drawString(this.font, "Class Selector", x1 + 10, y1 + 10, 0xFFFFFFFF, false);
+        g.drawString(this.font, stage == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.SELECTOR
+                ? "D1 Class Selector" : "Tamsin Vane", x1 + 10, y1 + 10, 0xFFFFFFFF, false);
 
+        if (!loading && renderConversation(g, x1, y1)) return;
         if (!loading) {
             Component current = className(activeClass);
             Component line = Component.literal("Current: ").append(current);
@@ -226,8 +321,7 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
         g.fill(this.listX, this.listY, this.listX + this.listW, this.listY + this.listH, 0x33000000);
 
         // enable scissor so the button list clips inside list viewport
-        g.enableScissor(this.listX, this.listY, this.listX + this.listW, this.listY + this.listH);
-        this.scissorEnabledThisFrame = true;
+        // Class rows are fully bounded; header and Ready buttons must not be scissored away.
     }
 
     @Override
@@ -258,16 +352,35 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
 
     /* -------------------- network entry points -------------------- */
 
+    public static void onTaxView(net.goui.cosmicdungeon.network.TamsinTaxPayloads.View payload) {
+        Minecraft.getInstance().execute(() -> {
+            if (!(Minecraft.getInstance().screen instanceof ClassSelectorScreen screen)
+                    || screen.menu.containerId != payload.containerId()) return;
+            screen.taxPanel.setView(payload);
+            screen.rebuildSelectorWidgets();
+        });
+    }
+    public static void onPartyView(net.goui.cosmicdungeon.network.PartyPayloads.View payload) {
+        Minecraft.getInstance().execute(() -> {
+            if (!(Minecraft.getInstance().screen instanceof ClassSelectorScreen screen)
+                    || screen.menu.containerId != payload.containerId()) return;
+            screen.partyPanel.setView(payload);
+            screen.rebuildSelectorWidgets();
+        });
+    }
+
     public static void onSelectorData(ClassPayloads.S2C_SelectorData payload) {
         Minecraft mc = Minecraft.getInstance();
         mc.execute(() -> {
-            if (!(mc.screen instanceof ClassSelectorScreen screen)) return;
-
+            if (!(mc.screen instanceof ClassSelectorScreen screen) || screen.menu.containerId != payload.containerId()) return;
+            try { screen.stage = net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.valueOf(payload.stage()); }
+            catch (IllegalArgumentException invalid) { return; }
             screen.loading = false;
             screen.activeClass = payload.activeClassId() == null ? "" : payload.activeClassId();
 
             screen.available.clear();
-            if (payload.availableClassIds() != null) screen.available.addAll(payload.availableClassIds());
+            if (payload.availableClassIds() != null) screen.available.addAll(payload.availableClassIds().stream()
+                    .filter(id -> !isDisabledClassSelection(id) && !ClassKeys.CLASS_ID_NONE.equals(id)).toList());
 
             // reset scroll when new data arrives (optional; remove if you want to keep scroll position)
             screen.scrollOffsetPx = 0;

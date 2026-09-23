@@ -13,9 +13,10 @@
         "count": 1
       },
       "cost": {
-        "amount": 3,
-        "denomination": "mark"
-      }
+        "amount": 36,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 5
     },
     {
       "offerId": "torch",
@@ -25,9 +26,10 @@
         "maxStackSize": 64
       },
       "cost": {
-        "amount": 1,
+        "amount": 2,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 5
     },
     {
       "offerId": "bread",
@@ -37,9 +39,10 @@
         "maxStackSize": 64
       },
       "cost": {
-        "amount": 2,
+        "amount": 3,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "baked_potato",
@@ -49,9 +52,10 @@
         "maxStackSize": 64
       },
       "cost": {
-        "amount": 2,
+        "amount": 3,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "cooked_chicken",
@@ -61,9 +65,10 @@
         "maxStackSize": 64
       },
       "cost": {
-        "amount": 3,
+        "amount": 4,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "apple",
@@ -73,9 +78,10 @@
         "maxStackSize": 64
       },
       "cost": {
-        "amount": 1,
+        "amount": 2,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "carrot",
@@ -85,9 +91,10 @@
         "maxStackSize": 64
       },
       "cost": {
-        "amount": 1,
+        "amount": 2,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "bucket",
@@ -96,9 +103,10 @@
         "count": 1
       },
       "cost": {
-        "amount": 5,
-        "denomination": "mark"
-      }
+        "amount": 60,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 1
     }
   ],
   "buyback": {

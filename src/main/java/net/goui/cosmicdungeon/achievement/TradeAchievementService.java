@@ -9,8 +9,15 @@ import net.minecraft.server.level.ServerPlayer;
 public final class TradeAchievementService {
     private TradeAchievementService() {}
 
+    public static final String COMPLETED_KEY="first_trade_completed_v1";
+    public static void recordCompleted(ServerPlayer player){
+        var root=player.getPersistentData().getCompoundOrEmpty(net.goui.cosmicdungeon.playerclass.api.ClassData.ROOT_TAG).copy();
+        root.putBoolean(COMPLETED_KEY,true);player.getPersistentData().put(net.goui.cosmicdungeon.playerclass.api.ClassData.ROOT_TAG,root);
+    }
     public static void syncPromptState(ServerPlayer player) {
         if (player == null) return;
+        if(player.getPersistentData().getCompoundOrEmpty(net.goui.cosmicdungeon.playerclass.api.ClassData.ROOT_TAG).getBooleanOr(COMPLETED_KEY,false))
+            CosmicAdvancementUtil.grant(player,CosmicAchievementIds.FIRST_PLAYER_TRADE);
         ModNetwork.sendTo(player, new TradePayloads.S2C_TradePromptState(hasCompletedFirstTrade(player)));
     }
 

@@ -1,25 +1,8 @@
 {
   "id": "cosmicdungeon:d1/save_teleport_npc",
-  "displayName": "Beluzon Everly",
+  "displayName": "Beluzon",
   "vendorType": "save_teleport",
   "requiredVillageAccess": true,
-  "requiredNpcSystem": "D1",
-  "requiredNpcTier": 4,
-  "buyOffers": [
-    {
-      "offerId": "potion_of_companionship",
-      "result": {
-        "item": "cosmicdungeon:potion_of_companionship",
-        "count": 1
-      },
-      "cost": {
-        "amount": 1,
-        "denomination": "seal"
-      }
-    }
-  ],
-  "buyback": {
-    "pricingGroup": "default",
-    "rules": []
-  }
+  "buyOffers": [],
+  "storeDisplayName": "The Village Inn"
 }

@@ -6,9 +6,8 @@
     }
   },
   "display": {
-    "description": {
-      "translate": "advancements.cosmicdungeon.achievements.nostalgia_bait.desc"
-    },
+    "announce_to_chat": false,
+    "description": "",
     "icon": {
       "count": 1,
       "id": "cosmicdungeon:farrows_chop"

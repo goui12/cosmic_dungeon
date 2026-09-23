@@ -163,6 +163,7 @@ public class ExtraInventoryMenu extends AbstractCraftingMenu {
 
     @Override
     public ItemStack quickMoveStack(Player p, int idx) {
+        if (p instanceof ServerPlayer server) net.goui.cosmicdungeon.crafting.CraftingPolicy.refresh(this,server);
         if (idx < 0 || idx >= this.slots.size()) return ItemStack.EMPTY;
 
         ItemStack ret = ItemStack.EMPTY;
@@ -310,7 +311,7 @@ public class ExtraInventoryMenu extends AbstractCraftingMenu {
         if (match.isPresent()) {
             RecipeHolder<CraftingRecipe> holder = match.get();
             CraftingRecipe recipe = holder.value();
-            if (resultSlots.setRecipeUsed(sp, holder)) {
+            if (net.goui.cosmicdungeon.crafting.CraftingPolicy.player(sp, holder) && resultSlots.setRecipeUsed(sp, holder)) {
                 ItemStack assembled = recipe.assemble(input, level.registryAccess());
                 if (assembled.isItemEnabled(level.enabledFeatures())) {
                     out = assembled;

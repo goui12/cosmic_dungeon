@@ -65,10 +65,12 @@ public final class ClassPayloads {
     }
 
     /** Server responds with authoritative selector data. */
-    public record S2C_SelectorData(String activeClassId, List<String> availableClassIds) implements CustomPacketPayload {
+    public record S2C_SelectorData(int containerId, String stage, String activeClassId, List<String> availableClassIds) implements CustomPacketPayload {
         public static final Type<S2C_SelectorData> TYPE = new Type<>(id("class_selector_data"));
         public static final StreamCodec<ByteBuf, S2C_SelectorData> STREAM_CODEC =
                 StreamCodec.composite(
+                        ByteBufCodecs.VAR_INT, S2C_SelectorData::containerId,
+                        ByteBufCodecs.STRING_UTF8, S2C_SelectorData::stage,
                         ByteBufCodecs.STRING_UTF8, S2C_SelectorData::activeClassId,
                         ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), S2C_SelectorData::availableClassIds,
                         S2C_SelectorData::new
@@ -76,11 +78,20 @@ public final class ClassPayloads {
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 
+    public record C2S_TamsinAction(int containerId, String action) implements CustomPacketPayload {
+        public static final Type<C2S_TamsinAction> TYPE = new Type<>(id("tamsin_action"));
+        public static final StreamCodec<ByteBuf, C2S_TamsinAction> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.VAR_INT, C2S_TamsinAction::containerId,
+                ByteBufCodecs.stringUtf8(16), C2S_TamsinAction::action, C2S_TamsinAction::new);
+        @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    }
+
     /** Client requests selecting a class (server validates + applies). */
-    public record C2S_SelectClass(String classId) implements CustomPacketPayload {
+    public record C2S_SelectClass(int containerId, String classId) implements CustomPacketPayload {
         public static final Type<C2S_SelectClass> TYPE = new Type<>(id("class_selector_select"));
         public static final StreamCodec<ByteBuf, C2S_SelectClass> STREAM_CODEC =
                 StreamCodec.composite(
+                        ByteBufCodecs.VAR_INT, C2S_SelectClass::containerId,
                         ByteBufCodecs.STRING_UTF8, C2S_SelectClass::classId,
                         C2S_SelectClass::new
                 );

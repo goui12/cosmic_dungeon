@@ -19,13 +19,14 @@ public final class DungeonAfkService {
     private DungeonAfkService() {}
 
     public static final long AFK_TIMEOUT_TICKS = 15L * 60L * 20L;
-    private static final long CHECK_INTERVAL_TICKS = 20L;
 
     private record Activity(long lastActiveTick, boolean afk, double x, double y, double z, float yRot, float xRot) {}
 
     private static final Map<UUID, Activity> ACTIVITY = new HashMap<>();
     private static long nextCheckTick = 0L;
 
+    public static void clear(){ACTIVITY.clear();nextCheckTick=0;}
+    public static long lastActive(UUID playerId){var activity=ACTIVITY.get(playerId);return activity==null?Long.MIN_VALUE:activity.lastActiveTick();}
     public static boolean isAfk(UUID playerId) {
         Activity activity = ACTIVITY.get(playerId);
         return activity != null && activity.afk();
@@ -33,7 +34,7 @@ public final class DungeonAfkService {
 
     public static void markActivity(ServerPlayer player) {
         if (player == null || player.level().isClientSide()) return;
-        long now = player.level().getGameTime();
+        long now = player.level().getServer().overworld().getGameTime();
         Activity old = ACTIVITY.get(player.getUUID());
         boolean wasAfk = old != null && old.afk();
         ACTIVITY.put(player.getUUID(), snapshot(player, now, false));
@@ -51,7 +52,7 @@ public final class DungeonAfkService {
         var overworld = server.overworld();
         long now = overworld.getGameTime();
         if (now < nextCheckTick) return;
-        nextCheckTick = now + CHECK_INTERVAL_TICKS;
+        nextCheckTick = now + net.goui.cosmicdungeon.Config.ACTIVITY_POLL_SECONDS.get() * 20L;
 
         Set<UUID> online = new HashSet<>();
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {

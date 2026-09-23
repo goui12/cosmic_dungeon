@@ -17,6 +17,14 @@ public final class DragoonRepairCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> d) {
         d.register(Commands.literal("repair")
+                .then(Commands.literal("shop")
+                        .then(Commands.argument("increments",com.mojang.brigadier.arguments.IntegerArgumentType.integer(1,4))
+                                .executes(ctx -> DirectRepairService.quote(ctx.getSource().getPlayerOrException(),
+                                        com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx,"increments"))))
+                        .then(Commands.literal("confirm").then(Commands.argument("quote",com.mojang.brigadier.arguments.StringArgumentType.word())
+                                .executes(ctx -> DirectRepairService.confirm(ctx.getSource().getPlayerOrException(),
+                                        com.mojang.brigadier.arguments.StringArgumentType.getString(ctx,"quote"))))))
+                .then(Commands.literal("claim").executes(ctx -> RepairCustody.claim(ctx.getSource().getPlayerOrException())))
                 .then(Commands.argument("player", EntityArgument.player()).executes(ctx -> request(ctx.getSource(), EntityArgument.getPlayer(ctx, "player"))))
                 .then(Commands.literal("accept").then(Commands.argument("player", EntityArgument.player()).executes(ctx -> accept(ctx.getSource(), EntityArgument.getPlayer(ctx, "player")))))
                 .then(Commands.literal("deny").then(Commands.argument("player", EntityArgument.player()).executes(ctx -> deny(ctx.getSource(), EntityArgument.getPlayer(ctx, "player")))))

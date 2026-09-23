@@ -48,7 +48,7 @@ public final class VendorCommand {
                         .requires(AccessPolicy::requireDeveloperOrConsole)
                         .then(Commands.argument("profileId", StringArgumentType.word())
                                 .suggests((ctx, b) -> SharedSuggestionProvider.suggest(VendorProfileResolver.suggestions(), b))
-                                .executes(ctx -> spawn(ctx.getSource(), StringArgumentType.getString(ctx, "profileId"), "villager"))
+                                .executes(ctx -> spawn(ctx.getSource(), StringArgumentType.getString(ctx, "profileId"), null))
                                 .then(Commands.argument("mobType", StringArgumentType.word())
                                         .suggests((ctx, b) -> SharedSuggestionProvider.suggest(BuiltInRegistries.ENTITY_TYPE.keySet().stream()
                                                 .filter(id -> BuiltInRegistries.ENTITY_TYPE.getValue(id) != EntityType.PLAYER)
@@ -123,52 +123,78 @@ public final class VendorCommand {
     private static int assign(CommandSourceStack src, String profileIdRaw) {
         ServerPlayer sp = src.getPlayer(); if (sp == null) { fail(src, "Player context required."); return 0; }
         ResourceLocation id = resolveOrFail(src, profileIdRaw); if (id == null) return 0;
-        Mob villager = lookedMob(sp); if (villager == null) { fail(src, "Look at a mob within 6 blocks."); return 0; }
-        if (!VendorAssignmentService.assignProfile(villager, id)) { fail(src, "Failed assigning vendor profile."); return 0; }
+        Mob villager = lookedMob(sp); if (villager == null) { fail(src, "Look directly at a visible mob within the configured binding range."); return 0; }
+        if (!VendorAssignmentService.assignProfile(villager, id)) {
+            fail(src, "Binding refused. Inspect /vendor info: clear an existing profile first; Tamsin/Watson are separate roles and Beluzon requires a native Creaking.");
+            return 0;
+        }
         src.sendSuccess(() -> Component.literal("Assigned ").withStyle(ChatFormatting.GREEN)
                 .append(profileName(id))
                 .append(Component.literal(" to mob ").withStyle(ChatFormatting.WHITE))
-                .append(Component.literal(villager.getUUID().toString()).withStyle(ChatFormatting.DARK_GRAY)), true);
+                .append(Component.literal(villager.getUUID().toString()).withStyle(ChatFormatting.DARK_GRAY))
+                .append(Component.literal("; replaces the previous NPC for this profile.").withStyle(ChatFormatting.GRAY)), true);
         return 1;
     }
 
     private static int clear(CommandSourceStack src) {
         ServerPlayer sp = src.getPlayer(); if (sp == null) { fail(src, "Player context required."); return 0; }
-        Mob villager = lookedMob(sp); if (villager == null) { fail(src, "Look at a mob within 6 blocks."); return 0; }
-        ResourceLocation old = VendorAssignmentService.getProfileId(villager); if (old == null) { fail(src, "Mob has no vendor profile."); return 0; }
-        VendorAssignmentService.clearProfile(villager);
-        src.sendSuccess(() -> Component.literal("Cleared vendor profile ").withStyle(ChatFormatting.GREEN).append(profileName(old)), true);
+        Mob villager = lookedMob(sp); if (villager == null) { fail(src, "Look directly at a visible mob within the configured binding range."); return 0; }
+        if (!VendorAssignmentService.hasAssignedProfile(villager)) { fail(src, "Mob has no vendor binding."); return 0; }
+        boolean legacy = !villager.getPersistentData().contains(net.goui.cosmicdungeon.vendor.VendorBindingRules.BEFORE);
+        if (!VendorAssignmentService.clearProfile(villager)) {
+            fail(src, "Binding has conflicting roles or an unreadable original-state snapshot; no changes made."); return 0;
+        }
+        src.sendSuccess(() -> Component.literal("Cleared vendor binding on " + villager.getUUID()
+                + (legacy ? "; legacy name/AI/protection retained." : "; recorded name/AI/protection restored.")
+                + " Entity persistence retained.").withStyle(ChatFormatting.GREEN), true);
         return 1;
     }
 
     private static int info(CommandSourceStack src) {
         ServerPlayer sp = src.getPlayer(); if (sp == null) { fail(src, "Player context required."); return 0; }
-        Mob villager = lookedMob(sp); if (villager == null) { fail(src, "Look at a mob within 6 blocks."); return 0; }
+        Mob villager = lookedMob(sp); if (villager == null) { fail(src, "Look directly at a visible mob within the configured binding range."); return 0; }
+        var data = villager.getPersistentData();
         ResourceLocation id = VendorAssignmentService.getProfileId(villager);
-        if (id == null) { src.sendSuccess(() -> Component.literal("Mob is not an assigned vendor shell.").withStyle(ChatFormatting.GRAY), false); return 1; }
-        src.sendSuccess(() -> Component.literal("Mob vendor profile: ").withStyle(ChatFormatting.WHITE).append(profileName(id)), false);
+        String raw = String.valueOf(data.get(net.goui.cosmicdungeon.vendor.VendorBindingRules.PROFILE));
+        if (raw.length() > 256) raw = raw.substring(0, 256) + "...";
+        final String binding = raw;
+        var profile = id == null ? null : VendorProfileManager.INSTANCE.get(id);
+        src.sendSuccess(() -> Component.literal("NPC UUID=" + villager.getUUID()
+                + " type=" + BuiltInRegistries.ENTITY_TYPE.getKey(villager.getType())
+                + " dimension=" + villager.level().dimension().location()
+                + " position=" + villager.blockPosition().toShortString()), false);
+        src.sendSuccess(() -> Component.literal("Profile=" + binding + "; loaded=" + (profile != null)
+                + "; other role=" + VendorAssignmentService.hasOtherRole(villager)
+                + "; original-state snapshot=" + data.contains(net.goui.cosmicdungeon.vendor.VendorBindingRules.BEFORE)), false);
+        if (profile != null) {
+            var access = VendorAccessService.evaluate(sp, profile);
+            src.sendSuccess(() -> Component.literal("Personal access for " + sp.getName().getString()
+                    + ": " + access.message() + "; global entity presence grants no personal tier."), false);
+        }
         return 1;
     }
 
     private static int spawn(CommandSourceStack src, String profileIdRaw, String mobTypeRaw) {
         ServerPlayer sp = src.getPlayer(); if (sp == null) { fail(src, "Player context required."); return 0; }
         ResourceLocation id = resolveOrFail(src, profileIdRaw); if (id == null) return 0;
+        if (mobTypeRaw == null) mobTypeRaw = id.toString().equals(net.goui.cosmicdungeon.vendor.VendorBindingRules.BELUZON)
+                ? "minecraft:creaking" : "minecraft:villager";
         ResourceLocation mobTypeId = parseEntityTypeId(mobTypeRaw);
-        EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.getValue(mobTypeId);
+        EntityType<?> entityType = mobTypeId == null ? null : BuiltInRegistries.ENTITY_TYPE.getOptional(mobTypeId).orElse(null);
         if (entityType == null) { fail(src, "Unknown mob type: " + mobTypeRaw); return 0; }
         Entity entity = entityType.create(sp.level(), EntitySpawnReason.COMMAND);
         if (!(entity instanceof Mob vendorMob)) { fail(src, "Entity type is not a mob vendor shell: " + mobTypeId); return 0; }
         vendorMob.snapTo(sp.getX(), sp.getY(), sp.getZ(), sp.getYRot(), sp.getXRot());
-        if (!sp.level().addFreshEntity(vendorMob)) { fail(src, "Could not spawn vendor entity: " + mobTypeId); return 0; }
         if (!VendorAssignmentService.assignProfile(vendorMob, id)) {
-            vendorMob.discard();
-            fail(src, "Failed assigning vendor profile.");
+            fail(src, "Profile incompatible with this entity; Beluzon requires a native Creaking.");
             return 0;
         }
+        if (!net.goui.cosmicdungeon.npc.NpcIdentityService.spawn(vendorMob)) { fail(src, "Could not spawn vendor entity: " + mobTypeId); return 0; }
         src.sendSuccess(() -> Component.literal("Spawned vendor ").withStyle(ChatFormatting.GREEN)
                 .append(Component.literal(mobTypeId.toString()).withStyle(ChatFormatting.AQUA))
                 .append(Component.literal(" with profile ").withStyle(ChatFormatting.GREEN))
-                .append(profileName(id)), true);
+                .append(profileName(id))
+                .append(Component.literal("; replaces the previous NPC for this profile.").withStyle(ChatFormatting.GRAY)), true);
         return 1;
     }
 
@@ -224,20 +250,27 @@ public final class VendorCommand {
     }
 
     private static ResourceLocation parseEntityTypeId(String raw) {
-        ResourceLocation direct = ResourceLocation.tryParse(raw);
-        if (direct != null && raw.contains(":")) return direct;
-        return ResourceLocation.fromNamespaceAndPath("minecraft", raw);
+        return ResourceLocation.tryParse(raw);
     }
 
     private static Mob lookedMob(ServerPlayer sp) {
         Vec3 eye = sp.getEyePosition();
-        Vec3 end = eye.add(sp.getLookAngle().scale(6.0D));
-        AABB box = new AABB(eye, end).inflate(1.5D);
+        Vec3 end = eye.add(sp.getLookAngle().scale(net.goui.cosmicdungeon.Config.VENDOR_BINDING_RANGE.get()));
+        end = sp.level().clip(new net.minecraft.world.level.ClipContext(eye, end,
+                net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                net.minecraft.world.level.ClipContext.Fluid.NONE, sp)).getLocation();
+        AABB box = new AABB(eye, end).inflate(1.0D);
         Mob best = null;
         double bestDist = Double.MAX_VALUE;
-        for (Mob v : sp.level().getEntitiesOfClass(Mob.class, box, e -> e.isAlive())) {
-            double d = v.distanceToSqr(sp);
-            if (d < bestDist) { bestDist = d; best = v; }
+        for (Mob mob : sp.level().getEntitiesOfClass(Mob.class, box, Entity::isAlive)) {
+            var hit = net.goui.cosmicdungeon.vendor.VendorBindingRules.hit(eye, end,
+                    mob.getBoundingBox().inflate(mob.getPickRadius()));
+            if (hit.isEmpty()) continue;
+            double distance = hit.get();
+            if (distance < bestDist || distance == bestDist && best != null
+                    && mob.getUUID().compareTo(best.getUUID()) < 0) {
+                bestDist = distance; best = mob;
+            }
         }
         return best;
     }

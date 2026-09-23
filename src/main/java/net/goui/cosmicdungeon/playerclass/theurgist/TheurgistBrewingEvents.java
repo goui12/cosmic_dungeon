@@ -1,104 +1,63 @@
 package net.goui.cosmicdungeon.playerclass.theurgist;
 
+import net.goui.cosmicdungeon.Config;
 import net.goui.cosmicdungeon.CosmicDungeonMod;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.NonNullList;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.alchemy.PotionBrewing;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
-import net.minecraft.world.level.block.entity.TickingBlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
+import net.goui.cosmicdungeon.playerclass.api.ClassData;
+import net.goui.cosmicdungeon.playerclass.api.ClassKeys;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.inventory.BrewingStandMenu;
+import net.minecraft.world.level.block.BrewingStandBlock;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerContainerEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.List;
-
+/** Q&A D14. Vanilla owns recipe, fuel, remainder and completion events. */
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID)
 public final class TheurgistBrewingEvents {
-    private static final Field LEVEL_BLOCK_ENTITY_TICKERS = findField(Level.class, "blockEntityTickers");
-    private static final Field BREWING_STAND_ITEMS = findField(BrewingStandBlockEntity.class, "items");
-    private static final Field BREWING_STAND_BREW_TIME = findField(BrewingStandBlockEntity.class, "brewTime");
-    private static final Method DO_BREW = findDoBrew();
-
     private TheurgistBrewingEvents() {}
+    private static boolean allowed(ServerPlayer player) {
+        return ClassKeys.CLASS_ID_THEURGIST.equals(ClassData.getClassId(player));
+    }
 
     @SubscribeEvent
-    public static void onLevelTickPost(LevelTickEvent.Post event) {
-        Level level = event.getLevel();
-        if (level.isClientSide()) return;
+    public static void onOpenAttempt(PlayerInteractEvent.RightClickBlock event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        if (!(player.level().getBlockState(event.getPos()).getBlock() instanceof BrewingStandBlock)) return;
+        if (allowed(player)) return;
+        event.setCanceled(true);
+        event.setCancellationResult(InteractionResult.FAIL);
+        player.displayClientMessage(Component.literal("Only Theurgists can use a brewing stand."), true);
+    }
 
-        for (TickingBlockEntity ticker : blockEntityTickers(level)) {
-            if (ticker == null || ticker.isRemoved()) continue;
-            BlockPos pos = ticker.getPos();
-            if (!(level.getBlockEntity(pos) instanceof BrewingStandBlockEntity brewingStand)) continue;
-            finishBrewing(level, pos, brewingStand);
+    @SubscribeEvent
+    public static void onContainerOpen(PlayerContainerEvent.Open event) {
+        if (event.getEntity() instanceof ServerPlayer player
+                && event.getContainer() instanceof BrewingStandMenu && !allowed(player)) {
+            player.closeContainer();
         }
     }
 
-    private static void finishBrewing(Level level, BlockPos pos, BrewingStandBlockEntity brewingStand) {
-        if (BREWING_STAND_ITEMS == null || BREWING_STAND_BREW_TIME == null || DO_BREW == null) return;
-
-        try {
-            if (BREWING_STAND_BREW_TIME.getInt(brewingStand) <= 0) return;
-
-            @SuppressWarnings("unchecked")
-            NonNullList<ItemStack> items = (NonNullList<ItemStack>) BREWING_STAND_ITEMS.get(brewingStand);
-            if (!isBrewable(level.potionBrewing(), items)) return;
-
-            DO_BREW.invoke(null, level, pos, items);
-            BREWING_STAND_BREW_TIME.setInt(brewingStand, 0);
-            BlockState state = level.getBlockState(pos);
-            brewingStand.setChanged();
-            level.sendBlockUpdated(pos, state, state, 3);
-        } catch (ReflectiveOperationException | RuntimeException ignored) {
-            // If Mojang internals change, fail soft and leave vanilla brewing behavior intact.
+    @SubscribeEvent
+    public static void onPlayerTick(PlayerTickEvent.Post event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        if (!(player.containerMenu instanceof BrewingStandMenu menu)) return;
+        if (!allowed(player)) { player.closeContainer(); return; }
+        // No global block-entity scan or reflection. This menu addresses its own stand.
+        // Only shorten an already-started vanilla brew, so fuel is consumed exactly once.
+        if (Config.INSTANT_BREWING.get() && menu.stillValid(player)
+                && menu.getBrewingTicks() > Config.BREW_TICKS.get()) {
+            menu.setData(0, Config.BREW_TICKS.get());
         }
     }
 
-    private static boolean isBrewable(PotionBrewing potionBrewing, NonNullList<ItemStack> items) {
-        ItemStack ingredient = items.get(3);
-        if (ingredient.isEmpty() || !potionBrewing.isIngredient(ingredient)) return false;
-
-        for (int i = 0; i < 3; i++) {
-            ItemStack input = items.get(i);
-            if (!input.isEmpty() && potionBrewing.hasMix(input, ingredient)) return true;
-        }
-        return false;
-    }
-
-    private static Iterable<TickingBlockEntity> blockEntityTickers(Level level) {
-        if (LEVEL_BLOCK_ENTITY_TICKERS == null) return List.of();
-
-        try {
-            @SuppressWarnings("unchecked")
-            List<TickingBlockEntity> tickers = (List<TickingBlockEntity>) LEVEL_BLOCK_ENTITY_TICKERS.get(level);
-            return tickers;
-        } catch (ReflectiveOperationException | RuntimeException ignored) {
-            return List.of();
-        }
-    }
-
-    private static Field findField(Class<?> owner, String name) {
-        try {
-            Field field = owner.getDeclaredField(name);
-            field.setAccessible(true);
-            return field;
-        } catch (ReflectiveOperationException | RuntimeException ignored) {
-            return null;
-        }
-    }
-
-    private static Method findDoBrew() {
-        try {
-            Method method = BrewingStandBlockEntity.class.getDeclaredMethod("doBrew", Level.class, BlockPos.class, NonNullList.class);
-            method.setAccessible(true);
-            return method;
-        } catch (ReflectiveOperationException | RuntimeException ignored) {
-            return null;
-        }
-    }
+    // TODO(D12/D42/D68/D82, D2+): source 1l9ox2pQUSPy0_J3h7ljPOaVOFtMFkoHq_rFSGK4iqeM,
+    // Theurgist Items and Armor, 2026-04-05, D2/D3 sections explicitly deferred.
+    // Portable brewing queues, tier speed 50/60/70/80%, custom cleansing/stasis effects,
+    // conduit fatal-damage health/debuff/cooldown tiers, and resurrection after respawn
+    // need their own reviewed lifecycle. D1 retains authored vanilla Undying totems.
+    // Put all later effect/radius/duration modifiers in the Theurgist config section.
 }

@@ -371,11 +371,15 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
         }
 
         public static TradeView current() {
-            return current;
+            var player = net.minecraft.client.Minecraft.getInstance().player;
+            return current != null && player != null && player.containerMenu instanceof TradeMenu
+                    && net.goui.cosmicdungeon.menu.SessionMenu.matches(player.containerMenu, current.containerId(), current.sessionId())
+                    ? current : null;
         }
 
         public static TradeView currentFor(int containerId) {
-            return current != null && current.containerId() == containerId ? current : null;
+            var view = current();
+            return view != null && view.containerId() == containerId ? view : null;
         }
 
         public record TradeView(

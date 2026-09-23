@@ -13,9 +13,10 @@
         "count": 1
       },
       "cost": {
-        "amount": 50,
+        "amount": 60,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "stone_sword",
@@ -24,9 +25,10 @@
         "count": 1
       },
       "cost": {
-        "amount": 80,
+        "amount": 96,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "golden_sword",
@@ -35,9 +37,10 @@
         "count": 1
       },
       "cost": {
-        "amount": 160,
+        "amount": 192,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "copper_sword",
@@ -46,9 +49,10 @@
         "count": 1
       },
       "cost": {
-        "amount": 250,
+        "amount": 300,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "iron_sword",
@@ -57,9 +61,10 @@
         "count": 1
       },
       "cost": {
-        "amount": 490,
+        "amount": 588,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "diamond_sword",
@@ -68,9 +73,10 @@
         "count": 1
       },
       "cost": {
-        "amount": 570,
+        "amount": 684,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "netherite_sword",
@@ -79,9 +85,10 @@
         "count": 1
       },
       "cost": {
-        "amount": 690,
+        "amount": 828,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "wooden_pickaxe",
@@ -90,9 +97,10 @@
         "count": 1
       },
       "cost": {
-        "amount": 60,
+        "amount": 72,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "stone_pickaxe",
@@ -101,9 +109,10 @@
         "count": 1
       },
       "cost": {
-        "amount": 100,
+        "amount": 120,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "golden_pickaxe",
@@ -112,9 +121,10 @@
         "count": 1
       },
       "cost": {
-        "amount": 180,
+        "amount": 216,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "copper_pickaxe",
@@ -123,9 +133,10 @@
         "count": 1
       },
       "cost": {
-        "amount": 310,
+        "amount": 372,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "iron_pickaxe",
@@ -134,9 +145,10 @@
         "count": 1
       },
       "cost": {
-        "amount": 620,
+        "amount": 744,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "diamond_pickaxe",
@@ -145,9 +157,10 @@
         "count": 1
       },
       "cost": {
-        "amount": 720,
+        "amount": 864,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "netherite_pickaxe",
@@ -156,9 +169,94 @@
         "count": 1
       },
       "cost": {
-        "amount": 880,
+        "amount": 1056,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 1
+    },
+    {
+      "offerId": "wooden_axe",
+      "result": {
+        "item": "minecraft:wooden_axe",
+        "count": 1
+      },
+      "cost": {
+        "amount": 72,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 1
+    },
+    {
+      "offerId": "stone_axe",
+      "result": {
+        "item": "minecraft:stone_axe",
+        "count": 1
+      },
+      "cost": {
+        "amount": 120,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 1
+    },
+    {
+      "offerId": "golden_axe",
+      "result": {
+        "item": "minecraft:golden_axe",
+        "count": 1
+      },
+      "cost": {
+        "amount": 216,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 1
+    },
+    {
+      "offerId": "copper_axe",
+      "result": {
+        "item": "minecraft:copper_axe",
+        "count": 1
+      },
+      "cost": {
+        "amount": 372,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 1
+    },
+    {
+      "offerId": "iron_axe",
+      "result": {
+        "item": "minecraft:iron_axe",
+        "count": 1
+      },
+      "cost": {
+        "amount": 744,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 1
+    },
+    {
+      "offerId": "diamond_axe",
+      "result": {
+        "item": "minecraft:diamond_axe",
+        "count": 1
+      },
+      "cost": {
+        "amount": 864,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 1
+    },
+    {
+      "offerId": "netherite_axe",
+      "result": {
+        "item": "minecraft:netherite_axe",
+        "count": 1
+      },
+      "cost": {
+        "amount": 1056,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "shield",
@@ -167,9 +265,10 @@
         "count": 1
       },
       "cost": {
-        "amount": 240,
+        "amount": 288,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "bow",
@@ -178,9 +277,10 @@
         "count": 1
       },
       "cost": {
-        "amount": 220,
+        "amount": 264,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "crossbow",
@@ -189,9 +289,22 @@
         "count": 1
       },
       "cost": {
-        "amount": 360,
+        "amount": 432,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 1
+    },
+    {
+      "offerId": "mace",
+      "result": {
+        "item": "minecraft:mace",
+        "count": 1
+      },
+      "cost": {
+        "amount": 720,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "trident",
@@ -200,9 +313,13 @@
         "count": 1
       },
       "cost": {
-        "amount": 580,
+        "amount": 696,
         "denomination": "trace"
-      }
+      },
+      "requiredClasses": [
+        "dragoon"
+      ],
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "arrow",
@@ -212,15 +329,17 @@
         "maxStackSize": 64
       },
       "cost": {
-        "amount": 1,
+        "amount": 2,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 64
     },
     {
-      "offerId": "leather_patch",
+      "offerId": "oak_planks",
       "result": {
-        "item": "cosmicdungeon:leather_patch",
-        "count": 1
+        "item": "minecraft:oak_planks",
+        "count": 1,
+        "repairComponent": "oak_planks"
       },
       "cost": {
         "amount": 2,
@@ -228,13 +347,63 @@
       },
       "requiredClasses": [
         "dragoon"
-      ]
+      ],
+      "maxPurchasesPerPlayer": 16
+    },
+    {
+      "offerId": "spruce_planks",
+      "result": {
+        "item": "minecraft:spruce_planks",
+        "count": 1,
+        "repairComponent": "spruce_planks"
+      },
+      "cost": {
+        "amount": 5,
+        "denomination": "trace"
+      },
+      "requiredClasses": [
+        "dragoon"
+      ],
+      "maxPurchasesPerPlayer": 16
+    },
+    {
+      "offerId": "cobblestone",
+      "result": {
+        "item": "minecraft:cobblestone",
+        "count": 1,
+        "repairComponent": "cobblestone"
+      },
+      "cost": {
+        "amount": 3,
+        "denomination": "trace"
+      },
+      "requiredClasses": [
+        "dragoon"
+      ],
+      "maxPurchasesPerPlayer": 16
+    },
+    {
+      "offerId": "leather",
+      "result": {
+        "item": "minecraft:leather",
+        "count": 1,
+        "repairComponent": "leather"
+      },
+      "cost": {
+        "amount": 2,
+        "denomination": "trace"
+      },
+      "requiredClasses": [
+        "dragoon"
+      ],
+      "maxPurchasesPerPlayer": 16
     },
     {
       "offerId": "gold_ingot",
       "result": {
         "item": "minecraft:gold_ingot",
-        "count": 1
+        "count": 1,
+        "repairComponent": "gold_ingot"
       },
       "cost": {
         "amount": 4,
@@ -242,13 +411,15 @@
       },
       "requiredClasses": [
         "dragoon"
-      ]
+      ],
+      "maxPurchasesPerPlayer": 16
     },
     {
       "offerId": "copper_ingot",
       "result": {
         "item": "minecraft:copper_ingot",
-        "count": 1
+        "count": 1,
+        "repairComponent": "copper_ingot"
       },
       "cost": {
         "amount": 8,
@@ -256,13 +427,15 @@
       },
       "requiredClasses": [
         "dragoon"
-      ]
+      ],
+      "maxPurchasesPerPlayer": 16
     },
     {
-      "offerId": "chain_link",
+      "offerId": "iron_ingot",
       "result": {
-        "item": "cosmicdungeon:chain_link",
-        "count": 1
+        "item": "minecraft:iron_ingot",
+        "count": 1,
+        "repairComponent": "iron_ingot"
       },
       "cost": {
         "amount": 12,
@@ -270,27 +443,15 @@
       },
       "requiredClasses": [
         "dragoon"
-      ]
-    },
-    {
-      "offerId": "iron_ingot",
-      "result": {
-        "item": "minecraft:iron_ingot",
-        "count": 1
-      },
-      "cost": {
-        "amount": 16,
-        "denomination": "trace"
-      },
-      "requiredClasses": [
-        "dragoon"
-      ]
+      ],
+      "maxPurchasesPerPlayer": 16
     },
     {
       "offerId": "diamond",
       "result": {
         "item": "minecraft:diamond",
-        "count": 1
+        "count": 1,
+        "repairComponent": "diamond"
       },
       "cost": {
         "amount": 18,
@@ -298,13 +459,15 @@
       },
       "requiredClasses": [
         "dragoon"
-      ]
+      ],
+      "maxPurchasesPerPlayer": 16
     },
     {
-      "offerId": "netherite_repair_fragment",
+      "offerId": "netherite_ingot",
       "result": {
-        "item": "cosmicdungeon:netherite_repair_fragment",
-        "count": 1
+        "item": "minecraft:netherite_ingot",
+        "count": 1,
+        "repairComponent": "netherite_ingot"
       },
       "cost": {
         "amount": 22,
@@ -312,7 +475,72 @@
       },
       "requiredClasses": [
         "dragoon"
-      ]
+      ],
+      "maxPurchasesPerPlayer": 16
+    },
+    {
+      "offerId": "mace_repair_kit",
+      "result": {
+        "item": "minecraft:mace",
+        "count": 1,
+        "repairComponent": "mace_repair_kit"
+      },
+      "cost": {
+        "amount": 18,
+        "denomination": "trace"
+      },
+      "requiredClasses": [
+        "dragoon"
+      ],
+      "maxPurchasesPerPlayer": 16
+    },
+    {
+      "offerId": "bow_repair_kit",
+      "result": {
+        "item": "minecraft:bow",
+        "count": 1,
+        "repairComponent": "bow_repair_kit"
+      },
+      "cost": {
+        "amount": 8,
+        "denomination": "trace"
+      },
+      "requiredClasses": [
+        "dragoon"
+      ],
+      "maxPurchasesPerPlayer": 4
+    },
+    {
+      "offerId": "crossbow_repair_kit",
+      "result": {
+        "item": "minecraft:crossbow",
+        "count": 1,
+        "repairComponent": "crossbow_repair_kit"
+      },
+      "cost": {
+        "amount": 14,
+        "denomination": "trace"
+      },
+      "requiredClasses": [
+        "dragoon"
+      ],
+      "maxPurchasesPerPlayer": 4
+    },
+    {
+      "offerId": "trident_repair_kit",
+      "result": {
+        "item": "minecraft:trident",
+        "count": 1,
+        "repairComponent": "trident_repair_kit"
+      },
+      "cost": {
+        "amount": 36,
+        "denomination": "trace"
+      },
+      "requiredClasses": [
+        "dragoon"
+      ],
+      "maxPurchasesPerPlayer": 4
     }
   ],
   "buyback": {

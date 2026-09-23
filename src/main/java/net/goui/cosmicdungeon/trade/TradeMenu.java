@@ -10,7 +10,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
-public class TradeMenu extends AbstractContainerMenu {
+public class TradeMenu extends AbstractContainerMenu implements net.goui.cosmicdungeon.menu.SessionMenu {
     public static final int OFFER_SLOTS = 9;
 
     public static final int OTHER_OFFER_START = 0;
@@ -38,8 +38,20 @@ public class TradeMenu extends AbstractContainerMenu {
     private final SimpleContainer otherFallback;
     private final Container ownContainer;
 
+    private final java.util.UUID sessionId;
+    private final net.goui.cosmicdungeon.menu.MenuBalanceRefresh balanceRefresh = new net.goui.cosmicdungeon.menu.MenuBalanceRefresh();
+    @Override public java.util.UUID sessionId() { return sessionId; }
+    @Override public void broadcastChanges() {
+        super.broadcastChanges();
+        if (session != null && self instanceof ServerPlayer sp && sp.containerMenu == this
+                && balanceRefresh.due(sp.level().getGameTime(), net.goui.cosmicdungeon.Config.MENU_BALANCE_POLL_TICKS.get()))
+            session.refreshBalances(sp, balanceRefresh);
+    }
     public TradeMenu(int id, Inventory inv, TradeSessionData.TradeSession session) {
-        super(ModMenus.TRADE.get(), id);
+        this(id, inv, session, session == null ? new java.util.UUID(0, 0) : session.id());
+    }
+    public TradeMenu(int id, Inventory inv, TradeSessionData.TradeSession session, java.util.UUID sessionId) {
+        super(ModMenus.TRADE.get(), id); this.sessionId = sessionId;
         this.session = session;
         this.self = inv.player;
         this.ownFallback = new SimpleContainer(OFFER_SLOTS);
@@ -67,6 +79,8 @@ public class TradeMenu extends AbstractContainerMenu {
         }
     }
 
+    public boolean belongsTo(TradeSessionData.TradeSession expected){return session==expected;}
+
     @Override
     public boolean stillValid(Player p) {
         return session != null && session.isValidFor(p);
@@ -74,7 +88,7 @@ public class TradeMenu extends AbstractContainerMenu {
 
     @Override
     public ItemStack quickMoveStack(Player p, int idx) {
-        if (idx < 0 || idx >= this.slots.size()) {
+        if (!canEditOwnOffer(p) || idx < 0 || idx >= this.slots.size()) {
             return ItemStack.EMPTY;
         }
         if (isOtherOfferSlot(idx)) {
@@ -94,7 +108,7 @@ public class TradeMenu extends AbstractContainerMenu {
                 return ItemStack.EMPTY;
             }
         } else if (isPlayerInventorySlot(idx) || isHotbarSlot(idx)) {
-            if (!canEditOwnOffer(p)) {
+            if (!canEditOwnOffer(p) || !net.goui.cosmicdungeon.economy.pricing.ItemTransferRules.tradeEligible(inSlot)) {
                 return ItemStack.EMPTY;
             }
             if (!moveItemStackTo(inSlot, OWN_OFFER_START, OWN_OFFER_START + OWN_OFFER_COUNT, false)) {
@@ -124,15 +138,17 @@ public class TradeMenu extends AbstractContainerMenu {
         if (isOwnOfferSlot(slotId) && !canEditOwnOffer(player)) {
             return;
         }
+        if (!canEditOwnOffer(player)) return;
         super.clicked(slotId, button, clickType, player);
+        if(player instanceof ServerPlayer p)TradeCustody.capture(p);
     }
 
     @Override
     public void removed(Player player) {
-        super.removed(player);
         if (!player.level().isClientSide() && session != null && player instanceof ServerPlayer serverPlayer && session.canCancelFromMenuClose(serverPlayer)) {
             session.cancelFromMenuClose(serverPlayer);
         }
+        super.removed(player);
     }
 
     @Override
@@ -176,7 +192,7 @@ public class TradeMenu extends AbstractContainerMenu {
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return canEditOwnOffer(self);
+            return canEditOwnOffer(self) && net.goui.cosmicdungeon.economy.pricing.ItemTransferRules.tradeEligible(stack);
         }
 
         @Override

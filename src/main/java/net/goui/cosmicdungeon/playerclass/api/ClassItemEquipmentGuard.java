@@ -76,6 +76,7 @@ public final class ClassItemEquipmentGuard {
     }
 
     private static boolean can(ServerPlayer player, ItemStack stack, boolean wearing) {
+        if (stack != null && net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairComponents.marked(stack)) return false;
         String required = getRequiredClass(stack);
         if (required == null) return true;
         if (wearing) {

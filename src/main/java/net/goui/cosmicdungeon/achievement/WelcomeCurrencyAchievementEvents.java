@@ -14,7 +14,6 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID)
 public final class WelcomeCurrencyAchievementEvents {
-    private static final long WELCOME_REWARD_TRACE = 5L;
 
     private WelcomeCurrencyAchievementEvents() {}
 
@@ -31,11 +30,13 @@ public final class WelcomeCurrencyAchievementEvents {
         if (holder == null) return;
         if (player.getAdvancements().getOrStartProgress(holder).isDone()) return;
 
-        CurrencyService.tryDeposit(player, WELCOME_REWARD_TRACE);
+        long requested=net.goui.cosmicdungeon.economy.D1EconomyConfig.FIRST_TRACE.get();
+        long credited=CurrencyService.reward(player,requested,"first_trace","first_trace",0,"first_trace");
+        if(credited<0)return;
         CosmicAdvancementUtil.grant(player, CosmicAchievementIds.FIRST_TRACE);
         player.sendSystemMessage(Component.literal("First Trace reward: ")
                 .withStyle(ChatFormatting.GOLD)
-                .append(Component.literal("5 Trace").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD))
+                .append(Component.literal(credited+" Trace").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD))
                 .append(Component.literal(" received. Check achievements to learn how Trace is used.")
                         .withStyle(ChatFormatting.AQUA)));
     }

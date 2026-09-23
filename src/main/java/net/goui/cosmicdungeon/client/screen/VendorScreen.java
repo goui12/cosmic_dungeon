@@ -37,6 +37,10 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
     private final Set<Integer> selectedSellSlots = new HashSet<>();
     private VendorClientState.VendorView renderedView;
     private int offerPage;
+    private int sellPage;
+    private static final int QUOTE_LINES_PER_PAGE = 3;
+    private int quotePage;
+    private VendorPayloads.S2C_VendorSaleQuote saleQuote;
     private Button sellSelectedButton;
     private Button sellAllButton;
 
@@ -70,7 +74,8 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         renderedView = view();
         int x0 = leftPos + 10;
 
-        if (renderedView == null || renderedView.offers().isEmpty()) return;
+        if (saleQuote != null) { buildQuoteWidgets(); return; }
+        if (renderedView == null) return;
 
         clampOfferPage();
         int pageCount = pageCount();
@@ -122,6 +127,68 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         addRenderableWidget(sellAllButton);
     }
 
+
+    public void showSaleQuote(VendorPayloads.S2C_VendorSaleQuote quote) {
+        if (quote.containerId() != menu.containerId) return;
+        saleQuote = quote;
+        quotePage = 0;
+        rebuildVendorWidgets();
+    }
+
+    private void decideSale(boolean confirm) {
+        if (saleQuote == null) return;
+        ModNetwork.sendToServer(new VendorPayloads.C2S_VendorSaleDecision(menu.containerId, saleQuote.token(), confirm));
+        saleQuote = null;
+        rebuildVendorWidgets();
+    }
+
+    private void buildQuoteWidgets() {
+        int pages = (saleQuote.lines().size() + QUOTE_LINES_PER_PAGE - 1) / QUOTE_LINES_PER_PAGE;
+        quotePage = Math.max(0, Math.min(quotePage, pages - 1));
+        var previous = Button.builder(Component.literal("<"), b -> { quotePage--; rebuildVendorWidgets(); })
+                .bounds(leftPos + 10, topPos + 199, 25, 18).build();
+        previous.active = quotePage > 0;
+        addRenderableWidget(previous);
+        var next = Button.builder(Component.literal(">"), b -> { quotePage++; rebuildVendorWidgets(); })
+                .bounds(leftPos + imageWidth - 35, topPos + 199, 25, 18).build();
+        next.active = quotePage + 1 < pages;
+        addRenderableWidget(next);
+        boolean zero = saleQuote.lines().stream().anyMatch(line -> line.trace() == 0);
+        addRenderableWidget(Button.builder(Component.literal(zero ? "Confirm surrender / sale" : "Confirm sale"),
+                b -> decideSale(true)).bounds(leftPos + 10, topPos + 229, 210, 20).build());
+        addRenderableWidget(Button.builder(Component.literal("Cancel"), b -> decideSale(false))
+                .bounds(leftPos + 230, topPos + 229, 120, 20).build());
+    }
+
+    private void renderQuote(GuiGraphics g, int mouseX, int mouseY) {
+        g.drawString(font, "Review sale", leftPos + 10, topPos + 9, 0xFFFFFFFF, false);
+        boolean zero = saleQuote.lines().stream().anyMatch(line -> line.trace() == 0);
+        String warning = zero ? "Zero-Trace items are surrendered without payment." : "Confirm removes the listed items.";
+        g.drawString(font, warning, leftPos + 10, topPos + 25, 0xFFFFCC80, false);
+        int first = quotePage * QUOTE_LINES_PER_PAGE;
+        for (int i = first; i < Math.min(first + QUOTE_LINES_PER_PAGE, saleQuote.lines().size()); i++) {
+            var line = saleQuote.lines().get(i);
+            var stack = line.stack();
+            int y = topPos + 45 + (i - first) * 48;
+            g.renderItem(stack, leftPos + 10, y);
+            g.renderItemDecorations(font, stack, leftPos + 10, y);
+            g.drawString(font, font.plainSubstrByWidth(stack.getHoverName().getString(), 136), leftPos + 32, y + 4, 0xFFFFFFFF, false);
+            g.drawString(font, line.trace() + " Trace", leftPos + 178, y + 4, 0xFF90CAF9, false);
+            var price = line.breakdown();
+            boolean named = net.goui.cosmicdungeon.item.identity.ItemProvenanceService.named(line.stack()) != null;
+            g.drawString(font, (named ? "Listed: " : "Base: ") + price.base(), leftPos + 10, y + 20, 0xFFCCCCCC, false);
+            g.drawString(font, named ? "Ench: included" : "Ench: " + price.enchantments(),
+                    leftPos + 178, y + 20, 0xFFCCCCCC, false);
+            g.drawString(font, "Curse: " + price.curses(), leftPos + 10, y + 32, 0xFFFFCC80, false);
+            g.drawString(font, "Adjust: " + price.adjustments(), leftPos + 178, y + 32, 0xFFCCCCCC, false);
+            if (isHoveringItemStack(mouseX, mouseY, leftPos + 10, y, stack))
+                g.setTooltipForNextFrame(font, stack, mouseX, mouseY);
+        }
+        g.drawString(font, "Page " + (quotePage + 1) + "/" + ((saleQuote.lines().size() + QUOTE_LINES_PER_PAGE - 1) / QUOTE_LINES_PER_PAGE),
+                leftPos + 45, topPos + 204, 0xFFB0BEC5, false);
+        g.drawString(font, "Total: " + saleQuote.totalTrace() + " Trace", leftPos + 150, topPos + 204, 0xFFFFE082, false);
+    }
+
     private int pageCount() {
         VendorClientState.VendorView current = view();
         if (current == null || current.offers().isEmpty()) return 1;
@@ -140,10 +207,13 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (saleQuote != null) return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
         if (super.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) return true;
         VendorClientState.VendorView current = view();
-        if (current == null || current.offers().isEmpty() || pageCount() <= 1 || !isMouseOver(mouseX, mouseY)) return false;
-        changeOfferPage(scrollY < 0.0D ? 1 : -1);
+        if (current == null || !isMouseOver(mouseX, mouseY)) return false;
+        if (mouseX >= leftPos + SELLABLE_TABLE_X_OFFSET) {
+            sellPage = Math.max(0, Math.min(sellPage + (scrollY < 0 ? 1 : -1), Math.max(0, (collectSellable(current).size() - 1) / SELLABLE_ROWS)));
+        } else changeOfferPage(scrollY < 0.0D ? 1 : -1);
         return true;
     }
 
@@ -170,6 +240,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         super.render(g, mouseX, mouseY, partialTick);
         renderTooltip(g, mouseX, mouseY);
 
+        if (saleQuote != null) { renderQuote(g, mouseX, mouseY); return; }
         VendorClientState.VendorView current = view();
         int x0 = leftPos + 10;
         int y = topPos + 8;
@@ -235,7 +306,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
     private void renderSellableInventoryPreview(GuiGraphics g, int mouseX, int mouseY, VendorClientState.VendorView current) {
         int tableX = leftPos + SELLABLE_TABLE_X_OFFSET;
         int tableY = topPos + SELLABLE_TABLE_TOP_OFFSET;
-        g.drawString(font, Component.literal("Player Inventory"), tableX, topPos + 40, 0xFFB0BEC5, false);
+        g.drawString(font, Component.literal("Inventory (scroll)"), tableX, topPos + 40, 0xFFB0BEC5, false);
 
         if (minecraft == null || minecraft.player == null) {
             g.drawString(font, Component.literal("Inventory unavailable"), tableX, tableY, 0xFFB0BEC5, false);
@@ -248,11 +319,13 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             ItemStack stack = inventory.getItem(slot);
             if (stack.isEmpty()) continue;
             var price = VendorPricingService.getSellValue(stack, current.pricingGroup());
-            if (price.traceValue() > 0L) sellable.add(new SellableStackView(slot, stack, price.traceValue()));
+            if (price.approved()) sellable.add(new SellableStackView(slot, stack, price.traceValue()));
         }
 
         if (sellable.isEmpty()) {
             g.drawString(font, Component.literal("No sellable items found"), tableX, tableY, 0xFFB0BEC5, false);
+            selectedSellSlots.clear();
+            sellPage = 0;
             updateSellButtons(0L, 0L);
             return;
         }
@@ -263,9 +336,11 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
         updateSellButtons(selectedPayout, allPayout);
 
         ItemStack hoveredSellableStack = ItemStack.EMPTY;
-        int rows = Math.min(SELLABLE_ROWS, sellable.size());
+        sellPage = Math.max(0, Math.min(sellPage, (sellable.size() - 1) / SELLABLE_ROWS));
+        int firstSell = sellPage * SELLABLE_ROWS;
+        int rows = Math.min(SELLABLE_ROWS, sellable.size() - firstSell);
         for (int i = 0; i < rows; i++) {
-            SellableStackView sellableStack = sellable.get(i);
+            SellableStackView sellableStack = sellable.get(firstSell + i);
             int rowY = tableY + i * SELLABLE_ROW_HEIGHT;
             g.fill(tableX - 2, rowY - 2, leftPos + imageWidth - 8, rowY + SELLABLE_ROW_HEIGHT - 2, 0x502B2B36);
             if (selectedSellSlots.contains(sellableStack.slotIndex())) drawBorder(g, tableX - 1, rowY - 4, tableX + 17, rowY + 14, 0xFFFFFFFF);
@@ -282,7 +357,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             }
         }
         if (sellable.size() > SELLABLE_ROWS) {
-            g.drawString(font, Component.literal("+" + (sellable.size() - SELLABLE_ROWS) + " more sellable stacks"), tableX, tableY + SELLABLE_ROWS * SELLABLE_ROW_HEIGHT + 2, 0xFFB0BEC5, false);
+            g.drawString(font, Component.literal((sellPage + 1) + "/" + ((sellable.size() + SELLABLE_ROWS - 1) / SELLABLE_ROWS)), tableX + 36, tableY + SELLABLE_ROWS * SELLABLE_ROW_HEIGHT, 0xFFB0BEC5, false);
         }
         if (!hoveredSellableStack.isEmpty()) {
             g.setTooltipForNextFrame(font, hoveredSellableStack, mouseX, mouseY);
@@ -321,18 +396,19 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             ItemStack stack = inventory.getItem(slot);
             if (stack.isEmpty()) continue;
             var price = VendorPricingService.getSellValue(stack, current.pricingGroup());
-            if (price.traceValue() > 0L) sellable.add(new SellableStackView(slot, stack, price.traceValue()));
+            if (price.approved()) sellable.add(new SellableStackView(slot, stack, price.traceValue()));
         }
         return sellable;
     }
 
     private void updateSellButtons(long selectedPayout, long allPayout) {
-        if (sellSelectedButton != null) sellSelectedButton.active = selectedPayout > 0L;
+        if (sellSelectedButton != null) sellSelectedButton.active = !selectedSellSlots.isEmpty();
         if (sellAllButton != null) sellAllButton.active = allPayout > 0L;
     }
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (saleQuote != null) return super.mouseClicked(event, doubleClick);
         int button = event.button();
         double mouseX = event.x();
         double mouseY = event.y();
@@ -357,9 +433,9 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             ItemStack stack = inventory.getItem(slot);
             if (stack.isEmpty()) continue;
             var price = VendorPricingService.getSellValue(stack, current.pricingGroup());
-            if (price.traceValue() <= 0L) continue;
-            if (row < SELLABLE_ROWS) {
-                int rowY = tableY + row * SELLABLE_ROW_HEIGHT;
+            if (!price.approved()) continue;
+            if (row >= sellPage * SELLABLE_ROWS && row < (sellPage + 1) * SELLABLE_ROWS) {
+                int rowY = tableY + (row - sellPage * SELLABLE_ROWS) * SELLABLE_ROW_HEIGHT;
                 if (mouseX >= tableX && mouseX < tableX + OFFER_ITEM_SIZE && mouseY >= rowY - 3 && mouseY < rowY - 3 + OFFER_ITEM_SIZE) {
                     return new SellableStackView(slot, stack, price.traceValue());
                 }
@@ -404,7 +480,12 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
     public static final class VendorClientState {
         private static VendorView current;
         public static void set(VendorView state) { current = state; }
-        public static VendorView current() { return current; }
+        public static VendorView current() {
+            var player = net.minecraft.client.Minecraft.getInstance().player;
+            return current != null && player != null && player.containerMenu instanceof VendorMenu
+                    && net.goui.cosmicdungeon.menu.SessionMenu.matches(player.containerMenu, current.containerId(), current.sessionId())
+                    ? current : null;
+        }
 
         public static String descriptorFromProfileId(ResourceLocation profileId) {
             if (profileId == null) return "Vendor";
@@ -422,7 +503,7 @@ public final class VendorScreen extends AbstractContainerScreen<VendorMenu> {
             return descriptor.isEmpty() ? "Vendor" : descriptor.toString();
         }
 
-        public record VendorView(int vendorEntityId, ResourceLocation profileId, String title, String storeDisplayName, long balanceTrace, String pricingGroup, List<VendorPayloads.S2C_OpenVendor.OfferView> offers, java.util.Set<String> unlockedOffers) {}
+        public record VendorView(int containerId, java.util.UUID sessionId, int vendorEntityId, ResourceLocation profileId, String title, String storeDisplayName, long balanceTrace, String pricingGroup, List<VendorPayloads.S2C_OpenVendor.OfferView> offers, java.util.Set<String> unlockedOffers) {}
     }
 
     private record SellableStackView(int slotIndex, ItemStack stack, long traceValue) {}

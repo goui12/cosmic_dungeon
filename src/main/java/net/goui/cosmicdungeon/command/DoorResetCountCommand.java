@@ -22,7 +22,7 @@ public final class DoorResetCountCommand {
         dispatcher.register(
                 Commands.literal("door")
                         .then(Commands.literal("reset_count")
-                                .requires(src -> src.hasPermission(0)) // anyone can use
+                                .requires(net.goui.cosmicdungeon.auth.AccessPolicy::requireDeveloperOrConsole)
                                 .executes(ctx -> {
                                     final CommandSourceStack src = ctx.getSource();
                                     final ServerPlayer player = src.getPlayerOrException();

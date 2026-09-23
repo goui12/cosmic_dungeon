@@ -74,7 +74,13 @@ public final class DefaultRiftDestinations {
             return false;
         }
         ResolvedDestination dest = resolved.get();
-        boolean ok = SafeTeleportUtil.teleportSafely(player, dest.level(), dest.pos(), player.getYRot(), player.getXRot());
+        var route = net.goui.cosmicdungeon.dungeon.DungeonTravelRouter.resolveRift(
+                player, MAIN_VILLAGE, dest.level().dimension(), dest.pos(), false);
+        if (route instanceof net.goui.cosmicdungeon.dungeon.DungeonTravelRouter.Result.Rejected rejected) {
+            player.sendSystemMessage(Component.literal(rejected.message()).withStyle(ChatFormatting.RED)); return false;
+        }
+        var allowed = (net.goui.cosmicdungeon.dungeon.DungeonTravelRouter.Result.Allowed) route;
+        boolean ok = SafeTeleportUtil.teleportSafely(player, allowed.level(), allowed.pos(), player.getYRot(), player.getXRot());
         if (!ok) player.sendSystemMessage(Component.literal("Main Village destination is blocked or unsafe.").withStyle(ChatFormatting.RED));
         return ok;
     }

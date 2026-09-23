@@ -14,9 +14,10 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 2,
-        "denomination": "mark"
-      }
+        "amount": 24,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "sugar",
@@ -26,9 +27,10 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 1,
+        "amount": 2,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "spider_eye",
@@ -38,9 +40,10 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 8,
+        "amount": 10,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "fermented_spider_eye",
@@ -50,9 +53,10 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 9,
+        "amount": 11,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "magma_cream",
@@ -62,9 +66,10 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 7,
+        "amount": 9,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "glistering_melon_slice",
@@ -74,9 +79,10 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 2,
-        "denomination": "mark"
-      }
+        "amount": 24,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "blaze_powder",
@@ -86,9 +92,70 @@
         "maxStackSize": 20
       },
       "cost": {
+        "amount": 6,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 20
+    },
+    {
+      "offerId": "ghast_tear",
+      "result": {
+        "item": "minecraft:ghast_tear",
+        "count": 1
+      },
+      "cost": {
+        "amount": 24,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 20
+    },
+    {
+      "offerId": "redstone",
+      "result": {
+        "item": "minecraft:redstone",
+        "count": 1
+      },
+      "cost": {
         "amount": 5,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
+    },
+    {
+      "offerId": "glowstone_dust",
+      "result": {
+        "item": "minecraft:glowstone_dust",
+        "count": 1
+      },
+      "cost": {
+        "amount": 8,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 20
+    },
+    {
+      "offerId": "gunpowder",
+      "result": {
+        "item": "minecraft:gunpowder",
+        "count": 1
+      },
+      "cost": {
+        "amount": 6,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 20
+    },
+    {
+      "offerId": "dragon_breath",
+      "result": {
+        "item": "minecraft:dragon_breath",
+        "count": 1
+      },
+      "cost": {
+        "amount": 36,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "glass_bottle",
@@ -98,9 +165,10 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 5,
+        "amount": 6,
         "denomination": "trace"
-      }
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "brewing_stand",
@@ -110,12 +178,13 @@
         "maxStackSize": 1
       },
       "cost": {
-        "amount": 8,
-        "denomination": "mark"
+        "amount": 96,
+        "denomination": "trace"
       },
       "requiredClasses": [
         "theurgist"
-      ]
+      ],
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "cauldron",
@@ -125,12 +194,13 @@
         "maxStackSize": 1
       },
       "cost": {
-        "amount": 5,
-        "denomination": "mark"
+        "amount": 60,
+        "denomination": "trace"
       },
       "requiredClasses": [
         "theurgist"
-      ]
+      ],
+      "maxPurchasesPerPlayer": 1
     },
     {
       "offerId": "potion_of_night_vision",
@@ -141,9 +211,10 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 3,
-        "denomination": "mark"
-      }
+        "amount": 36,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "potion_of_fire_resistance",
@@ -154,9 +225,10 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 4,
-        "denomination": "mark"
-      }
+        "amount": 48,
+        "denomination": "trace"
+      },
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "potion_of_healing",
@@ -167,45 +239,14 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 2,
-        "denomination": "mark"
+        "amount": 24,
+        "denomination": "trace"
       },
       "requiredClasses": [
         "theurgist",
         "judicator"
-      ]
-    },
-    {
-      "offerId": "potion_of_healing_ii",
-      "result": {
-        "item": "minecraft:potion",
-        "count": 1,
-        "potion": "minecraft:strong_healing",
-        "maxStackSize": 20
-      },
-      "cost": {
-        "amount": 4,
-        "denomination": "mark"
-      },
-      "requiredClasses": [
-        "theurgist"
-      ]
-    },
-    {
-      "offerId": "potion_of_regeneration",
-      "result": {
-        "item": "minecraft:potion",
-        "count": 1,
-        "potion": "minecraft:regeneration",
-        "maxStackSize": 20
-      },
-      "cost": {
-        "amount": 4,
-        "denomination": "mark"
-      },
-      "requiredClasses": [
-        "theurgist"
-      ]
+      ],
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "splash_potion_of_healing",
@@ -216,13 +257,48 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 3,
-        "denomination": "mark"
+        "amount": 36,
+        "denomination": "trace"
       },
       "requiredClasses": [
         "theurgist",
         "judicator"
-      ]
+      ],
+      "maxPurchasesPerPlayer": 20
+    },
+    {
+      "offerId": "potion_of_healing_ii",
+      "result": {
+        "item": "minecraft:potion",
+        "count": 1,
+        "potion": "minecraft:strong_healing",
+        "maxStackSize": 20
+      },
+      "cost": {
+        "amount": 48,
+        "denomination": "trace"
+      },
+      "requiredClasses": [
+        "theurgist"
+      ],
+      "maxPurchasesPerPlayer": 20
+    },
+    {
+      "offerId": "potion_of_regeneration",
+      "result": {
+        "item": "minecraft:potion",
+        "count": 1,
+        "potion": "minecraft:regeneration",
+        "maxStackSize": 20
+      },
+      "cost": {
+        "amount": 48,
+        "denomination": "trace"
+      },
+      "requiredClasses": [
+        "theurgist"
+      ],
+      "maxPurchasesPerPlayer": 20
     },
     {
       "offerId": "lingering_potion_of_healing",
@@ -233,12 +309,13 @@
         "maxStackSize": 20
       },
       "cost": {
-        "amount": 5,
-        "denomination": "mark"
+        "amount": 60,
+        "denomination": "trace"
       },
       "requiredClasses": [
         "theurgist"
-      ]
+      ],
+      "maxPurchasesPerPlayer": 20
     }
   ],
   "buyback": {

@@ -27,6 +27,7 @@ public final class DataGenerators {
 
         // Client datagen (models, lang, etc.)
         generator.addProvider(true, new ModModelProvider(packOutput));
+        generator.addProvider(true, new D1EffectAtlasProvider(packOutput));
 
         // NEW: 1.21+ item definition JSONs (assets/<modid>/items/*.json)
         generator.addProvider(true, new ModItemDefinitionsProvider(packOutput));
@@ -45,6 +46,8 @@ public final class DataGenerators {
                 List.of(new LootTableProvider.SubProviderEntry(ModBlockLootTableProvider::new, LootContextParamSets.BLOCK)),
                 lookupProvider
         ));
+
+        generator.addProvider(true, new D1EntityTagProvider(packOutput, lookupProvider));
 
         // Recipes
         generator.addProvider(true, new ModRecipeProvider.Runner(packOutput, lookupProvider));

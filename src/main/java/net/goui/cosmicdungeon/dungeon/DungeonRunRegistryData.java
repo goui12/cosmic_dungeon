@@ -21,7 +21,6 @@ import java.util.UUID;
 
 public final class DungeonRunRegistryData extends SavedData {
     private static final String SAVE_ID = "cosmicdungeon_dungeon_runs";
-    private static final Codec<UUID> UUID_CODEC = Codec.STRING.xmap(UUID::fromString, UUID::toString);
 
     public record RunRecord(
             long runId,
@@ -37,6 +36,8 @@ public final class DungeonRunRegistryData extends SavedData {
             List<UUID> completionExitedPlayers,
             List<DungeonPlayerRunSnapshot> playerSnapshots
     ) {
+        // Keep this codec local: the public record may initialize before its enclosing SavedData.
+        private static final Codec<UUID> UUID_CODEC = Codec.STRING.xmap(UUID::fromString, UUID::toString);
         public static final Codec<RunRecord> CODEC = RecordCodecBuilder.create(i -> i.group(
                 Codec.LONG.fieldOf("run_id").forGetter(RunRecord::runId),
                 Codec.STRING.fieldOf("dungeon_id").forGetter(RunRecord::dungeonId),
@@ -164,10 +165,11 @@ public final class DungeonRunRegistryData extends SavedData {
         }
     }
 
-    private record Persisted(long nextRunId, List<RunRecord> runs) {
+    private record Persisted(long nextRunId, List<RunRecord> runs, Map<String, net.minecraft.nbt.CompoundTag> startup) {
         private static final Codec<Persisted> CODEC = RecordCodecBuilder.create(i -> i.group(
                 Codec.LONG.fieldOf("next_run_id").forGetter(Persisted::nextRunId),
-                RunRecord.CODEC.listOf().fieldOf("runs").forGetter(Persisted::runs)
+                RunRecord.CODEC.listOf().fieldOf("runs").forGetter(Persisted::runs),
+                Codec.unboundedMap(Codec.STRING, net.minecraft.nbt.CompoundTag.CODEC).optionalFieldOf("startup", Map.of()).forGetter(Persisted::startup)
         ).apply(i, Persisted::new));
     }
 
@@ -188,27 +190,73 @@ public final class DungeonRunRegistryData extends SavedData {
         if (overworld == null) {
             throw new IllegalStateException("Overworld is not available; cannot load DungeonRunRegistryData.");
         }
-        return overworld.getDataStorage().computeIfAbsent(TYPE);
+        net.goui.cosmicdungeon.transaction.SavedDataProof.validate(server, SAVE_ID, CODEC);
+        var data = overworld.getDataStorage().computeIfAbsent(TYPE); data.server = server; return data;
     }
 
     private long nextRunId = 1L;
     private final Map<Long, RunRecord> runsById = new HashMap<>();
 
+    private final Map<String, net.minecraft.nbt.CompoundTag> startup = new HashMap<>();
+    private MinecraftServer server;
     private DungeonRunRegistryData() {}
+    public boolean flushVerified() { return net.goui.cosmicdungeon.transaction.SavedDataProof.save(server, SAVE_ID, CODEC, this); }
+    public boolean starting(long run) { return startup.containsKey(Long.toString(run)); }
+    public net.minecraft.nbt.CompoundTag startupImage(long run, UUID owner) {
+        var image = startup.get(Long.toString(run));
+        return image == null ? new net.minecraft.nbt.CompoundTag() : image.getCompoundOrEmpty(owner.toString()).copy();
+    }
+    public void prepareStartup(long run, net.minecraft.nbt.CompoundTag owners) {
+        var record = getRun(run).orElseThrow();
+        validateStartup(record, owners);
+        if (startup.putIfAbsent(Long.toString(run), owners.copy()) != null) throw new IllegalStateException("Startup already recorded");
+        setDirty();
+    }
+    public boolean completeStartupVerified(long run) {
+        var image = startup.remove(Long.toString(run)); setDirty();
+        if (flushVerified()) return true;
+        if (image != null) startup.put(Long.toString(run), image);
+        setDirty(); return false;
+    }
+    public boolean retireVerified(long run) {
+        var record = runsById.remove(run);
+        var image = startup.remove(Long.toString(run)); setDirty();
+        if (flushVerified()) return true;
+        if (record != null) runsById.put(run, record);
+        if (image != null) startup.put(Long.toString(run), image);
+        setDirty(); return false;
+    }
+    private static void validateStartup(RunRecord run, net.minecraft.nbt.CompoundTag owners) {
+        var roster = run.orderedPlayers().stream().map(UUID::toString).collect(java.util.stream.Collectors.toSet());
+        if (!owners.keySet().equals(roster)) throw new IllegalArgumentException("Startup roster differs from run");
+        for (String owner : roster) {
+            var image = owners.getCompound(owner).orElseThrow();
+            if (image.getCompound("inventory").isEmpty() || image.getCompound("ownership").isEmpty())
+                throw new IllegalArgumentException("Missing pre-entry image");
+            var ownership = image.getCompoundOrEmpty("ownership");
+            if (!ownership.isEmpty()) ChopOwnershipData.Entry.CODEC.parse(net.minecraft.nbt.NbtOps.INSTANCE, ownership).getOrThrow();
+        }
+    }
+
 
     private static DungeonRunRegistryData fromPersisted(Persisted p) {
         DungeonRunRegistryData d = new DungeonRunRegistryData();
         d.nextRunId = Math.max(1L, p.nextRunId());
         for (RunRecord r : p.runs()) {
-            d.runsById.put(r.runId(), r);
+            if (r.runId() <= 0 || r.runId() >= p.nextRunId() || d.runsById.put(r.runId(), r) != null) throw new IllegalArgumentException("Invalid or duplicate dungeon run");
         }
+        p.startup().forEach((key, image) -> {
+            long run = Long.parseLong(key);
+            if (!key.equals(Long.toString(run))) throw new IllegalArgumentException("Invalid startup key");
+            validateStartup(d.getRun(run).orElseThrow(), image); d.startup.put(key, image.copy());
+        });
         return d;
     }
 
     private Persisted toPersisted() {
         List<RunRecord> runs = new ArrayList<>(runsById.values());
         runs.sort(Comparator.comparingLong(RunRecord::runId));
-        return new Persisted(nextRunId, runs);
+        return new Persisted(nextRunId, runs, Map.copyOf(startup));
     }
 
     public long startRun(ResourceKey<Level> selectorDimension,
@@ -348,6 +396,7 @@ public final class DungeonRunRegistryData extends SavedData {
         RunRecord old = runsById.get(runId);
         if (old == null) return false;
 
+        if (starting(runId)) throw new IllegalStateException("Finish startup rollback before changing its roster");
         RunRecord updated = old.withoutPlayer(playerId);
         if (updated == old) return false;
 
@@ -379,6 +428,7 @@ public final class DungeonRunRegistryData extends SavedData {
     public boolean removeRun(long runId) {
         if (runId <= 0L) return false;
         boolean changed = runsById.remove(runId) != null;
+        if (changed) startup.remove(Long.toString(runId));
         if (changed) setDirty();
         return changed;
     }

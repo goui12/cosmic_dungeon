@@ -19,6 +19,8 @@ public final class TiredNotBrokenTracker {
     public static void onIncomingDamage(LivingIncomingDamageEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer sp)) return;
         if (sp.level().isClientSide()) return;
+        var run=net.goui.cosmicdungeon.dungeon.d1.D1Members.run(sp.level()).orElse(null);
+        if(run==null||!net.goui.cosmicdungeon.dungeon.d1.D1Members.inside(sp,run))return;
         if (!(event.getSource().getEntity() instanceof Phantom)) return;
         if (sp.getStats().getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.TIME_SINCE_REST)) < THREE_NIGHTS_WITHOUT_REST_TICKS) return;
         if (!D1AchievementRegionService.inRegion(sp.level(), sp.blockPosition(), D1AchievementRegionService.WOODLAND_MANOR)) return;

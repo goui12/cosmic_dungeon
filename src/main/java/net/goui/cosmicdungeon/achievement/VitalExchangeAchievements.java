@@ -15,8 +15,9 @@ public final class VitalExchangeAchievements {
     private VitalExchangeAchievements() {}
 
     private static final List<VitalExchangeCheck> CHECKS = List.of(
-            new VitalExchangeCheck(Items.ARROW, ClassKeys.CLASS_ID_THEURGIST, 1, 3, CosmicAchievementIds.VITAL_EXCHANGE_1),
-            new VitalExchangeCheck(Items.ARROW, ClassKeys.CLASS_ID_THEURGIST, 1, 4, CosmicAchievementIds.VITAL_EXCHANGE_2)
+            // TODO(M74, D2+): Vital Exchange I-IV starts after D1; Deadeye is unavailable here.
+            // Wire actual eligible restorative-arrow transfers for all four source tiers when D2
+            // identities/progression are enabled. D1 attuned ordinary arrows must grant none.
     );
 
     public static void recordVitalExchange(ServerPlayer provider, ServerPlayer receiver, ItemStack providedStack) {

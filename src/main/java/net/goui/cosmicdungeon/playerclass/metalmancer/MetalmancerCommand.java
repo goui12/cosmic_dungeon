@@ -19,7 +19,7 @@ public final class MetalmancerCommand {
     public static void register(CommandDispatcher<CommandSourceStack> d) {
         d.register(
                 Commands.literal("metalmancer")
-                        .requires(src -> src.hasPermission(0))
+                        .requires(net.goui.cosmicdungeon.auth.AccessPolicy::requireDeveloperOrConsole)
                         // /metalmancer  -> toggle class on/off
                         .executes(ctx -> {
                             ServerPlayer sp = ctx.getSource().getPlayerOrException();

@@ -96,6 +96,13 @@ public final class ModEntities {
             });
 
 
+    public static final DeferredHolder<EntityType<?>, EntityType<D1ArrowEntity>> D1_ARROW =
+            ENTITIES.register("d1_arrow", () -> EntityType.Builder
+                    .<D1ArrowEntity>of(D1ArrowEntity::new, MobCategory.MISC)
+                    .sized(0.5F, 0.5F).eyeHeight(0.13F).clientTrackingRange(4).updateInterval(20)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE,
+                            ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "d1_arrow"))));
+
     private ModEntities() {}
 
     /** Call once in CosmicDungeonMod constructor. */
