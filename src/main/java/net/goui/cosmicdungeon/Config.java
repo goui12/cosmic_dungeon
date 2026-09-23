@@ -66,7 +66,7 @@ public final class Config {
     public static final ModConfigSpec SPEC;
     static {
         B.comment("Implementation work bounds; not lore or damage modifiers.").push("Performance");
-        MENU_BALANCE_POLL_TICKS=B.comment("Server ticks between open vendor/trade/repair balance polls; unchanged values send no packet.")
+        MENU_BALANCE_POLL_TICKS=B.comment("Server ticks between account HUD/inventory/chest and open vendor/trade/repair balance polls; unchanged values send no packet.")
                 .defineInRange("menuBalancePollTicks",20,5,200);
         SPAWNER_MAINTENANCE_BUDGET=B.comment("Global maximum queued spawner maintenance visits per server tick, shared fairly between loaded spawners. New entity presets apply at admission.")
                 .defineInRange("spawnerMaintenanceVisitsPerTick",512,16,4096);
@@ -267,6 +267,7 @@ public final class Config {
         B.pop();
         net.goui.cosmicdungeon.economy.D1EconomyConfig.define(B);
         net.goui.cosmicdungeon.playerclass.d1.D1AbilityConfig.define(B);
+        net.goui.cosmicdungeon.crafting.CraftingConfig.define(B);
         SPEC = B.build();
     }
 

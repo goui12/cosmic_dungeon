@@ -32,7 +32,9 @@ public final class ModNetwork {
     private ModNetwork() {}
 
     public static void registerPayloadHandlers(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("6");
+        final PayloadRegistrar registrar = event.registrar("7");
+        registrar.playToClient(CurrencyBalancePayload.TYPE,CurrencyBalancePayload.STREAM_CODEC,
+                (payload,ctx)->ctx.enqueueWork(()->ClientNetworkDispatch.dispatch("onCurrencyBalance",payload)));
 
         /* =====================================================================================
          * RF (central registration; feature-local packet definitions)

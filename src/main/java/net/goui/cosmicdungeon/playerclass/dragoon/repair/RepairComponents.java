@@ -11,14 +11,12 @@ import java.util.Map;
 /** Repair 2.0 (2026-08-18): vanilla IDs + internal marker, including all four Repair Kits. */
 public final class RepairComponents {
     private RepairComponents() {}
-    // TODO(R01/M23, service-only compatibility): Q&A D08 and Cameron's 2026-09-20 correction
-    // prohibit changing authored class-chest items. Dragoon Class Chests
-    // 1E6YgHK0CEpirhbvAmy9Ihg9oQpr-p_YUymbUbDEqhVI (2026-04-04) lists vanilla supplies;
-    // Repair2.0 1Gbcq7Piqg2uHO1smx5oHOyeGxoT9g93cH-_G8WvhOoo (2026-08-18) expects markers.
-    // Current validation below still requires those markers. Resolve existing-material
-    // recognition inside repair quotation/reservation/commit without mutating the inputs,
-    // converting ordinary weapons into kits, or bypassing custody/rollback checks.
-    // Do not restore chest-open marking or move it to pickup, startup or migration hooks.
+    // Cameron September23 and Q&A D08 permit unmarked vanilla RAW materials in the
+    // repair service without changing authored stacks. Repair2.0 (August18), document
+    // 1Gbcq7Piqg2uHO1smx5oHOyeGxoT9g93cH-_G8WvhOoo, still defines marked weapon-shaped
+    // kits. key() remains strict for vendor identity/prices; serviceKey() is repair-only.
+    // TODO(R01 licensed TEST): mix marked/unmarked supplies, cancel/reconnect/restart during
+    // reservation, and verify exact component returns and paid completion. Never mark chests.
     private static final Map<String,String> ITEMS = Map.ofEntries(
             Map.entry("oak_planks","oak_planks"),Map.entry("spruce_planks","spruce_planks"),
             Map.entry("cobblestone","cobblestone"),Map.entry("leather","leather"),
@@ -46,7 +44,21 @@ public final class RepairComponents {
             stack.set(DataComponents.CUSTOM_NAME,Component.literal(Character.toUpperCase(weapon.charAt(0))+weapon.substring(1)+" Repair Kit"));
         }
     }
-    public static boolean validFor(ItemStack stack, Item item) { return stack.is(item) && key(stack) != null; }
+    public static String serviceKey(ItemStack stack) {
+        if (stack.isEmpty()) return null;
+        boolean protectedIdentity =
+                net.goui.cosmicdungeon.playerclass.api.ClassItemUtil.hasAnyAttunementMetadata(stack)
+                || net.goui.cosmicdungeon.item.identity.ItemProvenanceService.present(stack)
+                || stack.has(ModDataComponents.D1_ABILITY.get());
+        boolean pristine = stack.getDamageValue() == 0
+                && stack.getOrDefault(DataComponents.ENCHANTMENTS,
+                        net.minecraft.world.item.enchantment.ItemEnchantments.EMPTY).isEmpty();
+        return RepairMaterialRules.serviceKey(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString(),
+                marked(stack), key(stack), pristine, protectedIdentity);
+    }
+    public static boolean validFor(ItemStack stack, Item item) {
+        return stack.is(item) && serviceKey(stack) != null;
+    }
     public static Item item(String key) {
         String id=key==null?null:ITEMS.get(key);
         return id==null?null:BuiltInRegistries.ITEM.getValue(ResourceLocation.withDefaultNamespace(id));

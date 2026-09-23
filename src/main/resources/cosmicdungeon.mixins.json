@@ -49,6 +49,14 @@
     "DeathCurrencyEntityMixin",
     "InnHeartMixin",
     "InnFluidMixin",
-    "InnFireMixin"
+    "InnFireMixin",
+    "CraftingLookupMixin",
+    "CraftingPreviewMixin",
+    "CraftingTakeMixin",
+    "CraftingClickMixin",
+    "CraftingBookMixin",
+    "CraftingAutomationMixin",
+    "CraftingStonecutterMixin",
+    "CraftingSmithingMixin"
   ]
 }

@@ -23,6 +23,10 @@ public final class D1OfflineChecks {
         Config.SPEC.acceptConfig((net.neoforged.fml.config.IConfigSpec.ILoadedConfig)loadedConfig.newInstance(runtimeDefaults,null,null));
         net.goui.cosmicdungeon.block.entity.SpawnerMembershipChecks.main(args);
         net.goui.cosmicdungeon.menu.MenuBalanceChecks.main(args);
+        net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairMaterialChecks.main(args);
+        net.goui.cosmicdungeon.crafting.CraftingPolicyChecks.main(args);
+        net.goui.cosmicdungeon.crafting.CraftingHookChecks.main(args);
+        net.goui.cosmicdungeon.economy.BalanceDisplayChecks.main(args);
         net.goui.cosmicdungeon.menu.D1HelpNavigationChecks.main(args);
         net.goui.cosmicdungeon.dungeon.DungeonTravelChecks.main(args);
         net.goui.cosmicdungeon.achievement.d1.D1PiglinChecks.main(args);
@@ -71,6 +75,15 @@ public final class D1OfflineChecks {
         check(((Number)gameplay.get("ItemProtection.recoveryStacksPerClaim")).intValue()==32,
                 "Protected return processing has a bounded configurable claim budget");
         check(Config.SPEC.isCorrect(gameplay), "Generated gameplay defaults validate");
+        check(Boolean.TRUE.equals(gameplay.get("Crafting.enabled")), "Crafting policy enabled by default");
+        check(((java.util.List<?>)gameplay.get("Crafting.playerRecipes")).equals(
+                net.goui.cosmicdungeon.crafting.CraftingRules.DEFAULT_PLAYERS), "Only three source-backed D1 reagent recipes");
+        check(((java.util.List<?>)gameplay.get("Crafting.automatedRecipes")).isEmpty(), "No inferred automation authority");
+        gameplay.set("Crafting.playerRecipes",java.util.List.of("minecraft:cake|theurgist"));
+        Config.SPEC.correct(gameplay);
+        check(((java.util.List<?>)gameplay.get("Crafting.playerRecipes")).equals(java.util.List.of("minecraft:cake|theurgist")),
+                "Explicit developer recipe override retained");
+        gameplay.remove("Crafting");Config.SPEC.correct(gameplay);
         check(((Number)gameplay.get("Performance.menuBalancePollTicks")).intValue()==20,"Bounded open-menu poll default");
         check(((Number)gameplay.get("Performance.spawnerMaintenanceVisitsPerTick")).intValue()==512,"Global spawner budget default");
         gameplay.set("Performance.menuBalancePollTicks",0);

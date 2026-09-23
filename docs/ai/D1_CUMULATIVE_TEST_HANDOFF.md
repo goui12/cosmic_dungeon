@@ -1,3 +1,71 @@
+# D1 repair/crafting/balance candidate, 2026-09-23
+
+[Current candidate hash and implementation](D1_READINESS_IMPLEMENTATION_2026-09-23.md).
+22,387 offline checks passed. All native steps here remain **NOT RUN**.
+Use matching protocol7 client/server jars on licensed TEST, after the established
+explicit deployment, backup and Cameron-controlled stop/start procedure.
+
+## Repair
+
+1. Create separate test supplies: pristine unmarked/marked raw materials and valid marked
+   bow/crossbow/trident/mace kits. Do not inspect or modify authored class-chest contents.
+2. Quote and complete repairs using unmarked supplies, then mixed marked/unmarked supplies.
+   Verify the documented count, configured timing and exact currency charge once.
+3. Attempt ordinary weapons, renamed ordinary weapons, malformed markers, damaged,
+   enchanted and attuned/provenanced components. They must not count as valid kits.
+4. Cancel before/after reservation; disconnect either player; restart during reservation,
+   running and committing states. Verify exact stacks return once, capacity overflow is safe,
+   and a cancelled repair neither charges money nor duplicates/destroys the target.
+5. Repeat with insufficient supplies, insufficient available Trace, full inventory and
+   out-of-range participants. Confirm the existing transaction safeguards.
+
+## Crafting
+
+1. As Theurgist, craft Fermented Spider Eye and Magma Cream in inventory/table grids;
+   craft Glistering Melon at a table. Verify native ingredient counts and outputs.
+2. Repeat as every other D1 class and with no class. Try manual pickup, number-key swap,
+   throw, shift-click and recipe-book placement. No denied output or ingredient loss.
+3. Try ordinary plank/stick/equipment/cake/honey-bottle conversions; default policy denies them.
+   Crafters, cooking blocks, smithing and stonecutting also deny unlisted recipes.
+4. Leave an approved output visible, remove its allowlist permission or change class, then
+   try taking it. Repeat across config watcher reload and /reload with changed recipe output.
+   Old results must not be delivered; current authorized results consume inputs once.
+5. Temporarily approve a fixture recipe on TEST for a player class and independently for
+   automation. Verify permissions do not leak between the two; restore defaults afterwards.
+6. Use explicit TEST-only cake and sugar_from_honey_bottle permissions to check bucket/bottle
+   remainders, normal and full inventories, repeated shift crafting and Crafter dispensing.
+   Count every input, output and container before/after. Defaults do not approve these recipes.
+7. Revoke a running machine recipe, reload datapacks, reconnect and restart. Cached recipes
+   must not bypass current policy; existing legitimate output must remain retrievable.
+8. Verify protected equipment, currency identities and marked repair supplies cannot enter
+   a destructive conversion. Existing approved class brewing/repair/transmutation still work.
+9. Confirm unknown IDs are logged once on validation and produce nothing; test a typo,
+   empty lists, duplicate entries, valid administrator additions and restored defaults.
+
+## Balance panels
+
+1. Check HUD, survival inventory and a separately constructed class chest at GUI scales
+   1-4 and 320x240/854x480/1920x1080 windows. Open/close the recipe book and potion effects.
+   Icons and exact counts must remain legible and avoid slots/tooltips.
+2. Compare panel totals with /currency and trade/vendor/repair account views. Apply reward,
+   deposit, withdrawal, vendor payment and trade while the panel remains visible.
+3. Reserve a repair/trade payment, check available Trace in the tooltip, then cancel and
+   complete. The displayed total/available values must follow the original UUID account.
+4. Close/reopen class and ordinary chests; reconnect, respawn, change dimension and reset a
+   dungeon. No other player's or previous container's panel should appear.
+5. Test zero, denomination boundaries and large valid balances. Verify the five counts
+   reconstruct the exact Trace total. Check configured poll timing and unchanged traffic.
+6. Shift-click items/currency from the class chest with full/partial inventories. Existing
+   transfer behavior remains; clicking display icons must never move items or credit money.
+7. Check two licensed clients simultaneously: each sees only their own account. Confirm
+   no duplicate credit, no new saved balance data and no material frame-time regression.
+
+R08 also retains the ammunition/NPC/Watson/world-binding cases below. One readiness area
+remains; no implementation batch is pending from the current three-area request.
+Historical proposed/open status text below is superseded by this addendum.
+
+---
+
 # D1 edited texture candidate, 2026-09-23
 
 All 44 edited D1 ammunition textures are imported and verified in the current candidate.

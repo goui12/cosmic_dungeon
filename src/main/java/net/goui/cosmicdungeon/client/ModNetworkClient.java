@@ -38,6 +38,9 @@ public final class ModNetworkClient {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private ModNetworkClient() {}
+    public static void onCurrencyBalance(net.goui.cosmicdungeon.network.CurrencyBalancePayload payload) {
+        net.goui.cosmicdungeon.client.economy.CurrencyBalanceClient.receive(payload);
+    }
 
     public static void onShakeScreen(ShakeScreenPayload payload) {
         ClientShakeHandler.startShake(2.0F, 1.0F);

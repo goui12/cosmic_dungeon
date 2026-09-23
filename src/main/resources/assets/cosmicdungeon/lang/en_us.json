@@ -695,5 +695,7 @@
   "advancements.cosmicdungeon.achievements.wolves_in_piglin_clothing.title": "Wolves in Piglin Clothing",
   "advancements.cosmicdungeon.achievements.stairway_to_heaven.title": "Stairway To Heaven",
   "advancements.cosmicdungeon.achievements.stairway_to_heaven.desc": "",
-  "advancements.cosmicdungeon.achievements.the_tamsin_tax.title": "The Tamsin Tax"
+  "advancements.cosmicdungeon.achievements.the_tamsin_tax.title": "The Tamsin Tax",
+  "hud.cosmicdungeon.account": "Account",
+  "hud.cosmicdungeon.account.read_only": "Shared account balance; items and payments remain server controlled."
 }

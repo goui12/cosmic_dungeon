@@ -1,3 +1,26 @@
+# D1 requested readiness implementation complete, 2026-09-23
+
+[Current report, exact files and candidate hash](D1_READINESS_IMPLEMENTATION_2026-09-23.md).
+
+Completed R01: unmarked raw repair compatibility with strict weapon-kit identity.
+Completed R04: server recipe allowlists covering players, automation and reloads.
+Completed R05: synchronized shared-account HUD/inventory/class-chest panels.
+
+Java21 build,22,387 offline checks in50 groups, two config round trips and1,994 JSON checks passed.
+No new PNG; no chest content, world, active server config or persistence-schema changes.
+Native gameplay/UI acceptance remains NOT RUN.
+
+**0 planned implementation batches remain from the three requested areas.**
+**1 readiness area remains: R08 cumulative licensed TEST.**
+R08 checks ammunition, repair transactions, crafting/remainders, balances, world bindings,
+NPC replacement and simultaneous dungeon instances. No new numbered batch is scheduled.
+
+The historical101 disposition ledger remains45/20/1/8/27 pending separate evidence-backed
+reclassification. Previous proposed/open descriptions below are historical and superseded
+where R01/R04/R05 were implemented by this checkpoint.
+
+---
+
 # D1 edited textures imported, 2026-09-23
 
 [Texture import and attribute verification](D1_TEXTURE_IMPORT_2026-09-23.md) |
