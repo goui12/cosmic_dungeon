@@ -8,10 +8,10 @@ Cosmic Dungeon is a Java 21 NeoForge mod for Minecraft 1.21.10. These rules appl
 - Follow-up corrections for the same task remain on that same branch and pull request.
 - Never commit, push, or merge directly into `main`.
 - Never merge a pull request unless the user explicitly instructs you to do so.
-- At the end of an authorized implementation pass, make a local Git commit as the final repository-changing step, after validation and completion notes are finished. Cameron explicitly requested this checkpoint policy on 2026-09-19.
+- At the end of an authorized implementation pass, finish validation and completion notes, then make the final Git checkpoint. Cameron clarified on 2026-09-23 that a request to "commit" means commit locally AND push the current task branch to https://github.com/goui12/cosmic_dungeon. Complete the local commit and push as the final write actions.
 - Review the intended file list and staged diff first. Include the completed work being checkpointed; preserve unrelated local edits. Never blanket-stage credentials, private source mirrors, caches, logs, or generated build binaries.
-- After committing, verify the commit and working-tree status with read-only commands. Report the commit hash and any intentionally uncommitted files; keep the completion notes and implementation in the same checkpoint.
-- A local commit saves Git history on this PC. It does not push to GitHub; pushes, merges and deployments retain their separate authorization requirements.
+- Before pushing, verify the origin and push URL, fetch the current remote state, and check branch ancestry. Push only the intended task branch without force; never overwrite divergent remote work. After pushing, verify the remote branch SHA equals local HEAD and report the GitHub branch/commit link plus any intentionally uncommitted files.
+- A local-only commit does not fulfill Cameron's commit request. If the push fails, report that the work is saved locally but GitHub is not synchronized, and identify the actual blocker. A commit request authorizes this branch push; merges, direct main updates, force-pushes and deployments still require their separate explicit authorization.
 - Before editing, state:
   1. The intended behavior.
   2. The files and directories expected to change.
@@ -230,7 +230,7 @@ Do not claim certainty beyond the evidence produced by the build, tests, code re
 ## Cameron's Local I/O Workflow (2026-09-15)
 
 - Work in the verified local Git checkout via Remote Desktop Commander. Use the local Gradle wrapper and Git; Codex is not required.
-- Keep the existing task-branch/PR discipline. Local editing is not permission to push or merge main, force-push, reset, discard work, or deploy production.
+- Keep the existing task-branch/PR discipline. Cameron's commit request includes a normal push of the current task branch to the verified GitHub repository. Local editing alone does not authorize publishing; neither editing nor a commit request authorizes merging main, force-pushing, resetting, discarding work or deploying production.
 - Before edits, check the branch, tracked/untracked changes, origin, and applicable nested AGENTS.md files. Fetch before claiming parity with GitHub. Never stage build output or credentials with a blanket git add.
 - Cameron develops code; his dad maintains the Dungeon Crawl Master Sheet and associated Google Docs. Current document bodies, IDs and revisions matter more than stale sheet/chip labels.
 - When code, tests, docs, sheet labels, specifications or intended behavior contradict each other, present both interpretations with exact sources and obtain Cameron's confirmation BEFORE deciding or implementing a resolution.
