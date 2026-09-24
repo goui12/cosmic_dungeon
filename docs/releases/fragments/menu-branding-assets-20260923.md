@@ -10,3 +10,7 @@ An installed client needs those external theme files before startup as well as t
 
 Developer preview: panorama floor/ceiling seams and native visual/audio acceptance remain
 pending. No gameplay, registry, network or world-data migration changes.
+
+Approved artwork refresh: wider Cosmic Dungeon lettering with bright silver borders and
+blue/violet cosmic faces, plus a matching Java Edition subtitle. Original PNG dimensions
+and transparent backgrounds are preserved; NeoForge loading credits remain visible.

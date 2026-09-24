@@ -2,7 +2,7 @@
   "created_utc": "2026-09-23T16:22:03.410219+00:00",
   "branch": "feature/menu-branding-assets-20260923",
   "base_commit": "7df252362f257d001bbd43bbd0d891779fd4a72f",
-  "status": "connected for development-client preview; rendered seam and audio QA pending",
+  "status": "approved brighter logo assets installed; refreshed native appearance and prior seam/audio QA pending",
   "crop": {
     "left": 42,
     "right": 42,
@@ -30,24 +30,48 @@
   "assets": [
     {
       "file": "src/main/resources/assets/cosmicdungeon/textures/gui/title/cd_minecraft.png",
-      "source": "01_Title/cd_minecraft.png",
-      "operation": "byte-for-byte copy",
-      "sha256": "9b8ab9d2d5adc57ce64ebe4b8193f52384814f87ceb82c23f5869437ee3bad90",
-      "bytes": 20030,
+      "source": "approved-generated-logo-v2/cd_minecraft_epic_v2_1024x256.png",
+      "operation": "byte-for-byte copy of user-approved transparent PNG export",
+      "sha256": "11f47dc55ac3f03dfafba40fdeda56412b0601a77b89df297a057d2ee996deb0",
+      "bytes": 426481,
       "size": [
         1024,
         256
+      ],
+      "previous_versions": [
+        {
+          "source": "01_Title/cd_minecraft.png",
+          "operation": "byte-for-byte copy",
+          "sha256": "9b8ab9d2d5adc57ce64ebe4b8193f52384814f87ceb82c23f5869437ee3bad90",
+          "bytes": 20030,
+          "size": [
+            1024,
+            256
+          ]
+        }
       ]
     },
     {
       "file": "src/main/resources/assets/cosmicdungeon/textures/gui/title/cd_edition.png",
-      "source": "01_Title/cd_edition.png",
-      "operation": "byte-for-byte copy",
-      "sha256": "5f7ee98b08572f4c6db51248874713d21251a47b57a8738c90a57f882d010a3f",
-      "bytes": 6943,
+      "source": "approved-generated-logo-v2/cd_edition_epic_v2_512x64.png",
+      "operation": "byte-for-byte copy of user-approved transparent PNG export",
+      "sha256": "b58631711106c7b27674bb78149a3012f67758f2b701749ea107490ccf7700db",
+      "bytes": 66838,
       "size": [
         512,
         64
+      ],
+      "previous_versions": [
+        {
+          "source": "01_Title/cd_edition.png",
+          "operation": "byte-for-byte copy",
+          "sha256": "5f7ee98b08572f4c6db51248874713d21251a47b57a8738c90a57f882d010a3f",
+          "bytes": 6943,
+          "size": [
+            512,
+            64
+          ]
+        }
       ]
     },
     {
@@ -186,5 +210,30 @@
     "manual_QA": "panorama seams, title contrast/layout, audio/volume and world transition",
     "deployment": "development run/config only",
     "publishing": "local checkpoint only"
+  },
+  "logo_refresh": {
+    "installed_utc": "2026-09-24T00:07:07.254821+00:00",
+    "base_commit": "4fd7bf5457835875c25aadf1f8457914dbdc19ba",
+    "source": "user-approved generated epic v2 exports",
+    "transfer": "SHA-256, dimensions, RGBA, PNG CRC and decompression verified before replacement",
+    "desktop_originals": "preserved",
+    "renderer_and_theme_geometry": "unchanged",
+    "validation": {
+      "validated_utc": "2026-09-24T00:08:15.570474+00:00",
+      "build": "Java21 gradlew.bat build menuBrandingChecks --offline --console=plain passed",
+      "existing_branding_checks": 29,
+      "source_json_files_validated": 1996,
+      "packaged_assets_byte_matches": 12,
+      "early_loading_title": "matches approved title bytes; previous title backup verified",
+      "fml_config_and_theme": "unchanged byte-for-byte",
+      "unrelated_status_and_staged_diff": "preserved",
+      "jar_sha256": "4a45660ab451d8d2ce6a07e367de99b1284a4fa60078d803c3a7933f89603e79",
+      "diff_check": "passed",
+      "clean": "not run under tracked build artifact protection; prior jars backed up",
+      "datagen": "not applicable to PNG replacement",
+      "native_client_server_gametest": "not launched; native preview remains Cameron QA",
+      "migration": "none"
+    },
+    "manual_QA": "new logo contrast, size, GUI scales and splash/button overlap in runClient"
   }
 }

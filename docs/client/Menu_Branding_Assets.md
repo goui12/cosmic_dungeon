@@ -32,8 +32,8 @@ Unrelated FML settings are preserved. Nothing is launched by this preparation ta
   controls, and stops the menu track on world login. The Constant music-frequency option
   retains its native five-second spacing. In-world music definitions are unchanged.
 - Startup: the FML 10.0.32 theme replaces Mojang's startup logo with Cosmic Dungeon and uses
-  the authored progress bars. A muted lavender background provides contrast for the dark
-  supplied title. The inherited NeoForge fox, version and window icon remain, with an added
+  the authored progress bars. The approved silver-bordered cosmic title appears against
+  the existing muted lavender background. The inherited NeoForge fox, version and window icon remain, with an added
   "Powered by NeoForge" label. NeoForge carries this theme through the initial resource-load
   transition. Later resource-pack reload overlays retain Minecraft's existing behavior.
 
@@ -77,7 +77,7 @@ Paths relative to `src/main/resources/assets/cosmicdungeon/`:
 | sounds/music/cd_menu_theme.ogg | Stereo Vorbis, 44.1 kHz, 3:41 |
 | textures/gui/title/background/panorama_0.png through panorama_5.png | Six 1024 x 1024 PNGs |
 
-See [asset provenance](menu_branding_assets.json) for the preserved original hashes.
+See [asset provenance](menu_branding_assets.json) for current hashes and the preserved original logo hashes.
 
 ## Validation and manual acceptance
 
@@ -111,4 +111,20 @@ Revert this task's source changes, restore the saved `fml.toml.before-cosmic-*.b
 While this integration is active, the preparation task intentionally reselects its theme
 before development launches.
 
-Next improvement: use the native preview to settle panorama alignment and title contrast.
+Next improvement: use the native preview to tune logo scale and settle panorama alignment.
+
+
+## Approved logo refresh - 2026-09-24
+
+The approved wider silver/blue/violet title and matching edition artwork replace the two
+old dark PNGs byte-for-byte. Title remains 1024 x 256; edition remains 512 x 64, with real
+transparency. Existing renderer geometry and theme settings are retained. The preparation
+task copies the new title into the early-loading theme. Desktop source originals are kept.
+Originals and transfer evidence: sibling CosmicDungeon_AI/backups/menu-logo-refresh-20260924.
+Cameron supplied screenshots of the earlier menu/loading integration; the refreshed images
+still require his native runClient check for contrast, size and button/splash overlap.
+
+Refresh validation: Java21 build and all 29 branding checks passed; 1,996 source JSON files
+parsed, all 12 authored assets match the built JAR, and the loading title matches the approved
+PNG. Previous loading title backup verified. FML config/theme bytes and unrelated Git changes
+are preserved. No datagen, game, server or GameTest was run for this image replacement.

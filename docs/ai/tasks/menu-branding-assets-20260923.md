@@ -92,3 +92,35 @@ Exact changed repository files:
 
 Manual QA: docs/client/Menu_Branding_Assets.md.
 Future improvement: settle panorama alignment and title contrast using the native preview.
+
+
+## Authorized follow-up: install approved brighter logos - 2026-09-24
+
+Cameron approved the generated epic v2 title and edition exports and requested installation
+for his runClient preview. Copy the approved bytes; retain 1024 x 256 and 512 x 64 RGBA PNGs.
+No Java, Gradle, theme geometry or integration hotspot edits are needed. Existing OOP
+renderer and theme-preparation task consume the replacements at their current paths.
+Preserve desktop originals; back up repo PNGs, metadata and prior build JARs outside Git.
+No saved-data, registry, networking, gameplay, security or migration effects; no datagen.
+No client/server/GameTest launch or publishing request. Native appearance remains user QA.
+
+Exact repository scope:
+
+- src/main/resources/assets/cosmicdungeon/textures/gui/title/cd_minecraft.png
+- src/main/resources/assets/cosmicdungeon/textures/gui/title/cd_edition.png
+- docs/client/menu_branding_assets.json
+- docs/client/Menu_Branding_Assets.md
+- docs/ai/tasks/menu-branding-assets-20260923.md
+- docs/releases/fragments/menu-branding-assets-20260923.md
+
+Validation: Java21 build and all 29 existing branding checks passed; all 12 packaged asset
+byte comparisons, 1,996 source JSON parses and git diff --check passed. Transferred PNG
+SHA-256, dimensions, RGBA, chunk CRCs and decompression passed before replacement. Evidence and originals are in the sibling
+CosmicDungeon_AI/backups/menu-logo-refresh-20260924 folder.
+
+The prepared startup title matches the approved file; its previous version backup was verified.
+FML config/theme bytes, unrelated worktree status and pre-existing staged diff are preserved.
+Build used without clean under tracked-JAR protection; prior build JARs backed up.
+New title native contrast/layout/GUI scales remain manual QA; no game or GameTest launched.
+Next improvement: tune logo display scale after the requested native preview.
+Final local checkpoint follows completed notes and exact six-file diff review; no push.
