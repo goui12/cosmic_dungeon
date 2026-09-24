@@ -39,7 +39,7 @@ public final class CurrencyBalanceOverlay {
     }
     @SubscribeEvent public static void hud(RenderGuiEvent.Post event) {
         var mc=Minecraft.getInstance();
-        if(!ready()||mc.options.hideGui||mc.screen!=null||mc.getDebugOverlay().showDebugScreen())return;
+        if(!ready()||!CurrencyBalanceClient.HUD.visible()||mc.options.hideGui||mc.screen!=null||mc.getDebugOverlay().showDebugScreen())return;
         draw(event.getGuiGraphics(),8,8,mc.getWindow().getGuiScaledWidth()-16,false,-1,-1);
     }
     @SubscribeEvent public static void screen(ScreenEvent.Render.Post event) {
