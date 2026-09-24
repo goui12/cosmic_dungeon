@@ -78,6 +78,7 @@ public class CosmicDungeonMod {
         ModItems.register(modEventBus);
         ModMobEffects.register(modEventBus);
         ModDataComponents.register(modEventBus);
+        net.goui.cosmicdungeon.npc.tamsin.TamsinAppearance.INSTANCE.register(modEventBus);
 
         ModMenus.register(modEventBus);
         ModEntities.register(modEventBus);

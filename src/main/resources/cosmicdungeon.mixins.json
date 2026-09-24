@@ -7,7 +7,9 @@
     "client.OptionsScreenMixin",
     "client.D1CrossbowChargeMixin",
     "client.TitleScreenBrandingMixin",
-    "client.ClassSelectorTargetingMixin"
+    "client.ClassSelectorTargetingMixin",
+    "client.TamsinVillagerRendererMixin",
+    "client.TamsinClothingMixin"
   ],
   "injectors": {
     "defaultRequire": 1
