@@ -31,6 +31,13 @@ public class D1_Class_Selector_Block extends Block implements EntityBlock {
     }
 
     @Override
+    protected net.minecraft.world.phys.shapes.VoxelShape getShape(BlockState state,
+            net.minecraft.world.level.BlockGetter level, BlockPos pos,
+            net.minecraft.world.phys.shapes.CollisionContext context) {
+        return ClassSelectorShape.INSTANCE.shape();
+    }
+
+    @Override
     public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new ClassSelectorBlockEntity(pos, state);
     }

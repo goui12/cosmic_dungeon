@@ -6,7 +6,8 @@
   "client": [
     "client.OptionsScreenMixin",
     "client.D1CrossbowChargeMixin",
-    "client.TitleScreenBrandingMixin"
+    "client.TitleScreenBrandingMixin",
+    "client.ClassSelectorTargetingMixin"
   ],
   "injectors": {
     "defaultRequire": 1
