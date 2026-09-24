@@ -1,40 +1,30 @@
 package net.goui.cosmicdungeon.trade;
 
-import com.mojang.serialization.MapCodec;
 import net.goui.cosmicdungeon.CosmicDungeonMod;
-import net.minecraft.core.Holder;
-import net.minecraft.gametest.framework.FunctionGameTestInstance;
+import net.goui.cosmicdungeon.gametest.FunctionGameTestSuite;
+import net.neoforged.bus.api.IEventBus;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.GameTestInstance;
-import net.minecraft.gametest.framework.TestData;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.block.Rotation;
-import net.neoforged.neoforge.event.RegisterGameTestsEvent;
-
-import java.util.function.Consumer;
 
 public final class TradeFinalizationGameTests {
     private static final ResourceLocation ENVIRONMENT = id("trade_finalization");
-    private static final ResourceLocation EMPTY_STRUCTURE = ResourceLocation.withDefaultNamespace("empty");
 
     private TradeFinalizationGameTests() {}
 
-    public static void register(RegisterGameTestsEvent event) {
-        Holder<TestEnvironmentDefinition> environment = event.registerEnvironment(ENVIRONMENT, new TestEnvironmentDefinition.AllOf());
-        register(event, environment, "item_only", TradeFinalizationGameTests::itemOnlyTradeCompletes);
-        register(event, environment, "currency_only", TradeFinalizationGameTests::currencyOnlyTradeCompletes);
-        register(event, environment, "mixed", TradeFinalizationGameTests::mixedTradeCompletes);
-        register(event, environment, "full_inventory", TradeFinalizationGameTests::fullInventoryTradeFailsBeforeMutation);
-        register(event, environment, "capacity_limit", TradeFinalizationGameTests::currencyCapacityTradeFailsBeforeMutation);
+    private static final FunctionGameTestSuite SUITE = createSuite();
+
+    public static void register(IEventBus eventBus) {
+        SUITE.register(eventBus);
     }
 
-    private static void register(RegisterGameTestsEvent event, Holder<TestEnvironmentDefinition> environment, String name, Consumer<GameTestHelper> test) {
-        event.registerTest(id(name), new DirectGameTestInstance(test, data(environment)));
-    }
-
-    private static TestData<Holder<TestEnvironmentDefinition>> data(Holder<TestEnvironmentDefinition> environment) {
-        return new TestData<>(environment, EMPTY_STRUCTURE, 20, 0, true, Rotation.NONE);
+    private static FunctionGameTestSuite createSuite() {
+        var suite = new FunctionGameTestSuite(ENVIRONMENT);
+        suite.add(id("item_only"), TradeFinalizationGameTests::itemOnlyTradeCompletes);
+        suite.add(id("currency_only"), TradeFinalizationGameTests::currencyOnlyTradeCompletes);
+        suite.add(id("mixed"), TradeFinalizationGameTests::mixedTradeCompletes);
+        suite.add(id("full_inventory"), TradeFinalizationGameTests::fullInventoryTradeFailsBeforeMutation);
+        suite.add(id("capacity_limit"), TradeFinalizationGameTests::currencyCapacityTradeFailsBeforeMutation);
+        return suite;
     }
 
     private static void itemOnlyTradeCompletes(GameTestHelper helper) {
@@ -132,31 +122,6 @@ public final class TradeFinalizationGameTests {
 
     private static ResourceLocation id(String path) {
         return ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "trade_finalization/" + path);
-    }
-
-    private static final class DirectGameTestInstance extends GameTestInstance {
-        private final Consumer<GameTestHelper> test;
-
-        private DirectGameTestInstance(Consumer<GameTestHelper> test, TestData<Holder<TestEnvironmentDefinition>> data) {
-            super(data);
-            this.test = test;
-        }
-
-        @Override
-        public void run(GameTestHelper helper) {
-            test.accept(helper);
-        }
-
-        @Override
-        @SuppressWarnings({"unchecked", "rawtypes"})
-        public MapCodec<? extends GameTestInstance> codec() {
-            return (MapCodec) FunctionGameTestInstance.CODEC;
-        }
-
-        @Override
-        protected net.minecraft.network.chat.MutableComponent typeDescription() {
-            return net.minecraft.network.chat.Component.literal("direct cosmic dungeon trade finalization test");
-        }
     }
 
     private static final class FakeParticipant {

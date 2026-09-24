@@ -214,3 +214,23 @@ tasks.register('d1OfflineChecks', JavaExec) {
 
 // Client title/menu assets and early-loading theme preparation.
 apply from: "gradle/menu-branding.gradle"
+
+
+// Run native codec regression checks with the real NeoForge loader (no world/server).
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // The compiled WorldEdit API needs the same protocol companion bundled in the development client.
+    testRuntimeOnly 'org.enginehub.worldeditcui-protocol:worldeditcui-protocol-neoforge-mc1.21.9:4.0.2'
+}
+tasks.named('test') {
+    useJUnitPlatform()
+    // Standalone *Checks programs retain their existing JavaExec runners.
+    include '**/*Test.class', '**/*Tests.class'
+}
+neoForge {
+    unitTest {
+        enable()
+        testedMod = mods.getByName(project.mod_id)
+    }
+}

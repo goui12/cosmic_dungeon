@@ -57,8 +57,8 @@ public class CosmicDungeonMod {
 
         // networking payloads
         modEventBus.addListener(ModNetwork::registerPayloadHandlers);
-        modEventBus.addListener(TradeFinalizationGameTests::register);
-        modEventBus.addListener(DungeonInstanceGameTests::register);
+        TradeFinalizationGameTests.register(modEventBus);
+        DungeonInstanceGameTests.register(modEventBus);
         modEventBus.addListener(this::addCreative);
 
 
