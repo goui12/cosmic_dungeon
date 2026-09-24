@@ -15,12 +15,12 @@
 | `.\gradlew.bat build` | Compile/package and run configured build checks; not multiplayer QA. |
 | `.\gradlew.bat runServerData` | Generate data into `src/generated/resources_server`. |
 | `.\gradlew.bat runClientData` | Generate assets into `src/generated/resources_client`. |
-| `.\gradlew.bat runClient` | Dev-client run; not the default testing route. |
+| `.\gradlew.bat runClient` | Launch after a successful build when handing changes to Cameron for testing. |
 | `.\gradlew.bat clean` | Delete build outputs; currently also deletes a tracked 1.5.0 jar. Preserve it and resolve policy first. |
 
 Optional logged wrapper: `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-local.ps1 -Task build`.
 A successful build issues a local receipt with the Git commit, build-input fingerprint, jar SHA256 and log path. Deployment rejects missing/stale receipts.
-The same wrapper accepts the other four tasks. Dev-client execution is gated; clean refuses to destroy a tracked build artifact. No Gradle task or heap setting was changed by onboarding.
+The same wrapper accepts the other four tasks. Its older development-client gate remains a wrapper detail; Cameron authorized direct Gradle runClient handoffs on 2026-09-24. clean still refuses to destroy a tracked build artifact. No Gradle heap setting is changed.
 
 ## Credential setup and trust
 
@@ -57,3 +57,23 @@ The scripts use WinSCP's installed .NET assembly with SecurePassword and a pinne
 Keep `CURRENT_STATE.md` compact; update it after milestones. `DECISIONS.md` separates pending, approved and rejected choices. Source snapshots must include file ID/URL, source revision/modified time, fetched UTC time, content hash and explicit coverage; initialize sources/index.json without claiming unavailable content is cached.
 Use live Git status/commit and relevant file hashes to invalidate stale code notes. Before code alignment, refresh metadata for relevant Google Docs and fetch changed, missing or partial sources. A historic title-match/access result is not a full semantic read.
 The cache soft budget is 512 MiB; log snapshots are capped at 16 MiB each. Review size/retention instead of silently deleting rollback backups. No automatic ongoing monitoring is enabled.
+
+
+## Authorized edit-to-test handoff (2026-09-24)
+
+1. Complete the scoped edits. If they affect generated resources, run runServerData,
+   runClientData, or both sequentially; inspect the generated diff. Hand-authored artwork
+   and workflow notes do not need datagen.
+2. Run the Gradle build with Java21 after every completed edit pass, plus relevant checks.
+   Resolve failures from the current change before handing it over.
+3. When Cameron needs to test, launch runClient without asking again.
+   Check for an existing client first; do not force-close a game or open duplicates.
+   Check startup through bounded logs/window status and leave the client open for him.
+4. Give a short numbered list of exact actions and expected results, including relevant
+   edge cases. Report what passed automatically and what still requires human testing.
+
+This supersedes the previous ask-each-time rule for the development client only.
+It does not start a background watcher or authorize deployment or a dedicated/GameTest
+server launch. Real licensed multiplayer acceptance remains a separate test.
+When the connector is unavailable, include:
+npx.cmd -y @wonderwhy-er/desktop-commander@latest remote

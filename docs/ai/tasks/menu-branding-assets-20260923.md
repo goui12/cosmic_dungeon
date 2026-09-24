@@ -189,3 +189,32 @@ Exact changed repository files for this pass:
 
 Future improvement: tune logo scale and background contrast after native preview.
 Final local checkpoint follows complete notes and exact scoped diff review; no publishing.
+
+
+## Authorized follow-up: build and launch testing handoffs - 2026-09-24
+
+Cameron requests applicable datagen, build after every completed edit pass, and automatic
+runClient launch whenever handing changes to him for testing, with specific test steps.
+This explicitly supersedes the older per-launch development-client approval requirement.
+Scope: AGENTS.md, docs/LOCAL_AI_WORKFLOW.md and this task record. No Java/resource, world,
+registry, networking, migration or security changes. Datagen is unrelated to this pass.
+The current haunted-theme preview is the first handoff under that standing authorization.
+Build/startup results and the resulting manual test list will be recorded below.
+
+
+Handoff results: Java21 build and 42 offline checks passed (34 branding + 8 loading).
+Datagen not applicable to this workflow/hand-authored theme follow-up. No clean performed.
+runClient launched under the new standing authorization. Window PID28256 reports
+Minecraft NeoForge1.21.10 and Responding=true. Captured startup log confirms the
+cosmicdungeon early provider/theme, NVIDIA graphics initialization and sound engine start;
+no ERROR lines or theme/render failure markers were found at the startup check.
+The client is left running for Cameron. No world/server was entered by the assistant.
+Actual appearance/audio acceptance remains manual; a responding window is not that proof.
+Test list: inspect title/edition and splash overlap at usual GUI scale; resize/fullscreen;
+listen for custom menu music and adjust Music/Master; watch panorama rotation/seams;
+on the next startup check background, readable loading bars and NeoForge fox/credit.
+No migration/datagen/gameplay/security changes or dedicated/GameTest server launch.
+Exact repository files: AGENTS.md, docs/LOCAL_AI_WORKFLOW.md, this task record.
+Evidence: sibling CosmicDungeon_AI/backups/client-handoff-workflow-20260924.
+Final local checkpoint follows scoped diff review; no publishing request.
+Future improvement: include the precise failed test step with screenshots in preview feedback.
