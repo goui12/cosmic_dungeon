@@ -124,3 +124,68 @@ Build used without clean under tracked-JAR protection; prior build JARs backed u
 New title native contrast/layout/GUI scales remain manual QA; no game or GameTest launched.
 Next improvement: tune logo display scale after the requested native preview.
 Final local checkpoint follows completed notes and exact six-file diff review; no push.
+
+
+## Authorized follow-up: haunted background and darker lettering - 2026-09-24
+
+Install the user-approved horror background; return to the original dark logo material,
+widen the title/edition, and define their edges with irregular haunted lighting.
+Same task/branch. Ownership includes the existing Gradle menu-branding setup, theme,
+new isolated earlyLoading source set/service, artwork, focused checks and task docs.
+No common entry point, gameplay, networking, registry, schema, world or security changes;
+no migration or datagen. Preserve unrelated Git changes, desktop originals and prior JARs.
+Only the development early loading provider/config changes; no installed-client/server
+deployment, publishing, client launch or GameTest execution is authorized.
+
+Use a separate OOP provider extending native DisplayWindow, with a delegating scheduler
+to put cosmicBackground first before the first render task. Native controls/credits and
+window/Minecraft handoff remain intact. Two FML10.0.32 private fields are isolated and
+checked for compatibility. Additional image memory is bounded to about6MiB decoded.
+
+Validation: pending Java21 build, actual FML parser and existing branding checks; add
+background-copy/contrast/provider checks and scheduler first-frame/order/lifecycle checks.
+Also verify client launch classpath and dry-run ordering, helper exclusion from the main
+mod/server runtime, all JSON, packaged hashes, config preservation and scoped Git diff.
+Manual: first frame, progress controls and credits, window resize, initial transition,
+new wordmark readability/GUI scales/splash overlap. No runtime visual result claimed.
+Exact file scope is appended after completion. Evidence: sibling CosmicDungeon_AI/
+backups/haunted-loading-20260924. Future improvement: adjust contrast after native preview.
+
+
+### Haunted-theme completion
+
+Java21 build and 42 offline checks passed: 34 branding + 8 background ordering/scheduler.
+The first configuration attempt used an obsolete additional-runtime setting; FML1.21.10
+requires an ordinary runtime classpath. A separate empty brandedClient launch source set
+now adds the helper only to client runtime and reuses main outputs/dependencies.
+Generated client/server launch classpaths verify inclusion/exclusion; shared mod JAR omits
+helper classes/service. runClient dry-run orders helper and theme preparation before launch.
+1,996 source JSON files parsed; all 13 assets match the built mod JAR byte-for-byte.
+Native earlydisplay is an automatic module; private-field access passes offline checks.
+Native loading overlay accepts the DisplayWindow subclass and retains the framebuffer handoff.
+Only earlyWindowProvider changed in existing fml.toml; theme selection already matched.
+Prior config/theme/images/build JARs preserved in the scoped backup. Unrelated staged JAR
+removal and tracked cache changes preserved. git diff --check passed. No datagen or migration.
+No game/GL/server/GameTest execution, deployment or push; manual first-frame, resizing,
+credits/progress, transition and wordmark readability QA remains Cameron runClient work.
+
+Exact changed repository files for this pass:
+
+- src/main/resources/assets/cosmicdungeon/textures/gui/title/cd_minecraft.png
+- src/main/resources/assets/cosmicdungeon/textures/gui/title/cd_edition.png
+- src/main/resources/assets/cosmicdungeon/textures/gui/loading/cd_loading_background.png
+- src/main/loading-theme/theme-cosmicdungeon.json
+- src/earlyLoading/java/net/goui/cosmicdungeon/loading/CosmicLoadingWindow.java
+- src/earlyLoading/java/net/goui/cosmicdungeon/loading/CosmicLoadingScreenAccess.java
+- src/earlyLoading/java/net/goui/cosmicdungeon/loading/CosmicLoadingScheduler.java
+- src/earlyLoading/resources/META-INF/services/net.neoforged.neoforgespi.earlywindow.ImmediateWindowProvider
+- src/test/java/net/goui/cosmicdungeon/client/branding/MenuBrandingChecks.java
+- src/test/java/net/goui/cosmicdungeon/loading/LoadingBackgroundChecks.java
+- gradle/menu-branding.gradle
+- docs/client/Menu_Branding_Assets.md
+- docs/client/menu_branding_assets.json
+- docs/ai/tasks/menu-branding-assets-20260923.md
+- docs/releases/fragments/menu-branding-assets-20260923.md
+
+Future improvement: tune logo scale and background contrast after native preview.
+Final local checkpoint follows complete notes and exact scoped diff review; no publishing.

@@ -8,6 +8,7 @@ import javax.imageio.ImageIO;
 import net.neoforged.fml.earlydisplay.theme.Theme;
 import net.neoforged.fml.earlydisplay.theme.ThemeLoader;
 import net.neoforged.fml.earlydisplay.theme.elements.ThemeImageElement;
+import net.goui.cosmicdungeon.loading.LoadingBackgroundChecks;
 
 /** Offline packaging and real FML theme-parser checks. Never creates a Minecraft client or GL context. */
 public final class MenuBrandingChecks {
@@ -58,6 +59,16 @@ public final class MenuBrandingChecks {
                 Files.readAllBytes(themeDirectory.resolve(theme.sprites().progressBarForeground().resource().path()))), "Early foreground bar");
         require(Files.readString(configDirectory.resolve("fml.toml")).contains("earlyLoadingScreenTheme = \"cosmicdungeon\""),
                 "Early theme selected");
+        require(Files.readString(configDirectory.resolve("fml.toml")).contains("earlyWindowProvider = \"cosmicdungeon\""),
+                "Background-capable early provider selected");
+        var background = (ThemeImageElement) theme.loadingScreen().decoration().get("cosmicBackground");
+        require(background.visible(), "Background image enabled");
+        require(Arrays.equals(Files.readAllBytes(authored.resolve("textures/gui/loading/cd_loading_background.png")),
+                Files.readAllBytes(themeDirectory.resolve(background.texture().resource().path()))), "Early background copy");
+        require(background.left().value() == 0 && background.right().value() == 0
+                && background.top().value() == 0 && background.bottom().value() == 0, "Background fills native layout");
+        require(theme.colorScheme().text().r() > 0.75F, "Loading text contrasts with dark background");
+        new LoadingBackgroundChecks().run();
         System.out.println("Menu branding: " + checks + " offline checks passed; no client/server was launched.");
     }
 

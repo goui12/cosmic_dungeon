@@ -14,3 +14,9 @@ pending. No gameplay, registry, network or world-data migration changes.
 Approved artwork refresh: wider Cosmic Dungeon lettering with bright silver borders and
 blue/violet cosmic faces, plus a matching Java Edition subtitle. Original PNG dimensions
 and transparent backgrounds are preserved; NeoForge loading credits remain visible.
+
+Haunted theme revision: the approved shattered-reality loading background sits behind
+native progress controls and NeoForge credits. Wide dark-stone title/edition lettering
+uses irregular spectral edge light. Loading text is pale with charcoal window margins.
+Development runClient supplies a separate early-window helper; installed instances need
+that startup artifact and theme configuration in addition to the shared mod JAR.

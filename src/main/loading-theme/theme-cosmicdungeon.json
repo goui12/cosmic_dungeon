@@ -2,8 +2,8 @@
   "version": 1,
   "extends": "builtin:default",
   "colorScheme": {
-    "screenBackground": "#afa3bf",
-    "text": "#21192d"
+    "screenBackground": "#090b10",
+    "text": "#dee5f0"
   },
   "sprites": {
     "progressBarBackground": {
@@ -77,6 +77,24 @@
         "text": "Powered by NeoForge",
         "right": 16,
         "bottom": 150,
+        "visible": true
+      },
+      "cosmicBackground": {
+        "type": "image",
+        "texture": {
+          "resource": "cosmicdungeon/cd_loading_background.png",
+          "scaling": {
+            "type": "stretch",
+            "width": 854,
+            "height": 480,
+            "linearScaling": true
+          }
+        },
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0,
+        "maintainAspectRatio": false,
         "visible": true
       }
     }

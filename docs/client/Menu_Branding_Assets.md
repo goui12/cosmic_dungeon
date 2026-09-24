@@ -10,8 +10,9 @@ runClient task in IntelliJ. Refresh the Gradle project first if using an existin
 IDE Client configuration. The early-loading theme is already prepared for this checkout.
 
 The `prepareCosmicLoadingTheme` task runs before the development client and on IDE sync.
-It copies the theme and three existing PNGs into `run/config/fml/`, then sets only
-`earlyLoadingScreenTheme = "cosmicdungeon"` in `run/config/fml.toml`.
+It builds the separate loading-screen helper JAR for the client runtime, copies the theme
+and four PNGs into `run/config/fml/`, and selects `cosmicdungeon` for both
+`earlyLoadingScreenTheme` and `earlyWindowProvider` in `run/config/fml.toml`.
 Modified existing files receive unique `.before-cosmic-*.bak` backups beside them.
 Unrelated FML settings are preserved. Nothing is launched by this preparation task.
 
@@ -32,14 +33,16 @@ Unrelated FML settings are preserved. Nothing is launched by this preparation ta
   controls, and stops the menu track on world login. The Constant music-frequency option
   retains its native five-second spacing. In-world music definitions are unchanged.
 - Startup: the FML 10.0.32 theme replaces Mojang's startup logo with Cosmic Dungeon and uses
-  the authored progress bars. The approved silver-bordered cosmic title appears against
-  the existing muted lavender background. The inherited NeoForge fox, version and window icon remain, with an added
+  the authored progress bars. The dark haunted title appears over the approved shattered
+  cathedral background, with charcoal letterboxing and pale status text. The inherited
+  NeoForge fox, version and window icon remain, with an added
   "Powered by NeoForge" label. NeoForge carries this theme through the initial resource-load
   transition. Later resource-pack reload overlays retain Minecraft's existing behavior.
 
 The external early-loading theme is development configuration, not part of mod resource
 discovery. The built mod JAR contains the menu integration; a future installed-instance
-deployment also needs the theme files and FML setting before launch. This pass does not
+deployment also needs the helper JAR on the early startup classpath, theme files and both
+FML settings before launch. The helper is not embedded in the shared mod JAR. This pass does not
 deploy to CurseForge or a server.
 
 ## Panorama preparation
@@ -71,6 +74,7 @@ Paths relative to `src/main/resources/assets/cosmicdungeon/`:
 | --- | --- |
 | textures/gui/title/cd_minecraft.png | 1024 x 256 PNG |
 | textures/gui/title/cd_edition.png | 512 x 64 PNG |
+| textures/gui/loading/cd_loading_background.png | 1672 x 941 PNG |
 | textures/gui/loading/cd_progress_bar_bg.png | 40 x 20 PNG |
 | textures/gui/loading/cd_progress_bar_fg.png | 40 x 20 PNG |
 | texts/splashes.txt | Ten UTF-8 phrases |
@@ -128,3 +132,40 @@ Refresh validation: Java21 build and all 29 branding checks passed; 1,996 source
 parsed, all 12 authored assets match the built JAR, and the loading title matches the approved
 PNG. Previous loading title backup verified. FML config/theme bytes and unrelated Git changes
 are preserved. No datagen, game, server or GameTest was run for this image replacement.
+
+
+## Haunted loading background and dark wordmarks - 2026-09-24
+
+The approved background is installed without pixel edits. The original dark logos were
+used as image-generation edit references: wide single-line charcoal stone lettering with
+uneven silver, ice-blue and violet fractured edges. PNG dimensions stay 1024 x 256 and
+512 x 64 with real transparency. Desktop originals and prior repo assets are backed up.
+
+FML 10.0.32 renders decorations after its controls. A dedicated OOP early-window provider
+extends NeoForge DisplayWindow and moves only cosmicBackground to the first render slot
+at construction. A delegating scheduler runs this once on the native rendering executor
+before the first frame; it adds no thread, per-frame reflection or new rendering loop.
+Native window management, progress, fox/version/credits, scheduling, error UI and the
+Minecraft resource-loading handoff remain delegated to NeoForge. The adapter isolates
+two private fields; check compatibility again when upgrading FML.
+
+The helper lives in src/earlyLoading and builds as cosmicdungeon-1.5.1-loading-screen.jar.
+Only the development client receives that artifact on its brandedClient runtime classpath.
+The shared mod JAR and server configurations do not include the provider. The static
+1672 x 941 image requires about 6 MiB decoded and uses the native fitted loading layout;
+non-widescreen windows receive deep-charcoal margins. No animated backdrop or new heap
+setting is introduced. The main-menu panorama and music retain their existing behavior.
+
+Java21 build and 42 offline checks passed (34 branding + 8 ordering/scheduler checks).
+All 1,996 source JSON files parsed and 13 asset entries matched the built mod JAR.
+Generated client launch classpath includes the helper; server classpath and shared mod JAR
+exclude it. runClient dry-run orders helper/theme preparation before launch. Only the FML
+provider selection changed in fml.toml; unrelated settings and staged changes are preserved.
+No game, GL context, server or GameTest was launched. Manual preview must check the very
+first frame, progress text/bars,
+fox/version/credit, resizing and the initial Minecraft loading transition. Later resource
+reload overlays are still native. Also inspect the new wordmarks at usual GUI scales.
+Backups/evidence: sibling CosmicDungeon_AI/backups/haunted-loading-20260924.
+Rollback: restore this pass's source assets/config and both prior FML setting values from
+that backup; the prepare task must match the rollback or it will reselect the new provider.
+Future improvement: tune logo scale and backdrop contrast after the native preview.

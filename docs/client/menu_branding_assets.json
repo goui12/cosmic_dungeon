@@ -2,7 +2,7 @@
   "created_utc": "2026-09-23T16:22:03.410219+00:00",
   "branch": "feature/menu-branding-assets-20260923",
   "base_commit": "7df252362f257d001bbd43bbd0d891779fd4a72f",
-  "status": "approved brighter logo assets installed; refreshed native appearance and prior seam/audio QA pending",
+  "status": "haunted background and darker wider logos installed for runClient; native visual QA pending",
   "crop": {
     "left": 42,
     "right": 42,
@@ -30,10 +30,10 @@
   "assets": [
     {
       "file": "src/main/resources/assets/cosmicdungeon/textures/gui/title/cd_minecraft.png",
-      "source": "approved-generated-logo-v2/cd_minecraft_epic_v2_1024x256.png",
-      "operation": "byte-for-byte copy of user-approved transparent PNG export",
-      "sha256": "11f47dc55ac3f03dfafba40fdeda56412b0601a77b89df297a057d2ee996deb0",
-      "bytes": 426481,
+      "source": "haunted-loading-20260924/cd_minecraft.png",
+      "operation": "imagegen edit of original dark logo; transparent export fitted to existing canvas",
+      "sha256": "9597f388d792edd463a791c715015660fad8535c85187f813278fffd69643ea1",
+      "bytes": 299343,
       "size": [
         1024,
         256
@@ -48,15 +48,25 @@
             1024,
             256
           ]
+        },
+        {
+          "source": "approved-generated-logo-v2/cd_minecraft_epic_v2_1024x256.png",
+          "operation": "byte-for-byte copy of user-approved transparent PNG export",
+          "sha256": "11f47dc55ac3f03dfafba40fdeda56412b0601a77b89df297a057d2ee996deb0",
+          "bytes": 426481,
+          "size": [
+            1024,
+            256
+          ]
         }
       ]
     },
     {
       "file": "src/main/resources/assets/cosmicdungeon/textures/gui/title/cd_edition.png",
-      "source": "approved-generated-logo-v2/cd_edition_epic_v2_512x64.png",
-      "operation": "byte-for-byte copy of user-approved transparent PNG export",
-      "sha256": "b58631711106c7b27674bb78149a3012f67758f2b701749ea107490ccf7700db",
-      "bytes": 66838,
+      "source": "haunted-loading-20260924/cd_edition.png",
+      "operation": "imagegen edit of original dark logo; transparent export fitted to existing canvas",
+      "sha256": "7db706c8a2bed047dd487171e01f043e2840d842f03620d7943e20e268988f23",
+      "bytes": 49984,
       "size": [
         512,
         64
@@ -67,6 +77,16 @@
           "operation": "byte-for-byte copy",
           "sha256": "5f7ee98b08572f4c6db51248874713d21251a47b57a8738c90a57f882d010a3f",
           "bytes": 6943,
+          "size": [
+            512,
+            64
+          ]
+        },
+        {
+          "source": "approved-generated-logo-v2/cd_edition_epic_v2_512x64.png",
+          "operation": "byte-for-byte copy of user-approved transparent PNG export",
+          "sha256": "b58631711106c7b27674bb78149a3012f67758f2b701749ea107490ccf7700db",
+          "bytes": 66838,
           "size": [
             512,
             64
@@ -175,6 +195,17 @@
         1024,
         1024
       ]
+    },
+    {
+      "file": "src/main/resources/assets/cosmicdungeon/textures/gui/loading/cd_loading_background.png",
+      "source": "haunted-loading-20260924/cd_loading_background.png",
+      "operation": "approved background unchanged",
+      "sha256": "2a57f980b64ea1e16ee3fbc4449f3e5f5376b7e294a1c149f1b15c3a3c074e2a",
+      "bytes": 2241757,
+      "size": [
+        1672,
+        941
+      ]
     }
   ],
   "validation": {
@@ -235,5 +266,42 @@
       "migration": "none"
     },
     "manual_QA": "new logo contrast, size, GUI scales and splash/button overlap in runClient"
+  },
+  "haunted_loading": {
+    "base_commit": "6ab3dd14e0a546c63db4a4fce1d2470fd1ec2e8b",
+    "background_source": "approved generated image exec-6954daa4-dbc1-47ab-bb2b-d2ab39278063.png, unchanged bytes",
+    "logos": "dark original material, wider wordmarks, irregular spectral edges",
+    "source": "built-in image generation; original desktop logos used as edit references",
+    "early_provider": "cosmicdungeon; separate client early service artifact",
+    "fml_compatibility": "10.0.32; two private fields checked; native renderer, scheduling and handoff retained",
+    "runtime_memory": "one 1672x941 background, about 6 MiB decoded; no new animation",
+    "validation": {
+      "source_json": 1996,
+      "packaged_asset_byte_matches": 13,
+      "main_jar_sha256": "6ff7d1f5822bcc765766c5e70573a798778399a3188ec6e3c554bd94996945b0",
+      "helper_jar_sha256": "127e4e4282e2f981cfdcfe5104da39afa89697759d7151c276c03f5e1d7f232d",
+      "helper_classes": [
+        "net/goui/cosmicdungeon/loading/CosmicLoadingScheduler.class",
+        "net/goui/cosmicdungeon/loading/CosmicLoadingScreenAccess.class",
+        "net/goui/cosmicdungeon/loading/CosmicLoadingWindow.class"
+      ],
+      "client_contains_helper": true,
+      "server_excludes_helper": true,
+      "main_jar_excludes_helper": true,
+      "fml_config_only_provider_changed": true,
+      "unrelated_staging_and_tracked_edits_preserved": true,
+      "diff_check": "passed",
+      "validated_utc": "2026-09-24T01:12:01.662295+00:00",
+      "java": "Temurin21.0.7",
+      "build": "build menuBrandingChecks --offline --console=plain passed",
+      "branding_checks": 34,
+      "loading_background_checks": 8,
+      "client_dry_run": "passed; helper build and theme preparation precede launch",
+      "native_gl_client_server_gametest": "not launched; manual QA pending",
+      "datagen": "not applicable",
+      "migration": "none",
+      "clean": "not run under tracked-JAR protection; prior JARs backed up"
+    },
+    "native_QA": "background first frame/transition, loading controls/credits, window sizes, title/edition and splash overlap"
   }
 }
