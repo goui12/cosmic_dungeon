@@ -120,6 +120,7 @@ public final class TamsinService {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("d1")
                 .then(Commands.literal("tamsin").requires(AccessPolicy::requireDeveloperOrConsole)
+                        .then(TamsinPlacement.INSTANCE.command())
                         .then(Commands.literal("bind").then(Commands.argument("npc", EntityArgument.entity())
                                 .then(Commands.argument("selector", BlockPosArgument.blockPos()).executes(ctx -> {
                                     var source = ctx.getSource();

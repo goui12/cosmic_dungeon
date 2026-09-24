@@ -87,5 +87,7 @@ public class D1_Class_Selector_Block extends Block implements EntityBlock {
                         .withStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW).withUnderlined(true)
                                 .withClickEvent(new ClickEvent.RunCommand("/classselector ui players " + p)))
         );
+
+        dev.sendSystemMessage(net.goui.cosmicdungeon.npc.tamsin.TamsinPlacement.INSTANCE.button(dev, selectorPos));
     }
 }
