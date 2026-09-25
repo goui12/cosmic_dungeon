@@ -25,6 +25,11 @@ public final class DungeonLifecycleEvents {
         net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrThreats.clear();
     }
 
+    @SubscribeEvent
+    public static void stopping(net.neoforged.neoforge.event.server.ServerStoppingEvent event) {
+        DungeonInstanceWorlds.stop(event.getServer());
+    }
+
     private static volatile boolean reevaluateSoon = false;
 
     @SubscribeEvent
