@@ -20,6 +20,7 @@ public final class DungeonLifecycleEvents {
     @SubscribeEvent
     public static void stopped(net.neoforged.neoforge.event.server.ServerStoppedEvent event) {
         DungeonAfkService.clear();reevaluateSoon=false;
+        DungeonForfeitService.stop(event.getServer());
         net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrRecovery.clear();
         net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrThreats.clear();
     }
@@ -80,6 +81,7 @@ public final class DungeonLifecycleEvents {
         PlantFlagService.completeIfReady(server);
         DungeonAfkService.tick(server);
         if (doPeriodic) {
+            DungeonForfeitService.tick(server);
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 FarrowsChopTravelService.syncOutsideInventory(player);
                 DungeonTravelRouter.evacuateUnauthorizedLocation(player);

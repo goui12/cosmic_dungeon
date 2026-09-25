@@ -505,6 +505,17 @@ public final class DungeonLifecycleService {
         }
     }
 
+    /** Failed outcome for one leased instance; existing guards and durable handoffs remain authoritative. */
+    public static boolean forfeitRun(MinecraftServer server, long runId) {
+        var runs = DungeonRunRegistryData.get(server);
+        var run = runs.getRun(runId).orElse(null);
+        if (run == null || run.stateEnum() != DungeonRunState.ACTIVE || runs.starting(runId)) return false;
+        finishRun(server, runId, DungeonResetReason.ABANDONED, null);
+        var updated = runs.getRun(runId).orElse(null);
+        return updated != null && updated.stateEnum() == DungeonRunState.RESETTING
+                && updated.resetReason().equals(DungeonResetReason.ABANDONED.name());
+    }
+
     public static boolean resolveD1Run(MinecraftServer server, long runId, boolean success) {
         var run = DungeonRunRegistryData.get(server).getRun(runId).orElse(null);
         if (run == null || !run.dungeonId().equals("dungeon_1") || run.stateEnum() != DungeonRunState.ACTIVE) return false;

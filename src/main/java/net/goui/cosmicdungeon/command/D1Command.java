@@ -12,6 +12,7 @@ import net.minecraft.network.chat.Component;
 public final class D1Command {
     private D1Command() {}
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        ForfeitCommand.register(dispatcher);
         net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCompanions.register(dispatcher);
         net.goui.cosmicdungeon.item.identity.D1ItemAuthoring.register(dispatcher);
          net.goui.cosmicdungeon.dungeon.ChopRecoveryCommand.register(dispatcher);
