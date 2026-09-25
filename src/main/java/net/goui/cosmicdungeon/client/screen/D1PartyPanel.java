@@ -25,11 +25,12 @@ final class D1PartyPanel {
         String phase = state.phase();
         boolean assembly = phase.equals("ASSEMBLY"), checking = phase.equals("READY_CHECK");
         boolean queued = phase.equals("QUEUED"), preparing = phase.equals("PREPARING");
-        boolean grouped = !phase.equals("UNGROUPED");
+        boolean solo = phase.equals("SOLO_AVAILABLE");
+        boolean grouped = !phase.equals("UNGROUPED") && !solo;
         boolean allReady = !view.members().isEmpty() && view.members().stream().allMatch(PartyPayloads.Member::ready);
-        button(add, assembly ? "Begin ready check" : checking ? "I'm ready" : "Waiting",
-                x + 10, y + 144, 130, (assembly && state.leader()) || checking,
-                () -> send(containerId, assembly ? "begin" : "ready", ""));
+        button(add, solo ? "Start solo" : assembly ? "Begin ready check" : checking ? "I'm ready" : "Waiting",
+                x + 10, y + 144, 130, solo || (assembly && state.leader()) || checking,
+                () -> send(containerId, solo ? "solo" : assembly ? "begin" : "ready", ""));
         button(add, "Join queue", x + 145, y + 144, 98, state.leader() && checking && allReady,
                 () -> send(containerId, "queue", ""));
         button(add, "Unready", x + 248, y + 144, 102, grouped && !assembly && !preparing,
@@ -53,6 +54,7 @@ final class D1PartyPanel {
         if (view == null) { graphics.drawString(font, "Loading group...", x + 10, y + 37, 0xFFFFFFFF, false); return; }
         var state = view.state();
         String phase = switch(state.phase()) {
+            case "SOLO_AVAILABLE" -> "Start solo or invite players";
             case "ASSEMBLY" -> "Group assembly";
             case "READY_CHECK" -> "Personal ready check";
             case "QUEUED" -> "Queue position: " + state.queuePosition();
@@ -72,6 +74,8 @@ final class D1PartyPanel {
         if (state.phase().equals("QUEUED"))
             graphics.drawString(font, state.countdownSeconds() < 0 ? "Waiting for an available instance."
                     : "Entry in " + state.countdownSeconds() + " seconds.", x + 10, y + 130, 0xFF90CAF9, false);
+        else if (state.phase().equals("SOLO_AVAILABLE"))
+            graphics.drawString(font, "Solo requires your class and ready confirmation.", x + 10, y + 130, 0xFFBBBBBB, false);
         else if (state.phase().equals("ASSEMBLY"))
             graphics.drawString(font, "Leader begins; everyone confirms personally.", x + 10, y + 130, 0xFFBBBBBB, false);
         if (!view.invitation().token().isEmpty()) {

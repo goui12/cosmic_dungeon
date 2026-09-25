@@ -41,8 +41,24 @@ public final class D1PartyLobby {
     private void changed(Party party) { party.revision = ++revision; }
     public boolean current(UUID player, long expected) { return revision(player) == expected; }
 
+    /** Explicit opt-in; viewing a menu never creates or merges a party. */
+    public boolean canStartSolo(UUID leader, int minimum, int capacity) {
+        return leader != null && minimum == 1 && capacity >= 1 && capacity <= 6
+                && party(leader) == null && invitation(leader) == null;
+    }
+    public String startSolo(UUID leader, Anchor anchor, long expected, int minimum, int capacity) {
+        if (anchor == null || !canStartSolo(leader, minimum, capacity) || !current(leader, expected))
+            return "Solo entry is unavailable; review the party limits and any invitation.";
+        var party = new Party(leader, anchor);
+        groups.put(party.id, party);
+        membership.put(leader, party);
+        changed(party);
+        return null;
+    }
+
     public String invite(UUID sender, UUID target, Anchor anchor, long now, int lifetimeTicks, int capacity) {
         capacity = Math.min(6, capacity);
+        if (capacity < 2) return "This selector has no room for another player.";
         if (sender.equals(target)) return "You cannot invite yourself.";
         if (party(target) != null) return "That player already belongs to a group; groups cannot merge.";
         var p = party(sender);
@@ -100,7 +116,7 @@ public final class D1PartyLobby {
         var p = party(leader);
         if (p == null || !p.leader.equals(leader)) return "Only the group leader can begin readiness.";
         if (!current(leader, expected) || p.phase != Phase.ASSEMBLY) return "Group changed; refresh before readying.";
-        if (p.members.size() < Math.max(3, minimum) || p.members.size() > Math.min(6, capacity))
+        if (p.members.size() < Math.max(1, minimum) || p.members.size() > Math.min(6, capacity))
             return "The group must fit this selector's party limits.";
         if (!classes.keySet().equals(p.members) || classes.values().stream().anyMatch(c -> c == null || c.isBlank() || c.equals("none")))
             return "Every member must personally select a class.";

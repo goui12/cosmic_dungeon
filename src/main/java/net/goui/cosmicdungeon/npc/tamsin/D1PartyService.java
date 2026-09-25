@@ -85,12 +85,15 @@ public final class D1PartyService {
         var i = LOBBY.invitation(player.getUUID());
         var sender = i == null ? null : player.level().getServer().getPlayerList().getPlayer(i.inviter());
         boolean leader = p != null && p.leader().equals(player.getUUID());
-        boolean canInvite = block != null && nearby(player, anchor) && (p == null
+        boolean canSolo = block != null && nearby(player, anchor)
+                && LOBBY.canStartSolo(player.getUUID(), Config.MIN_PARTY.get(), capacity);
+        String phase = p == null ? (canSolo ? "SOLO_AVAILABLE" : "UNGROUPED") : p.phase().name();
+        boolean canInvite = block != null && capacity >= 2 && nearby(player, anchor) && (p == null
                 || (leader && p.anchor().equals(anchor) && p.members().size() < capacity
                 && p.phase() != D1PartyLobby.Phase.QUEUED && p.phase() != D1PartyLobby.Phase.PREPARING));
         int countdown = p == null || p.countdownEnd() < 0 ? -1 : (int)Math.max(0, (p.countdownEnd() - now(player.level().getServer()) + 19) / 20);
         var view = new PartyPayloads.View(menu.containerId,
-                new PartyPayloads.State(LOBBY.revision(player.getUUID()), p == null ? "UNGROUPED" : p.phase().name(),
+                new PartyPayloads.State(LOBBY.revision(player.getUUID()), phase,
                         leader, capacity, LOBBY.queuePosition(p), countdown), members,
                 new PartyPayloads.Invite(i == null ? "" : i.token(), sender == null ? "" : sender.getGameProfile().name(),
                         i != null && i.accepted(), canInvite));
@@ -133,6 +136,13 @@ public final class D1PartyService {
         }
         String error = null;
         switch (request.action()) {
+            case "solo" -> {
+                if (anchor == null || !nearby(player, anchor)) {
+                    error = "Speak with Tamsin to start a solo party."; break;
+                }
+                error = LOBBY.startSolo(player.getUUID(), anchor, request.revision(),
+                        Config.MIN_PARTY.get(), selector(server, anchor).getMaxPlayers());
+            }
             case "invite" -> {
                 if (anchor == null || !nearby(player, anchor)) { error = "Speak with Tamsin to form a group."; break; }
                 long last = LAST_INVITE.getOrDefault(player.getUUID(), -1000000L);
