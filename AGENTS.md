@@ -303,3 +303,11 @@ Do not claim certainty beyond the evidence produced by the build, tests, code re
 - Give a short numbered test list stating the screen/action, expected result, and relevant regression or boundary to check. Distinguish a successful launch from visual, audio, interaction or multiplayer acceptance.
 - These are task-time actions, not a persistent watcher. The earlier licensed-server, authentication, deployment and GameTest boundaries remain in effect.
 - If the desktop connector is unavailable, report what remains incomplete and include its launch command: npx.cmd -y @wonderwhy-er/desktop-commander@latest remote
+
+
+### Portable TEST build distribution (Cameron, 2026-09-25)
+- Cameron explicitly authorizes normal binary commits/pushes to the artifact-only test-builds branch for each testing build. This is an exception to the no-build-binaries rule only on that branch; never merge it into main or stage JARs on source task branches.
+- Use scripts/build-local.ps1 -Task build: its successful build receipt publishes latest-built through scripts/publish-test-build.ps1. A raw Gradle invocation alone does not publish; do not claim otherwise.
+- After the existing stopped-server/closed-client deployment completes, deploy-mod.safe.ps1 publishes current-test only after independently verifying the installed client and TEST-server hashes. A publication failure must be reported and retried; it does not undo a completed deployment.
+- Testers copy the portable scripts/client-updater PS1/BAT into their mods folder. They download current-test, pinned to one artifact commit, and fully close Minecraft before replacement. Never embed server credentials, change authentication, auto-launch a second game, or overwrite unrelated mods.
+- The region-look physical/template visualization fix is still queued for the next mod-code implementation batch. This distribution-tooling task does not authorize changing gameplay while Cameron tests.
