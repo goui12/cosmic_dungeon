@@ -62,7 +62,7 @@ public final class DungeonLifecycleService {
     private static final int RESET_MAX_ATTEMPTS = 12;         // 60 seconds total retry window
     public sealed interface InstancePreparation permits PreparedInstance, PreparationError {}
     public record PreparationError(String message) implements InstancePreparation {}
-    public record PreparedInstance(DungeonDefinition definition, int slot,
+    public record PreparedInstance(DungeonDefinition definition, int slot, long runId,
                                    Map<net.minecraft.resources.ResourceKey<Level>, net.minecraft.resources.ResourceKey<Level>> dimensions)
             implements InstancePreparation {
         public ServerLevel resolve(MinecraftServer server, net.minecraft.resources.ResourceKey<Level> template) {
@@ -156,6 +156,12 @@ public final class DungeonLifecycleService {
     public static String getStartRunBlocker(MinecraftServer server,
                                             net.minecraft.resources.ResourceKey<Level> dungeonDimension,
                                             Collection<UUID> party) {
+        return getStartRunBlocker(server, dungeonDimension, party, true);
+    }
+
+    private static String getStartRunBlocker(MinecraftServer server,
+                                             net.minecraft.resources.ResourceKey<Level> dungeonDimension,
+                                             Collection<UUID> party, boolean requireFreeSlot) {
         if (server == null || dungeonDimension == null) return "Server or dungeon dimension was null.";
 
         DungeonDefinition def = DungeonDefinitions.byDimension(dungeonDimension).orElse(null);
@@ -164,7 +170,7 @@ public final class DungeonLifecycleService {
         }
 
         DungeonRunRegistryData runs = DungeonRunRegistryData.get(server);
-        if (runs.firstAvailableSlot().isEmpty()) return "All " + DungeonInstanceSlots.SLOT_COUNT + " dungeon instance slots are occupied.";
+        if (requireFreeSlot && runs.firstAvailableSlot().isEmpty()) return "All " + DungeonInstanceSlots.SLOT_COUNT + " dungeon instance slots are occupied.";
 
         if (party != null) {
             for (UUID id : party) {
@@ -193,14 +199,7 @@ public final class DungeonLifecycleService {
         if (definition == null) return new PreparationError("No logical dungeon definition is registered for " + dungeonDimension.location());
         int slot = DungeonRunRegistryData.get(server).firstAvailableSlot().orElse(-1);
         if (slot < 1) return new PreparationError("All dungeon instance slots are occupied.");
-        DungeonWorldSnapshotService.SnapshotResult refresh = DungeonWorldSnapshotService.refreshInstanceSlot(server, definition, slot);
-        if (refresh instanceof DungeonWorldSnapshotService.SnapshotResult.Error error) {
-            return new PreparationError("Could not prepare dungeon instance slot " + slot + ": " + error.message());
-        }
-        Map<net.minecraft.resources.ResourceKey<Level>, net.minecraft.resources.ResourceKey<Level>> mapping =
-                DungeonInstanceSlots.mapping(definition, slot);
-        net.goui.cosmicdungeon.rift.RiftRegistryData.get(server).copyTemplatePortals(mapping);
-        return new PreparedInstance(definition, slot, mapping);
+        return DungeonInstanceWorlds.get(server).prepare(definition, slot);
     }
 
     public static String startRun(MinecraftServer server,
@@ -234,7 +233,7 @@ public final class DungeonLifecycleService {
             return "Cannot start a run with an empty party.";
         }
 
-        String blocker = getStartRunBlocker(server, dungeonDimension, ids);
+        String blocker = getStartRunBlocker(server, dungeonDimension, ids, false);
         if (blocker != null) return blocker;
 
         CompoundTag startup = new CompoundTag();
@@ -254,7 +253,7 @@ public final class DungeonLifecycleService {
         }
 
         long runId = DungeonRunRegistryData.get(server).startRun(
-                selectorDimension,
+                prepared.runId(), selectorDimension,
                 selectorPosLong,
                 def,
                 prepared.slot(),
@@ -341,6 +340,19 @@ public final class DungeonLifecycleService {
         PENDING_RESETS.clear();
         DungeonRunRegistryData runs = DungeonRunRegistryData.get(server);
         for (DungeonRunRegistryData.RunRecord run : runs.listAllRuns()) {
+            if (run.stateEnum() == DungeonRunState.PREPARING) {
+                DungeonInstanceWorlds.get(server).discardPreparation(run.runId());
+                continue;
+            }
+            if (run.instanceSlot() > 0 && DungeonInstanceSlots.unique(run) && !runs.retiring(run.runId())) {
+                try { DungeonInstanceWorlds.get(server).restore(run); }
+                catch (Exception error) {
+                    notifyDevelopers(server, Component.literal("[DungeonLifecycle] Run " + run.runId()
+                            + " could not reopen; recovery remains held: " + error.getMessage()).withStyle(ChatFormatting.RED));
+                    com.mojang.logging.LogUtils.getLogger().error("[DungeonInstance] Existing run {} could not reopen", run.runId(), error);
+                    continue;
+                }
+            }
             if (run.dungeonId().equals("dungeon_1")
                     && net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(server).sealed(run.runId())) continue;
             if (runs.starting(run.runId()) && run.stateEnum() == DungeonRunState.ACTIVE) {
@@ -370,7 +382,7 @@ public final class DungeonLifecycleService {
             }
         }
         for (DungeonRunRegistryData.RunRecord run : runs.listAllRuns()) {
-            if (run.stateEnum() == DungeonRunState.RESETTING && run.instanceSlot() > 0) {
+            if ((run.stateEnum() == DungeonRunState.RESETTING || (run.stateEnum() == DungeonRunState.FAILED && runs.retiring(run.runId()))) && run.instanceSlot() > 0) {
                 DungeonResetReason reason;
                 try { reason = DungeonResetReason.valueOf(run.resetReason()); }
                 catch (RuntimeException ignored) { reason = DungeonResetReason.ABANDONED; }
@@ -736,7 +748,7 @@ public final class DungeonLifecycleService {
             DoorPassageTracker.clearRecentForDimensions(run.dungeonDimensionIds());
             if (def != null && run.instanceSlot() > 0) {
                 net.goui.cosmicdungeon.rift.RiftRegistryData.get(server)
-                        .copyTemplatePortals(DungeonInstanceSlots.mapping(def, run.instanceSlot()));
+                        .clearInstancePortals(run.dungeonDimensionIds());
             } else {
                 net.goui.cosmicdungeon.rift.RiftRegistryData.get(server).rebuildForDimensions(server, run.dungeonDimensionIds());
             }
@@ -754,7 +766,8 @@ public final class DungeonLifecycleService {
             PlantFlagService.clearForRun(server, runId);
             var registry = DungeonRunRegistryData.get(server);
             if (!registry.retireVerified(runId)) {
-                notifyDevelopers(server, Component.literal("[DungeonLifecycle] Run retirement save failed; reconnect/restart before reusing its slot."));
+                if (run != null) queueReset(server, run.dungeonId(), runId, reason, run.instanceSlot(), null, RESET_RETRY_DELAY_TICKS);
+                notifyDevelopers(server, Component.literal("[DungeonLifecycle] Run retirement save failed; its slot remains held and retry is queued."));
                 return;
             }
             if (!net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(server).retireOutcomeVerified(runId)) {
@@ -1040,7 +1053,8 @@ public final class DungeonLifecycleService {
                             pr.snapshotIdOrNull(),nowTick+RESET_RETRY_DELAY_TICKS,pr.attemptsRemaining()));continue;
                 }
             }
-            if(companionRun!=null&&!net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrRecovery.prepareReset(server,companionRun)){
+            if(companionRun!=null && !DungeonRunRegistryData.get(server).retiring(companionRun.runId())
+                    && !net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrRecovery.prepareReset(server,companionRun)){
                 // Chunk loading/archive preparation is progress, not a failed filesystem reset.
                 PENDING_RESETS.put(resetKey,new PendingReset(pr.dungeonId(),pr.runId(),pr.reason(),pr.instanceSlot(),
                         pr.snapshotIdOrNull(),nowTick+1,pr.attemptsRemaining()));
@@ -1048,7 +1062,7 @@ public final class DungeonLifecycleService {
             }
             DungeonDefinition resetDefinition = DungeonDefinitions.byId(pr.dungeonId()).orElse(null);
             DungeonWorldSnapshotService.SnapshotResult result = pr.instanceSlot() > 0 && resetDefinition != null
-                    ? DungeonWorldSnapshotService.refreshInstanceSlot(server, resetDefinition, pr.instanceSlot())
+                    ? DungeonInstanceWorlds.get(server).retire(companionRun)
                     : (pr.snapshotIdOrNull() == null || pr.snapshotIdOrNull().isBlank())
                             ? DungeonWorldSnapshotService.resetToLatest(server, pr.dungeonId())
                             : DungeonWorldSnapshotService.resetToSnapshot(server, pr.dungeonId(), pr.snapshotIdOrNull());

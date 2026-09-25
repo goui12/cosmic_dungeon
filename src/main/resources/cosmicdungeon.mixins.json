@@ -15,6 +15,7 @@
     "defaultRequire": 1
   },
   "mixins": [
+    "DungeonServerAccess",
     "CosmicSpawnerEntityMixin",
     "CosmicSpawnerTrackingMixin",
     "CosmicSpawnerHealthMixin",
