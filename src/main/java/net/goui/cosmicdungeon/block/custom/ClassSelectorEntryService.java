@@ -12,7 +12,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.levelgen.Heightmap;
 import org.slf4j.Logger;
 
 import java.util.*;
@@ -21,7 +20,7 @@ import java.util.*;
 public final class ClassSelectorEntryService {
     private static final Logger LOGGER = LogUtils.getLogger();
     private ClassSelectorEntryService() {}
-    private record TeleportTarget(ServerLevel level, BlockPos safePos) {}
+    private record TeleportTarget(ServerLevel level, BlockPos destinationPos) {}
 
     public static boolean enter(MinecraftServer server, net.goui.cosmicdungeon.npc.tamsin.D1PartyLobby.Anchor anchor,
                                 List<UUID> ordered, Map<UUID, String> classes,
@@ -196,16 +195,6 @@ public final class ClassSelectorEntryService {
             }
 
             if (!validRoster.getAsBoolean()) return false;
-            for (int index = 0; index < teleportTargets.size(); index++) {
-                var target = teleportTargets.get(index);
-                var safe = ensureStandable(target.level(), target.safePos());
-                if (safe == null) {
-                    finalParty.forEach(p -> p.sendSystemMessage(Component.literal("The entry point is obstructed; a developer must fix its placement.")));
-                    return false;
-                }
-                teleportTargets.set(index, new TeleportTarget(target.level(), safe));
-            }
-            if (!validRoster.getAsBoolean()) return false;
             finalParty.forEach(ServerPlayer::closeContainer);
             String err = DungeonLifecycleService.startRun(
                     server,
@@ -228,18 +217,19 @@ public final class ClassSelectorEntryService {
             for (int slotIndex = 0; slotIndex < finalParty.size(); slotIndex++) {
                 ServerPlayer p = finalParty.get(slotIndex);
                 TeleportTarget tp = teleportTargets.get(slotIndex);
-                if (!p.connection.isAcceptingMessages() || !p.isAlive() || tp == null || tp.level() == null || tp.safePos() == null) {
+                if (!p.connection.isAcceptingMessages() || !p.isAlive() || tp == null || tp.level() == null || tp.destinationPos() == null) {
                     p.sendSystemMessage(Component.literal("Teleport target missing for your slot.").withStyle(ChatFormatting.RED));
                     DungeonLifecycleService.abortActiveRunForPlayer(finalParty.getFirst());
                     return false;
                 }
 
-                BlockPos safe = tp.safePos();
+                // Authored destination is authoritative, including an obstructed feet position.
+                BlockPos destination = tp.destinationPos();
                 boolean ok = p.teleportTo(
                         tp.level(),
-                        safe.getX() + 0.5D,
-                        safe.getY(),
-                        safe.getZ() + 0.5D,
+                        destination.getX() + 0.5D,
+                        destination.getY(),
+                        destination.getZ() + 0.5D,
                         Set.of(),
                         p.getYRot(),
                         p.getXRot(),
@@ -253,7 +243,7 @@ public final class ClassSelectorEntryService {
                 }
 
                 net.goui.cosmicdungeon.dungeon.ChopOwnershipService.clearForDungeonEntry(p);
-                DungeonLifecycleService.setPlayerRespawnTo(p, tp.level(), safe, p.getYRot(), p.getXRot());
+                DungeonLifecycleService.setPlayerRespawnTo(p, tp.level(), destination, p.getYRot(), p.getXRot());
             }
 
             var run = net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData.get(server)
@@ -277,39 +267,4 @@ public final class ClassSelectorEntryService {
     // roster. Its full pre-entry inventories remain saved until every owner entered. On restart an
     // incomplete marker rolls back the entire roster. Pre-registration paste failures change no
     // inventory; its unused physical worlds are retired, and their IDs are never reused. Actual authored 36-room bindings remain M81.
-    private static BlockPos ensureStandable(ServerLevel level, BlockPos pos) {
-        if (isStandable(level, pos)) return pos;
-
-        var m = pos.mutable();
-        int minY = level.getMinY();
-        int maxY = minY + level.getLogicalHeight() - 1;
-
-        for (int y = Math.max(minY + 1, m.getY()); y < maxY - 1; y++) {
-            m.setY(y);
-            if (isStandable(level, m)) return m.immutable();
-        }
-
-        int surfaceY = level.getHeight(Heightmap.Types.WORLD_SURFACE, pos.getX(), pos.getZ());
-        m.set(pos.getX(), Math.max(surfaceY, minY + 1), pos.getZ());
-
-        for (int y = m.getY(); y < Math.min(m.getY() + 8, maxY - 1); y++) {
-            m.setY(y);
-            if (isStandable(level, m)) return m.immutable();
-        }
-
-        return null;
-    }
-
-    private static boolean isStandable(ServerLevel level, BlockPos pos) {
-        var below = pos.below();
-        var feet = level.getBlockState(pos);
-        var head = level.getBlockState(pos.above());
-
-        boolean sturdyBelow = level.getBlockState(below).isFaceSturdy(level, below, net.minecraft.core.Direction.UP);
-        boolean noFluid = level.getFluidState(pos).isEmpty() && level.getFluidState(pos.above()).isEmpty();
-        boolean emptySpace = feet.getCollisionShape(level, pos).isEmpty()
-                && head.getCollisionShape(level, pos.above()).isEmpty();
-
-        return sturdyBelow && noFluid && emptySpace;
-    }
 }
