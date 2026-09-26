@@ -55,7 +55,7 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
 
     /* -------------------- localization helpers -------------------- */
 
-    private static Component className(String classId) {
+    static Component className(String classId) {
         if (classId == null || classId.isBlank()) return Component.empty();
 
         // Normalize to known IDs so hacked/unknown ids don't become missing lang spam.
@@ -104,6 +104,16 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
         this.classButtons.clear();
         this.scissorEnabledThisFrame = false;
 
+        if (!loading && stage == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.MAP) {
+            var map = TamsinMapLayout.forViewport(this.width, this.height);
+            this.imageWidth = map.width();
+            this.imageHeight = map.height();
+        } else {
+            this.imageWidth = 360;
+            this.imageHeight = 240;
+        }
+        this.leftPos = (this.width - this.imageWidth) / 2;
+        this.topPos = (this.height - this.imageHeight) / 2;
         int x = this.leftPos;
         int y = this.topPos;
 
@@ -217,25 +227,18 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
             }
             case MAP -> {
                 g.drawString(font, "A route into the depths", x + 18, y + 32, 0xFFFFFFFF, false);
-                int mw = 206, mh = 103, mx = x + (imageWidth - mw) / 2, my = y + 51;
+                int edge = imageHeight - 90;
+                int mx = x + (imageWidth - edge) / 2, my = y + 44;
                 if (mapArtwork) {
-                    // UVs cover the whole optional 512 x 256 image; no inventory map is created.
+                    // Full square 516px artwork; transparent tattered edges are preserved.
                     g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TAMSIN_MAP,
-                            mx, my, 0.0F, 0.0F, mw, mh, mw, mh);
+                            mx, my, 0.0F, 0.0F, edge, edge, TamsinMapLayout.TEXTURE_SIZE,
+                            TamsinMapLayout.TEXTURE_SIZE, TamsinMapLayout.TEXTURE_SIZE, TamsinMapLayout.TEXTURE_SIZE);
                 } else {
-                    g.fill(mx, my, mx + mw, my + mh, 0xFFCFB987);
-                    // Authored schematic fallback, not a geographically accurate dungeon map.
-                    int[][] points = {{10, 16}, {60, 16}, {60, 39}, {27, 39},
-                            {27, 69}, {108, 69}, {108, 43}, {174, 43}, {174, 72}};
-                    for (int i = 1; i < points.length; i++) {
-                        int[] a = points[i - 1], b = points[i];
-                        g.fill(mx + Math.min(a[0], b[0]), my + Math.min(a[1], b[1]),
-                                mx + Math.max(a[0], b[0]) + 2, my + Math.max(a[1], b[1]) + 2, 0xFF654B32);
-                    }
-                    g.drawString(font, "Base Camp", mx + 141, my + 76, 0xFF302617, false);
-                    g.drawString(font, "-JHW", mx + mw - font.width("-JHW") - 7, my + mh - 13, 0xFF302617, false);
+                    g.drawString(font, "Map artwork unavailable.", mx, my + edge / 2, 0xFFCCCCCC, false);
                 }
-                paragraph(g, "Choose a class before joining the expedition.", x + 18, y + 164, imageWidth - 36, 0xFFCCCCCC);
+                g.drawString(font, "Choose a class, then start your adventure.", x + 18,
+                        my + edge + 7, 0xFFCCCCCC, false);
                 return true;
             }
             case TAX -> { taxPanel.render(g, font, x, y); return true; }

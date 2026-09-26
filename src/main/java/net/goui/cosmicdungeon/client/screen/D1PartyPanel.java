@@ -28,13 +28,16 @@ final class D1PartyPanel {
         boolean solo = phase.equals("SOLO_AVAILABLE");
         boolean grouped = !phase.equals("UNGROUPED") && !solo;
         boolean allReady = !view.members().isEmpty() && view.members().stream().allMatch(PartyPayloads.Member::ready);
-        button(add, solo ? "Start solo" : assembly ? "Begin ready check" : checking ? "I'm ready" : "Waiting",
-                x + 10, y + 144, 130, solo || (assembly && state.leader()) || checking,
-                () -> send(containerId, solo ? "solo" : assembly ? "begin" : "ready", ""));
-        button(add, "Join queue", x + 145, y + 144, 98, state.leader() && checking && allReady,
+        var player = net.minecraft.client.Minecraft.getInstance().player;
+        var ready = D1PartyPresentation.readiness(view, player == null ? null : player.getGameProfile().name());
+        button(add, ready.label(), x + 10, y + 144, 162, ready.enabled(),
+                () -> send(containerId, ready.action(), ""));
+        button(add, "Start Adventure!", x + 178, y + 144, 172, state.leader() && checking && allReady,
                 () -> send(containerId, "queue", ""));
-        button(add, "Unready", x + 248, y + 144, 102, grouped && !assembly && !preparing,
-                () -> send(containerId, "unready", ""));
+        if (solo || assembly) {
+            button(add, solo ? "Start solo" : "Begin ready check", x + 10, y + 170, 162,
+                    solo || state.leader(), () -> send(containerId, solo ? "solo" : "begin", ""));
+        }
         button(add, state.leader() ? "Disband" : "Leave group", x + 248, y + 170, 102, grouped && !preparing,
                 () -> send(containerId, "leave", ""));
         var invite = view.invitation();
@@ -65,7 +68,7 @@ final class D1PartyPanel {
         graphics.drawString(font, "Members: " + view.members().size() + "/" + state.capacity(), x + 10, y + 46, 0xFFBBBBBB, false);
         int rowY = y + 60;
         for (var member : view.members()) {
-            String row = (member.leader() ? "* " : "  ") + member.name() + " / " + member.classId()
+            String row = (member.leader() ? "* " : "  ") + member.name() + " / " + ClassSelectorScreen.className(member.classId()).getString()
                     + (member.ready() ? " / Ready" : "");
             graphics.drawString(font, font.plainSubstrByWidth(row, 340), x + 10, rowY,
                     member.ready() ? 0xFFAAFFAA : 0xFFFFFFFF, false);
