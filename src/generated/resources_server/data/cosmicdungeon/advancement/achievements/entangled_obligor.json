@@ -7,10 +7,12 @@
   },
   "display": {
     "announce_to_chat": false,
-    "description": "",
+    "description": {
+      "translate": "advancements.cosmicdungeon.achievements.entangled_obligor.desc"
+    },
     "icon": {
       "count": 1,
-      "id": "minecraft:paper"
+      "id": "minecraft:totem_of_undying"
     },
     "title": {
       "translate": "advancements.cosmicdungeon.achievements.entangled_obligor.title"

@@ -1,56 +1,79 @@
-# Achievements & Advancements — 1.5
+# Achievements and Advancements - 1.5.1
 
-Cosmic Dungeon achievements use generated advancements plus server-side helper services for incremental gameplay hooks.
+Cosmic Dungeon uses generated advancements and server-side gameplay services.
+The visible catalog follows the repository's lore Docs and the Dungeon Crawl Master Sheet:
+30 named achievements plus six Bloom records. Every displayed entry has a description
+and an item icon tied to its subject.
 
-## Current foundations
+## Advancement gallery
 
-- Advancement IDs are centralized and generated through datagen.
-- New players are granted the **First Trace** onboarding achievement on first login if they do not already have it; the reward deposits 5 Trace into their `/currency` balance and introduces Trace as currency for purchases, upgrades, and dungeon rewards. The internal advancement path remains `achievements/im_rich` for player advancement compatibility.
-- Developer commands can grant achievements and inspect/reset persisted counters.
-- Binding Idol counters track returns through an idol and players who provide idols to others.
-- Vital Exchange hooks grant achievements when the expected healing/support items are provided to a Deadeye receiver.
-- Plant Flags tracks D1 run-scoped banner planting and grants the Plant Flags advancement when eligible online members complete the requirement.
-- D1 environmental tracker services exist for region-based achievement work.
-- Successful player-to-player trade finalization grants the first-trade onboarding achievement to both participants.
+Open Advancements with the normal key or menu entry. The larger starfield window
+shows achievement cards, earned status, chapter navigation and a detail panel.
+Select a card to read its requirement; scroll over the detail panel for long text,
+or over the card area to change pages. The layout adapts to the game's GUI scale.
+Vanilla and other server-provided advancement roots remain available as chapters.
+Secret advancements remain hidden until earned.
+
+## Lore catalog
+
+The catalog includes First Trace, The Tamsin Tax, Plant Flags, the ten Binding Idol
+milestones, Tired, Not Broken, Vital Exchange I-IV, the four Sixfold Vigil records,
+Cycle of Recorded Sound, Synchronous Peal, Nostalgia Bait, Wolves in Piglin Clothing,
+Fire Escape, Librarian 1, Shulker Express and Stairway to Heaven.
+The six existing Bloom records retain their shared discovery progress.
+
+The descriptions explain the lore-defined requirements. Their presence does not
+assert that all authored world bindings or later-dungeon gameplay have been tested.
+See the [task audit](../ai/tasks/advancement-lore-gallery-20260925.md) for source
+coverage and current validation limits.
 
 ## First Trace onboarding achievement
 
-**First Trace** is the visible onboarding achievement for the first-login Trace grant. It keeps the existing `cosmicdungeon:achievements/im_rich` advancement id so existing player advancement files remain compatible, but player-facing title/copy now use First Trace. Trace represents stabilized fragments of severed divine attunement recovered from dungeon-bound or attuned beings. Freed NPCs gather Trace because it helps resist future binding, re-attunement, displacement, and enslavement.
+First Trace introduces Trace and deposits 5 Trace on first login when the player
+does not already have the advancement. Trace is currency formed from fragments of
+severed divine attunement. The existing advancement path `achievements/im_rich`
+and its progress criterion remain unchanged for saved-player compatibility.
 
 ## Trade onboarding achievement
 
-**Handshake Protocol** tracks "You have traded with a player at least once." It is granted only after the server successfully finalizes a [player-to-player trade](../Trading/Trading_Guide.md), after item/currency capacity checks and transfers pass. The client receives a small synced prompt state on login and after the grant so the CAPS LOCK look prompt no longer appears for players who have already traded once. This stores advancement progress only; it does not add saved entity or block-entity fields.
+The old Handshake Protocol award is retired from the visible catalog because it
+has no entry in the reviewed lore. Its internal `achievements/first_player_trade`
+progress marker remains: a successful server-finalized [trade](../Trading/Trading_Guide.md)
+records completion and retires the CAPS LOCK tutorial prompt for both participants.
+It has no display, toast, chat announcement or reward. Existing completion remains valid.
 
-## Operator workflow
-
-Use [Commands: Achievement](../commands/In_Game_Commands.md#achievement-15-advancement-foundation) for debug grants and counter inspection. Use [Commands: Region Quest Reactions](../commands/In_Game_Commands.md#region-quest-reactions-151-location-quest-foundation) for Plant Flags region setup and diagnostics through `/region quest plant_flags ...`.
-
-## Related topics
-
-- [Class Restrictions & Inventory](../Classes/Class_Restrictions_and_Inventory.md) for class-attuned Plant Flags banners.
-- [Progression, Factions & Unlocks](../Progression/Progression_Factions_and_Unlocks.md) for D1 unlock context.
-- [Trading Guide](../Trading/Trading_Guide.md) for the trade finalization hook that grants Handshake Protocol.
-
-## Changelog
-
-- **1.5.1:** Added Handshake Protocol for first successful player trade and uses its synced state to retire the CAPS LOCK trade prompt.
-- **1.5.1:** Standardized Plant Flags setup and diagnostics under `/region quest plant_flags ...` and added a small region quest handler registry for future location-based quest reactions.
-- **1.5:** Added generated achievement scaffolding, counter persistence, Binding Idol hooks, Vital Exchange hooks, Plant Flags tracking, D1 environmental tracker foundations, and the First Trace currency onboarding achievement while preserving the legacy `achievements/im_rich` id.
-
+BOOM!, Monster Compendium, Player Classes and the Pyroclast category are also removed
+from the visible catalog. Their old IDs remain displayless compatibility records.
+Gunpowder use no longer grants BOOM!; its ordinary gameplay behavior is unchanged.
 
 ## Nostalgia Bait
 
-- **Title:** Nostalgia Bait
-- **Description:** Cook Farrow's Chop to return to the Main Village.
-- **Trigger:** Granted only after a successful Farrow's Chop teleport to `main_village`. Failed destination lookups or unsafe teleports do not grant it.
+Return to the Main Village using Farrow's Powered Chop. Only a successful teleport
+to `main_village` grants the advancement; failed or unsafe teleports do not.
 
 ## The Tamsin Tax
 
-**Status:** planned/docs-only. The current source does not include a player-facing Tamsin payment interaction, so this advancement is not presented as earnable and no developer-only command is used as a grant path.
+Personally discover the Base Camp, complete Dungeon 1 and give Tamsin Vane one
+eligible named Dungeon 1 item. Currency is not an eligible payment.
+The advancement is non-repeatable and hidden until earned. Its existing gameplay
+gates and criterion are unchanged by the catalog/presentation update.
 
-- **Title:** The Tamsin Tax
-- **Description/design:** Awarded when an adventurer returns from the dungeon and gives Tamsin Vane a share of the treasure recovered using her map.
-- **Flavor:** Tamsin calls it business. You may call it gratitude, obligation, or a poor decision made before seeing the haul.
-- **Gate:** Locked behind completion of the first dungeon.
-- **Payment:** Any item or currency can be used to pay this debt once a real player-facing payment interface exists.
-- **Repeatability:** Not repeatable.
+## Compatibility and authority
+
+Retained advancement IDs, criteria, rewards, counters and Bloom progress are preserved.
+No save migration is required. The client reads the server's advancement tree and
+progress through the native listener and selected-tab packets; it cannot grant awards.
+No new packet format, registry, saved-data field or runtime dependency is introduced.
+
+## Operator workflow
+
+Developer diagnostics are documented under
+[Commands: Achievement](../commands/In_Game_Commands.md#achievement-15-advancement-foundation).
+Plant Flags region setup remains under
+[Commands: Region Quest Reactions](../commands/In_Game_Commands.md#region-quest-reactions-151-location-quest-foundation).
+
+## Related topics
+
+- [Class Restrictions and Inventory](../Classes/Class_Restrictions_and_Inventory.md)
+- [Progression, Factions and Unlocks](../Progression/Progression_Factions_and_Unlocks.md)
+- [Trading Guide](../Trading/Trading_Guide.md)

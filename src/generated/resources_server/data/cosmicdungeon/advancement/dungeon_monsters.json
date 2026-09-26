@@ -2,18 +2,8 @@
   "parent": "cosmicdungeon:root",
   "criteria": {
     "tick": {
-      "trigger": "minecraft:tick"
+      "trigger": "minecraft:impossible"
     }
-  },
-  "display": {
-    "announce_to_chat": false,
-    "description": "Can you kill them all?",
-    "icon": {
-      "count": 1,
-      "id": "cosmicdungeon:tidal_mace"
-    },
-    "show_toast": false,
-    "title": "Monster Compendium"
   },
   "requirements": [
     [

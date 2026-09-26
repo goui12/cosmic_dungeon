@@ -7,10 +7,12 @@
   },
   "display": {
     "announce_to_chat": false,
-    "description": "",
+    "description": {
+      "translate": "advancements.cosmicdungeon.achievements.tired_not_broken.desc"
+    },
     "icon": {
       "count": 1,
-      "id": "minecraft:paper"
+      "id": "minecraft:phantom_membrane"
     },
     "title": {
       "translate": "advancements.cosmicdungeon.achievements.tired_not_broken.title"
