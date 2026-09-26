@@ -9,7 +9,9 @@
     "client.TitleScreenBrandingMixin",
     "client.ClassSelectorTargetingMixin",
     "client.TamsinVillagerRendererMixin",
-    "client.TamsinClothingMixin"
+    "client.TamsinClothingMixin",
+    "client.InventoryRecipeBookScreenMixin",
+    "client.InventoryRecipeBookComponentMixin"
   ],
   "injectors": {
     "defaultRequire": 1
