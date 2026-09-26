@@ -7,11 +7,13 @@
   },
   "display": {
     "announce_to_chat": false,
-    "description": "",
+    "description": {
+      "translate": "advancements.cosmicdungeon.achievements.the_tamsin_tax.desc"
+    },
     "hidden": true,
     "icon": {
       "count": 1,
-      "id": "minecraft:paper"
+      "id": "minecraft:spyglass"
     },
     "title": {
       "translate": "advancements.cosmicdungeon.achievements.the_tamsin_tax.title"

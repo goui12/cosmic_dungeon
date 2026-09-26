@@ -7,10 +7,12 @@
   },
   "display": {
     "announce_to_chat": false,
-    "description": "",
+    "description": {
+      "translate": "advancements.cosmicdungeon.achievements.cycle_of_recorded_sound.desc"
+    },
     "icon": {
       "count": 1,
-      "id": "minecraft:paper"
+      "id": "minecraft:music_disc_cat"
     },
     "title": {
       "translate": "advancements.cosmicdungeon.achievements.cycle_of_recorded_sound.title"

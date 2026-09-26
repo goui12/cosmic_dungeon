@@ -6,7 +6,7 @@ Trading lets two players exchange item offers and Attunement Fragment currency t
 
 - Use `/trade <player>` to invite an online player.
 - Incoming chat includes clickable **Accept Trade** and **Deny Trade** actions.
-- The **Trade Request** keybind defaults to `CAPS LOCK` and sends the same invite path when looking at a nearby player. The look prompt is a client-only onboarding hint and stops appearing after the player completes one successful trade and receives the [first-trade achievement](../Achievements/Achievements_and_Advancements.md#trade-onboarding-achievement).
+- The **Trade Request** keybind defaults to `CAPS LOCK` and sends the same invite path when looking at a nearby player. The look prompt is a client-only onboarding hint and stops appearing after the player completes one successful trade and receives the invisible [first-trade progress marker](../Achievements/Achievements_and_Advancements.md#trade-onboarding-achievement).
 - Invites expire after 30 seconds and successful invite sends have a short cooldown.
 
 ## Trade window
@@ -19,16 +19,16 @@ Trading lets two players exchange item offers and Attunement Fragment currency t
 
 ## Safety and server authority
 
-The server validates online state, active-session state, inventory capacity, account balances, currency capacity, and menu lifecycle. Zero-currency offers skip withdraw/deposit calls so account storage methods keep their positive-amount invariants while item-only trades can complete safely. Dedicated server-side trade finalization GameTests cover item-only, currency-only, mixed, full-inventory, and currency-capacity-limit outcomes. Disconnects and menu closes clean up the session and return items where possible. Successful finalization grants the first-trade achievement to both participants server-side; clients only use the synced achievement state to hide the onboarding prompt and cannot bypass the server-authoritative trade checks.
+The server validates online state, active-session state, inventory capacity, account balances, currency capacity, and menu lifecycle. Zero-currency offers skip withdraw/deposit calls so account storage methods keep their positive-amount invariants while item-only trades can complete safely. Dedicated server-side trade finalization GameTests cover item-only, currency-only, mixed, full-inventory, and currency-capacity-limit outcomes. Disconnects and menu closes clean up the session and return items where possible. Successful finalization records an invisible first-trade progress marker for both participants server-side; clients only use that synced state to hide the onboarding prompt and cannot bypass the server-authoritative trade checks.
 
 ## Related topics
 
 - [Economy & Currency](../Economy/Economy_and_Currency.md) documents Trace and denominations.
 - [Trade GUI Coordinate Map](./Trade_GUI_Coordinate_Map.md) documents the current texture and procedural layout coordinates.
 - [Commands: Trade](../commands/In_Game_Commands.md#trade-15-player-to-player-foundation) lists command syntax and authority.
-- [Achievements & Advancements](../Achievements/Achievements_and_Advancements.md#trade-onboarding-achievement) documents the first-trade achievement used to retire the prompt.
+- [Achievements & Advancements](../Achievements/Achievements_and_Advancements.md#trade-onboarding-achievement) documents the invisible first-trade marker used to retire the prompt.
 
 ## Changelog
 
-- **1.5.1:** Allows item-only, currency-only, and mixed trades; improves trade currency spacing; shows both players' balances in the GUI; removes decorative coin stack counts; fixed the CAPS LOCK look prompt text rendering; and added the first-trade achievement so the prompt retires permanently after a successful player trade.
+- **1.5.1:** Allows item-only, currency-only, and mixed trades; improves trade currency spacing; shows both players' balances in the GUI; removes decorative coin stack counts; fixed the CAPS LOCK look prompt text rendering; and added first-trade progress so the prompt retires permanently after a successful player trade. The later lore audit removes the public Handshake Protocol award while preserving this internal marker.
 - **1.5:** Added trade invites, clickable chat responses, item/currency offer slots, ready/confirm flow, CAPS LOCK look-target request, server validation, and disconnect cleanup.

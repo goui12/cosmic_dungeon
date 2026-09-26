@@ -6,14 +6,17 @@
   },
   "display": {
     "announce_to_chat": false,
-    "background": "cosmicdungeon:gui/advancements/region_ghost_glass",
-    "description": "The ascent of insanity.",
+    "description": {
+      "translate": "advancements.cosmicdungeon.root.desc"
+    },
     "icon": {
       "count": 1,
-      "id": "cosmicdungeon:shattered_reality_of_shudde_mell"
+      "id": "cosmicdungeon:attunement_trace"
     },
     "show_toast": false,
-    "title": "Cosmic Dungeon"
+    "title": {
+      "translate": "advancements.cosmicdungeon.root.title"
+    }
   },
   "requirements": [
     [
