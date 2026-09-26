@@ -22,15 +22,15 @@ public class TradeMenu extends AbstractContainerMenu implements net.goui.cosmicd
     public static final int HOTBAR_START = PLAYER_INV_START + PLAYER_INV_COUNT;
     public static final int HOTBAR_COUNT = 9;
 
-    private static final int OTHER_OFFER_X = 56;
-    private static final int OTHER_OFFER_Y = 28;
-    private static final int OWN_OFFER_X = 55;
-    private static final int OWN_OFFER_Y = 89;
-    private static final int PLAYER_INV_X = 55;
-    private static final int PLAYER_INV_Y = 126;
-    private static final int HOTBAR_X = 55;
-    private static final int HOTBAR_Y = 184;
-    private static final int SLOT_SPACING = 18;
+    private static final int OTHER_OFFER_X = TradeScreenLayout.SLOT_X;
+    private static final int OTHER_OFFER_Y = TradeScreenLayout.OTHER_ITEMS_Y;
+    private static final int OWN_OFFER_X = TradeScreenLayout.SLOT_X;
+    private static final int OWN_OFFER_Y = TradeScreenLayout.OWN_ITEMS_Y;
+    private static final int PLAYER_INV_X = TradeScreenLayout.SLOT_X;
+    private static final int PLAYER_INV_Y = TradeScreenLayout.INVENTORY_Y;
+    private static final int HOTBAR_X = TradeScreenLayout.SLOT_X;
+    private static final int HOTBAR_Y = TradeScreenLayout.HOTBAR_Y;
+    private static final int SLOT_SPACING = TradeScreenLayout.SLOT_STEP;
 
     private final TradeSessionData.TradeSession session;
     private final Player self;
