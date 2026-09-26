@@ -1,4 +1,4 @@
-# Region Protection Guide (Developer) â€” 1.5
+# Region Protection Guide (Developer) — 1.5
 
 This guide reflects the **actual implemented region system and command tree**.
 
