@@ -52,6 +52,10 @@ public final class CurrencyBalanceOverlay {
         int y=Math.max(2,screen.getGuiTop()-32);
         draw(event.getGuiGraphics(),8,y,width-16,true,event.getMouseX(),event.getMouseY());
     }
+    /** Reuses the inventory account presentation inside screens with a reserved header. */
+    public static void drawAccount(GuiGraphics g,int x,int y,int maxWidth,int mouseX,int mouseY) {
+        if (ready()) draw(g,x,y,maxWidth,true,mouseX,mouseY);
+    }
     private static void draw(GuiGraphics g,int x,int y,int maxWidth,boolean tooltip,int mouseX,int mouseY) {
         icons();
         var font=Minecraft.getInstance().font;
