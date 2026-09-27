@@ -4,11 +4,9 @@ package net.goui.cosmicdungeon.block.custom;
 import net.goui.cosmicdungeon.block.entity.ClassLockedChestBlockEntity;
 import net.goui.cosmicdungeon.block.entity.ModBlockEntities;
 import net.goui.cosmicdungeon.playerclass.api.ClassKeys;
-import net.goui.cosmicdungeon.playerclass.api.ClassNbtUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -109,20 +107,12 @@ public class ClassLockedChestBlock extends Block implements EntityBlock, ClassLo
         if (level.isClientSide()) return InteractionResult.SUCCESS;
         if (!(player instanceof ServerPlayer sp)) return InteractionResult.PASS;
 
-        if (!net.goui.cosmicdungeon.auth.AccessPolicy.isDeveloper(sp)) {
-            String have = ClassNbtUtil.getClassId(sp);
-            if (!requiredClassId.equals(have)) {
-                sp.displayClientMessage(
-                        Component.literal("Only " + requiredClassId + " can open this chest.")
-                                .withStyle(ChatFormatting.RED),
-                        true
-                );
-                return InteractionResult.CONSUME;
-            }
-        }
-
         BlockEntity be = level.getBlockEntity(pos);
         if (!(be instanceof ClassLockedChestBlockEntity chestBe)) return InteractionResult.PASS;
+        if (!chestBe.canOpen(sp)) {
+            sp.displayClientMessage(chestBe.denialMessage(sp).copy().withStyle(ChatFormatting.RED), true);
+            return InteractionResult.CONSUME;
+        }
 
         sp.openMenu(chestBe);
         return InteractionResult.CONSUME;

@@ -184,7 +184,10 @@ public final class ClassSelectorEntryService {
             }
 
             DungeonStartupSchematicPipeline.PasteBatchResult pasteResult =
-                    DungeonStartupSchematicPipeline.execute(dungeonLevel, pastePlan);
+                    DungeonStartupSchematicPipeline.execute(dungeonLevel, pastePlan,
+                            finalParty.stream().map(player ->
+                                    new net.goui.cosmicdungeon.block.entity.ClassChestOwnership(
+                                            player.getUUID(), player.getGameProfile().name())).toList());
             if (!(pasteResult instanceof DungeonStartupSchematicPipeline.PasteBatchSuccess success)
                     || success.completedOperations() != DungeonStartupSchematicPlan.EXPECTED_OPERATION_COUNT) {
                 for (ServerPlayer p : finalParty) {
