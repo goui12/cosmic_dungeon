@@ -705,5 +705,8 @@
   "screen.cosmicdungeon.advancements.progress": "%s / %s earned",
   "screen.cosmicdungeon.advancements.page": "%s / %s",
   "screen.cosmicdungeon.advancements.scroll_details": "Scroll here for more",
-  "screen.cosmicdungeon.advancements.close": "Done"
+  "screen.cosmicdungeon.advancements.close": "Done",
+  "chest.cosmicdungeon.unassigned": "Unassigned",
+  "message.cosmicdungeon.class_chest.not_owner": "This chest belongs to %s. Only they can open it.",
+  "message.cosmicdungeon.class_chest.unassigned": "This chest is not assigned to a player."
 }

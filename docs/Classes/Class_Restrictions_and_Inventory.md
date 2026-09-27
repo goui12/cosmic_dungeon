@@ -38,3 +38,27 @@ Developer-authored class gear stores class, dungeon, tier, and Trace value metad
 ## Dragoon anvil access
 
 Dragoon is the server-authoritative vanilla anvil/repair-support class. `AccessPolicy.allowClassGatedVanillaUse` allows Dragoons to use anvils, denies non-Dragoons with a clear message, and preserves developer bypass. Theurgist brewing stand access remains a separate restriction and is unchanged. The custom Dragoon Repair Affinity UI is live as a player-to-player Dragoon service; see [Dragoon Repair System](Dragoon_Repair_System.md).
+
+## Personal slot chests
+
+For new Dungeon 1 runs, each occupied slot's class chests belong to the player assigned
+that slot at entry. This applies to the starting-room schematic and all five later chest
+groups. Players of the same class still have separate ownership.
+
+Nearby chests display their owner's name. A non-owner receives a red explanation instead
+of a menu. The server checks the UUID when opening and while the menu remains open;
+owned chests also reject automated insertion/extraction. Developer status does not bypass
+another player's slot ownership. Existing class restrictions still apply to the owner.
+
+Ownership persists through saving, chunk reloads and restarts. Leaving the party does not
+shift ownership to someone else. New runs bind fresh pasted chests to their own roster.
+Name labels fit within one chest column and use ordinary depth testing, with no floating
+entities or extra polling.
+
+Chest items, names, quantities and item components remain authored as-is. Optional
+CosmicSlotOwner metadata is separate from inventory data; only that metadata is synchronized
+for labels. Existing unbound/template chests retain their previous class/developer rules.
+Already-started runs from before this update need a new run to receive these assignments;
+the update does not guess retroactive ownership or modify source schematic files.
+
+See the [task and validation notes](../ai/tasks/slot-chest-ownership-20260926.md).

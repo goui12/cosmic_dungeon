@@ -3,6 +3,14 @@ package net.goui.cosmicdungeon.block.entity;
 import net.goui.cosmicdungeon.block.custom.ClassLocked;
 import net.goui.cosmicdungeon.block.custom.ClassLockedChestBlock;
 import net.goui.cosmicdungeon.playerclass.api.ClassNbtUtil;
+import java.util.Objects;
+import javax.annotation.Nullable;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
@@ -32,6 +40,9 @@ public class ClassLockedChestBlockEntity extends RandomizableContainerBlockEntit
     private NonNullList<net.minecraft.world.item.ItemStack> items =
             NonNullList.withSize(SIZE, net.minecraft.world.item.ItemStack.EMPTY);
 
+    @Nullable private ClassChestOwnership slotOwner;
+    @Nullable private Component slotOwnerLabel;
+
     // client-only animation state
     private boolean isOpen = false;
     private float lidProgressO = 0.0F;
@@ -45,6 +56,7 @@ public class ClassLockedChestBlockEntity extends RandomizableContainerBlockEntit
     // Class lock check
     // ------------------------------------------------------------
     public boolean canOpen(Player player) {
+        if (slotOwner != null && !slotOwner.permits(player.getUUID())) return false;
         if (player instanceof ServerPlayer sp) {
             if (net.goui.cosmicdungeon.auth.AccessPolicy.isDeveloper(sp)) return true;
 
@@ -57,6 +69,65 @@ public class ClassLockedChestBlockEntity extends RandomizableContainerBlockEntit
         }
         return true;
     }
+
+    @Nullable
+    public Component getSlotOwnerLabel() { return slotOwnerLabel; }
+
+    private void readSlotOwner(ValueInput input) {
+        slotOwner = ClassChestOwnership.load(input);
+        slotOwnerLabel = slotOwner == null ? null : slotOwner.displayName();
+    }
+
+    /** Called only for newly pasted physical slot chests; never reads or rewrites inventory. */
+    public void bindSlotOwner(ClassChestOwnership owner) {
+        if (level == null || level.isClientSide() || !level.getServer().isSameThread())
+            throw new IllegalStateException("Slot chest ownership must be assigned by the server");
+        Objects.requireNonNull(owner);
+        if (owner.equals(slotOwner)) return;
+        slotOwner = owner;
+        slotOwnerLabel = owner.displayName();
+        setChanged();
+        level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 2);
+    }
+
+    public Component denialMessage(Player player) {
+        if (slotOwner != null && !slotOwner.permits(player.getUUID())) {
+            return slotOwner.playerId() == null
+                    ? Component.translatable("message.cosmicdungeon.class_chest.unassigned")
+                    : Component.translatable("message.cosmicdungeon.class_chest.not_owner", slotOwnerLabel);
+        }
+        String required = getBlockState().getBlock() instanceof ClassLocked locked ? locked.requiredClassId() : "";
+        return Component.literal("Only " + required + " can open this chest.");
+    }
+
+    @Override
+    public boolean canPlaceItem(int slot, net.minecraft.world.item.ItemStack stack) {
+        return slotOwner == null;
+    }
+
+    @Override
+    public boolean canTakeItem(Container target, int slot, net.minecraft.world.item.ItemStack stack) {
+        return slotOwner == null;
+    }
+
+    /** Only owner information is sent to nearby clients; chest contents use the existing menu. */
+    @Override
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        var output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, registries);
+        if (slotOwner != null) slotOwner.save(output);
+        return output.buildResult();
+    }
+
+    @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public void handleUpdateTag(ValueInput input) { readSlotOwner(input); }
+
+    @Override
+    public void onDataPacket(Connection connection, ValueInput input) { readSlotOwner(input); }
 
     // ------------------------------------------------------------
     // Menu
@@ -159,19 +230,21 @@ public class ClassLockedChestBlockEntity extends RandomizableContainerBlockEntit
 
 
     // ------------------------------------------------------------
-    // Inventory persistence (items ONLY)
+    // Inventory persistence and optional slot ownership (legacy items preserved)
     // ------------------------------------------------------------
     @Override
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
         this.items = NonNullList.withSize(SIZE, net.minecraft.world.item.ItemStack.EMPTY);
         ContainerHelper.loadAllItems(input, this.items);
+        readSlotOwner(input);
     }
 
     @Override
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
         ContainerHelper.saveAllItems(output, this.items);
+        if (slotOwner != null) slotOwner.save(output);
     }
 
     @Override
