@@ -40,7 +40,7 @@ public final class BogatyrThreats {
     }
     private static boolean eligible(Wolf wolf,ServerPlayer owner,Mob target){
         double radius=Config.WOLF_FOLLOW_RANGE.get();
-        return target.isAlive()&&target.getTarget()==owner&&target.level()==owner.level()
+        return !CompanionAllies.friendly(target)&&target.isAlive()&&target.getTarget()==owner&&target.level()==owner.level()
                 &&owner.distanceToSqr(target)<=radius*radius
                 &&wolf.canAttack(target)&&wolf.wantsToAttack(target,owner)
                 &&!wolf.isAlliedTo(target)&&!owner.isAlliedTo(target);
@@ -71,14 +71,25 @@ public final class BogatyrThreats {
     @SubscribeEvent(priority=EventPriority.LOWEST)
     public static void changingTarget(LivingChangeTargetEvent event){
         if(!(event.getEntity() instanceof Wolf wolf)||!(wolf.level() instanceof ServerLevel)
-                ||!BogatyrWolfEvents.managed(wolf))return;
+                ||!BogatyrWolfEvents.owned(wolf))return;
         var requested=event.getNewAboutToBeSetTarget();
+        if(CompanionAllies.friendly(requested)){event.setNewAboutToBeSetTarget(null);return;}
+        if(!BogatyrWolfEvents.managed(wolf))return;
         if(!available(wolf)){event.setNewAboutToBeSetTarget(null);return;}
         var owner=owner(wolf);
         if(requested instanceof AbstractSkeleton&&wolf.getLastHurtByMob()!=requested
                 &&(owner==null||(((Mob)requested).getTarget()!=owner
                 &&owner.getLastHurtByMob()!=requested&&owner.getLastHurtMob()!=requested))){
             event.setNewAboutToBeSetTarget(null);
+        }
+    }
+    @SubscribeEvent(priority=EventPriority.HIGHEST)
+    public static void preventFriendlyDamage(net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent event) {
+        if (event.getSource().getEntity() instanceof Wolf wolf && BogatyrWolfEvents.owned(wolf)
+                && CompanionAllies.friendly(event.getEntity())) {
+            event.setCanceled(true);
+            wolf.setTarget(null);
+            wolf.stopBeingAngry();
         }
     }
     private static final class ProtectOwner extends Goal {

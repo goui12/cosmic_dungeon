@@ -11,6 +11,6 @@ public final class DungeonGroupSplitEvents {
 
     @SubscribeEvent(priority=net.neoforged.bus.api.EventPriority.LOWEST)
     public static void onLivingDeath(LivingDeathEvent event) {
-        DungeonGroupSplitService.onMobKilled(event.getEntity());
+        DungeonGroupSplitService.onMobKilled(event.getEntity(), DungeonKillCredit.resolve(event.getEntity(), event.getSource()));
     }
 }

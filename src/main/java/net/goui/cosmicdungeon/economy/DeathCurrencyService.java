@@ -106,6 +106,7 @@ public final class DeathCurrencyService {
             long amount=DeathCurrencyRecord.loss(before,D1EconomyConfig.DEATH_THRESHOLD.get(),D1EconomyConfig.DEATH_PERCENT.get(),D1EconomyConfig.DEATH_MIN.get());
             long run=DungeonRunRegistryData.get(server).findRunForPlayer(p.getUUID()).map(r->r.runId()).orElse(0L);
             var item=new ItemEntity(p.level(),p.getX(),p.getY(),p.getZ(),visual(id,amount));
+            net.goui.cosmicdungeon.item.identity.WorldItemOwnership.centerDeathDrop(p,item);
             item.setUUID(id);item.getPersistentData().putString(DeathCurrencyRecord.MARKER,id.toString());item.setDefaultPickUpDelay();
             var record=new DeathCurrencyRecord(id,p.getUUID(),before,amount,run,System.currentTimeMillis(),
                     p.level().dimension().location().toString(),snapshot(item),false);
