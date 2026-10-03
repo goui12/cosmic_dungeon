@@ -79,7 +79,7 @@ public final class DungeonForfeitService {
                 com.mojang.logging.LogUtils.getLogger().info("Dungeon forfeit accepted for run {}: {}/{} Yes votes",
                         run.runId(), ballot.yesCount(), ballot.members().size());
                 broadcast(ballot, Component.literal("Vote passed. Dungeon failed: dungeon loot is forfeited; "
-                        + "your saved outside inventory will be restored. Respawn if you are on the death screen.")
+                        + "your saved outside inventory will be restored. Dead members return alive automatically.")
                         .withStyle(ChatFormatting.RED));
             } else {
                 broadcast(ballot, Component.literal("Forfeit could not safely start because this run has ended "

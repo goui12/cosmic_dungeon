@@ -64,8 +64,8 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
         g.fill(x + 1, y + 1, x + WIDTH - 1, y + 2, 0xffffffff);
         g.fill(x + 1, y + HEIGHT - 2, x + WIDTH - 1, y + HEIGHT - 1, 0xff555555);
         // Separate, full-width offer panels leave currency clear of slots and inventory.
-        g.fill(x + 5, y + 35, x + WIDTH - 5, y + 88, 0xff30303a);
-        g.fill(x + 5, y + 90, x + WIDTH - 5, y + 142, 0xff25252f);
+        g.fill(x + 5, y + 5, x + WIDTH - 5, y + 58, 0xff30303a);
+        g.fill(x + 5, y + 60, x + WIDTH - 5, y + 112, 0xff25252f);
         g.fill(x + 5, y + 145, x + WIDTH - 5, y + 146, 0xff777777);
         for (var slot : menu.slots) {
             // Reuse one original 18px slot frame without stretching its authored pixels.
@@ -99,7 +99,7 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
         renderTooltip(g, mx, my);
         renderCustomTooltips(g, mx, my, view, data);
         // The exact inventory account renderer, including live total/available hover details.
-        CurrencyBalanceOverlay.drawAccount(g, leftPos + 8, topPos + 4, WIDTH - 16, mx, my);
+        CurrencyBalanceOverlay.drawAccount(g, leftPos + 8, topPos + BALANCE_Y, WIDTH - 16, mx, my);
     }
 
     private void updateCurrencyRows(TradeViewData data) {
@@ -164,12 +164,12 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
 
     private void renderTradeText(GuiGraphics g, TradeClientState.TradeView view, TradeViewData data) {
         g.drawString(font, font.plainSubstrByWidth(data.otherName() + "'s offer", 183),
-                leftPos + 9, topPos + 38, 0xffeeeeee, false);
-        g.drawString(font, "Your offer", leftPos + 9, topPos + 92, 0xffffffff, false);
+                leftPos + 9, topPos + 8, 0xffeeeeee, false);
+        g.drawString(font, "Your offer", leftPos + 9, topPos + 62, 0xffffffff, false);
         String theirs = tradeStatus(view != null && view.otherReady(), view != null && view.otherConfirmed());
         String ours = tradeStatus(view != null && view.selfReady(), view != null && view.selfConfirmed());
-        g.drawString(font, theirs, leftPos + WIDTH - 10 - font.width(theirs), topPos + 38, 0xffcccccc, false);
-        g.drawString(font, ours, leftPos + WIDTH - 10 - font.width(ours), topPos + 92, 0xffcccccc, false);
+        g.drawString(font, theirs, leftPos + WIDTH - 10 - font.width(theirs), topPos + 8, 0xffcccccc, false);
+        g.drawString(font, ours, leftPos + WIDTH - 10 - font.width(ours), topPos + 62, 0xffcccccc, false);
         g.drawString(font, playerInventoryTitle, leftPos + 9, topPos + 148, 0xff404040, false);
         g.drawString(font, "Trade status", leftPos + 219, topPos + 148, 0xff404040, false);
         var lines = font.split(Component.literal(statusText(view)), 72);

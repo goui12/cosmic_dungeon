@@ -1,8 +1,8 @@
 # Testing rollout, 2026-10-03
 
-[Current approved queue](TESTING_ROLLOUT_20261003.md). Batch 1 is implemented and validated;
-batch 2 is authorized next. Nine further batches remain after batch 2, plus cumulative licensed TEST acceptance.
-[Batch 1 report](TESTING_BATCH_1_20261003.md).
+[Current approved queue](TESTING_ROLLOUT_20261003.md). Batches 1 and 2 are implemented and validated.
+Nine implementation batches remain, plus cumulative licensed TEST acceptance.
+[Batch 1 report](TESTING_BATCH_1_20261003.md) | [Batch 2 report](TESTING_BATCH_2_20261003.md).
 The older zero-batch statements below apply to earlier completed requests.
 
 ---

@@ -11,7 +11,8 @@ final class TradeScreenLayoutTest {
         assertTrue(OTHER_ITEMS_Y + 17 < OTHER_CURRENCY_Y);
         assertTrue(OTHER_CURRENCY_Y + ICON_SIZE + 8 < OWN_ITEMS_Y - 1);
         assertTrue(OWN_ITEMS_Y + 17 < OWN_CURRENCY_Y);
-        assertTrue(OWN_CURRENCY_Y + ICON_SIZE + 12 < INVENTORY_Y - 1);
+        assertTrue(OWN_CURRENCY_Y + ICON_SIZE + 4 < BALANCE_Y);
+        assertTrue(BALANCE_Y + 29 + 4 < INVENTORY_Y - 1);
         assertTrue(INVENTORY_Y + 2 * SLOT_STEP + 17 < HOTBAR_Y - 1);
         assertTrue(HOTBAR_Y + 17 < HEIGHT);
         assertTrue(SLOT_X + 8 * SLOT_STEP + 17 < 181); // player preview
