@@ -7,7 +7,7 @@ Use the offline Docs repository for class weapons; do not require live Google au
 ## Numbered implementation batches
 
 1. **Implemented; gameplay QA pending:** attuned ownership/death drops; kill credit/group split; Bogatyr wolves.
-2. **Authorized next:** Trade ordering; hidden advancement descriptions; death-screen forfeit.
+2. **Implemented; gameplay QA pending:** Trade ordering; hidden advancement descriptions; death-screen forfeit.
 3. Developer-only spawner equipment; fixed placement/blocked indicator/radius removal; isolated wave aggro.
 4. Tamsin create/name/leave groups; LFG and member invitations; move player class selection to Tamsin.
 5. Leader maximum capacity; mobile ready check/group HUD; invitation HUD and inventory-only controls.
@@ -18,7 +18,7 @@ Use the offline Docs repository for class weapons; do not require live Google au
 10. Mercenary HUD stacking; equipment-preserving no-drop death and ten-minute respawn.
 11. Server-wide lifetime statistics; teal pause-menu button and scrollable selectable leaderboards.
 
-Ten implementation batches follow batch 1; cumulative licensed gameplay QA is separate.
+Nine implementation batches remain after batch 2; cumulative licensed gameplay QA is separate.
 The order may be adjusted for a concrete dependency without expanding a batch's scope.
 Complete the current batch and hand off; the numbered queue is not permission to skip the
 2–3-change limit or a subsequent requested stop.

@@ -109,6 +109,9 @@ public final class CosmicAdvancementScreen extends Screen implements ClientAdvan
         return value != null && value.isDone();
     }
     private DisplayInfo display(AdvancementNode node) { return node.advancement().display().orElseThrow(); }
+    private Component description(AdvancementNode node) {
+        return earned(node) ? display(node).getDescription() : Component.literal("????????");
+    }
 
     private void chapter(int delta) {
         List<ResourceLocation> keys = new ArrayList<>(roots.keySet());
@@ -177,7 +180,7 @@ public final class CosmicAdvancementScreen extends Screen implements ClientAdvan
             top = statusY + 15;
         }
         int bottom = box.bottom() - 8;
-        List<FormattedCharSequence> lines = font.split(info.getDescription(), box.width() - 20);
+        List<FormattedCharSequence> lines = font.split(description(selected), box.width() - 20);
         boolean overflow = lines.size() * 11 > bottom - top;
         if (overflow) bottom -= 11;
         int visible = Math.max(1, (bottom - top) / 11);
@@ -267,11 +270,11 @@ public final class CosmicAdvancementScreen extends Screen implements ClientAdvan
 
         AchievementTile(int x, int y, int w, AdvancementNode node) {
             super(x, y, w, AdvancementGalleryLayout.TILE_HEIGHT,
-                    display(node).getTitle().copy().append(". ").append(display(node).getDescription()),
+                    display(node).getTitle().copy().append(". ").append(description(node)),
                     button -> { selectedEntry = node.holder().id(); descriptionScroll = 0; }, DEFAULT_NARRATION);
             this.node = node;
             lines = font.split(display(node).getTitle(), w - 48);
-            setTooltip(Tooltip.create(display(node).getTitle().copy().append("\n").append(display(node).getDescription())));
+            setTooltip(Tooltip.create(display(node).getTitle().copy().append("\n").append(description(node))));
         }
 
         @Override protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {

@@ -612,6 +612,7 @@ public final class DungeonLifecycleService {
                                              DungeonRunRegistryData.RunRecord run,
                                              DungeonResetReason reason) {
         if (server == null || run == null) return;
+        if (!DungeonDeathRecovery.prepare(server, run, reason)) return;
         var d1=net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(server);
         if (run.dungeonId().equals("dungeon_1")) {
             if (!net.goui.cosmicdungeon.dungeon.d1.D1WatsonRecovery.permitsCleanup(server, run.runId(), reason.name())) return;

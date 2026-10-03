@@ -103,6 +103,16 @@ final class DungeonForfeitTest {
                 () -> new DungeonForfeitBallot(List.of(owner, owner), 1200));
     }
 
+    @Test void onlyDeadConnectedMembersOfAnEndingFailedRunAreAutomaticallyRespawned() {
+        for (var state : DungeonRunState.values()) {
+            boolean ending = state == DungeonRunState.RESETTING || state == DungeonRunState.FAILED;
+            assertEquals(ending, DungeonDeathRecovery.needsRespawn(state, DungeonResetReason.ABANDONED, true, false));
+            assertFalse(DungeonDeathRecovery.needsRespawn(state, DungeonResetReason.ABANDONED, true, true));
+            assertFalse(DungeonDeathRecovery.needsRespawn(state, DungeonResetReason.ABANDONED, false, false));
+            assertFalse(DungeonDeathRecovery.needsRespawn(state, DungeonResetReason.COMPLETED, true, false));
+        }
+    }
+
     @Test void failedRunInventoryRecoveryRetainsItsNativeCodecAndInterruptionGuarantees() throws Exception {
         InventoryHandoffChecks.main(new String[0]);
     }
