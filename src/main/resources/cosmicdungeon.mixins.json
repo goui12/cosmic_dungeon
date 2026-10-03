@@ -18,6 +18,8 @@
   },
   "mixins": [
     "DungeonServerAccess",
+    "BaseSpawnerAccess",
+    "CosmicSpawnerAwarenessMixin",
     "CosmicSpawnerEntityMixin",
     "CosmicSpawnerTrackingMixin",
     "CosmicSpawnerHealthMixin",

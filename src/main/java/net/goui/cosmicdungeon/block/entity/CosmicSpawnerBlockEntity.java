@@ -71,6 +71,19 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
 
     // One-shot spawn detection cache (tag-filtered, not total entities).
     private int oneShotTaggedCount = -1;
+    private boolean spawnBlocked;
+    private long nextPlacementAttempt;
+
+    public boolean isSpawnBlocked() { return spawnBlocked; }
+    SpawnData currentSpawnData() { return spawner.currentSpawnData; }
+    void setSpawnBlocked(boolean blocked) {
+        if (spawnBlocked == blocked) return;
+        spawnBlocked = blocked;
+        markUpdated();
+    }
+    boolean mayRetryPlacement(long now) { return now >= nextPlacementAttempt; }
+    void deferPlacement(long now) { nextPlacementAttempt = now + 10; }
+    void tickSpawnDelay() { setIntRaw(F_SPAWN_DELAY, Math.max(0, getSpawnerDelayTicks() - 1)); }
 
     /**
      * Stable marker prefix added to every mob emitted by a Cosmic Mob Spawner.
@@ -179,6 +192,9 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     private final CosmicBaseSpawner spawner = new CosmicBaseSpawner();
 
     private final class CosmicBaseSpawner extends BaseSpawner {
+        @Override public com.mojang.datafixers.util.Either<BlockEntity, Entity> getOwner() {
+            return com.mojang.datafixers.util.Either.left(CosmicSpawnerBlockEntity.this);
+        }
         private SpawnData currentSpawnData;
         private boolean warnedMalformedTags;
         @Override
@@ -442,6 +458,9 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     protected void loadAdditional(net.minecraft.world.level.storage.ValueInput input) {
         super.loadAdditional(input);
 
+        // Transient client status is absent in durable world saves.
+        this.spawnBlocked = input.getBooleanOr("CosmicSpawnBlocked", false);
+        this.nextPlacementAttempt = 0;
         int dataVersion = input.getIntOr(DATA_VERSION_KEY, LEGACY_1_5_0_DATA_VERSION);
         if (dataVersion < CURRENT_DATA_VERSION) {
             LOGGER.info("Upgrading Cosmic Spawner block entity at {} from data version {} to {}", this.worldPosition, dataVersion, CURRENT_DATA_VERSION);
@@ -523,7 +542,9 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
 
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-        return this.saveWithoutMetadata(registries);
+        var tag = this.saveWithoutMetadata(registries);
+        tag.putBoolean("CosmicSpawnBlocked", spawnBlocked);
+        return tag;
     }
 
     @Override
@@ -670,7 +691,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         }
 
         try {
-            be.spawner.serverTick(sl, pos);
+            CosmicSpawnerRuntime.tick(sl, pos, be, be.spawner);
         } finally {
             if (limitedSpawnCount) {
                 be.setSpawnerSpawnCountTransient(originalSpawnCount);
@@ -713,6 +734,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     }
 
     public void clearSpawnerEntity(Level level) {
+        this.setSpawnBlocked(false);
         this.spawnerEntityId = "none";
         this.clientSpawnerDirty = true;
         invalidatePreviewEntityCache();

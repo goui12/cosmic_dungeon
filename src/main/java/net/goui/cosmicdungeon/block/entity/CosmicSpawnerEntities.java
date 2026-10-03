@@ -62,6 +62,11 @@ public final class CosmicSpawnerEntities {
             if (index.size() == 0) LEVELS.remove(level);
         }
     }
+    public static boolean tracked(Entity entity) {
+        if (!(entity.level() instanceof ServerLevel level)) return false;
+        var index = LEVELS.get(level);
+        return index != null && index.contains(entity.getUUID(), entity);
+    }
     public static int count(ServerLevel level, String tag) {
         var index = LEVELS.get(level); return index == null ? 0 : index.alive(tag);
     }

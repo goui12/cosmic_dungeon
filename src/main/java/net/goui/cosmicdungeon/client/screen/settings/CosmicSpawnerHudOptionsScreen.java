@@ -69,7 +69,6 @@ public final class CosmicSpawnerHudOptionsScreen extends Screen {
                 bool("Cap", SpawnerHudClientConfig.CAP),
                 bool("Delay", SpawnerHudClientConfig.DELAY),
                 bool("Spawn Count", SpawnerHudClientConfig.SPAWN_COUNT),
-                bool("Spawn Range", SpawnerHudClientConfig.SPAWN_RANGE),
                 bool("Required Player Range", SpawnerHudClientConfig.REQUIRED_PLAYER_RANGE),
                 bool("Max Nearby Entities", SpawnerHudClientConfig.MAX_NEARBY_ENTITIES),
                 bool("Preset Present", SpawnerHudClientConfig.PRESET_PRESENT),

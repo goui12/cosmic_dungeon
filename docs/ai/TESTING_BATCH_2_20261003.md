@@ -85,3 +85,12 @@ Possible future improvement: show the live forfeit tally directly on the death s
 - src/main/java/net/goui/cosmicdungeon/trade/TradeScreenLayout.java
 - src/test/java/net/goui/cosmicdungeon/dungeon/DungeonForfeitTest.java
 - src/test/java/net/goui/cosmicdungeon/trade/TradeScreenLayoutTest.java
+
+## Verification follow-up, 2026-10-03
+
+Source 067f832e is pushed and matches its remote branch; draft PR201 is open.
+The stale pending-handoff note was checked against the completed deployment manifest
+20261003T095034672Z-5ab234b0 and current-test publication 19e45347. TEST and installed
+client hashes were independently reverified; the updater returned Already current at
+067f832e. Java21 build and the combined native/offline regressions pass. Remaining
+licensed acceptance above is still unperformed; deployment is not gameplay proof.

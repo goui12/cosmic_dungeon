@@ -50,6 +50,9 @@ public final class SpawnerMembership<E> {
     public int alive(String tag) { var group = groups.get(tag); return group == null ? 0 : group.alive; }
     public int size(String tag) { var group = groups.get(tag); return group == null ? 0 : group.members.size(); }
     public int size() { return members.size(); }
+    public boolean contains(UUID id, E value) {
+        var member = members.get(id); return member != null && member.value == value;
+    }
     public E next(String tag) {
         var group = groups.get(tag);
         if (group == null) return null;
