@@ -6,7 +6,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
 
 /** Retain exact stacks in vanilla Inventory/equipment, not a second cross-file item store.
- * Gear Trading 2.0 (2026-08-18): class-issued gear stays no-drop, ordinary gear can be lost.
+ * Cameron 2026-10-03: attuned gear drops with permanent ownership. Explicit non-gear no-drop items remain retained.
  * The dungeon failure/abandonment recovery still replaces this inventory with its outside snapshot. */
 public final class ProtectedItemLifecycle {
     private ProtectedItemLifecycle() {}
@@ -19,6 +19,7 @@ public final class ProtectedItemLifecycle {
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             var stack = inventory.getItem(slot);
             if (!stack.isEmpty() && !retain(player, stack)) {
+                ClassItemOwnership.bind(player, stack);
                 player.drop(stack, true, false);
                 inventory.setItem(slot, ItemStack.EMPTY);
             }

@@ -77,6 +77,8 @@ public final class ClassItemEquipmentGuard {
 
     private static boolean can(ServerPlayer player, ItemStack stack, boolean wearing) {
         if (stack != null && net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairComponents.marked(stack)) return false;
+        if (net.goui.cosmicdungeon.item.identity.ClassItemOwnership.present(stack)
+                && !player.getUUID().equals(net.goui.cosmicdungeon.item.identity.ClassItemOwnership.owner(stack))) return false;
         String required = getRequiredClass(stack);
         if (required == null) return true;
         if (wearing) {
@@ -104,6 +106,9 @@ public final class ClassItemEquipmentGuard {
         if (last != null && now - last < DENIAL_MESSAGE_COOLDOWN_TICKS) return;
         LAST_DENIAL_TICK.put(player.getUUID(), now);
         String display = ClassItemUtil.displayNameForClass(required);
-        player.sendSystemMessage(Component.literal("Only a " + display + " can " + verb + " that!"));
+        boolean otherOwner = net.goui.cosmicdungeon.item.identity.ClassItemOwnership.present(stack)
+                && !player.getUUID().equals(net.goui.cosmicdungeon.item.identity.ClassItemOwnership.owner(stack));
+        player.sendSystemMessage(Component.literal(otherOwner ? "That item belongs to another player."
+                : "Only a " + display + " can " + verb + " that!"));
     }
 }

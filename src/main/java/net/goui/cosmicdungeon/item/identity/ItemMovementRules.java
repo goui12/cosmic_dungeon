@@ -7,7 +7,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
 
 /** Trading doc 1byHfuC0G_lb0IRrgO3kblLYP06AY8gJWm9bJOMlrFIc (2026-08-18).
- * Class-issued gear stays no-drop. Other explicit bindings require owner-safe storage.
+ * Attuned gear may drop; its persistent owner controls collection. Other explicit bindings require owner-safe storage.
  * Ordinary named loot remains droppable; do not conflate sale eligibility with no-drop. */
 public final class ItemMovementRules {
     public record Flags(boolean noDrop, boolean privateStorage) {
@@ -32,13 +32,14 @@ public final class ItemMovementRules {
                 || stack.is(ModTags.Items.CLASS_RESTRICTED_DRAGOON) || stack.is(ModTags.Items.CLASS_RESTRICTED_PYROCLAST)
                 || stack.is(ModTags.Items.CLASS_RESTRICTED_THEURGIST) || stack.is(ModTags.Items.CLASS_RESTRICTED_VENEFEX)
                 || stack.is(ModTags.Items.CLASS_RESTRICTED_METALMANCER) || stack.is(ModTags.Items.CLASS_RESTRICTED_DEADEYE);
-        boolean noDrop = issued;
-        boolean privateStorage = issued || stack.has(ModDataComponents.CHOP_OWNER.get())
+        boolean droppableAttuned = ClassItemOwnership.attuned(stack);
+        boolean noDrop = issued && !droppableAttuned;
+        boolean privateStorage = issued || ClassItemOwnership.present(stack) || stack.has(ModDataComponents.CHOP_OWNER.get())
                 || stack.has(ModDataComponents.DUNGEON_RETURN_TARGET.get());
         var custom = stack.get(DataComponents.CUSTOM_DATA);
         if (custom != null) {
             var tag = custom.copyTag();
-            noDrop |= tag.contains("no_drop") || tag.contains("class_issued");
+            noDrop |= !droppableAttuned && (tag.contains("no_drop") || tag.contains("class_issued"));
             privateStorage |= noDrop || tag.contains("owner") || tag.contains("owner_uuid")
                     || tag.contains("bound") || tag.contains("quest_bound") || tag.contains("no_trade");
         }

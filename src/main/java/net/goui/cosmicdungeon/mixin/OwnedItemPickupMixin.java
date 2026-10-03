@@ -13,6 +13,9 @@ public abstract class OwnedItemPickupMixin {
     @Inject(method = "playerTouch", at = @At("HEAD"), cancellable = true)
     private void cosmicdungeon$ownerOnly(Player player, CallbackInfo ci) {
         // Before pickup listeners: a later TRUE event cannot override the item's owner.
-        if (!ItemLifecyclePolicy.mayCollect(((ItemEntity)(Object)this).getTarget(), player.getUUID())) ci.cancel();
+        var item = (ItemEntity)(Object)this;
+        if (!ItemLifecyclePolicy.mayCollect(item.getTarget(), player.getUUID())
+                || (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer
+                && !net.goui.cosmicdungeon.item.identity.ClassItemOwnership.mayAcquire(serverPlayer, item.getItem()))) ci.cancel();
     }
 }

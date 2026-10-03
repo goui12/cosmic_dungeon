@@ -24,6 +24,8 @@ public final class ItemMovementGuard {
         Slot slot = slotId >= 0 && slotId < menu.slots.size() ? menu.slots.get(slotId) : null;
         var clicked = slot == null ? ItemStack.EMPTY : slot.getItem();
         var clickedFlags = ItemMovementRules.flags(clicked);
+        if ((!clicked.isEmpty() && !ClassItemOwnership.mayAcquire(player, clicked))
+                || (!carried.isEmpty() && !ClassItemOwnership.mayAcquire(player, carried))) return true;
         // Do not turn overflow recovery into an expandable personal storage interface.
         // Existing carried/input items can still return; make room and claim before lifting more.
         if (carried.isEmpty() && clickedFlags.noDrop() && ProtectedItemRecovery.pendingHere(player)
