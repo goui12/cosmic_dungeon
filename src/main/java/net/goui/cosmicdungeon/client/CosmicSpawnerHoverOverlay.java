@@ -104,7 +104,8 @@ public final class CosmicSpawnerHoverOverlay {
         addTextRow(rows, font, contentMaxWidth, SpawnerHudClientConfig.CAP.get(), "Cap: " + formatCap(be.getSpawnerMobCap()));
         addTextRow(rows, font, contentMaxWidth, SpawnerHudClientConfig.DELAY.get(), "Delay: range " + be.getSpawnerMinSpawnDelay() + "-" + be.getSpawnerMaxSpawnDelay() + " ticks");
         addTextRow(rows, font, contentMaxWidth, SpawnerHudClientConfig.SPAWN_COUNT.get(), "Spawn Count: " + be.getSpawnerSpawnCount());
-        addTextRow(rows, font, contentMaxWidth, SpawnerHudClientConfig.SPAWN_RANGE.get(), "Spawn Range: " + be.getSpawnerSpawnRange());
+        if (be.isSpawnBlocked()) rows.add(new TextRow(font.split(
+                Component.literal("BLOCKED — clear space within one block").withStyle(net.minecraft.ChatFormatting.RED), contentMaxWidth), font));
         addTextRow(rows, font, contentMaxWidth, SpawnerHudClientConfig.REQUIRED_PLAYER_RANGE.get(), "Player Range: " + be.getSpawnerRequiredPlayerRange());
         addTextRow(rows, font, contentMaxWidth, SpawnerHudClientConfig.MAX_NEARBY_ENTITIES.get(), "Nearby Cap: " + be.getSpawnerMaxNearbyEntities());
         addTextRow(rows, font, contentMaxWidth, SpawnerHudClientConfig.PRESET_PRESENT.get(), "Preset: " + (be.getSpawnerPreset() == null ? "no" : "yes"));

@@ -109,14 +109,39 @@ The default HUD preserves the existing four-line summary:
 
 The HUD now builds its bottom-right preview from the enabled field list only, so disabling a row collapses the layout without leaving gaps. If every field is disabled, an authorized developer sees no preview instead of an empty panel. The panel width follows the widest rendered content up to `spawnerHud.maxWidth`, and text rows wrap within that cap so wrapped rows increase the box height correctly. The Delay row intentionally shows the stable configured min/max range only, not the live countdown, because the client block entity is not synced for every server-side timer decrement. The Spawn Count row likewise shows the configured count only; temporary server-side boss/cap limiting is applied without syncing or saving that transient value.
 
-Available toggle fields are Mob Type, Mob Name, Coordinates, Boss One-Shot, Boss Spawned, Cap, Delay, Spawn Count, Spawn Range, Required Player Range, Max Nearby Entities, Preset Present, and Equipment. Additional optional fields default off until a designer enables them locally: coordinates, boss one-shot, boss spawned, spawn count, spawn range, required player range, max nearby entities, preset present, and equipment. The subsection also includes local HUD layout preferences for maximum width and equipment mode, while the existing bottom-right default position, opacity, horizontal offset, vertical offset, background color, and border color behavior continue to work.
+Available toggle fields are Mob Type, Mob Name, Coordinates, Boss One-Shot, Boss Spawned, Cap, Delay, Spawn Count, Required Player Range, Max Nearby Entities, Preset Present, and Equipment. Additional optional fields default off until a designer enables them locally: coordinates, boss one-shot, boss spawned, spawn count, required player range, max nearby entities, preset present, and equipment. The subsection also includes local HUD layout preferences for maximum width and equipment mode, while the existing bottom-right default position, opacity, horizontal offset, vertical offset, background color, and border color behavior continue to work.
 
 Equipment can render in compact icon mode or compact text mode. Icon mode uses the configured preset `ItemStack`s for non-empty main-hand, off-hand, head, chest, legs, and feet slots, preserving item display data such as names/components and enchantment glint through normal GUI item rendering; the icon row wraps when it reaches the HUD max width and intentionally has no hover tooltip. Text mode renders a compact summary such as `Equipment: MH bow, Head iron_helmet`. When equipment is enabled but there is no preset or no configured equipment, the HUD shows `Equipment: none`.
 
 Intrinsic loot tables and intrinsic drop rules are intentionally excluded from this bottom-right HUD because they are too complex for a compact preview. Use [`/spawner info`](../Spawner_Commands_Features.md#spawner-info) and the spawner command documentation for loot-table and intrinsic-drop details.
 
-This HUD/showlabels work reads existing synchronized Cosmic Spawner block-entity and preset data only: Mob Type, Mob Name, Coordinates, Boss One-Shot, Boss Spawned, Cap, Delay, Spawn Count, Spawn Range, Required Player Range, Max Nearby Entities, Preset Present, and Equipment are all displayed from configured/static client-synced block-entity, block-position, or preset state rather than unsynced live server counters. `Boss Spawned` is the persisted one-shot completion flag, not a live nearby-mob count. It does not change Cosmic Spawner block-entity saved-data keys, Cosmic Spawner preset file structures, or the 1.5.0 to 1.5.1 data migration path; no spawner storage migration is required.
+This HUD/showlabels work reads existing synchronized Cosmic Spawner block-entity and preset data only: Mob Type, Mob Name, Coordinates, Boss One-Shot, Boss Spawned, Cap, Delay, Spawn Count, Required Player Range, Max Nearby Entities, Preset Present, and Equipment are all displayed from configured/static client-synced block-entity, block-position, or preset state rather than unsynced live server counters. `Boss Spawned` is the persisted one-shot completion flag, not a live nearby-mob count. It does not change Cosmic Spawner block-entity saved-data keys, Cosmic Spawner preset file structures, or the 1.5.0 to 1.5.1 data migration path; no spawner storage migration is required.
 
 Saved-data audit for the HUD/showlabels work confirmed the existing storage contracts are unchanged: placed block entities still load/save `CosmicSpawnerDataVersion`, `SpawnerEntityId`, nested `SpawnerPreset`, `BossOneShot`, `BossHasSpawned`, `SpawnerMobCap`, and vanilla `BaseSpawner` fields such as `Delay`, `MinSpawnDelay`, `MaxSpawnDelay`, `SpawnCount`, `MaxNearbyEntities`, `RequiredPlayerRange`, and `SpawnRange`. Presets still load/save `presetVersion`, `entityType`, `customName`, `illagerCaptainVariant`, `eq_<slot>`, `drop_<slot>`, `intrinsicDropRules`, and the legacy `intrinsicDrops` compatibility mirror, while preset JSON files still use the existing `formatVersion`, `entityTypeId`, boss/cap/delay fields, and optional `spawnerPresetNbt`. Per-player showlabels state remains in-memory/session display authorization, and `spawnerHud.*` field choices remain local client config rather than world or preset data.
 
 Related docs: [`/spawner showlabels`](../Spawner_Commands_Features.md#spawner-showlabels) and the [1.5.1 release notes](../releases/Update_1.5.1.md#cosmic-dungeon-settings-and-spawner-hud-preferences).
+
+
+## Fixed placement and independent activation (2026-10-03)
+
+Equipment hand interaction, spawner authoring commands and preset keybinds require the
+server's Developer rank; operator level alone does not grant that rank.
+
+Spawns try top, N, W, S, E, NE, NW, SW, SE, with centered feet positions and fixed one-block
+offsets. Actual mob/passenger bounds must clear blocks, the world border and loaded
+chunks. Entity overlap is allowed. All blocked positions produce a red outline and red
+developer HUD warning; clearing space resumes spawning, with retries every ten ticks.
+The Spawn Range display/toggle is removed. Legacy SpawnRange and authored absolute Pos
+NBT stay serialized but no longer control these fixed positions. There is no preset or
+placed-spawner format migration and no requirement to replace old blocks.
+
+Each new mob waits independently until it detects a visible survival/adventure player
+within eight blocks or takes direct damage from a living attacker. Checks run every ten
+ticks; old fighting mobs' target alerts do not wake reinforcements. Goal and brain AI
+share the gate. Optional per-mob activation metadata survives reload. Naturally spawned
+mobs are unaffected. Idle/fighting members share the existing live cap; passenger groups
+must fit the available cap before admission. Native chunk-visibility counting is retained.
+
+Blocked status is synchronized only on changes and is not written into world saves.
+Authored equipment, drop rules, delays, weighted potentials and boss one-shot behavior
+remain intact. See [Batch 3 report](../ai/TESTING_BATCH_3_20261003.md) for test coverage.

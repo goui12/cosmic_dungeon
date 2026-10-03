@@ -47,7 +47,7 @@ public final class SpawnerCommand {
     private SpawnerCommand() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> d) {
-        d.register(Commands.literal("spawner").requires(s -> s.hasPermission(2))
+        d.register(Commands.literal("spawner").requires(Authority::isDeveloperOrConsole)
                 .executes(c -> help(c.getSource()))
                 .then(Commands.literal("help").executes(c -> help(c.getSource())))
                 .then(Commands.literal("showlabels")
@@ -498,7 +498,7 @@ public final class SpawnerCommand {
             return 0;
         }
         CommandSourceStack src = player.createCommandSourceStack();
-        if (!src.hasPermission(2)) {
+        if (!Authority.isDeveloper(player)) {
             player.sendSystemMessage(Component.literal("You do not have permission to use /spawner preset load."));
             return 0;
         }
@@ -513,6 +513,6 @@ public final class SpawnerCommand {
         }
     }
 
-    private static CosmicSpawnerBlockEntity getTargetSpawnerBE(CommandSourceStack src, ServerPlayer player, Level level) { final BlockHitResult hit = raycast(player, 5.0D); if (hit == null || hit.getType() == HitResult.Type.MISS) { src.sendFailure(Component.literal("Look at a Cosmic Spawner within 5 blocks.")); return null; } final BlockPos pos = hit.getBlockPos(); if (!(level.getBlockState(pos).getBlock() instanceof CosmicMobSpawnerBlock)) { src.sendFailure(Component.literal("Target block is not a Cosmic Spawner.")); return null; } if (!(level.getBlockEntity(pos) instanceof CosmicSpawnerBlockEntity be)) { src.sendFailure(Component.literal("Cosmic Spawner block entity missing at target.")); return null; } return be; }
+    private static CosmicSpawnerBlockEntity getTargetSpawnerBE(CommandSourceStack src, ServerPlayer player, Level level) { if (!Authority.isDeveloper(player)) { Authority.deny(src); return null; } final BlockHitResult hit = raycast(player, 5.0D); if (hit == null || hit.getType() == HitResult.Type.MISS) { src.sendFailure(Component.literal("Look at a Cosmic Spawner within 5 blocks.")); return null; } final BlockPos pos = hit.getBlockPos(); if (!(level.getBlockState(pos).getBlock() instanceof CosmicMobSpawnerBlock)) { src.sendFailure(Component.literal("Target block is not a Cosmic Spawner.")); return null; } if (!(level.getBlockEntity(pos) instanceof CosmicSpawnerBlockEntity be)) { src.sendFailure(Component.literal("Cosmic Spawner block entity missing at target.")); return null; } return be; }
     private static BlockHitResult raycast(ServerPlayer p, double range) { ClipContext ctx = new ClipContext(p.getEyePosition(), p.getEyePosition().add(p.getLookAngle().scale(range)), ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, p); HitResult hr = p.level().clip(ctx); return hr instanceof BlockHitResult bhr ? bhr : null; }
 }

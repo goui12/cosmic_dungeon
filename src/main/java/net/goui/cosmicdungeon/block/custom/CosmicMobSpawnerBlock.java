@@ -85,6 +85,9 @@ public class CosmicMobSpawnerBlock extends Block implements EntityBlock {
         if (stack.isEmpty()) return InteractionResult.PASS;
         if (level.isClientSide()) return InteractionResult.SUCCESS;
 
+        if (!(player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)
+                || !net.goui.cosmicdungeon.auth.AccessPolicy.isDeveloper(serverPlayer))
+            return InteractionResult.FAIL;
         BlockEntity be = level.getBlockEntity(pos);
         if (!(be instanceof CosmicSpawnerBlockEntity cosmic)) return InteractionResult.PASS;
 
