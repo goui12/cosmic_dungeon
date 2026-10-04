@@ -43,16 +43,17 @@ After manual publication, save that receipt back onto the same GitHub release.
 ## Loading-screen distribution
 
 NeoForge 10.0.32 discovers early services in top-level JARs before normal mod discovery.
-The common gameplay JAR and client startup helper remain separate. Each release uploads
-the helper as an additional file under the main file for archival; this is **not**
-app-managed installation. Ordinary clients can play using NeoForge's default startup
+The common gameplay JAR and client startup helper remain separate. With the companion
+configured, each release uploads the helper there and the gameplay JAR to the main
+project. Without a companion, an additional-file archive preserves the helper; this is
+**not** app-managed installation. A processing parent can reject an archive attachment;
+reconcile the owner console and wait for parent approval before a controlled retry. Ordinary clients can play using NeoForge's default startup
 screen without this optional cosmetic component.
 
-To enable app-managed helper updates, create a Minecraft mod project named
-**Cosmic Dungeon Loading Screen**, under the same CurseForge owner. Set its environment
-to Client, explain that it is a NeoForge early-window library, and provide its project ID
-as the GitHub Actions variable `CURSEFORGE_LOADING_PROJECT_ID`, and its URL slug as
-`CURSEFORGE_LOADING_PROJECT_SLUG`. Both projects then receive
+The companion **Cosmic Dungeon Loading Screen** now exists under the same owner:
+project ID `1727305`, slug `cosmic-dungeon-loading-screen`, with client-only file metadata.
+GitHub Actions variables `CURSEFORGE_LOADING_PROJECT_ID` and
+`CURSEFORGE_LOADING_PROJECT_SLUG` contain these values. Both projects receive
 the exact matching version automatically; the main file declares an optional visual
 dependency so dedicated-server installations do not require the helper.
 Install both projects once in the client profile, and enable Beta (Alpha for testers).
@@ -98,3 +99,8 @@ The initial v1.5.2-beta.1 CI artifacts remain immutable. Its rejected upload was
 reconciled against the owner console before a corrected manual publisher resumed
 those same hashes. A tooling-only correction does not retag or rebuild that release.
 Official contract: https://support.curseforge.com/support/solutions/articles/9000197321-curseforge-api
+
+Dependency relation projectID values must be JSON integers: the live API rejects quoted
+IDs with HTTP400/API1002 despite the documentation example. The first beta main file is
+9063474, companion file 9063592, and legacy archive 9063594. Upload acceptance is recorded;
+companion project moderation and licensed-client app update testing remain separate gates.

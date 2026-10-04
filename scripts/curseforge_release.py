@@ -198,11 +198,13 @@ def publish(plan, receipt_path, loading_project, github_tag=None, loading_slug=N
                     gameVersionNames=game_version_names(entries, plan["minecraft"]))
     if loading_project:
         # Optional visual component: dedicated servers do not need the early-display library.
-        metadata["relations"] = {"projects": [{"slug": loading_slug, "projectID": str(loading_project), "type": "optionalDependency"}]}
+        metadata["relations"] = {"projects": [{"slug": loading_slug, "projectID": loading_project, "type": "optionalDependency"}]}
     main_id = upload("main", "main", plan["project_id"], metadata)
-    # Archive every matching helper even before a standalone companion project is configured.
-    upload("loading_archive", "loading", plan["project_id"],
-           dict(common, parentFileID=main_id, displayName=f'Loading screen archive {plan["version"]} (manual install)'))
+    # The companion already stores the exact helper. An additional archive is only
+    # needed without it; attaching to a still-processing parent can fail with HTTP500.
+    if not loading_project:
+        upload("loading_archive", "loading", plan["project_id"],
+               dict(common, parentFileID=main_id, displayName=f'Loading screen archive {plan["version"]} (manual install)'))
     receipt["status"] = "submitted"
     receipt["loading_app_managed"] = bool(loading_project)
     save_receipt(receipt_path, receipt, github_tag)

@@ -82,6 +82,11 @@ class ReleaseTests(unittest.TestCase):
         with patch.object(p, 'request', side_effect=[self.entries, {'id': 100}, {'id': 101}]) as call:
             p.publish(plan, receipt, 0)
             self.assertEqual(call.call_count, 3)
+            archive = call.call_args_list[2].args[2].split(b'\r\n\r\n', 1)[1].split(b'\r\n', 1)[0]
+            metadata = json.loads(archive)
+            self.assertEqual(metadata['parentFileID'], 100)
+            self.assertNotIn('gameVersions', metadata)
+            self.assertNotIn('gameVersionNames', metadata)
         with patch.object(p, 'request', return_value=self.entries) as call:
             p.publish(plan, receipt, 0)
             self.assertEqual(call.call_count, 1)
@@ -102,10 +107,10 @@ class ReleaseTests(unittest.TestCase):
 
     @patch.dict(os.environ, {'CURSEFORGE_API_TOKEN': 'test-only'})
     @patch.object(p, 'git', return_value='commit')
-    def test_companion_precedes_main_and_archive_inherits_parent(self, _git):
+    def test_companion_precedes_main_without_redundant_archive(self, _git):
         plan = p.validate('v1.5.2-beta.1', self.root)
         with patch.object(p, 'multipart', return_value=(b'jar', 'multipart/test')) as multipart:
-            with patch.object(p, 'request', side_effect=[self.entries, {'id': 90}, {'id': 100}, {'id': 101}]):
+            with patch.object(p, 'request', side_effect=[self.entries, {'id': 90}, {'id': 100}]):
                 p.publish(plan, self.root / 'receipt.json', 999, loading_slug='cosmic-loading-screen')
         metadata = [call.args[0] for call in multipart.call_args_list]
         self.assertEqual(metadata[0]['gameVersionNames'], ['1.21.10', 'NeoForge', 'Java 21', 'Client'])
@@ -113,9 +118,9 @@ class ReleaseTests(unittest.TestCase):
         self.assertNotIn('gameVersions', metadata[0])
         self.assertNotIn('gameVersions', metadata[1])
         self.assertEqual(metadata[1]['relations']['projects'][0]['slug'], 'cosmic-loading-screen')
-        self.assertEqual(metadata[2]['parentFileID'], 100)
-        self.assertNotIn('gameVersions', metadata[2])
-        self.assertNotIn('gameVersionNames', metadata[2])
+        self.assertEqual(len(metadata), 2)
+        self.assertIsInstance(metadata[1]['relations']['projects'][0]['projectID'], int)
+        self.assertEqual(metadata[1]['relations']['projects'][0]['projectID'], 999)
 
 
     def test_api_rejection_reports_reason_without_token(self):
