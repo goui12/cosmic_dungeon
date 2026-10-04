@@ -23,8 +23,14 @@ public final class MercenaryPotions {
             cloud.getPersistentData().putString(SOURCE,projectile.getPersistentData().getStringOr(SOURCE,""));
     }
     public static boolean marked(Entity source){return source!=null&&source.getPersistentData().contains(SOURCE);}
+    /** Native owners also cover unmarked projectiles and per-recipient cloud effects. */
+    public static Entity caster(Entity source){
+        if(source instanceof Projectile projectile)return projectile.getOwner();
+        if(source instanceof AreaEffectCloud cloud)return cloud.getOwner();
+        return source;
+    }
     public static MercenaryEntity owner(Entity source){
-        if(source instanceof MercenaryEntity mercenary)return mercenary;
+        if(caster(source) instanceof MercenaryEntity mercenary)return mercenary;
         if(source==null||!(source.level() instanceof ServerLevel level)||!marked(source))return null;
         try{return level.getEntity(UUID.fromString(source.getPersistentData().getStringOr(SOURCE,"")))
                 instanceof MercenaryEntity mercenary?mercenary:null;}
@@ -37,8 +43,10 @@ public final class MercenaryPotions {
     }
     public static boolean permits(boolean helpful,boolean ally,boolean enemy){return helpful?ally:enemy;}
     public static boolean allows(Entity source,LivingEntity target,MobEffect effect){
-        if(!marked(source)&&!(source instanceof MercenaryEntity))return true;
+        if(target instanceof MercenaryEntity&&MercenaryBrain.friendlySource(source)
+                &&!helpful(effect,target.isInvertedHealAndHarm()))return false;
         var mercenary=owner(source);
+        if(!marked(source)&&mercenary==null)return true;
         if(mercenary==null||MercenaryBrain.hirer(mercenary)==null)return false;
         return permits(helpful(effect,target.isInvertedHealAndHarm()),MercenaryBrain.ally(mercenary,target),
                 MercenaryBrain.enemy(mercenary,target));

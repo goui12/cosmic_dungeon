@@ -47,12 +47,13 @@ All2001 source JSON files parse; scoped staged diff/whitespace checks pass.
 No datagen applies. No destructive clean or dedicated/GameTest runtime was launched;
 the existing historical JAR deletion, unrelated generated caches and logs remain excluded.
 
-## Deployment and pending gameplay acceptance
+## Original deployment and pending gameplay acceptance
 
-Source checkpoint and latest-built publication use the normal pipeline. Installation,
-current-test advancement and fresh development-client handoff await confirmed stopped TEST
-and a freshly verified closed client. The active client was observed closing during repair;
-do not force-close a subsequently reopened game. Cameron controls the hosting panel.
+Original source ff65c7f9 was installed on TEST and the ADMIN client with identical SHA256
+CBB67548CE9FA76CD288514B2067D2FAE53461A3BD2031736219FE8DF07E6772. current-test publication and
+updater verification completed. Development-client launch and one retry failed in the native
+NVIDIA driver before mod initialization. Cameron subsequently launched the licensed client
+and resumed testing. The new follow-up below requires a fresh stopped/closed handoff.
 
 1. At Tamsin type a name such as `Emerald Seekers`, including uppercase E; the dialog remains
    open, editing works, unfocused E does nothing, and Escape/Close still exit normally.
@@ -73,3 +74,45 @@ Possible future improvement: a licensed dedicated-server pickup acceptance fixtu
 - `docs/ai/tasks/tamsin-input-mercenary-crash-20261004.md`
 - `docs/ai/TAMSIN_MERCENARY_FIXES_20261004.md`
 - `docs/releases/fragments/tamsin-input-mercenary-crash-20261004.md`
+
+
+## Friendly-fire follow-up and second shutdown investigation
+
+Incoming friendly damage was missing from the existing outgoing mercenary guard. The existing
+CompanionAllies classification now protects mercenaries from all players, friendly NPCs and
+owned companions, without needing the hirer online/in the active run. Native direct/indirect
+projectile and cloud ownership is resolved, while orphaned marked mercenary projectiles remain
+unable to regain damage. Ordinary hostile attacks and unowned environmental damage still apply.
+
+Pre-impact filtering prevents friendly non-potion projectile damage and impact side effects.
+Incoming player projectiles are not discarded, preserving recoverable ammunition. Permitted
+restorative D1 arrows still reach their existing native-wound-suppressing handler. Splash/cloud
+mixins reuse the updated potion helper to filter harmful effects per recipient. The native
+applicability event also vetoes source-attributed friendly debuffs before they can create delayed
+source-less poison damage. Beneficial healing/buffs remain allowed. No general immunity, saved
+format change, dependency, polling loop, scan or packet was added. No migration/datagen applies.
+Authored equipment and chest stacks remain untouched. No central registrations/mixins changed.
+
+Java21 full build and d1OfflineChecks passed:230 native JUnit tests, zero failures/errors/skips;
+all2001 source JSON files parse and scoped whitespace checks pass. Eight added native tests
+use actual mercenary/entity/event classes without a level/server launch; existing companion
+classification tests cover ServerPlayer and NPC types. Live player attacks, restorative class
+arrows, splashes, lingering clouds, hostile combat and fire/knockback still need licensed QA.
+
+The second reported shutdown has no new crash report. Retrieved latest/debug logs end at
+12:58:00.951UTC (05:58PDT) with Stopping the server; the client records disconnect and subsequent
+connection timeout. No crash stack, watchdog, memory error or fatal mod exception appears there.
+This does not establish who/what initiated shutdown or prove the earlier crash recurred. The
+hosting-panel console/exit reason is the missing evidence. No speculative crash fix was made.
+Logs remain private in Google Docs and Sheet/Audit/Testing_Fixes_20261004/test-*-second-crash.log.
+
+This follow-up changes exactly six files: MercenaryBrain.java, MercenaryPotions.java,
+MercenaryFriendlyFireTest.java, this report, its linked task card and the same release fragment.
+It stays on PR211 with zero numbered implementation batches remaining. The existing installed
+ff65c7f9 build/current-test remains until a fresh stopped-TEST/closed-client deployment.
+
+Pending testing: hit the mercenary with melee, a damaging arrow and poison/harming potions;
+health/effects must be unchanged. Check healing potions and restorative D1 arrows still help.
+Stand with pets/mercenaries during combat; friendly attacks must not hurt allies, while hostile
+mobs/environment can still hurt mercenaries. Repeat the original Tamsin typing and pickup checks.
+Future improvement: add this reciprocal combat matrix to the licensed dedicated-server QA fixture.
