@@ -148,7 +148,9 @@ final class LeaderboardTest{
         var oversized=Unpooled.buffer();try{net.minecraft.network.codec.ByteBufCodecs.VAR_INT.encode(oversized,1);net.minecraft.network.codec.ByteBufCodecs.VAR_INT.encode(oversized,13);
             assertThrows(RuntimeException.class,()->View.CODEC.decode(oversized));}finally{oversized.release();}
     }
-    @Test void smallestNativeGuiKeepsRowsAboveNavigation(){
+    @Test void nativePauseInjectionAndSmallestGuiAreCompatible()throws Exception{
+        // Force the real native pause class through Mixin transformation without opening a world.
+        Class.forName("net.minecraft.client.gui.screens.PauseScreen");
         for(int height:List.of(240,270,360,480,720,1080)){
             int rows=LeaderboardScreen.visibleRows(height);assertTrue(rows>=3&&rows<=12);assertTrue(64+rows*18<=height-72);
         }

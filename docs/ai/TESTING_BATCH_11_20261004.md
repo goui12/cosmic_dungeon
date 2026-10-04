@@ -80,6 +80,8 @@ The 18 new tests cover old saves; failed/successful outcome isolation; UUID/name
 saturation and unknown keys; actual native counter aggregation; registered catalog coverage;
 archive values, versioned read-only files, malformed/oversized input; stable tied cursor pages;
 extreme scores; time/distance formatting; packet round trips/limits; minimum GUI geometry.
+The native PauseScreen class also loads successfully through the new Mixin transformation
+in the native test environment, without opening a world.
 d1OfflineChecks passed, including 129 config checks and two configuration round trips.
 Incidental config-example ordering was restored to its verified pre-run bytes.
 All source JSON, changed-document links and scoped whitespace are checked.
