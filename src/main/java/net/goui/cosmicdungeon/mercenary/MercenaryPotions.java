@@ -43,7 +43,7 @@ public final class MercenaryPotions {
     }
     public static boolean permits(boolean helpful,boolean ally,boolean enemy){return helpful?ally:enemy;}
     public static boolean allows(Entity source,LivingEntity target,MobEffect effect){
-        if(target instanceof MercenaryEntity&&MercenaryBrain.friendlySource(source)
+        if(MercenaryWolves.protectedCompanion(target)&&MercenaryBrain.friendlySource(source)
                 &&!helpful(effect,target.isInvertedHealAndHarm()))return false;
         var mercenary=owner(source);
         if(!marked(source)&&mercenary==null)return true;
@@ -65,6 +65,7 @@ public final class MercenaryPotions {
         return old==null||old.getAmplifier()<incoming.getAmplifier()||old.getDuration()<40;
     }
     public static boolean use(MercenaryEntity entity,List<LivingEntity> candidates){
+        if(!MercenaryBrewing.enabled(entity.contract()))return false;
         for(int i=0;i<entity.supplies().size();i++){
             var stack=entity.supplies().get(i);
             if(!(stack.getItem() instanceof PotionItem)||!entity.timers().ready(key(stack)))continue;
@@ -103,12 +104,10 @@ public final class MercenaryPotions {
         return false;
     }
     public static void produce(MercenaryEntity entity,ServerLevel level){
+        if(!MercenaryBrewing.enabled(entity.contract()))return;
         var timers=entity.timers();
-        if(timers.brew()==0){
-            var brewed=MercenaryInventory.brew(entity.supplies(),level.potionBrewing());
-            if(brewed!=null)MercenaryInventory.commit(entity.supplies(),brewed);
-            timers=new MercenaryTimers(MercenaryConfig.BREW_TICKS.get(),timers.fallback(),timers.potions());
-        }
+        // Recipe production happens immediately at a usable stand in the bounded collection pass.
+        // Keep the legacy brew timer field readable; it no longer enables portable production.
         if(timers.fallback()==0){
             var healing=PotionContents.createItemStack(Items.SPLASH_POTION,Potions.HEALING);
             MercenaryInventory.insert(entity.supplies(),healing);

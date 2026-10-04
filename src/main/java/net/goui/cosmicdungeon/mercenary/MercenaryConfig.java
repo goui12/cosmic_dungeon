@@ -9,7 +9,7 @@ public final class MercenaryConfig {
         b.push("mercenaries");
         HIRE_TRACE=b.comment("Trace per hire, reserved during entry and charged only after successful startup.")
                 .defineInRange("hireTrace",500,0,100000000);
-        BREW_TICKS=b.comment("Active ticks per native recipe attempt; one bottle and reagent per cycle.")
+        BREW_TICKS=b.comment("Legacy brewing delay retained for configuration compatibility; Theurgists now brew instantly at nearby stands.")
                 .defineInRange("brewTicks",400,20,1728000);
         FALLBACK_TICKS=b.comment("Active ticks per fallback splash healing potion; no offline catch-up.")
                 .defineInRange("fallbackHealingTicks",3600,20,1728000);

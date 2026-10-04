@@ -81,6 +81,7 @@ public final class MercenaryBrain {
         lastPosition=entity.position();
         if(recover(distance,stuck)&&teleport(entity,owner,level)){stuck=0;distance=entity.distanceToSqr(owner);}
         if(distance>256){entity.setTarget(null);entity.getNavigation().moveTo(owner,1.15);return;}
+        MercenaryWolves.tick(entity,level,owner,10);
         var candidates=new ArrayList<LivingEntity>();candidates.add(owner);candidates.add(entity);
         nearby(level,LivingEntity.class,entity.getBoundingBox().inflate(8),48,target->{
             if(target!=owner&&target!=entity&&target.isAlive()&&(ally(context,target)||enemy(context,entity,target)))candidates.add(target);
@@ -92,6 +93,7 @@ public final class MercenaryBrain {
         LivingEntity target=candidates.stream().filter(t->enemy(context,entity,t)&&owner.distanceToSqr(t)<=64
                 &&entity.getSensing().hasLineOfSight(t)).min(Comparator.comparingDouble(entity::distanceToSqr)).orElse(null);
         entity.setTarget(target);
+        MercenaryWolves.command(entity,level,target);
         if(distance>100){entity.getNavigation().moveTo(owner,1.15);return;}
         if(target!=null){
             entity.getLookControl().setLookAt(target,30,30);
@@ -163,7 +165,7 @@ public final class MercenaryBrain {
     public static void impact(ProjectileImpactEvent event){
         if(!(event.getRayTraceResult() instanceof EntityHitResult hit)||!(hit.getEntity() instanceof LivingEntity target))return;
         var shot=event.getProjectile();
-        if(target instanceof MercenaryEntity&&friendlySource(shot)&&!(shot instanceof AbstractThrownPotion)){
+        if(MercenaryWolves.protectedCompanion(target)&&friendlySource(shot)&&!(shot instanceof AbstractThrownPotion)){
             // Native/class arrows can ignite or apply effects before/without a successful wound.
             // Restorative D1 arrows already suppress their native wound in D1ArrowAbilities.
             if(shot instanceof AbstractArrow arrow&&!target.isInvertedHealAndHarm()){
@@ -188,10 +190,12 @@ public final class MercenaryBrain {
     @SubscribeEvent(priority=EventPriority.HIGHEST)
     public static void friendlyDamage(LivingIncomingDamageEvent event){
         var source=event.getSource();
-        if(event.getEntity() instanceof MercenaryEntity
+        if(MercenaryWolves.protectedCompanion(event.getEntity())
                 &&(friendlySource(source.getEntity())||friendlySource(source.getDirectEntity()))){
             event.setCanceled(true);return;
         }
+        if((MercenaryWolves.managed(source.getEntity())||MercenaryWolves.managed(source.getDirectEntity()))
+                &&CompanionAllies.friendly(event.getEntity())){event.setCanceled(true);return;}
         var owner=source.getEntity() instanceof MercenaryEntity m?m:MercenaryPotions.owner(source.getDirectEntity());
         if(owner!=null&&!enemy(owner,event.getEntity())
                 ||owner==null&&MercenaryPotions.marked(source.getDirectEntity()))event.setCanceled(true);

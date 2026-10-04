@@ -57,7 +57,8 @@ public final class MercenaryInventory {
                     ||net.goui.cosmicdungeon.item.identity.ItemProvenanceService.present(stack)))return false;
             return MercenaryBrain.attackArrow(stack,false)||MercenaryBrain.attackArrow(stack,true);
         }
-        return stack.getItem() instanceof PotionItem||recipes.isInput(stack)||recipes.isIngredient(stack);
+        return MercenaryBrewing.enabled(contract)
+                &&(stack.getItem() instanceof PotionItem||recipes.isInput(stack)||recipes.isIngredient(stack));
     }
     /** Native recipes, including registered mod recipes; one reagent, one bottle per cycle. */
     public static List<ItemStack> brew(List<ItemStack> inventory,PotionBrewing recipes){

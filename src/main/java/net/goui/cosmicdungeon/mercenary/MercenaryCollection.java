@@ -55,7 +55,8 @@ public final class MercenaryCollection {
                 item.discard();transfers[0]++;
             }
         });
-        if(transfers[0]>=4)return;
+        boolean brewer=MercenaryBrewing.enabled(entity.contract()),attemptedBrew=false;
+        if(transfers[0]>=4&&!brewer)return;
         var center=entity.blockPosition();
         for(var pos:BlockPos.betweenClosed(center.offset(-2,-1,-2),center.offset(2,1,2))){
             if(!level.hasChunkAt(pos)||entity.distanceToSqr(Vec3.atCenterOf(pos))>9)continue;
@@ -66,7 +67,10 @@ public final class MercenaryCollection {
             for(int slot=0;slot<chest.getContainerSize()&&transfers[0]<4;slot++){
                 if(copySlot(entity,chest,slot,level.dimension().location(),recipes))transfers[0]++;
             }
-            if(transfers[0]>=4)return;
+            if(brewer&&!attemptedBrew&&chest instanceof BrewingStandBlockEntity){
+                MercenaryBrewing.brew(entity,chest,recipes);attemptedBrew=true;
+            }
+            if(transfers[0]>=4&&(!brewer||attemptedBrew))return;
         }
     }
 }

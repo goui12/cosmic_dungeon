@@ -63,6 +63,9 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
     private long run;
     private final MercenaryBrain brain=new MercenaryBrain();
     private MercenaryTimers timers;
+    private int wolfTicks=MercenaryWolves.INTERVAL;
+    int wolfTicks(){return wolfTicks;}
+    void wolfTicks(int ticks){wolfTicks=Math.clamp(ticks,0,MercenaryWolves.INTERVAL);}
     private MercenaryLootMemory lootMemory=new MercenaryLootMemory();
     public MercenaryLootMemory lootMemory(){return lootMemory;}
     boolean equipmentUpgrade(ItemStack stack,EquipmentSlot slot){
@@ -104,6 +107,7 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
         if(timers!=null)out.store("mercenary_timers",MercenaryTimers.CODEC,timers);
         ContainerHelper.saveAllItems(out.child("mercenary_supplies"),supplies);
         lootMemory.save(out);
+        out.putInt("mercenary_wolf_ticks",wolfTicks);
     }
     @Override public void readAdditionalSaveData(ValueInput in){
         super.readAdditionalSaveData(in);
@@ -112,6 +116,7 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
         timers=in.read("mercenary_timers",MercenaryTimers.CODEC).orElse(null);
         ContainerHelper.loadAllItems(in.childOrEmpty("mercenary_supplies"),supplies);
         lootMemory=MercenaryLootMemory.load(in);
+        wolfTicks=MercenaryWolves.loadCooldown(in);
         rest=in.read("mercenary_rest",MercenaryRest.CODEC).orElse(null);
         if(rest!=null)sleep();
     }

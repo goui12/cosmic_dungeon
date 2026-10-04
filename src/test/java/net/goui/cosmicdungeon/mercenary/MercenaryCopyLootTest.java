@@ -97,7 +97,7 @@ final class MercenaryCopyLootTest {
         assertEquals(1,upgrade.getCount());
     }
     @Test void starterChestCopiesSuppliesButNeverClearsTheAuthoredChest(){
-        var m=merc("pyroclast");var chest=new ClassLockedChestBlockEntity(BlockPos.ZERO,ModBlocks.PYROCLAST_CHEST.get().defaultBlockState());
+        var m=merc("theurgist");var chest=new ClassLockedChestBlockEntity(BlockPos.ZERO,ModBlocks.THEURGIST_CHEST.get().defaultBlockState());
         var brew=new ItemStack(Items.NETHER_WART,4);brew.set(DataComponents.CUSTOM_NAME,Component.literal("Starter reagent"));
         chest.setItem(0,brew.copy());chest.setItem(1,new ItemStack(Items.ARROW,32));chest.setItem(2,new ItemStack(ModItems.DOOR_KEY.get()));
         assertTrue(MercenaryEquipment.equip(m,List.of(chest),recipes(),DIM));
