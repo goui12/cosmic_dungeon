@@ -26,6 +26,9 @@ class ReleaseTests(unittest.TestCase):
         with zipfile.ZipFile(self.root / 'build/libs/cosmicdungeon-1.5.2-beta.1-loading-screen.jar', 'w') as jar:
             jar.writestr(p.SERVICE, 'net.goui.cosmicdungeon.loading.CosmicLoadingWindow\n')
             jar.writestr('META-INF/MANIFEST.MF', 'FMLModType: LIBRARY\nImplementation-Version: 1.5.2-beta.1\n')
+            for asset in ['theme-cosmicdungeon.json', 'cd_minecraft.png', 'cd_loading_background.png',
+                          'cd_progress_bar_bg.png', 'cd_progress_bar_fg.png']:
+                jar.writestr('cosmic-loading/' + asset, 'fixture')
         self.entries = [dict(id=i, name=n, gameVersionTypeID=1) for i, n in
                         enumerate(['1.21.10', 'NeoForge', 'Java 21', 'Client', 'Server'], 1)]
 

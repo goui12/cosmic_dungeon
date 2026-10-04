@@ -169,3 +169,14 @@ Backups/evidence: sibling CosmicDungeon_AI/backups/haunted-loading-20260924.
 Rollback: restore this pass's source assets/config and both prior FML setting values from
 that backup; the prepare task must match the rollback or it will reselect the new provider.
 Future improvement: tune logo scale and backdrop contrast after the native preview.
+
+## Public client packaging, 1.5.2 Beta 1 (2026-10-04)
+
+This supersedes the development-only distribution notes above. The separate helper now
+bundles the theme JSON and all four startup PNGs. Its selected provider refreshes only
+those owned files before NeoForge initializes the theme; unchanged files and unrelated
+settings are preserved. Both FML selectors still need to be enabled once in a new profile.
+See [CurseForge distribution](../CURSEFORGE_RELEASES.md) for the companion-project setup.
+The shared gameplay JAR remains free of client startup service classes. No world or save
+migration is involved. Two standalone artifact tests load the built helper in an isolated classloader
+and verify asset installation, upgrades, no-op rewrites and unrelated-file preservation.

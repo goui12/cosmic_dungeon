@@ -61,18 +61,12 @@ in a clean profile before retiring the transitional PS1 updater.
 
 Existing configured clients: close Minecraft and replace the old helper with the matching
 `cosmicdungeon-<version>-loading-screen.jar` in `mods`. Keep only one helper version.
-For a new profile, also copy `src/main/loading-theme/theme-cosmicdungeon.json` to
-`config/fml/theme-cosmicdungeon.json`; copy these authored assets under
-`config/fml/cosmicdungeon/` using the filenames in the left column:
+The helper bundles the theme JSON and four authored PNGs. Before NeoForge loads the theme,
+the selected Cosmic provider installs/refreshes only its own assets under config/fml,
+preserving unrelated files and settings. Unchanged files are not rewritten. Asset preparation
+failure is logged, and NeoForge's existing theme fallback remains available.
 
-| Destination filename | Source under src/main/resources/assets/cosmicdungeon/ |
-| --- | --- |
-| cd_minecraft.png | textures/gui/title/cd_minecraft.png |
-| cd_loading_background.png | textures/gui/loading/cd_loading_background.png |
-| cd_progress_bar_bg.png | textures/gui/loading/cd_progress_bar_bg.png |
-| cd_progress_bar_fg.png | textures/gui/loading/cd_progress_bar_fg.png |
-
-Set `earlyLoadingScreenTheme = "cosmicdungeon"` and `earlyWindowProvider = "cosmicdungeon"`
+For a new profile, set `earlyLoadingScreenTheme = "cosmicdungeon"` and `earlyWindowProvider = "cosmicdungeon"`
 in `config/fml.toml`, preserving unrelated settings. Never put the helper on the server.
 This one-time profile setup can also be distributed as a CurseForge modpack after a
 separate modpack project is created. The main mod upload does not distribute a world/map.

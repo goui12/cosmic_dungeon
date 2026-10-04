@@ -22,3 +22,15 @@ updates. Preserve the legacy feed until that migration is verified. Public moder
 clean licensed-client visual checks remain distinct from API acceptance and build success.
 
 See ../CURSEFORGE_AND_MERCENARY_BATCHES_20261004.md and ../../CURSEFORGE_RELEASES.md.
+
+## Packaging follow-up
+
+Scope also includes gradle/menu-branding.gradle, CosmicLoadingWindow.java,
+CosmicLoadingAssets.java, LoadingAssetsTest.java and docs/client/Menu_Branding_Assets.md.
+The optional client helper bundles and installs its own five theme assets before native
+theme initialization, preserving unrelated FML settings. Native test-loader isolation
+initially hid the helper; the tests now load the actual standalone jar in a separate test JVM with an isolated
+classloader, exercising installed-artifact behavior without adding it to the game module.
+Local validation target: 261 native tests plus 2 standalone helper artifact tests, 7 publishing tests, 42 offline branding/loading checks;
+2,001 JSON files and scoped diff checks. No client, local server or local GameTest launch.
+CI clean build/GameTests remain required on the final PR head before merge/tag publication.

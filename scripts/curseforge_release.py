@@ -64,8 +64,12 @@ def validate(tag, root=ROOT):
         manifest = jar.read("META-INF/MANIFEST.MF").decode()
         if "FMLModType: LIBRARY" not in manifest:
             raise ValueError("Loading helper must remain an early-service library.")
-        if f"Implementation-Version: {version}" not in manifest:
+        if f"Implementation-Version: {version}" not in manifest.splitlines():
             raise ValueError("Loading helper's embedded version does not match the release.")
+        for asset in ["theme-cosmicdungeon.json", "cd_minecraft.png", "cd_loading_background.png",
+                      "cd_progress_bar_bg.png", "cd_progress_bar_fg.png"]:
+            if not jar.read("cosmic-loading/" + asset):
+                raise ValueError("Loading helper contains an empty theme asset.")
     changelog_path = root / f"docs/releases/{version}.md"
     changelog = changelog_path.read_text(encoding="utf-8")
     if not changelog.strip():
