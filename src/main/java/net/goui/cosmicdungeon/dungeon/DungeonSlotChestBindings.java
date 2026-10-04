@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import net.goui.cosmicdungeon.block.custom.ClassLockedChestBlock;
 import net.goui.cosmicdungeon.block.entity.ClassChestOwnership;
 import net.goui.cosmicdungeon.block.entity.ClassLockedChestBlockEntity;
@@ -32,6 +33,11 @@ public final class DungeonSlotChestBindings {
                 throw new IllegalArgumentException("Each occupied slot must have a distinct player UUID");
     }
 
+    private final Map<UUID,java.util.List<BlockPos>> starterChests=new HashMap<>();
+    public Map<UUID,java.util.List<BlockPos>> starterChests(){
+        var result=new HashMap<UUID,java.util.List<BlockPos>>();starterChests.forEach((id,list)->result.put(id,List.copyOf(list)));
+        return Map.copyOf(result);
+    }
     public ClassChestOwnership ownerFor(int logicalSlot) {
         if (logicalSlot < 1 || logicalSlot > DungeonStartupSchematicPlan.LOGICAL_SLOT_COUNT)
             throw new IllegalArgumentException("Invalid logical slot");
@@ -61,6 +67,8 @@ public final class DungeonSlotChestBindings {
             if (!(level.getBlockEntity(target) instanceof ClassLockedChestBlockEntity chest))
                 throw new IllegalStateException("Pasted class chest is missing at " + target);
             chest.bindSlotOwner(owner);
+            if(request.groupId().equals("d1_start")&&owner.playerId()!=null)
+                starterChests.computeIfAbsent(owner.playerId(),ignored->new ArrayList<>()).add(target);
         }
     }
 

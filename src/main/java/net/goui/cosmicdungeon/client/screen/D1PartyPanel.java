@@ -11,10 +11,10 @@ import java.util.function.Consumer;
 final class D1PartyPanel {
     private PartyPayloads.View view;
     private String inviteName = "", groupName = "";
-    private boolean recruiting;
+    private boolean recruiting, mercenaries;
     void setView(PartyPayloads.View view) {
         this.view = view;
-        if (view.members().isEmpty()) recruiting = false;
+        if (view.members().isEmpty()) { recruiting = false; mercenaries = false; }
     }
     private void send(int containerId, String action, String target) {
         ModNetwork.sendToServer(new PartyPayloads.Action(containerId, view == null ? 0 : view.state().revision(), action, target));
@@ -29,6 +29,21 @@ final class D1PartyPanel {
         var social = view.recruitment();
         boolean grouped = !view.members().isEmpty();
         boolean preparing = state.phase().equals("PREPARING");
+        if(mercenaries&&grouped){
+            button(add,"Back",x+290,y+32,60,true,()->{mercenaries=false;rebuild.run();});
+            boolean mutable=!preparing&&!state.phase().equals("QUEUED");
+            if(!view.hire().selectedClass().isEmpty())
+                button(add,"Release "+view.hire().selectedClass(),x+10,y+180,340,mutable,()->send(containerId,"release_hire",""));
+            else {
+                int n=0;
+                for(String cls:net.goui.cosmicdungeon.mercenary.MercenaryContract.CLASSES){
+                    int col=n%2,row=n++/2;
+                    button(add,ClassSelectorScreen.className(cls).getString(),x+10+col*172,y+74+row*25,166,
+                        mutable&&view.members().size()<state.capacity(),()->send(containerId,"hire",cls));
+                }
+            }
+            return;
+        }
         if (grouped && state.leader() && !recruiting) {
             boolean mutable = !preparing && !state.phase().equals("QUEUED");
             button(add, "-", x + 292, y + 42, 26, mutable && state.capacity() > view.members().size(),
@@ -80,8 +95,9 @@ final class D1PartyPanel {
             button(add, "Difficulty: " + difficulty.title(), x + 10, y + 190, 340,
                     state.leader() && !preparing && !state.phase().equals("QUEUED"),
                     () -> send(containerId, "difficulty", net.goui.cosmicdungeon.dungeon.DungeonDifficulty.values()[(difficulty.ordinal() + 1) % 4].name()));
-            button(add, "Recruit / Invite friends", x + 10, y + 210, 340, !preparing,
+            button(add, "Recruit / Invite", x + 10, y + 210, 166, !preparing,
                     () -> { recruiting = true; rebuild.run(); });
+            button(add,"Mercenary",x+184,y+210,166,!preparing,()->{mercenaries=true;rebuild.run();});
         }
         var invite = view.invitation();
         if (!invite.token().isEmpty()) {
@@ -95,6 +111,13 @@ final class D1PartyPanel {
         if (view == null) { graphics.drawString(font, "Loading group...", x + 10, y + 37, 0xFFFFFFFF, false); return; }
         var state = view.state();
         var social = view.recruitment();
+        if(mercenaries&&!view.members().isEmpty()){
+            graphics.drawString(font,"Hire one mercenary",x+10,y+36,0xFFFFFFAA,false);
+            graphics.drawString(font,view.hire().price()+" Trace on successful start; uses one slot.",x+10,y+57,0xFFBBBBBB,false);
+            if(!view.hire().selectedClass().isEmpty())
+                graphics.drawString(font,"Reserved: "+view.hire().selectedClass(),x+10,y+100,0xFFFFFFFF,false);
+            return;
+        }
         if (recruiting && !view.members().isEmpty()) {
             graphics.drawString(font, "Looking for group", x + 10, y + 36, 0xFFFFFFAA, false);
             int row = 0;

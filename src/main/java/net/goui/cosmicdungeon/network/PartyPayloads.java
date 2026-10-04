@@ -39,7 +39,19 @@ public final class PartyPayloads {
                 ByteBufCodecs.VAR_INT, Recruitment::page, ByteBufCodecs.VAR_INT, Recruitment::pages,
                 Member.CODEC.apply(ByteBufCodecs.list(4)), Recruitment::candidates, Recruitment::new);
     }
-    public record View(int containerId, State state, List<Member> members, Invite invitation, Recruitment recruitment, String difficulty) implements CustomPacketPayload {
+    public record Options(String difficulty,Hire hire){
+        public static final StreamCodec<ByteBuf,Options> CODEC=StreamCodec.composite(
+            ByteBufCodecs.stringUtf8(16),Options::difficulty,Hire.CODEC,Options::hire,Options::new);
+    }
+    public record Hire(String selectedClass,int price){
+        public static final Hire NONE=new Hire("",500);
+        public static final StreamCodec<ByteBuf,Hire> CODEC=StreamCodec.composite(
+            ByteBufCodecs.stringUtf8(32),Hire::selectedClass,ByteBufCodecs.VAR_INT,Hire::price,Hire::new);
+    }
+    public record View(int containerId, State state, List<Member> members, Invite invitation, Recruitment recruitment, String difficulty, Hire hire) implements CustomPacketPayload {
+        public View(int containerId,State state,List<Member> members,Invite invitation,Recruitment recruitment,String difficulty){
+            this(containerId,state,members,invitation,recruitment,difficulty,Hire.NONE);
+        }
         public View(int containerId, State state, List<Member> members, Invite invitation, Recruitment recruitment) {
             this(containerId, state, members, invitation, recruitment, "HARD");
         }
@@ -50,7 +62,8 @@ public final class PartyPayloads {
         public static final StreamCodec<ByteBuf, View> STREAM_CODEC = StreamCodec.composite(
                 ByteBufCodecs.VAR_INT, View::containerId, State.CODEC, View::state,
                 Member.CODEC.apply(ByteBufCodecs.list(6)), View::members, Invite.CODEC, View::invitation,
-                Recruitment.CODEC, View::recruitment, ByteBufCodecs.stringUtf8(16), View::difficulty, View::new);
+                Recruitment.CODEC, View::recruitment, Options.CODEC, v->new Options(v.difficulty(),v.hire()),
+                (id,state,members,invite,recruitment,options)->new View(id,state,members,invite,recruitment,options.difficulty(),options.hire()));
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 }

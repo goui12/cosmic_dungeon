@@ -34,6 +34,7 @@ public final class DungeonLifecycleEvents {
 
     @SubscribeEvent
     public static void onServerStarted(ServerStartedEvent event) {
+        net.goui.cosmicdungeon.mercenary.MercenaryEntry.recoverFees(event.getServer());
         DungeonLifecycleService.recoverInstancePoolOnServerStarted(event.getServer());
     }
 
@@ -86,6 +87,7 @@ public final class DungeonLifecycleEvents {
         PlantFlagService.completeIfReady(server);
         DungeonAfkService.tick(server);
         if (doPeriodic) {
+            net.goui.cosmicdungeon.mercenary.MercenaryEntry.retryFees(server);
             DungeonForfeitService.tick(server);
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 FarrowsChopTravelService.syncOutsideInventory(player);

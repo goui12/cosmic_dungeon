@@ -40,7 +40,8 @@ final class D1PartyHudService {
             boolean leader = false;
             if (p != null) {
                 retainedIdentities.addAll(p.members());
-                rows = p.members().stream().map(m -> member(server, m, p.ready().contains(m), p.leader().equals(m))).toList();
+                rows = new ArrayList<>(p.members().stream().map(m -> member(server, m, p.ready().contains(m), p.leader().equals(m))).toList());
+                for(var cls:p.hires().values())rows.add(new PartyPayloads.Member("Mercenary",cls,true,false));
                 name = p.name(); phase = p.phase().name(); capacity = p.capacity(); leader = p.leader().equals(id);
                 queue = lobby.queuePosition(p);
                 seconds = p.countdownEnd() < 0 ? -1 : (int)Math.max(0, (p.countdownEnd() - server.overworld().getGameTime() + 19) / 20);
@@ -50,6 +51,9 @@ final class D1PartyHudService {
                 rows = roster.stream().map(m -> member(server, m, true, run.groupLeader().filter(m::equals).isPresent())).toList();
                 var previous = LAST.get(id);
                 name = previous == null || previous.recruitment().groupName().isBlank() ? "Dungeon 1" : previous.recruitment().groupName();
+                rows=new ArrayList<>(rows);
+                for(var hire:run.mercenaries())if(run.containsPlayer(hire.hirer())&&!run.isCompletionExited(hire.hirer()))
+                    rows.add(new PartyPayloads.Member("Mercenary",hire.classId(),true,false));
                 phase = "ACTIVE"; capacity = rows.size();
             }
             var view = new PartyPayloads.View(-1,

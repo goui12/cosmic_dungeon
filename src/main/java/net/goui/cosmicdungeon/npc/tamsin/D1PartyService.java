@@ -78,11 +78,12 @@ public final class D1PartyService {
         var anchor = anchor(player, menu);
         var block = anchor == null ? null : selector(player.level().getServer(), anchor);
         int capacity = p == null ? (block == null ? 6 : block.getMaxPlayers()) : p.capacity();
-        var members = p == null ? List.<PartyPayloads.Member>of() : p.members().stream().map(id -> {
+        var members = p == null ? new ArrayList<PartyPayloads.Member>() : new ArrayList<>(p.members().stream().map(id -> {
             var member = player.level().getServer().getPlayerList().getPlayer(id);
             return new PartyPayloads.Member(member == null ? "Offline" : member.getGameProfile().name(),
                     member == null ? "none" : ClassData.getClassId(member), p.ready().contains(id), p.leader().equals(id));
-        }).toList();
+        }).toList());
+        if(p!=null)p.hires().forEach((owner,cls)->members.add(new PartyPayloads.Member("Mercenary",cls,true,false)));
         var i = LOBBY.invitation(player.getUUID());
         var sender = i == null ? null : player.level().getServer().getPlayerList().getPlayer(i.inviter());
         boolean leader = p != null && p.leader().equals(player.getUUID());
@@ -90,14 +91,15 @@ public final class D1PartyService {
                 && LOBBY.canStartSolo(player.getUUID(), capacity);
         String phase = p == null ? (canSolo ? "SOLO_AVAILABLE" : "UNGROUPED") : p.phase().name();
         boolean canInvite = block != null && capacity >= 2 && nearby(player, anchor) && p != null
-                && p.anchor().equals(anchor) && p.members().size() < capacity
+                && p.anchor().equals(anchor) && p.occupied() < capacity
                 && p.phase() != D1PartyLobby.Phase.QUEUED && p.phase() != D1PartyLobby.Phase.PREPARING;
         int countdown = p == null || p.countdownEnd() < 0 ? -1 : (int)Math.max(0, (p.countdownEnd() - now(player.level().getServer()) + 19) / 20);
         var view = new PartyPayloads.View(menu.containerId,
                 new PartyPayloads.State(LOBBY.revision(player.getUUID()), phase,
                         leader, capacity, LOBBY.queuePosition(p), countdown), members,
                 new PartyPayloads.Invite(i == null ? "" : i.token(), sender == null ? "" : sender.getGameProfile().name(),
-                        i != null && i.accepted(), canInvite), recruitment(player, menu, p, anchor), p == null ? "HARD" : p.difficulty().name());
+                        i != null && i.accepted(), canInvite), recruitment(player, menu, p, anchor), p == null ? "HARD" : p.difficulty().name(),
+                new PartyPayloads.Hire(p==null?"":p.hires().getOrDefault(player.getUUID(),""),p!=null&&p.hires().containsKey(player.getUUID())?(int)p.hireFee(player.getUUID()):net.goui.cosmicdungeon.mercenary.MercenaryConfig.HIRE_TRACE.get()));
         if (force || !view.equals(menu.lastPartyView)) {
             menu.lastPartyView = view; ModNetwork.sendTo(player, view);
         }
@@ -118,7 +120,7 @@ public final class D1PartyService {
     private static String rosterProblem(MinecraftServer server, D1PartyLobby.Party p, boolean compareClasses) {
         var block = selector(server, p.anchor());
         if (block == null) return "Tamsin or the group selector is unavailable.";
-        if (!D1PartyRules.fits(p.members().size(), p.capacity()))
+        if (!D1PartyRules.fits(p.occupied(), p.capacity()))
             return "The group no longer fits this selector's party limits.";
         for (UUID id : p.members()) {
             var member = server.getPlayerList().getPlayer(id);
@@ -194,6 +196,10 @@ public final class D1PartyService {
             case "create" -> {
                 if (anchor == null || !nearby(player, anchor)) { error = "Speak with Tamsin to create a group."; break; }
                 error = LOBBY.create(player.getUUID(), anchor, request.revision(), request.target(), selector(server, anchor).getMaxPlayers());
+            }
+            case "hire", "release_hire" -> {
+                if(anchor==null||!nearby(player,anchor)){error="Speak with Tamsin to change a hire.";break;}
+                error=LOBBY.hire(player.getUUID(),request.revision(),request.action().equals("release_hire")?"":request.target(),net.goui.cosmicdungeon.mercenary.MercenaryConfig.HIRE_TRACE.get());
             }
             case "difficulty" -> error = LOBBY.difficulty(player.getUUID(), request.revision(), request.target());
             case "capacity" -> {
@@ -336,6 +342,7 @@ public final class D1PartyService {
                     boolean success = false;
                     try {
                         success = ClassSelectorEntryService.enter(server, p.anchor(), p.members(), p.classes(),
+                                p.contracts(),
                                 net.goui.cosmicdungeon.dungeon.DungeonDifficultyConfig.snapshot(p.difficulty()),
                                 () -> LOBBY.party(p.leader()) == p && rosterProblem(server, p, true) == null);
                     } catch (RuntimeException failure) {

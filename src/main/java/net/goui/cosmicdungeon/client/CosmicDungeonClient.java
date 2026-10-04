@@ -133,6 +133,7 @@ public final class CosmicDungeonClient {
         e.registerEntityRenderer(ModEntities.MAGMA_GLOB.get(), MagmaGlobRenderer::new);
         e.registerEntityRenderer(ModEntities.STONE_WARDEN.get(), StoneWardenRenderer::new);
         e.registerEntityRenderer(ModEntities.GOBLIN_AMBUSHER.get(), GoblinAmbusherRenderer::new);
+        e.registerEntityRenderer(ModEntities.MERCENARY.get(), net.goui.cosmicdungeon.client.render.MercenaryRenderer::new);
         e.registerEntityRenderer(ModEntities.CTHONIAN_GNAWLING.get(), CthonianGnawlingRenderer::new);
 
         // Metalmancer Golem
