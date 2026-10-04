@@ -17,6 +17,17 @@ public final class D1PartyLobby {
         public net.goui.cosmicdungeon.dungeon.DungeonDifficulty difficulty() { return difficulty; }
         private final LinkedHashSet<UUID> members = new LinkedHashSet<>();
         private final Set<UUID> ready = new HashSet<>();
+        private final LinkedHashMap<UUID,String> hires=new LinkedHashMap<>();
+        private final Map<UUID,Long> hireFees=new HashMap<>();
+        public long hireFee(UUID owner){return hireFees.getOrDefault(owner,0L);}
+        public Map<UUID,String> hires(){return Collections.unmodifiableMap(hires);}
+        public int occupied(){return members.size()+hires.size();}
+        public List<net.goui.cosmicdungeon.mercenary.MercenaryContract> contracts(){
+            var result=new ArrayList<net.goui.cosmicdungeon.mercenary.MercenaryContract>();
+            for(var entry:hires.entrySet())result.add(new net.goui.cosmicdungeon.mercenary.MercenaryContract(
+                UUID.randomUUID(),entry.getKey(),entry.getValue(),members.size()+result.size()+1,hireFees.get(entry.getKey())));
+            return List.copyOf(result);
+        }
         private Map<UUID, String> classes = Map.of();
         private Phase phase = Phase.ASSEMBLY;
         private long revision, queueOrder, countdownEnd = -1;
@@ -99,7 +110,7 @@ public final class D1PartyLobby {
         capacity = Math.min(capacity, p.capacity);
         if (p != null && (!p.anchor.equals(anchor) || p.phase == Phase.QUEUED || p.phase == Phase.PREPARING))
             return "Cancel queueing before inviting players at this Tamsin.";
-        if (p != null && p.members.size() >= capacity) return "This group is full.";
+        if (p != null && p.occupied() >= capacity) return "This group is full.";
         var existing = invitations.get(target);
         if (existing != null && existing.expires > now) return "That player already has a pending invitation.";
         invitations.put(target, new Invitation(UUID.randomUUID().toString(), sender, target, p.id, anchor,
@@ -130,7 +141,7 @@ public final class D1PartyLobby {
             invitations.remove(target); return "The inviting group changed.";
         }
         capacity = Math.min(capacity, p.capacity);
-        if (p.phase == Phase.PREPARING || p.members.size() >= capacity) {
+        if (p.phase == Phase.PREPARING || p.occupied() >= capacity) {
             invitations.remove(target); return "That group is full or has started entry preparation.";
         }
         if (!eligible) return null;
@@ -147,7 +158,7 @@ public final class D1PartyLobby {
         var p = party(leader);
         if (p == null || !p.leader.equals(leader)) return "Only the group leader can begin readiness.";
         if (!current(leader, expected) || p.phase != Phase.ASSEMBLY) return "Group changed; refresh before readying.";
-        if (!D1PartyRules.fits(p.members.size(), p.capacity))
+        if (!D1PartyRules.fits(p.occupied(), p.capacity))
             return "The group must fit this selector's party limits.";
         if (!classes.keySet().equals(p.members) || classes.values().stream().anyMatch(c -> c == null || c.isBlank() || c.equals("none")))
             return "Every member must personally select a class.";
@@ -159,7 +170,7 @@ public final class D1PartyLobby {
         if (p == null || !p.leader.equals(leader)) return "Only the group leader can choose the maximum.";
         if (!current(leader, expected) || p.phase == Phase.QUEUED || p.phase == Phase.PREPARING)
             return "Cancel queueing before changing the maximum.";
-        if (!D1PartyRules.fits(p.members.size(), capacity)) return "Maximum must fit the current group (1-6).";
+        if (!D1PartyRules.fits(p.occupied(), capacity)) return "Maximum must fit the current group (1-6).";
         if (p.capacity != capacity) { p.capacity = capacity; cancel(p); }
         return null;
     }
@@ -172,6 +183,18 @@ public final class D1PartyLobby {
         if (selected.isEmpty()) return "Choose Easy, Hard, Insane or Ridiculous.";
         if (p.difficulty != selected.get()) { p.difficulty = selected.get(); cancel(p); }
         return null;
+    }
+    public String hire(UUID player,long expected,String classId){return hire(player,expected,classId,500);}
+    public String hire(UUID player,long expected,String classId,long fee){
+        if(fee<0||fee>100000000)return "Invalid mercenary fee.";
+        var p=party(player);
+        if(p==null||!current(player,expected)||p.phase==Phase.QUEUED||p.phase==Phase.PREPARING)
+            return "Join a group and cancel queueing before changing a hire.";
+        if(classId.isEmpty()){if(p.hires.remove(player)!=null){p.hireFees.remove(player);cancel(p);}return null;}
+        if(!net.goui.cosmicdungeon.mercenary.MercenaryContract.CLASSES.contains(classId))return "Choose an available mercenary class.";
+        if(p.hires.containsKey(player))return "Release your current mercenary first.";
+        if(p.occupied()>=p.capacity)return "This group is full.";
+        p.hires.put(player,classId);p.hireFees.put(player,fee);cancel(p);return null;
     }
     public String unready(UUID player, long expected) {
         var p = party(player);
@@ -225,7 +248,7 @@ public final class D1PartyLobby {
         if (p == null || p.phase == Phase.PREPARING) return List.of();
         var affected = p.members();
         if (p.leader.equals(member)) complete(p);
-        else { p.members.remove(member); membership.remove(member); cancel(p); }
+        else { p.members.remove(member); p.hires.remove(member); p.hireFees.remove(member); membership.remove(member); cancel(p); }
         return affected;
     }
     public void complete(Party p) {

@@ -35,7 +35,8 @@ public final class DungeonRunRegistryData extends SavedData {
             List<UUID> orderedPlayers,
             List<UUID> completionExitedPlayers,
             List<DungeonPlayerRunSnapshot> playerSnapshots,
-            DungeonDifficulty.Profile difficulty
+            DungeonDifficulty.Profile difficulty,
+            List<net.goui.cosmicdungeon.mercenary.MercenaryContract> mercenaries
     ) {
         // Keep this codec local: the public record may initialize before its enclosing SavedData.
         private static final Codec<UUID> UUID_CODEC = Codec.STRING.xmap(UUID::fromString, UUID::toString);
@@ -52,7 +53,8 @@ public final class DungeonRunRegistryData extends SavedData {
                 UUID_CODEC.listOf().fieldOf("ordered_players").forGetter(RunRecord::orderedPlayers),
                 UUID_CODEC.listOf().optionalFieldOf("completion_exited_players", List.of()).forGetter(RunRecord::completionExitedPlayers),
                 DungeonPlayerRunSnapshot.CODEC.listOf().optionalFieldOf("player_snapshots", List.of()).forGetter(RunRecord::playerSnapshots),
-                DungeonDifficulty.Profile.CODEC.optionalFieldOf("difficulty_profile", DungeonDifficulty.Profile.LEGACY).forGetter(RunRecord::difficulty)
+                DungeonDifficulty.Profile.CODEC.optionalFieldOf("difficulty_profile", DungeonDifficulty.Profile.LEGACY).forGetter(RunRecord::difficulty),
+                net.goui.cosmicdungeon.mercenary.MercenaryContract.CODEC.listOf().optionalFieldOf("mercenaries",List.of()).forGetter(RunRecord::mercenaries)
         ).apply(i, RunRecord::new));
 
         public RunRecord(long runId, String dungeonId, String selectorDimensionId, long selectorPosLong,
@@ -63,10 +65,28 @@ public final class DungeonRunRegistryData extends SavedData {
                     state, resetReason, startedAtEpochMillis, orderedPlayers, completionExitedPlayers,
                     playerSnapshots, DungeonDifficulty.Profile.LEGACY);
         }
+        public RunRecord {
+            mercenaries=List.copyOf(mercenaries);
+            if(mercenaries.size()>3||mercenaries.stream().map(net.goui.cosmicdungeon.mercenary.MercenaryContract::id).distinct().count()!=mercenaries.size()
+                    ||mercenaries.stream().map(net.goui.cosmicdungeon.mercenary.MercenaryContract::hirer).distinct().count()!=mercenaries.size()
+                    ||mercenaries.stream().map(net.goui.cosmicdungeon.mercenary.MercenaryContract::slot).distinct().count()!=mercenaries.size())
+                throw new IllegalArgumentException("Invalid mercenary roster");
+        }
+        public RunRecord(long runId,String dungeonId,String selectorDimensionId,long selectorPosLong,
+                List<String> dungeonDimensionIds,int instanceSlot,String state,String resetReason,
+                long startedAtEpochMillis,List<UUID> orderedPlayers,List<UUID> completionExitedPlayers,
+                List<DungeonPlayerRunSnapshot> playerSnapshots,DungeonDifficulty.Profile difficulty){
+            this(runId,dungeonId,selectorDimensionId,selectorPosLong,dungeonDimensionIds,instanceSlot,state,
+                resetReason,startedAtEpochMillis,orderedPlayers,completionExitedPlayers,playerSnapshots,difficulty,List.of());
+        }
+        public RunRecord withMercenaries(List<net.goui.cosmicdungeon.mercenary.MercenaryContract> hires){
+            return new RunRecord(runId,dungeonId,selectorDimensionId,selectorPosLong,dungeonDimensionIds,instanceSlot,state,
+                resetReason,startedAtEpochMillis,orderedPlayers,completionExitedPlayers,playerSnapshots,difficulty,hires);
+        }
         public RunRecord withDifficulty(DungeonDifficulty.Profile profile) {
             return new RunRecord(runId, dungeonId, selectorDimensionId, selectorPosLong, dungeonDimensionIds,
                     instanceSlot, state, resetReason, startedAtEpochMillis, orderedPlayers,
-                    completionExitedPlayers, playerSnapshots, java.util.Objects.requireNonNull(profile));
+                    completionExitedPlayers, playerSnapshots, java.util.Objects.requireNonNull(profile), mercenaries);
         }
         public DungeonRunState stateEnum() {
             try {
@@ -125,7 +145,7 @@ public final class DungeonRunRegistryData extends SavedData {
                     startedAtEpochMillis,
                     orderedPlayers,
                     updated,
-                    playerSnapshots, difficulty
+                    playerSnapshots, difficulty, mercenaries
             );
         }
 
@@ -157,7 +177,7 @@ public final class DungeonRunRegistryData extends SavedData {
                     startedAtEpochMillis,
                     updatedPlayers,
                     updatedExited,
-                    updatedSnapshots, difficulty
+                    updatedSnapshots, difficulty, mercenaries
             );
         }
 
@@ -174,14 +194,14 @@ public final class DungeonRunRegistryData extends SavedData {
                     startedAtEpochMillis,
                     orderedPlayers,
                     completionExitedPlayers,
-                    playerSnapshots, difficulty
+                    playerSnapshots, difficulty, mercenaries
             );
         }
 
         public RunRecord withInstance(int slot, List<String> dimensions) {
             return new RunRecord(runId, dungeonId, selectorDimensionId, selectorPosLong,
                     List.copyOf(dimensions), slot, state, resetReason, startedAtEpochMillis,
-                    orderedPlayers, completionExitedPlayers, playerSnapshots, difficulty);
+                    orderedPlayers, completionExitedPlayers, playerSnapshots, difficulty, mercenaries);
         }
     }
 
@@ -223,6 +243,15 @@ public final class DungeonRunRegistryData extends SavedData {
     private MinecraftServer server;
     private DungeonRunRegistryData() {}
     public boolean flushVerified() { return net.goui.cosmicdungeon.transaction.SavedDataProof.save(server, SAVE_ID, CODEC, this); }
+    public boolean attachMercenaries(long run,List<net.goui.cosmicdungeon.mercenary.MercenaryContract> hires){
+        var record=getRun(run).orElseThrow();
+        if(!starting(run)||!record.mercenaries().isEmpty()||record.orderedPlayers().size()+hires.size()>6)
+            throw new IllegalStateException("Run cannot accept hires");
+        int slot=record.orderedPlayers().size()+1;
+        for(var hire:hires)if(!record.containsPlayer(hire.hirer())||hire.slot()!=slot++||record.containsPlayer(hire.id()))
+            throw new IllegalArgumentException("Hire does not match startup roster");
+        runsById.put(run,record.withMercenaries(hires));setDirty();return flushVerified();
+    }
     public boolean starting(long run) { return startup.containsKey(Long.toString(run)); }
     public net.minecraft.nbt.CompoundTag startupImage(long run, UUID owner) {
         var image = startup.get(Long.toString(run));

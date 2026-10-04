@@ -24,11 +24,12 @@ public final class ClassSelectorEntryService {
 
     public static boolean enter(MinecraftServer server, net.goui.cosmicdungeon.npc.tamsin.D1PartyLobby.Anchor anchor,
                                 List<UUID> ordered, Map<UUID, String> classes,
+                                List<net.goui.cosmicdungeon.mercenary.MercenaryContract> hires,
                                 net.goui.cosmicdungeon.dungeon.DungeonDifficulty.Profile difficulty,
                                 java.util.function.BooleanSupplier validRoster) {
         if (!server.isSameThread() || !validRoster.getAsBoolean()) return false;
         try {
-            return enterPrepared(server, anchor, ordered, classes, difficulty, validRoster);
+            return enterPrepared(server, anchor, ordered, classes, hires, difficulty, validRoster);
         } catch (RuntimeException failure) {
             LOGGER.error("D1 entry interrupted; registered rollback and saved inventories retained", failure);
             rollbackRegistered(server, ordered);
@@ -46,12 +47,21 @@ public final class ClassSelectorEntryService {
         }
     }
     private static boolean enterPrepared(MinecraftServer server, net.goui.cosmicdungeon.npc.tamsin.D1PartyLobby.Anchor anchor,
-            List<UUID> ordered, Map<UUID, String> classes, net.goui.cosmicdungeon.dungeon.DungeonDifficulty.Profile difficulty,
+            List<UUID> ordered, Map<UUID, String> classes, List<net.goui.cosmicdungeon.mercenary.MercenaryContract> hires, net.goui.cosmicdungeon.dungeon.DungeonDifficulty.Profile difficulty,
             java.util.function.BooleanSupplier validRoster) {
         ServerLevel selectorLevel = ClassSelectorTeleportUtil.resolveLevel(server, anchor.dimension());
         BlockPos selectorPos = BlockPos.of(anchor.selector());
         if (selectorLevel == null || !(selectorLevel.getBlockEntity(selectorPos) instanceof ClassSelectorBlockEntity csbe)) return false;
-        int max = ordered.size();
+        int max = ordered.size()+hires.size();
+        if(ordered.isEmpty()||!net.goui.cosmicdungeon.mercenary.MercenaryEntry.affordable(server,hires)){
+            for(UUID id:ordered){var player=server.getPlayerList().getPlayer(id);if(player!=null)
+                player.sendSystemMessage(Component.literal("Each hirer needs the mercenary fee available before entry."));}
+            return false;
+        }
+        int nextSlot=ordered.size()+1;
+        var hirers=new HashSet<UUID>();var identities=new HashSet<UUID>(ordered);
+        for(var hire:hires)if(!ordered.contains(hire.hirer())||!hirers.add(hire.hirer())||!identities.add(hire.id())||hire.slot()!=nextSlot++)
+            return false;
         if (!net.goui.cosmicdungeon.npc.tamsin.D1PartyRules.fits(max, 6)) return false;
 
         RiftRegistryData data = RiftRegistryData.get(server);
@@ -131,7 +141,7 @@ public final class ClassSelectorEntryService {
             }
         }
 
-        if (finalParty.size() < max) {
+        if (finalParty.size() != ordered.size()) {
             for (ServerPlayer p : finalParty) {
                 p.sendSystemMessage(Component.literal("Party changed before teleport. Ready up again.").withStyle(ChatFormatting.RED));
             }
@@ -172,6 +182,11 @@ public final class ClassSelectorEntryService {
                 orderedClasses.add(classes.get(partyMember.getUUID()));
             }
 
+            hires.forEach(h->orderedClasses.add(h.classId()));
+            var slotOwners=new ArrayList<net.goui.cosmicdungeon.block.entity.ClassChestOwnership>();
+            finalParty.forEach(player->slotOwners.add(new net.goui.cosmicdungeon.block.entity.ClassChestOwnership(
+                    player.getUUID(),player.getGameProfile().name())));
+            hires.forEach(h->slotOwners.add(new net.goui.cosmicdungeon.block.entity.ClassChestOwnership(h.id(),"Mercenary")));
             DungeonStartupSchematicPlan.StartupPastePlan pastePlan;
             try {
                 pastePlan = DungeonStartupSchematicPlan.buildPlan(orderedClasses);
@@ -185,9 +200,7 @@ public final class ClassSelectorEntryService {
 
             DungeonStartupSchematicPipeline.PasteBatchResult pasteResult =
                     DungeonStartupSchematicPipeline.execute(dungeonLevel, pastePlan,
-                            finalParty.stream().map(player ->
-                                    new net.goui.cosmicdungeon.block.entity.ClassChestOwnership(
-                                            player.getUUID(), player.getGameProfile().name())).toList());
+                            slotOwners);
             if (!(pasteResult instanceof DungeonStartupSchematicPipeline.PasteBatchSuccess success)
                     || success.completedOperations() != DungeonStartupSchematicPlan.EXPECTED_OPERATION_COUNT) {
                 for (ServerPlayer p : finalParty) {
@@ -217,6 +230,17 @@ public final class ClassSelectorEntryService {
                 return false;
             }
 
+            if(!net.goui.cosmicdungeon.mercenary.MercenaryEntry.reserve(server,prepared.runId(),hires)){
+                DungeonLifecycleService.abortActiveRunForPlayer(finalParty.getFirst());return false;
+            }
+            for(var hire:hires){
+                var target=teleportTargets.get(hire.slot()-1);
+                if(target.level()!=dungeonLevel||!net.goui.cosmicdungeon.mercenary.MercenaryEntry.spawn(
+                        dungeonLevel,prepared.runId(),hire,target.destinationPos(),success.starterChests())){
+                    finalParty.forEach(player->player.sendSystemMessage(Component.literal("Mercenary starter chest or spawn unavailable; entry cancelled.")));
+                    DungeonLifecycleService.abortActiveRunForPlayer(finalParty.getFirst());return false;
+                }
+            }
             for (int slotIndex = 0; slotIndex < finalParty.size(); slotIndex++) {
                 ServerPlayer p = finalParty.get(slotIndex);
                 TeleportTarget tp = teleportTargets.get(slotIndex);

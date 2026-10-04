@@ -99,6 +99,7 @@ public class CosmicDungeonMod {
             e.put(ModEntities.MAGMA_GLOB.get(),       MagmaGlobEntity.createAttributes().build());
             e.put(ModEntities.STONE_WARDEN.get(),     StoneWardenEntity.createAttributes().build());
             e.put(ModEntities.GOBLIN_AMBUSHER.get(),  GoblinAmbusherEntity.createAttributes().build());
+            e.put(ModEntities.MERCENARY.get(), net.goui.cosmicdungeon.mercenary.MercenaryEntity.createAttributes().build());
             e.put(ModEntities.METALMANCER_GOLEM.get(), MetalmancerGolemEntity.createAttributes().build());
             e.put(ModEntities.CRYSTAL_CREEPER.get(),   CrystalCreeperEntity.createAttributes().build());
             e.put(ModEntities.CTHONIAN_GNAWLING.get(), CthonianGnawlingEntity.createAttributes().build());

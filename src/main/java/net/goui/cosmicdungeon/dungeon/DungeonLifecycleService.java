@@ -557,6 +557,11 @@ public final class DungeonLifecycleService {
             notifyDevelopers(server,Component.literal("[DungeonLifecycle] Chop travel recovery is pending; run and inventory escrow retained."));
             return;
         }
+        var hireAccounts=net.goui.cosmicdungeon.economy.PlayerCurrencyData.get(server);
+        if(!run.mercenaries().isEmpty()){
+            hireAccounts.settleMercenaryFees(runId,!runs.starting(runId));
+            if(!hireAccounts.flushVerified())return;
+        }
         runs.setState(runId, DungeonRunState.RESETTING, reason);
         if (run.dungeonId().equals("dungeon_1") && !runs.flushVerified()) {
             notifyDevelopers(server, Component.literal("[DungeonLifecycle] Reset decision needs save recovery; run and inventories retained."));
@@ -845,7 +850,17 @@ public final class DungeonLifecycleService {
                     || !net.goui.cosmicdungeon.transaction.PlayerSaveProof.saveWithLocation(p)) return false;
         }
         server.saveEverything(true, true, true);
-        return runs.completeStartupVerified(runId);
+        if(!runs.completeStartupVerified(runId))return false;
+        var accounts=net.goui.cosmicdungeon.economy.PlayerCurrencyData.get(server);
+        if(!run.mercenaries().isEmpty()){
+            try {
+                accounts.settleMercenaryFees(runId,true);
+                if(!accounts.flushVerified())com.mojang.logging.LogUtils.getLogger().error("Mercenary payment save needs retry for successful run {}",runId);
+            }catch(RuntimeException failure){
+                com.mojang.logging.LogUtils.getLogger().error("Successful run retains reserved mercenary fees for recovery: "+runId,failure);
+            }
+        }
+        return true;
     }
 
     private static void applyRecoveryToLivePlayer(MinecraftServer server,

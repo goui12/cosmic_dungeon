@@ -72,6 +72,7 @@ public class ClassLockedChestBlockEntity extends RandomizableContainerBlockEntit
 
     @Nullable
     public Component getSlotOwnerLabel() { return slotOwnerLabel; }
+    public boolean ownedBy(java.util.UUID id){return slotOwner!=null&&id.equals(slotOwner.playerId());}
 
     private void readSlotOwner(ValueInput input) {
         slotOwner = ClassChestOwnership.load(input);

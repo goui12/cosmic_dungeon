@@ -33,7 +33,7 @@ public final class DungeonStartupSchematicPipeline {
 
     public sealed interface PasteBatchResult permits PasteBatchSuccess, PasteBatchFailure {}
 
-    public record PasteBatchSuccess(int completedOperations) implements PasteBatchResult {}
+    public record PasteBatchSuccess(int completedOperations,Map<java.util.UUID,java.util.List<BlockPos>> starterChests) implements PasteBatchResult {}
 
     public record PasteBatchFailure(String groupId, int logicalSlot, String schematicFilename,
                                     BlockPos destination, int rotationDegrees, int completedOperations,
@@ -111,7 +111,7 @@ public final class DungeonStartupSchematicPipeline {
 
         LOGGER.info("[DungeonStartupSchematics] Completed {} operations in physical dimension {}.",
                 completed, targetLevel.dimension().location());
-        return new PasteBatchSuccess(completed);
+        return new PasteBatchSuccess(completed,chestBindings.starterChests());
     }
 
     private static Clipboard loadClipboard(String schematicFilename) throws Exception {

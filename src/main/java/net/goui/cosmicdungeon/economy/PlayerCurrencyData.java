@@ -33,7 +33,8 @@ public final class PlayerCurrencyData extends SavedData {
             CompoundTag.CODEC.optionalFieldOf("ledger",new CompoundTag()).forGetter(data->data.ledger),
             CompoundTag.CODEC.optionalFieldOf("death_currency",new DeathCurrencyState().save()).forGetter(data->data.deaths.save()),
             CompoundTag.CODEC.optionalFieldOf("wealth_review",new CompoundTag()).forGetter(data->data.wealthReviews.save()),
-            CompoundTag.CODEC.optionalFieldOf("retired_reward_runs",new CompoundTag()).forGetter(data->data.retiredRewards.save())
+            CompoundTag.CODEC.optionalFieldOf("retired_reward_runs",new CompoundTag()).forGetter(data->data.retiredRewards.save()),
+            Codec.unboundedMap(Codec.STRING,MercenaryFee.CODEC).optionalFieldOf("mercenary_fees",Map.of()).forGetter(data->data.mercenaryFees)
     ).apply(inst, PlayerCurrencyData::fromCodec));
 
     public static final SavedDataType<PlayerCurrencyData> TYPE = new SavedDataType<>(
@@ -46,6 +47,42 @@ public final class PlayerCurrencyData extends SavedData {
     private final Map<UUID, Long> capacityOverrideByPlayer = new HashMap<>();
 
     private final Map<String,Long> receipts=new HashMap<>();
+    private final Map<String,MercenaryFee> mercenaryFees=new HashMap<>();
+    private final Set<Long> pendingMercenaryFees=new HashSet<>();
+    public Set<Long> pendingMercenaryFeeRuns(){return Set.copyOf(pendingMercenaryFees);}
+    public boolean reserveMercenaryFees(long run,Map<UUID,Long> charges){
+        if(charges.isEmpty())return true;
+        if(run<=0)throw new IllegalArgumentException("Invalid run");
+        var fee=new MercenaryFee(charges,"reserved");var key=Long.toString(run);var old=mercenaryFees.get(key);
+        if(old!=null){if(!old.charges().equals(charges))throw new IllegalArgumentException("Changed hire fees");return old.reserved();}
+        if(pendingMercenaryFees.size()>=10)return false;
+        for(var e:charges.entrySet())if(deathBlocked(e.getKey())||availableTrace(e.getKey())<e.getValue())return false;
+        charges.forEach((owner,amount)->adjustHold(heldDebit,owner,amount));
+        mercenaryFees.put(key,fee);pendingMercenaryFees.add(run);setDirty();return true;
+    }
+    public void settleMercenaryFees(long run,boolean successful){
+        var key=Long.toString(run);var fee=mercenaryFees.get(key);if(fee==null||!fee.reserved())return;
+        for(var e:fee.charges().entrySet())if(successful&&getBalanceTrace(e.getKey())<e.getValue())
+            throw new IllegalStateException("Reserved hire balance changed");
+        // One account save contains the complete group decision, all balances and ledger rows.
+        var previousLedger=ledger.copy();var previousWealth=wealthReviews;
+        var beforeBalances=new HashMap<UUID,Long>();var beforeHolds=new HashMap<UUID,Long>();
+        fee.charges().keySet().forEach(owner->{beforeBalances.put(owner,getBalanceTrace(owner));beforeHolds.put(owner,heldDebit.getOrDefault(owner,0L));});
+        try {
+        for(var e:fee.charges().entrySet()){
+            UUID owner=e.getKey();long before=getBalanceTrace(owner),amount=successful?e.getValue():0;
+            journal(EconomyLedger.row("mercenary:"+run+":"+owner,owner,accountName(owner),"mercenary_hire",-amount,
+                before,before-amount,"mercenary",run,successful?"committed":"cancelled",System.currentTimeMillis(),new CompoundTag()));
+            adjustHold(heldDebit,owner,-e.getValue());balanceByPlayer.put(owner,before-amount);
+        }
+        mercenaryFees.put(key,new MercenaryFee(fee.charges(),successful?"committed":"cancelled"));
+        pendingMercenaryFees.remove(run);setDirty();
+        }catch(RuntimeException failure){
+            ledger=previousLedger;wealthReviews=previousWealth;balanceByPlayer.putAll(beforeBalances);
+            beforeHolds.forEach((owner,amount)->{if(amount==0)heldDebit.remove(owner);else heldDebit.put(owner,amount);});
+            setDirty();throw failure;
+        }
+    }
     private final java.util.Set<String> wealthCrossings=new java.util.HashSet<>();
     private final Map<UUID,AccountTransfer> transfers=new LinkedHashMap<>();
     private final Map<UUID,Set<UUID>> reservedTransfersByOwner=new HashMap<>();
@@ -68,7 +105,7 @@ public final class PlayerCurrencyData extends SavedData {
     private PlayerCurrencyData() {}
 
     private static PlayerCurrencyData fromCodec(Map<UUID, Long> balances, Map<UUID, Long> overrides,
-                                                Map<String,Long> receipts,java.util.List<String> crossings,Map<UUID,AccountTransfer> transfers,Map<UUID,RepairCommitPlan> repairPlans,Map<UUID,TradeCommitPlan> tradePlans,Map<UUID,AccountOperation> operations,CompoundTag ledger,CompoundTag deathCurrency,CompoundTag wealthReview,CompoundTag retiredRewards) {
+                                                Map<String,Long> receipts,java.util.List<String> crossings,Map<UUID,AccountTransfer> transfers,Map<UUID,RepairCommitPlan> repairPlans,Map<UUID,TradeCommitPlan> tradePlans,Map<UUID,AccountOperation> operations,CompoundTag ledger,CompoundTag deathCurrency,CompoundTag wealthReview,CompoundTag retiredRewards,Map<String,MercenaryFee> mercenaryFees) {
         PlayerCurrencyData data = new PlayerCurrencyData();
         if (balances != null) data.balanceByPlayer.putAll(balances);
         if (overrides != null) data.capacityOverrideByPlayer.putAll(overrides);
@@ -98,6 +135,15 @@ public final class PlayerCurrencyData extends SavedData {
         for(var record:data.deaths.entries.values())if(!record.active()&&record.before()!=data.getBalanceTrace(record.owner()))
             throw new IllegalArgumentException("Pending death account image mismatch");
         operations.forEach(data::loadOperation);
+        mercenaryFees.forEach((key,fee)->{
+            long run=Long.parseLong(key);if(run<=0||!Long.toString(run).equals(key))throw new IllegalArgumentException("Invalid hire fee run");
+            data.mercenaryFees.put(key,fee);
+            if(fee.reserved()){
+                data.pendingMercenaryFees.add(run);
+                fee.charges().forEach((owner,amount)->adjustHold(data.heldDebit,owner,amount));
+            }
+        });
+        if(data.pendingMercenaryFees.size()>10)throw new IllegalArgumentException("Too many pending mercenary runs");
         if(data.heldDebit.entrySet().stream().anyMatch(e->e.getValue()>data.getBalanceTrace(e.getKey())))throw new IllegalArgumentException("Operation reservations exceed balance");
         return data;
     }
@@ -132,7 +178,7 @@ public final class PlayerCurrencyData extends SavedData {
                     &&repairPlans.equals(saved.repairPlans)&&tradePlans.equals(saved.tradePlans)
                     &&operations.equals(saved.operations)&&ledger.equals(saved.ledger)&&deaths.save().equals(saved.deaths.save())
                     &&wealthReviews.save().equals(saved.wealthReviews.save())
-                    &&retiredRewards.save().equals(saved.retiredRewards.save());
+                    &&retiredRewards.save().equals(saved.retiredRewards.save())&&mercenaryFees.equals(saved.mercenaryFees);
             if(!matches){setDirty();return false;}
             var pending=ledger.getCompoundOrEmpty("outbox");
             if(!pending.isEmpty()){

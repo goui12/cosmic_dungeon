@@ -97,6 +97,7 @@ public final class DungeonInventoryHandoffs {
         var d = PendingDungeonRecoveryData.get(server);
         if (plan.worldReady()) return;
         if (plan.kind().equals("cleanup")) {
+            net.goui.cosmicdungeon.mercenary.MercenaryLifecycle.dismiss(server,plan.run(),plan.owner());
             if (plan.reason().equals("COMPLETED")) {
                 var stored = D1StoredInventoryData.get(server);
                 stored.stash(plan.run(), plan.owner(), plan.tag("stored"));

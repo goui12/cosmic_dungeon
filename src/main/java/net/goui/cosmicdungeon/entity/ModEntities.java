@@ -103,6 +103,12 @@ public final class ModEntities {
                     .build(ResourceKey.create(Registries.ENTITY_TYPE,
                             ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, "d1_arrow"))));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<net.goui.cosmicdungeon.mercenary.MercenaryEntity>> MERCENARY =
+            ENTITIES.register("mercenary", () -> EntityType.Builder
+                    .of(net.goui.cosmicdungeon.mercenary.MercenaryEntity::new, MobCategory.MISC)
+                    .sized(.6F,1.8F).clientTrackingRange(8).updateInterval(3)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE,
+                            ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID,"mercenary"))));
     private ModEntities() {}
 
     /** Call once in CosmicDungeonMod constructor. */
