@@ -8,20 +8,30 @@ Branch: feature/testing-fixes-batch11-20261004. Three approved action items impl
 ## Behavior
 
 The pause menu has a native, full-width Leaderboard button directly below Disconnect,
-with tiled vanilla stone tinted teal, the native focus border and the same grid arrangement. The screen
-offers searchable statistic selection and server-wide descending rankings. Both lists
-scroll independently; native focusable buttons also provide previous/next pages, Refresh,
-Done and player selection. Selected rows have a teal accent and UUID tooltip. Separate
-name/score columns protect score visibility; tooltips and narration retain complete values.
-Time and distance use native statistic formatting. Catalog labels identify mod namespaces.
+with tiled vanilla stone tinted teal and the native focus border. Cameron's 2026-10-04
+follow-up replaces the exhaustive registry catalog with eight curated statistics:
 
-Every registered native statistic type and registry entry is selectable, including mining,
-crafting, use/break/pickup/drop, kills/killed-by and general statistics such as travel.
-Per-type totals are available except for general/custom statistics, whose units differ.
-The existing mined statistic has a Cosmic Spawners destroyed label. It follows native mining
-semantics, including native exceptions such as creative-mode destruction. Registered keys
-must fit the bounded 160-character protocol field; unusually longer third-party keys are
-not exposed. This does not claim every possible engine event is a recorded statistic.
+1. Dungeons completed (the default).
+2. Cosmic mob spawners broken.
+3. Mobs killed.
+4. Death count.
+5. Blocks traveled.
+6. Doors unlocked.
+7. Lesser Blooms harvested.
+8. Time played.
+
+The statistic and ranking lists scroll independently; small-screen statistic arrows only
+scroll these eight choices. Search and statistic catalog pagination are removed. Player
+rank paging, Refresh, Done, selection, narration and full-value tooltips remain. Separate
+name/score columns protect score visibility. Time played uses native time formatting.
+The same eight keys form the server allowlist; clients cannot request hidden categories.
+
+Blocks traveled sums all sixteen native movement-distance counters, including walking,
+sprinting, swimming, falling, flying and riding, then converts centimeters to whole blocks.
+Live and offline values share the same conversion; fractional centimeters are combined
+before rounding. This measures native recorded distance, not displacement or teleports.
+Spawner breaks, mob kills and deaths keep native counting semantics, including creative-mode
+mining exceptions. Completions reuse existing successful-run totals, not attempts or tier awards.
 
 Existing Minecraft statistics remain authoritative and are never reset by this feature.
 Live players use their server counter, including not-yet-saved changes; offline players
@@ -32,8 +42,9 @@ changes. Hostile credit reuses the existing direct/companion/environmental credi
 and records one death once. Lesser harvests count the actor, separately from shared rewards.
 
 Custom counters begin when this update observes events; unavailable history is not invented.
+The additional underlying counters remain saved but are not exposed in the curated menu.
 Existing recovered Spectral Blooms, retained Lesser Blooms, completions and successful-run
-kills remain separate, explicitly named legacy metrics with unchanged reward semantics.
+kills remain separate stored totals with unchanged reward semantics.
 UUID is the identity throughout. Online names, saved last-known names and native cached UUID
 names are used; unknown historical names display a short UUID with full UUID in the tooltip.
 The cache lookup makes no external name-resolution request.
@@ -75,9 +86,11 @@ to preserve this history and honor the earlier batches' rollback boundaries.
 
 ## Verification
 
-Java 21 test/build passed: 213 native NeoForge JUnit tests, zero failures/errors/skips.
+Java 21 test/build passed: 216 native NeoForge JUnit tests, zero failures/errors/skips.
+The curated follow-up adds completion default/receipt retention, live/offline travel parity,
+and rounding/malformed-distance checks; the catalog test now enforces the approved eight keys.
 The 18 new tests cover old saves; failed/successful outcome isolation; UUID/name retention;
-saturation and unknown keys; actual native counter aggregation; registered catalog coverage;
+saturation and unknown keys; actual native counter aggregation; curated catalog coverage;
 archive values, versioned read-only files, malformed/oversized input; stable tied cursor pages;
 extreme scores; time/distance formatting; packet round trips/limits; minimum GUI geometry.
 The native PauseScreen class also loads successfully through the new Mixin transformation
@@ -102,14 +115,15 @@ retain deployment headroom; active rollback JARs and authoritative source are pr
 ## Pending licensed TEST acceptance
 
 1. Pause at small/large GUI scales: Leaderboard sits immediately below Disconnect, uses
-   teal stone styling, opens reliably, supports search/scroll/selection/keyboard focus,
-   and exposes complete long names/scores without overlapping navigation.
-2. Mine/craft/travel, unlock a door, harvest a Lesser Bloom and earn direct/companion kills;
+   teal stone styling, opens to Dungeons completed and offers exactly the eight listed stats,
+   supports scroll/selection/keyboard focus, and keeps long names/scores clear of navigation.
+2. Break a Cosmic Spawner, travel, unlock a door, harvest a Lesser Bloom and kill mobs;
    fail/forfeit the run. Refresh after the cache window: observed totals remain, while
    successful-run reward metrics do not gain a false success. Repeat with two independent runs.
 3. Compare online and offline players, ties and later pages; reconnect and restart TEST
    under the normal controlled process. Known history persists, names resolve locally,
    and corrupt/unreadable archive input produces a visible error rather than a partial board.
+   Check mixed movement distances in whole blocks and native death/time counters.
 
 Cumulative gameplay QA from Batches 1–10 remains pending. These are test tasks, not questions.
 Possible future improvement: an authorized multiplayer archive/restart acceptance fixture.

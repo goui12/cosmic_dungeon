@@ -25,6 +25,10 @@ public final class StatisticsArchive{
         if(!document.isJsonObject())throw new IllegalArgumentException("Invalid stats document");
         var root=document.getAsJsonObject();var stats=root.getAsJsonObject("stats");
         if(stats==null)throw new IllegalArgumentException("Missing native stats object");
+        if(metric.equals(LeaderboardMetrics.TRAVEL)){
+            var movement=stats.getAsJsonObject("minecraft:custom");
+            return movement==null?0:LeaderboardMetrics.traveledBlocks(stat->count(movement.get(stat.toString())));
+        }
         String[] parts=metric.split("\\|",-1);if(parts.length!=2)throw new IllegalArgumentException("Invalid metric");
         boolean total=parts[0].equals("total");var group=stats.getAsJsonObject(total?parts[1]:parts[0]);
         if(group==null)return 0;

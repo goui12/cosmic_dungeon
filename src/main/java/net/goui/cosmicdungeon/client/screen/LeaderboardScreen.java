@@ -13,14 +13,13 @@ public final class LeaderboardScreen extends Screen{
     private static int sequence;
     private final Screen parent;
     private View view;
-    private EditBox search;
     private final List<Button> metrics=new ArrayList<>(),players=new ArrayList<>();
     private final Deque<Cursor> history=new ArrayDeque<>();
     private record Cursor(long value,String id){}
     private Cursor cursor=new Cursor(-1,"");
     private Button metricPrev,metricNext,rankPrev,rankNext,refresh;
-    private String metric=LeaderboardMetrics.DEFAULT,metricLabel="Mob kills",filter="",selected="",status="Reading server statistics...";
-    private int metricPage,metricScroll,playerScroll,requestId,leftWidth,rightX,rowsVisible;
+    private String metric=LeaderboardMetrics.DEFAULT,metricLabel="Dungeons completed",selected="",status="Reading server statistics...";
+    private int metricScroll,playerScroll,requestId,leftWidth,rightX,rowsVisible;
     private boolean pending,queued;
     private long sent;
     public LeaderboardScreen(Screen parent){super(Component.literal("Leaderboard"));this.parent=parent;}
@@ -28,18 +27,13 @@ public final class LeaderboardScreen extends Screen{
         var mc=Minecraft.getInstance();
         if(mc.player!=null&&mc.screen instanceof LeaderboardScreen screen&&payload.request()==screen.requestId){
             screen.view=payload;screen.pending=false;screen.metric=payload.page().metric();
-            screen.metricPage=payload.page().page();screen.status=payload.page().status();screen.updateRows();
+            screen.status=payload.page().status();screen.updateRows();
         }
     }
     public static int visibleRows(int height){return Math.max(3,Math.min(12,(height-142)/18));}
     @Override protected void init(){
-        String typed=search==null?filter:search.getValue();
         leftWidth=(width-36)/2;rightX=24+leftWidth;rowsVisible=visibleRows(height);
         metrics.clear();players.clear();
-        search=addRenderableWidget(new EditBox(font,12,34,leftWidth-58,20,Component.literal("Search statistics")));
-        search.setMaxLength(48);search.setValue(typed);search.setHint(Component.literal("Search statistics"));
-        addRenderableWidget(Button.builder(Component.literal("Search"),b->{filter=search.getValue();metricPage=0;metricScroll=0;queue();})
-            .bounds(12+leftWidth-54,34,54,20).build());
         for(int i=0;i<rowsVisible;i++){
             final int row=i;
             metrics.add(addRenderableWidget(Button.builder(Component.empty(),b->{
@@ -51,8 +45,8 @@ public final class LeaderboardScreen extends Screen{
             })));
         }
         int nav=height-72;
-        metricPrev=addRenderableWidget(Button.builder(Component.literal("<"),b->{metricPage--;metricScroll=0;queue();}).bounds(12,nav,30,20).build());
-        metricNext=addRenderableWidget(Button.builder(Component.literal(">"),b->{metricPage++;metricScroll=0;queue();}).bounds(12+leftWidth-30,nav,30,20).build());
+        metricPrev=addRenderableWidget(Button.builder(Component.literal("<"),b->{metricScroll-=rowsVisible;updateRows();}).bounds(12,nav,30,20).build());
+        metricNext=addRenderableWidget(Button.builder(Component.literal(">"),b->{metricScroll+=rowsVisible;updateRows();}).bounds(12+leftWidth-30,nav,30,20).build());
         rankPrev=addRenderableWidget(Button.builder(Component.literal("<"),b->{cursor=history.removeLast();playerScroll=0;queue();}).bounds(rightX,nav,30,20).build());
         rankNext=addRenderableWidget(Button.builder(Component.literal(">"),b->{
             if(view==null||view.rows().isEmpty())return;
@@ -69,7 +63,7 @@ public final class LeaderboardScreen extends Screen{
         if(pending&&now-sent>15_000_000_000L){pending=false;status="Read timed out. Refresh to retry.";updateRows();}
         if(queued&&!pending&&now-sent>=300_000_000L){
             queued=false;pending=true;sent=now;requestId=sequence=sequence==Integer.MAX_VALUE?0:sequence+1;
-            ModNetwork.sendToServer(new Request(requestId,metric,filter,metricPage,cursor.value(),cursor.id()));updateRows();
+            ModNetwork.sendToServer(new Request(requestId,metric,"",0,cursor.value(),cursor.id()));updateRows();
         }
     }
     private void updateRows(){
@@ -94,7 +88,8 @@ public final class LeaderboardScreen extends Screen{
                 button.setTooltip(Tooltip.create(Component.literal(row.name()+"\n"+score+" ("+row.value()+")\n"+row.id())));
             }
         }
-        metricPrev.active=enabled&&metricPage>0;metricNext.active=enabled&&view!=null&&metricPage+1<view.page().pages();
+        metricPrev.active=enabled&&metricScroll>0;metricNext.active=enabled&&view!=null&&metricScroll+rowsVisible<view.metrics().size();
+        metricPrev.visible=metricNext.visible=view!=null&&view.metrics().size()>rowsVisible;
         rankPrev.active=enabled&&!history.isEmpty();rankNext.active=enabled&&view!=null&&view.page().more();
         refresh.active=enabled;
     }
@@ -113,7 +108,7 @@ public final class LeaderboardScreen extends Screen{
         String label=metricLabel;
         if(view!=null)for(var choice:view.metrics())if(choice.key().equals(metric)){label=choice.label();break;}
         g.drawString(font,font.plainSubstrByWidth(label,width-rightX-12),rightX,40,0xFFCCF5ED,false);
-        g.drawCenteredString(font,"Statistics "+(metricPage+1)+"/"+(view==null?1:view.page().pages()),12+leftWidth/2,height-66,0xFFE4E4E4);
+        g.drawCenteredString(font,"Statistics",12+leftWidth/2,40,0xFFCCF5ED);
         g.drawCenteredString(font,"Rankings",rightX+(width-12-rightX)/2,height-66,0xFFE4E4E4);
         g.drawCenteredString(font,font.plainSubstrByWidth(status,width-24),width/2,height-44,0xFFB9CBC8);
         if(y>=height-46&&y<height-30)g.setComponentTooltipForNextFrame(font,List.of(Component.literal(status)),x,y);

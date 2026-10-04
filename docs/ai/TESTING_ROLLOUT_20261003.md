@@ -64,8 +64,12 @@ Complete the current batch and hand off; the numbered queue is not permission to
   Individual potion/production timers remain configurable.
 - Mercenary never drops anything on death, retains equipment, respawns after 10 minutes.
   It may teleport when stuck/separated. Stacked top-left health/name/countdown HUD.
-- Leaderboard retains server-wide activity including failed/forfeited runs, vanilla stats and
-  new custom counters. Preserve known totals; never invent historical events not recorded.
+- Leaderboard retains server-wide activity including failed/forfeited runs. Cameron's October 4
+  follow-up limits the visible/server-allowed menu to Dungeons completed, Cosmic mob spawners
+  broken, Mobs killed, Death count, Blocks traveled, Doors unlocked, Lesser Blooms harvested
+  and Time played. Default to completions; remove search and exhaustive stat pagination.
+  Keep stored history; never invent historical events not recorded. Blocks traveled combines
+  native movement centimeters into whole blocks, identically for online/offline players.
 - Agreed-fix pipeline: validate/build, scoped commit and push, stopped TEST/closed installed-client
   verified replacement, current-test publication and dad's updater verification. No restart.
 

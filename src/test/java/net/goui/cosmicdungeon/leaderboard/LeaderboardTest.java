@@ -64,15 +64,15 @@ final class LeaderboardTest{
         assertEquals(3,StatisticsArchive.value(json,"minecraft:mined|cosmicdungeon:cosmic_mob_spawner"));
         assertEquals(12,StatisticsArchive.value(json,"minecraft:crafted|minecraft:stick"));
         assertEquals(300,StatisticsArchive.value(json,"minecraft:custom|minecraft:walk_one_cm"));
-        assertEquals(4,StatisticsArchive.value(json,LeaderboardMetrics.DEFAULT));
+        assertEquals(4,StatisticsArchive.value(json,"minecraft:custom|minecraft:mob_kills"));
         assertEquals(0,StatisticsArchive.value(json,"minecraft:used|minecraft:stone"));
     }
     @Test void malformedNativeCountsCannotProducePlausibleRankings(){
         for(String value:List.of("-1","1.5","9223372036854775808","\"12\"","null","{}")){
             var json=stats("\"minecraft:custom\":{\"minecraft:mob_kills\":"+value+"}");
-            assertThrows(RuntimeException.class,()->StatisticsArchive.value(json,LeaderboardMetrics.DEFAULT),value);
+            assertThrows(RuntimeException.class,()->StatisticsArchive.value(json,"minecraft:custom|minecraft:mob_kills"),value);
         }
-        assertThrows(RuntimeException.class,()->StatisticsArchive.value(JsonParser.parseString("{}"),LeaderboardMetrics.DEFAULT));
+        assertThrows(RuntimeException.class,()->StatisticsArchive.value(JsonParser.parseString("{}"),"minecraft:custom|minecraft:mob_kills"));
     }
     @Test void nativeTotalArithmeticCannotWrapNegative(){
         var json=stats("\"minecraft:mined\":{\"a\":9223372036854775807,\"b\":3}");
@@ -83,14 +83,14 @@ final class LeaderboardTest{
         var json=stats("\"minecraft:custom\":{\"minecraft:mob_kills\":27}").getAsJsonObject();
         json.addProperty("DataVersion",SharedConstants.getCurrentVersion().dataVersion().version());
         Files.writeString(path,json.toString());byte[] before=Files.readAllBytes(path);
-        assertEquals(27,StatisticsArchive.read(path,LeaderboardMetrics.DEFAULT,DataFixers.getDataFixer()));
+        assertEquals(27,StatisticsArchive.read(path,"minecraft:custom|minecraft:mob_kills",DataFixers.getDataFixer()));
         assertArrayEquals(before,Files.readAllBytes(path));
     }
     @Test void archiveRejectsOversizedAndMalformedFiles()throws Exception{
         var path=folder.resolve(A+".json");Files.write(path,new byte[StatisticsArchive.MAX_FILE_BYTES+1]);
-        assertThrows(java.io.IOException.class,()->StatisticsArchive.read(path,LeaderboardMetrics.DEFAULT,DataFixers.getDataFixer()));
+        assertThrows(java.io.IOException.class,()->StatisticsArchive.read(path,"minecraft:custom|minecraft:mob_kills",DataFixers.getDataFixer()));
         Files.writeString(path,"{broken");
-        assertThrows(RuntimeException.class,()->StatisticsArchive.read(path,LeaderboardMetrics.DEFAULT,DataFixers.getDataFixer()));
+        assertThrows(RuntimeException.class,()->StatisticsArchive.read(path,"minecraft:custom|minecraft:mob_kills",DataFixers.getDataFixer()));
     }
     @Test void allTiedPagesAreStableWithoutDuplicates(){
         var input=new ArrayList<Row>();for(int i=1;i<=41;i++)input.add(new Row(new UUID(0,i).toString(),"P"+i,42));
@@ -115,14 +115,51 @@ final class LeaderboardTest{
         counter.setValue(null,Stats.CUSTOM.get(Stats.MOB_KILLS),3);
         assertEquals(5,LeaderboardMetrics.nativeValue(counter,"minecraft:mined|minecraft:stone"));
         assertEquals(12,LeaderboardMetrics.nativeValue(counter,"total|minecraft:mined"));
-        assertEquals(3,LeaderboardMetrics.nativeValue(counter,LeaderboardMetrics.DEFAULT));
+        assertEquals(3,LeaderboardMetrics.nativeValue(counter,"minecraft:custom|minecraft:mob_kills"));
     }
-    @Test void catalogCoversRegisteredNativeAndModStatistics(){
-        var list=LeaderboardMetrics.catalog();assertEquals(list.size(),list.stream().map(Metric::key).distinct().count());
-        for(String type:List.of("mined","crafted","used","broken","picked_up","dropped","killed","killed_by"))
-            assertTrue(list.stream().anyMatch(m->m.key().equals("total|minecraft:"+type)),type);
-        assertTrue(list.stream().anyMatch(m->m.label().equals("Cosmic Spawners destroyed")));
-        assertTrue(list.stream().allMatch(m->m.key().length()<=160&&m.label().length()<=160));
+    @Test void catalogExposesOnlyTheApprovedCuratedStatistics(){
+        var list=LeaderboardMetrics.catalog();
+        assertEquals(List.of(
+            new Metric("legacy|completions","Dungeons completed"),
+            new Metric("minecraft:mined|cosmicdungeon:cosmic_mob_spawner","Cosmic mob spawners broken"),
+            new Metric("minecraft:custom|minecraft:mob_kills","Mobs killed"),
+            new Metric("minecraft:custom|minecraft:deaths","Death count"),
+            new Metric("summary|blocks_traveled","Blocks traveled"),
+            new Metric("cosmic|doors_unlocked","Doors unlocked"),
+            new Metric("cosmic|lesser_harvests","Lesser Blooms harvested"),
+            new Metric("minecraft:custom|minecraft:play_time","Time played")),list);
+        assertEquals(LeaderboardMetrics.DEFAULT,list.getFirst().key());
+        assertEquals(list.size(),list.stream().map(Metric::key).distinct().count());
+    }
+    @Test void completionDefaultPreservesHistoryAndRejectsFailedOrRepeatedAwards()throws Exception{
+        var d=empty();assertTrue(d.complete(A,10));assertFalse(d.complete(A,10));
+        d=reload(d);assertEquals(1,d.leaderboard(A,LeaderboardMetrics.DEFAULT));
+        d.applyWatson(new WatsonReceipt(A,11,UUID.randomUUID(),false),50,20);
+        assertEquals(1,d.leaderboard(A,LeaderboardMetrics.DEFAULT));
+        var success=new WatsonReceipt(A,12,UUID.randomUUID(),true);
+        d.applyWatson(success,3,1);d=reload(d);d.applyWatson(success,3,1);
+        assertEquals(2,d.leaderboard(A,LeaderboardMetrics.DEFAULT));
+    }
+    @Test void traveledBlocksMatchesLiveAndOfflineAcrossNativeMovementModes(){
+        var counter=new StatsCounter();var group=new JsonObject();var document=new JsonObject();var body=new JsonObject();
+        int centimeters=25;
+        for(var id:List.of(Stats.WALK_ONE_CM,Stats.CROUCH_ONE_CM,Stats.SPRINT_ONE_CM,Stats.WALK_ON_WATER_ONE_CM,
+                Stats.FALL_ONE_CM,Stats.CLIMB_ONE_CM,Stats.FLY_ONE_CM,Stats.WALK_UNDER_WATER_ONE_CM,
+                Stats.MINECART_ONE_CM,Stats.BOAT_ONE_CM,Stats.PIG_ONE_CM,Stats.HAPPY_GHAST_ONE_CM,
+                Stats.HORSE_ONE_CM,Stats.AVIATE_ONE_CM,Stats.SWIM_ONE_CM,Stats.STRIDER_ONE_CM)){
+            counter.setValue(null,Stats.CUSTOM.get(id),centimeters);group.addProperty(id.toString(),centimeters);
+        }
+        counter.setValue(null,Stats.CUSTOM.get(Stats.JUMP),999);group.addProperty("minecraft:jump",999);
+        body.add("minecraft:custom",group);document.add("stats",body);
+        assertEquals(4,LeaderboardMetrics.nativeValue(counter,LeaderboardMetrics.TRAVEL));
+        assertEquals(4,StatisticsArchive.value(document,LeaderboardMetrics.TRAVEL));
+        assertEquals("1,234",LeaderboardMetrics.format(LeaderboardMetrics.TRAVEL,1234));
+    }
+    @Test void traveledBlocksRoundsAfterSummingAndRejectsMalformedDistance(){
+        assertEquals(1,StatisticsArchive.value(stats("\"minecraft:custom\":{\"minecraft:walk_one_cm\":50,\"minecraft:sprint_one_cm\":75}"),LeaderboardMetrics.TRAVEL));
+        assertEquals(0,StatisticsArchive.value(stats(""),LeaderboardMetrics.TRAVEL));
+        assertThrows(RuntimeException.class,()->StatisticsArchive.value(stats("\"minecraft:custom\":{\"minecraft:walk_one_cm\":-1}"),LeaderboardMetrics.TRAVEL));
+        assertEquals(1475739525896764129L,LeaderboardMetrics.traveledBlocks(id->Long.MAX_VALUE));
     }
     @Test void timeAndDistanceUseNativeFormatting(){
         assertEquals(Stats.CUSTOM.get(Stats.PLAY_TIME).format(72000),LeaderboardMetrics.format("minecraft:custom|minecraft:play_time",72000));
@@ -130,7 +167,7 @@ final class LeaderboardTest{
         assertEquals("9,223,372,036,854,775,807",LeaderboardMetrics.format("cosmic|hostile_kills",Long.MAX_VALUE));
     }
     @Test void requestRoundTripAndInvalidCursors(){
-        var expected=new Request(3,LeaderboardMetrics.DEFAULT,"kills",4,Long.MAX_VALUE,A.toString());
+        var expected=new Request(3,"minecraft:custom|minecraft:mob_kills","kills",4,Long.MAX_VALUE,A.toString());
         var buffer=Unpooled.buffer();try{Request.CODEC.encode(buffer,expected);assertEquals(expected,Request.CODEC.decode(buffer));}finally{buffer.release();}
         assertThrows(IllegalArgumentException.class,()->new Request(0,"","",0,-1,A.toString()));
         assertThrows(IllegalArgumentException.class,()->new Request(0,"","",0,0,""));
