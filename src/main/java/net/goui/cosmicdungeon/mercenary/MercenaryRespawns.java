@@ -62,14 +62,13 @@ public final class MercenaryRespawns {
     }
     public static PartyPayloads.Mercenary status(MinecraftServer server,DungeonRunRegistryData.RunRecord run,
                                                 MercenaryContract contract,String owner){
-        String name="Mercenary "+net.goui.cosmicdungeon.playerclass.api.ClassItemUtil.displayNameForClass(contract.classId());
+        String name=contract.name();
         var rest=run.mercenaryRests().get(contract.id());
         for(String dimension:run.dungeonDimensionIds()){
             var level=net.goui.cosmicdungeon.block.custom.ClassSelectorTeleportUtil.resolveLevel(server,dimension);
             if(level==null)continue;
             if(level.getEntity(contract.id()) instanceof MercenaryEntity entity&&run.runId()==entity.runId()
                     &&contract.equals(entity.contract())){
-                name=entity.getName().getString();if(name.length()>64)name=name.substring(0,64);
                 if(entity.rest()!=null)rest=entity.rest();
                 else return new PartyPayloads.Mercenary(name,owner,entity.getHealth(),entity.getMaxHealth(),-1,"ACTIVE");
                 break;

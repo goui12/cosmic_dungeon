@@ -12,6 +12,7 @@ public record MercenaryContract(UUID id, UUID hirer, String classId, int slot, l
         Codec.STRING.fieldOf("class").forGetter(MercenaryContract::classId),
         Codec.INT.fieldOf("slot").forGetter(MercenaryContract::slot),
         Codec.LONG.fieldOf("fee").forGetter(MercenaryContract::fee)).apply(i,MercenaryContract::new));
+    public String name() { return MercenaryIdentity.name(id); }
     public MercenaryContract {
         Objects.requireNonNull(id);Objects.requireNonNull(hirer);
         if(id.equals(hirer)||!CLASSES.contains(classId)||slot<1||slot>6||fee<0||fee>100000000)

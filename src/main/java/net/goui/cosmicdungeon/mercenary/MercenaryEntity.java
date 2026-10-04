@@ -93,7 +93,7 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
     public void initialize(long run,MercenaryContract contract){
         if(this.contract!=null||run<=0)throw new IllegalStateException("Mercenary already initialized");
         this.run=run;this.contract=contract;setUUID(contract.id());
-        setCustomName(net.minecraft.network.chat.Component.literal("Mercenary "+contract.classId()));
+        setCustomName(net.minecraft.network.chat.Component.literal(contract.name()));
         setCustomNameVisible(true);
     }
     public MercenaryContract contract(){return contract;}
@@ -112,6 +112,8 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
     @Override public void readAdditionalSaveData(ValueInput in){
         super.readAdditionalSaveData(in);
         contract=in.read("mercenary_contract",MercenaryContract.CODEC).orElse(null);
+        // Existing contracts already contain the stable identity needed by older saves.
+        if(contract!=null)setCustomName(net.minecraft.network.chat.Component.literal(contract.name()));
         run=in.getLongOr("mercenary_run",0);
         timers=in.read("mercenary_timers",MercenaryTimers.CODEC).orElse(null);
         ContainerHelper.loadAllItems(in.childOrEmpty("mercenary_supplies"),supplies);

@@ -83,7 +83,7 @@ public final class D1PartyService {
             return new PartyPayloads.Member(member == null ? "Offline" : member.getGameProfile().name(),
                     member == null ? "none" : ClassData.getClassId(member), p.ready().contains(id), p.leader().equals(id));
         }).toList());
-        if(p!=null)p.hires().forEach((owner,cls)->members.add(new PartyPayloads.Member("Mercenary",cls,true,false)));
+        if(p!=null)p.contracts().forEach(hire->members.add(new PartyPayloads.Member(hire.name(),hire.classId(),true,false)));
         var i = LOBBY.invitation(player.getUUID());
         var sender = i == null ? null : player.level().getServer().getPlayerList().getPlayer(i.inviter());
         boolean leader = p != null && p.leader().equals(player.getUUID());
@@ -264,7 +264,7 @@ public final class D1PartyService {
             }
             case "ready", "queue" -> {
                 error = readiness(player, request.revision(), request.action());
-                if (error == null && request.action().equals("ready")) player.closeContainer();
+                if (D1PartyRules.closeAfterReady(p, player.getUUID(), request.action(), error)) player.closeContainer();
             }
             default -> error = "Unknown group action.";
         }

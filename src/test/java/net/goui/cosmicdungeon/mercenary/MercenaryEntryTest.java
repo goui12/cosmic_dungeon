@@ -170,4 +170,34 @@ final class MercenaryEntryTest {
         assertFalse(MercenaryLifecycle.admitted(run.withoutPlayer(a),contract,contract.id(),"cosmicdungeon:d1_instance_1"));
         assertFalse(MercenaryLifecycle.admitted(run.withCompletionExited(a),contract,contract.id(),"cosmicdungeon:d1_instance_1"));
     }
+
+    @Test void lobbyIdentitySurvivesViewsReadinessAndSlotChangesUntilReleased() {
+        var l=lobby(6); var p=l.party(a);
+        assertNull(l.hire(a,p.revision(),"theurgist",777));
+        var original=p.contracts().getFirst();
+        assertEquals(original,p.contracts().getFirst(),"Viewing a hire cannot reroll its identity");
+        join(l,b);
+        var shifted=p.contracts().getFirst();
+        assertEquals(original.id(),shifted.id()); assertEquals(original.name(),shifted.name());
+        assertEquals(3,shifted.slot()); assertEquals(777,shifted.fee());
+        assertNull(l.begin(a,p.revision(),Map.of(a,"bogatyr",b,"dragoon")));
+        assertNull(l.ready(a,p.revision())); assertNull(l.ready(b,p.revision()));
+        assertNull(l.queue(a,p.revision())); assertEquals(shifted,p.contracts().getFirst());
+        l.cancel(p); assertEquals(shifted,p.contracts().getFirst());
+        assertNull(l.hire(a,p.revision(),"")); assertTrue(p.contracts().isEmpty());
+        assertNull(l.hire(a,p.revision(),"theurgist",777));
+        assertNotEquals(original.id(),p.contracts().getFirst().id());
+    }
+    @Test void memberDepartureAndNewGroupDoNotRecycleHireIdentities() {
+        var l=lobby(6); join(l,b); var p=l.party(a);
+        assertNull(l.hire(b,p.revision(),"bogatyr")); var old=p.contracts().getFirst().id();
+        l.remove(b); assertTrue(p.contracts().isEmpty());
+        join(l,b); assertNull(l.hire(b,p.revision(),"bogatyr"));
+        assertNotEquals(old,p.contracts().getFirst().id());
+        old=p.contracts().getFirst().id(); l.remove(a);
+        assertNull(l.create(a,anchor,0,"Next",6)); join(l,b); p=l.party(a);
+        assertNull(l.hire(b,p.revision(),"bogatyr"));
+        assertNotEquals(old,p.contracts().getFirst().id());
+    }
+
 }

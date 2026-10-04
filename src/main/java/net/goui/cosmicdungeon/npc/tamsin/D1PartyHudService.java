@@ -42,7 +42,7 @@ final class D1PartyHudService {
             if (p != null) {
                 retainedIdentities.addAll(p.members());
                 rows = new ArrayList<>(p.members().stream().map(m -> member(server, m, p.ready().contains(m), p.leader().equals(m))).toList());
-                for(var cls:p.hires().values())rows.add(new PartyPayloads.Member("Mercenary",cls,true,false));
+                for(var hire:p.contracts())rows.add(new PartyPayloads.Member(hire.name(),hire.classId(),true,false));
                 name = p.name(); phase = p.phase().name(); capacity = p.capacity(); leader = p.leader().equals(id);
                 queue = lobby.queuePosition(p);
                 seconds = p.countdownEnd() < 0 ? -1 : (int)Math.max(0, (p.countdownEnd() - server.overworld().getGameTime() + 19) / 20);

@@ -1,7 +1,7 @@
 # Release and mercenary rollout, 2026-10-04
 
-Stage 1 is authorized now. Gameplay batches below are planned, not yet authorized for
-implementation. Previous October 3 batches 1-11 and their October 4 fixes are complete;
+Stage 1 and Batch 1 are authorized. Batch 1 is implemented with automated checks passing; batches 2-9 remain
+planned, not yet authorized for implementation. Previous October 3 batches 1-11 and their October 4 fixes are complete;
 their cumulative licensed multiplayer QA remains pending.
 
 ## Stage 1: public 1.5.2 Beta and publishing
@@ -17,7 +17,7 @@ their cumulative licensed multiplayer QA remains pending.
   until companion installation, theme activation and updates are verified.
 - No gameplay, network/save format, authored chest, registry or world changes in this stage.
 
-## 1. Menus and identities
+## 1. Menus and identities (implemented; manual QA pending, 1.5.3-alpha.1)
 
 - Leader's Tamsin menu stays open after Ready so Start Adventure is immediately available.
 - Random mercenary skins and approximately 100 names with a seventeenth-century English
@@ -102,4 +102,4 @@ their cumulative licensed multiplayer QA remains pending.
 After these nine batches: verify multiplayer payments/donations, friendly fire and potion
 targeting, growth/reset/reload, wolf ownership, death-menu races, performance and both
 CurseForge client updates. Merge the completed source set into main and publish beta.
-Stable follows full beta acceptance. Nine gameplay implementation batches remain.
+Stable follows full beta acceptance. Eight gameplay implementation batches remain (2-9); Batch 1 manual QA is pending.
