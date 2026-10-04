@@ -61,8 +61,11 @@ def validate(tag, root=ROOT):
     with zipfile.ZipFile(files["loading"]) as jar:
         if jar.read(SERVICE).decode().strip() != "net.goui.cosmicdungeon.loading.CosmicLoadingWindow":
             raise ValueError("Loading helper service metadata is incorrect.")
-        if "FMLModType: LIBRARY" not in jar.read("META-INF/MANIFEST.MF").decode():
+        manifest = jar.read("META-INF/MANIFEST.MF").decode()
+        if "FMLModType: LIBRARY" not in manifest:
             raise ValueError("Loading helper must remain an early-service library.")
+        if f"Implementation-Version: {version}" not in manifest:
+            raise ValueError("Loading helper's embedded version does not match the release.")
     changelog_path = root / f"docs/releases/{version}.md"
     changelog = changelog_path.read_text(encoding="utf-8")
     if not changelog.strip():
@@ -125,12 +128,14 @@ def save_receipt(path, receipt, github_tag=None):
                        cwd=ROOT, check=True, stdout=subprocess.DEVNULL)
 
 
-def publish(plan, receipt_path, loading_project, github_tag=None):
+def publish(plan, receipt_path, loading_project, github_tag=None, loading_slug=None):
     token = os.environ.get("CURSEFORGE_API_TOKEN", "").strip()
     if not token:
         raise ValueError("CURSEFORGE_API_TOKEN is missing. Use the local credential wrapper or Actions secret.")
     if loading_project and (loading_project <= 0 or loading_project == plan["project_id"]):
         raise ValueError("Loading-screen companion needs its own positive CurseForge project ID.")
+    if loading_project and not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", loading_slug or ""):
+        raise ValueError("Set CURSEFORGE_LOADING_PROJECT_SLUG to the companion project's URL slug.")
     commit = git("rev-parse", "HEAD")
     hashes = {role: item["sha256"] for role, item in plan["artifacts"].items()}
     receipt = {"version": plan["version"], "commit": commit, "sha256": hashes,
@@ -174,7 +179,7 @@ def publish(plan, receipt_path, loading_project, github_tag=None):
                     gameVersions=game_versions(entries, plan["minecraft"]))
     if loading_project:
         # Optional visual component: dedicated servers do not need the early-display library.
-        metadata["relations"] = {"projects": [{"projectID": str(loading_project), "type": "optionalDependency"}]}
+        metadata["relations"] = {"projects": [{"slug": loading_slug, "projectID": str(loading_project), "type": "optionalDependency"}]}
     main_id = upload("main", "main", plan["project_id"], metadata)
     # Archive every matching helper even before a standalone companion project is configured.
     upload("loading_archive", "loading", plan["project_id"],
@@ -209,6 +214,7 @@ def main():
     parser.add_argument("--channel", choices=["alpha", "beta", "release"])
     parser.add_argument("--receipt", type=Path, default=ROOT / "build/release/curseforge-receipt.json")
     parser.add_argument("--loading-project", type=int, default=int(os.environ.get("CURSEFORGE_LOADING_PROJECT_ID") or "0"))
+    parser.add_argument("--loading-slug", default=os.environ.get("CURSEFORGE_LOADING_PROJECT_SLUG"))
     parser.add_argument("--github-release", action="store_true")
     args = parser.parse_args()
     if args.command == "bump":
@@ -224,7 +230,7 @@ def main():
     else:
         if git("rev-parse", args.tag + "^{commit}") != git("rev-parse", "HEAD"):
             raise ValueError("Release tag does not identify the checked-out commit.")
-        publish(plan, args.receipt, args.loading_project, args.tag if args.github_release else None)
+        publish(plan, args.receipt, args.loading_project, args.tag if args.github_release else None, args.loading_slug)
 
 
 if __name__ == "__main__":

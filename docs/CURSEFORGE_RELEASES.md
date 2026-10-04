@@ -51,7 +51,8 @@ screen without this optional cosmetic component.
 To enable app-managed helper updates, create a Minecraft mod project named
 **Cosmic Dungeon Loading Screen**, under the same CurseForge owner. Set its environment
 to Client, explain that it is a NeoForge early-window library, and provide its project ID
-as the GitHub Actions variable `CURSEFORGE_LOADING_PROJECT_ID`. Both projects then receive
+as the GitHub Actions variable `CURSEFORGE_LOADING_PROJECT_ID`, and its URL slug as
+`CURSEFORGE_LOADING_PROJECT_SLUG`. Both projects then receive
 the exact matching version automatically; the main file declares an optional visual
 dependency so dedicated-server installations do not require the helper.
 Install both projects once in the client profile, and enable Beta (Alpha for testers).

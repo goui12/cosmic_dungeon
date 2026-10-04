@@ -25,7 +25,7 @@ class ReleaseTests(unittest.TestCase):
             jar.writestr('META-INF/neoforge.mods.toml', '[[mods]]\nmodId="cosmicdungeon"\nversion="1.5.2-beta.1"')
         with zipfile.ZipFile(self.root / 'build/libs/cosmicdungeon-1.5.2-beta.1-loading-screen.jar', 'w') as jar:
             jar.writestr(p.SERVICE, 'net.goui.cosmicdungeon.loading.CosmicLoadingWindow\n')
-            jar.writestr('META-INF/MANIFEST.MF', 'FMLModType: LIBRARY\n')
+            jar.writestr('META-INF/MANIFEST.MF', 'FMLModType: LIBRARY\nImplementation-Version: 1.5.2-beta.1\n')
         self.entries = [dict(id=i, name=n, gameVersionTypeID=1) for i, n in
                         enumerate(['1.21.10', 'NeoForge', 'Java 21', 'Client', 'Server'], 1)]
 
@@ -85,6 +85,19 @@ class ReleaseTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 p.publish(plan, receipt, 0)
             call.assert_not_called()
+
+    @patch.dict(os.environ, {'CURSEFORGE_API_TOKEN': 'test-only'})
+    @patch.object(p, 'git', return_value='commit')
+    def test_companion_precedes_main_and_archive_inherits_parent(self, _git):
+        plan = p.validate('v1.5.2-beta.1', self.root)
+        with patch.object(p, 'multipart', return_value=(b'jar', 'multipart/test')) as multipart:
+            with patch.object(p, 'request', side_effect=[self.entries, {'id': 90}, {'id': 100}, {'id': 101}]):
+                p.publish(plan, self.root / 'receipt.json', 999, loading_slug='cosmic-loading-screen')
+        metadata = [call.args[0] for call in multipart.call_args_list]
+        self.assertEqual(metadata[0]['gameVersions'], [1, 2, 3, 4])
+        self.assertEqual(metadata[1]['relations']['projects'][0]['slug'], 'cosmic-loading-screen')
+        self.assertEqual(metadata[2]['parentFileID'], 100)
+        self.assertNotIn('gameVersions', metadata[2])
 
 
 if __name__ == '__main__':

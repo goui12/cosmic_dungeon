@@ -1,6 +1,6 @@
 # Manual fallback publisher; normal release tags publish through GitHub Actions.
 [CmdletBinding()]
-param([switch]$Upload, [string]$Tag, [int]$LoadingProjectId = 0)
+param([switch]$Upload, [string]$Tag, [int]$LoadingProjectId = 0, [string]$LoadingProjectSlug)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
@@ -14,6 +14,7 @@ if ($Upload) {
     $arguments += @('--receipt', (Join-Path (Split-Path $repo -Parent) ('CosmicDungeon_AI\releases\' + $Tag + '\curseforge-receipt.json')))
 }
 if ($LoadingProjectId) { $arguments += @('--loading-project', [string]$LoadingProjectId) }
+if ($LoadingProjectSlug) { $arguments += @('--loading-slug', $LoadingProjectSlug) }
 $previousToken = $env:CURSEFORGE_API_TOKEN
 try {
     if ($Upload -and !$env:CURSEFORGE_API_TOKEN) {
