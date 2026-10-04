@@ -56,11 +56,17 @@ public final class MercenaryBrain {
     }
     public static boolean enemy(MercenaryEntity entity,LivingEntity target){return enemy(context(entity),entity,target);}
     public static <T extends Entity> void nearby(ServerLevel level,Class<T> type,AABB box,int limit,Consumer<T> action){
-        int[] visited={0};
-        level.getEntities().get(EntityTypeTest.forClass(type),box,entity->{
-            action.accept(entity);
-            return ++visited[0]>=limit?AbortableIterationConsumer.Continuation.ABORT:AbortableIterationConsumer.Continuation.CONTINUE;
+        afterSnapshot(limit,visitor->level.getEntities().get(EntityTypeTest.forClass(type),box,visitor),action);
+    }
+    /** Consumers can discard or move entities, so run them only after native section traversal ends. */
+    static <T> void afterSnapshot(int limit,Consumer<AbortableIterationConsumer<T>> query,Consumer<T> action){
+        if(limit<=0)return;
+        var snapshot=new ArrayList<T>(Math.min(limit,48));
+        query.accept(entity->{
+            snapshot.add(entity);
+            return snapshot.size()>=limit?AbortableIterationConsumer.Continuation.ABORT:AbortableIterationConsumer.Continuation.CONTINUE;
         });
+        snapshot.forEach(action);
     }
     public static boolean recover(double distanceSquared,int stalled){return distanceSquared>256||distanceSquared>16&&stalled>=100;}
     public void tick(MercenaryEntity entity,ServerLevel level){
