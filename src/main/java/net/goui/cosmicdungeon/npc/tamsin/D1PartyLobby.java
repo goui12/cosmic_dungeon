@@ -6,17 +6,19 @@ import java.util.*;
 public final class D1PartyLobby {
     public enum Phase { ASSEMBLY, READY_CHECK, QUEUED, PREPARING }
     public record Anchor(UUID npc, String dimension, long selector) {}
-    public record Invitation(String token, UUID inviter, UUID target, Anchor anchor, long expires, boolean accepted) {}
+    public record Invitation(String token, UUID inviter, UUID target, UUID groupId, Anchor anchor, long expires, boolean accepted) {}
     public static final class Party {
         private final UUID id = UUID.randomUUID();
         private final UUID leader;
         private final Anchor anchor;
+        private final String name;
         private final LinkedHashSet<UUID> members = new LinkedHashSet<>();
         private final Set<UUID> ready = new HashSet<>();
         private Map<UUID, String> classes = Map.of();
         private Phase phase = Phase.ASSEMBLY;
         private long revision, queueOrder, countdownEnd = -1;
-        private Party(UUID leader, Anchor anchor) { this.leader = leader; this.anchor = anchor; members.add(leader); }
+        private Party(UUID leader, Anchor anchor, String name) { this.leader = leader; this.anchor = anchor; this.name = name; members.add(leader); }
+        public String name() { return name; }
         public UUID id() { return id; }
         public UUID leader() { return leader; }
         public Anchor anchor() { return anchor; }
@@ -30,14 +32,41 @@ public final class D1PartyLobby {
     private final Map<UUID, Party> groups = new LinkedHashMap<>();
     private final Map<UUID, Party> membership = new HashMap<>();
     private final Map<UUID, Invitation> invitations = new HashMap<>();
+    private final Map<UUID, Anchor> looking = new HashMap<>();
     private long revision, queueSequence;
+
+    public boolean looking(UUID player) { return looking.containsKey(player); }
+    public Set<UUID> lookingPlayers() { return Set.copyOf(looking.keySet()); }
+    public Set<UUID> lookingAt(Anchor anchor) {
+        var result = new HashSet<UUID>();
+        looking.forEach((id, location) -> { if (location.equals(anchor)) result.add(id); });
+        return Set.copyOf(result);
+    }
+    public String advertise(UUID player, Anchor anchor, boolean enabled) {
+        if (!enabled) { looking.remove(player); return null; }
+        if (anchor == null || party(player) != null) return "Leave your group before looking for another.";
+        looking.put(player, anchor); return null;
+    }
+    public static boolean validName(String name) {
+        return name != null && !name.isBlank() && name.length() <= 32
+                && name.codePoints().noneMatch(c -> Character.isISOControl(c) || Character.getType(c) == Character.FORMAT || c == 167);
+    }
+    public String create(UUID leader, Anchor anchor, long expected, String name) {
+        if (leader == null || anchor == null || !current(leader, expected) || party(leader) != null)
+            return "Group changed; refresh before creating a group.";
+        if (invitation(leader) != null) return "Accept or decline your pending invitation first.";
+        if (!validName(name)) return "Use a group name of 1-32 visible characters.";
+        var party = new Party(leader, anchor, name.strip());
+        groups.put(party.id, party); membership.put(leader, party); looking.remove(leader); changed(party);
+        return null;
+    }
 
     public Party party(UUID member) { return membership.get(member); }
     public List<Party> parties() { return List.copyOf(groups.values()); }
     public Invitation invitation(UUID target) { return invitations.get(target); }
     public List<Invitation> invitations() { return List.copyOf(invitations.values()); }
     public long revision(UUID player) { var p = party(player); return p == null ? 0 : p.revision; }
-    public void clear() { groups.clear(); membership.clear(); invitations.clear(); }
+    public void clear() { groups.clear(); membership.clear(); invitations.clear(); looking.clear(); }
     private void changed(Party party) { party.revision = ++revision; }
     public boolean current(UUID player, long expected) { return revision(player) == expected; }
 
@@ -49,11 +78,7 @@ public final class D1PartyLobby {
     public String startSolo(UUID leader, Anchor anchor, long expected, int minimum, int capacity) {
         if (anchor == null || !canStartSolo(leader, minimum, capacity) || !current(leader, expected))
             return "Solo entry is unavailable; review the party limits and any invitation.";
-        var party = new Party(leader, anchor);
-        groups.put(party.id, party);
-        membership.put(leader, party);
-        changed(party);
-        return null;
+        return create(leader, anchor, expected, "Solo adventure");
     }
 
     public String invite(UUID sender, UUID target, Anchor anchor, long now, int lifetimeTicks, int capacity) {
@@ -62,13 +87,13 @@ public final class D1PartyLobby {
         if (sender.equals(target)) return "You cannot invite yourself.";
         if (party(target) != null) return "That player already belongs to a group; groups cannot merge.";
         var p = party(sender);
-        if (p != null && !p.leader.equals(sender)) return "Only the group leader can invite players.";
+        if (p == null) return "Create or join a group before inviting players.";
         if (p != null && (!p.anchor.equals(anchor) || p.phase == Phase.QUEUED || p.phase == Phase.PREPARING))
             return "Cancel queueing before inviting players at this Tamsin.";
         if (p != null && p.members.size() >= capacity) return "This group is full.";
         var existing = invitations.get(target);
         if (existing != null && existing.expires > now) return "That player already has a pending invitation.";
-        invitations.put(target, new Invitation(UUID.randomUUID().toString(), sender, target, anchor,
+        invitations.put(target, new Invitation(UUID.randomUUID().toString(), sender, target, p.id, anchor,
                 now + lifetimeTicks, false));
         return null;
     }
@@ -77,7 +102,7 @@ public final class D1PartyLobby {
         if (invitation == null || !invitation.token.equals(token)) return "Invitation is no longer available.";
         if (now >= invitation.expires) { invitations.remove(target); return "Invitation expired."; }
         if (party(target) != null) { invitations.remove(target); return "You already belong to a group."; }
-        invitations.put(target, new Invitation(token, invitation.inviter, target, invitation.anchor, invitation.expires, true));
+        invitations.put(target, new Invitation(token, invitation.inviter, target, invitation.groupId, invitation.anchor, invitation.expires, true));
         return null;
     }
     public boolean decline(UUID target, String token) {
@@ -92,7 +117,7 @@ public final class D1PartyLobby {
         if (i == null || !i.accepted) return null;
         if (now >= i.expires) { invitations.remove(target); return "Invitation expired."; }
         var p = party(i.inviter);
-        if (party(target) != null || (p != null && (!p.leader.equals(i.inviter) || !p.anchor.equals(i.anchor)))) {
+        if (party(target) != null || p == null || !p.id.equals(i.groupId) || !p.anchor.equals(i.anchor)) {
             invitations.remove(target); return "The inviting group changed.";
         }
         if (p != null && (p.phase == Phase.PREPARING || p.members.size() >= capacity)) {
@@ -100,11 +125,7 @@ public final class D1PartyLobby {
         }
         if (!eligible) return null;
         if (capacity < 2) { invitations.remove(target); return "This selector cannot admit a group."; }
-        if (p == null) {
-            p = new Party(i.inviter, i.anchor); groups.put(p.id, p); membership.put(i.inviter, p);
-            invitations.remove(i.inviter);
-        }
-        p.members.add(target); membership.put(target, p); invitations.remove(target);
+        p.members.add(target); membership.put(target, p); invitations.remove(target); looking.remove(target);
         cancel(p); return null;
     }
     public void cancel(Party p) {
@@ -159,6 +180,8 @@ public final class D1PartyLobby {
     }
     public List<UUID> remove(UUID member) {
         var p = party(member);
+        if (p != null && p.phase == Phase.PREPARING) return List.of();
+        looking.remove(member);
         invitations.remove(member);
         invitations.values().removeIf(i -> i.inviter.equals(member));
         if (p == null || p.phase == Phase.PREPARING) return List.of();
@@ -170,7 +193,7 @@ public final class D1PartyLobby {
     public void complete(Party p) {
         if (groups.remove(p.id) == null) return;
         p.members.forEach(membership::remove);
-        invitations.values().removeIf(i -> i.inviter.equals(p.leader));
+        invitations.values().removeIf(i -> i.groupId.equals(p.id));
     }
     public void expire(long now) { invitations.values().removeIf(i -> now >= i.expires); }
 }

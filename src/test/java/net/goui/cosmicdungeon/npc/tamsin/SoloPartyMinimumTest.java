@@ -74,6 +74,7 @@ final class SoloPartyMinimumTest {
         var lobby = new D1PartyLobby();
         assertNotNull(lobby.invite(leader, member, anchor, 0, 120, 1));
         assertNull(lobby.invitation(member));
+        assertNull(lobby.create(member, anchor, 0, "Inviting group"));
         assertNull(lobby.invite(member, leader, anchor, 0, 120, 6));
         var invitation = lobby.invitation(leader);
         assertFalse(lobby.canStartSolo(leader, 1, 6));
@@ -87,6 +88,7 @@ final class SoloPartyMinimumTest {
 
     @Test void twoPlayerInvitationsHonorConfiguredMinimumAndSelectorCapacity() {
         var lobby = new D1PartyLobby();
+        assertNull(lobby.create(leader, anchor, 0, "Two player group"));
         assertNull(lobby.invite(leader, member, anchor, 0, 120, 6));
         assertNull(lobby.accept(member, lobby.invitation(member).token(), 1));
         assertNull(lobby.joinAccepted(member, 2, 6, true));

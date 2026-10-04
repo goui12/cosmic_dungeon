@@ -14,6 +14,7 @@ public class ClassSelectorMenu extends AbstractContainerMenu {
     private final TamsinData.Binding binding;
     private TamsinFlow.Stage stage;
     public net.goui.cosmicdungeon.network.PartyPayloads.View lastPartyView;
+    public int recruitmentPage;
     public long lastPartyActionTick = -1000000L;
     public long lastTaxActionTick = -1000000L;
     public TamsinTaxService.Quote taxQuote;

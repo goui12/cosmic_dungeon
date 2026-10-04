@@ -207,6 +207,11 @@ Compilation alone does not prove that runtime behavior, transactions, persistenc
 
 ## Completion Report
 
+- Cameron clarified on 2026-10-03: questions are reserved for genuinely unresolved decisions.
+  Ask each question clearly, record the answer in the plan, and do not ask or restate it as
+  a question again. Label unfinished gameplay checks as pending testing, never as questions
+  or requests to reconfirm settled behavior.
+
 - Cameron requested on 2026-09-19: after each completed D1 batch, state the number of planned
   implementation/review batches remaining and give one short summary of every remaining batch.
   Keep the numbered plan in docs/ai/D1_REMAINING.md current. Distinguish this estimate from
