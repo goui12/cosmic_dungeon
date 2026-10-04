@@ -1,4 +1,6 @@
 import importlib.util
+import io
+import urllib.error
 import json
 import os
 from pathlib import Path
@@ -59,9 +61,17 @@ class ReleaseTests(unittest.TestCase):
             p.validate('v1.5.2-beta.1', self.root)
 
     def test_game_version_namespace_and_client_only(self):
-        entries = self.entries + [dict(id=999, name='1.21.10', gameVersionTypeID=615)]
-        self.assertEqual(p.game_versions(entries, '1.21.10', True), [1, 2, 3, 4])
-        self.assertEqual(p.game_versions(entries, '1.21.10'), [1, 2, 3, 4, 5])
+        # Real collision: the generic type-1 ID is invalid for this mod project.
+        entries = self.entries[1:] + [
+            dict(id=13966, name='1.21.10', gameVersionTypeID=1),
+            dict(id=13964, name='1.21.10', gameVersionTypeID=77784),
+            dict(id=16126, name='1.21.10', gameVersionTypeID=615)]
+        self.assertEqual(p.game_version_names(entries, '1.21.10', True),
+                         ['1.21.10', 'NeoForge', 'Java 21', 'Client'])
+        self.assertEqual(p.game_version_names(entries, '1.21.10'),
+                         ['1.21.10', 'NeoForge', 'Java 21', 'Client', 'Server'])
+        with self.assertRaises(ValueError):
+            p.game_version_names(entries, '99.99.99')
 
     @patch.dict(os.environ, {'CURSEFORGE_API_TOKEN': 'test-only'})
     @patch.object(p, 'git', return_value='commit')
@@ -97,10 +107,39 @@ class ReleaseTests(unittest.TestCase):
             with patch.object(p, 'request', side_effect=[self.entries, {'id': 90}, {'id': 100}, {'id': 101}]):
                 p.publish(plan, self.root / 'receipt.json', 999, loading_slug='cosmic-loading-screen')
         metadata = [call.args[0] for call in multipart.call_args_list]
-        self.assertEqual(metadata[0]['gameVersions'], [1, 2, 3, 4])
+        self.assertEqual(metadata[0]['gameVersionNames'], ['1.21.10', 'NeoForge', 'Java 21', 'Client'])
+        self.assertEqual(metadata[1]['gameVersionNames'], ['1.21.10', 'NeoForge', 'Java 21', 'Client', 'Server'])
+        self.assertNotIn('gameVersions', metadata[0])
+        self.assertNotIn('gameVersions', metadata[1])
         self.assertEqual(metadata[1]['relations']['projects'][0]['slug'], 'cosmic-loading-screen')
         self.assertEqual(metadata[2]['parentFileID'], 100)
         self.assertNotIn('gameVersions', metadata[2])
+        self.assertNotIn('gameVersionNames', metadata[2])
+
+
+    def test_api_rejection_reports_reason_without_token(self):
+        token = 'secret-do-not-log'
+        body = json.dumps({'errorCode': 1009,
+                           'errorMessage': 'Invalid game version ID 13966. ' + token,
+                           'untrusted': 'do not print arbitrary response fields'}).encode()
+        error = urllib.error.HTTPError('https://example.invalid', 400, 'Bad Request', {}, io.BytesIO(body))
+        with patch.object(p.urllib.request, 'urlopen', side_effect=error):
+            with self.assertRaises(RuntimeError) as caught:
+                p.request('/projects/1326805/upload-file', token, b'fixture', 'multipart/test')
+        message = str(caught.exception)
+        self.assertIn('1009', message)
+        self.assertIn('13966', message)
+        self.assertNotIn(token, message)
+        self.assertNotIn('untrusted', message)
+
+    def test_html_api_error_body_is_not_logged(self):
+        error = urllib.error.HTTPError('https://example.invalid', 502, 'Bad Gateway', {},
+                                       io.BytesIO(b'<html>private server diagnostics</html>'))
+        with patch.object(p.urllib.request, 'urlopen', side_effect=error):
+            with self.assertRaises(RuntimeError) as caught:
+                p.request('/game/versions', 'secret')
+        self.assertIn('502', str(caught.exception))
+        self.assertNotIn('private server diagnostics', str(caught.exception))
 
 
 if __name__ == '__main__':
