@@ -349,6 +349,18 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
     }
 
     @Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        // This NPC dialog is not an inventory toggle. Character events still reach the focused EditBox.
+        if (!event.isEscape() && (event.key() == org.lwjgl.glfw.GLFW.GLFW_KEY_E
+                || this.minecraft != null && this.minecraft.options.keyInventory.isActiveAndMatches(
+                        com.mojang.blaze3d.platform.InputConstants.getKey(event)))) {
+            if (getFocused() != null) getFocused().keyPressed(event);
+            return true;
+        }
+        return super.keyPressed(event);
+    }
+
+    @Override
     public boolean isPauseScreen() {
         return false;
     }

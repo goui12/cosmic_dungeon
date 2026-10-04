@@ -21,6 +21,7 @@ import net.neoforged.bus.api.*;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.living.MobEffectEvent;
 
 /** One bounded decision every ten ticks; native navigation handles motion between decisions. */
 @EventBusSubscriber(modid="cosmicdungeon")
@@ -56,11 +57,17 @@ public final class MercenaryBrain {
     }
     public static boolean enemy(MercenaryEntity entity,LivingEntity target){return enemy(context(entity),entity,target);}
     public static <T extends Entity> void nearby(ServerLevel level,Class<T> type,AABB box,int limit,Consumer<T> action){
-        int[] visited={0};
-        level.getEntities().get(EntityTypeTest.forClass(type),box,entity->{
-            action.accept(entity);
-            return ++visited[0]>=limit?AbortableIterationConsumer.Continuation.ABORT:AbortableIterationConsumer.Continuation.CONTINUE;
+        afterSnapshot(limit,visitor->level.getEntities().get(EntityTypeTest.forClass(type),box,visitor),action);
+    }
+    /** Consumers can discard or move entities, so run them only after native section traversal ends. */
+    static <T> void afterSnapshot(int limit,Consumer<AbortableIterationConsumer<T>> query,Consumer<T> action){
+        if(limit<=0)return;
+        var snapshot=new ArrayList<T>(Math.min(limit,48));
+        query.accept(entity->{
+            snapshot.add(entity);
+            return snapshot.size()>=limit?AbortableIterationConsumer.Continuation.ABORT:AbortableIterationConsumer.Continuation.CONTINUE;
         });
+        snapshot.forEach(action);
     }
     public static boolean recover(double distanceSquared,int stalled){return distanceSquared>256||distanceSquared>16&&stalled>=100;}
     public void tick(MercenaryEntity entity,ServerLevel level){
@@ -156,17 +163,42 @@ public final class MercenaryBrain {
     public static void impact(ProjectileImpactEvent event){
         if(!(event.getRayTraceResult() instanceof EntityHitResult hit)||!(hit.getEntity() instanceof LivingEntity target))return;
         var shot=event.getProjectile();
+        if(target instanceof MercenaryEntity&&friendlySource(shot)&&!(shot instanceof AbstractThrownPotion)){
+            // Native/class arrows can ignite or apply effects before/without a successful wound.
+            // Restorative D1 arrows already suppress their native wound in D1ArrowAbilities.
+            if(shot instanceof AbstractArrow arrow&&!target.isInvertedHealAndHarm()){
+                var ammo=arrow.getPickupItemStackOrigin();
+                String id=D1AbilityIdentity.identify(ammo);
+                if(D1CombatRules.supportive(id)&&D1ProjectileAccess.permission(arrow,ammo,id)
+                        ==D1CombatRules.Ammunition.ABILITY)return;
+            }
+            event.setCanceled(true);return; // Let recoverable projectiles continue; do not destroy player gear.
+        }
         if(!(shot instanceof AbstractArrow)||!MercenaryPotions.marked(shot))return;
         var owner=MercenaryPotions.owner(shot);
         if(owner==null||!enemy(owner,target)||!attackArrow(((AbstractArrow)shot).getPickupItemStackOrigin(),target.isInvertedHealAndHarm())){
             event.setCanceled(true);shot.discard();
         }
     }
+    /** Protection does not depend on the hirer being online or still inside the run. */
+    static boolean friendlySource(Entity source){
+        return source instanceof MercenaryEntity||MercenaryPotions.marked(source)
+                ||CompanionAllies.friendly(source)||CompanionAllies.friendly(MercenaryPotions.caster(source));
+    }
     @SubscribeEvent(priority=EventPriority.HIGHEST)
     public static void friendlyDamage(LivingIncomingDamageEvent event){
         var source=event.getSource();
+        if(event.getEntity() instanceof MercenaryEntity
+                &&(friendlySource(source.getEntity())||friendlySource(source.getDirectEntity()))){
+            event.setCanceled(true);return;
+        }
         var owner=source.getEntity() instanceof MercenaryEntity m?m:MercenaryPotions.owner(source.getDirectEntity());
         if(owner!=null&&!enemy(owner,event.getEntity())
                 ||owner==null&&MercenaryPotions.marked(source.getDirectEntity()))event.setCanceled(true);
+    }
+    @SubscribeEvent(priority=EventPriority.LOWEST)
+    public static void friendlyEffect(MobEffectEvent.Applicable event){
+        if(!MercenaryPotions.allows(event.getEffectSource(),event.getEntity(),event.getEffectInstance().getEffect().value()))
+            event.setResult(MobEffectEvent.Applicable.Result.DO_NOT_APPLY);
     }
 }
