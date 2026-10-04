@@ -71,6 +71,11 @@
     "CraftingAutomationMixin",
     "CraftingStonecutterMixin",
     "CraftingSmithingMixin",
-    "DungeonDifficultyEffectMixin"
+    "DungeonDifficultyEffectMixin",
+    "SkillProjectileWeaponMixin",
+    "SkillSplashPotionMixin",
+    "SkillCloudMixin",
+    "SkillLingeringPotionMixin",
+    "SkillDrinkPotionMixin"
   ]
 }

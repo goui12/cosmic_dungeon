@@ -54,7 +54,11 @@ public final class D1ArrowAbilities {
         var owner=(ServerPlayer)arrow.getOwner();
         double power=D1AbilityConfig.get(ClassData.getClassId(owner),id).power().get();
         boolean healing=id.equals("scintilla_vitalis")||id.equals("lux_vitalis");
-        if(healing&&!target.isInvertedHealAndHarm())target.heal((float)power);
+        if(healing&&!target.isInvertedHealAndHarm()){
+            float before=target.getHealth();
+            target.heal((float)(power*net.goui.cosmicdungeon.playerclass.skill.SkillPotions.arrowHealing(arrow,target)));
+            if(target.getHealth()>before)net.goui.cosmicdungeon.playerclass.skill.SkillPotions.arrowSupport(arrow,target,"healing");
+        }
         else if(!healing&&target.isInvertedHealAndHarm())
             target.heal(D1AbilityConfig.get("venefex","spicule_undead_healing").power().get().floatValue());
         else {
@@ -97,7 +101,8 @@ public final class D1ArrowAbilities {
         // Preserve native undead/spider immunity and other mods' applicability vetoes.
         if(vanillaFamily!=null&&!net.neoforged.neoforge.common.CommonHooks.canMobEffectBeApplied(target,
                 new MobEffectInstance(vanillaFamily,spell.duration().get(),0),arrow.getOwner()))return true;
-        var incoming=new MobEffectInstance(effect,spell.duration().get(),0);
+        int duration=net.goui.cosmicdungeon.playerclass.skill.SkillPotions.arrowDuration(arrow,effect.value(),spell.duration().get());
+        var incoming=new MobEffectInstance(effect,duration,0);
         if(!net.neoforged.neoforge.common.CommonHooks.canMobEffectBeApplied(target,incoming,arrow.getOwner()))return true;
         var family=switch(id){
             case "mending_sting","verdant_jolt"->List.of(ModMobEffects.MENDING_STING,ModMobEffects.VERDANT_JOLT);
@@ -117,7 +122,17 @@ public final class D1ArrowAbilities {
         for(var other:family){
             if(other!=effect&&target.hasEffect(other)&&!target.removeEffect(other))return true;
         }
-        target.addEffect(incoming,arrow.getOwner());
+        var previous=target.getEffect(effect);
+        boolean useful=previous==null;
+        boolean changed=target.addEffect(incoming,arrow.getOwner());
+        if(changed && target.hasEffect(effect)){
+            if(id.equals("mending_sting")||id.equals("verdant_jolt"))
+                target.getPersistentData().putDouble("cosmicdungeon_skill_healing_"+id,
+                        net.goui.cosmicdungeon.playerclass.skill.SkillPotions.arrowHealing(arrow,target));
+            if(useful && D1CombatRules.supportive(id) && (!id.equals("mending_sting") && !id.equals("verdant_jolt")
+                    || target.getHealth()<target.getMaxHealth()))
+                net.goui.cosmicdungeon.playerclass.skill.SkillPotions.arrowSupport(arrow,target,id);
+        }
         return true;
     }
     @SubscribeEvent public static void preventForgedRename(AnvilUpdateEvent event){
