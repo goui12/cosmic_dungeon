@@ -123,6 +123,25 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(metadata[1]['relations']['projects'][0]['projectID'], 999)
 
 
+    @patch.dict(os.environ, {'CURSEFORGE_API_TOKEN': 'test-only'})
+    @patch.object(p, 'git', return_value='commit')
+    def test_enabling_companion_after_legacy_main_keeps_archive(self, _git):
+        plan = p.validate('v1.5.2-beta.1', self.root)
+        receipt = self.root / 'receipt.json'
+        receipt.write_text(json.dumps({
+            'version': plan['version'], 'commit': 'commit',
+            'sha256': {role: item['sha256'] for role, item in plan['artifacts'].items()},
+            'main_project': plan['project_id'],
+            'files': {'main': {'project_id': plan['project_id'], 'file_id': 100}}}))
+        with patch.object(p, 'multipart', return_value=(b'jar', 'multipart/test')) as multipart:
+            with patch.object(p, 'request', side_effect=[self.entries, {'id': 90}, {'id': 101}]):
+                result = p.publish(plan, receipt, 999, loading_slug='cosmic-loading-screen')
+        self.assertEqual(result['files']['main']['file_id'], 100)
+        self.assertEqual(result['files']['loading_archive']['file_id'], 101)
+        self.assertEqual(multipart.call_count, 2)
+        self.assertEqual(multipart.call_args_list[1].args[0]['parentFileID'], 100)
+        self.assertNotIn('main_loading_project', result)
+
     def test_api_rejection_reports_reason_without_token(self):
         token = 'secret-do-not-log'
         body = json.dumps({'errorCode': 1009,

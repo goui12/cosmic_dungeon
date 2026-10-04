@@ -45,7 +45,8 @@ After manual publication, save that receipt back onto the same GitHub release.
 NeoForge 10.0.32 discovers early services in top-level JARs before normal mod discovery.
 The common gameplay JAR and client startup helper remain separate. With the companion
 configured, each release uploads the helper there and the gameplay JAR to the main
-project. Without a companion, an additional-file archive preserves the helper; this is
+project. Without a companion, or when resuming a legacy main file whose companion
+relation was never uploaded, an additional-file archive preserves the helper; this is
 **not** app-managed installation. A processing parent can reject an archive attachment;
 reconcile the owner console and wait for parent approval before a controlled retry. Ordinary clients can play using NeoForge's default startup
 screen without this optional cosmetic component.
@@ -104,3 +105,7 @@ Dependency relation projectID values must be JSON integers: the live API rejects
 IDs with HTTP400/API1002 despite the documentation example. The first beta main file is
 9063474, companion file 9063592, and legacy archive 9063594. Upload acceptance is recorded;
 companion project moderation and licensed-client app update testing remain separate gates.
+
+The receipt records the companion ID/slug actually sent with a successful main upload.
+A reused older main without that evidence retains its archive fallback even after a
+companion is enabled; a retry never claims it added metadata to an already uploaded file.

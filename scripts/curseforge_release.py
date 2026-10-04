@@ -185,6 +185,10 @@ def publish(plan, receipt_path, loading_project, github_tag=None, loading_slug=N
         if not isinstance(file_id, int) or file_id <= 0:
             raise RuntimeError("Upload returned no valid file ID; inspect CurseForge before retrying.")
         receipt["files"][role] = {"project_id": project_id, "file_id": file_id}
+        if role == "main":
+            # Record which relation was actually sent with this accepted main file.
+            receipt["main_loading_project"] = loading_project
+            receipt["main_loading_slug"] = loading_slug if loading_project else None
         receipt.pop("pending")
         save_receipt(receipt_path, receipt, github_tag)
         print(f"CurseForge accepted {role}: project {project_id}, file {file_id} (moderation may still be pending).")
@@ -202,7 +206,11 @@ def publish(plan, receipt_path, loading_project, github_tag=None, loading_slug=N
     main_id = upload("main", "main", plan["project_id"], metadata)
     # The companion already stores the exact helper. An additional archive is only
     # needed without it; attaching to a still-processing parent can fail with HTTP500.
-    if not loading_project:
+    main_linked = (loading_project and receipt.get("main_loading_project") == loading_project
+                   and receipt.get("main_loading_slug") == loading_slug)
+    if not main_linked:
+        # Legacy/reconciled mains may predate companion configuration. Keep the
+        # discoverable archive unless the accepted main is known to include its link.
         upload("loading_archive", "loading", plan["project_id"],
                dict(common, parentFileID=main_id, displayName=f'Loading screen archive {plan["version"]} (manual install)'))
     receipt["status"] = "submitted"
