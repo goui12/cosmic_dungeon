@@ -123,7 +123,7 @@ final class MercenaryEntryTest {
         assertThrows(IllegalArgumentException.class,()->new MercenaryContract(a,a,"bogatyr",1,500));
         assertThrows(IllegalArgumentException.class,()->new MercenaryContract(UUID.randomUUID(),a,"bogatyr",7,500));
     }
-    private MercenaryContract starter(){return new MercenaryContract(a,b,"bogatyr",2,0);}
+    private MercenaryContract starter(){return new MercenaryContract(a,b,"theurgist",2,0);}
     private static net.minecraft.world.item.alchemy.PotionBrewing recipes(){
         var builder=new net.minecraft.world.item.alchemy.PotionBrewing.Builder(net.minecraft.world.flag.FeatureFlags.DEFAULT_FLAGS);
         net.minecraft.world.item.alchemy.PotionBrewing.addVanillaMixes(builder);return builder.build();

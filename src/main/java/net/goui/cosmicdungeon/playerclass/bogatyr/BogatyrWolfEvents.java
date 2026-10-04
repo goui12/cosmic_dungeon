@@ -68,6 +68,7 @@ public final class BogatyrWolfEvents {
                 && owner.toString().equals(wolf.getPersistentData().getStringOr(OWNER,""));
     }
     private static void register(Wolf wolf,UUID owner,long run){
+        if(net.goui.cosmicdungeon.mercenary.MercenaryWolves.managed(wolf))return; // Summoned run companions are not permanent player pets.
         if(!(wolf.level() instanceof ServerLevel level)||owner==null||!owner.equals(ownerId(wolf)))return;
         if(!managed(wolf))BogatyrIdentity.fresh(wolf);
         if(!BogatyrIdentity.observe(wolf))return;

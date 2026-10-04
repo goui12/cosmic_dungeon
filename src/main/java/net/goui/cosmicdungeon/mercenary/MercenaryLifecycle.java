@@ -34,6 +34,7 @@ public final class MercenaryLifecycle {
     public static void dismiss(MinecraftServer server,long runId,UUID hirer){
         var run=DungeonRunRegistryData.get(server).getRun(runId).orElse(null);if(run==null)return;
         for(var contract:run.mercenaries())if(contract.hirer().equals(hirer)){
+            MercenaryWolves.dismiss(server,run,contract);
             DungeonRunRegistryData.get(server).mercenaryRest(runId,contract.id(),null);
             for(String dimension:run.dungeonDimensionIds()){
                 var level=net.goui.cosmicdungeon.block.custom.ClassSelectorTeleportUtil.resolveLevel(server,dimension);

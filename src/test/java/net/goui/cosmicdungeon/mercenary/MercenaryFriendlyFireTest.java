@@ -21,6 +21,11 @@ import static org.junit.jupiter.api.Assertions.*;
 final class MercenaryFriendlyFireTest {
     private static MercenaryEntity mercenary(){return new MercenaryEntity(ModEntities.MERCENARY.get(),null);}
     private static IronGolem friendly(){return new IronGolem(EntityType.IRON_GOLEM,null);}
+    private static net.minecraft.world.entity.animal.wolf.Wolf dog(){
+        var wolf=new MercenaryTestWolf();
+        MercenaryWolves.mark(wolf,new MercenaryWolves.Bond(42,java.util.UUID.randomUUID(),java.util.UUID.randomUUID()));
+        return wolf;
+    }
     private static Zombie hostile(){return new Zombie(EntityType.ZOMBIE,null);}
     private static LivingIncomingDamageEvent damage(LivingEntity target,Entity direct,Entity cause){
         var source=new DamageSource(Holder.direct(new DamageType("test",0)),direct,cause);
@@ -102,4 +107,28 @@ final class MercenaryFriendlyFireTest {
         MercenaryBrain.friendlyEffect(healing);
         assertEquals(MobEffectEvent.Applicable.Result.DEFAULT,healing.getResult());
     }
+    @Test void dogsRejectFriendlyMeleeArrowsAndCloudDamageButNotEnemies(){
+        var dog=dog();var ally=friendly();var enemy=hostile();
+        assertTrue(damage(dog,ally,ally).isCanceled());
+        assertTrue(damage(dog,new Shot(ally),null).isCanceled());
+        assertTrue(damage(dog,new Cloud(ally),null).isCanceled());
+        assertTrue(damage(ally,dog,dog).isCanceled());
+        assertFalse(damage(dog,enemy,enemy).isCanceled());
+        assertFalse(damage(dog,null,null).isCanceled());
+        var impact=new ProjectileImpactEvent(new Shot(ally),new EntityHitResult(dog));
+        MercenaryBrain.impact(impact);assertTrue(impact.isCanceled());
+    }
+    @Test void dogsBlockFriendlyNegativePotionsWhilePreservingHealingAndEnemyEffects(){
+        var dog=dog();var ally=friendly();
+        for(Entity source:new Entity[]{ally,new Shot(ally),new Cloud(ally)}){
+            assertFalse(MercenaryPotions.allows(source,dog,MobEffects.POISON.value()));
+            assertFalse(MercenaryPotions.allows(source,dog,MobEffects.INSTANT_DAMAGE.value()));
+            assertTrue(MercenaryPotions.allows(source,dog,MobEffects.INSTANT_HEALTH.value()));
+            assertTrue(MercenaryPotions.allows(source,dog,MobEffects.REGENERATION.value()));
+        }
+        assertTrue(MercenaryPotions.allows(new Cloud(hostile()),dog,MobEffects.POISON.value()));
+        var event=new MobEffectEvent.Applicable(dog,new MobEffectInstance(MobEffects.SLOWNESS,100),ally);
+        MercenaryBrain.friendlyEffect(event);assertEquals(MobEffectEvent.Applicable.Result.DO_NOT_APPLY,event.getResult());
+    }
+
 }
