@@ -1,0 +1,157 @@
+name: CurseForge Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing version tag, for example v1.5.2-beta.1'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cosmicdungeon-curseforge-publisher
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+      channel: ${{ steps.release.outputs.channel }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Validate release identity
+        id: release
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          python - <<'PY'
+          import importlib.util, os, subprocess
+          spec = importlib.util.spec_from_file_location('publisher', 'scripts/curseforge_release.py')
+          publisher = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(publisher)
+          version = publisher.properties()['mod_version'].strip()
+          channel = publisher.channel(version)
+          tag = os.environ['RELEASE_TAG']
+          if tag != 'v' + version:
+              raise SystemExit('Tag and mod_version differ.')
+          if publisher.git('rev-parse', tag + '^{commit}') != publisher.git('rev-parse', 'HEAD'):
+              raise SystemExit('Tag does not identify the checked-out commit.')
+          if channel != 'alpha':
+              subprocess.run(['git', 'merge-base', '--is-ancestor', 'HEAD', 'origin/main'], check=True)
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+              out.write(f'tag={tag}\nversion={version}\nchannel={channel}\n')
+          PY
+      - name: Publishing safeguard tests
+        run: python -m unittest discover -s scripts/tests -v
+      - name: Validate source JSON
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          paths = list(Path('src').rglob('*.json'))
+          for path in paths:
+              json.loads(path.read_text(encoding='utf-8-sig'))
+          print(f'Validated {len(paths)} JSON files.')
+          PY
+      - name: Build and native tests
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon clean build --console=plain
+      - name: GameTests
+        run: ./gradlew --no-daemon runGameTestServer --console=plain
+      - name: Verify packaged artifacts
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: python scripts/curseforge_release.py validate --tag "$RELEASE_TAG"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-jars
+          if-no-files-found: error
+          path: |
+            build/libs/cosmicdungeon-${{ steps.release.outputs.version }}.jar
+            build/libs/cosmicdungeon-${{ steps.release.outputs.version }}-loading-screen.jar
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: release-validation
+          if-no-files-found: warn
+          path: |
+            build/reports/**
+            build/test-results/**
+            run/logs/**
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.build.outputs.tag }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-jars
+          path: build/libs
+      - name: Create release checkpoint and restore upload receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+          RELEASE_VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          mkdir -p build/release
+          if ! gh release view "$RELEASE_TAG" --repo goui12/cosmic_dungeon >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --verify-tag --draft --title "Cosmic Dungeon $RELEASE_VERSION" --notes-file "docs/releases/$RELEASE_VERSION.md" --repo goui12/cosmic_dungeon
+          fi
+          gh release view "$RELEASE_TAG" --json assets --repo goui12/cosmic_dungeon > build/release/assets.json
+          if python -c "import json; raise SystemExit(not any(a['name']=='curseforge-receipt.json' for a in json.load(open('build/release/assets.json'))['assets']))"; then
+            gh release download "$RELEASE_TAG" --pattern curseforge-receipt.json --dir build/release --clobber --repo goui12/cosmic_dungeon
+          fi
+      - name: Upload to CurseForge
+        env:
+          CURSEFORGE_API_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
+          CURSEFORGE_LOADING_PROJECT_ID: ${{ vars.CURSEFORGE_LOADING_PROJECT_ID }}
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+        run: python scripts/curseforge_release.py upload --tag "$RELEASE_TAG" --github-release
+      - name: Publish GitHub release and matching artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+          RELEASE_CHANNEL: ${{ needs.build.outputs.channel }}
+        run: |
+          gh release upload "$RELEASE_TAG" build/libs/*.jar --clobber --repo goui12/cosmic_dungeon
+          if [ "$RELEASE_CHANNEL" = release ]; then
+            gh release edit "$RELEASE_TAG" --draft=false --prerelease=false --latest --repo goui12/cosmic_dungeon
+          else
+            gh release edit "$RELEASE_TAG" --draft=false --prerelease --latest=false --repo goui12/cosmic_dungeon
+          fi
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: curseforge-upload-receipt
+          path: build/release/curseforge-receipt.json

@@ -70,3 +70,15 @@ The cache soft budget is 512 MiB; log snapshots are capped at 16 MiB each. Prune
 Local dedicated/GameTest server launches still require separate authorization. No background watcher is enabled.
 When the connector is unavailable, include:
 npx.cmd -y @wonderwhy-er/desktop-commander@latest remote
+
+
+## Public releases, 2026-10-04
+
+The versioned CurseForge workflow in [CURSEFORGE_RELEASES.md](CURSEFORGE_RELEASES.md)
+is now the publishing target. Each distributed test increments mod_version; completed
+source sets merge into main through a validated PR and release as Beta. Stable waits
+for full beta gameplay acceptance. The user's request grants those routine merges/uploads.
+Keep the stopped-server/closed-client rules and never auto-launch the development client.
+The artifact-only test-builds feed is transitional until the loading-screen companion
+and theme setup have verified CurseForge app distribution. Do not claim that an
+Additional Files upload replaces the tester updater.

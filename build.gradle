@@ -2,7 +2,6 @@ plugins {
     id 'java-library'
     id 'net.neoforged.moddev' version '2.0.115'
     id 'idea'
-    id 'io.github.themrmilchmann.curseforge-publish' version '0.8.0'
 }
 
 version = mod_version
@@ -178,27 +177,15 @@ idea {
     }
 }
 
-/** =========================
- *  CurseForge publishing
- *  (safe if token missing)
- *  ========================= */
-def cfToken = providers.gradleProperty('curseforgeApiToken').orNull
-def cfProjectId = providers.gradleProperty('curseforgeProjectId').orNull
-
-if (cfToken && cfProjectId) {
-    curseforge {
-        apiToken = cfToken
-        publications {
-            named('neoForge') {
-                projectId = cfProjectId
-                artifacts.named('main') { /* default jar */ }
-            }
-        }
-    }
-} else {
-    logger.lifecycle("[curseforge] Token or projectId not provided; publish task will be skipped.")
+// Publishing is centralized in scripts/curseforge_release.py and the tag workflow.
+// Reproducible JARs keep retry receipts and client/server hashes stable across builds.
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
 }
-
+tasks.withType(Jar).configureEach {
+    manifest.attributes('Implementation-Version': project.version.toString())
+}
 
 // NeoForge attaches its compile API to main; offline tests need that same existing API.
 sourceSets.test.compileClasspath += sourceSets.main.compileClasspath

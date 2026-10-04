@@ -1,3 +1,14 @@
+# Current rollout, 2026-10-04
+
+[CurseForge and mercenary batch plan](CURSEFORGE_AND_MERCENARY_BATCHES_20261004.md).
+Stage 1 release automation is in progress. Nine new gameplay batches remain:
+1 menu/identity; 2 wolves/equipment drops; 3 recovery/payment; 4 shared progression;
+5 Theurgist potions; 6 Bogatyr progression; 7 Pyroclast fireworks; 8 Dragoon lightning;
+9 Theurgist resurrection. Gameplay implementation waits until Stage 1 is established.
+The earlier zero-batch statements below refer to the previous completed request.
+
+---
+
 # Testing rollout, 2026-10-03
 
 [Current approved queue](TESTING_ROLLOUT_20261003.md). Batches 1–11 are implemented and validated.
