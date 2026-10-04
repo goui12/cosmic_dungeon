@@ -52,7 +52,10 @@ public final class DragoonPassiveEvents {
                 && dragoon.getMainHandItem().is(net.minecraft.world.item.Items.TRIDENT);
         if (!D1CombatRules.tridentHit(active, thrown, melee, event.getNewDamage())) return;
         float damage = (float)(event.getNewDamage() * Config.CHAIN_DAMAGE.get());
-        if (damage <= 0.0F || dragoon.getRandom().nextDouble() >= Config.CHAIN_CHANCE.get()) return;
+        if (damage <= 0.0F || dragoon.getRandom().nextDouble() >= Math.min(1,Config.CHAIN_CHANCE.get()
+                + net.goui.cosmicdungeon.playerclass.skill.ClassSkills.bonus(
+                    net.goui.cosmicdungeon.playerclass.skill.ClassSkills.attack(source),
+                    net.goui.cosmicdungeon.playerclass.skill.ClassSkillConfig.CHAIN.get()))) return;
 
         List<Mob> targets = collectTargets(level, dragoon, initialTarget);
         if (targets.isEmpty()) return;

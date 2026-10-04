@@ -51,7 +51,9 @@ public final class PlayerProgressionData extends SavedData {
 
     private static final Codec<PlayerProgressionData> CODEC = RecordCodecBuilder.create(inst -> inst.group(
             DATA_CODEC.optionalFieldOf("player_progression", Map.of()).forGetter(d -> d.byPlayer),
-            WatsonReceipt.MAP_CODEC.optionalFieldOf("watson_receipts", Map.of()).forGetter(d -> d.watsonReceipts)
+            WatsonReceipt.MAP_CODEC.optionalFieldOf("watson_receipts", Map.of()).forGetter(d -> d.watsonReceipts),
+            Codec.unboundedMap(UUID_CODEC, net.goui.cosmicdungeon.playerclass.skill.ClassSkillRules.CODEC)
+                    .optionalFieldOf("class_skill_xp", Map.of()).forGetter(d -> d.skillXp)
     ).apply(inst, PlayerProgressionData::fromCodec));
 
     public static final SavedDataType<PlayerProgressionData> TYPE = new SavedDataType<>(SAVE_ID, PlayerProgressionData::new, CODEC);
@@ -62,11 +64,26 @@ public final class PlayerProgressionData extends SavedData {
 
     private final Map<UUID, WatsonReceipt> watsonReceipts = new HashMap<>();
     private MinecraftServer server;
-    private static PlayerProgressionData fromCodec(Map<UUID, Entry> values, Map<UUID, WatsonReceipt> receipts) {
+    private final Map<UUID, Map<String, Integer>> skillXp = new HashMap<>();
+    public int skillXp(UUID owner, String key) { return skillXp.getOrDefault(owner, Map.of()).getOrDefault(key, 0); }
+    public Map<String, Integer> skills(UUID owner) { return Map.copyOf(skillXp.getOrDefault(owner, Map.of())); }
+    public int addSkillXp(UUID owner, String key, int amount, long cap) {
+        if (owner == null || !net.goui.cosmicdungeon.playerclass.skill.ClassSkillRules.DAMAGE.containsKey(key))
+            throw new IllegalArgumentException("Unknown skill owner/key");
+        int old = skillXp(owner, key);
+        int next = net.goui.cosmicdungeon.playerclass.skill.ClassSkillRules.addXp(old, amount, cap);
+        if (next != old) {
+            var values = new HashMap<>(skillXp.getOrDefault(owner, Map.of())); values.put(key, next);
+            skillXp.put(owner, Map.copyOf(values)); setDirty();
+        }
+        return next;
+    }
+    private static PlayerProgressionData fromCodec(Map<UUID, Entry> values, Map<UUID, WatsonReceipt> receipts, Map<UUID, Map<String, Integer>> skills) {
         WatsonReceipt.validate(receipts);
         PlayerProgressionData data = new PlayerProgressionData();
         if (values != null) data.byPlayer.putAll(values);
         data.watsonReceipts.putAll(receipts);
+        skills.forEach((owner, xp) -> data.skillXp.put(owner, Map.copyOf(xp)));
         return data;
     }
 

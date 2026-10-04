@@ -20,7 +20,8 @@ public final class D1TunedMobEffect extends MobEffect {
     }
     @Override public boolean applyEffectTick(ServerLevel level,LivingEntity target,int amplifier){
         var spell=D1AbilityConfig.get(cls,id);double amount=net.goui.cosmicdungeon.playerclass.d1.D1CombatRules.pulse(spell.power().get(),spell.duration().get());
-        if(kind.equals("heal"))target.heal((float)amount);
+        if(kind.equals("heal"))target.heal((float)(amount*Math.clamp(
+                target.getPersistentData().getDoubleOr("cosmicdungeon_skill_healing_"+id,1),1,6)));
         else if(kind.equals("poison")&&target.getHealth()>1)
             target.hurtServer(level,target.damageSources().magic(),(float)net.goui.cosmicdungeon.playerclass.d1.D1CombatRules.poisonPulse(spell.power().get(),spell.duration().get(),target.getHealth()));
         return true;

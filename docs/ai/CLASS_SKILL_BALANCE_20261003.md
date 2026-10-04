@@ -2,7 +2,7 @@
 
 Cameron delegated drafting and implementation without another approval. These are initial
 tunable balance choices, not values claimed to be written in lore. Runtime implementation
-is batch 7. No weapon access, authored loadout or class unlock changes are implied.
+was completed in [Batch 7](TESTING_BATCH_7_20261004.md). No weapon access, authored loadout or class unlock changes are implied.
 
 ## Shared progression
 

@@ -31,9 +31,17 @@ public abstract class D1CrossbowMixin {
     private void cosmicdungeon$rocketEntity(Level level, LivingEntity shooter, ItemStack weapon,
                                            ItemStack ammo, boolean critical, CallbackInfoReturnable<Projectile> ci) {
         if (D1FireworkItem.isCustomRocket(ammo)) {
-            ci.setReturnValue(new FireworkRocketEntity(level, ammo, shooter,
-                    shooter.getX(), shooter.getEyeY() - 0.15F, shooter.getZ(), true));
+            var rocket = new FireworkRocketEntity(level, ammo, shooter,
+                    shooter.getX(), shooter.getEyeY() - 0.15F, shooter.getZ(), true);
+            net.goui.cosmicdungeon.playerclass.skill.ClassSkills.capture(rocket, shooter, weapon);
+            ci.setReturnValue(rocket);
         }
+    }
+
+    @Inject(method = "createProjectile", at = @At("RETURN"))
+    private void cosmicdungeon$skillShot(Level level, LivingEntity shooter, ItemStack weapon, ItemStack ammo,
+                                        boolean critical, CallbackInfoReturnable<Projectile> ci) {
+        net.goui.cosmicdungeon.playerclass.skill.ClassSkills.capture(ci.getReturnValue(), shooter, weapon);
     }
 
     @Inject(method = "getDurabilityUse", at = @At("HEAD"), cancellable = true)
