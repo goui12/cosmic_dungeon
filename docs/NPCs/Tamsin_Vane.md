@@ -14,9 +14,15 @@ replacement group. Changing class cancels readiness; active dungeon runs prevent
 changes and late joining. The selector block retains developer configuration and directs
 ordinary players to Tamsin.
 
-The current ready check and configured party limits remain until the next planned update.
-Mobile readiness and group/invitation HUDs are planned in batch 5. See the
-[batch 4 report and pending gameplay checks](../ai/TESTING_BATCH_4_20261003.md).
+The leader chooses a maximum of1–6 with the group count controls. Fewer members can
+start once everyone personally confirms. Ready closes Tamsin, and members can move
+around the same starting dimension until the leader starts the adventure at Tamsin.
+Not Ready withdraws only your confirmation and cancels a submitted start.
+
+The group HUD stays at top left. Open player inventory for Ready/Not Ready and Leave
+Group; invitation HUD exposes Join Group there. Recipe-book layouts use a compact
+summary with the full roster on hover. Active dungeon HUD is read-only. See the
+[batch 5 report and pending gameplay checks](../ai/TESTING_BATCH_5_20261003.md).
 
 ## Backstory
 

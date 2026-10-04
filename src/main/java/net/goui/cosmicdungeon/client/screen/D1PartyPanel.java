@@ -29,6 +29,13 @@ final class D1PartyPanel {
         var social = view.recruitment();
         boolean grouped = !view.members().isEmpty();
         boolean preparing = state.phase().equals("PREPARING");
+        if (grouped && state.leader() && !recruiting) {
+            boolean mutable = !preparing && !state.phase().equals("QUEUED");
+            button(add, "-", x + 292, y + 42, 26, mutable && state.capacity() > view.members().size(),
+                    () -> send(containerId, "capacity", Integer.toString(state.capacity() - 1)));
+            button(add, "+", x + 324, y + 42, 26, mutable && state.capacity() < 6,
+                    () -> send(containerId, "capacity", Integer.toString(state.capacity() + 1)));
+        }
         if (recruiting && grouped) {
             button(add, "Back", x + 290, y + 32, 60, true, () -> { recruiting = false; rebuild.run(); });
             int row = 0;
@@ -104,8 +111,8 @@ final class D1PartyPanel {
                     : "Looking for group lists your selected class.", x + 10, y + 99, 0xFFBBBBBB, false);
         } else {
             graphics.drawString(font, font.plainSubstrByWidth(social.groupName(), 340), x + 10, y + 32, 0xFFFFFFAA, false);
-            graphics.drawString(font, "Members: " + view.members().size() + "/" + state.capacity(), x + 10, y + 46, 0xFFBBBBBB, false);
-            int rowY = y + 60;
+            graphics.drawString(font, "Members: " + view.members().size() + " / Maximum: " + state.capacity(), x + 10, y + 46, 0xFFBBBBBB, false);
+            int rowY = y + 64;
             for (var member : view.members()) {
                 String row = (member.leader() ? "* " : "  ") + member.name() + " / "
                         + ClassSelectorScreen.className(member.classId()).getString() + (member.ready() ? " / Ready" : "");

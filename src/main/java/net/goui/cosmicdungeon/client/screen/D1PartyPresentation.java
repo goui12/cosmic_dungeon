@@ -13,6 +13,6 @@ final class D1PartyPresentation {
         boolean ready = member != null && member.ready();
         String phase = view == null ? "" : view.state().phase();
         boolean enabled = member != null && (phase.equals("READY_CHECK") || (ready && phase.equals("QUEUED")));
-        return new ReadyControl(ready ? "not ready" : "Ready", ready ? "unready" : "ready", enabled);
+        return new ReadyControl(ready ? "Not Ready" : "Ready", ready ? "unready" : "ready", enabled);
     }
 }

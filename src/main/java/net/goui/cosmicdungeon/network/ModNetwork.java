@@ -32,7 +32,7 @@ public final class ModNetwork {
     private ModNetwork() {}
 
     public static void registerPayloadHandlers(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("8");
+        final PayloadRegistrar registrar = event.registrar("9");
         registrar.playToClient(CurrencyBalancePayload.TYPE,CurrencyBalancePayload.STREAM_CODEC,
                 (payload,ctx)->ctx.enqueueWork(()->ClientNetworkDispatch.dispatch("onCurrencyBalance",payload)));
 

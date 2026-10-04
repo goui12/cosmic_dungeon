@@ -55,7 +55,8 @@ public final class ModNetworkClient {
     }
 
     public static void onD1PartyView(net.goui.cosmicdungeon.network.PartyPayloads.View payload) {
-        ClassSelectorScreen.onPartyView(payload);
+        if (payload.containerId() == -1) net.goui.cosmicdungeon.client.screen.D1PartyHud.receive(payload);
+        else ClassSelectorScreen.onPartyView(payload);
     }
 
     public static void onClassSelectorResult(ClassPayloads.S2C_SelectResult payload) {

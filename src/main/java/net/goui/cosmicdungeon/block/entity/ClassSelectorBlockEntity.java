@@ -48,11 +48,11 @@ public final class ClassSelectorBlockEntity extends BlockEntity {
     /* ---------------- Max players ---------------- */
 
     public int getMaxPlayers() {
-        return Math.max(net.goui.cosmicdungeon.Config.MIN_PARTY.get(), Math.min(6,maxPlayers));
+        return Math.max(1, Math.min(6,maxPlayers));
     }
 
     public void setMaxPlayers(int count) {
-        this.maxPlayers = Math.max(net.goui.cosmicdungeon.Config.MIN_PARTY.get(), Math.min(6, count));
+        this.maxPlayers = Math.max(1, Math.min(6, count));
         markChangedAndSync();
     }
 
