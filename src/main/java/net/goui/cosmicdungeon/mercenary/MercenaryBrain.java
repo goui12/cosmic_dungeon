@@ -28,7 +28,7 @@ public final class MercenaryBrain {
     private Vec3 lastPosition;
     private int stuck, attack, collection;
     public static ServerPlayer hirer(MercenaryEntity entity){
-        if(!entity.isAlive()||!(entity.level() instanceof ServerLevel level))return null;
+        if(entity.dormant()||!entity.isAlive()||!(entity.level() instanceof ServerLevel level))return null;
         var run=D1Members.run(level).orElse(null);
         if(!MercenaryLifecycle.admitted(run,entity.contract(),entity.getUUID(),level.dimension().location().toString())
                 ||run.runId()!=entity.runId())return null;
@@ -41,7 +41,7 @@ public final class MercenaryBrain {
         return owner==null?null:new Context(owner,D1Members.run(owner.level()).orElseThrow());
     }
     private static boolean ally(Context context,LivingEntity target){
-        if(context==null||!target.isAlive()||target.level()!=context.owner().level())return false;
+        if(context==null||target instanceof MercenaryEntity m&&m.dormant()||!target.isAlive()||target.level()!=context.owner().level())return false;
         if(target instanceof ServerPlayer player)return !player.isSpectator()&&!AccessPolicy.isDeveloper(player)
                 &&context.run().containsPlayer(player.getUUID())&&!context.run().isCompletionExited(player.getUUID());
         return target instanceof OwnableEntity owned&&owned.getOwnerReference()!=null
@@ -138,7 +138,7 @@ public final class MercenaryBrain {
         if(!level.addFreshEntity(shot))return false;
         ammo.shrink(1);return true;
     }
-    private static boolean teleport(MercenaryEntity entity,ServerPlayer owner,ServerLevel level){
+    static boolean teleport(MercenaryEntity entity,ServerPlayer owner,ServerLevel level){
         if(entity.isPassenger()||entity.isVehicle())return false;
         for(int y=0;y<=1;y++)for(int x=-2;x<=2;x++)for(int z=-2;z<=2;z++){
             if(Math.abs(x)<2&&Math.abs(z)<2)continue;

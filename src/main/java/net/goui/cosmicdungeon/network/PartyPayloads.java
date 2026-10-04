@@ -39,16 +39,33 @@ public final class PartyPayloads {
                 ByteBufCodecs.VAR_INT, Recruitment::page, ByteBufCodecs.VAR_INT, Recruitment::pages,
                 Member.CODEC.apply(ByteBufCodecs.list(4)), Recruitment::candidates, Recruitment::new);
     }
-    public record Options(String difficulty,Hire hire){
+    public record Mercenary(String name,String owner,float health,float maxHealth,int respawnSeconds,String status){
+        public Mercenary{
+            if(name==null||owner==null||name.length()>64||owner.length()>16||!Float.isFinite(health)
+                    ||!Float.isFinite(maxHealth)||health<0||maxHealth<0||health>maxHealth
+                    ||respawnSeconds < -1||respawnSeconds>600
+                    ||!List.of("ACTIVE","RESPAWNING","UNLOADED").contains(status))
+                throw new IllegalArgumentException("Invalid mercenary HUD row");
+        }
+        public static final StreamCodec<ByteBuf,Mercenary> CODEC=StreamCodec.composite(
+            ByteBufCodecs.stringUtf8(64),Mercenary::name,ByteBufCodecs.stringUtf8(16),Mercenary::owner,
+            ByteBufCodecs.FLOAT,Mercenary::health,ByteBufCodecs.FLOAT,Mercenary::maxHealth,
+            ByteBufCodecs.VAR_INT,Mercenary::respawnSeconds,ByteBufCodecs.stringUtf8(16),Mercenary::status,Mercenary::new);
+    }
+    public record Options(String difficulty,Hire hire,List<Mercenary> mercenaries){
         public static final StreamCodec<ByteBuf,Options> CODEC=StreamCodec.composite(
-            ByteBufCodecs.stringUtf8(16),Options::difficulty,Hire.CODEC,Options::hire,Options::new);
+            ByteBufCodecs.stringUtf8(16),Options::difficulty,Hire.CODEC,Options::hire,Mercenary.CODEC.apply(ByteBufCodecs.list(3)),Options::mercenaries,Options::new);
     }
     public record Hire(String selectedClass,int price){
         public static final Hire NONE=new Hire("",500);
         public static final StreamCodec<ByteBuf,Hire> CODEC=StreamCodec.composite(
             ByteBufCodecs.stringUtf8(32),Hire::selectedClass,ByteBufCodecs.VAR_INT,Hire::price,Hire::new);
     }
-    public record View(int containerId, State state, List<Member> members, Invite invitation, Recruitment recruitment, String difficulty, Hire hire) implements CustomPacketPayload {
+    public record View(int containerId, State state, List<Member> members, Invite invitation, Recruitment recruitment, String difficulty, Hire hire, List<Mercenary> mercenaries) implements CustomPacketPayload {
+        public View { mercenaries=List.copyOf(mercenaries);if(mercenaries.size()>3)throw new IllegalArgumentException("Too many mercenaries"); }
+        public View(int containerId,State state,List<Member> members,Invite invitation,Recruitment recruitment,String difficulty,Hire hire){
+            this(containerId,state,members,invitation,recruitment,difficulty,hire,List.of());
+        }
         public View(int containerId,State state,List<Member> members,Invite invitation,Recruitment recruitment,String difficulty){
             this(containerId,state,members,invitation,recruitment,difficulty,Hire.NONE);
         }
@@ -62,8 +79,8 @@ public final class PartyPayloads {
         public static final StreamCodec<ByteBuf, View> STREAM_CODEC = StreamCodec.composite(
                 ByteBufCodecs.VAR_INT, View::containerId, State.CODEC, View::state,
                 Member.CODEC.apply(ByteBufCodecs.list(6)), View::members, Invite.CODEC, View::invitation,
-                Recruitment.CODEC, View::recruitment, Options.CODEC, v->new Options(v.difficulty(),v.hire()),
-                (id,state,members,invite,recruitment,options)->new View(id,state,members,invite,recruitment,options.difficulty(),options.hire()));
+                Recruitment.CODEC, View::recruitment, Options.CODEC, v->new Options(v.difficulty(),v.hire(),v.mercenaries()),
+                (id,state,members,invite,recruitment,options)->new View(id,state,members,invite,recruitment,options.difficulty(),options.hire(),options.mercenaries()));
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 }

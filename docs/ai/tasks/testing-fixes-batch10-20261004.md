@@ -1,0 +1,9 @@
+# Batch 10: retained mercenary death, respawn and stacked HUD
+
+Authorized by Cameron 2026-10-04. Chain on Batch 9 / 1b9fb4b00e9a0623f6f81c36d06ed2cdcb377809 / PR208. One branch, one draft PR; stop before Batch 11.
+
+Implement three actions: stacked name/health/countdown display; no-drop death retaining all native equipment/supplies; ten-minute respawn beside the eligible hirer. Use the same persistent entity, never spawn an inventory-bearing replacement. The deadline uses server game time (stops during shutdown), survives reload, and waits for a living eligible hirer and safe loaded arrival position. Party members see the shared active-run HUD. These defaults reuse existing party/time semantics and do not reopen accepted questions.
+
+Single-writer hotspots: mercenary entity/death persistence, DungeonRunRegistryData optional rest locators and copy transitions, MercenaryLifecycle/Brain movement integration, the existing bounded companion chunk-loading helper, DungeonLifecycleEvents one-second callback, PartyPayloads codec/protocol and D1PartyHudService/client layout. Expected files also include native tests, relevant AI docs and unique release fragment. No item component rewrite, equipment copy archive, duplicate entity, new SavedData system, spawner/preset format or generated resource change.
+
+Validate Java21 test/build, old-shape and round-trip records, deadline/replay semantics, exact inventory retention hooks, packet round trips and bounded HUD layout. All src JSON, scoped diff and doc links; relevant offline checks. No destructive clean, GameTest/dedicated launch or world entry. Existing stopped-TEST/closed-client deployment and current-test/updater publication apply after final scoped commit/push and draft PR. Review the 512MiB audit cache budget before adding a rollback JAR; preserve all rollback/source bytes.

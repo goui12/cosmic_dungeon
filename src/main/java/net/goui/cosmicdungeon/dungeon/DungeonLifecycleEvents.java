@@ -88,6 +88,7 @@ public final class DungeonLifecycleEvents {
         DungeonAfkService.tick(server);
         if (doPeriodic) {
             net.goui.cosmicdungeon.mercenary.MercenaryEntry.retryFees(server);
+            net.goui.cosmicdungeon.mercenary.MercenaryRespawns.tick(server);
             DungeonForfeitService.tick(server);
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 FarrowsChopTravelService.syncOutsideInventory(player);
