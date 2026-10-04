@@ -35,6 +35,7 @@ final class D1PartyHudService {
             var invitation = lobby.invitation(id);
             var sender = invitation == null ? null : server.getPlayerList().getPlayer(invitation.inviter());
             List<PartyPayloads.Member> rows = List.of();
+            List<PartyPayloads.Mercenary> mercenaries = new ArrayList<>();
             String name = "", phase = "UNGROUPED";
             int capacity = 6, queue = 0, seconds = -1;
             boolean leader = false;
@@ -51,17 +52,17 @@ final class D1PartyHudService {
                 rows = roster.stream().map(m -> member(server, m, true, run.groupLeader().filter(m::equals).isPresent())).toList();
                 var previous = LAST.get(id);
                 name = previous == null || previous.recruitment().groupName().isBlank() ? "Dungeon 1" : previous.recruitment().groupName();
-                rows=new ArrayList<>(rows);
                 for(var hire:run.mercenaries())if(run.containsPlayer(hire.hirer())&&!run.isCompletionExited(hire.hirer()))
-                    rows.add(new PartyPayloads.Member("Mercenary",hire.classId(),true,false));
-                phase = "ACTIVE"; capacity = rows.size();
+                    mercenaries.add(net.goui.cosmicdungeon.mercenary.MercenaryRespawns.status(server,run,hire,
+                        member(server,hire.hirer(),true,false).name()));
+                phase = "ACTIVE"; capacity = rows.size()+mercenaries.size();
             }
             var view = new PartyPayloads.View(-1,
                     new PartyPayloads.State(lobby.revision(id), phase, leader, capacity, queue, seconds), rows,
                     new PartyPayloads.Invite(invitation == null ? "" : invitation.token(),
                             sender == null ? "" : sender.getGameProfile().name(), invitation != null && invitation.accepted(), false),
                     new PartyPayloads.Recruitment(name, false, 0, 1, List.of()),
-                    p != null ? p.difficulty().name() : run != null ? run.difficulty().tier() : "HARD");
+                    p != null ? p.difficulty().name() : run != null ? run.difficulty().tier() : "HARD",PartyPayloads.Hire.NONE,mercenaries);
             if (!view.equals(LAST.get(id))) ModNetwork.sendTo(player, view);
             if (rows.isEmpty() && invitation == null) LAST.remove(id);
             else LAST.put(id, view);

@@ -7,8 +7,58 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.ContainerHelper;
 import java.util.*;
-/** Server-controlled hired companion. Death/respawn presentation is implemented separately. */
+/** Server-controlled hired companion; death rests the original inventory-bearing entity. */
 public final class MercenaryEntity extends PathfinderMob implements OwnableEntity {
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Boolean> DORMANT=
+        net.minecraft.network.syncher.SynchedEntityData.defineId(MercenaryEntity.class,net.minecraft.network.syncher.EntityDataSerializers.BOOLEAN);
+    private MercenaryRest rest;
+    @Override protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder){
+        super.defineSynchedData(builder);builder.define(DORMANT,false);
+    }
+    public MercenaryRest rest(){return rest;}
+    public boolean dormant(){return entityData.get(DORMANT);}
+    private int restFlags(){
+        return (isNoAi()?1:0)|(isNoGravity()?2:0)|(isInvisible()?4:0)|(isInvulnerable()?8:0)
+            |(isCustomNameVisible()?16:0)|(isSilent()?32:0);
+    }
+    private void sleep(){
+        entityData.set(DORMANT,true);setHealth(1);deathTime=0;setNoAi(true);setNoGravity(true);
+        setInvisible(true);setInvulnerable(true);setSilent(true);setCustomNameVisible(false);noPhysics=true;
+        getNavigation().stop();setTarget(null);stopRiding();ejectPassengers();
+        setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);clearFire();fallDistance=0;
+    }
+    @Override public void die(net.minecraft.world.damagesource.DamageSource source){
+        if(!(level() instanceof net.minecraft.server.level.ServerLevel level)||rest!=null)return;
+        rest=new MercenaryRest(MercenaryRest.deadline(level.getServer().overworld().getGameTime()),
+            level.dimension().location().toString(),blockPosition().asLong(),restFlags());
+        sleep();MercenaryRespawns.remember(this);
+    }
+    void resumeAfterRest(){
+        if(rest==null)return;
+        var previous=rest;rest=null;entityData.set(DORMANT,false);noPhysics=false;
+        setNoAi(previous.flag(1));setNoGravity(previous.flag(2));setInvisible(previous.flag(4));
+        setInvulnerable(previous.flag(8));setCustomNameVisible(previous.flag(16));setSilent(previous.flag(32));
+        removeAllEffects();clearFire();setAirSupply(getMaxAirSupply());setTicksFrozen(0);
+        deathTime=0;hurtTime=0;invulnerableTime=0;setHealth(getMaxHealth());fallDistance=0;setPortalCooldown();
+    }
+    @Override public boolean hurtServer(net.minecraft.server.level.ServerLevel level,
+            net.minecraft.world.damagesource.DamageSource source,float amount){
+        return !dormant()&&super.hurtServer(level,source,amount);
+    }
+    @Override public void tick(){
+        if(dormant()){
+            // No base tick while resting: no portals, effects, equipment callbacks, or native death removal.
+            noPhysics=true;setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);setPortalCooldown();return;
+        }
+        super.tick();
+    }
+    @Override protected void onBelowWorld(){if(!dormant())die(damageSources().fellOutOfWorld());}
+    @Override public boolean isPickable(){return !dormant()&&super.isPickable();}
+    @Override public boolean isPushable(){return !dormant()&&super.isPushable();}
+    @Override public boolean isPushedByFluid(){return !dormant()&&super.isPushedByFluid();}
+    @Override public boolean isAffectedByPotions(){return !dormant()&&super.isAffectedByPotions();}
+    @Override protected void dropAllDeathLoot(net.minecraft.server.level.ServerLevel level,
+            net.minecraft.world.damagesource.DamageSource source){}
     private MercenaryContract contract;
     private long run;
     private final MercenaryBrain brain=new MercenaryBrain();
@@ -45,6 +95,7 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
         super.addAdditionalSaveData(out);
         if(contract!=null)out.store("mercenary_contract",MercenaryContract.CODEC,contract);
         out.putLong("mercenary_run",run);
+        if(rest!=null)out.store("mercenary_rest",MercenaryRest.CODEC,rest);
         if(timers!=null)out.store("mercenary_timers",MercenaryTimers.CODEC,timers);
         ContainerHelper.saveAllItems(out.child("mercenary_supplies"),supplies);
     }
@@ -54,5 +105,7 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
         run=in.getLongOr("mercenary_run",0);
         timers=in.read("mercenary_timers",MercenaryTimers.CODEC).orElse(null);
         ContainerHelper.loadAllItems(in.childOrEmpty("mercenary_supplies"),supplies);
+        rest=in.read("mercenary_rest",MercenaryRest.CODEC).orElse(null);
+        if(rest!=null)sleep();
     }
 }

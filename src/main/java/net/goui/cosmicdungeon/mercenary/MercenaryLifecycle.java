@@ -29,13 +29,16 @@ public final class MercenaryLifecycle {
                 &&!(plan!=null&&plan.run()==entity.runId()&&plan.kind().equals("cleanup"));
         }
         if(!valid){event.setCanceled(true);entity.discard();}
+        else MercenaryRespawns.remember(entity);
     }
     public static void dismiss(MinecraftServer server,long runId,UUID hirer){
         var run=DungeonRunRegistryData.get(server).getRun(runId).orElse(null);if(run==null)return;
-        for(var contract:run.mercenaries())if(contract.hirer().equals(hirer))
+        for(var contract:run.mercenaries())if(contract.hirer().equals(hirer)){
+            DungeonRunRegistryData.get(server).mercenaryRest(runId,contract.id(),null);
             for(String dimension:run.dungeonDimensionIds()){
                 var level=net.goui.cosmicdungeon.block.custom.ClassSelectorTeleportUtil.resolveLevel(server,dimension);
                 if(level!=null&&level.getEntity(contract.id()) instanceof MercenaryEntity entity)entity.discard();
             }
+        }
     }
 }

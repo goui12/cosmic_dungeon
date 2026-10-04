@@ -13,6 +13,9 @@ public final class MercenaryRenderer extends HumanoidMobRenderer<MercenaryEntity
             ModelLayers.PLAYER_ARMOR.map(layer->new HumanoidModel<HumanoidRenderState>(context.bakeLayer(layer))),
             context.getEquipmentRenderer()));
     }
+    @Override public boolean shouldRender(MercenaryEntity entity,net.minecraft.client.renderer.culling.Frustum frustum,double x,double y,double z){
+        return !entity.dormant()&&super.shouldRender(entity,frustum,x,y,z);
+    }
     @Override public HumanoidRenderState createRenderState(){return new HumanoidRenderState();}
     @Override public ResourceLocation getTextureLocation(HumanoidRenderState state){
         return ResourceLocation.withDefaultNamespace("textures/entity/player/wide/steve.png");

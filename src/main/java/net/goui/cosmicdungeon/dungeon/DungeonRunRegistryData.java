@@ -1,6 +1,7 @@
 package net.goui.cosmicdungeon.dungeon;
 
 import com.mojang.serialization.Codec;
+import net.goui.cosmicdungeon.mercenary.MercenaryRest;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -36,7 +37,8 @@ public final class DungeonRunRegistryData extends SavedData {
             List<UUID> completionExitedPlayers,
             List<DungeonPlayerRunSnapshot> playerSnapshots,
             DungeonDifficulty.Profile difficulty,
-            List<net.goui.cosmicdungeon.mercenary.MercenaryContract> mercenaries
+            List<net.goui.cosmicdungeon.mercenary.MercenaryContract> mercenaries,
+            Map<UUID,MercenaryRest> mercenaryRests
     ) {
         // Keep this codec local: the public record may initialize before its enclosing SavedData.
         private static final Codec<UUID> UUID_CODEC = Codec.STRING.xmap(UUID::fromString, UUID::toString);
@@ -54,7 +56,8 @@ public final class DungeonRunRegistryData extends SavedData {
                 UUID_CODEC.listOf().optionalFieldOf("completion_exited_players", List.of()).forGetter(RunRecord::completionExitedPlayers),
                 DungeonPlayerRunSnapshot.CODEC.listOf().optionalFieldOf("player_snapshots", List.of()).forGetter(RunRecord::playerSnapshots),
                 DungeonDifficulty.Profile.CODEC.optionalFieldOf("difficulty_profile", DungeonDifficulty.Profile.LEGACY).forGetter(RunRecord::difficulty),
-                net.goui.cosmicdungeon.mercenary.MercenaryContract.CODEC.listOf().optionalFieldOf("mercenaries",List.of()).forGetter(RunRecord::mercenaries)
+                net.goui.cosmicdungeon.mercenary.MercenaryContract.CODEC.listOf().optionalFieldOf("mercenaries",List.of()).forGetter(RunRecord::mercenaries),
+                Codec.unboundedMap(UUID_CODEC,MercenaryRest.CODEC).optionalFieldOf("mercenary_rests",Map.of()).forGetter(RunRecord::mercenaryRests)
         ).apply(i, RunRecord::new));
 
         public RunRecord(long runId, String dungeonId, String selectorDimensionId, long selectorPosLong,
@@ -67,6 +70,10 @@ public final class DungeonRunRegistryData extends SavedData {
         }
         public RunRecord {
             mercenaries=List.copyOf(mercenaries);
+            mercenaryRests=Map.copyOf(mercenaryRests);
+            for(var entry:mercenaryRests.entrySet())if(mercenaries.stream().noneMatch(m->m.id().equals(entry.getKey()))
+                    ||!dungeonDimensionIds.contains(entry.getValue().dimension()))
+                throw new IllegalArgumentException("Rest does not match mercenary run");
             if(mercenaries.size()>3||mercenaries.stream().map(net.goui.cosmicdungeon.mercenary.MercenaryContract::id).distinct().count()!=mercenaries.size()
                     ||mercenaries.stream().map(net.goui.cosmicdungeon.mercenary.MercenaryContract::hirer).distinct().count()!=mercenaries.size()
                     ||mercenaries.stream().map(net.goui.cosmicdungeon.mercenary.MercenaryContract::slot).distinct().count()!=mercenaries.size())
@@ -79,14 +86,26 @@ public final class DungeonRunRegistryData extends SavedData {
             this(runId,dungeonId,selectorDimensionId,selectorPosLong,dungeonDimensionIds,instanceSlot,state,
                 resetReason,startedAtEpochMillis,orderedPlayers,completionExitedPlayers,playerSnapshots,difficulty,List.of());
         }
+        public RunRecord(long runId,String dungeonId,String selectorDimensionId,long selectorPosLong,
+                List<String> dungeonDimensionIds,int instanceSlot,String state,String resetReason,
+                long startedAtEpochMillis,List<UUID> orderedPlayers,List<UUID> completionExitedPlayers,
+                List<DungeonPlayerRunSnapshot> playerSnapshots,DungeonDifficulty.Profile difficulty,
+                List<net.goui.cosmicdungeon.mercenary.MercenaryContract> mercenaries){
+            this(runId,dungeonId,selectorDimensionId,selectorPosLong,dungeonDimensionIds,instanceSlot,state,
+                resetReason,startedAtEpochMillis,orderedPlayers,completionExitedPlayers,playerSnapshots,difficulty,mercenaries,Map.of());
+        }
+        public RunRecord withMercenaryRests(Map<UUID,MercenaryRest> rests){
+            return new RunRecord(runId,dungeonId,selectorDimensionId,selectorPosLong,dungeonDimensionIds,instanceSlot,state,
+                resetReason,startedAtEpochMillis,orderedPlayers,completionExitedPlayers,playerSnapshots,difficulty,mercenaries,rests);
+        }
         public RunRecord withMercenaries(List<net.goui.cosmicdungeon.mercenary.MercenaryContract> hires){
             return new RunRecord(runId,dungeonId,selectorDimensionId,selectorPosLong,dungeonDimensionIds,instanceSlot,state,
-                resetReason,startedAtEpochMillis,orderedPlayers,completionExitedPlayers,playerSnapshots,difficulty,hires);
+                resetReason,startedAtEpochMillis,orderedPlayers,completionExitedPlayers,playerSnapshots,difficulty,hires,mercenaryRests);
         }
         public RunRecord withDifficulty(DungeonDifficulty.Profile profile) {
             return new RunRecord(runId, dungeonId, selectorDimensionId, selectorPosLong, dungeonDimensionIds,
                     instanceSlot, state, resetReason, startedAtEpochMillis, orderedPlayers,
-                    completionExitedPlayers, playerSnapshots, java.util.Objects.requireNonNull(profile), mercenaries);
+                    completionExitedPlayers, playerSnapshots, java.util.Objects.requireNonNull(profile), mercenaries, mercenaryRests);
         }
         public DungeonRunState stateEnum() {
             try {
@@ -145,7 +164,7 @@ public final class DungeonRunRegistryData extends SavedData {
                     startedAtEpochMillis,
                     orderedPlayers,
                     updated,
-                    playerSnapshots, difficulty, mercenaries
+                    playerSnapshots, difficulty, mercenaries, mercenaryRests
             );
         }
 
@@ -177,7 +196,7 @@ public final class DungeonRunRegistryData extends SavedData {
                     startedAtEpochMillis,
                     updatedPlayers,
                     updatedExited,
-                    updatedSnapshots, difficulty, mercenaries
+                    updatedSnapshots, difficulty, mercenaries, mercenaryRests
             );
         }
 
@@ -194,14 +213,14 @@ public final class DungeonRunRegistryData extends SavedData {
                     startedAtEpochMillis,
                     orderedPlayers,
                     completionExitedPlayers,
-                    playerSnapshots, difficulty, mercenaries
+                    playerSnapshots, difficulty, mercenaries, mercenaryRests
             );
         }
 
         public RunRecord withInstance(int slot, List<String> dimensions) {
             return new RunRecord(runId, dungeonId, selectorDimensionId, selectorPosLong,
                     List.copyOf(dimensions), slot, state, resetReason, startedAtEpochMillis,
-                    orderedPlayers, completionExitedPlayers, playerSnapshots, difficulty, mercenaries);
+                    orderedPlayers, completionExitedPlayers, playerSnapshots, difficulty, mercenaries, mercenaryRests);
         }
     }
 
@@ -243,6 +262,15 @@ public final class DungeonRunRegistryData extends SavedData {
     private MinecraftServer server;
     private DungeonRunRegistryData() {}
     public boolean flushVerified() { return net.goui.cosmicdungeon.transaction.SavedDataProof.save(server, SAVE_ID, CODEC, this); }
+    /** Mark native SavedData dirty; ordinary autosave persists this locator without per-tick disk writes. */
+    public void mercenaryRest(long run,UUID id,MercenaryRest rest){
+        var record=getRun(run).orElse(null);
+        if(record==null||record.mercenaries().stream().noneMatch(m->m.id().equals(id))
+                ||java.util.Objects.equals(record.mercenaryRests().get(id),rest))return;
+        var rests=new HashMap<>(record.mercenaryRests());
+        if(rest==null)rests.remove(id);else rests.put(id,rest);
+        runsById.put(run,record.withMercenaryRests(rests));setDirty();
+    }
     public boolean attachMercenaries(long run,List<net.goui.cosmicdungeon.mercenary.MercenaryContract> hires){
         var record=getRun(run).orElseThrow();
         if(!starting(run)||!record.mercenaries().isEmpty()||record.orderedPlayers().size()+hires.size()>6)

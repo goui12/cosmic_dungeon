@@ -61,7 +61,8 @@ public final class BogatyrRecovery {
         return false;
     }
     /** Uses a short-lived vanilla loading ticket; no force-loaded chunks or blocking future join. */
-    static boolean ready(MinecraftServer server,UUID id,ServerLevel level,long position){
+    public static boolean ready(MinecraftServer server,UUID id,ServerLevel level,long position){
+        budget(server);
         var chunk=new ChunkPos(BlockPos.of(position));
         if(level.areEntitiesLoaded(chunk.toLong())){LOADS.remove(id);return true;}
         var pending=LOADS.get(id);
