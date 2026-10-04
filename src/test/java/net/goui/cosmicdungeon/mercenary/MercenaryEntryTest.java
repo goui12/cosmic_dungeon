@@ -123,25 +123,30 @@ final class MercenaryEntryTest {
         assertThrows(IllegalArgumentException.class,()->new MercenaryContract(a,a,"bogatyr",1,500));
         assertThrows(IllegalArgumentException.class,()->new MercenaryContract(UUID.randomUUID(),a,"bogatyr",7,500));
     }
-    @Test void actualStacksConserveNamesCountsComponentsAndDuplicateEquipment(){
+    private MercenaryContract starter(){return new MercenaryContract(a,b,"bogatyr",2,0);}
+    private static net.minecraft.world.item.alchemy.PotionBrewing recipes(){
+        var builder=new net.minecraft.world.item.alchemy.PotionBrewing.Builder(net.minecraft.world.flag.FeatureFlags.DEFAULT_FLAGS);
+        net.minecraft.world.item.alchemy.PotionBrewing.addVanillaMixes(builder);return builder.build();
+    }
+    @Test void usableStarterCopiesPreserveAllAuthoredStacksWithoutUnusedSpareGear(){
         var armor=new ItemStack(Items.DIAMOND_CHESTPLATE);armor.set(DataComponents.CUSTOM_NAME,Component.literal("Authored mail"));
         armor.setDamageValue(17);var bow=new ItemStack(Items.BOW);var spare=new ItemStack(Items.BOW);
         var rockets=new ItemStack(Items.FIREWORK_ROCKET,32);rockets.set(DataComponents.CUSTOM_NAME,Component.literal("Emergency rockets"));
-        var original=List.of(armor,bow,spare,rockets);var before=original.stream().map(ItemStack::copy).toList();
-        var plan=MercenaryEquipment.plan(original,a,"bogatyr",54);assertNotNull(plan);
+        var original=List.of(armor,bow,spare,rockets,new ItemStack(Items.ARROW,32),new ItemStack(Items.NETHER_WART,4));var before=original.stream().map(ItemStack::copy).toList();
+        var plan=MercenaryEquipment.plan(original,starter(),54,recipes());assertNotNull(plan);
         assertTrue(ItemStack.matches(armor,plan.equipment().get(EquipmentSlot.CHEST)));
         assertTrue(ItemStack.matches(bow,plan.equipment().get(EquipmentSlot.MAINHAND)));
-        assertEquals(2,plan.supplies().size());assertTrue(ItemStack.matches(rockets,plan.supplies().get(1)));
+        assertEquals(2,plan.supplies().size());assertTrue(plan.supplies().get(0).is(Items.ARROW));assertTrue(plan.supplies().get(1).is(Items.NETHER_WART));
         for(int i=0;i<original.size();i++)assertTrue(ItemStack.matches(before.get(i),original.get(i)));
         assertNotSame(armor,plan.equipment().get(EquipmentSlot.CHEST));
-        assertNull(MercenaryEquipment.plan(original,a,"bogatyr",1));
+        assertNull(MercenaryEquipment.plan(original,starter(),1,recipes()));
     }
     @Test void foreignOrMalformedBoundStackIsNeverTaken(){
         var stack=new ItemStack(Items.BOW);var tag=new CompoundTag();tag.putString(ClassItemOwnership.KEY,b.toString());
         stack.set(DataComponents.CUSTOM_DATA,CustomData.of(tag));
-        assertNull(MercenaryEquipment.plan(List.of(stack),a,"bogatyr",54));
+        assertNull(MercenaryEquipment.plan(List.of(stack),starter(),54,recipes()));
         tag.putString(ClassItemOwnership.KEY,"broken");stack.set(DataComponents.CUSTOM_DATA,CustomData.of(tag));
-        assertNull(MercenaryEquipment.plan(List.of(stack),a,"bogatyr",54));
+        assertNull(MercenaryEquipment.plan(List.of(stack),starter(),54,recipes()));
     }
     @Test void packetCarriesFeeAndOwnReservation(){
         var view=new PartyPayloads.View(4,new PartyPayloads.State(2,"ASSEMBLY",true,6,0,-1),

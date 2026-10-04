@@ -63,6 +63,11 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
     private long run;
     private final MercenaryBrain brain=new MercenaryBrain();
     private MercenaryTimers timers;
+    private MercenaryLootMemory lootMemory=new MercenaryLootMemory();
+    public MercenaryLootMemory lootMemory(){return lootMemory;}
+    boolean equipmentUpgrade(ItemStack stack,EquipmentSlot slot){
+        return canReplaceCurrentItem(stack,getItemBySlot(slot),slot);
+    }
     @Override public EntityReference<LivingEntity> getOwnerReference(){return contract==null?null:EntityReference.of(contract.hirer());}
     public MercenaryTimers timers(){
         if(timers==null)timers=new MercenaryTimers(MercenaryConfig.BREW_TICKS.get(),MercenaryConfig.FALLBACK_TICKS.get(),Map.of());
@@ -98,6 +103,7 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
         if(rest!=null)out.store("mercenary_rest",MercenaryRest.CODEC,rest);
         if(timers!=null)out.store("mercenary_timers",MercenaryTimers.CODEC,timers);
         ContainerHelper.saveAllItems(out.child("mercenary_supplies"),supplies);
+        lootMemory.save(out);
     }
     @Override public void readAdditionalSaveData(ValueInput in){
         super.readAdditionalSaveData(in);
@@ -105,6 +111,7 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
         run=in.getLongOr("mercenary_run",0);
         timers=in.read("mercenary_timers",MercenaryTimers.CODEC).orElse(null);
         ContainerHelper.loadAllItems(in.childOrEmpty("mercenary_supplies"),supplies);
+        lootMemory=MercenaryLootMemory.load(in);
         rest=in.read("mercenary_rest",MercenaryRest.CODEC).orElse(null);
         if(rest!=null)sleep();
     }
