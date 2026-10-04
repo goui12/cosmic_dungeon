@@ -1,5 +1,6 @@
 import importlib.util
 import io
+import http.client
 import urllib.error
 import json
 import os
@@ -140,6 +141,16 @@ class ReleaseTests(unittest.TestCase):
                 p.request('/game/versions', 'secret')
         self.assertIn('502', str(caught.exception))
         self.assertNotIn('private server diagnostics', str(caught.exception))
+
+
+    def test_truncated_api_error_body_stays_bounded(self):
+        error = urllib.error.HTTPError('https://example.invalid', 502, 'Bad Gateway', {}, io.BytesIO())
+        with patch.object(error, 'read', side_effect=http.client.IncompleteRead(b'private diagnostic', 50)):
+            with patch.object(p.urllib.request, 'urlopen', side_effect=error):
+                with self.assertRaises(RuntimeError) as caught:
+                    p.request('/game/versions', 'secret')
+        self.assertIn('502', str(caught.exception))
+        self.assertNotIn('private diagnostic', str(caught.exception))
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 """Validated CurseForge publishing. Standard library only; credentials stay in env."""
 import argparse
 import hashlib
+import http.client
 import json
 import os
 from pathlib import Path
@@ -102,7 +103,7 @@ def request(path, token, data=None, content_type=None):
             if isinstance(message, str):
                 message = " ".join(message.replace(token, "[REDACTED]").split())[:500]
                 detail = f" (API {code}): {message}" if isinstance(code, int) else f": {message}"
-        except (ValueError, AttributeError, OSError):
+        except (ValueError, AttributeError, OSError, http.client.HTTPException):
             pass
         finally:
             error.close()
