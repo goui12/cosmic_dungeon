@@ -89,7 +89,7 @@ public final class Config {
                 .defineInRange("baseCampDiscoveryRadius",4.0,0.5,32.0);
         TAX_CONFIRM_SECONDS=B.comment("Seconds before a selected Tax item confirmation expires. Implementation default.")
                 .defineInRange("taxConfirmationSeconds",30,5,300);
-        MIN_PARTY=B.comment("Minimum personally ready players. Set to 1 to allow solo entry; the default remains 3.")
+        MIN_PARTY=B.comment("Legacy setting retained for existing configs; named groups now allow 1-6 members up to their leader-selected maximum.")
                 .defineInRange("minimumPartySize",3,1,6);
         READY_COUNTDOWN_SECONDS=B.defineInRange("readyCountdownSeconds",5,1,60);
         SELECTOR_SESSION_SECONDS=B.defineInRange("selectorSessionSeconds",300,30,3600);

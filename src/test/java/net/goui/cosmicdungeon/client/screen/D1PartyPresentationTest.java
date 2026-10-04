@@ -17,11 +17,11 @@ final class D1PartyPresentationTest {
         var control = D1PartyPresentation.readiness(view("READY_CHECK", false, true), "Cameron");
         assertEquals(new D1PartyPresentation.ReadyControl("Ready", "ready", true), control);
         control = D1PartyPresentation.readiness(view("READY_CHECK", true, false), "Cameron");
-        assertEquals(new D1PartyPresentation.ReadyControl("not ready", "unready", true), control);
+        assertEquals(new D1PartyPresentation.ReadyControl("Not Ready", "unready", true), control);
     }
 
     @Test void queuedPlayerCanWithdrawButPreparingPlayerCannot() {
-        assertEquals(new D1PartyPresentation.ReadyControl("not ready", "unready", true),
+        assertEquals(new D1PartyPresentation.ReadyControl("Not Ready", "unready", true),
                 D1PartyPresentation.readiness(view("QUEUED", true, true), "Cameron"));
         assertFalse(D1PartyPresentation.readiness(view("PREPARING", true, true), "Cameron").enabled());
         assertFalse(D1PartyPresentation.readiness(view("QUEUED", false, true), "Cameron").enabled());

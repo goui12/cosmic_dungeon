@@ -50,7 +50,7 @@ public final class ClassSelectorEntryService {
         BlockPos selectorPos = BlockPos.of(anchor.selector());
         if (selectorLevel == null || !(selectorLevel.getBlockEntity(selectorPos) instanceof ClassSelectorBlockEntity csbe)) return false;
         int max = ordered.size();
-        if (max < net.goui.cosmicdungeon.Config.MIN_PARTY.get() || max > csbe.getMaxPlayers()) return false;
+        if (!net.goui.cosmicdungeon.npc.tamsin.D1PartyRules.fits(max, 6)) return false;
 
         RiftRegistryData data = RiftRegistryData.get(server);
 
@@ -123,8 +123,6 @@ public final class ClassSelectorEntryService {
             ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p != null && p.connection.isAcceptingMessages() && p.isAlive() && !p.isSpectator() && p.level()==selectorLevel
                     && !net.goui.cosmicdungeon.auth.AccessPolicy.isDeveloper(p)
-                    && p.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(selectorPos))<=
-                        net.goui.cosmicdungeon.Config.SELECTOR_RANGE.get()*net.goui.cosmicdungeon.Config.SELECTOR_RANGE.get()
                     && ClassSelectorTeleportUtil.isReadyEligibleClass(classes.get(id))
                     && java.util.Objects.equals(classes.get(id),net.goui.cosmicdungeon.playerclass.api.ClassData.getClassId(p))) {
                 finalParty.add(p);

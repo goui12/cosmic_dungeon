@@ -12,12 +12,14 @@ public final class D1PartyLobby {
         private final UUID leader;
         private final Anchor anchor;
         private final String name;
+        private int capacity;
         private final LinkedHashSet<UUID> members = new LinkedHashSet<>();
         private final Set<UUID> ready = new HashSet<>();
         private Map<UUID, String> classes = Map.of();
         private Phase phase = Phase.ASSEMBLY;
         private long revision, queueOrder, countdownEnd = -1;
-        private Party(UUID leader, Anchor anchor, String name) { this.leader = leader; this.anchor = anchor; this.name = name; members.add(leader); }
+        private Party(UUID leader, Anchor anchor, String name, int capacity) { this.leader = leader; this.anchor = anchor; this.name = name; this.capacity = capacity; members.add(leader); }
+        public int capacity() { return capacity; }
         public String name() { return name; }
         public UUID id() { return id; }
         public UUID leader() { return leader; }
@@ -52,11 +54,15 @@ public final class D1PartyLobby {
                 && name.codePoints().noneMatch(c -> Character.isISOControl(c) || Character.getType(c) == Character.FORMAT || c == 167);
     }
     public String create(UUID leader, Anchor anchor, long expected, String name) {
+        return create(leader, anchor, expected, name, 6);
+    }
+    public String create(UUID leader, Anchor anchor, long expected, String name, int capacity) {
+        if (!D1PartyRules.fits(1, capacity)) return "Select a maximum of 1-6 members.";
         if (leader == null || anchor == null || !current(leader, expected) || party(leader) != null)
             return "Group changed; refresh before creating a group.";
         if (invitation(leader) != null) return "Accept or decline your pending invitation first.";
         if (!validName(name)) return "Use a group name of 1-32 visible characters.";
-        var party = new Party(leader, anchor, name.strip());
+        var party = new Party(leader, anchor, name.strip(), capacity);
         groups.put(party.id, party); membership.put(leader, party); looking.remove(leader); changed(party);
         return null;
     }
@@ -71,14 +77,14 @@ public final class D1PartyLobby {
     public boolean current(UUID player, long expected) { return revision(player) == expected; }
 
     /** Explicit opt-in; viewing a menu never creates or merges a party. */
-    public boolean canStartSolo(UUID leader, int minimum, int capacity) {
-        return leader != null && minimum == 1 && capacity >= 1 && capacity <= 6
+    public boolean canStartSolo(UUID leader, int capacity) {
+        return leader != null && D1PartyRules.fits(1, capacity)
                 && party(leader) == null && invitation(leader) == null;
     }
-    public String startSolo(UUID leader, Anchor anchor, long expected, int minimum, int capacity) {
-        if (anchor == null || !canStartSolo(leader, minimum, capacity) || !current(leader, expected))
+    public String startSolo(UUID leader, Anchor anchor, long expected, int capacity) {
+        if (anchor == null || !canStartSolo(leader, capacity) || !current(leader, expected))
             return "Solo entry is unavailable; review the party limits and any invitation.";
-        return create(leader, anchor, expected, "Solo adventure");
+        return create(leader, anchor, expected, "Solo adventure", capacity);
     }
 
     public String invite(UUID sender, UUID target, Anchor anchor, long now, int lifetimeTicks, int capacity) {
@@ -88,6 +94,7 @@ public final class D1PartyLobby {
         if (party(target) != null) return "That player already belongs to a group; groups cannot merge.";
         var p = party(sender);
         if (p == null) return "Create or join a group before inviting players.";
+        capacity = Math.min(capacity, p.capacity);
         if (p != null && (!p.anchor.equals(anchor) || p.phase == Phase.QUEUED || p.phase == Phase.PREPARING))
             return "Cancel queueing before inviting players at this Tamsin.";
         if (p != null && p.members.size() >= capacity) return "This group is full.";
@@ -120,7 +127,8 @@ public final class D1PartyLobby {
         if (party(target) != null || p == null || !p.id.equals(i.groupId) || !p.anchor.equals(i.anchor)) {
             invitations.remove(target); return "The inviting group changed.";
         }
-        if (p != null && (p.phase == Phase.PREPARING || p.members.size() >= capacity)) {
+        capacity = Math.min(capacity, p.capacity);
+        if (p.phase == Phase.PREPARING || p.members.size() >= capacity) {
             invitations.remove(target); return "That group is full or has started entry preparation.";
         }
         if (!eligible) return null;
@@ -133,15 +141,33 @@ public final class D1PartyLobby {
         p.phase = Phase.ASSEMBLY; p.ready.clear(); p.classes = Map.of();
         p.countdownEnd = -1; p.queueOrder = 0; changed(p);
     }
-    public String begin(UUID leader, long expected, Map<UUID, String> classes, int minimum, int capacity) {
+    public String begin(UUID leader, long expected, Map<UUID, String> classes) {
         var p = party(leader);
         if (p == null || !p.leader.equals(leader)) return "Only the group leader can begin readiness.";
         if (!current(leader, expected) || p.phase != Phase.ASSEMBLY) return "Group changed; refresh before readying.";
-        if (p.members.size() < Math.max(1, minimum) || p.members.size() > Math.min(6, capacity))
+        if (!D1PartyRules.fits(p.members.size(), p.capacity))
             return "The group must fit this selector's party limits.";
         if (!classes.keySet().equals(p.members) || classes.values().stream().anyMatch(c -> c == null || c.isBlank() || c.equals("none")))
             return "Every member must personally select a class.";
         p.classes = Map.copyOf(classes); p.ready.clear(); p.phase = Phase.READY_CHECK; changed(p);
+        return null;
+    }
+    public String capacity(UUID leader, long expected, int capacity) {
+        var p = party(leader);
+        if (p == null || !p.leader.equals(leader)) return "Only the group leader can choose the maximum.";
+        if (!current(leader, expected) || p.phase == Phase.QUEUED || p.phase == Phase.PREPARING)
+            return "Cancel queueing before changing the maximum.";
+        if (!D1PartyRules.fits(p.members.size(), capacity)) return "Maximum must fit the current group (1-6).";
+        if (p.capacity != capacity) { p.capacity = capacity; cancel(p); }
+        return null;
+    }
+    public String unready(UUID player, long expected) {
+        var p = party(player);
+        if (p == null || !current(player, expected)
+                || (p.phase != Phase.READY_CHECK && p.phase != Phase.QUEUED)) return "Ready check changed; review the group.";
+        if (p.ready.remove(player)) {
+            p.phase = Phase.READY_CHECK; p.countdownEnd = -1; p.queueOrder = 0; changed(p);
+        }
         return null;
     }
     public String ready(UUID player, long expected) {

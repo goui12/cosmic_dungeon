@@ -29,7 +29,7 @@ public final class D1PartyChecks {
     }
     private static void readyAll(D1PartyLobby lobby, UUID leader) {
         var p = lobby.party(leader);
-        check(lobby.begin(leader, p.revision(), classes(p), 3, 6) == null, "Leader begins complete ready check");
+        check(lobby.begin(leader, p.revision(), classes(p)) == null, "Leader begins complete ready check");
         long revision = p.revision();
         for (UUID member : p.members()) check(lobby.ready(member, revision) == null, "Simultaneous personal confirmation");
     }
@@ -55,14 +55,15 @@ public final class D1PartyChecks {
         check(lobby.invite(id(2), id(3), A, 6, 120, 6) == null, "Regular members can invite");
         lobby.decline(id(3), lobby.invitation(id(3)).token());
         check(lobby.invite(id(3), id(1), A, 6, 120, 6) != null, "Inviting another group leader cannot merge");
-        check(lobby.begin(id(2), p.revision(), classes(p), 3, 6) != null, "Nonleader cannot begin ready check");
-        check(lobby.begin(id(1), p.revision(), classes(p), 3, 6) != null, "Two members cannot queue");
+        check(lobby.begin(id(2), p.revision(), classes(p)) != null, "Nonleader cannot begin ready check");
+        check(lobby.begin(id(1), p.revision(), classes(p)) == null, "Two members may ready below maximum");
+        lobby.cancel(p);
         check(lobby.invite(id(1), id(3), B, 6, 120, 6) != null, "Cannot change another group's selector anchor");
         join(lobby, id(1), id(3), 6);
         var missing = classes(p); missing.remove(id(3));
-        check(lobby.begin(id(1), p.revision(), missing, 3, 6) != null, "Every roster member needs class snapshot");
+        check(lobby.begin(id(1), p.revision(), missing) != null, "Every roster member needs class snapshot");
         var noClass = classes(p); noClass.put(id(3), "none");
-        check(lobby.begin(id(1), p.revision(), noClass, 3, 6) != null, "Unselected member blocks readiness");
+        check(lobby.begin(id(1), p.revision(), noClass) != null, "Unselected member blocks readiness");
         readyAll(lobby, id(1));
         check(p.phase() == D1PartyLobby.Phase.READY_CHECK, "All ready never automatically queues");
         check(lobby.ready(id(1), p.revision()) == null && p.ready().size() == 3, "Ready replay remains idempotent");
