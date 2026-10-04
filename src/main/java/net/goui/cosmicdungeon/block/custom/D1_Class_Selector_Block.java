@@ -53,18 +53,7 @@ public class D1_Class_Selector_Block extends Block implements EntityBlock {
             return InteractionResult.CONSUME;
         }
 
-        if (!net.goui.cosmicdungeon.npc.tamsin.TamsinService.accepted(sp)) {
-            sp.sendSystemMessage(Component.literal("Speak with Tamsin Vane and accept her offer first."));
-            return InteractionResult.CONSUME;
-        }
-        // Dungeoneer: open normal menu and remember which selector it came from
-        ClassSelectorTeleportUtil.markPendingSelectorSource(sp, sl, pos);
-
-        MenuProvider provider = new SimpleMenuProvider(
-                (containerId, inv, p) -> new ClassSelectorMenu(containerId, inv),
-                Component.translatable("menu.cosmicdungeon.class_selector")
-        );
-        sp.openMenu(provider);
+        sp.sendSystemMessage(Component.literal("Speak with Tamsin Vane to choose your class and group."));
         return InteractionResult.CONSUME;
     }
 

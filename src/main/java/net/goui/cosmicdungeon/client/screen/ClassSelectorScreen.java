@@ -163,7 +163,7 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
             return;
         }
         if (stage == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.READY) {
-            partyPanel.build(font, widget -> addRenderableWidget(widget), x, y, menu.containerId);
+            partyPanel.build(font, widget -> addRenderableWidget(widget), this::rebuildSelectorWidgets, x, y, menu.containerId);
             return;
         }
         var group = addRenderableWidget(Button.builder(Component.literal("Group"), button ->
@@ -310,7 +310,7 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
 
         // header text
         g.drawString(this.font, stage == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.SELECTOR
-                ? "D1 Class Selector" : "Tamsin Vane", x1 + 10, y1 + 10, 0xFFFFFFFF, false);
+                ? "Tamsin: Choose class" : "Tamsin Vane", x1 + 10, y1 + 10, 0xFFFFFFFF, false);
 
         if (!loading && renderConversation(g, x1, y1)) return;
         if (!loading) {

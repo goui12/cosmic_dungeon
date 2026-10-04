@@ -32,11 +32,22 @@ public final class PartyPayloads {
                 ByteBufCodecs.stringUtf8(36), Invite::token, ByteBufCodecs.stringUtf8(16), Invite::inviter,
                 ByteBufCodecs.BOOL, Invite::accepted, ByteBufCodecs.BOOL, Invite::canInvite, Invite::new);
     }
-    public record View(int containerId, State state, List<Member> members, Invite invitation) implements CustomPacketPayload {
+    public record Recruitment(String groupName, boolean looking, int page, int pages, List<Member> candidates) {
+        public static final Recruitment EMPTY = new Recruitment("", false, 0, 1, List.of());
+        public static final StreamCodec<ByteBuf, Recruitment> CODEC = StreamCodec.composite(
+                ByteBufCodecs.stringUtf8(32), Recruitment::groupName, ByteBufCodecs.BOOL, Recruitment::looking,
+                ByteBufCodecs.VAR_INT, Recruitment::page, ByteBufCodecs.VAR_INT, Recruitment::pages,
+                Member.CODEC.apply(ByteBufCodecs.list(4)), Recruitment::candidates, Recruitment::new);
+    }
+    public record View(int containerId, State state, List<Member> members, Invite invitation, Recruitment recruitment) implements CustomPacketPayload {
+        public View(int containerId, State state, List<Member> members, Invite invitation) {
+            this(containerId, state, members, invitation, Recruitment.EMPTY);
+        }
         public static final Type<View> TYPE = new Type<>(id("d1_party_view"));
         public static final StreamCodec<ByteBuf, View> STREAM_CODEC = StreamCodec.composite(
                 ByteBufCodecs.VAR_INT, View::containerId, State.CODEC, View::state,
-                Member.CODEC.apply(ByteBufCodecs.list(6)), View::members, Invite.CODEC, View::invitation, View::new);
+                Member.CODEC.apply(ByteBufCodecs.list(6)), View::members, Invite.CODEC, View::invitation,
+                Recruitment.CODEC, View::recruitment, View::new);
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 }

@@ -2,11 +2,21 @@
 
 ## Player-facing role
 
-Tamsin Vane is a living surface-side treasure hunter who discovered a map to the Base Camp and now sells access to nearby adventurers. Current source keeps her map interface, dungeon broker UI, Tamsin Tax payment flow, and queue system future/stubbed unless presented in-game.
+Tamsin Vane is a living surface-side treasure hunter who discovered a map to the Base Camp. Her conversation handles the agreement, map, class selection and group preparation.
 
-## Current implementation caution
+## Groups and class selection
 
-Tamsin’s lore may appear in player-facing help, but do not present her map interface, dungeon broker UI, Tamsin Tax payment flow, or queue system as live unless those systems are implemented in source. The Tamsin Tax remains future/stubbed.
+Choose a class through Tamsin, then create a named group or select Looking for Group
+so recruiters can see your selected class. Every group member can recruit an advertised
+player or invite an online friend by name. Only grouped players see recruiting controls.
+Members can leave; the leader can disband. Invitations expire and cannot transfer to a
+replacement group. Changing class cancels readiness; active dungeon runs prevent class
+changes and late joining. The selector block retains developer configuration and directs
+ordinary players to Tamsin.
+
+The current ready check and configured party limits remain until the next planned update.
+Mobile readiness and group/invitation HUDs are planned in batch 5. See the
+[batch 4 report and pending gameplay checks](../ai/TESTING_BATCH_4_20261003.md).
 
 ## Backstory
 

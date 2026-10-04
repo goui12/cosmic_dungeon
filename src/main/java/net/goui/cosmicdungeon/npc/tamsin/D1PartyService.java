@@ -71,7 +71,7 @@ public final class D1PartyService {
     }
     public static void show(ServerPlayer player, boolean force) {
         if (!(player.containerMenu instanceof ClassSelectorMenu menu) || !menu.stillValid(player)
-                || menu.stage() != TamsinFlow.Stage.READY || !onboarded(player)) return;
+                || menu.tamsinNpc() == null || menu.stage() != TamsinFlow.Stage.READY || !onboarded(player)) return;
         VIEWERS.add(player.getUUID());
         var p = LOBBY.party(player.getUUID());
         var anchor = anchor(player, menu);
@@ -88,18 +88,31 @@ public final class D1PartyService {
         boolean canSolo = block != null && nearby(player, anchor)
                 && LOBBY.canStartSolo(player.getUUID(), Config.MIN_PARTY.get(), capacity);
         String phase = p == null ? (canSolo ? "SOLO_AVAILABLE" : "UNGROUPED") : p.phase().name();
-        boolean canInvite = block != null && capacity >= 2 && nearby(player, anchor) && (p == null
-                || (leader && p.anchor().equals(anchor) && p.members().size() < capacity
-                && p.phase() != D1PartyLobby.Phase.QUEUED && p.phase() != D1PartyLobby.Phase.PREPARING));
+        boolean canInvite = block != null && capacity >= 2 && nearby(player, anchor) && p != null
+                && p.anchor().equals(anchor) && p.members().size() < capacity
+                && p.phase() != D1PartyLobby.Phase.QUEUED && p.phase() != D1PartyLobby.Phase.PREPARING;
         int countdown = p == null || p.countdownEnd() < 0 ? -1 : (int)Math.max(0, (p.countdownEnd() - now(player.level().getServer()) + 19) / 20);
         var view = new PartyPayloads.View(menu.containerId,
                 new PartyPayloads.State(LOBBY.revision(player.getUUID()), phase,
                         leader, capacity, LOBBY.queuePosition(p), countdown), members,
                 new PartyPayloads.Invite(i == null ? "" : i.token(), sender == null ? "" : sender.getGameProfile().name(),
-                        i != null && i.accepted(), canInvite));
+                        i != null && i.accepted(), canInvite), recruitment(player, menu, p, anchor));
         if (force || !view.equals(menu.lastPartyView)) {
             menu.lastPartyView = view; ModNetwork.sendTo(player, view);
         }
+    }
+    private static PartyPayloads.Recruitment recruitment(ServerPlayer player, ClassSelectorMenu menu,
+            D1PartyLobby.Party party, D1PartyLobby.Anchor anchor) {
+        if (party == null) return new PartyPayloads.Recruitment("", LOBBY.looking(player.getUUID()), 0, 1, List.of());
+        var server = player.level().getServer();
+        var candidates = LOBBY.lookingAt(anchor).stream().map(server.getPlayerList()::getPlayer)
+                .filter(D1PartyService::onboarded).filter(p -> LOBBY.party(p.getUUID()) == null)
+                .sorted(Comparator.comparing(p -> p.getGameProfile().name(), String.CASE_INSENSITIVE_ORDER)).toList();
+        int pages = Math.max(1, (candidates.size() + 3) / 4);
+        menu.recruitmentPage = Math.clamp(menu.recruitmentPage, 0, pages - 1);
+        var rows = candidates.stream().skip((long) menu.recruitmentPage * 4).limit(4)
+                .map(p -> new PartyPayloads.Member(p.getGameProfile().name(), ClassData.getClassId(p), false, false)).toList();
+        return new PartyPayloads.Recruitment(party.name(), false, menu.recruitmentPage, pages, rows);
     }
     private static String rosterProblem(MinecraftServer server, D1PartyLobby.Party p, boolean compareClasses) {
         var block = selector(server, p.anchor());
@@ -116,7 +129,7 @@ public final class D1PartyService {
     }
     public static void action(ServerPlayer player, PartyPayloads.Action request) {
         if (!(player.containerMenu instanceof ClassSelectorMenu menu) || menu.containerId != request.containerId()
-                || !menu.stillValid(player) || !onboarded(player)) return;
+                || menu.tamsinNpc() == null || !menu.stillValid(player) || !onboarded(player)) return;
         if (request.action().equals("group")) {
             if (!TamsinFlow.canReady(true, menu.stage())) return;
             menu.setStage(TamsinFlow.Stage.READY); ClassNet.sendSelectorDataTo(player); return;
@@ -136,6 +149,23 @@ public final class D1PartyService {
         }
         String error = null;
         switch (request.action()) {
+            case "create" -> {
+                if (anchor == null || !nearby(player, anchor)) { error = "Speak with Tamsin to create a group."; break; }
+                error = LOBBY.create(player.getUUID(), anchor, request.revision(), request.target());
+            }
+            case "lfg" -> {
+                if (anchor == null || !nearby(player, anchor)) { error = "Speak with Tamsin to advertise your class."; break; }
+                error = LOBBY.advertise(player.getUUID(), anchor, !LOBBY.looking(player.getUUID()));
+            }
+            case "lfg_prev", "lfg_next" -> {
+                if (p == null) { error = "Join a group before recruiting."; break; }
+                menu.recruitmentPage += request.action().equals("lfg_next") ? 1 : -1;
+            }
+            case "class" -> {
+                if (p != null && p.phase() == D1PartyLobby.Phase.PREPARING) break;
+                withdraw(player);
+                menu.setStage(TamsinFlow.Stage.SELECTOR); ClassNet.sendSelectorDataTo(player); return;
+            }
             case "solo" -> {
                 if (anchor == null || !nearby(player, anchor)) {
                     error = "Speak with Tamsin to start a solo party."; break;
@@ -155,7 +185,7 @@ public final class D1PartyService {
                     LAST_INVITE.put(player.getUUID(), now(server));
                     var invitation = LOBBY.invitation(target.getUUID());
                     message(player, "Invitation sent to " + target.getGameProfile().name() + ".");
-                    target.sendSystemMessage(Component.literal(player.getGameProfile().name() + " invites you to Dungeon 1. ")
+                    target.sendSystemMessage(Component.literal(player.getGameProfile().name() + " invites you to " + p.name() + ". ")
                             .append(Component.literal("[Accept]").withStyle(Style.EMPTY.withUnderlined(true)
                                     .withClickEvent(new ClickEvent.RunCommand("/d1 party accept " + invitation.token()))))
                             .append(Component.literal(" "))
@@ -231,6 +261,10 @@ public final class D1PartyService {
         long now = now(server);
         if (now % Config.PARTY_POLL_TICKS.get() != 0) return;
         LOBBY.expire(now);
+        for (var id : LOBBY.lookingPlayers()) {
+            if (!onboarded(server.getPlayerList().getPlayer(id)))
+                LOBBY.advertise(id, null, false);
+        }
         for (var i : LOBBY.invitations()) {
             var target = server.getPlayerList().getPlayer(i.target());
             if (!available(target) || !available(server.getPlayerList().getPlayer(i.inviter()))) LOBBY.decline(i.target(), i.token());
