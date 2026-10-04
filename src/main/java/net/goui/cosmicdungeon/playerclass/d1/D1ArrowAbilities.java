@@ -51,8 +51,8 @@ public final class D1ArrowAbilities {
             }
             return;
         }
-        var owner=(ServerPlayer)arrow.getOwner();
-        double power=D1AbilityConfig.get(ClassData.getClassId(owner),id).power().get();
+        var owner=(LivingEntity)arrow.getOwner();
+        double power=D1AbilityConfig.get(D1ProjectileAccess.classId(owner),id).power().get();
         boolean healing=id.equals("scintilla_vitalis")||id.equals("lux_vitalis");
         if(healing&&!target.isInvertedHealAndHarm()){
             float before=target.getHealth();
@@ -76,7 +76,7 @@ public final class D1ArrowAbilities {
         var access=permission(arrow,id);
         if(access==D1CombatRules.Ammunition.VANILLA)return false;
         if(access==D1CombatRules.Ammunition.DENIED)return true;
-        String cls=ClassData.getClassId((ServerPlayer)arrow.getOwner());
+        String cls=D1ProjectileAccess.classId((LivingEntity)arrow.getOwner());
         var spell=D1AbilityConfig.get(cls,id);Holder<MobEffect> effect=switch(id){
             case "mending_sting"->ModMobEffects.MENDING_STING;
             case "verdant_jolt"->ModMobEffects.VERDANT_JOLT;
