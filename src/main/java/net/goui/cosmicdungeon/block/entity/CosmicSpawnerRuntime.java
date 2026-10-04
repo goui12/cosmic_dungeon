@@ -22,7 +22,8 @@ final class CosmicSpawnerRuntime {
                         pos.getZ() + 0.5, owner.getSpawnerRequiredPlayerRange())) return;
         if (owner.getSpawnerDelayTicks() == -1) delay(spawner, level, pos);
         if (owner.getSpawnerDelayTicks() > 0) {
-            owner.tickSpawnDelay();
+            var profile = net.goui.cosmicdungeon.dungeon.DungeonDifficultyEvents.profile(level);
+            owner.tickSpawnDelay(profile == null ? 1 : profile.spawnDelay());
             return;
         }
         if (!owner.mayRetryPlacement(level.getGameTime())) return;

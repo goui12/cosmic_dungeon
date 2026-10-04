@@ -35,6 +35,15 @@ public final class ModAdvancementProvider implements AdvancementSubProvider {
             String key = achievement.getPath().substring("achievements/".length());
             manual(saver, achievement, ROOT, icon(key), "achievements." + key, "triggered");
         }
+        ResourceLocation completionParent = ROOT;
+        for (var tier : net.goui.cosmicdungeon.dungeon.DungeonDifficulty.values()) {
+            ResourceLocation completion = net.goui.cosmicdungeon.dungeon.DungeonCompletionAwards.id(tier);
+            manual(saver, completion, completionParent, switch (tier) {
+                case EASY -> Items.IRON_SWORD; case HARD -> Items.DIAMOND_SWORD;
+                case INSANE -> Items.NETHERITE_SWORD; case RIDICULOUS -> Items.NETHER_STAR;
+            }, "achievements.dungeon_1_" + tier.name().toLowerCase(java.util.Locale.ROOT), "triggered");
+            completionParent = completion;
+        }
         // No display, toast, rewards or automatic criteria: these are not player achievements.
         // First-trade progress still retires the existing CAPS LOCK onboarding prompt.
         retired(saver, CosmicAchievementIds.FIRST_PLAYER_TRADE, "triggered");

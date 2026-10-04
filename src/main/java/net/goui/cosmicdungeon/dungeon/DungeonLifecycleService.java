@@ -46,7 +46,6 @@ public final class DungeonLifecycleService {
     private static final String KEY_METALMANCER_ROOT = "metalmancer";
     private static final String KEY_PENDING_SELECTOR = "pending_class_selector";
     private static final String KEY_RUN_TEMP = "run_temp";
-    private static final String DEFAULT_DIFFICULTY = "NORMAL";
     private record PendingReset(
             String dungeonId,
             long runId,
@@ -193,13 +192,17 @@ public final class DungeonLifecycleService {
     public static InstancePreparation prepareRunInstance(MinecraftServer server,
                                                          net.minecraft.resources.ResourceKey<Level> dungeonDimension,
                                                          Collection<UUID> party) {
+        return prepareRunInstance(server, dungeonDimension, party, DungeonDifficulty.Profile.LEGACY);
+    }
+    public static InstancePreparation prepareRunInstance(MinecraftServer server,
+            net.minecraft.resources.ResourceKey<Level> dungeonDimension, Collection<UUID> party, DungeonDifficulty.Profile profile) {
         String blocker = getStartRunBlocker(server, dungeonDimension, party);
         if (blocker != null) return new PreparationError(blocker);
         DungeonDefinition definition = DungeonDefinitions.byDimension(dungeonDimension).orElse(null);
         if (definition == null) return new PreparationError("No logical dungeon definition is registered for " + dungeonDimension.location());
         int slot = DungeonRunRegistryData.get(server).firstAvailableSlot().orElse(-1);
         if (slot < 1) return new PreparationError("All dungeon instance slots are occupied.");
-        return DungeonInstanceWorlds.get(server).prepare(definition, slot);
+        return DungeonInstanceWorlds.get(server).prepare(definition, slot, profile);
     }
 
     public static String startRun(MinecraftServer server,
@@ -643,7 +646,7 @@ public final class DungeonLifecycleService {
 
         if (reason == DungeonResetReason.COMPLETED) {
             for (UUID id : run.orderedPlayers()) {
-                progress.markCompleted(id, run.dungeonId(), DEFAULT_DIFFICULTY);
+                progress.markCompleted(id, run.dungeonId(), run.difficulty().tier());
             }
         }
 

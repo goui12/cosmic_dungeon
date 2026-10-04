@@ -11,14 +11,14 @@ Use the offline Docs repository for class weapons; do not require live Google au
 3. **Implemented; gameplay QA pending:** Developer-only spawner equipment; fixed placement/blocked indicator/radius removal; isolated wave aggro.
 4. **Implemented; gameplay QA pending:** Tamsin create/name/leave groups; LFG and member invitations; move player class selection to Tamsin.
 5. **Implemented; gameplay QA pending:** Leader maximum capacity; mobile ready check/group HUD; invitation HUD and inventory-only controls.
-6. Per-instance difficulty with individual modifiers; cumulative completion advancement tiers.
+6. **Implemented; gameplay QA pending:** Per-instance difficulty with individual modifiers; cumulative completion advancement tiers.
 7. Class weapon skill persistence/balance; damage and class bonuses; meaningful potion-use progression.
 8. Mercenary hire/payment/roster slots; own starter room and actual chest equipment.
 9. Mercenary follow/teleport and ally-safe combat; chest/ingredient collection and automatic brewing; timed fallback healing.
 10. Mercenary HUD stacking; equipment-preserving no-drop death and ten-minute respawn.
 11. Server-wide lifetime statistics; teal pause-menu button and scrollable selectable leaderboards.
 
-Six implementation batches remain after batch 5; cumulative licensed gameplay QA is separate.
+Five implementation batches remain after batch 6; cumulative licensed gameplay QA is separate.
 Pending gameplay checks are testing tasks, not questions or requests to reconfirm decisions.
 The order may be adjusted for a concrete dependency without expanding a batch's scope.
 Complete the current batch and hand off; the numbered queue is not permission to skip the

@@ -65,6 +65,7 @@ public final class Config {
     public static final ModConfigSpec.IntValue MENU_BALANCE_POLL_TICKS, SPAWNER_MAINTENANCE_BUDGET;
     public static final ModConfigSpec SPEC;
     static {
+        net.goui.cosmicdungeon.dungeon.DungeonDifficultyConfig.define(B);
         B.comment("Implementation work bounds; not lore or damage modifiers.").push("Performance");
         MENU_BALANCE_POLL_TICKS=B.comment("Server ticks between account HUD/inventory/chest and open vendor/trade/repair balance polls; unchanged values send no packet.")
                 .defineInRange("menuBalancePollTicks",20,5,200);

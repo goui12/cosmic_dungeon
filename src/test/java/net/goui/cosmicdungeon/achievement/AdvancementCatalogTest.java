@@ -31,7 +31,9 @@ class AdvancementCatalogTest {
                 "constricting_bonds", "unspoken_resignation", "elegy"})
             expected.add("blooms/bloom_of_" + bloom);
         assertEquals(30, CosmicAchievementIds.ALL.size());
-        assertEquals(38, expected.size());
+        expected.addAll(Set.of("achievements/dungeon_1_easy", "achievements/dungeon_1_hard",
+                "achievements/dungeon_1_insane", "achievements/dungeon_1_ridiculous"));
+        assertEquals(42, expected.size());
         Set<String> actual = new HashSet<>();
         try (var paths = Files.walk(ROOT)) {
             for (Path path : paths.filter(p -> p.toString().endsWith(".json")).toList()) {

@@ -11,7 +11,7 @@ public final class InventoryHandoffPlan {
     public InventoryHandoffPlan(CompoundTag image) {
         data = image.copy();
         if (data.getIntOr("version", 0) != 1) throw new IllegalArgumentException("Unknown inventory handoff version");
-        id(); owner();
+        id(); owner(); difficulty();
         for (String flag : List.of("keep", "exact_before", "world_ready"))
             if (data.getBoolean(flag).isEmpty()) throw new IllegalArgumentException("Missing handoff flag " + flag);
         if (data.getString("reason").isEmpty() || data.getString("key").isEmpty())
@@ -71,6 +71,14 @@ public final class InventoryHandoffPlan {
         }
         return create(owner, run, "cleanup", startup ? "STARTUP_ABORT" : reason, keep, online, before,
                 after, stored, DungeonInventoryEscrowData.image(escrow), ownershipBefore, ownershipAfter, "", new CompoundTag());
+    }
+    /** Additive frozen completion tier; old handoffs retain their NORMAL/Hard meaning. */
+    public DungeonDifficulty difficulty() {
+        return DungeonDifficulty.parse(data.getStringOr("difficulty", "HARD"))
+                .orElseThrow(() -> new IllegalArgumentException("Invalid handoff difficulty"));
+    }
+    public InventoryHandoffPlan withDifficulty(DungeonDifficulty tier) {
+        var n = image(); n.putString("difficulty", tier.name()); return new InventoryHandoffPlan(n);
     }
     public CompoundTag image() { return data.copy(); }
     public CompoundTag tag(String key) { return data.getCompoundOrEmpty(key).copy(); }

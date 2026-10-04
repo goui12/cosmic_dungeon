@@ -70,6 +70,7 @@
     "CraftingBookMixin",
     "CraftingAutomationMixin",
     "CraftingStonecutterMixin",
-    "CraftingSmithingMixin"
+    "CraftingSmithingMixin",
+    "DungeonDifficultyEffectMixin"
   ]
 }

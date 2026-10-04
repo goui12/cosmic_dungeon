@@ -34,7 +34,8 @@ public final class DungeonRunRegistryData extends SavedData {
             long startedAtEpochMillis,
             List<UUID> orderedPlayers,
             List<UUID> completionExitedPlayers,
-            List<DungeonPlayerRunSnapshot> playerSnapshots
+            List<DungeonPlayerRunSnapshot> playerSnapshots,
+            DungeonDifficulty.Profile difficulty
     ) {
         // Keep this codec local: the public record may initialize before its enclosing SavedData.
         private static final Codec<UUID> UUID_CODEC = Codec.STRING.xmap(UUID::fromString, UUID::toString);
@@ -50,9 +51,23 @@ public final class DungeonRunRegistryData extends SavedData {
                 Codec.LONG.optionalFieldOf("started_at", 0L).forGetter(RunRecord::startedAtEpochMillis),
                 UUID_CODEC.listOf().fieldOf("ordered_players").forGetter(RunRecord::orderedPlayers),
                 UUID_CODEC.listOf().optionalFieldOf("completion_exited_players", List.of()).forGetter(RunRecord::completionExitedPlayers),
-                DungeonPlayerRunSnapshot.CODEC.listOf().optionalFieldOf("player_snapshots", List.of()).forGetter(RunRecord::playerSnapshots)
+                DungeonPlayerRunSnapshot.CODEC.listOf().optionalFieldOf("player_snapshots", List.of()).forGetter(RunRecord::playerSnapshots),
+                DungeonDifficulty.Profile.CODEC.optionalFieldOf("difficulty_profile", DungeonDifficulty.Profile.LEGACY).forGetter(RunRecord::difficulty)
         ).apply(i, RunRecord::new));
 
+        public RunRecord(long runId, String dungeonId, String selectorDimensionId, long selectorPosLong,
+                List<String> dungeonDimensionIds, int instanceSlot, String state, String resetReason,
+                long startedAtEpochMillis, List<UUID> orderedPlayers, List<UUID> completionExitedPlayers,
+                List<DungeonPlayerRunSnapshot> playerSnapshots) {
+            this(runId, dungeonId, selectorDimensionId, selectorPosLong, dungeonDimensionIds, instanceSlot,
+                    state, resetReason, startedAtEpochMillis, orderedPlayers, completionExitedPlayers,
+                    playerSnapshots, DungeonDifficulty.Profile.LEGACY);
+        }
+        public RunRecord withDifficulty(DungeonDifficulty.Profile profile) {
+            return new RunRecord(runId, dungeonId, selectorDimensionId, selectorPosLong, dungeonDimensionIds,
+                    instanceSlot, state, resetReason, startedAtEpochMillis, orderedPlayers,
+                    completionExitedPlayers, playerSnapshots, java.util.Objects.requireNonNull(profile));
+        }
         public DungeonRunState stateEnum() {
             try {
                 return DungeonRunState.valueOf(state.toUpperCase(Locale.ROOT));
@@ -110,7 +125,7 @@ public final class DungeonRunRegistryData extends SavedData {
                     startedAtEpochMillis,
                     orderedPlayers,
                     updated,
-                    playerSnapshots
+                    playerSnapshots, difficulty
             );
         }
 
@@ -142,7 +157,7 @@ public final class DungeonRunRegistryData extends SavedData {
                     startedAtEpochMillis,
                     updatedPlayers,
                     updatedExited,
-                    updatedSnapshots
+                    updatedSnapshots, difficulty
             );
         }
 
@@ -159,14 +174,14 @@ public final class DungeonRunRegistryData extends SavedData {
                     startedAtEpochMillis,
                     orderedPlayers,
                     completionExitedPlayers,
-                    playerSnapshots
+                    playerSnapshots, difficulty
             );
         }
 
         public RunRecord withInstance(int slot, List<String> dimensions) {
             return new RunRecord(runId, dungeonId, selectorDimensionId, selectorPosLong,
                     List.copyOf(dimensions), slot, state, resetReason, startedAtEpochMillis,
-                    orderedPlayers, completionExitedPlayers, playerSnapshots);
+                    orderedPlayers, completionExitedPlayers, playerSnapshots, difficulty);
         }
     }
 
@@ -301,7 +316,11 @@ public final class DungeonRunRegistryData extends SavedData {
     }
 
     public RunRecord reserveInstanceVerified(DungeonDefinition definition, int slot) {
-        RunRecord record = allocateInstance(definition, slot);
+        return reserveInstanceVerified(definition, slot, DungeonDifficulty.Profile.LEGACY);
+    }
+    public RunRecord reserveInstanceVerified(DungeonDefinition definition, int slot, DungeonDifficulty.Profile profile) {
+        RunRecord record = allocateInstance(definition, slot).withDifficulty(profile);
+        runsById.put(record.runId(), record);
         if (!flushVerified()) throw new IllegalStateException("Instance reservation could not be saved; its slot remains held");
         return record;
     }
@@ -356,7 +375,7 @@ public final class DungeonRunRegistryData extends SavedData {
                 System.currentTimeMillis(),
                 new ArrayList<>(orderedPlayers),
                 new ArrayList<>(),
-                snapshots == null ? List.of() : new ArrayList<>(snapshots)
+                snapshots == null ? List.of() : new ArrayList<>(snapshots), reservation.difficulty()
         );
 
         runsById.put(runId, rec);
@@ -403,6 +422,10 @@ public final class DungeonRunRegistryData extends SavedData {
         return Optional.empty();
     }
 
+    public DungeonDifficulty.Profile difficultyForDimension(ResourceKey<Level> dimension) {
+        return runsById.values().stream().filter(r -> r.instanceSlot() > 0 && r.containsDimension(dimension)
+                && r.stateEnum() != DungeonRunState.FAILED).findFirst().map(RunRecord::difficulty).orElse(null);
+    }
     public Optional<RunRecord> findRunForInstanceDimension(ResourceKey<Level> dimension) {
         if (dimension == null) return Optional.empty();
         return runsById.values().stream()

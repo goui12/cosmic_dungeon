@@ -708,5 +708,13 @@
   "screen.cosmicdungeon.advancements.close": "Done",
   "chest.cosmicdungeon.unassigned": "Unassigned",
   "message.cosmicdungeon.class_chest.not_owner": "This chest belongs to %s. Only they can open it.",
-  "message.cosmicdungeon.class_chest.unassigned": "This chest is not assigned to a player."
+  "message.cosmicdungeon.class_chest.unassigned": "This chest is not assigned to a player.",
+  "advancements.cosmicdungeon.achievements.dungeon_1_easy.title": "Dungeon 1: Easy",
+  "advancements.cosmicdungeon.achievements.dungeon_1_easy.desc": "Complete Dungeon 1 on Easy difficulty or higher.",
+  "advancements.cosmicdungeon.achievements.dungeon_1_hard.title": "Dungeon 1: Hard",
+  "advancements.cosmicdungeon.achievements.dungeon_1_hard.desc": "Complete Dungeon 1 on Hard difficulty or higher.",
+  "advancements.cosmicdungeon.achievements.dungeon_1_insane.title": "Dungeon 1: Insane",
+  "advancements.cosmicdungeon.achievements.dungeon_1_insane.desc": "Complete Dungeon 1 on Insane difficulty or higher.",
+  "advancements.cosmicdungeon.achievements.dungeon_1_ridiculous.title": "Dungeon 1: Ridiculous",
+  "advancements.cosmicdungeon.achievements.dungeon_1_ridiculous.desc": "Complete Dungeon 1 on Ridiculous difficulty or higher."
 }

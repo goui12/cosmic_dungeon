@@ -138,6 +138,7 @@ public final class D1PartyHud {
             if (mouseX >= box.x() && mouseX < box.x() + box.width() && mouseY >= box.y() && mouseY < box.y() + box.height()) {
                 var details = new java.util.ArrayList<Component>();
                 details.add(Component.literal(grouped ? view.recruitment().groupName() : "Dungeon 1 invitation from " + view.invitation().inviter()));
+                if (grouped) details.add(Component.literal("Difficulty: " + view.difficulty()));
                 for (var member : view.members()) details.add(Component.literal(member.name() + " / "
                         + ClassSelectorScreen.className(member.classId()).getString() + (member.ready() ? " / Ready" : " / Not Ready")));
                 if (!grouped && view.invitation().accepted()) details.add(Component.literal("Finish agreement/class selection at Tamsin"));
@@ -160,7 +161,9 @@ public final class D1PartyHud {
             case "ACTIVE" -> "Dungeon 1";
             default -> view.members().size() + "/" + view.state().capacity() + " members";
         };
-        line(graphics, status, box.y() + 16, 0xFF90CAF9, mouseX, mouseY);
+        String difficulty = net.goui.cosmicdungeon.dungeon.DungeonDifficulty.parse(view.difficulty())
+                .orElse(net.goui.cosmicdungeon.dungeon.DungeonDifficulty.HARD).title();
+        line(graphics, difficulty + " / " + status, box.y() + 16, 0xFF90CAF9, mouseX, mouseY);
         int y = box.y() + 30;
         for (var member : view.members()) {
             line(graphics, (member.leader() ? "* " : "") + member.name() + " / "

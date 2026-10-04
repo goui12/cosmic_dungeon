@@ -38,6 +38,9 @@ public final class DungeonInstanceWorlds {
     }
 
     public DungeonLifecycleService.InstancePreparation prepare(DungeonDefinition definition, int slot) {
+        return prepare(definition, slot, DungeonDifficulty.Profile.LEGACY);
+    }
+    public DungeonLifecycleService.InstancePreparation prepare(DungeonDefinition definition, int slot, DungeonDifficulty.Profile profile) {
         var registry = DungeonRunRegistryData.get(server);
         DungeonRunRegistryData.RunRecord reservation = null;
         try {
@@ -55,7 +58,7 @@ public final class DungeonInstanceWorlds {
                         || Files.exists(DungeonWorldSnapshotService.getDimensionFolder(server, physical), LinkOption.NOFOLLOW_LINKS))
                     throw new IOException("Reserved generation already exists; recovery is required for " + physical.location());
             }
-            reservation = registry.reserveInstanceVerified(definition, slot);
+            reservation = registry.reserveInstanceVerified(definition, slot, profile);
             var mapping = DungeonInstanceSlots.mapping(definition, reservation);
             for (var pair : mapping.entrySet()) {
                 if (server.getLevel(pair.getValue()) != null || closing.containsKey(pair.getValue()))

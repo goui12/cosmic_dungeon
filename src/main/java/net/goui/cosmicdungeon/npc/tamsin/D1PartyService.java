@@ -97,7 +97,7 @@ public final class D1PartyService {
                 new PartyPayloads.State(LOBBY.revision(player.getUUID()), phase,
                         leader, capacity, LOBBY.queuePosition(p), countdown), members,
                 new PartyPayloads.Invite(i == null ? "" : i.token(), sender == null ? "" : sender.getGameProfile().name(),
-                        i != null && i.accepted(), canInvite), recruitment(player, menu, p, anchor));
+                        i != null && i.accepted(), canInvite), recruitment(player, menu, p, anchor), p == null ? "HARD" : p.difficulty().name());
         if (force || !view.equals(menu.lastPartyView)) {
             menu.lastPartyView = view; ModNetwork.sendTo(player, view);
         }
@@ -195,6 +195,7 @@ public final class D1PartyService {
                 if (anchor == null || !nearby(player, anchor)) { error = "Speak with Tamsin to create a group."; break; }
                 error = LOBBY.create(player.getUUID(), anchor, request.revision(), request.target(), selector(server, anchor).getMaxPlayers());
             }
+            case "difficulty" -> error = LOBBY.difficulty(player.getUUID(), request.revision(), request.target());
             case "capacity" -> {
                 try { error = LOBBY.capacity(player.getUUID(), request.revision(), Integer.parseInt(request.target())); }
                 catch (NumberFormatException invalid) { error = "Choose a maximum of 1-6 members."; }
@@ -335,6 +336,7 @@ public final class D1PartyService {
                     boolean success = false;
                     try {
                         success = ClassSelectorEntryService.enter(server, p.anchor(), p.members(), p.classes(),
+                                net.goui.cosmicdungeon.dungeon.DungeonDifficultyConfig.snapshot(p.difficulty()),
                                 () -> LOBBY.party(p.leader()) == p && rosterProblem(server, p, true) == null);
                     } catch (RuntimeException failure) {
                         com.mojang.logging.LogUtils.getLogger().error("D1 party entry failed; cancelling preparation", failure);

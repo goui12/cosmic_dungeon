@@ -56,7 +56,8 @@ final class D1PartyHudService {
                     new PartyPayloads.State(lobby.revision(id), phase, leader, capacity, queue, seconds), rows,
                     new PartyPayloads.Invite(invitation == null ? "" : invitation.token(),
                             sender == null ? "" : sender.getGameProfile().name(), invitation != null && invitation.accepted(), false),
-                    new PartyPayloads.Recruitment(name, false, 0, 1, List.of()));
+                    new PartyPayloads.Recruitment(name, false, 0, 1, List.of()),
+                    p != null ? p.difficulty().name() : run != null ? run.difficulty().tier() : "HARD");
             if (!view.equals(LAST.get(id))) ModNetwork.sendTo(player, view);
             if (rows.isEmpty() && invitation == null) LAST.remove(id);
             else LAST.put(id, view);
