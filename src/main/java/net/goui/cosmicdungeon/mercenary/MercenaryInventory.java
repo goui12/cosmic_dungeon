@@ -4,6 +4,8 @@ import java.util.*;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.alchemy.PotionBrewing;
 import net.goui.cosmicdungeon.item.identity.ClassItemOwnership;
+import net.goui.cosmicdungeon.playerclass.api.ClassItemUtil;
+import net.goui.cosmicdungeon.playerclass.d1.*;
 
 /** Copy/plan/commit; no source consumption until the complete result fits. */
 public final class MercenaryInventory {
@@ -29,6 +31,33 @@ public final class MercenaryInventory {
     }
     public static boolean permitted(ItemStack stack,MercenaryContract contract){
         return contract!=null&&ClassItemOwnership.mayAcquire(stack,contract.id(),contract.classId());
+    }
+    /** Only resources this AI can actually equip, shoot, drink/throw, or brew. Never keys. */
+    public static boolean useful(ItemStack stack,MercenaryContract contract,PotionBrewing recipes){
+        if(stack.isEmpty()||!permitted(stack,contract)
+                ||stack.getItem() instanceof net.goui.cosmicdungeon.item.custom.DoorKeyItem
+                ||stack.has(net.goui.cosmicdungeon.component.ModDataComponents.DOOR_LOCK_ID.get()))return false;
+        String required=net.goui.cosmicdungeon.playerclass.api.ClassItemEquipmentGuard.getRequiredClass(stack);
+        if(required!=null&&!required.equals(contract.classId()))return false;
+        var slot=MercenaryEquipment.preferred(stack);
+        if(slot!=null)return slot!=net.minecraft.world.entity.EquipmentSlot.MAINHAND
+                ||net.goui.cosmicdungeon.playerclass.skill.ClassSkillRules.known(contract.classId(),
+                    net.goui.cosmicdungeon.playerclass.skill.ClassSkills.weapon(stack));
+        if(stack.getItem() instanceof ArrowItem){
+            if(!net.goui.cosmicdungeon.playerclass.skill.ClassSkillRules.known(contract.classId(),"bow")
+                    &&!net.goui.cosmicdungeon.playerclass.skill.ClassSkillRules.known(contract.classId(),"crossbow"))return false;
+            String id=D1AbilityIdentity.identify(stack);
+            var ability=D1AmmunitionCatalog.find(id);
+            if(ability==null&&D1AmmunitionCatalog.registered(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString()))return false;
+            if(ability!=null&&(!ability.classes().contains(contract.classId())
+                    ||!D1AmmunitionCatalog.bindingAllowed(id,ClassItemUtil.hasAnyAttunementMetadata(stack),
+                        ClassItemUtil.hasCompleteValidAttunement(stack),ClassItemUtil.getClassAttunement(stack),
+                        ClassItemUtil.getDungeon(stack),ClassItemUtil.getTier(stack))
+                    ||net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairComponents.marked(stack)
+                    ||net.goui.cosmicdungeon.item.identity.ItemProvenanceService.present(stack)))return false;
+            return MercenaryBrain.attackArrow(stack,false)||MercenaryBrain.attackArrow(stack,true);
+        }
+        return stack.getItem() instanceof PotionItem||recipes.isInput(stack)||recipes.isIngredient(stack);
     }
     /** Native recipes, including registered mod recipes; one reagent, one bottle per cycle. */
     public static List<ItemStack> brew(List<ItemStack> inventory,PotionBrewing recipes){
