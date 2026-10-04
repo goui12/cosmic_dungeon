@@ -13,7 +13,7 @@ import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 /**
  * Q&A D20: successful-run statistics persist; failed/exited run statistics do not.
  * Counts attributed hostile deaths, including a member's companions and subsequent environmental damage.
- * Lifetime leaderboard retention is a separate pending testing batch.
+ * Independent server-wide LifetimeEvents also retains all newly attributed hostile kills.
  * No entity scan, currency payout, or lifetime update occurs on this event.
  */
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID)

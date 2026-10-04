@@ -1,6 +1,7 @@
 package net.goui.cosmicdungeon.dungeon.d1;
 
 import com.mojang.serialization.Codec;
+import net.goui.cosmicdungeon.leaderboard.LifetimeActivity;
 import net.goui.cosmicdungeon.transaction.SavedDataProof;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.server.MinecraftServer;
@@ -23,17 +24,39 @@ public final class D1LifetimeData extends SavedData {
     private static final Codec<D1LifetimeData> CODEC = RecordCodecBuilder.create(i -> i.group(
             Codec.unboundedMap(Codec.STRING.xmap(UUID::fromString, UUID::toString), Totals.CODEC)
                     .optionalFieldOf("players", Map.of()).forGetter((D1LifetimeData d) -> d.players),
-            WatsonReceipt.MAP_CODEC.optionalFieldOf("watson_receipts", Map.of()).forGetter(d -> d.watsonReceipts)
+            WatsonReceipt.MAP_CODEC.optionalFieldOf("watson_receipts", Map.of()).forGetter(d -> d.watsonReceipts),
+            Codec.unboundedMap(Codec.STRING.xmap(UUID::fromString,UUID::toString),LifetimeActivity.CODEC)
+                    .optionalFieldOf("activity",Map.of()).forGetter(d->d.activity)
     ).apply(i, D1LifetimeData::load));
     private static final SavedDataType<D1LifetimeData> TYPE =
             new SavedDataType<>("cosmicdungeon_d1_lifetime_v1", D1LifetimeData::new, CODEC);
     private final Map<UUID, Totals> players = new HashMap<>();
+    private final Map<UUID,LifetimeActivity> activity=new HashMap<>();
+    public Set<UUID> owners(){var ids=new HashSet<>(players.keySet());ids.addAll(activity.keySet());return Set.copyOf(ids);}
+    public LifetimeActivity activity(UUID id){return activity.getOrDefault(id,LifetimeActivity.EMPTY);}
+    public void name(UUID id,String name){
+        var previous=activity(id);if(!previous.name().equals(name)){activity.put(id,previous.named(name));setDirty();}
+    }
+    public void activity(UUID id,String key,long amount){
+        Objects.requireNonNull(id);var previous=activity(id);var next=previous.add(key,amount);
+        if(!previous.equals(next)){activity.put(id,next);setDirty();}
+    }
+    public long leaderboard(UUID id,String key){
+        var t=totals(id);
+        return switch(key){
+            case "legacy|spectral_blooms" -> t.spectralBlooms();
+            case "legacy|lesser_blooms" -> t.lesserBlooms();
+            case "legacy|completions" -> t.completions();
+            case "legacy|successful_kills" -> t.successfulKills();
+            default -> key.startsWith("cosmic|")?activity(id).counts().getOrDefault(key.substring(7),0L):0L;
+        };
+    }
     private D1LifetimeData() {}
     private final Map<UUID, WatsonReceipt> watsonReceipts = new HashMap<>();
     private MinecraftServer server;
-    private static D1LifetimeData load(Map<UUID, Totals> players, Map<UUID, WatsonReceipt> receipts) {
+    private static D1LifetimeData load(Map<UUID, Totals> players, Map<UUID, WatsonReceipt> receipts,Map<UUID,LifetimeActivity> activity) {
         WatsonReceipt.validate(receipts);
-        D1LifetimeData data = new D1LifetimeData(); data.players.putAll(players); data.watsonReceipts.putAll(receipts); return data;
+        D1LifetimeData data = new D1LifetimeData(); data.players.putAll(players); data.watsonReceipts.putAll(receipts);data.activity.putAll(activity); return data;
     }
     public static D1LifetimeData get(MinecraftServer server) {
         SavedDataProof.validate(server, "cosmicdungeon_d1_lifetime_v1", CODEC);

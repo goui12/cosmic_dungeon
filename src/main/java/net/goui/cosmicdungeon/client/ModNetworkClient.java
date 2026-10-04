@@ -38,6 +38,9 @@ public final class ModNetworkClient {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private ModNetworkClient() {}
+    public static void onLeaderboard(net.goui.cosmicdungeon.network.LeaderboardPayloads.View payload){
+        net.goui.cosmicdungeon.client.screen.LeaderboardScreen.receive(payload);
+    }
     public static void onCurrencyBalance(net.goui.cosmicdungeon.network.CurrencyBalancePayload payload) {
         net.goui.cosmicdungeon.client.economy.CurrencyBalanceClient.receive(payload);
     }
