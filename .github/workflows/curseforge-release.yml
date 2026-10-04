@@ -144,8 +144,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ needs.build.outputs.tag }}
           RELEASE_CHANNEL: ${{ needs.build.outputs.channel }}
+          RELEASE_VERSION: ${{ needs.build.outputs.version }}
         run: |
-          gh release upload "$RELEASE_TAG" build/libs/*.jar --clobber --repo goui12/cosmic_dungeon
+          gh release upload "$RELEASE_TAG" "build/libs/cosmicdungeon-$RELEASE_VERSION.jar" "build/libs/cosmicdungeon-$RELEASE_VERSION-loading-screen.jar" --clobber --repo goui12/cosmic_dungeon
           if [ "$RELEASE_CHANNEL" = release ]; then
             gh release edit "$RELEASE_TAG" --draft=false --prerelease=false --latest --repo goui12/cosmic_dungeon
           else
