@@ -11,7 +11,8 @@
     "client.TamsinVillagerRendererMixin",
     "client.TamsinClothingMixin",
     "client.InventoryRecipeBookScreenMixin",
-    "client.InventoryRecipeBookComponentMixin"
+    "client.InventoryRecipeBookComponentMixin",
+    "client.LeaderboardPauseMixin"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -76,6 +77,7 @@
     "SkillSplashPotionMixin",
     "SkillCloudMixin",
     "SkillLingeringPotionMixin",
-    "SkillDrinkPotionMixin"
+    "SkillDrinkPotionMixin",
+    "StatsCounterAccess"
   ]
 }

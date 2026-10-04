@@ -1,0 +1,3 @@
+# Batch 11 — lifetime statistics and leaderboards
+
+Adds server-wide native statistics and custom lifetime activity retained through failed/forfeited runs; preserves existing successful-run totals. A teal Leaderboard pause-menu button opens searchable, scrollable statistic/player pages with offline history. Reuses native stats files and existing lifetime SavedData; bounded read-only background queries and protocol13 require matching jars. New custom counters start from observed events, without invented historical backfill. Java21 build,213 native tests and offline checks passed; licensed gameplay QA remains pending. No generated assets or spawner migration.

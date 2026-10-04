@@ -16,9 +16,9 @@ Use the offline Docs repository for class weapons; do not require live Google au
 8. **Implemented; gameplay QA pending:** Mercenary hire/payment/roster slots; own starter room and actual chest equipment.
 9. **Implemented; gameplay QA pending:** Mercenary follow/teleport and ally-safe combat; chest/ingredient collection and automatic brewing; timed fallback healing.
 10. **Implemented; gameplay QA pending:** Mercenary HUD stacking; equipment-preserving no-drop death and ten-minute respawn.
-11. Server-wide lifetime statistics; teal pause-menu button and scrollable selectable leaderboards.
+11. **Implemented; gameplay QA pending:** Server-wide lifetime statistics; teal pause-menu button and scrollable selectable leaderboards.
 
-One implementation batch remains after batch 10; cumulative licensed gameplay QA is separate.
+Zero implementation batches remain after batch 11; cumulative licensed gameplay QA is separate.
 Pending gameplay checks are testing tasks, not questions or requests to reconfirm decisions.
 The order may be adjusted for a concrete dependency without expanding a batch's scope.
 Complete the current batch and hand off; the numbered queue is not permission to skip the
