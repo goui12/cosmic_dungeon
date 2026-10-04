@@ -39,7 +39,10 @@ public final class PartyPayloads {
                 ByteBufCodecs.VAR_INT, Recruitment::page, ByteBufCodecs.VAR_INT, Recruitment::pages,
                 Member.CODEC.apply(ByteBufCodecs.list(4)), Recruitment::candidates, Recruitment::new);
     }
-    public record View(int containerId, State state, List<Member> members, Invite invitation, Recruitment recruitment) implements CustomPacketPayload {
+    public record View(int containerId, State state, List<Member> members, Invite invitation, Recruitment recruitment, String difficulty) implements CustomPacketPayload {
+        public View(int containerId, State state, List<Member> members, Invite invitation, Recruitment recruitment) {
+            this(containerId, state, members, invitation, recruitment, "HARD");
+        }
         public View(int containerId, State state, List<Member> members, Invite invitation) {
             this(containerId, state, members, invitation, Recruitment.EMPTY);
         }
@@ -47,7 +50,7 @@ public final class PartyPayloads {
         public static final StreamCodec<ByteBuf, View> STREAM_CODEC = StreamCodec.composite(
                 ByteBufCodecs.VAR_INT, View::containerId, State.CODEC, View::state,
                 Member.CODEC.apply(ByteBufCodecs.list(6)), View::members, Invite.CODEC, View::invitation,
-                Recruitment.CODEC, View::recruitment, View::new);
+                Recruitment.CODEC, View::recruitment, ByteBufCodecs.stringUtf8(16), View::difficulty, View::new);
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 }

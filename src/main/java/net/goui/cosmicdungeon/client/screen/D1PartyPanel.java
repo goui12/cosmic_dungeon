@@ -75,6 +75,11 @@ final class D1PartyPanel {
             button(add, "Class", x + 178, y + 170, 66, !preparing, () -> send(containerId, "class", ""));
             button(add, state.leader() ? "Disband" : "Leave group", x + 250, y + 170, 100, !preparing,
                     () -> send(containerId, "leave", ""));
+            var difficulty = net.goui.cosmicdungeon.dungeon.DungeonDifficulty.parse(view.difficulty())
+                    .orElse(net.goui.cosmicdungeon.dungeon.DungeonDifficulty.HARD);
+            button(add, "Difficulty: " + difficulty.title(), x + 10, y + 190, 340,
+                    state.leader() && !preparing && !state.phase().equals("QUEUED"),
+                    () -> send(containerId, "difficulty", net.goui.cosmicdungeon.dungeon.DungeonDifficulty.values()[(difficulty.ordinal() + 1) % 4].name()));
             button(add, "Recruit / Invite friends", x + 10, y + 210, 340, !preparing,
                     () -> { recruiting = true; rebuild.run(); });
         }

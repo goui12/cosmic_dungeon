@@ -83,7 +83,11 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     }
     boolean mayRetryPlacement(long now) { return now >= nextPlacementAttempt; }
     void deferPlacement(long now) { nextPlacementAttempt = now + 10; }
-    void tickSpawnDelay() { setIntRaw(F_SPAWN_DELAY, Math.max(0, getSpawnerDelayTicks() - 1)); }
+    private final net.goui.cosmicdungeon.dungeon.DungeonDifficulty.Clock difficultyClock =
+            new net.goui.cosmicdungeon.dungeon.DungeonDifficulty.Clock();
+    void tickSpawnDelay(double multiplier) {
+        setIntRaw(F_SPAWN_DELAY, Math.max(0, getSpawnerDelayTicks() - difficultyClock.step(multiplier)));
+    }
 
     /**
      * Stable marker prefix added to every mob emitted by a Cosmic Mob Spawner.
@@ -674,7 +678,8 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
 
         int originalSpawnCount = be.getSpawnerSpawnCount();
         boolean limitedSpawnCount = false;
-        int spawnLimit = originalSpawnCount;
+        var difficulty = net.goui.cosmicdungeon.dungeon.DungeonDifficultyEvents.profile(sl);
+        int spawnLimit = difficulty == null ? originalSpawnCount : difficulty.count(originalSpawnCount, be.bossOneShot);
         if (be.bossOneShot) {
             spawnLimit = Math.min(spawnLimit, 1);
         }
@@ -685,7 +690,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
             }
             spawnLimit = Math.min(spawnLimit, remaining);
         }
-        if (spawnLimit > 0 && spawnLimit < originalSpawnCount) {
+        if (spawnLimit > 0 && spawnLimit != originalSpawnCount) {
             be.setSpawnerSpawnCountTransient(spawnLimit);
             limitedSpawnCount = true;
         }

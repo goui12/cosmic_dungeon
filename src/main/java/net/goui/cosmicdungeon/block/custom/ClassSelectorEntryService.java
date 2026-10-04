@@ -24,10 +24,11 @@ public final class ClassSelectorEntryService {
 
     public static boolean enter(MinecraftServer server, net.goui.cosmicdungeon.npc.tamsin.D1PartyLobby.Anchor anchor,
                                 List<UUID> ordered, Map<UUID, String> classes,
+                                net.goui.cosmicdungeon.dungeon.DungeonDifficulty.Profile difficulty,
                                 java.util.function.BooleanSupplier validRoster) {
         if (!server.isSameThread() || !validRoster.getAsBoolean()) return false;
         try {
-            return enterPrepared(server, anchor, ordered, classes, validRoster);
+            return enterPrepared(server, anchor, ordered, classes, difficulty, validRoster);
         } catch (RuntimeException failure) {
             LOGGER.error("D1 entry interrupted; registered rollback and saved inventories retained", failure);
             rollbackRegistered(server, ordered);
@@ -45,7 +46,8 @@ public final class ClassSelectorEntryService {
         }
     }
     private static boolean enterPrepared(MinecraftServer server, net.goui.cosmicdungeon.npc.tamsin.D1PartyLobby.Anchor anchor,
-            List<UUID> ordered, Map<UUID, String> classes, java.util.function.BooleanSupplier validRoster) {
+            List<UUID> ordered, Map<UUID, String> classes, net.goui.cosmicdungeon.dungeon.DungeonDifficulty.Profile difficulty,
+            java.util.function.BooleanSupplier validRoster) {
         ServerLevel selectorLevel = ClassSelectorTeleportUtil.resolveLevel(server, anchor.dimension());
         BlockPos selectorPos = BlockPos.of(anchor.selector());
         if (selectorLevel == null || !(selectorLevel.getBlockEntity(selectorPos) instanceof ClassSelectorBlockEntity csbe)) return false;
@@ -138,7 +140,7 @@ public final class ClassSelectorEntryService {
 
         if (!validRoster.getAsBoolean()) return false;
         DungeonLifecycleService.InstancePreparation preparationResult =
-                DungeonLifecycleService.prepareRunInstance(server, dungeonLevel.dimension(), ordered);
+                DungeonLifecycleService.prepareRunInstance(server, dungeonLevel.dimension(), ordered, difficulty);
         if (preparationResult instanceof DungeonLifecycleService.PreparationError preparationError) {
             Component msg = Component.literal(preparationError.message()).withStyle(ChatFormatting.RED);
             for (ServerPlayer p : finalParty) {

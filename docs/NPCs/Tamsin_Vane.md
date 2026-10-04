@@ -24,6 +24,12 @@ Group; invitation HUD exposes Join Group there. Recipe-book layouts use a compac
 summary with the full roster on hover. Active dungeon HUD is read-only. See the
 [batch 5 report and pending gameplay checks](../ai/TESTING_BATCH_5_20261003.md).
 
+The leader chooses Easy, Hard, Insane or Ridiculous with the Difficulty button.
+Changing it clears readiness; queued groups must cancel readiness before changing it.
+The group HUD shows the chosen tier. Settings are fixed for that adventure, and a
+successful completion earns its tier plus every lower completion advancement.
+See [difficulty settings and testing](../ai/TESTING_BATCH_6_20261003.md).
+
 ## Backstory
 
 Tamsin Vane was already a seller of recovered treasures before she became a seller of dangerous opportunities. Tomb roads, collapsed shrines, sealed wells, and abandoned military works all interested her for the same practical reason. Old places held old treasures, and old treasures sold for big money.

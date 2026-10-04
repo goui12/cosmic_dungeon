@@ -18,9 +18,8 @@ import java.util.UUID;
 
 public final class DungeonRunProgressData extends SavedData {
     private static final String SAVE_ID = "cosmicdungeon_dungeon_progress_v1";
-    private static final Codec<UUID> UUID_CODEC = Codec.STRING.xmap(UUID::fromString, UUID::toString);
-
     public record BloomMaskRecord(long runId, UUID playerId, long mask) {
+        private static final Codec<UUID> UUID_CODEC = Codec.STRING.xmap(UUID::fromString, UUID::toString);
         public static final Codec<BloomMaskRecord> CODEC = RecordCodecBuilder.create(i -> i.group(
                 Codec.LONG.fieldOf("run_id").forGetter(BloomMaskRecord::runId),
                 UUID_CODEC.fieldOf("player_id").forGetter(BloomMaskRecord::playerId),
@@ -29,6 +28,7 @@ public final class DungeonRunProgressData extends SavedData {
     }
 
     public record CompletionRecord(UUID playerId, String dungeonId, String difficulty, long completedAtEpochMillis) {
+        private static final Codec<UUID> UUID_CODEC = Codec.STRING.xmap(UUID::fromString, UUID::toString);
         public static final Codec<CompletionRecord> CODEC = RecordCodecBuilder.create(i -> i.group(
                 UUID_CODEC.fieldOf("player_id").forGetter(CompletionRecord::playerId),
                 Codec.STRING.fieldOf("dungeon_id").forGetter(CompletionRecord::dungeonId),
@@ -61,13 +61,16 @@ public final class DungeonRunProgressData extends SavedData {
         if (overworld == null) {
             throw new IllegalStateException("Overworld is not available; cannot load DungeonRunProgressData.");
         }
-        return overworld.getDataStorage().computeIfAbsent(TYPE);
+        net.goui.cosmicdungeon.transaction.SavedDataProof.validate(server, SAVE_ID, CODEC);
+        var data = overworld.getDataStorage().computeIfAbsent(TYPE); data.server = server; return data;
     }
 
     private final Map<Long, Map<UUID, Long>> bloomMasks = new HashMap<>();
     private final Map<String, CompletionRecord> completions = new HashMap<>();
 
+    private MinecraftServer server;
     private DungeonRunProgressData() {}
+    public boolean flushVerified() { return net.goui.cosmicdungeon.transaction.SavedDataProof.save(server, SAVE_ID, CODEC, this); }
 
     private static DungeonRunProgressData fromPersisted(Persisted p) {
         DungeonRunProgressData d = new DungeonRunProgressData();
@@ -137,8 +140,7 @@ public final class DungeonRunProgressData extends SavedData {
 
         String diff = (difficulty == null || difficulty.isBlank()) ? "NORMAL" : difficulty.toUpperCase(Locale.ROOT);
         CompletionRecord rec = new CompletionRecord(playerId, dungeonId, diff, System.currentTimeMillis());
-        completions.put(key(playerId, dungeonId, diff), rec);
-        setDirty();
+        if (completions.putIfAbsent(key(playerId, dungeonId, diff), rec) == null) setDirty();
     }
 
     public List<CompletionRecord> listCompletionsFor(UUID playerId) {

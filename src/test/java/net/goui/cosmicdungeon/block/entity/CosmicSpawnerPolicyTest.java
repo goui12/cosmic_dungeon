@@ -69,6 +69,22 @@ class CosmicSpawnerPolicyTest {
         var client=spawner();load(client,be.getUpdateTag(lookup()));assertTrue(client.isSpawnBlocked());
         be.setSpawnBlocked(false);load(client,be.getUpdateTag(lookup()));assertFalse(client.isSpawnBlocked());
     }
+    @Test void difficultyCountdownKeepsAuthoredKnobsAndSurvivesChunkReload() {
+        var be = spawner();
+        // Native initial loading seeds optional SpawnData before testing the difficulty countdown.
+        load(be, be.saveWithoutMetadata(lookup()));
+        be.setSpawnerDelayRange(80, 120); be.setSpawnerDelayTicks(20);
+        be.setSpawnerSpawnCount(4); be.setSpawnerMobCap(7);
+        for (int i = 0; i < 20; i++) be.tickSpawnDelay(2);
+        assertEquals(10, be.getSpawnerDelayTicks());
+        var saved = be.saveWithoutMetadata(lookup());
+        var restored = spawner(); load(restored, saved);
+        for (int i = 0; i < 20; i++) restored.tickSpawnDelay(2);
+        assertEquals(0, restored.getSpawnerDelayTicks());
+        assertEquals(80, restored.getSpawnerMinSpawnDelay()); assertEquals(120, restored.getSpawnerMaxSpawnDelay());
+        assertEquals(4, restored.getSpawnerSpawnCount()); assertEquals(7, restored.getSpawnerMobCap());
+        assertEquals(saved.keySet(), restored.saveWithoutMetadata(lookup()).keySet());
+    }
     @Test void legacyPlacedSpawnerRetainsConfigurationAndAuthoredGear() {
         var original=spawner();var preset=new CosmicSpawnerPreset();
         preset.setEntityTypeId(ResourceLocation.withDefaultNamespace("skeleton"));

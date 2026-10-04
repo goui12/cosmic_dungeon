@@ -13,6 +13,8 @@ public final class D1PartyLobby {
         private final Anchor anchor;
         private final String name;
         private int capacity;
+        private net.goui.cosmicdungeon.dungeon.DungeonDifficulty difficulty = net.goui.cosmicdungeon.dungeon.DungeonDifficulty.HARD;
+        public net.goui.cosmicdungeon.dungeon.DungeonDifficulty difficulty() { return difficulty; }
         private final LinkedHashSet<UUID> members = new LinkedHashSet<>();
         private final Set<UUID> ready = new HashSet<>();
         private Map<UUID, String> classes = Map.of();
@@ -159,6 +161,16 @@ public final class D1PartyLobby {
             return "Cancel queueing before changing the maximum.";
         if (!D1PartyRules.fits(p.members.size(), capacity)) return "Maximum must fit the current group (1-6).";
         if (p.capacity != capacity) { p.capacity = capacity; cancel(p); }
+        return null;
+    }
+    public String difficulty(UUID leader, long expected, String choice) {
+        var p = party(leader);
+        if (p == null || !p.leader.equals(leader)) return "Only the group leader can choose difficulty.";
+        if (!current(leader, expected) || p.phase == Phase.QUEUED || p.phase == Phase.PREPARING)
+            return "Cancel queueing before changing difficulty.";
+        var selected = net.goui.cosmicdungeon.dungeon.DungeonDifficulty.parse(choice);
+        if (selected.isEmpty()) return "Choose Easy, Hard, Insane or Ridiculous.";
+        if (p.difficulty != selected.get()) { p.difficulty = selected.get(); cancel(p); }
         return null;
     }
     public String unready(UUID player, long expected) {

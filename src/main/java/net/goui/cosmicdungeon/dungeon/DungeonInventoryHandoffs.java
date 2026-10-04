@@ -73,7 +73,8 @@ public final class DungeonInventoryHandoffs {
                 plan = InventoryHandoffPlan.cleanup(owner, run.runId(), reason, original.inventoryNbt(), escrow,
                         DungeonRunRegistryData.get(server).startupImage(run.runId(), owner),
                         ChopOwnershipData.get(server).image(owner),
-                        online == null ? new CompoundTag() : ChopTravelRecovery.saveInventory(online), online != null);
+                        online == null ? new CompoundTag() : ChopTravelRecovery.saveInventory(online), online != null)
+                        .withDifficulty(run.difficulty().difficulty());
                 if (online != null) {
                     if (!plan.keep()) ChopTravelRecovery.decode(online, plan.tag("after"));
                     if (plan.reason().equals("COMPLETED")) ChopTravelRecovery.decode(online, plan.tag("stored"));
@@ -100,7 +101,7 @@ public final class DungeonInventoryHandoffs {
                 var stored = D1StoredInventoryData.get(server);
                 stored.stash(plan.run(), plan.owner(), plan.tag("stored"));
                 if (!stored.flushVerified()) throw new IllegalStateException("Success inventory stash not verified");
-                DungeonRunProgressData.get(server).markCompleted(plan.owner(), "dungeon_1", "NORMAL");
+                DungeonCompletionAwards.completed(server, plan);
             }
             if (!ChopOwnershipData.get(server).compareAndSetVerified(plan.owner(), plan.tag("ownership_before"), plan.tag("ownership_after")))
                 throw new IllegalStateException("Cleanup Chop entitlement not verified");
