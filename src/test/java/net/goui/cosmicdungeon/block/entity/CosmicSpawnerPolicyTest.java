@@ -127,6 +127,33 @@ class CosmicSpawnerPolicyTest {
         assertFalse(CosmicSpawnerAwareness.detects(4,false,true));
         assertFalse(CosmicSpawnerAwareness.detects(4,true,false));
     }
+    @Test void legacyNearbyCapRemainsEffectiveAfterReload() {
+        var saved=spawner().saveWithoutMetadata(lookup());
+        saved.remove(CosmicSpawnerBlockEntity.DATA_VERSION_KEY);
+        saved.putInt("SpawnerMobCap",0);
+        saved.putShort("MaxNearbyEntities",(short)6);
+        saved.putShort("SpawnRange",(short)9);
+        var be=spawner();load(be,saved);
+        assertFalse(CosmicSpawnerRuntime.nativeCapReached(be,()->5));
+        assertTrue(CosmicSpawnerRuntime.nativeCapReached(be,()->6));
+        assertTrue(CosmicSpawnerRuntime.nativeCapReached(be,()->7));
+        var restored=spawner();load(restored,be.saveWithoutMetadata(lookup()));
+        assertEquals(6,restored.getSpawnerMaxNearbyEntities());
+        assertEquals(9,restored.getSpawnerSpawnRange());
+        assertTrue(CosmicSpawnerRuntime.nativeCapReached(restored,()->6));
+        restored.setSpawnerMaxNearbyEntities(0);
+        assertTrue(CosmicSpawnerRuntime.nativeCapReached(restored,()->0));
+    }
+    @Test void customTaggedCapDoesNotCountUnrelatedNearbyMobs() {
+        var be=spawner();be.setSpawnerMobCap(5);
+        be.setSpawnerMaxNearbyEntities(1);
+        assertFalse(CosmicSpawnerRuntime.nativeCapReached(be,()->{
+            fail("custom cap must not query unrelated nearby mobs");
+            return 100;
+        }));
+        assertTrue(CosmicSpawnerRuntime.fitsCap(5,4,1));
+        assertFalse(CosmicSpawnerRuntime.fitsCap(5,5,1));
+    }
     @Test void passengerGroupsCannotOverflowTheLivingCap() {
         assertTrue(CosmicSpawnerRuntime.fitsCap(5,3,2));
         assertFalse(CosmicSpawnerRuntime.fitsCap(5,4,2));

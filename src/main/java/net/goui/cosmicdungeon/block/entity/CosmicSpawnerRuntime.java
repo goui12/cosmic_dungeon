@@ -7,6 +7,9 @@ import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.level.BaseSpawner;
 import net.minecraft.world.level.SpawnData;
+import net.minecraft.world.level.entity.EntityTypeTest;
+import net.minecraft.world.phys.AABB;
+import java.util.function.IntSupplier;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.EventHooks;
@@ -40,6 +43,15 @@ final class CosmicSpawnerRuntime {
                         return part;
                     });
             if (entity == null) { delay(spawner, level, pos); return; }
+            // Preserve the authored native nearby cap when the tagged custom cap is disabled.
+            // Match BaseSpawner's exact-class, non-spectator query and delay reset.
+            if (nativeCapReached(owner, () -> level.getEntities(
+                    EntityTypeTest.forExactClass(entity.getClass()),
+                    new AABB(pos).inflate(owner.getSpawnerSpawnRange()),
+                    EntitySelector.NO_SPECTATORS).size())) {
+                delay(spawner, level, pos);
+                return;
+            }
             if (!entity.getType().getCategory().isFriendly() && level.getDifficulty() == Difficulty.PEACEFUL) return;
             if (entity instanceof Mob mob) {
                 boolean basic = tag.size() == 1 && tag.getString("id").isPresent();
@@ -88,6 +100,10 @@ final class CosmicSpawnerRuntime {
         }
         if (spawned) delay(spawner, level, pos);
         else owner.deferPlacement(level.getGameTime());
+    }
+    static boolean nativeCapReached(CosmicSpawnerBlockEntity owner, IntSupplier nearbyCount) {
+        return owner.getSpawnerMobCap() <= 0
+                && nearbyCount.getAsInt() >= owner.getSpawnerMaxNearbyEntities();
     }
     static boolean fitsCap(int cap, int existing, int incoming) {
         return cap <= 0 || (long) existing + incoming <= cap;

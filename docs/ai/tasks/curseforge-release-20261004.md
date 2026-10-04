@@ -34,3 +34,14 @@ classloader, exercising installed-artifact behavior without adding it to the gam
 Local validation target: 261 native tests plus 2 standalone helper artifact tests, 7 publishing tests, 42 offline branding/loading checks;
 2,001 JSON files and scoped diff checks. No client, local server or local GameTest launch.
 CI clean build/GameTests remain required on the final PR head before merge/tag publication.
+
+## Release review fixes
+
+PR 215 found two release blockers: native MaxNearbyEntities was skipped by the new
+Cosmic-only runtime, and the transitional updater matched the helper classifier.
+Restore the native exact-class/non-spectator AABB query and normal delay when the
+tagged custom cap is disabled; preserve the positive tagged-cap policy and all saved
+fields. No spawner migration is required. Exclude the helper from runtime swaps.
+Regression coverage adds legacy native-cap load/round-trip and custom-cap isolation,
+plus actual beta helper preservation during an offline updater transaction.
+This remains the unreleased 1.5.2-beta.1 candidate; no TEST update has been distributed.

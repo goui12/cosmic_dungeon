@@ -1,4 +1,4 @@
-﻿#requires -Version 5.1
+#requires -Version 5.1
 # Offline filesystem/transaction tests. No game launch, network request, or installed mod edit.
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot\client-updater\Update-CosmicDungeon.ps1" -LibraryOnly
@@ -77,7 +77,12 @@ class CdUpdaterRegression {
             $this.Jar((Join-Path $f.Mods 'cosmicdungeon-1.5.0.jar'), 'older')
             [IO.File]::WriteAllText((Join-Path $f.Mods 'other-mod.jar'), 'preserve')
             [IO.File]::WriteAllText((Join-Path $f.Mods 'cosmicdungeon-loading-screen-1.5.1.jar'), 'preserve-loader')
+            $helper = Join-Path $f.Mods 'cosmicdungeon-1.5.2-beta.1-loading-screen.jar'
+            [IO.File]::WriteAllText($helper, 'preserve-versioned-loader')
+            $this.Assert(![CdClientUpdater]::IsManaged('cosmicdungeon-1.5.2-beta.1-loading-screen.jar'), 'versioned helper is not a runtime JAR')
+            $this.Assert([CdClientUpdater]::IsManaged('cosmicdungeon-1.5.2-beta.1.jar'), 'beta runtime is managed')
             $this.Assert($f.App.Run($false) -eq 0, 'same version update succeeds')
+            $this.Assert([IO.File]::ReadAllText($helper) -eq 'preserve-versioned-loader', 'actual versioned helper survives update')
             $this.Assert([CdClientUpdater]::Hash($target) -eq $f.Feed.Value.sha256, 'new content installed')
             $this.Assert(!(Test-Path (Join-Path $f.Mods 'cosmicdungeon-1.5.0.jar')), 'old duplicate removed from mods')
             $this.Assert((Get-ChildItem (Join-Path $f.App.Work 'backups') -Recurse -Filter 'cosmicdungeon-*.jar').Count -eq 2, 'both old versions backed up')

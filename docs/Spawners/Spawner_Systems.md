@@ -141,6 +141,10 @@ ticks; old fighting mobs' target alerts do not wake reinforcements. Goal and bra
 share the gate. Optional per-mob activation metadata survives reload. Naturally spawned
 mobs are unaffected. Idle/fighting members share the existing live cap; passenger groups
 must fit the available cap before admission. Native chunk-visibility counting is retained.
+When the tagged SpawnerMobCap is disabled (zero), the authored native MaxNearbyEntities
+limit still applies to the exact entity class within the saved SpawnRange. Reaching
+that limit resets the normal spawn delay. A positive tagged cap uses per-spawner
+membership instead of unrelated nearby mobs. No saved fields or formats change.
 
 Blocked status is synchronized only on changes and is not written into world saves.
 Authored equipment, drop rules, delays, weighted potentials and boss one-shot behavior

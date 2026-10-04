@@ -1,4 +1,4 @@
-﻿#requires -Version 5.1
+#requires -Version 5.1
 [CmdletBinding()]
 param([switch]$CheckOnly, [switch]$LibraryOnly)
 
@@ -78,7 +78,7 @@ class CdClientUpdater {
 
     static [bool] IsManaged([string]$name) {
         # Only the main mod; preserve loading-screen modules and unrelated mods.
-        return $name -cmatch '^cosmicdungeon-[0-9]+\.[0-9]+\.[0-9]+(?:[-+][A-Za-z0-9._-]+)?\.jar$'
+        return $name -inotlike '*-loading-screen.jar' -and $name -cmatch '^cosmicdungeon-[0-9]+\.[0-9]+\.[0-9]+(?:[-+][A-Za-z0-9._-]+)?\.jar$'
     }
 
     static [string] Hash([string]$path) {
