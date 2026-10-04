@@ -1,6 +1,7 @@
 """Validated CurseForge publishing. Standard library only; credentials stay in env."""
 import argparse
 import hashlib
+import http.client
 import json
 import os
 from pathlib import Path
@@ -92,21 +93,35 @@ def request(path, token, data=None, content_type=None):
         with urllib.request.urlopen(req, timeout=180) as response:
             return json.load(response)
     except urllib.error.HTTPError as error:
-        # Do not print request objects, headers or server bodies containing credentials.
-        raise RuntimeError(f"CurseForge returned HTTP {error.code}; inspect the author console.") from None
+        # Expose only the bounded API error fields, with the credential redacted.
+        # Never log request headers, arbitrary response bodies or HTML error pages.
+        detail = ""
+        try:
+            failure = json.loads(error.read(8192))
+            message = failure.get("errorMessage", "")
+            code = failure.get("errorCode")
+            if isinstance(message, str):
+                message = " ".join(message.replace(token, "[REDACTED]").split())[:500]
+                detail = f" (API {code}): {message}" if isinstance(code, int) else f": {message}"
+        except (ValueError, AttributeError, OSError, http.client.HTTPException):
+            pass
+        finally:
+            error.close()
+        raise RuntimeError(f"CurseForge returned HTTP {error.code}{detail}; inspect the receipt before retrying.") from None
     except (urllib.error.URLError, TimeoutError):
         raise RuntimeError("CurseForge connection failed; inspect the receipt before retrying.") from None
 
 
-def game_versions(entries, minecraft, client_only=False):
-    selected = []
-    for name in [minecraft, "NeoForge", "Java 21", "Client"] + ([] if client_only else ["Server"]):
-        matches = [entry for entry in entries if entry["name"] == name
-                   and (name != minecraft or entry["gameVersionTypeID"] == 1)]
-        if len(matches) != 1:
-            raise ValueError(f"Expected one CurseForge version ID for {name}; found {len(matches)}.")
-        selected.append(matches[0]["id"])
-    return selected
+def game_version_names(entries, minecraft, client_only=False):
+    # Name lookup is resolved in the project's dependency namespace by CurseForge.
+    # The API contains multiple identical Minecraft labels; type ID 1 is NOT a
+    # universal Minecraft namespace (e.g. 1.21.10's mod version uses type 77784).
+    names = [minecraft, "NeoForge", "Java 21", "Client"] + ([] if client_only else ["Server"])
+    available = {entry["name"] for entry in entries}
+    missing = [name for name in names if name not in available]
+    if missing:
+        raise ValueError(f"Unknown CurseForge version names: {', '.join(missing)}.")
+    return names
 
 
 def multipart(metadata, artifact):
@@ -178,9 +193,9 @@ def publish(plan, receipt_path, loading_project, github_tag=None, loading_slug=N
     if loading_project:
         upload("loading_companion", "loading", loading_project,
                dict(common, displayName=f'Cosmic Dungeon Loading Screen {plan["version"]}',
-                    gameVersions=game_versions(entries, plan["minecraft"], True)))
+                    gameVersionNames=game_version_names(entries, plan["minecraft"], True)))
     metadata = dict(common, displayName=f'Cosmic Dungeon {plan["version"]} - NeoForge {plan["minecraft"]}',
-                    gameVersions=game_versions(entries, plan["minecraft"]))
+                    gameVersionNames=game_version_names(entries, plan["minecraft"]))
     if loading_project:
         # Optional visual component: dedicated servers do not need the early-display library.
         metadata["relations"] = {"projects": [{"slug": loading_slug, "projectID": str(loading_project), "type": "optionalDependency"}]}

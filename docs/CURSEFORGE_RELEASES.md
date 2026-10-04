@@ -83,3 +83,18 @@ Accepted upload is not proof of moderation approval or visibility in the app.
 Keep existing stopped-server/closed-client verification and hash-checked TEST deployment.
 Never launch a development client automatically. The legacy test-builds feed remains a
 transition path until both CurseForge client components have verified app distribution.
+
+## API version-name correction (2026-10-04)
+
+Use the official upload API's gameVersionNames field. The game/versions endpoint has
+multiple same-name Minecraft entries belonging to different dependencies. Type ID 1
+is not a universal Minecraft mod version namespace; selecting it caused HTTP400/API1009
+for 1.21.10 (ID13966). Project-scoped name resolution avoids that ambiguity.
+The publisher validates requested names and keeps additional files version-free so
+they inherit their parent. API failures report bounded, credential-redacted error
+fields and still retain pending receipts until their outcome is reconciled.
+
+The initial v1.5.2-beta.1 CI artifacts remain immutable. Its rejected upload was
+reconciled against the owner console before a corrected manual publisher resumed
+those same hashes. A tooling-only correction does not retag or rebuild that release.
+Official contract: https://support.curseforge.com/support/solutions/articles/9000197321-curseforge-api
