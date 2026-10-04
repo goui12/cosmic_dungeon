@@ -96,23 +96,13 @@ public final class DungeonWorldSnapshotService {
                 return new SnapshotResult.Error("Snapshot folder already exists: " + snapshotId);
             }
 
-            debug("[DUNGEON DEBUG] saveSnapshot calling server.saveEverything");
-            server.saveEverything(true, false, true);
-
+            // Native flush saves blocks, SavedData, POI and persistent entities before copying.
+            Map<String, Path> sources = new java.util.LinkedHashMap<>();
             for (ServerLevel level : levels) {
-                debug("[DUNGEON DEBUG] saveSnapshot saving level " + level.dimension().location());
                 level.save(null, true, false);
-                level.getChunkSource().save(true);
-                flushChunkIoWorker(level);
-                flushAuxiliaryIoWorkers(level);
+                sources.put(sanitizeDimensionId(level.dimension()), getDimensionFolder(server, level.dimension()));
             }
-
-            for (ServerLevel level : levels) {
-                Path livePath = getDimensionFolder(server, level.dimension());
-                Path dimOut = snapshotPath.resolve(sanitizeDimensionId(level.dimension()));
-                debug("[DUNGEON DEBUG] saveSnapshot copying " + livePath + " -> " + dimOut);
-                copyDirectory(livePath, dimOut);
-            }
+            new DungeonSnapshotFiles().publish(snapshotPath, sources);
 
             debug("[DUNGEON DEBUG] saveSnapshot pruning old snapshots in " + dungeonSnapshotRoot);
             pruneSnapshots(dungeonSnapshotRoot);
@@ -151,6 +141,7 @@ public final class DungeonWorldSnapshotService {
      * the selected template worlds. Target levels must not contain players. The fixed slot worlds
      * are registered by datapack, so clients never need a runtime registry update.
      */
+    @Deprecated
     public static SnapshotResult refreshInstanceSlot(MinecraftServer server, DungeonDefinition definition, int slot) {
         if (server == null || definition == null) return new SnapshotResult.Error("Server or dungeon definition was null.");
 
@@ -427,7 +418,7 @@ public final class DungeonWorldSnapshotService {
             List<Path> dirs = new ArrayList<>();
             try (DirectoryStream<Path> ds = Files.newDirectoryStream(dungeonSnapshotRoot)) {
                 for (Path p : ds) {
-                    if (Files.isDirectory(p)) dirs.add(p);
+                    if (DungeonSnapshotFiles.published(p)) dirs.add(p);
                 }
             }
 
@@ -1392,7 +1383,7 @@ public final class DungeonWorldSnapshotService {
         return names.toString();
     }
 
-    private static Path getSnapshotRoot(MinecraftServer server) {
+    static Path getSnapshotRoot(MinecraftServer server) {
         return server.getWorldPath(LevelResource.ROOT).resolve(SNAPSHOT_ROOT_DIR);
     }
 
@@ -1408,7 +1399,7 @@ public final class DungeonWorldSnapshotService {
         return out;
     }
 
-    private static Path getDimensionFolder(MinecraftServer server, ResourceKey<Level> dimensionKey) {
+    static Path getDimensionFolder(MinecraftServer server, ResourceKey<Level> dimensionKey) {
         Path root = server.getWorldPath(LevelResource.ROOT);
 
         if (dimensionKey == Level.OVERWORLD) {
@@ -1432,7 +1423,7 @@ public final class DungeonWorldSnapshotService {
         return stamp + "_" + dungeonId;
     }
 
-    private static String sanitizeDimensionId(ResourceKey<Level> dim) {
+    static String sanitizeDimensionId(ResourceKey<Level> dim) {
         String raw = dim.location().toString();
         return raw.replace(':', '_').replace('/', '_').replace('\\', '_').replace(' ', '_');
     }
@@ -1453,7 +1444,7 @@ public final class DungeonWorldSnapshotService {
         List<Path> dirs = new ArrayList<>();
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(dungeonSnapshotRoot)) {
             for (Path p : ds) {
-                if (Files.isDirectory(p)) dirs.add(p);
+                if (DungeonSnapshotFiles.published(p)) dirs.add(p);
             }
         }
 

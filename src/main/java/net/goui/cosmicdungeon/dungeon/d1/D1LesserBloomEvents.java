@@ -48,6 +48,7 @@ public final class D1LesserBloomEvents {
             String source = level.dimension().location() + ":" + harvest.pos().asLong();
             if (data.values(run.runId(), "lesser_placed").contains(source)
                     || !data.recordUnique(run.runId(), "lesser_harvests", source)) continue;
+            net.goui.cosmicdungeon.leaderboard.LifetimeEvents.add(actor,"lesser_harvests");
             for (var member : D1Members.active(level.getServer(), run)) {
                 if (!run.containsDimension(member.level().dimension())) continue;
                 String key = "lesser:" + member.getUUID();

@@ -56,6 +56,11 @@ This means `/region flag interact allow` is now the default state for newly crea
   - Toggle rendering for nearby regions.
   - Region outlines now render in an x-ray overlay pass so edges remain visible even when buried behind solid blocks, while still using normal nearby/render-distance filtering for large or far-away regions.
 
+In a runtime dungeon instance, both visualization commands resolve authored template regions
+through the same server-side dimension mapping used by region protection. Bounds are rendered
+in the current physical world; another template or instance is not included. Saved regions and
+protection rules are unchanged.
+
 ### Inspection / structure
 - `/region info <name>`
 - `/region here`

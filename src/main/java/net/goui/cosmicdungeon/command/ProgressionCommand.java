@@ -64,6 +64,14 @@ public final class ProgressionCommand {
         src.sendSuccess(() -> Component.literal(" - Village access: " + ProgressionService.hasVillageAccess(target)), false);
         src.sendSuccess(() -> Component.literal(" - Cavern Residue: " + ProgressionService.getCavernResidue(target)), false);
         src.sendSuccess(() -> Component.literal(" - D2 NPC tier: " + ProgressionService.getD2NpcUnlockTier(target)), false);
+        var skills=net.goui.cosmicdungeon.progression.PlayerProgressionData.get(target.level().getServer());
+        String cls=net.goui.cosmicdungeon.playerclass.api.ClassData.getClassId(target);
+        net.goui.cosmicdungeon.playerclass.skill.ClassSkillRules.DAMAGE.keySet().stream()
+                .filter(key->key.startsWith(cls+".")).sorted().forEach(key->{
+                    int xp=skills.skillXp(target.getUUID(),key);
+                    src.sendSuccess(()->Component.literal(" - "+key+": level "
+                            +net.goui.cosmicdungeon.playerclass.skill.ClassSkillConfig.level(xp)+" ("+xp+" XP)"),false);
+                });
         return 1;
     }
 

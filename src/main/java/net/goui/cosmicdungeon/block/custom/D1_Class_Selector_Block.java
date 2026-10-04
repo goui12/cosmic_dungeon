@@ -31,6 +31,13 @@ public class D1_Class_Selector_Block extends Block implements EntityBlock {
     }
 
     @Override
+    protected net.minecraft.world.phys.shapes.VoxelShape getShape(BlockState state,
+            net.minecraft.world.level.BlockGetter level, BlockPos pos,
+            net.minecraft.world.phys.shapes.CollisionContext context) {
+        return ClassSelectorShape.INSTANCE.shape();
+    }
+
+    @Override
     public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new ClassSelectorBlockEntity(pos, state);
     }
@@ -46,18 +53,7 @@ public class D1_Class_Selector_Block extends Block implements EntityBlock {
             return InteractionResult.CONSUME;
         }
 
-        if (!net.goui.cosmicdungeon.npc.tamsin.TamsinService.accepted(sp)) {
-            sp.sendSystemMessage(Component.literal("Speak with Tamsin Vane and accept her offer first."));
-            return InteractionResult.CONSUME;
-        }
-        // Dungeoneer: open normal menu and remember which selector it came from
-        ClassSelectorTeleportUtil.markPendingSelectorSource(sp, sl, pos);
-
-        MenuProvider provider = new SimpleMenuProvider(
-                (containerId, inv, p) -> new ClassSelectorMenu(containerId, inv),
-                Component.translatable("menu.cosmicdungeon.class_selector")
-        );
-        sp.openMenu(provider);
+        sp.sendSystemMessage(Component.literal("Speak with Tamsin Vane to choose your class and group."));
         return InteractionResult.CONSUME;
     }
 
@@ -80,5 +76,7 @@ public class D1_Class_Selector_Block extends Block implements EntityBlock {
                         .withStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW).withUnderlined(true)
                                 .withClickEvent(new ClickEvent.RunCommand("/classselector ui players " + p)))
         );
+
+        dev.sendSystemMessage(net.goui.cosmicdungeon.npc.tamsin.TamsinPlacement.INSTANCE.button(dev, selectorPos));
     }
 }

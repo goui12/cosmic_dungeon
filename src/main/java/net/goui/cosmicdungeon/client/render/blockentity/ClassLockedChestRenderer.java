@@ -8,6 +8,8 @@ import net.goui.cosmicdungeon.block.custom.ClassLocked;
 import net.goui.cosmicdungeon.block.custom.ClassLockedChestBlock;
 import net.goui.cosmicdungeon.block.entity.ClassLockedChestBlockEntity;
 import net.goui.cosmicdungeon.client.model.ClassLockedChestModel;
+import net.minecraft.client.gui.Font;
+import net.minecraft.network.chat.Component;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -29,17 +31,22 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class ClassLockedChestRenderer implements BlockEntityRenderer<ClassLockedChestBlockEntity, ClassLockedChestRenderer.State> {
 
     private final ClassLockedChestModel model;
+    private final Font font;
     private static final Map<String, ResourceLocation> TEX_CACHE = new ConcurrentHashMap<>();
 
     public ClassLockedChestRenderer(BlockEntityRendererProvider.Context ctx) {
         ModelPart root = ctx.bakeLayer(ClassLockedChestModel.LAYER_LOCATION);
         this.model = new ClassLockedChestModel(root);
+        this.font = ctx.font();
     }
 
     public static final class State extends BlockEntityRenderState {
         public Direction facing = Direction.NORTH;
         public float lidProgress = 0.0F; // 0..1
         public ResourceLocation texture = defaultTexture();
+        @Nullable public Component ownerLabel;
+        public int labelWidth;
+        public double labelX, labelZ, distanceToCameraSq;
     }
 
     @Override
@@ -66,6 +73,17 @@ public final class ClassLockedChestRenderer implements BlockEntityRenderer<Class
 
         rs.texture = textureFor(state);
         rs.lidProgress = be.getLidProgress(partialTick);
+        rs.ownerLabel = be.getSlotOwnerLabel();
+        rs.distanceToCameraSq = Vec3.atCenterOf(be.getBlockPos()).distanceToSqr(cameraPosition);
+        if (rs.ownerLabel != null && rs.distanceToCameraSq <= 100.0D) {
+            rs.labelWidth = font.width(rs.ownerLabel);
+            // Bring the caption just in front of the stack so the chest above cannot obscure it.
+            double dx = cameraPosition.x - (be.getBlockPos().getX() + 0.5D);
+            double dz = cameraPosition.z - (be.getBlockPos().getZ() + 0.5D);
+            double distance = Math.hypot(dx, dz);
+            rs.labelX = 0.5D + (distance > 0.001D ? dx / distance * 0.75D : 0.0D);
+            rs.labelZ = 0.5D + (distance > 0.001D ? dz / distance * 0.75D : 0.0D);
+        }
     }
 
     @Override
@@ -119,6 +137,19 @@ public final class ClassLockedChestRenderer implements BlockEntityRenderer<Class
 
         pose.popPose();
         pose.popPose();
+
+        if (rs.ownerLabel != null && rs.distanceToCameraSq <= 100.0D) {
+            pose.pushPose();
+            pose.translate(rs.labelX, 1.15D, rs.labelZ);
+            pose.mulPose(cameraRenderState.orientation);
+            // Fit even a full username within one chest column; normal depth testing hides walls.
+            float scale = Math.min(0.025F, 0.9F / Math.max(1, rs.labelWidth));
+            pose.scale(scale, -scale, scale);
+            collector.submitText(pose, -rs.labelWidth / 2.0F, 0.0F,
+                    rs.ownerLabel.getVisualOrderText(), true, Font.DisplayMode.NORMAL,
+                    rs.lightCoords, 0xFFFFFFFF, 0x88000000, 0);
+            pose.popPose();
+        }
     }
 
     private static ResourceLocation textureFor(BlockState state) {

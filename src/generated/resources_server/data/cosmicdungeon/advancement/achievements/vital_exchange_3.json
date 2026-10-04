@@ -7,10 +7,12 @@
   },
   "display": {
     "announce_to_chat": false,
-    "description": "",
+    "description": {
+      "translate": "advancements.cosmicdungeon.achievements.vital_exchange_3.desc"
+    },
     "icon": {
       "count": 1,
-      "id": "minecraft:paper"
+      "id": "cosmicdungeon:mending_sting"
     },
     "title": {
       "translate": "advancements.cosmicdungeon.achievements.vital_exchange_3.title"

@@ -2,11 +2,33 @@
 
 ## Player-facing role
 
-Tamsin Vane is a living surface-side treasure hunter who discovered a map to the Base Camp and now sells access to nearby adventurers. Current source keeps her map interface, dungeon broker UI, Tamsin Tax payment flow, and queue system future/stubbed unless presented in-game.
+Tamsin Vane is a living surface-side treasure hunter who discovered a map to the Base Camp. Her conversation handles the agreement, map, class selection and group preparation.
 
-## Current implementation caution
+## Groups and class selection
 
-Tamsin’s lore may appear in player-facing help, but do not present her map interface, dungeon broker UI, Tamsin Tax payment flow, or queue system as live unless those systems are implemented in source. The Tamsin Tax remains future/stubbed.
+Choose a class through Tamsin, then create a named group or select Looking for Group
+so recruiters can see your selected class. Every group member can recruit an advertised
+player or invite an online friend by name. Only grouped players see recruiting controls.
+Members can leave; the leader can disband. Invitations expire and cannot transfer to a
+replacement group. Changing class cancels readiness; active dungeon runs prevent class
+changes and late joining. The selector block retains developer configuration and directs
+ordinary players to Tamsin.
+
+The leader chooses a maximum of1–6 with the group count controls. Fewer members can
+start once everyone personally confirms. Ready closes Tamsin, and members can move
+around the same starting dimension until the leader starts the adventure at Tamsin.
+Not Ready withdraws only your confirmation and cancels a submitted start.
+
+The group HUD stays at top left. Open player inventory for Ready/Not Ready and Leave
+Group; invitation HUD exposes Join Group there. Recipe-book layouts use a compact
+summary with the full roster on hover. Active dungeon HUD is read-only. See the
+[batch 5 report and pending gameplay checks](../ai/TESTING_BATCH_5_20261003.md).
+
+The leader chooses Easy, Hard, Insane or Ridiculous with the Difficulty button.
+Changing it clears readiness; queued groups must cancel readiness before changing it.
+The group HUD shows the chosen tier. Settings are fixed for that adventure, and a
+successful completion earns its tier plus every lower completion advancement.
+See [difficulty settings and testing](../ai/TESTING_BATCH_6_20261003.md).
 
 ## Backstory
 

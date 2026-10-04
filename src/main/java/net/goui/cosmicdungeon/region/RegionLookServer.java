@@ -1,6 +1,7 @@
 // file: src/main/java/net/goui/cosmicdungeon/region/RegionLookServer.java
 package net.goui.cosmicdungeon.region;
 
+import net.goui.cosmicdungeon.dungeon.DungeonInstanceSlots;
 import net.goui.cosmicdungeon.network.ModNetwork;
 import net.goui.cosmicdungeon.network.payload.RegionLookAllPayload;
 import net.goui.cosmicdungeon.network.payload.RegionLookAllRequestPayload;
@@ -56,12 +57,14 @@ public final class RegionLookServer {
 
         final RegionRegistryData.Region r = opt.get();
 
-        final ResourceKey<Level> dimKey = parseDimKey(r.dimensionId());
-        if (dimKey == null) {
+        final ResourceKey<Level> authoredDim = parseDimKey(r.dimensionId());
+        if (authoredDim == null) {
             player.displayClientMessage(Component.literal("Region has invalid dimensionId: " + r.dimensionId()), false);
             return;
         }
 
+        final ResourceKey<Level> dimKey = displayDimension(authoredDim, level.dimension(),
+                DungeonInstanceSlots.templateDimensionForPhysical(level.getServer(), level.dimension()));
         final boolean enabled = flipSingle(player.getUUID(), r.name());
 
         // If we just disabled, tell client to turn off single look.
@@ -130,6 +133,7 @@ public final class RegionLookServer {
                                         int centerChunkX, int centerChunkZ, int radiusChunks) {
 
         RegionRegistryData data = RegionRegistryData.get(level);
+        ResourceKey<Level> templateDim = DungeonInstanceSlots.templateDimensionForPhysical(level.getServer(), dim);
 
         // Convert chunk radius into block bounds (inclusive)
         int minBlockX = (centerChunkX - radiusChunks) << 4;
@@ -146,7 +150,7 @@ public final class RegionLookServer {
         for (var r : data.listSorted()) {
             ResourceKey<Level> rDim = parseDimKey(r.dimensionId());
             if (rDim == null) continue;
-            if (!rDim.equals(dim)) continue;
+            if (!displayDimension(rDim, dim, templateDim).equals(dim)) continue;
 
             BlockPos rMinP = r.min();
             BlockPos rMaxP = r.max();
@@ -168,6 +172,12 @@ public final class RegionLookServer {
         }
 
         ModNetwork.sendTo(player, new RegionLookAllPayload(true, dim, out));
+    }
+
+    /** Translate only the viewer's authored template; never another physical instance. */
+    static ResourceKey<Level> displayDimension(ResourceKey<Level> region, ResourceKey<Level> physical,
+                                               ResourceKey<Level> template) {
+        return region.equals(template) ? physical : region;
     }
 
     private static boolean intersects(int aMin, int aMax, int bMin, int bMax) {

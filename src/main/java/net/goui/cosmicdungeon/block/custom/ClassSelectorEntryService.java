@@ -12,7 +12,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.levelgen.Heightmap;
 import org.slf4j.Logger;
 
 import java.util.*;
@@ -21,14 +20,16 @@ import java.util.*;
 public final class ClassSelectorEntryService {
     private static final Logger LOGGER = LogUtils.getLogger();
     private ClassSelectorEntryService() {}
-    private record TeleportTarget(ServerLevel level, BlockPos safePos) {}
+    private record TeleportTarget(ServerLevel level, BlockPos destinationPos) {}
 
     public static boolean enter(MinecraftServer server, net.goui.cosmicdungeon.npc.tamsin.D1PartyLobby.Anchor anchor,
                                 List<UUID> ordered, Map<UUID, String> classes,
+                                List<net.goui.cosmicdungeon.mercenary.MercenaryContract> hires,
+                                net.goui.cosmicdungeon.dungeon.DungeonDifficulty.Profile difficulty,
                                 java.util.function.BooleanSupplier validRoster) {
         if (!server.isSameThread() || !validRoster.getAsBoolean()) return false;
         try {
-            return enterPrepared(server, anchor, ordered, classes, validRoster);
+            return enterPrepared(server, anchor, ordered, classes, hires, difficulty, validRoster);
         } catch (RuntimeException failure) {
             LOGGER.error("D1 entry interrupted; registered rollback and saved inventories retained", failure);
             rollbackRegistered(server, ordered);
@@ -46,12 +47,22 @@ public final class ClassSelectorEntryService {
         }
     }
     private static boolean enterPrepared(MinecraftServer server, net.goui.cosmicdungeon.npc.tamsin.D1PartyLobby.Anchor anchor,
-            List<UUID> ordered, Map<UUID, String> classes, java.util.function.BooleanSupplier validRoster) {
+            List<UUID> ordered, Map<UUID, String> classes, List<net.goui.cosmicdungeon.mercenary.MercenaryContract> hires, net.goui.cosmicdungeon.dungeon.DungeonDifficulty.Profile difficulty,
+            java.util.function.BooleanSupplier validRoster) {
         ServerLevel selectorLevel = ClassSelectorTeleportUtil.resolveLevel(server, anchor.dimension());
         BlockPos selectorPos = BlockPos.of(anchor.selector());
         if (selectorLevel == null || !(selectorLevel.getBlockEntity(selectorPos) instanceof ClassSelectorBlockEntity csbe)) return false;
-        int max = ordered.size();
-        if (max < net.goui.cosmicdungeon.Config.MIN_PARTY.get() || max > csbe.getMaxPlayers()) return false;
+        int max = ordered.size()+hires.size();
+        if(ordered.isEmpty()||!net.goui.cosmicdungeon.mercenary.MercenaryEntry.affordable(server,hires)){
+            for(UUID id:ordered){var player=server.getPlayerList().getPlayer(id);if(player!=null)
+                player.sendSystemMessage(Component.literal("Each hirer needs the mercenary fee available before entry."));}
+            return false;
+        }
+        int nextSlot=ordered.size()+1;
+        var hirers=new HashSet<UUID>();var identities=new HashSet<UUID>(ordered);
+        for(var hire:hires)if(!ordered.contains(hire.hirer())||!hirers.add(hire.hirer())||!identities.add(hire.id())||hire.slot()!=nextSlot++)
+            return false;
+        if (!net.goui.cosmicdungeon.npc.tamsin.D1PartyRules.fits(max, 6)) return false;
 
         RiftRegistryData data = RiftRegistryData.get(server);
 
@@ -124,15 +135,13 @@ public final class ClassSelectorEntryService {
             ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p != null && p.connection.isAcceptingMessages() && p.isAlive() && !p.isSpectator() && p.level()==selectorLevel
                     && !net.goui.cosmicdungeon.auth.AccessPolicy.isDeveloper(p)
-                    && p.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(selectorPos))<=
-                        net.goui.cosmicdungeon.Config.SELECTOR_RANGE.get()*net.goui.cosmicdungeon.Config.SELECTOR_RANGE.get()
                     && ClassSelectorTeleportUtil.isReadyEligibleClass(classes.get(id))
                     && java.util.Objects.equals(classes.get(id),net.goui.cosmicdungeon.playerclass.api.ClassData.getClassId(p))) {
                 finalParty.add(p);
             }
         }
 
-        if (finalParty.size() < max) {
+        if (finalParty.size() != ordered.size()) {
             for (ServerPlayer p : finalParty) {
                 p.sendSystemMessage(Component.literal("Party changed before teleport. Ready up again.").withStyle(ChatFormatting.RED));
             }
@@ -141,7 +150,7 @@ public final class ClassSelectorEntryService {
 
         if (!validRoster.getAsBoolean()) return false;
         DungeonLifecycleService.InstancePreparation preparationResult =
-                DungeonLifecycleService.prepareRunInstance(server, dungeonLevel.dimension(), ordered);
+                DungeonLifecycleService.prepareRunInstance(server, dungeonLevel.dimension(), ordered, difficulty);
         if (preparationResult instanceof DungeonLifecycleService.PreparationError preparationError) {
             Component msg = Component.literal(preparationError.message()).withStyle(ChatFormatting.RED);
             for (ServerPlayer p : finalParty) {
@@ -150,118 +159,133 @@ public final class ClassSelectorEntryService {
             return false;
         }
         DungeonLifecycleService.PreparedInstance prepared = (DungeonLifecycleService.PreparedInstance) preparationResult;
-        if (!validRoster.getAsBoolean()) return false;
-        List<TeleportTarget> teleportTargets = new ArrayList<>(max);
-        for (RiftRegistryData.DestinationRecord destination : resolved) {
-            ServerLevel templateLevel = ClassSelectorTeleportUtil.resolveLevel(server, destination.dimensionId());
-            ServerLevel instanceLevel = templateLevel == null ? null : prepared.resolve(server, templateLevel.dimension());
-            if (instanceLevel == null) {
+        try {
+            if (!validRoster.getAsBoolean()) return false;
+            List<TeleportTarget> teleportTargets = new ArrayList<>(max);
+            for (RiftRegistryData.DestinationRecord destination : resolved) {
+                ServerLevel templateLevel = ClassSelectorTeleportUtil.resolveLevel(server, destination.dimensionId());
+                ServerLevel instanceLevel = templateLevel == null ? null : prepared.resolve(server, templateLevel.dimension());
+                if (instanceLevel == null) {
+                    for (ServerPlayer p : finalParty) {
+                        p.sendSystemMessage(Component.literal("A class-selector destination is outside the selected dungeon template.")
+                                .withStyle(ChatFormatting.RED));
+                    }
+                    return false;
+                }
+                teleportTargets.add(new TeleportTarget(instanceLevel,destination.pos()));
+            }
+            dungeonLevel = prepared.resolve(server, prepared.definition().primaryDimension());
+            if (dungeonLevel == null) return false;
+
+            List<String> orderedClasses = new ArrayList<>(finalParty.size());
+            for (ServerPlayer partyMember : finalParty) {
+                orderedClasses.add(classes.get(partyMember.getUUID()));
+            }
+
+            hires.forEach(h->orderedClasses.add(h.classId()));
+            var slotOwners=new ArrayList<net.goui.cosmicdungeon.block.entity.ClassChestOwnership>();
+            finalParty.forEach(player->slotOwners.add(new net.goui.cosmicdungeon.block.entity.ClassChestOwnership(
+                    player.getUUID(),player.getGameProfile().name())));
+            hires.forEach(h->slotOwners.add(new net.goui.cosmicdungeon.block.entity.ClassChestOwnership(h.id(),"Mercenary")));
+            DungeonStartupSchematicPlan.StartupPastePlan pastePlan;
+            try {
+                pastePlan = DungeonStartupSchematicPlan.buildPlan(orderedClasses);
+            } catch (IllegalArgumentException exception) {
+                LOGGER.error("[DungeonStartupSchematics] Could not build the 36-operation startup plan.", exception);
                 for (ServerPlayer p : finalParty) {
-                    p.sendSystemMessage(Component.literal("A class-selector destination is outside the selected dungeon template.")
+                    p.sendSystemMessage(Component.literal("Dungeon paste failed.").withStyle(ChatFormatting.RED));
+                }
+                return false;
+            }
+
+            DungeonStartupSchematicPipeline.PasteBatchResult pasteResult =
+                    DungeonStartupSchematicPipeline.execute(dungeonLevel, pastePlan,
+                            slotOwners);
+            if (!(pasteResult instanceof DungeonStartupSchematicPipeline.PasteBatchSuccess success)
+                    || success.completedOperations() != DungeonStartupSchematicPlan.EXPECTED_OPERATION_COUNT) {
+                for (ServerPlayer p : finalParty) {
+                    p.sendSystemMessage(Component.literal("Dungeon paste failed. Please try again.")
                             .withStyle(ChatFormatting.RED));
                 }
                 return false;
             }
-            teleportTargets.add(new TeleportTarget(instanceLevel,destination.pos()));
-        }
-        dungeonLevel = prepared.resolve(server, prepared.definition().primaryDimension());
-        if (dungeonLevel == null) return false;
 
-        List<String> orderedClasses = new ArrayList<>(finalParty.size());
-        for (ServerPlayer partyMember : finalParty) {
-            orderedClasses.add(classes.get(partyMember.getUUID()));
-        }
-
-        DungeonStartupSchematicPlan.StartupPastePlan pastePlan;
-        try {
-            pastePlan = DungeonStartupSchematicPlan.buildPlan(orderedClasses);
-        } catch (IllegalArgumentException exception) {
-            LOGGER.error("[DungeonStartupSchematics] Could not build the 36-operation startup plan.", exception);
-            for (ServerPlayer p : finalParty) {
-                p.sendSystemMessage(Component.literal("Dungeon paste failed.").withStyle(ChatFormatting.RED));
-            }
-            return false;
-        }
-
-        DungeonStartupSchematicPipeline.PasteBatchResult pasteResult =
-                DungeonStartupSchematicPipeline.execute(dungeonLevel, pastePlan);
-        if (!(pasteResult instanceof DungeonStartupSchematicPipeline.PasteBatchSuccess success)
-                || success.completedOperations() != DungeonStartupSchematicPlan.EXPECTED_OPERATION_COUNT) {
-            for (ServerPlayer p : finalParty) {
-                p.sendSystemMessage(Component.literal("Dungeon paste failed. Please try again.")
-                        .withStyle(ChatFormatting.RED));
-            }
-            return false;
-        }
-
-        if (!validRoster.getAsBoolean()) return false;
-        for (int index = 0; index < teleportTargets.size(); index++) {
-            var target = teleportTargets.get(index);
-            var safe = ensureStandable(target.level(), target.safePos());
-            if (safe == null) {
-                finalParty.forEach(p -> p.sendSystemMessage(Component.literal("The entry point is obstructed; a developer must fix its placement.")));
-                return false;
-            }
-            teleportTargets.set(index, new TeleportTarget(target.level(), safe));
-        }
-        if (!validRoster.getAsBoolean()) return false;
-        finalParty.forEach(ServerPlayer::closeContainer);
-        String err = DungeonLifecycleService.startRun(
-                server,
-                selectorLevel.dimension(),
-                selectorPos.asLong(),
-                prepared.definition().primaryDimension(),
-                prepared,
-                finalParty
-        );
-
-        if (err != null) {
-            rollbackRegistered(server, ordered);
-            Component msg = Component.literal(err).withStyle(ChatFormatting.RED);
-            for (ServerPlayer p : finalParty) {
-                p.sendSystemMessage(msg);
-            }
-            return false;
-        }
-
-        for (int slotIndex = 0; slotIndex < finalParty.size(); slotIndex++) {
-            ServerPlayer p = finalParty.get(slotIndex);
-            TeleportTarget tp = teleportTargets.get(slotIndex);
-            if (!p.connection.isAcceptingMessages() || !p.isAlive() || tp == null || tp.level() == null || tp.safePos() == null) {
-                p.sendSystemMessage(Component.literal("Teleport target missing for your slot.").withStyle(ChatFormatting.RED));
-                DungeonLifecycleService.abortActiveRunForPlayer(finalParty.getFirst());
-                return false;
-            }
-
-            BlockPos safe = tp.safePos();
-            boolean ok = p.teleportTo(
-                    tp.level(),
-                    safe.getX() + 0.5D,
-                    safe.getY(),
-                    safe.getZ() + 0.5D,
-                    Set.of(),
-                    p.getYRot(),
-                    p.getXRot(),
-                    true
+            if (!validRoster.getAsBoolean()) return false;
+            finalParty.forEach(ServerPlayer::closeContainer);
+            String err = DungeonLifecycleService.startRun(
+                    server,
+                    selectorLevel.dimension(),
+                    selectorPos.asLong(),
+                    prepared.definition().primaryDimension(),
+                    prepared,
+                    finalParty
             );
 
-            if (!ok) {
-                p.sendSystemMessage(Component.literal("Teleport failed for your slot.").withStyle(ChatFormatting.RED));
-                DungeonLifecycleService.abortActiveRunForPlayer(finalParty.getFirst());
+            if (err != null) {
+                rollbackRegistered(server, ordered);
+                Component msg = Component.literal(err).withStyle(ChatFormatting.RED);
+                for (ServerPlayer p : finalParty) {
+                    p.sendSystemMessage(msg);
+                }
                 return false;
             }
 
-            net.goui.cosmicdungeon.dungeon.ChopOwnershipService.clearForDungeonEntry(p);
-            DungeonLifecycleService.setPlayerRespawnTo(p, tp.level(), safe, p.getYRot(), p.getXRot());
-        }
+            if(!net.goui.cosmicdungeon.mercenary.MercenaryEntry.reserve(server,prepared.runId(),hires)){
+                DungeonLifecycleService.abortActiveRunForPlayer(finalParty.getFirst());return false;
+            }
+            for(var hire:hires){
+                var target=teleportTargets.get(hire.slot()-1);
+                if(target.level()!=dungeonLevel||!net.goui.cosmicdungeon.mercenary.MercenaryEntry.spawn(
+                        dungeonLevel,prepared.runId(),hire,target.destinationPos(),success.starterChests())){
+                    finalParty.forEach(player->player.sendSystemMessage(Component.literal("Mercenary starter chest or spawn unavailable; entry cancelled.")));
+                    DungeonLifecycleService.abortActiveRunForPlayer(finalParty.getFirst());return false;
+                }
+            }
+            for (int slotIndex = 0; slotIndex < finalParty.size(); slotIndex++) {
+                ServerPlayer p = finalParty.get(slotIndex);
+                TeleportTarget tp = teleportTargets.get(slotIndex);
+                if (!p.connection.isAcceptingMessages() || !p.isAlive() || tp == null || tp.level() == null || tp.destinationPos() == null) {
+                    p.sendSystemMessage(Component.literal("Teleport target missing for your slot.").withStyle(ChatFormatting.RED));
+                    DungeonLifecycleService.abortActiveRunForPlayer(finalParty.getFirst());
+                    return false;
+                }
 
-        var run = net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData.get(server)
-                .findRunForPlayer(finalParty.getFirst().getUUID()).orElseThrow();
-        if (!DungeonLifecycleService.completeStartup(server, run.runId())) {
-            DungeonLifecycleService.abortActiveRunForPlayer(finalParty.getFirst());
-            return false;
+                // Authored destination is authoritative, including an obstructed feet position.
+                BlockPos destination = tp.destinationPos();
+                boolean ok = p.teleportTo(
+                        tp.level(),
+                        destination.getX() + 0.5D,
+                        destination.getY(),
+                        destination.getZ() + 0.5D,
+                        Set.of(),
+                        p.getYRot(),
+                        p.getXRot(),
+                        true
+                );
+
+                if (!ok) {
+                    p.sendSystemMessage(Component.literal("Teleport failed for your slot.").withStyle(ChatFormatting.RED));
+                    DungeonLifecycleService.abortActiveRunForPlayer(finalParty.getFirst());
+                    return false;
+                }
+
+                net.goui.cosmicdungeon.dungeon.ChopOwnershipService.clearForDungeonEntry(p);
+                DungeonLifecycleService.setPlayerRespawnTo(p, tp.level(), destination, p.getYRot(), p.getXRot());
+            }
+
+            var run = net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData.get(server)
+                    .findRunForPlayer(finalParty.getFirst().getUUID()).orElseThrow();
+            if (!DungeonLifecycleService.completeStartup(server, run.runId())) {
+                DungeonLifecycleService.abortActiveRunForPlayer(finalParty.getFirst());
+                return false;
+            }
+            finalParty.forEach(net.goui.cosmicdungeon.dungeon.DungeonForfeitService::notifyEntry);
+            return true;
+        } finally {
+            // A failed paste or changed roster owns no inventory; retire its unused copy immediately.
+            // Once registered, the durable run and existing handoff recovery own cleanup instead.
+            net.goui.cosmicdungeon.dungeon.DungeonInstanceWorlds.get(server).discardPreparation(prepared.runId());
         }
-        return true;
     }
 
     // TODO(M102): licensed TEST failure-injection at snapshot refresh, each paste, run registration
@@ -269,40 +293,5 @@ public final class ClassSelectorEntryService {
     // Tamsin 1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4 (2026-08-19) requires one locked
     // roster. Its full pre-entry inventories remain saved until every owner entered. On restart an
     // incomplete marker rolls back the entire roster. Pre-registration paste failures change no
-    // inventory; the unused slot is refreshed before reuse. Actual authored 36-room bindings remain M81.
-    private static BlockPos ensureStandable(ServerLevel level, BlockPos pos) {
-        if (isStandable(level, pos)) return pos;
-
-        var m = pos.mutable();
-        int minY = level.getMinY();
-        int maxY = minY + level.getLogicalHeight() - 1;
-
-        for (int y = Math.max(minY + 1, m.getY()); y < maxY - 1; y++) {
-            m.setY(y);
-            if (isStandable(level, m)) return m.immutable();
-        }
-
-        int surfaceY = level.getHeight(Heightmap.Types.WORLD_SURFACE, pos.getX(), pos.getZ());
-        m.set(pos.getX(), Math.max(surfaceY, minY + 1), pos.getZ());
-
-        for (int y = m.getY(); y < Math.min(m.getY() + 8, maxY - 1); y++) {
-            m.setY(y);
-            if (isStandable(level, m)) return m.immutable();
-        }
-
-        return null;
-    }
-
-    private static boolean isStandable(ServerLevel level, BlockPos pos) {
-        var below = pos.below();
-        var feet = level.getBlockState(pos);
-        var head = level.getBlockState(pos.above());
-
-        boolean sturdyBelow = level.getBlockState(below).isFaceSturdy(level, below, net.minecraft.core.Direction.UP);
-        boolean noFluid = level.getFluidState(pos).isEmpty() && level.getFluidState(pos.above()).isEmpty();
-        boolean emptySpace = feet.getCollisionShape(level, pos).isEmpty()
-                && head.getCollisionShape(level, pos.above()).isEmpty();
-
-        return sturdyBelow && noFluid && emptySpace;
-    }
+    // inventory; its unused physical worlds are retired, and their IDs are never reused. Actual authored 36-room bindings remain M81.
 }

@@ -7,10 +7,12 @@
   },
   "display": {
     "announce_to_chat": false,
-    "description": "",
+    "description": {
+      "translate": "advancements.cosmicdungeon.achievements.sixfold_vigil.desc"
+    },
     "icon": {
       "count": 1,
-      "id": "minecraft:paper"
+      "id": "minecraft:candle"
     },
     "title": {
       "translate": "advancements.cosmicdungeon.achievements.sixfold_vigil.title"

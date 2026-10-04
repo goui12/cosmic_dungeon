@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/** Fixed, datapack-registered physical worlds leased as ten logical dungeon slots. */
+/** Ten concurrent leases; new runs use unique physical keys. Fixed keys remain readable for old runs. */
 public final class DungeonInstanceSlots {
     public static final int SLOT_COUNT = 10;
 
@@ -51,10 +51,33 @@ public final class DungeonInstanceSlots {
         return Map.copyOf(result);
     }
 
+    public static Map<ResourceKey<Level>, ResourceKey<Level>> mapping(DungeonDefinition definition, int slot, long generation) {
+        if (generation <= 0) throw new IllegalArgumentException("Invalid instance generation");
+        LinkedHashMap<ResourceKey<Level>, ResourceKey<Level>> result = new LinkedHashMap<>();
+        mapping(definition, slot).forEach((template, legacy) -> result.put(template,
+                dimension("dungeon_instance_" + twoDigits(slot) + "_run_" + generation
+                        + (template.equals(definition.primaryDimension()) ? "" : "_nether"))));
+        return Map.copyOf(result);
+    }
+
+    public static Map<ResourceKey<Level>, ResourceKey<Level>> mapping(DungeonDefinition definition,
+                                                                                    DungeonRunRegistryData.RunRecord run) {
+        var legacy = mapping(definition, run.instanceSlot());
+        var fresh = mapping(definition, run.instanceSlot(), run.runId());
+        var actual = java.util.Set.copyOf(run.dungeonDimensionIds());
+        if (actual.equals(fresh.values().stream().map(k -> k.location().toString()).collect(java.util.stream.Collectors.toSet()))) return fresh;
+        if (actual.equals(legacy.values().stream().map(k -> k.location().toString()).collect(java.util.stream.Collectors.toSet()))) return legacy;
+        throw new IllegalArgumentException("Unrecognized physical dimensions for run " + run.runId());
+    }
+
+    public static boolean unique(DungeonRunRegistryData.RunRecord run) {
+        return run.dungeonDimensionIds().stream().allMatch(id -> id.contains("_run_" + run.runId()));
+    }
+
     public static Optional<Integer> slotOf(ResourceKey<Level> dimension) {
         if (dimension == null || !CosmicDungeonMod.MOD_ID.equals(dimension.location().getNamespace())) return Optional.empty();
         String path = dimension.location().getPath();
-        if (!path.startsWith("dungeon_instance_") || path.length() < "dungeon_instance_00".length()) return Optional.empty();
+        if (!path.matches("dungeon_instance_(0[1-9]|10)(?:_run_[1-9][0-9]*)?(?:_nether)?")) return Optional.empty();
         try {
             int slot = Integer.parseInt(path.substring("dungeon_instance_".length(), "dungeon_instance_".length() + 2));
             return slot >= 1 && slot <= SLOT_COUNT ? Optional.of(slot) : Optional.empty();
@@ -74,7 +97,7 @@ public final class DungeonInstanceSlots {
         DungeonRunRegistryData.RunRecord run = DungeonRunRegistryData.get(server).findRunForInstanceDimension(physical).orElse(null);
         DungeonDefinition definition = run == null ? null : DungeonDefinitions.byId(run.dungeonId()).orElse(null);
         if (definition == null) return physical;
-        for (Map.Entry<ResourceKey<Level>, ResourceKey<Level>> entry : mapping(definition, run.instanceSlot()).entrySet()) {
+        for (Map.Entry<ResourceKey<Level>, ResourceKey<Level>> entry : mapping(definition, run).entrySet()) {
             if (entry.getValue().equals(physical)) return entry.getKey();
         }
         return physical;

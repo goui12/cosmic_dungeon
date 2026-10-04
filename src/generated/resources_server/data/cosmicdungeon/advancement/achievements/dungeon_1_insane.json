@@ -1,0 +1,27 @@
+{
+  "parent": "cosmicdungeon:achievements/dungeon_1_hard",
+  "criteria": {
+    "triggered": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "translate": "advancements.cosmicdungeon.achievements.dungeon_1_insane.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:netherite_sword"
+    },
+    "title": {
+      "translate": "advancements.cosmicdungeon.achievements.dungeon_1_insane.title"
+    }
+  },
+  "requirements": [
+    [
+      "triggered"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

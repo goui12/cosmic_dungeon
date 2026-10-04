@@ -7,10 +7,12 @@
   },
   "display": {
     "announce_to_chat": false,
-    "description": "",
+    "description": {
+      "translate": "advancements.cosmicdungeon.achievements.shulker_express.desc"
+    },
     "icon": {
       "count": 1,
-      "id": "minecraft:paper"
+      "id": "minecraft:shulker_shell"
     },
     "title": {
       "translate": "advancements.cosmicdungeon.achievements.shulker_express.title"

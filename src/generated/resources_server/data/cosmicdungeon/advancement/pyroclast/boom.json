@@ -1,19 +1,8 @@
 {
-  "parent": "cosmicdungeon:pyroclast",
+  "parent": "cosmicdungeon:root",
   "criteria": {
     "triggered": {
       "trigger": "minecraft:impossible"
-    }
-  },
-  "display": {
-    "announce_to_chat": false,
-    "description": "",
-    "icon": {
-      "count": 1,
-      "id": "minecraft:tnt"
-    },
-    "title": {
-      "translate": "advancements.cosmicdungeon.pyroclast.boom.title"
     }
   },
   "requirements": [

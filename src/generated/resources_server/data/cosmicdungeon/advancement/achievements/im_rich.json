@@ -7,10 +7,12 @@
   },
   "display": {
     "announce_to_chat": false,
-    "description": "",
+    "description": {
+      "translate": "advancements.cosmicdungeon.achievements.im_rich.desc"
+    },
     "icon": {
       "count": 1,
-      "id": "minecraft:paper"
+      "id": "cosmicdungeon:attunement_trace"
     },
     "title": {
       "translate": "advancements.cosmicdungeon.achievements.im_rich.title"

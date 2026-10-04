@@ -7,10 +7,12 @@
   },
   "display": {
     "announce_to_chat": false,
-    "description": "",
+    "description": {
+      "translate": "advancements.cosmicdungeon.achievements.vital_exchange_1.desc"
+    },
     "icon": {
       "count": 1,
-      "id": "minecraft:paper"
+      "id": "cosmicdungeon:scintilla_vitalis"
     },
     "title": {
       "translate": "advancements.cosmicdungeon.achievements.vital_exchange_1.title"

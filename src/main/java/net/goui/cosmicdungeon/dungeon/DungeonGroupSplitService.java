@@ -16,12 +16,13 @@ import java.util.*;
 public final class DungeonGroupSplitService {
     private static final Set<String> WARNED=new HashSet<>();
     private DungeonGroupSplitService(){}
-    public static void onMobKilled(LivingEntity mob){
+    public static void onMobKilled(LivingEntity mob, UUID creditedPlayer){
         if(!(mob.level() instanceof ServerLevel level)||!(mob instanceof Mob)
                 ||mob.getTags().stream().noneMatch(t->t.startsWith(CosmicSpawnerBlockEntity.COSMIC_SPAWNER_TAG_PREFIX)))return;
         var run=DungeonRunRegistryData.get(level.getServer()).findRunForInstanceDimension(level.dimension())
                 .filter(r->r.stateEnum()==DungeonRunState.ACTIVE&&r.dungeonId().equals("dungeon_1")).orElse(null);
-        if(run==null||net.goui.cosmicdungeon.vendor.VendorAssignmentService.hasAssignedProfile(mob)
+        if(run==null||creditedPlayer==null||!run.containsPlayer(creditedPlayer)
+                ||net.goui.cosmicdungeon.vendor.VendorAssignmentService.hasAssignedProfile(mob)
                 ||mob.getPersistentData().contains("cosmicdungeon_d1_watson_run")
                 ||net.goui.cosmicdungeon.npc.tamsin.TamsinData.get(level.getServer()).binding(mob.getUUID())!=null)return;
         var data=D1RunData.get(level.getServer());

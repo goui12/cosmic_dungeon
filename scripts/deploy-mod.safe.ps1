@@ -1,4 +1,4 @@
-# Coordinated TEST deployment. Dry-run default; no wildcards for deletion.
+﻿# Coordinated TEST deployment. Dry-run default; no wildcards for deletion.
 [CmdletBinding()] param([string]$Jar, [switch]$Apply, [switch]$ServerStopped, [switch]$ClientClosed)
 . "$PSScriptRoot\cd-common.ps1"
 $c=Get-CDConfig
@@ -76,4 +76,15 @@ try {
 } finally {
     if($localStage -and (Test-Path -LiteralPath $localStage)){Remove-Item -LiteralPath $localStage}
     try {if($null -ne $s){$s.Dispose()}} finally {$lock.Dispose()}
+}
+
+
+# Publish only after the completed deployment transaction released its lock.
+# GitHub failure must not trigger the installation rollback above.
+if ($null -ne $manifest -and $manifest.State -eq 'complete') {
+    try {
+        & "$PSScriptRoot\publish-test-build.ps1" -Mode Deployed -ReceiptPath $manifestPath -Apply
+    } catch {
+        throw ("TEST/client deployment is COMPLETE, but TEST download publication failed. Retry publish-test-build.ps1 with manifest " + $manifestPath + ". Cause: " + $_.Exception.Message)
+    }
 }

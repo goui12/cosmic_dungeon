@@ -240,7 +240,7 @@ public class ModModelProvider extends ModelProvider {
                     MultiVariantGenerator.dispatch(b, new MultiVariant(WeightedList.of(new Variant(blockModel))))
             );
 
-            registerExternalItem(itemModels, b.asItem(), blockModel);
+            FLAT.accept(b.asItem());
         }
 
         // ===== Infinite Dispenser =====

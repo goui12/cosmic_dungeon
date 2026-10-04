@@ -423,6 +423,12 @@ public final class RiftRegistryData extends SavedData {
         }
     }
 
+    /** Retiring a copy removes only its physical bindings; authored template portals remain intact. */
+    public void clearInstancePortals(java.util.Collection<String> dimensions) {
+        clearPortalStateForDimensions(java.util.Set.copyOf(dimensions));
+        setDirty();
+    }
+
     public void copyTemplatePortals(Map<ResourceKey<Level>, ResourceKey<Level>> dimensionMapping) {
         if (dimensionMapping == null || dimensionMapping.isEmpty()) return;
         Set<String> targets = dimensionMapping.values().stream()

@@ -14,16 +14,34 @@ public final class D1ProjectileAccess {
     private D1ProjectileAccess() {}
 
     public static D1CombatRules.Ammunition permission(Projectile projectile, ItemStack stack, String id) {
+        if(D1AmmunitionCatalog.find(id)==null){
+            String item=net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+            return D1AmmunitionCatalog.registered(item)?D1CombatRules.Ammunition.DENIED:D1CombatRules.Ammunition.VANILLA;
+        }
+        if(projectile.getOwner() instanceof net.minecraft.world.entity.LivingEntity owner&&owner.level()==projectile.level())
+            return permission(owner,stack,id);
+        return D1CombatRules.Ammunition.DENIED;
+    }
+    public static String classId(net.minecraft.world.entity.LivingEntity owner){
+        return owner instanceof ServerPlayer player?ClassData.getClassId(player)
+            :owner instanceof net.goui.cosmicdungeon.mercenary.MercenaryEntity mercenary&&mercenary.contract()!=null
+            ?mercenary.contract().classId():"";
+    }
+    public static D1CombatRules.Ammunition permission(net.minecraft.world.entity.LivingEntity owner,ItemStack stack,String id){
         if (D1AmmunitionCatalog.find(id) == null) {
             String item = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
             return D1AmmunitionCatalog.registered(item)
                     ? D1CombatRules.Ammunition.DENIED : D1CombatRules.Ammunition.VANILLA;
         }
-        if (!(projectile.getOwner() instanceof ServerPlayer owner))
-            return D1CombatRules.Ammunition.DENIED;
-        var run = D1Members.run(owner.level()).orElse(null);
-        String cls = ClassData.getClassId(owner);
-        boolean active = projectile.level() == owner.level() && run != null && D1Members.inside(owner, run);
+        String cls=classId(owner);
+        boolean active=false;
+        if(owner instanceof ServerPlayer player){
+            var run=D1Members.run(player.level()).orElse(null);
+            active=run!=null&&D1Members.inside(player,run);
+        }else if(owner instanceof net.goui.cosmicdungeon.mercenary.MercenaryEntity mercenary){
+            active=net.goui.cosmicdungeon.mercenary.MercenaryBrain.hirer(mercenary)!=null
+                &&net.goui.cosmicdungeon.mercenary.MercenaryInventory.permitted(stack,mercenary.contract());
+        }
         boolean metadata = ClassItemUtil.hasAnyAttunementMetadata(stack);
         boolean bound = D1AmmunitionCatalog.bindingAllowed(id, metadata,
                 ClassItemUtil.hasCompleteValidAttunement(stack), ClassItemUtil.getClassAttunement(stack),

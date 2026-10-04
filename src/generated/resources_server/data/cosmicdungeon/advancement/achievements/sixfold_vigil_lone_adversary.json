@@ -7,10 +7,12 @@
   },
   "display": {
     "announce_to_chat": false,
-    "description": "",
+    "description": {
+      "translate": "advancements.cosmicdungeon.achievements.sixfold_vigil_lone_adversary.desc"
+    },
     "icon": {
       "count": 1,
-      "id": "minecraft:paper"
+      "id": "minecraft:wither_skeleton_skull"
     },
     "title": {
       "translate": "advancements.cosmicdungeon.achievements.sixfold_vigil_lone_adversary.title"

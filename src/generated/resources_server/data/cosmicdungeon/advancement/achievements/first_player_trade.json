@@ -5,17 +5,6 @@
       "trigger": "minecraft:impossible"
     }
   },
-  "display": {
-    "announce_to_chat": false,
-    "description": "",
-    "icon": {
-      "count": 1,
-      "id": "minecraft:paper"
-    },
-    "title": {
-      "translate": "advancements.cosmicdungeon.achievements.first_player_trade.title"
-    }
-  },
   "requirements": [
     [
       "triggered"

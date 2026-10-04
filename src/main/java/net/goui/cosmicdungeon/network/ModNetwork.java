@@ -32,7 +32,12 @@ public final class ModNetwork {
     private ModNetwork() {}
 
     public static void registerPayloadHandlers(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("7");
+        final PayloadRegistrar registrar = event.registrar("13");
+        registrar.playToServer(LeaderboardPayloads.Request.TYPE,LeaderboardPayloads.Request.CODEC,
+            (payload,ctx)->ctx.enqueueWork(()->{if(ctx.player() instanceof net.minecraft.server.level.ServerPlayer player)
+                net.goui.cosmicdungeon.leaderboard.LeaderboardService.request(player,payload);}));
+        registrar.playToClient(LeaderboardPayloads.View.TYPE,LeaderboardPayloads.View.CODEC,
+            (payload,ctx)->ctx.enqueueWork(()->ClientNetworkDispatch.dispatch("onLeaderboard",payload)));
         registrar.playToClient(CurrencyBalancePayload.TYPE,CurrencyBalancePayload.STREAM_CODEC,
                 (payload,ctx)->ctx.enqueueWork(()->ClientNetworkDispatch.dispatch("onCurrencyBalance",payload)));
 
@@ -284,7 +289,7 @@ public final class ModNetwork {
 
                     if (sp.containerMenu.containerId != payload.containerId()
                             || !net.goui.cosmicdungeon.block.custom.ClassSelectorTeleportUtil.validSelectionSession(sp)){
-                        ctx.reply(new ClassPayloads.S2C_SelectResult(false,"Reopen a nearby Dungeon 1 selector.",ClassData.getClassId(sp)));return;
+                        ctx.reply(new ClassPayloads.S2C_SelectResult(false,"Speak with Tamsin Vane to choose a class.",ClassData.getClassId(sp)));return;
                     }
                     String requested = payload.classId();
                     String clamped = ClassKeys.clamp(requested);

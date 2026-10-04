@@ -2,21 +2,7 @@
   "parent": "cosmicdungeon:root",
   "criteria": {
     "tick": {
-      "trigger": "minecraft:tick"
-    }
-  },
-  "display": {
-    "announce_to_chat": false,
-    "description": {
-      "translate": "advancements.cosmicdungeon.pyroclast.root.desc"
-    },
-    "icon": {
-      "count": 1,
-      "id": "minecraft:gunpowder"
-    },
-    "show_toast": false,
-    "title": {
-      "translate": "advancements.cosmicdungeon.pyroclast.root.title"
+      "trigger": "minecraft:impossible"
     }
   },
   "requirements": [

@@ -1,8 +1,6 @@
 package net.goui.cosmicdungeon.playerclass.pyroclast;
 import net.goui.cosmicdungeon.Config;
 import net.goui.cosmicdungeon.CosmicDungeonMod;
-import net.goui.cosmicdungeon.achievement.CosmicAchievementIds;
-import net.goui.cosmicdungeon.achievement.CosmicAdvancementUtil;
 import net.goui.cosmicdungeon.playerclass.api.ClassData;
 import net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairComponents;
 import net.minecraft.server.level.ServerPlayer;
@@ -47,7 +45,6 @@ public final class PyroclastGunpowderEvents {
             player.displayClientMessage(Component.literal("Make room for the gunpowder."),true);
         } else {
             player.getCooldowns().addCooldown(new ItemStack(Items.FLINT),5);
-            CosmicAdvancementUtil.grant(player,CosmicAchievementIds.PYROCLAST_BOOM);
         }
         inv.setChanged(); player.inventoryMenu.broadcastChanges();
     }

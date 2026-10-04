@@ -1,6 +1,7 @@
 package net.goui.cosmicdungeon.dungeon;
 
 import com.mojang.serialization.Codec;
+import net.goui.cosmicdungeon.mercenary.MercenaryRest;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -34,7 +35,10 @@ public final class DungeonRunRegistryData extends SavedData {
             long startedAtEpochMillis,
             List<UUID> orderedPlayers,
             List<UUID> completionExitedPlayers,
-            List<DungeonPlayerRunSnapshot> playerSnapshots
+            List<DungeonPlayerRunSnapshot> playerSnapshots,
+            DungeonDifficulty.Profile difficulty,
+            List<net.goui.cosmicdungeon.mercenary.MercenaryContract> mercenaries,
+            Map<UUID,MercenaryRest> mercenaryRests
     ) {
         // Keep this codec local: the public record may initialize before its enclosing SavedData.
         private static final Codec<UUID> UUID_CODEC = Codec.STRING.xmap(UUID::fromString, UUID::toString);
@@ -50,15 +54,70 @@ public final class DungeonRunRegistryData extends SavedData {
                 Codec.LONG.optionalFieldOf("started_at", 0L).forGetter(RunRecord::startedAtEpochMillis),
                 UUID_CODEC.listOf().fieldOf("ordered_players").forGetter(RunRecord::orderedPlayers),
                 UUID_CODEC.listOf().optionalFieldOf("completion_exited_players", List.of()).forGetter(RunRecord::completionExitedPlayers),
-                DungeonPlayerRunSnapshot.CODEC.listOf().optionalFieldOf("player_snapshots", List.of()).forGetter(RunRecord::playerSnapshots)
+                DungeonPlayerRunSnapshot.CODEC.listOf().optionalFieldOf("player_snapshots", List.of()).forGetter(RunRecord::playerSnapshots),
+                DungeonDifficulty.Profile.CODEC.optionalFieldOf("difficulty_profile", DungeonDifficulty.Profile.LEGACY).forGetter(RunRecord::difficulty),
+                net.goui.cosmicdungeon.mercenary.MercenaryContract.CODEC.listOf().optionalFieldOf("mercenaries",List.of()).forGetter(RunRecord::mercenaries),
+                Codec.unboundedMap(UUID_CODEC,MercenaryRest.CODEC).optionalFieldOf("mercenary_rests",Map.of()).forGetter(RunRecord::mercenaryRests)
         ).apply(i, RunRecord::new));
 
+        public RunRecord(long runId, String dungeonId, String selectorDimensionId, long selectorPosLong,
+                List<String> dungeonDimensionIds, int instanceSlot, String state, String resetReason,
+                long startedAtEpochMillis, List<UUID> orderedPlayers, List<UUID> completionExitedPlayers,
+                List<DungeonPlayerRunSnapshot> playerSnapshots) {
+            this(runId, dungeonId, selectorDimensionId, selectorPosLong, dungeonDimensionIds, instanceSlot,
+                    state, resetReason, startedAtEpochMillis, orderedPlayers, completionExitedPlayers,
+                    playerSnapshots, DungeonDifficulty.Profile.LEGACY);
+        }
+        public RunRecord {
+            mercenaries=List.copyOf(mercenaries);
+            mercenaryRests=Map.copyOf(mercenaryRests);
+            for(var entry:mercenaryRests.entrySet())if(mercenaries.stream().noneMatch(m->m.id().equals(entry.getKey()))
+                    ||!dungeonDimensionIds.contains(entry.getValue().dimension()))
+                throw new IllegalArgumentException("Rest does not match mercenary run");
+            if(mercenaries.size()>3||mercenaries.stream().map(net.goui.cosmicdungeon.mercenary.MercenaryContract::id).distinct().count()!=mercenaries.size()
+                    ||mercenaries.stream().map(net.goui.cosmicdungeon.mercenary.MercenaryContract::hirer).distinct().count()!=mercenaries.size()
+                    ||mercenaries.stream().map(net.goui.cosmicdungeon.mercenary.MercenaryContract::slot).distinct().count()!=mercenaries.size())
+                throw new IllegalArgumentException("Invalid mercenary roster");
+        }
+        public RunRecord(long runId,String dungeonId,String selectorDimensionId,long selectorPosLong,
+                List<String> dungeonDimensionIds,int instanceSlot,String state,String resetReason,
+                long startedAtEpochMillis,List<UUID> orderedPlayers,List<UUID> completionExitedPlayers,
+                List<DungeonPlayerRunSnapshot> playerSnapshots,DungeonDifficulty.Profile difficulty){
+            this(runId,dungeonId,selectorDimensionId,selectorPosLong,dungeonDimensionIds,instanceSlot,state,
+                resetReason,startedAtEpochMillis,orderedPlayers,completionExitedPlayers,playerSnapshots,difficulty,List.of());
+        }
+        public RunRecord(long runId,String dungeonId,String selectorDimensionId,long selectorPosLong,
+                List<String> dungeonDimensionIds,int instanceSlot,String state,String resetReason,
+                long startedAtEpochMillis,List<UUID> orderedPlayers,List<UUID> completionExitedPlayers,
+                List<DungeonPlayerRunSnapshot> playerSnapshots,DungeonDifficulty.Profile difficulty,
+                List<net.goui.cosmicdungeon.mercenary.MercenaryContract> mercenaries){
+            this(runId,dungeonId,selectorDimensionId,selectorPosLong,dungeonDimensionIds,instanceSlot,state,
+                resetReason,startedAtEpochMillis,orderedPlayers,completionExitedPlayers,playerSnapshots,difficulty,mercenaries,Map.of());
+        }
+        public RunRecord withMercenaryRests(Map<UUID,MercenaryRest> rests){
+            return new RunRecord(runId,dungeonId,selectorDimensionId,selectorPosLong,dungeonDimensionIds,instanceSlot,state,
+                resetReason,startedAtEpochMillis,orderedPlayers,completionExitedPlayers,playerSnapshots,difficulty,mercenaries,rests);
+        }
+        public RunRecord withMercenaries(List<net.goui.cosmicdungeon.mercenary.MercenaryContract> hires){
+            return new RunRecord(runId,dungeonId,selectorDimensionId,selectorPosLong,dungeonDimensionIds,instanceSlot,state,
+                resetReason,startedAtEpochMillis,orderedPlayers,completionExitedPlayers,playerSnapshots,difficulty,hires,mercenaryRests);
+        }
+        public RunRecord withDifficulty(DungeonDifficulty.Profile profile) {
+            return new RunRecord(runId, dungeonId, selectorDimensionId, selectorPosLong, dungeonDimensionIds,
+                    instanceSlot, state, resetReason, startedAtEpochMillis, orderedPlayers,
+                    completionExitedPlayers, playerSnapshots, java.util.Objects.requireNonNull(profile), mercenaries, mercenaryRests);
+        }
         public DungeonRunState stateEnum() {
             try {
                 return DungeonRunState.valueOf(state.toUpperCase(Locale.ROOT));
             } catch (Exception ignored) {
                 return DungeonRunState.ACTIVE;
             }
+        }
+
+        public boolean unusedPreparation() {
+            return stateEnum() == DungeonRunState.PREPARING && orderedPlayers.isEmpty()
+                    && completionExitedPlayers.isEmpty() && playerSnapshots.isEmpty();
         }
 
         public boolean containsDimension(ResourceKey<Level> dim) {
@@ -105,7 +164,7 @@ public final class DungeonRunRegistryData extends SavedData {
                     startedAtEpochMillis,
                     orderedPlayers,
                     updated,
-                    playerSnapshots
+                    playerSnapshots, difficulty, mercenaries, mercenaryRests
             );
         }
 
@@ -137,7 +196,7 @@ public final class DungeonRunRegistryData extends SavedData {
                     startedAtEpochMillis,
                     updatedPlayers,
                     updatedExited,
-                    updatedSnapshots
+                    updatedSnapshots, difficulty, mercenaries, mercenaryRests
             );
         }
 
@@ -154,22 +213,23 @@ public final class DungeonRunRegistryData extends SavedData {
                     startedAtEpochMillis,
                     orderedPlayers,
                     completionExitedPlayers,
-                    playerSnapshots
+                    playerSnapshots, difficulty, mercenaries, mercenaryRests
             );
         }
 
         public RunRecord withInstance(int slot, List<String> dimensions) {
             return new RunRecord(runId, dungeonId, selectorDimensionId, selectorPosLong,
                     List.copyOf(dimensions), slot, state, resetReason, startedAtEpochMillis,
-                    orderedPlayers, completionExitedPlayers, playerSnapshots);
+                    orderedPlayers, completionExitedPlayers, playerSnapshots, difficulty, mercenaries, mercenaryRests);
         }
     }
 
-    private record Persisted(long nextRunId, List<RunRecord> runs, Map<String, net.minecraft.nbt.CompoundTag> startup) {
+    private record Persisted(long nextRunId, List<RunRecord> runs, Map<String, net.minecraft.nbt.CompoundTag> startup, List<Long> retiring) {
         private static final Codec<Persisted> CODEC = RecordCodecBuilder.create(i -> i.group(
                 Codec.LONG.fieldOf("next_run_id").forGetter(Persisted::nextRunId),
                 RunRecord.CODEC.listOf().fieldOf("runs").forGetter(Persisted::runs),
-                Codec.unboundedMap(Codec.STRING, net.minecraft.nbt.CompoundTag.CODEC).optionalFieldOf("startup", Map.of()).forGetter(Persisted::startup)
+                Codec.unboundedMap(Codec.STRING, net.minecraft.nbt.CompoundTag.CODEC).optionalFieldOf("startup", Map.of()).forGetter(Persisted::startup),
+                Codec.LONG.listOf().optionalFieldOf("retiring_instances", List.of()).forGetter(Persisted::retiring)
         ).apply(i, Persisted::new));
     }
 
@@ -198,9 +258,28 @@ public final class DungeonRunRegistryData extends SavedData {
     private final Map<Long, RunRecord> runsById = new HashMap<>();
 
     private final Map<String, net.minecraft.nbt.CompoundTag> startup = new HashMap<>();
+    private final Set<Long> retiring = new java.util.HashSet<>();
     private MinecraftServer server;
     private DungeonRunRegistryData() {}
     public boolean flushVerified() { return net.goui.cosmicdungeon.transaction.SavedDataProof.save(server, SAVE_ID, CODEC, this); }
+    /** Mark native SavedData dirty; ordinary autosave persists this locator without per-tick disk writes. */
+    public void mercenaryRest(long run,UUID id,MercenaryRest rest){
+        var record=getRun(run).orElse(null);
+        if(record==null||record.mercenaries().stream().noneMatch(m->m.id().equals(id))
+                ||java.util.Objects.equals(record.mercenaryRests().get(id),rest))return;
+        var rests=new HashMap<>(record.mercenaryRests());
+        if(rest==null)rests.remove(id);else rests.put(id,rest);
+        runsById.put(run,record.withMercenaryRests(rests));setDirty();
+    }
+    public boolean attachMercenaries(long run,List<net.goui.cosmicdungeon.mercenary.MercenaryContract> hires){
+        var record=getRun(run).orElseThrow();
+        if(!starting(run)||!record.mercenaries().isEmpty()||record.orderedPlayers().size()+hires.size()>6)
+            throw new IllegalStateException("Run cannot accept hires");
+        int slot=record.orderedPlayers().size()+1;
+        for(var hire:hires)if(!record.containsPlayer(hire.hirer())||hire.slot()!=slot++||record.containsPlayer(hire.id()))
+            throw new IllegalArgumentException("Hire does not match startup roster");
+        runsById.put(run,record.withMercenaries(hires));setDirty();return flushVerified();
+    }
     public boolean starting(long run) { return startup.containsKey(Long.toString(run)); }
     public net.minecraft.nbt.CompoundTag startupImage(long run, UUID owner) {
         var image = startup.get(Long.toString(run));
@@ -220,9 +299,11 @@ public final class DungeonRunRegistryData extends SavedData {
     }
     public boolean retireVerified(long run) {
         var record = runsById.remove(run);
+        boolean wasRetiring = retiring.remove(run);
         var image = startup.remove(Long.toString(run)); setDirty();
         if (flushVerified()) return true;
         if (record != null) runsById.put(run, record);
+        if (wasRetiring) retiring.add(run);
         if (image != null) startup.put(Long.toString(run), image);
         setDirty(); return false;
     }
@@ -243,6 +324,8 @@ public final class DungeonRunRegistryData extends SavedData {
         DungeonRunRegistryData d = new DungeonRunRegistryData();
         d.nextRunId = Math.max(1L, p.nextRunId());
         for (RunRecord r : p.runs()) {
+            if (r.stateEnum() == DungeonRunState.PREPARING && !r.unusedPreparation())
+                throw new IllegalArgumentException("Preparation contains player inventory or roster state");
             if (r.runId() <= 0 || r.runId() >= p.nextRunId() || d.runsById.put(r.runId(), r) != null) throw new IllegalArgumentException("Invalid or duplicate dungeon run");
         }
         p.startup().forEach((key, image) -> {
@@ -250,16 +333,62 @@ public final class DungeonRunRegistryData extends SavedData {
             if (!key.equals(Long.toString(run))) throw new IllegalArgumentException("Invalid startup key");
             validateStartup(d.getRun(run).orElseThrow(), image); d.startup.put(key, image.copy());
         });
+        for (Long run : p.retiring()) {
+            RunRecord record = d.getRun(run).orElseThrow();
+            if (record.instanceSlot() <= 0 || (record.stateEnum() != DungeonRunState.RESETTING
+                    && record.stateEnum() != DungeonRunState.FAILED && record.stateEnum() != DungeonRunState.PREPARING))
+                throw new IllegalArgumentException("Invalid instance retirement marker");
+            d.retiring.add(run);
+        }
         return d;
+    }
+
+    public boolean retiring(long runId) { return retiring.contains(runId); }
+
+    public boolean prepareRetirementVerified(long runId) {
+        RunRecord record = getRun(runId).orElseThrow();
+        if (record.stateEnum() != DungeonRunState.RESETTING && record.stateEnum() != DungeonRunState.PREPARING
+                && record.stateEnum() != DungeonRunState.FAILED) return false;
+        retiring.add(runId);
+        setDirty();
+        // Never delete unless the marker and existing recovery state are proven durable.
+        return flushVerified();
+    }
+
+    long nextInstanceRunId() { return nextRunId; }
+
+    RunRecord allocateInstance(DungeonDefinition definition, int slot) {
+        if (isSlotOccupied(slot) || nextRunId <= 0 || nextRunId == Long.MAX_VALUE)
+            throw new IllegalStateException("Instance slot or generation unavailable");
+        long runId = nextRunId;
+        var dimensions = DungeonInstanceSlots.mapping(definition, slot, runId).values().stream()
+                .map(key -> key.location().toString()).toList();
+        var record = new RunRecord(runId, definition.id(), Level.OVERWORLD.location().toString(), 0,
+                dimensions, slot, DungeonRunState.PREPARING.name(), "", System.currentTimeMillis(),
+                List.of(), List.of(), List.of());
+        nextRunId++;
+        runsById.put(runId, record);
+        setDirty();
+        return record;
+    }
+
+    public RunRecord reserveInstanceVerified(DungeonDefinition definition, int slot) {
+        return reserveInstanceVerified(definition, slot, DungeonDifficulty.Profile.LEGACY);
+    }
+    public RunRecord reserveInstanceVerified(DungeonDefinition definition, int slot, DungeonDifficulty.Profile profile) {
+        RunRecord record = allocateInstance(definition, slot).withDifficulty(profile);
+        runsById.put(record.runId(), record);
+        if (!flushVerified()) throw new IllegalStateException("Instance reservation could not be saved; its slot remains held");
+        return record;
     }
 
     private Persisted toPersisted() {
         List<RunRecord> runs = new ArrayList<>(runsById.values());
         runs.sort(Comparator.comparingLong(RunRecord::runId));
-        return new Persisted(nextRunId, runs, Map.copyOf(startup));
+        return new Persisted(nextRunId, runs, Map.copyOf(startup), retiring.stream().sorted().toList());
     }
 
-    public long startRun(ResourceKey<Level> selectorDimension,
+    public long startRun(long reservedRunId, ResourceKey<Level> selectorDimension,
                          long selectorPosLong,
                          DungeonDefinition def,
                          int instanceSlot,
@@ -270,9 +399,13 @@ public final class DungeonRunRegistryData extends SavedData {
             return -1L;
         }
 
+        RunRecord reservation = runsById.get(reservedRunId);
+        if (reservation == null || reservation.stateEnum() != DungeonRunState.PREPARING
+                || reservation.instanceSlot() != instanceSlot || !reservation.dungeonId().equals(def.id())
+                || retiring(reservedRunId)) return -1L;
         if (instanceSlot < 1 || instanceSlot > DungeonInstanceSlots.SLOT_COUNT
                 || instanceDimensionIds == null || instanceDimensionIds.isEmpty()
-                || isSlotOccupied(instanceSlot)) {
+                || !Set.copyOf(instanceDimensionIds).equals(Set.copyOf(reservation.dungeonDimensionIds()))) {
             return -1L;
         }
 
@@ -286,7 +419,7 @@ public final class DungeonRunRegistryData extends SavedData {
             }
         }
 
-        long runId = nextRunId++;
+        long runId = reservedRunId;
         RunRecord rec = new RunRecord(
                 runId,
                 def.id(),
@@ -299,7 +432,7 @@ public final class DungeonRunRegistryData extends SavedData {
                 System.currentTimeMillis(),
                 new ArrayList<>(orderedPlayers),
                 new ArrayList<>(),
-                snapshots == null ? List.of() : new ArrayList<>(snapshots)
+                snapshots == null ? List.of() : new ArrayList<>(snapshots), reservation.difficulty()
         );
 
         runsById.put(runId, rec);
@@ -333,7 +466,8 @@ public final class DungeonRunRegistryData extends SavedData {
 
     public boolean isSlotOccupied(int slot) {
         return runsById.values().stream().anyMatch(r -> r.instanceSlot() == slot
-                && (r.stateEnum() == DungeonRunState.ACTIVE
+                && (r.stateEnum() == DungeonRunState.PREPARING
+                || r.stateEnum() == DungeonRunState.ACTIVE
                 || r.stateEnum() == DungeonRunState.RESETTING
                 || r.stateEnum() == DungeonRunState.FAILED));
     }
@@ -345,6 +479,10 @@ public final class DungeonRunRegistryData extends SavedData {
         return Optional.empty();
     }
 
+    public DungeonDifficulty.Profile difficultyForDimension(ResourceKey<Level> dimension) {
+        return runsById.values().stream().filter(r -> r.instanceSlot() > 0 && r.containsDimension(dimension)
+                && r.stateEnum() != DungeonRunState.FAILED).findFirst().map(RunRecord::difficulty).orElse(null);
+    }
     public Optional<RunRecord> findRunForInstanceDimension(ResourceKey<Level> dimension) {
         if (dimension == null) return Optional.empty();
         return runsById.values().stream()
@@ -428,7 +566,7 @@ public final class DungeonRunRegistryData extends SavedData {
     public boolean removeRun(long runId) {
         if (runId <= 0L) return false;
         boolean changed = runsById.remove(runId) != null;
-        if (changed) startup.remove(Long.toString(runId));
+        if (changed) { startup.remove(Long.toString(runId)); retiring.remove(runId); }
         if (changed) setDirty();
         return changed;
     }

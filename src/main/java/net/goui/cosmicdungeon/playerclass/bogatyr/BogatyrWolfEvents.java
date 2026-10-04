@@ -27,6 +27,35 @@ public final class BogatyrWolfEvents {
     private BogatyrWolfEvents(){}
     public static boolean managed(Wolf wolf){return wolf.getPersistentData().getLongOr(RUN,0)>0;}
     private static boolean bogatyr(ServerPlayer player){return "bogatyr".equals(ClassData.getClassId(player));}
+    public static boolean owned(Wolf wolf) {
+        return wolf.isTame() && (managed(wolf) || wolf.getPersistentData().contains(OWNER)
+                || wolf.getOwner() instanceof ServerPlayer player && bogatyr(player));
+    }
+    public static boolean isBogatyrWolfEgg(net.minecraft.world.entity.LivingEntity source,
+            net.minecraft.world.item.ItemStack stack) {
+        return source instanceof ServerPlayer player && bogatyr(player)
+                && !net.goui.cosmicdungeon.auth.AccessPolicy.isDeveloper(player)
+                && stack != null && stack.getItem() instanceof net.minecraft.world.item.SpawnEggItem egg
+                && egg.spawnsEntity(stack, net.minecraft.world.entity.EntityType.WOLF);
+    }
+    public static boolean maySpawnEgg(net.minecraft.world.entity.LivingEntity source,
+            net.minecraft.world.item.ItemStack stack) {
+        if (!isBogatyrWolfEgg(source, stack)) return true;
+        var player = (ServerPlayer)source;
+        var run = D1Members.run(player.level()).orElse(null);
+        if (run != null && full(player, run.runId())) {
+            player.displayClientMessage(Component.literal("Your wolf pack is full."), true);
+            return false;
+        }
+        return true;
+    }
+    public static void tameEgg(net.minecraft.world.entity.LivingEntity source, net.minecraft.world.entity.Entity entity) {
+        if (!(source instanceof ServerPlayer player) || !(entity instanceof Wolf wolf) || !bogatyr(player)) return;
+        wolf.tame(player);
+        wolf.getPersistentData().putString(OWNER, player.getUUID().toString());
+        wolf.setOrderedToSit(false); wolf.setInSittingPose(false); wolf.setTarget(null); wolf.stopBeingAngry();
+        // The existing onAddedToLevel path registers the actual successful in-instance spawn.
+    }
     private static boolean full(ServerPlayer player,long run){
         return BogatyrCompanions.packSize(player.level().getServer(),player.getUUID(),run)>=Config.WOLF_CAP.get();
     }
@@ -39,6 +68,7 @@ public final class BogatyrWolfEvents {
                 && owner.toString().equals(wolf.getPersistentData().getStringOr(OWNER,""));
     }
     private static void register(Wolf wolf,UUID owner,long run){
+        if(net.goui.cosmicdungeon.mercenary.MercenaryWolves.managed(wolf))return; // Summoned run companions are not permanent player pets.
         if(!(wolf.level() instanceof ServerLevel level)||owner==null||!owner.equals(ownerId(wolf)))return;
         if(!managed(wolf))BogatyrIdentity.fresh(wolf);
         if(!BogatyrIdentity.observe(wolf))return;

@@ -5,12 +5,22 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "client.OptionsScreenMixin",
-    "client.D1CrossbowChargeMixin"
+    "client.D1CrossbowChargeMixin",
+    "client.TitleScreenBrandingMixin",
+    "client.ClassSelectorTargetingMixin",
+    "client.TamsinVillagerRendererMixin",
+    "client.TamsinClothingMixin",
+    "client.InventoryRecipeBookScreenMixin",
+    "client.InventoryRecipeBookComponentMixin",
+    "client.LeaderboardPauseMixin"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "mixins": [
+    "DungeonServerAccess",
+    "BaseSpawnerAccess",
+    "CosmicSpawnerAwarenessMixin",
     "CosmicSpawnerEntityMixin",
     "CosmicSpawnerTrackingMixin",
     "CosmicSpawnerHealthMixin",
@@ -33,6 +43,10 @@
     "ProtectedItemDeathMixin",
     "ProtectedItemCloneMixin",
     "OwnedItemPickupMixin",
+    "OwnedProjectilePickupMixin",
+    "AttunedInventoryMixin",
+    "BogatyrEggSpawnMixin",
+    "BogatyrEggOffspringMixin",
     "ProtectedItemHopperMixin",
     "ProtectedItemDispenserMixin",
     "OwnedItemMobPickupMixin",
@@ -57,6 +71,13 @@
     "CraftingBookMixin",
     "CraftingAutomationMixin",
     "CraftingStonecutterMixin",
-    "CraftingSmithingMixin"
+    "CraftingSmithingMixin",
+    "DungeonDifficultyEffectMixin",
+    "SkillProjectileWeaponMixin",
+    "SkillSplashPotionMixin",
+    "SkillCloudMixin",
+    "SkillLingeringPotionMixin",
+    "SkillDrinkPotionMixin",
+    "StatsCounterAccess"
   ]
 }

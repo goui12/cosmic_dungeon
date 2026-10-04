@@ -1,4 +1,4 @@
-# Wrapper preserves the project's Gradle tasks; adds local logs and build provenance.
+﻿# Wrapper preserves the project's Gradle tasks; adds local logs and build provenance.
 [CmdletBinding()] param([ValidateSet('build','runServerData','runClientData','runClient','clean')][string]$Task='build', [switch]$AllowDevClient)
 . "$PSScriptRoot\cd-common.ps1"
 if ($Task -eq 'runClient' -and !$AllowDevClient) { throw 'Dev-client execution is not realistic licensed-server QA. Ask Cameron before using -AllowDevClient.' }
@@ -25,4 +25,5 @@ if ($Task -eq 'build') {
     if (!(Test-Path -LiteralPath $jar)) { throw 'Expected runtime jar was not produced.' }
     @{Task='build';BuiltUtc=[DateTime]::UtcNow.ToString('o');Commit=(& git -C $script:CDRepo rev-parse HEAD);SourceHash=$after;Jar=$jar;JarSHA256=(Get-FileHash -LiteralPath $jar).Hash;Log=$log} | ConvertTo-Json | Set-Content (Join-Path $script:CDCache 'build-receipt.json') -Encoding UTF8
     Write-Output 'Build provenance saved. Build is not proof of multiplayer gameplay QA.'
+    & "$PSScriptRoot\publish-test-build.ps1" -Mode Built -ReceiptPath (Join-Path $script:CDCache 'build-receipt.json') -Apply
 }

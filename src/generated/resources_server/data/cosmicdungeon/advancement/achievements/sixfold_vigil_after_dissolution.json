@@ -7,10 +7,12 @@
   },
   "display": {
     "announce_to_chat": false,
-    "description": "",
+    "description": {
+      "translate": "advancements.cosmicdungeon.achievements.sixfold_vigil_after_dissolution.desc"
+    },
     "icon": {
       "count": 1,
-      "id": "minecraft:paper"
+      "id": "minecraft:white_candle"
     },
     "title": {
       "translate": "advancements.cosmicdungeon.achievements.sixfold_vigil_after_dissolution.title"

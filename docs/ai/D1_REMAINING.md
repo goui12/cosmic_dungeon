@@ -1,3 +1,25 @@
+# Current rollout, 2026-10-04
+
+[CurseForge and mercenary batch plan](CURSEFORGE_AND_MERCENARY_BATCHES_20261004.md).
+Stage 1 release automation is in progress. Nine new gameplay batches remain:
+1 menu/identity; 2 wolves/equipment drops; 3 recovery/payment; 4 shared progression;
+5 Theurgist potions; 6 Bogatyr progression; 7 Pyroclast fireworks; 8 Dragoon lightning;
+9 Theurgist resurrection. Gameplay implementation waits until Stage 1 is established.
+The earlier zero-batch statements below refer to the previous completed request.
+
+---
+
+# Testing rollout, 2026-10-03
+
+[Current approved queue](TESTING_ROLLOUT_20261003.md). Batches 1–11 are implemented and validated.
+Zero implementation batches remain; cumulative licensed TEST acceptance is pending.
+[Batch 1 report](TESTING_BATCH_1_20261003.md) | [Batch 2 report](TESTING_BATCH_2_20261003.md) | [Batch 3 report](TESTING_BATCH_3_20261003.md) | [Batch 4 report](TESTING_BATCH_4_20261003.md) | [Batch 5 report](TESTING_BATCH_5_20261003.md) | [Batch 6 report](TESTING_BATCH_6_20261003.md) | [Batch 7 report](TESTING_BATCH_7_20261004.md) | [Batch 8 report](TESTING_BATCH_8_20261004.md) | [Batch 9 report](TESTING_BATCH_9_20261004.md) | [Batch 10 report](TESTING_BATCH_10_20261004.md) | [Batch 11 report](TESTING_BATCH_11_20261004.md).
+Batch 11 completes lifetime statistics, the teal pause-menu entry and eight curated leaderboards;
+the October 4 follow-up removes the exhaustive catalog and defaults to Dungeons completed.
+The older zero-batch statements below apply to earlier completed requests.
+
+---
+
 # D1 requested readiness implementation complete, 2026-09-23
 
 [Current report, exact files and candidate hash](D1_READINESS_IMPLEMENTATION_2026-09-23.md).

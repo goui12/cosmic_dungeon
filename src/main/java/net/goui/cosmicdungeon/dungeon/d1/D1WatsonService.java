@@ -45,7 +45,7 @@ public final class D1WatsonService {
                 continue;
             }
             var level = level(server, run, binding);
-            if (existing != null && !binding.matches(run.instanceSlot(), existing.level().dimension(), existing.blockPosition())) {
+            if (existing != null && !binding.matches(run, existing.level().dimension(), existing.blockPosition())) {
                 retire(data, run.runId(), existing);
                 existing = null;
             }
@@ -84,7 +84,7 @@ public final class D1WatsonService {
     }
 
     private static ServerLevel level(MinecraftServer server, DungeonRunRegistryData.RunRecord run, D1WatsonData binding) {
-        var dimension = binding.instanceDimension(run.instanceSlot());
+        var dimension = binding.instanceDimension(run);
         return dimension == null ? null : server.getLevel(dimension);
     }
     @SubscribeEvent public static void joined(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event){
@@ -96,7 +96,7 @@ public final class D1WatsonService {
         var binding = D1WatsonData.get(level.getServer());
         if(run==null||!run.dungeonId().equals("dungeon_1")||run.stateEnum()!=DungeonRunState.ACTIVE
                 ||data.sealed(runId)||!run.containsDimension(level.dimension())
-                ||!binding.matches(run.instanceSlot(),level.dimension(),entity.blockPosition())
+                ||!binding.matches(run,level.dimension(),entity.blockPosition())
                 ||(!ids.isEmpty()&&!ids.getFirst().equals(entity.getUUID().toString()))){
             event.setCanceled(true);entity.discard();return;
         }
@@ -160,7 +160,7 @@ public final class D1WatsonService {
         var binding = D1WatsonData.get(server);
         if (run == null || run.stateEnum() != DungeonRunState.ACTIVE || !run.containsPlayer(player.getUUID())
                 || !run.containsDimension(player.level().dimension()) || !binding.configured()
-                || !binding.matches(run.instanceSlot(), player.level().dimension(), watson.blockPosition())
+                || !binding.matches(run, player.level().dimension(), watson.blockPosition())
                 || existing(server, data, runId) != watson || player.distanceToSqr(watson) > 64.0) return;
         var members = gathered(server, run, player.level(), binding.pos());
         if (!members.contains(player)) {

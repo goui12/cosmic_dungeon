@@ -8,7 +8,7 @@ import java.util.List;
 public final class CosmicAchievementIds {
     private CosmicAchievementIds() {}
 
-    /** Visible as First Trace; legacy path preserved for advancement-file compatibility. */
+    /** Lore-defined achievement IDs retain their existing advancement-file paths. */
     public static final ResourceLocation TAMSIN_TAX = id("achievements/the_tamsin_tax");
     public static final ResourceLocation FIRST_TRACE = id("achievements/im_rich");
     public static final ResourceLocation PLANT_FLAGS = id("achievements/plant_flags");
@@ -33,8 +33,10 @@ public final class CosmicAchievementIds {
     public static final ResourceLocation SIXFOLD_VIGIL_TWIN_MANIFESTATION = id("achievements/sixfold_vigil_twin_manifestation");
     public static final ResourceLocation CYCLE_OF_RECORDED_SOUND = id("achievements/cycle_of_recorded_sound");
     public static final ResourceLocation SYNCHRONOUS_PEAL = id("achievements/synchronous_peal");
+    /** Retired displayless onboarding marker; retained for existing trade-prompt progress. */
     public static final ResourceLocation FIRST_PLAYER_TRADE = id("achievements/first_player_trade");
     public static final ResourceLocation NOSTALGIA_BAIT = id("achievements/nostalgia_bait");
+    /** Retired displayless compatibility ID; no new gameplay awards. */
     public static final ResourceLocation PYROCLAST_BOOM = id("pyroclast/boom");
 
     public static final ResourceLocation WOLVES_IN_PIGLIN_CLOTHING=id("achievements/wolves_in_piglin_clothing");
@@ -49,7 +51,7 @@ public final class CosmicAchievementIds {
             CONTRACT_ENFORCED, BINDING_CREDITOR, VOTARY_OF_THE_LEDGER, WARDEN_OF_THE_LEDGER, SOVEREIGN_OF_THE_BOND,
             TIRED_NOT_BROKEN, VITAL_EXCHANGE_1, VITAL_EXCHANGE_2, VITAL_EXCHANGE_3, VITAL_EXCHANGE_4, SIXFOLD_VIGIL,
             SIXFOLD_VIGIL_AFTER_DISSOLUTION, SIXFOLD_VIGIL_LONE_ADVERSARY, SIXFOLD_VIGIL_TWIN_MANIFESTATION,
-            CYCLE_OF_RECORDED_SOUND, SYNCHRONOUS_PEAL, FIRST_PLAYER_TRADE, NOSTALGIA_BAIT, PYROCLAST_BOOM
+            CYCLE_OF_RECORDED_SOUND, SYNCHRONOUS_PEAL, NOSTALGIA_BAIT
     );
 
     private static ResourceLocation id(String path) {

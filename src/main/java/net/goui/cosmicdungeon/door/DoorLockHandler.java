@@ -64,6 +64,8 @@ public final class DoorLockHandler {
 
             // Permanently unlock
             data.unlock(level, pos);
+            if(event.getEntity() instanceof net.minecraft.server.level.ServerPlayer player)
+                net.goui.cosmicdungeon.leaderboard.LifetimeEvents.add(player,"doors_unlocked");
 
             // Feedback
             event.getEntity().displayClientMessage(Component.literal("You've unlocked a door."), true);

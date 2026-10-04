@@ -52,6 +52,7 @@ public final class ClassSelectorTeleportUtil {
 
     public static boolean validSelectionSession(ServerPlayer player) {
         return validSession(player)
+                && ((net.goui.cosmicdungeon.menu.ClassSelectorMenu) player.containerMenu).tamsinNpc() != null
                 && ((net.goui.cosmicdungeon.menu.ClassSelectorMenu) player.containerMenu).stage()
                 == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.SELECTOR;
     }

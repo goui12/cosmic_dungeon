@@ -2,48 +2,47 @@ package net.goui.cosmicdungeon.dungeon;
 
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
-import com.mojang.serialization.MapCodec;
 import net.goui.cosmicdungeon.CosmicDungeonMod;
+import net.goui.cosmicdungeon.gametest.FunctionGameTestSuite;
+import net.neoforged.bus.api.IEventBus;
 import net.goui.cosmicdungeon.block.custom.ClassSelectorTeleportUtil;
-import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.gametest.framework.FunctionGameTestInstance;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.GameTestInstance;
-import net.minecraft.gametest.framework.TestData;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.block.Rotation;
-import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.UUID;
 
 public final class DungeonInstanceGameTests {
     private static final ResourceLocation ENVIRONMENT = id("dungeon_instances");
-    private static final ResourceLocation EMPTY_STRUCTURE = ResourceLocation.withDefaultNamespace("empty");
 
     private DungeonInstanceGameTests() {}
 
-    public static void register(RegisterGameTestsEvent event) {
-        Holder<TestEnvironmentDefinition> environment = event.registerEnvironment(ENVIRONMENT, new TestEnvironmentDefinition.AllOf());
-        register(event, environment, "slot_mapping", DungeonInstanceGameTests::slotMapping);
-        register(event, environment, "legacy_run_codec", DungeonInstanceGameTests::legacyRunCodec);
-        register(event, environment, "farrows_chop_target_codec", DungeonInstanceGameTests::farrowsChopTargetCodec);
-        register(event, environment, "inventory_escrow_codec", DungeonInstanceGameTests::inventoryEscrowCodec);
-        register(event, environment, "startup_plan_one_player", DungeonInstanceGameTests::startupPlanOnePlayer);
-        register(event, environment, "startup_plan_four_players", DungeonInstanceGameTests::startupPlanFourPlayers);
-        register(event, environment, "startup_plan_six_players", DungeonInstanceGameTests::startupPlanSixPlayers);
-        register(event, environment, "startup_plan_duplicate_classes", DungeonInstanceGameTests::startupPlanDuplicateClasses);
-        register(event, environment, "startup_definition_integrity", DungeonInstanceGameTests::startupDefinitionIntegrity);
-        register(event, environment, "startup_plan_party_counts", DungeonInstanceGameTests::startupPlanPartyCounts);
-        register(event, environment, "startup_plan_blank_entry", DungeonInstanceGameTests::startupPlanBlankEntry);
-        register(event, environment, "class_selector_ready_eligibility", DungeonInstanceGameTests::classSelectorReadyEligibility);
-        register(event, environment, "startup_plan_rejects_none", DungeonInstanceGameTests::startupPlanRejectsNone);
+    private static final FunctionGameTestSuite SUITE = createSuite();
+
+    public static void register(IEventBus eventBus) {
+        SUITE.register(eventBus);
+    }
+
+    private static FunctionGameTestSuite createSuite() {
+        var suite = new FunctionGameTestSuite(ENVIRONMENT);
+        suite.add(id("slot_mapping"), DungeonInstanceGameTests::slotMapping);
+        suite.add(id("legacy_run_codec"), DungeonInstanceGameTests::legacyRunCodec);
+        suite.add(id("farrows_chop_target_codec"), DungeonInstanceGameTests::farrowsChopTargetCodec);
+        suite.add(id("inventory_escrow_codec"), DungeonInstanceGameTests::inventoryEscrowCodec);
+        suite.add(id("startup_plan_one_player"), DungeonInstanceGameTests::startupPlanOnePlayer);
+        suite.add(id("startup_plan_four_players"), DungeonInstanceGameTests::startupPlanFourPlayers);
+        suite.add(id("startup_plan_six_players"), DungeonInstanceGameTests::startupPlanSixPlayers);
+        suite.add(id("startup_plan_duplicate_classes"), DungeonInstanceGameTests::startupPlanDuplicateClasses);
+        suite.add(id("startup_definition_integrity"), DungeonInstanceGameTests::startupDefinitionIntegrity);
+        suite.add(id("startup_plan_party_counts"), DungeonInstanceGameTests::startupPlanPartyCounts);
+        suite.add(id("startup_plan_blank_entry"), DungeonInstanceGameTests::startupPlanBlankEntry);
+        suite.add(id("class_selector_ready_eligibility"), DungeonInstanceGameTests::classSelectorReadyEligibility);
+        suite.add(id("startup_plan_rejects_none"), DungeonInstanceGameTests::startupPlanRejectsNone);
+        return suite;
     }
 
     private static void slotMapping(GameTestHelper helper) {
@@ -281,27 +280,8 @@ public final class DungeonInstanceGameTests {
         helper.assertTrue(condition, net.minecraft.network.chat.Component.literal(message));
     }
 
-    private static void register(RegisterGameTestsEvent event, Holder<TestEnvironmentDefinition> environment,
-                                 String name, Consumer<GameTestHelper> test) {
-        TestData<Holder<TestEnvironmentDefinition>> data = new TestData<>(environment, EMPTY_STRUCTURE, 20, 0, true, Rotation.NONE);
-        event.registerTest(id(name), new DirectGameTestInstance(test, data));
-    }
-
     private static ResourceLocation id(String path) {
         return ResourceLocation.fromNamespaceAndPath(CosmicDungeonMod.MOD_ID, path);
     }
 
-    private static final class DirectGameTestInstance extends GameTestInstance {
-        private final Consumer<GameTestHelper> test;
-        private DirectGameTestInstance(Consumer<GameTestHelper> test, TestData<Holder<TestEnvironmentDefinition>> data) {
-            super(data);
-            this.test = test;
-        }
-        @Override public void run(GameTestHelper helper) { test.accept(helper); }
-        @Override @SuppressWarnings({"unchecked", "rawtypes"})
-        public MapCodec<? extends GameTestInstance> codec() { return (MapCodec) FunctionGameTestInstance.CODEC; }
-        @Override protected net.minecraft.network.chat.MutableComponent typeDescription() {
-            return net.minecraft.network.chat.Component.literal("direct cosmic dungeon instance test");
-        }
-    }
 }

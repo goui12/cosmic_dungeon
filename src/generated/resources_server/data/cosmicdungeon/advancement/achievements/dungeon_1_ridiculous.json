@@ -1,0 +1,27 @@
+{
+  "parent": "cosmicdungeon:achievements/dungeon_1_insane",
+  "criteria": {
+    "triggered": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "translate": "advancements.cosmicdungeon.achievements.dungeon_1_ridiculous.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:nether_star"
+    },
+    "title": {
+      "translate": "advancements.cosmicdungeon.achievements.dungeon_1_ridiculous.title"
+    }
+  },
+  "requirements": [
+    [
+      "triggered"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

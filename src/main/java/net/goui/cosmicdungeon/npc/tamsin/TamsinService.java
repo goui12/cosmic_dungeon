@@ -120,6 +120,7 @@ public final class TamsinService {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("d1")
                 .then(Commands.literal("tamsin").requires(AccessPolicy::requireDeveloperOrConsole)
+                        .then(TamsinPlacement.INSTANCE.command())
                         .then(Commands.literal("bind").then(Commands.argument("npc", EntityArgument.entity())
                                 .then(Commands.argument("selector", BlockPosArgument.blockPos()).executes(ctx -> {
                                     var source = ctx.getSource();
@@ -140,6 +141,7 @@ public final class TamsinService {
                                     TamsinData.get(source.getServer()).bind(npc.getUUID(),
                                             new TamsinData.Binding(source.getLevel().dimension().location().toString(), pos.asLong()));
                                     net.goui.cosmicdungeon.npc.NpcIdentityService.placed(npc);
+                                    TamsinAppearance.INSTANCE.refresh(npc);
                                     source.sendSuccess(() -> Component.literal("Tamsin bound: " + npc.getUUID() + " -> "
                                             + pos.toShortString() + "; replaces the previous Tamsin."), true);
                                     return 1;
@@ -153,6 +155,7 @@ public final class TamsinService {
                                 identities.clear(net.goui.cosmicdungeon.npc.NpcIdentityService.TAMSIN, npc);
                             }
                             boolean removed = data.unbind(npc);
+                            TamsinAppearance.INSTANCE.refresh(ctx.getSource().getServer(), npc);
                             ctx.getSource().sendSuccess(() -> Component.literal(removed ? "Tamsin binding removed." : "That NPC is not bound."), true);
                             return removed ? 1 : 0;
                         })))

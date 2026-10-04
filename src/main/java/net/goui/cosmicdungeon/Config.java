@@ -65,6 +65,9 @@ public final class Config {
     public static final ModConfigSpec.IntValue MENU_BALANCE_POLL_TICKS, SPAWNER_MAINTENANCE_BUDGET;
     public static final ModConfigSpec SPEC;
     static {
+        net.goui.cosmicdungeon.dungeon.DungeonDifficultyConfig.define(B);
+        net.goui.cosmicdungeon.playerclass.skill.ClassSkillConfig.define(B);
+        net.goui.cosmicdungeon.mercenary.MercenaryConfig.define(B);
         B.comment("Implementation work bounds; not lore or damage modifiers.").push("Performance");
         MENU_BALANCE_POLL_TICKS=B.comment("Server ticks between account HUD/inventory/chest and open vendor/trade/repair balance polls; unchanged values send no packet.")
                 .defineInRange("menuBalancePollTicks",20,5,200);
@@ -82,14 +85,15 @@ public final class Config {
         FLAG_DISCONNECT_GRACE_SECONDS=B.comment("Plant Flags waits five minutes after a member disconnects.")
                 .defineInRange("flagDisconnectGraceSeconds",300,0,3600);
         B.pop();
-        B.comment("Tamsin Vane Internal: D1 parties contain three to six personally ready players.").push("TamsinVane");
+        B.comment("Tamsin Vane Internal: D1 defaults to three to six personally ready players; servers may enable solo entry.").push("TamsinVane");
         BASE_CAMP_POLL_TICKS=B.comment("Server ticks between personal Base Camp proximity checks. Implementation default.")
                 .defineInRange("baseCampPollTicks",20,1,200);
         BASE_CAMP_RADIUS=B.comment("Blocks around the explicitly authored base_camp binding; no guessed location. Implementation default.")
                 .defineInRange("baseCampDiscoveryRadius",4.0,0.5,32.0);
         TAX_CONFIRM_SECONDS=B.comment("Seconds before a selected Tax item confirmation expires. Implementation default.")
                 .defineInRange("taxConfirmationSeconds",30,5,300);
-        MIN_PARTY=B.defineInRange("minimumPartySize",3,3,6);
+        MIN_PARTY=B.comment("Legacy setting retained for existing configs; named groups now allow 1-6 members up to their leader-selected maximum.")
+                .defineInRange("minimumPartySize",3,1,6);
         READY_COUNTDOWN_SECONDS=B.defineInRange("readyCountdownSeconds",5,1,60);
         SELECTOR_SESSION_SECONDS=B.defineInRange("selectorSessionSeconds",300,30,3600);
         SELECTOR_RANGE=B.defineInRange("selectorInteractionRange",16.0,1.0,64.0);

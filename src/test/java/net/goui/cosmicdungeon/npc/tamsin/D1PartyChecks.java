@@ -11,6 +11,7 @@ public final class D1PartyChecks {
     private static final D1PartyLobby.Anchor A = new D1PartyLobby.Anchor(id(900), "minecraft:overworld", 0);
     private static final D1PartyLobby.Anchor B = new D1PartyLobby.Anchor(id(901), "minecraft:overworld", 1);
     private static void join(D1PartyLobby lobby, UUID leader, UUID member, int capacity) {
+        if (lobby.party(leader) == null) check(lobby.create(leader, A, 0, "Test group") == null, "Explicit group creation");
         check(lobby.invite(leader, member, A, 0, 12000, capacity) == null, "Leader invitation accepted");
         var invitation = lobby.invitation(member);
         check(lobby.accept(member, invitation.token(), 1) == null, "Recipient accepts own invitation");
@@ -28,15 +29,17 @@ public final class D1PartyChecks {
     }
     private static void readyAll(D1PartyLobby lobby, UUID leader) {
         var p = lobby.party(leader);
-        check(lobby.begin(leader, p.revision(), classes(p), 3, 6) == null, "Leader begins complete ready check");
+        check(lobby.begin(leader, p.revision(), classes(p)) == null, "Leader begins complete ready check");
         long revision = p.revision();
         for (UUID member : p.members()) check(lobby.ready(member, revision) == null, "Simultaneous personal confirmation");
     }
     public static void main(String[] args) {
         var lobby = new D1PartyLobby();
         check(lobby.invite(id(1), id(1), A, 0, 120, 6) != null, "No self invitation");
-        check(lobby.invite(id(1), id(2), A, 0, 120, 6) == null, "Ungrouped inviter can invite");
-        check(lobby.party(id(1)) == null, "Sending alone never claims group leadership");
+        check(lobby.invite(id(1), id(2), A, 0, 120, 6) != null, "Ungrouped inviter cannot recruit");
+        check(lobby.party(id(1)) == null, "Rejected invite never creates a group");
+        check(lobby.create(id(1), A, 0, "Adventurers") == null, "Named group created explicitly");
+        check(lobby.invite(id(1), id(2), A, 0, 120, 6) == null, "Grouped inviter can invite");
         var pending = lobby.invitation(id(2));
         check(lobby.accept(id(3), pending.token(), 1) != null, "Another UUID cannot accept target's invitation");
         check(lobby.accept(id(2), "bad", 1) != null, "Wrong invitation token rejected");
@@ -49,16 +52,18 @@ public final class D1PartyChecks {
         var p = lobby.party(id(1));
         check(p != null && p.leader().equals(id(1)) && p.members().equals(List.of(id(1), id(2))), "Accepted sender leads stable ordered roster");
         check(lobby.accept(id(2), pending.token(), 6) != null, "Consumed invitation cannot replay");
-        check(lobby.invite(id(2), id(3), A, 6, 120, 6) != null, "Regular members cannot invite");
+        check(lobby.invite(id(2), id(3), A, 6, 120, 6) == null, "Regular members can invite");
+        lobby.decline(id(3), lobby.invitation(id(3)).token());
         check(lobby.invite(id(3), id(1), A, 6, 120, 6) != null, "Inviting another group leader cannot merge");
-        check(lobby.begin(id(2), p.revision(), classes(p), 3, 6) != null, "Nonleader cannot begin ready check");
-        check(lobby.begin(id(1), p.revision(), classes(p), 3, 6) != null, "Two members cannot queue");
+        check(lobby.begin(id(2), p.revision(), classes(p)) != null, "Nonleader cannot begin ready check");
+        check(lobby.begin(id(1), p.revision(), classes(p)) == null, "Two members may ready below maximum");
+        lobby.cancel(p);
         check(lobby.invite(id(1), id(3), B, 6, 120, 6) != null, "Cannot change another group's selector anchor");
         join(lobby, id(1), id(3), 6);
         var missing = classes(p); missing.remove(id(3));
-        check(lobby.begin(id(1), p.revision(), missing, 3, 6) != null, "Every roster member needs class snapshot");
+        check(lobby.begin(id(1), p.revision(), missing) != null, "Every roster member needs class snapshot");
         var noClass = classes(p); noClass.put(id(3), "none");
-        check(lobby.begin(id(1), p.revision(), noClass, 3, 6) != null, "Unselected member blocks readiness");
+        check(lobby.begin(id(1), p.revision(), noClass) != null, "Unselected member blocks readiness");
         readyAll(lobby, id(1));
         check(p.phase() == D1PartyLobby.Phase.READY_CHECK, "All ready never automatically queues");
         check(lobby.ready(id(1), p.revision()) == null && p.ready().size() == 3, "Ready replay remains idempotent");
@@ -121,6 +126,7 @@ public final class D1PartyChecks {
         check(lobby.queued().isEmpty() && lobby.party(id(40))==second, "Cancelled queue keeps remaining assembled group");
 
         lobby = new D1PartyLobby();
+        lobby.create(id(70), A, 0, "Expiry test");
         lobby.invite(id(70),id(71),A,0,100,6);token=lobby.invitation(id(71)).token();
         check(lobby.accept(id(71),token,100)!=null && lobby.invitation(id(71))==null, "Expiry boundary rejects acceptance");
         lobby.invite(id(70),id(71),A,0,100,6);
@@ -161,10 +167,13 @@ public final class D1PartyChecks {
         check(rejected, "Roster codec rejects a seventh member");
         // An accepted invitation must not merge groups if its original sender joins another party.
         lobby = new D1PartyLobby();
+        lobby.create(id(90), A, 0, "Original");
         lobby.invite(id(90),id(91),A,0,12000,6);
         token = lobby.invitation(id(91)).token(); lobby.accept(id(91),token,1);
+        lobby.remove(id(90));
         join(lobby,id(92),id(90),6);
-        check(lobby.joinAccepted(id(91),2,6,false) != null && lobby.party(id(91)) == null,
+        lobby.joinAccepted(id(91),2,6,true);
+        check(lobby.invitation(id(91)) == null && lobby.party(id(91)) == null,
                 "Sender becoming a member cancels the old pending invitation without a merge");
         System.out.println(checks+" D1 party invitation/readiness/queue checks passed");
     }

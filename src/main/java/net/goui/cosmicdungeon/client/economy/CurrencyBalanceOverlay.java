@@ -39,8 +39,9 @@ public final class CurrencyBalanceOverlay {
     }
     @SubscribeEvent public static void hud(RenderGuiEvent.Post event) {
         var mc=Minecraft.getInstance();
-        if(!ready()||mc.options.hideGui||mc.screen!=null||mc.getDebugOverlay().showDebugScreen())return;
-        draw(event.getGuiGraphics(),8,8,mc.getWindow().getGuiScaledWidth()-16,false,-1,-1);
+        if(!ready()||!CurrencyBalanceClient.HUD.visible()||mc.options.hideGui||mc.screen!=null||mc.getDebugOverlay().showDebugScreen())return;
+        draw(event.getGuiGraphics(),8,8 + net.goui.cosmicdungeon.client.screen.D1PartyHud.worldHeight(),
+                mc.getWindow().getGuiScaledWidth()-16,false,-1,-1);
     }
     @SubscribeEvent public static void screen(ScreenEvent.Render.Post event) {
         if(!ready()||!(event.getScreen() instanceof AbstractContainerScreen<?> screen))return;
@@ -50,7 +51,12 @@ public final class CurrencyBalanceOverlay {
         // Header keeps currency outside slots, equipment, recipe book and right-hand potion effects.
         // Vanilla's minimum 320x240 GUI leaves this space above both inventory and three-row class chests.
         int y=Math.max(2,screen.getGuiTop()-32);
-        draw(event.getGuiGraphics(),8,y,width-16,true,event.getMouseX(),event.getMouseY());
+        int x = net.goui.cosmicdungeon.client.screen.D1PartyHud.inventoryAccountX();
+        draw(event.getGuiGraphics(),x,y,width-x-8,true,event.getMouseX(),event.getMouseY());
+    }
+    /** Reuses the inventory account presentation inside screens with a reserved header. */
+    public static void drawAccount(GuiGraphics g,int x,int y,int maxWidth,int mouseX,int mouseY) {
+        if (ready()) draw(g,x,y,maxWidth,true,mouseX,mouseY);
     }
     private static void draw(GuiGraphics g,int x,int y,int maxWidth,boolean tooltip,int mouseX,int mouseY) {
         icons();

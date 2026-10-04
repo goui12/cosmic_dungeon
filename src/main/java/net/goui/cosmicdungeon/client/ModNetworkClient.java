@@ -38,6 +38,9 @@ public final class ModNetworkClient {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private ModNetworkClient() {}
+    public static void onLeaderboard(net.goui.cosmicdungeon.network.LeaderboardPayloads.View payload){
+        net.goui.cosmicdungeon.client.screen.LeaderboardScreen.receive(payload);
+    }
     public static void onCurrencyBalance(net.goui.cosmicdungeon.network.CurrencyBalancePayload payload) {
         net.goui.cosmicdungeon.client.economy.CurrencyBalanceClient.receive(payload);
     }
@@ -55,7 +58,8 @@ public final class ModNetworkClient {
     }
 
     public static void onD1PartyView(net.goui.cosmicdungeon.network.PartyPayloads.View payload) {
-        ClassSelectorScreen.onPartyView(payload);
+        if (payload.containerId() == -1) net.goui.cosmicdungeon.client.screen.D1PartyHud.receive(payload);
+        else ClassSelectorScreen.onPartyView(payload);
     }
 
     public static void onClassSelectorResult(ClassPayloads.S2C_SelectResult payload) {

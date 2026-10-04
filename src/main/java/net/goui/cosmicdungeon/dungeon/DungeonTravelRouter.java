@@ -76,7 +76,7 @@ public final class DungeonTravelRouter {
                 var run = active.get();
                 if (!run.dungeonId().equalsIgnoreCase(template.get().id()) || !canTravelInside(player, run))
                     return new Result.Rejected("That destination is outside your active dungeon travel.");
-                ResourceKey<Level> physical = DungeonInstanceSlots.translateTemplate(template.get(), run.instanceSlot(), requestedDimension).orElse(null);
+                ResourceKey<Level> physical = DungeonInstanceSlots.mapping(template.get(), run).get(requestedDimension);
                 ServerLevel level = physical == null ? null : server.getLevel(physical);
                 return level == null ? new Result.Rejected("Your dungeon instance is unavailable.") : new Result.Allowed(level, requestedPos);
             }

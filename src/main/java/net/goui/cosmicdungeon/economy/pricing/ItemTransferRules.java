@@ -35,6 +35,7 @@ public final class ItemTransferRules {
                 repair, repair && net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairComponents.key(stack) != null);
     }
     private static boolean commonProtected(ItemStack stack) {
+        if (net.goui.cosmicdungeon.item.identity.ClassItemOwnership.present(stack)) return true;
         if (stack.isEmpty() || stack.has(ModDataComponents.D1_ABILITY.get()) || net.goui.cosmicdungeon.playerclass.d1.D1AbilityIdentity.identify(stack)!=null
                 || ClassItemUtil.hasAnyAttunementMetadata(stack) || stack.getItem() instanceof ClassBoundItem
                 || stack.has(ModDataComponents.DUNGEON_RETURN_TARGET.get())) return true;

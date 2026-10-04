@@ -33,14 +33,15 @@ public final class DungeonStartupSchematicPipeline {
 
     public sealed interface PasteBatchResult permits PasteBatchSuccess, PasteBatchFailure {}
 
-    public record PasteBatchSuccess(int completedOperations) implements PasteBatchResult {}
+    public record PasteBatchSuccess(int completedOperations,Map<java.util.UUID,java.util.List<BlockPos>> starterChests) implements PasteBatchResult {}
 
     public record PasteBatchFailure(String groupId, int logicalSlot, String schematicFilename,
                                     BlockPos destination, int rotationDegrees, int completedOperations,
                                     String message, Throwable cause) implements PasteBatchResult {}
 
     public static PasteBatchResult execute(ServerLevel targetLevel,
-                                           DungeonStartupSchematicPlan.StartupPastePlan plan) {
+                                           DungeonStartupSchematicPlan.StartupPastePlan plan,
+                                           java.util.List<net.goui.cosmicdungeon.block.entity.ClassChestOwnership> slotOwners) {
         Objects.requireNonNull(targetLevel, "Prepared physical target level must not be null.");
         Objects.requireNonNull(plan, "Startup paste plan must not be null.");
         if (plan.requests().size() != DungeonStartupSchematicPlan.EXPECTED_OPERATION_COUNT) {
@@ -67,6 +68,7 @@ public final class DungeonStartupSchematicPipeline {
             return new PasteBatchFailure(first.groupId(), first.logicalSlot(), first.schematicFilename(),
                     first.destination(), first.rotationDegrees(), 0, message, exception);
         }
+        DungeonSlotChestBindings chestBindings = new DungeonSlotChestBindings(slotOwners);
         Map<String, Clipboard> clipboardCache = new HashMap<>();
         int completed = 0;
 
@@ -91,6 +93,8 @@ public final class DungeonStartupSchematicPipeline {
                             .build();
                     Operations.complete(operation);
                 }
+                // The edit session has flushed the pasted block entities; never alter authored stacks.
+                chestBindings.bindPasted(targetLevel, clipboard, request);
                 completed++;
             } catch (Exception exception) {
                 String message = exception.getMessage() == null
@@ -107,7 +111,7 @@ public final class DungeonStartupSchematicPipeline {
 
         LOGGER.info("[DungeonStartupSchematics] Completed {} operations in physical dimension {}.",
                 completed, targetLevel.dimension().location());
-        return new PasteBatchSuccess(completed);
+        return new PasteBatchSuccess(completed,chestBindings.starterChests());
     }
 
     private static Clipboard loadClipboard(String schematicFilename) throws Exception {
