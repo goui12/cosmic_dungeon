@@ -2,10 +2,10 @@
 
 [CurseForge and mercenary batch plan](CURSEFORGE_AND_MERCENARY_BATCHES_20261004.md).
 Stage 1 publishing is established; companion moderation and licensed two-component
-app delivery remain pending. Batches 1-6 are validated, published and installed.
-Batch 7 Pyroclast fireworks is implemented; validation/release delivery and cumulative
-manual QA remain. Two later gameplay batches remain:
-8 Dragoon lightning; 9 Theurgist resurrection.
+app delivery remain pending. Batches 1-7 are validated, published and installed.
+Batch 8 Dragoon chain lightning is implemented; validation/release delivery and cumulative
+manual QA remain. One later gameplay batch remains: 9 Theurgist resurrection
+(level-50 death-menu resurrection and three-minute cooldown). Stop before Batch 9.
 The earlier zero-batch statements below refer to the previous completed request.
 
 ---

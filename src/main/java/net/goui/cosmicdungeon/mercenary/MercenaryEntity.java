@@ -72,6 +72,9 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
     private MercenaryFireworkStock fireworks=MercenaryFireworkStock.initial();
     MercenaryFireworkStock fireworks(){return fireworks;}
     void fireworks(MercenaryFireworkStock value){fireworks=java.util.Objects.requireNonNull(value);}
+    private MercenaryLightningState lightning=MercenaryLightningState.initial();
+    MercenaryLightningState lightning(){return lightning;}
+    void lightning(MercenaryLightningState value){lightning=java.util.Objects.requireNonNull(value);}
     private int wolfTicks=MercenaryWolves.INTERVAL;
     private int wolfCommandCursor;
     int nextWolfCommand(int size){
@@ -124,6 +127,7 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
         lootMemory.save(out);
         out.putInt("mercenary_wolf_ticks",wolfTicks);
         if(MercenaryFireworks.enabled(this))out.store("mercenary_fireworks",MercenaryFireworkStock.CODEC,fireworks);
+        if(MercenaryLightning.enabled(this))out.store("mercenary_lightning",MercenaryLightningState.CODEC,lightning);
     }
     @Override public void readAdditionalSaveData(ValueInput in){
         super.readAdditionalSaveData(in);regeneration.combat();potionCasting.cancel();
@@ -136,6 +140,7 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
         lootMemory=MercenaryLootMemory.load(in);
         wolfTicks=MercenaryWolves.loadCooldown(in);
         fireworks=in.read("mercenary_fireworks",MercenaryFireworkStock.CODEC).orElseGet(MercenaryFireworkStock::initial);
+        lightning=in.read("mercenary_lightning",MercenaryLightningState.CODEC).orElseGet(MercenaryLightningState::initial);
         rest=in.read("mercenary_rest",MercenaryRest.CODEC).orElse(null);
         if(rest!=null)sleep();
     }
