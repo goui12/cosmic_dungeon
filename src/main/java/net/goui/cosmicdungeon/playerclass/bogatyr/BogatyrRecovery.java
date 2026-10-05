@@ -266,8 +266,6 @@ public final class BogatyrRecovery {
                     return 0;
                 }
                 snapshots++;
-                if(existing&&data.activeCount(entry.owner())>Config.WOLF_CAP.get())
-                    throw new IllegalStateException("Your active pack exceeds the current limit; the existing wolf stays where it is");
                 if(existing||archive.phase().equals(WolfArchive.RESERVED)||archive.phase().equals(WolfArchive.REMOVING)){
                     if(!BogatyrWithdrawal.prepare(server,entry)){
                         player.sendSystemMessage(net.minecraft.network.chat.Component.literal("Loading your companion's source location. Repeat the command shortly."));
@@ -277,8 +275,6 @@ public final class BogatyrRecovery {
                     archive=data.archive(entry.wolf()).orElseThrow();
                 }
                 if(archive.phase().equals(WolfArchive.STORED)){
-                    if(data.activeCount(entry.owner())>=Config.WOLF_CAP.get())
-                        throw new IllegalStateException("Your active pack is full. This companion remains safely stored");
                     if(loaded(server,entry)!=null||liveNativeUuid(server,entry.wolf()))
                         throw new IllegalStateException("Original companion or destination UUID still exists; claim held");
                     var restored=archive.entity();

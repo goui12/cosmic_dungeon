@@ -70,9 +70,11 @@ final class MercenaryWolvesTest {
     }
     @Test void packsAreIndependentAndDismissalSurvivesReload()throws Exception{
         var data=empty();var other=new MercenaryWolves.Bond(42,UUID.randomUUID(),hirer);
+        for(int i=0;i<100;i++)data.recordUnique(42,"wolves:"+hirer,UUID.randomUUID().toString());
         for(int i=0;i<5;i++)assertTrue(MercenaryWolves.remember(data,bond(),UUID.randomUUID()));
         assertTrue(MercenaryWolves.remember(data,other,UUID.randomUUID()));
         data.setCount(42,MercenaryWolves.dismissed(merc),1);data=reload(data);
+        assertEquals(100,data.values(42,"wolves:"+hirer).size());
         assertFalse(MercenaryWolves.remember(data,bond(),UUID.randomUUID()));
         assertTrue(MercenaryWolves.remember(data,other,UUID.randomUUID()));
     }

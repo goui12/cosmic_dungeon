@@ -1,6 +1,6 @@
 # Release and mercenary rollout, 2026-10-04
 
-Stage 1 and Batch 1 are authorized. Batch 1 is implemented with automated checks passing; batches 2-9 remain
+Stage 1 and Batches 1-2 are authorized. Batch 1 is implemented; Batch 2 is implemented with local validation passing; CI and manual QA remain. Batches 3-9 remain
 planned, not yet authorized for implementation. Previous October 3 batches 1-11 and their October 4 fixes are complete;
 their cumulative licensed multiplayer QA remains pending.
 
@@ -24,7 +24,7 @@ their cumulative licensed multiplayer QA remains pending.
   feel; each complete displayed name is at most nine characters.
 - Group HUD uses only the random name, omitting both owner and the word mercenary.
 
-## 2. Wolves and equipment drops
+## 2. Wolves and equipment drops (implemented; local validation passed, CI/manual QA pending, 1.5.4-alpha.1)
 
 - Dungeoneer Bogatyr has no wolf cap: its wolfpack must never report full.
 - Separate player wolf ownership/counting from mercenary ownership/counting.
@@ -102,4 +102,4 @@ their cumulative licensed multiplayer QA remains pending.
 After these nine batches: verify multiplayer payments/donations, friendly fire and potion
 targeting, growth/reset/reload, wolf ownership, death-menu races, performance and both
 CurseForge client updates. Merge the completed source set into main and publish beta.
-Stable follows full beta acceptance. Eight gameplay implementation batches remain (2-9); Batch 1 manual QA is pending.
+Stable follows full beta acceptance. Seven gameplay implementation batches remain (3-9); Batches 1-2 manual QA is pending.
