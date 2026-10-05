@@ -136,6 +136,7 @@ jobs:
           CURSEFORGE_API_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
           CURSEFORGE_LOADING_PROJECT_ID: ${{ vars.CURSEFORGE_LOADING_PROJECT_ID }}
           CURSEFORGE_LOADING_PROJECT_SLUG: ${{ vars.CURSEFORGE_LOADING_PROJECT_SLUG }}
+          CURSEFORGE_LOADING_RELATION_APPROVED: ${{ vars.CURSEFORGE_LOADING_RELATION_APPROVED }}
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ needs.build.outputs.tag }}
         run: python scripts/curseforge_release.py upload --tag "$RELEASE_TAG" --github-release

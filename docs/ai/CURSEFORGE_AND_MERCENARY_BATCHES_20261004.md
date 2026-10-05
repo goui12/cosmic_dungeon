@@ -1,6 +1,6 @@
 # Release and mercenary rollout, 2026-10-04
 
-Stage 1 and Batches 1-5 are authorized. Batches 1-4 are validated, published and installed; manual gameplay QA remains. Batch 5 implements Theurgist splash potions; validation and release delivery follow. Batches 6-9 are planned, not authorized. Earlier D1 sets retain their pending cumulative licensed multiplayer QA.
+Stage 1 and Batches 1-6 are authorized. Batches 1-5 are validated, published and installed; manual gameplay QA remains. Batch 6 implements Bogatyr scaling and the publication approval gate; validation and delivery follow. Batches 7-9 are planned, not authorized. Earlier D1 sets retain their cumulative licensed multiplayer QA.
 
 ## Stage 1: public 1.5.2 Beta and publishing
 
@@ -72,10 +72,13 @@ Stage 1 and Batches 1-5 are authorized. Batches 1-4 are validated, published and
   requirement and aims at the player's feet. Optional clarification received no answer;
   this is a documented interpretation, not a separately approved drinkable feature.
 
-## 6. Bogatyr mercenary skill
+## 6. Bogatyr mercenary skill (implemented, 1.5.8-alpha.1)
 
 - Baseline remains one wolf every two minutes, up to five mercenary wolves.
-- Wolves levels shorten summon time; every other level adds one to this mercenary cap.
+- Summon interval is ceil(2400 / (1 + 0.06*(level-1))) ticks, with a 400-tick floor.
+- Cap is 5 + floor((level-1)/2): six at level 3, seven at 5. Counts include unloaded wolves.
+- Commands rotate through five roster entries per existing decision; larger loaded packs
+  finish dismissal through their existing two-second validation. No expanded world scans.
 - Preserve protection from allied aggression, damage and harmful potion effects.
 - Player Bogatyr remains uncapped regardless of mercenary level/count.
 
@@ -109,4 +112,4 @@ Stage 1 and Batches 1-5 are authorized. Batches 1-4 are validated, published and
 After these nine batches: verify multiplayer payments/donations, friendly fire and potion
 targeting, growth/reset/reload, wolf ownership, death-menu races, performance and both
 CurseForge client updates. Merge the completed source set into main and publish beta.
-Stable follows full beta acceptance. Four later gameplay batches remain (6-9); Batch 5 delivery and cumulative manual QA are pending.
+Stable follows full beta acceptance. Three later gameplay batches remain (7-9); Batch 6 delivery and cumulative manual QA are pending.

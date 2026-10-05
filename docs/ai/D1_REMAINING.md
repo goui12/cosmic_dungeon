@@ -2,10 +2,10 @@
 
 [CurseForge and mercenary batch plan](CURSEFORGE_AND_MERCENARY_BATCHES_20261004.md).
 Stage 1 publishing is established; companion moderation and licensed two-component
-app delivery remain pending. Batches 1-4 are validated, published and installed.
-Batch 5 Theurgist potions is implemented; validation/release delivery and cumulative
-manual QA remain. Four later gameplay batches remain:
-6 Bogatyr progression; 7 Pyroclast fireworks; 8 Dragoon lightning; 9 Theurgist resurrection.
+app delivery remain pending. Batches 1-5 are validated, published and installed.
+Batch 6 Bogatyr scaling and the companion approval gate are implemented; validation/
+release delivery and cumulative manual QA remain. Three later gameplay batches remain:
+7 Pyroclast fireworks; 8 Dragoon lightning; 9 Theurgist resurrection.
 The earlier zero-batch statements below refer to the previous completed request.
 
 ---
