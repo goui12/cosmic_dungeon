@@ -1,15 +1,17 @@
 # Current rollout, 2026-10-05
 
 [CurseForge and mercenary batch plan](CURSEFORGE_AND_MERCENARY_BATCHES_20261004.md).
-Stage 1 and Batches 1-8 are validated, published and installed. Companion moderation,
-licensed two-component app delivery and cumulative gameplay QA remain pending.
-Two implementation batches remain:
-9. Active: Theurgist resurrection at Positive Potions level 10, exact death position,
-   five seconds of invincibility, and a three-minute cooldown with HUD/death-menu controls.
-10. Planned: replay Tamsin's first-time lore/map with a top-right 20x18 "i" button,
-    then validated completed-set main merge and exact **1.6.0-beta** publication.
-Stop after Batch 9 until Batch 10 implementation is requested.
-The earlier zero-batch statements below refer to the previous completed request.
+Stage 1 and Batches 1-9 are validated, published and installed. Batch 9 is 1.5.12-alpha.1:
+Positive Potions level 10 resurrection, exact death position, five-second protection and
+three-minute cooldown. Clean CI plus all 33 GameTests passed.
+Companion moderation/licensed app delivery and cumulative gameplay QA remain pending.
+
+**One planned implementation batch remains:**
+10. Tamsin's top-right 20x18 "i" button replays first-time lore/map while preserving
+    agreement, class, group/readiness and progression; then validated completed-set
+    main merge and exact **1.6.0-beta** publication.
+Stop before Batch 10 implementation until requested. The earlier zero-batch statements
+below refer to the previous completed request.
 
 ---
 

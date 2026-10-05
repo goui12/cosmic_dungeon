@@ -1,10 +1,11 @@
 # Release and mercenary rollout, 2026-10-04
 
-Stage 1 and Batches 1-9 are authorized. Batches 1-8 are validated, published and installed;
-manual gameplay QA remains. Batch 9 implements Theurgist resurrection at Positive Potions
-level 10 (Cameron's explicit 2026-10-05 decision). Batch 10 is queued for Tamsin lore/map
-replay and the completed-set **1.6.0-beta** release. Stop after Batch 9 until Batch 10
-implementation is requested. Earlier D1 sets retain their cumulative licensed multiplayer QA.
+Stage 1 and Batches 1-9 are validated, published and installed. Batch 9 is
+**1.5.12-alpha.1**, with resurrection unlocked at Positive Potions level 10.
+Licensed gameplay QA and companion app-delivery acceptance remain pending.
+**One planned implementation batch remains: 10**, Tamsin lore/map replay and the completed-set
+**1.6.0-beta** release. Stop before Batch 10 implementation until requested.
+Earlier D1 sets retain their cumulative licensed multiplayer QA.
 
 ## Stage 1: public 1.5.2 Beta and publishing
 
@@ -123,7 +124,7 @@ implementation is requested. Earlier D1 sets retain their cumulative licensed mu
 - Player Dragoon chance, damage, repair and authored equipment remain unchanged.
   See [Batch 8 report](tasks/dragoon-lightning-20261005.md) for boundaries and manual QA.
 
-## 9. Theurgist resurrection
+## 9. Theurgist resurrection (implemented and installed, 1.5.12-alpha.1)
 
 - At **Positive Potions level 10**, a living Theurgist mercenary can resurrect a dead
   dungeoneer through the death menu: "Accept Resurrection from <Name>". This explicit
@@ -161,4 +162,5 @@ After all ten batches: verify multiplayer payments/donations, friendly fire and 
 targeting, growth/reset/reload, wolf ownership, death-menu races, Tamsin replay, performance
 and both CurseForge client updates. Merge the completed source set into main and publish
 **1.6.0-beta**. Stable follows full licensed beta acceptance, which is a separate gate.
-Two implementation batches remain at this checkpoint: active Batch 9 and planned Batch 10.
+One planned implementation batch remains: **10**. Batch 9 passed clean CI and all 33 GameTests;
+manual licensed acceptance remains pending.

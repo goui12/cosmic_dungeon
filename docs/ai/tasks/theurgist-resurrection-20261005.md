@@ -71,6 +71,19 @@ Clean CI build plus all 33 GameTests, publisher/JSON/diff checks and PR review a
 before tagging; final source, results, receipt and installed hashes are recorded in the PR
 and operational checkpoint. No local game, GameTest server, client or launcher is started.
 
+## Final release checkpoint
+
+[Clean CI and all 33 GameTests](https://github.com/goui12/cosmic_dungeon/actions/runs/37352684877) passed on runtime source f7aa08737bd59f9565796eb8be14872a0276d6e0.
+[Release v1.5.12-alpha.1](https://github.com/goui12/cosmic_dungeon/releases/tag/v1.5.12-alpha.1)
+was published by workflow 37353256913. CurseForge accepted runtime file
+9071767 and companion file 9071765.
+Exact CI runtime/helper installed on closed ADMIN; matching runtime installed on stopped TEST.
+Installed hashes verified, server.properties unchanged, both distribution feeds updated.
+No automatic game/client/launcher start or server restart. Licensed gameplay and companion
+app-update acceptance remain pending. Review had no findings; only fixture/report corrections
+followed the reviewed production code. This final documentation checkpoint closes Batch 9
+and queues Batch 10; it does not change the immutable release tag or distribute another JAR.
+
 ## Pending licensed TEST QA
 
 1. At Positive 9 (even Negative 50), die: no offer. At Positive 10, die with a living
