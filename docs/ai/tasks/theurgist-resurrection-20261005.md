@@ -59,6 +59,9 @@ model/tag/recipe/loot/advancement resource changed.
 ## Validation
 
 Java 21 local build passed with all 336 native unit tests and two loading-helper tests.
+Initial CI passed its clean build and 32/33 GameTests; the new native respawn fixture
+needed an in-memory network channel for clone hooks, because NeoForge FakePlayer has none.
+The fixture now supplies a private channel; no gameplay gate or assertion is bypassed.
 Seven new tests cover exact death/state persistence, old fields, malformed values,
 single-use/replaced death tokens, cooldown expiry/reset, protection expiry and packet/HUD
 round trips. Two additional native CI GameTests cover Positive 9/10 versus Negative 50,

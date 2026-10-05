@@ -31,13 +31,30 @@ public final class MercenaryResurrectionGameTests {
         final DungeonRunRegistryData.RunRecord run;final D1RunData data;
         final Map<Long,DungeonRunRegistryData.RunRecord> runs;final Map<UUID,ServerPlayer> players;
         final List<ServerPlayer> online;final Vec3 origin;
+        final io.netty.channel.embedded.EmbeddedChannel channel=new io.netty.channel.embedded.EmbeddedChannel();
         @SuppressWarnings("unchecked") Fixture(GameTestHelper helper,long id,boolean nativePlayer){
             this.helper=helper;this.id=id;level=helper.getLevel();var server=level.getServer();
             origin=helper.absoluteVec(new Vec3(.125,10.75,.625));
             var profile=new GameProfile(UUID.randomUUID(),"ResurrectionTest");
             var fake=FakePlayerFactory.get(level,profile);
             player=nativePlayer?new ServerPlayer(server,level,profile,ClientInformation.createDefault()):fake;
-            player.connection=fake.connection;player.connection.player=player;
+            if(nativePlayer){
+                // FakePlayer's shared dummy connection has no channel. Native clone hooks query attributes.
+                // A private in-memory channel supplies those attributes without sockets or authenticated clients.
+                var connection=new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND){
+                    @Override public io.netty.channel.Channel channel(){return channel;}
+                };
+                net.neoforged.neoforge.network.registration.ChannelAttributes.setConnectionType(connection,net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
+                net.neoforged.neoforge.network.registration.ChannelAttributes.setPayloadSetup(connection,net.neoforged.neoforge.network.registration.NetworkPayloadSetup.empty());
+                player.connection=new net.minecraft.server.network.ServerGamePacketListenerImpl(server,connection,player,
+                        net.minecraft.server.network.CommonListenerCookie.createInitial(profile,false)){
+                    @Override public void send(net.minecraft.network.protocol.Packet<?> packet){}
+                    @Override public void send(net.minecraft.network.protocol.Packet<?> packet,io.netty.channel.ChannelFutureListener listener){}
+                    @Override public void resetPosition(){}
+                    @Override public void teleport(double x,double y,double z,float yaw,float pitch){}
+                };
+            }else player.connection=fake.connection;
+            player.connection.player=player;
             player.setPos(origin);player.setYRot(137.5f);player.setXRot(-31.25f);player.setHealth(player.getMaxHealth());
             var root=new CompoundTag();root.putString(ClassData.KEY_CLASS_ID,"theurgist");root.putBoolean("run_temp",true);
             player.getPersistentData().put(ClassData.ROOT_TAG,root);
@@ -66,7 +83,7 @@ public final class MercenaryResurrectionGameTests {
             var current=players.remove(player.getUUID());online.removeIf(p->p.getUUID().equals(player.getUUID()));
             if(current!=null&&current!=player)level.removePlayerImmediately(current,Entity.RemovalReason.DISCARDED);
             if(!player.isRemoved())level.removePlayerImmediately(player,Entity.RemovalReason.DISCARDED);
-            merc.discard();runs.remove(id);data.clearRun(id);
+            merc.discard();runs.remove(id);data.clearRun(id);channel.finishAndReleaseAll();
         }
     }
     public static void eligibility(GameTestHelper helper){
@@ -137,6 +154,8 @@ public final class MercenaryResurrectionGameTests {
                 var expired=new EntityInvulnerabilityCheckEvent(revived,revived.damageSources().generic(),false);
                 NeoForge.EVENT_BUS.post(expired);f.check(!expired.isInvulnerable(),"Expired protection no longer overrides native vulnerability");
                 helper.succeed();
+            }catch(RuntimeException error){
+                com.mojang.logging.LogUtils.getLogger().error("Native resurrection fixture failed",error);throw error;
             }finally{keep.set(previous,server);drops.forEach(Entity::discard);}
         }
     }
