@@ -75,10 +75,13 @@ public final class MercenaryLightningGameTests {
         var immune=EntityType.ZOMBIE.create(level,EntitySpawnReason.COMMAND);
         var wallTarget=EntityType.ZOMBIE.create(level,EntitySpawnReason.COMMAND);
         var teamTarget=EntityType.ZOMBIE.create(level,EntitySpawnReason.COMMAND);
+        var angryWolf=EntityType.WOLF.create(level,EntitySpawnReason.COMMAND);
+        var angryBee=EntityType.BEE.create(level,EntitySpawnReason.COMMAND);
+        var angryBear=EntityType.POLAR_BEAR.create(level,EntitySpawnReason.COMMAND);
         var cow=EntityType.COW.create(level,EntitySpawnReason.COMMAND);
         var wolf=EntityType.WOLF.create(level,EntitySpawnReason.COMMAND);
         wolf.setOwnerReference(EntityReference.of(owner.getUUID()));
-        var targets=List.of(primary,secondary,immune,cow,wolf,merc,wallTarget,teamTarget);
+        var targets=List.of(primary,secondary,immune,cow,wolf,merc,wallTarget,teamTarget,angryWolf,angryBee,angryBear);
         var wall=new LinkedHashMap<net.minecraft.core.BlockPos,net.minecraft.world.level.block.state.BlockState>();
         var scoreboard=level.getScoreboard();var team=scoreboard.addPlayerTeam("chain"+owner.getUUID().toString().substring(0,8));
         scoreboard.addPlayerToTeam(owner.getScoreboardName(),team);
@@ -90,6 +93,11 @@ public final class MercenaryLightningGameTests {
                 target.getAttribute(Attributes.MAX_HEALTH).setBaseValue(200);target.setHealth(200);
             }
             merc.setPos(origin);immune.setInvulnerable(true);
+            for(var neutral:List.of(angryWolf,angryBee,angryBear)){
+                neutral.setTarget(owner);
+                helper.assertTrue(!MercenaryLightning.enemy(merc,owner,neutral),
+                        Component.literal("Angry neutral animals remain protected even when targeting a party member"));
+            }
             wallTarget.setPos(origin.add(3,0,0));teamTarget.setPos(origin.add(0,0,2));
             for(int y=0;y<3;y++){
                 var pos=net.minecraft.core.BlockPos.containing(origin).offset(2,y,0);
@@ -110,7 +118,8 @@ public final class MercenaryLightningGameTests {
             helper.assertTrue(MercenarySkills.level(merc,MercenarySkill.CHAIN_LIGHTNING)==2&&merc.lightning().damage()==power,
                     Component.literal("One successful cast reaches level 2 without recursively multiplying power"));
             helper.assertTrue(immune.getHealth()==200&&cow.getHealth()==200&&wolf.getHealth()==200&&merc.getHealth()==200
-                    &&wallTarget.getHealth()==200&&teamTarget.getHealth()==200,
+                    &&wallTarget.getHealth()==200&&teamTarget.getHealth()==200
+                    &&angryWolf.getHealth()==200&&angryBee.getHealth()==200&&angryBear.getHealth()==200,
                     Component.literal("Walls, scoreboard allies, immune, neutral, owned and self targets are protected"));
             merc.lightning(new MercenaryLightningState(98,power,Optional.of(primary.getUUID()),20));
             var health=secondary.getHealth();MercenaryLightning.tick(merc,level,10);

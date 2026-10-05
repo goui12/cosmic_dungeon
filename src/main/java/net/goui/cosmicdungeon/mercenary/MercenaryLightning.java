@@ -32,7 +32,7 @@ public final class MercenaryLightning {
     // Post-damage may already have killed the victim; type/team eligibility must still credit that hit.
     static boolean enemy(MercenaryEntity merc,ServerPlayer owner,LivingEntity target){
         if(target==merc||target.level()!=merc.level()||target.isSpectator()
-                ||target instanceof MercenaryEntity||CompanionAllies.friendly(target)
+                ||target instanceof MercenaryEntity||target instanceof net.minecraft.world.entity.animal.Animal||CompanionAllies.friendly(target)
                 ||target.isAlliedTo(merc)||target.isAlliedTo(owner))return false;
         return target instanceof Enemy||target instanceof Mob mob&&mob.getTarget()!=null
                 &&MercenaryBrain.ally(merc,mob.getTarget());

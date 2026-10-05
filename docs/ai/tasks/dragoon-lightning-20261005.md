@@ -1,7 +1,7 @@
 # Batch 8: Dragoon mercenary lightning, 2026-10-05
 
 Authorized scope: Batch 8 only. Branch feature/dragoon-lightning-20261005, stacked on
-Batch 7 source c45af42e4926300d21420004e1bd92cd52e143c2 / PR224. Version 1.5.10-alpha.1.
+Batch 7 source c45af42e4926300d21420004e1bd92cd52e143c2 / PR224. Version 1.5.11-alpha.1.
 
 ## Behavior and integration
 
@@ -48,6 +48,11 @@ artifact hashes, CurseForge receipt and deployment status are recorded in PR/ope
 checkpoint. No local client/GameTest/server launches or licensed gameplay acceptance.
 Datagen is not applicable: no generated resources, recipes, tags, loot, models or IDs changed.
 
+Review #4183892674 found that angry neutral animals satisfied the retaliating-mob
+condition. Explicit Animal exclusion and native angry-wolf/bee/polar-bear assertions
+address the finding. The previously published latest-built candidate1.5.10 was never
+tagged or installed; corrected test inputs advance to1.5.11-alpha.1 under the micro rule.
+
 ## Manual TEST QA (pending)
 
 1. Hire a Dragoon, land50 successful enemy hits and inspect the lightning and level2 message.
@@ -87,3 +92,4 @@ records source ID/hash/failure. No fresh Google semantic-alignment claim.
 - docs/releases/1.5.10-alpha.1.md
 - docs/releases/fragments/dragoon-lightning-20261005.md
 - docs/ai/tasks/dragoon-lightning-20261005.md
+- docs/releases/1.5.11-alpha.1.md

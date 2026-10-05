@@ -103,7 +103,7 @@ cumulative licensed multiplayer QA.
 - Launch/run and one-detonation stamps prevent stale or repeated rockets from earning or
   regaining vanilla damage. Reuse server authority; no new packet or registry IDs.
 
-## 8. Dragoon chain lightning (implemented, 1.5.10-alpha.1)
+## 8. Dragoon chain lightning (implemented, 1.5.11-alpha.1)
 
 - Start at 50 successful damaging hits. Threshold is max(5, 51-level), one fewer per
   level until level 46. Native melee and attributed projectile hits count, including
