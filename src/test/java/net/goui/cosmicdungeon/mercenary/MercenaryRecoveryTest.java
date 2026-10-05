@@ -89,13 +89,14 @@ final class MercenaryRecoveryTest {
         tag.putString("death","corrupt");assertTrue(MercenaryRest.CODEC.parse(NbtOps.INSTANCE,tag).error().isPresent());
     }
     @Test void onlyActiveSameInstanceGroupMembersMayContribute(){
-        String dim="cosmicdungeon:d1_instance_1";
+        String dim="cosmicdungeon:d1_instance_1",nether="cosmicdungeon:d1_instance_1_nether";
         var contract=new MercenaryContract(merc,owner,"theurgist",3,50);
-        var run=new DungeonRunRegistryData.RunRecord(1,"dungeon_1","minecraft:overworld",0,List.of(dim),1,
+        var run=new DungeonRunRegistryData.RunRecord(1,"dungeon_1","minecraft:overworld",0,List.of(dim,nether),1,
                 "ACTIVE","",0,List.of(owner,donor),List.of(),List.of()).withMercenaries(List.of(contract));
         var rest=new MercenaryRest(12000,dim,0,16);
         assertTrue(MercenaryRevival.admitted(run,contract,rest,owner,dim));
         assertTrue(MercenaryRevival.admitted(run,contract,rest,donor,dim));
+        assertTrue(MercenaryRevival.admitted(run,contract,rest,donor,nether));
         assertFalse(MercenaryRevival.admitted(run,contract,rest,UUID.randomUUID(),dim));
         assertFalse(MercenaryRevival.admitted(run,contract,rest,donor,"minecraft:overworld"));
         assertFalse(MercenaryRevival.admitted(run.withCompletionExited(donor),contract,rest,donor,dim));
@@ -103,6 +104,13 @@ final class MercenaryRecoveryTest {
         assertFalse(MercenaryRevival.admitted(run.withState(DungeonRunState.RESETTING,DungeonResetReason.ABANDONED),contract,rest,donor,dim));
         assertFalse(MercenaryRevival.admitted(run,contract,null,donor,dim));
         assertFalse(MercenaryRevival.admitted(run,null,rest,donor,dim));
+    }
+    @Test void helpEligibilityIsRecheckedAfterFundsOrAccountReadinessChange(){
+        assertTrue(MercenaryRevival.helpAvailable(24,25,true));
+        assertFalse(MercenaryRevival.helpAvailable(25,25,true));
+        assertFalse(MercenaryRevival.helpAvailable(50,25,true));
+        assertFalse(MercenaryRevival.helpAvailable(0,25,false));
+        assertFalse(MercenaryRevival.helpAvailable(0,0,true));
     }
     @Test void regenerationWaits15SecondsThenHealsHalfAPointPerSecond(){
         var timer=new MercenaryRegeneration();

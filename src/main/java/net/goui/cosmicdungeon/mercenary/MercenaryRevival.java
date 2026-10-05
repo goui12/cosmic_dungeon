@@ -21,7 +21,7 @@ public final class MercenaryRevival {
             MercenaryRest rest,UUID actor,String dimension){
         return contract!=null&&rest!=null&&MercenaryLifecycle.admitted(run,contract,contract.id(),rest.dimension())
                 &&run.containsPlayer(actor)&&!run.isCompletionExited(actor)
-                &&run.dungeonDimensionIds().contains(dimension)&&rest.dimension().equals(dimension);
+                &&run.dungeonDimensionIds().contains(dimension);
     }
     public static boolean paid(MinecraftServer server,long run,UUID id,MercenaryRest rest){
         return !UNVERIFIED.containsKey(MercenaryRevivePayment.id(run,id,rest.death(),rest.until()))
@@ -33,14 +33,15 @@ public final class MercenaryRevival {
         var contract=run.mercenaries().stream().filter(c->c.id().equals(mercenary)).findFirst().orElse(null);
         if(contract==null)return null;
         var rest=run.mercenaryRests().get(mercenary);
-        var nativeEntity=actor.level().getEntity(mercenary);
+        var deathLevel=rest==null?null:net.goui.cosmicdungeon.block.custom.ClassSelectorTeleportUtil.resolveLevel(actor.level().getServer(),rest.dimension());
+        var nativeEntity=deathLevel==null?null:deathLevel.getEntity(mercenary);
         if(nativeEntity instanceof MercenaryEntity entity){
             if(entity.runId()!=run.runId()||!contract.equals(entity.contract())||!entity.dormant())return null;
             rest=entity.rest();
         }
         if(rest==null||rest.until()!=deadline||!admitted(run,contract,rest,actor.getUUID(),actor.level().dimension().location().toString()))return null;
         var owner=actor.level().getServer().getPlayerList().getPlayer(contract.hirer());
-        if(owner==null||owner.level()!=actor.level()||!D1Members.inside(owner,run))return null;
+        if(owner==null||!D1Members.inside(owner,run))return null;
         var recovery=PendingDungeonRecoveryData.get(actor.level().getServer());
         var handoff=recovery.handoff(contract.hirer());
         if(recovery.completed(contract.hirer())>=run.runId()
@@ -59,10 +60,17 @@ public final class MercenaryRevival {
         if(action.action().equals("revive"))pay(player,request,true);
         else if(action.action().equals("revive_help"))ask(player,request);
     }
+    public static boolean helpAvailable(long available,long price,boolean ready){return ready&&price>0&&available<price;}
+    private static boolean needsHelp(ServerPlayer owner,MercenaryContract contract){
+        return CurrencyService.transactionsAllowed(owner)&&helpAvailable(CurrencyService.getAvailableTrace(owner),price(contract),true);
+    }
     private static void ask(ServerPlayer player,Request request){
         var server=player.level().getServer();long now=server.overworld().getGameTime();
         if(request.rest().due(now)||paid(server,request.run(),request.contract().id(),request.rest())){
             message(player,"This companion is already awaiting a safe return.");return;
+        }
+        if(!needsHelp(player,request.contract())){
+            message(player,"Group help is only available while you lack the revival funds and your account is ready. Review the Revive button.");return;
         }
         REQUESTS.entrySet().removeIf(e->e.getValue().rest().due(now)
                 ||DungeonRunRegistryData.get(server).getRun(e.getValue().run()).filter(r->r.stateEnum()==DungeonRunState.ACTIVE).isEmpty());
@@ -88,6 +96,10 @@ public final class MercenaryRevival {
         var request=current(player,old.contract().id(),old.rest().until());
         if(request==null||request.run()!=old.run()||!request.rest().death().equals(old.rest().death())){
             message(player,"That donation request is no longer available to you.");return 0;
+        }
+        var hirer=player.level().getServer().getPlayerList().getPlayer(request.contract().hirer());
+        if(hirer==null||!needsHelp(hirer,request.contract())){
+            REQUESTS.remove(token);message(player,"The hirer no longer needs or is no longer eligible for this donation. No Trace charged.");return 0;
         }
         return pay(player,request,false)?1:0;
     }
