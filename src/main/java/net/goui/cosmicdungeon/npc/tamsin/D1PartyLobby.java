@@ -185,7 +185,7 @@ public final class D1PartyLobby {
         if (p.difficulty != selected.get()) { p.difficulty = selected.get(); cancel(p); }
         return null;
     }
-    public String hire(UUID player,long expected,String classId){return hire(player,expected,classId,500);}
+    public String hire(UUID player,long expected,String classId){return hire(player,expected,classId,50);}
     public String hire(UUID player,long expected,String classId,long fee){
         if(fee<0||fee>100000000)return "Invalid mercenary fee.";
         var p=party(player);
