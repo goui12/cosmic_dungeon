@@ -56,11 +56,25 @@ public final class PartyPayloads {
                 ByteBufCodecs.stringUtf8(9),RevivePrompt::name,RevivePrompt::new);
         @Override public Type<? extends CustomPacketPayload> type(){return TYPE;}
     }
-    public record Mercenary(String name,String owner,float health,float maxHealth,int respawnSeconds,String status,Recovery recovery){
+    public record Skill(String id,int successes){
+        public Skill{
+            net.goui.cosmicdungeon.mercenary.MercenarySkill.fromId(id);
+            if(successes<0)throw new IllegalArgumentException("Invalid mercenary progress");
+        }
+        public static final StreamCodec<ByteBuf,Skill> CODEC=StreamCodec.composite(
+                ByteBufCodecs.stringUtf8(24),Skill::id,ByteBufCodecs.VAR_INT,Skill::successes,Skill::new);
+    }
+    public record Mercenary(String name,String owner,float health,float maxHealth,int respawnSeconds,String status,Recovery recovery,List<Skill> skills){
+        public Mercenary(String name,String owner,float health,float maxHealth,int respawnSeconds,String status,Recovery recovery){
+            this(name,owner,health,maxHealth,respawnSeconds,status,recovery,List.of());
+        }
         public Mercenary(String name,String owner,float health,float maxHealth,int respawnSeconds,String status){
             this(name,owner,health,maxHealth,respawnSeconds,status,Recovery.NONE);
         }
         public Mercenary{
+            skills=List.copyOf(skills);
+            if(skills.size()>2||skills.stream().map(Skill::id).distinct().count()!=skills.size())
+                throw new IllegalArgumentException("Invalid mercenary skills");
             if(recovery==null||name==null||owner==null||name.length()>64||owner.length()>16||!Float.isFinite(health)
                     ||!Float.isFinite(maxHealth)||health<0||maxHealth<0||health>maxHealth
                     ||respawnSeconds < -1||respawnSeconds>600
@@ -70,9 +84,9 @@ public final class PartyPayloads {
         public static final StreamCodec<ByteBuf,Mercenary> CODEC=StreamCodec.of((buf,row)->{
             ByteBufCodecs.stringUtf8(64).encode(buf,row.name());ByteBufCodecs.stringUtf8(16).encode(buf,row.owner());
             buf.writeFloat(row.health());buf.writeFloat(row.maxHealth());ByteBufCodecs.VAR_INT.encode(buf,row.respawnSeconds());
-            ByteBufCodecs.stringUtf8(16).encode(buf,row.status());Recovery.CODEC.encode(buf,row.recovery());
+            ByteBufCodecs.stringUtf8(16).encode(buf,row.status());Recovery.CODEC.encode(buf,row.recovery());Skill.CODEC.apply(ByteBufCodecs.list(2)).encode(buf,row.skills());
         },buf->new Mercenary(ByteBufCodecs.stringUtf8(64).decode(buf),ByteBufCodecs.stringUtf8(16).decode(buf),
-            buf.readFloat(),buf.readFloat(),ByteBufCodecs.VAR_INT.decode(buf),ByteBufCodecs.stringUtf8(16).decode(buf),Recovery.CODEC.decode(buf)));
+            buf.readFloat(),buf.readFloat(),ByteBufCodecs.VAR_INT.decode(buf),ByteBufCodecs.stringUtf8(16).decode(buf),Recovery.CODEC.decode(buf),Skill.CODEC.apply(ByteBufCodecs.list(2)).decode(buf)));
     }
     public record Options(String difficulty,Hire hire,List<Mercenary> mercenaries){
         public static final StreamCodec<ByteBuf,Options> CODEC=StreamCodec.composite(

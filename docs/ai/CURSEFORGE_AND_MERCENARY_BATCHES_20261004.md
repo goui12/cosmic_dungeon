@@ -1,6 +1,6 @@
 # Release and mercenary rollout, 2026-10-04
 
-Stage 1 and Batches 1-3 are authorized. Batches 1-2 are implemented, validated and installed; manual gameplay QA remains. Batch 3 is implemented with local validation passing; CI/release delivery remain. Batches 4-9 are planned, not authorized. Earlier D1 batch sets retain their pending cumulative licensed multiplayer QA.
+Stage 1 and Batches 1-4 are authorized. Batches 1-3 are validated, published and installed; manual gameplay QA remains. Batch 4 implements the shared skill foundation; validation and release delivery follow. Batches 5-9 are planned, not authorized. Earlier D1 batch sets retain their pending cumulative licensed multiplayer QA.
 
 ## Stage 1: public 1.5.2 Beta and publishing
 
@@ -30,7 +30,7 @@ Stage 1 and Batches 1-3 are authorized. Batches 1-2 are implemented, validated a
 - Keep naturally generated mob armor but independently control its drop chance. Preserve
   authored spawner loot and deliberately equipped/player-given items when defining scope.
 
-## 3. Mercenary recovery and transactions
+## 3. Mercenary recovery and transactions (implemented; installed, 1.5.5-alpha.1)
 
 - Hiring costs 50 Trace. A dead mercenary gets an inventory Revive (25 Trace) button to
   bypass the countdown. Server revalidates ownership/death state/payment atomically.
@@ -39,13 +39,21 @@ Stage 1 and Batches 1-3 are authorized. Batches 1-2 are implemented, validated a
   mercenary. Prevent double charges/revives and stale requests.
 - After 15 seconds out of combat regenerate 0.5 health points per second until full.
 
-## 4. Shared mercenary skills
+## 4. Shared mercenary skills (implemented foundation, 1.5.6-alpha.1)
 
 - Start at level 1; next level needs current-level additional successful events: 1,2,3,...
   Level 5 requires 10 total successes. Failed/immune effects do not count.
 - Group chat announces level-ups; inventory group HUD hover shows class-specific skills.
 - Levels survive mercenary death/revival, but reset with the next dungeon group instance
   after completion or forfeit. Reuse existing run identity, persistence and lifecycle.
+- Reuse D1RunData counters keyed by run, contract and skill, including unloaded/resting HUD rows.
+- Current success hooks: actual wolf creation; successful splash/cloud healing, useful positive
+  buff changes, and immediate negative potion damage. Each potion/cloud contributes at most
+  one success per category across targets/effects. No XP for immune/failed/unchanged effects.
+- Batches 5-9 add the remaining class behavior and success hooks, including damage-over-time
+  attribution in the potion rewrite, firework detonation and completed lightning casts.
+  Fireworks/Chain Lightning display level 1 until their later mechanics exist.
+- No player skill balance change or automatic skill-based combat scaling in this foundation.
 
 ## 5. Theurgist potions
 
@@ -100,4 +108,4 @@ Stage 1 and Batches 1-3 are authorized. Batches 1-2 are implemented, validated a
 After these nine batches: verify multiplayer payments/donations, friendly fire and potion
 targeting, growth/reset/reload, wolf ownership, death-menu races, performance and both
 CurseForge client updates. Merge the completed source set into main and publish beta.
-Stable follows full beta acceptance. Six later gameplay batches remain (4-9); Batch 3 validation and cumulative manual QA are pending.
+Stable follows full beta acceptance. Five later gameplay batches remain (5-9); Batch 4 validation and cumulative manual QA are pending.

@@ -103,7 +103,7 @@ public final class MercenaryWolves {
         boolean added=false;
         try{added=level.addFreshEntity(wolf);}
         finally{if(!added)data.removeUnique(bond.run(),key(bond.mercenary()),wolf.getUUID().toString());}
-        if(added)entity.wolfTicks(INTERVAL);
+        if(added){entity.wolfTicks(INTERVAL);MercenarySkills.success(entity,MercenarySkill.WOLVES);}
     }
     static boolean belongs(Wolf wolf,long run,MercenaryContract contract){
         return new Bond(run,contract.id(),contract.hirer()).equals(bond(wolf));
