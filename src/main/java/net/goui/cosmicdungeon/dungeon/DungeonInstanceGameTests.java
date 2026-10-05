@@ -42,6 +42,7 @@ public final class DungeonInstanceGameTests {
         suite.add(id("startup_plan_blank_entry"), DungeonInstanceGameTests::startupPlanBlankEntry);
         suite.add(id("class_selector_ready_eligibility"), DungeonInstanceGameTests::classSelectorReadyEligibility);
         suite.add(id("startup_plan_rejects_none"), DungeonInstanceGameTests::startupPlanRejectsNone);
+        suite.add(id("natural_armor_drop_policy"), net.goui.cosmicdungeon.gametest.WolfEquipmentGameTests::naturalArmor);
         return suite;
     }
 

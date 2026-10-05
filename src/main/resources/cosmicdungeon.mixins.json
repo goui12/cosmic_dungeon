@@ -78,6 +78,7 @@
     "SkillCloudMixin",
     "SkillLingeringPotionMixin",
     "SkillDrinkPotionMixin",
-    "StatsCounterAccess"
+    "StatsCounterAccess",
+    "NaturalArmorDropsMixin"
   ]
 }

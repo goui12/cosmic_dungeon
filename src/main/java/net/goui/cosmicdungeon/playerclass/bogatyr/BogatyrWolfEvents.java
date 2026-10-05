@@ -25,10 +25,11 @@ import net.neoforged.neoforge.event.entity.living.BabyEntitySpawnEvent;
 public final class BogatyrWolfEvents {
     static final String RUN="cosmicdungeon.bogatyr_run", OWNER="cosmicdungeon.bogatyr_owner";
     private BogatyrWolfEvents(){}
-    public static boolean managed(Wolf wolf){return wolf.getPersistentData().getLongOr(RUN,0)>0;}
+    public static boolean managed(Wolf wolf){return !net.goui.cosmicdungeon.mercenary.MercenaryWolves.managed(wolf)
+            && wolf.getPersistentData().getLongOr(RUN,0)>0;}
     private static boolean bogatyr(ServerPlayer player){return "bogatyr".equals(ClassData.getClassId(player));}
     public static boolean owned(Wolf wolf) {
-        return wolf.isTame() && (managed(wolf) || wolf.getPersistentData().contains(OWNER)
+        return !net.goui.cosmicdungeon.mercenary.MercenaryWolves.managed(wolf) && wolf.isTame() && (managed(wolf) || wolf.getPersistentData().contains(OWNER)
                 || wolf.getOwner() instanceof ServerPlayer player && bogatyr(player));
     }
     public static boolean isBogatyrWolfEgg(net.minecraft.world.entity.LivingEntity source,
@@ -38,33 +39,20 @@ public final class BogatyrWolfEvents {
                 && stack != null && stack.getItem() instanceof net.minecraft.world.item.SpawnEggItem egg
                 && egg.spawnsEntity(stack, net.minecraft.world.entity.EntityType.WOLF);
     }
-    public static boolean maySpawnEgg(net.minecraft.world.entity.LivingEntity source,
-            net.minecraft.world.item.ItemStack stack) {
-        if (!isBogatyrWolfEgg(source, stack)) return true;
-        var player = (ServerPlayer)source;
-        var run = D1Members.run(player.level()).orElse(null);
-        if (run != null && full(player, run.runId())) {
-            player.displayClientMessage(Component.literal("Your wolf pack is full."), true);
-            return false;
-        }
-        return true;
-    }
     public static void tameEgg(net.minecraft.world.entity.LivingEntity source, net.minecraft.world.entity.Entity entity) {
-        if (!(source instanceof ServerPlayer player) || !(entity instanceof Wolf wolf) || !bogatyr(player)) return;
+        if (!(source instanceof ServerPlayer player) || !(entity instanceof Wolf wolf) || !bogatyr(player)
+                || net.goui.cosmicdungeon.mercenary.MercenaryWolves.managed(wolf)) return;
         wolf.tame(player);
         wolf.getPersistentData().putString(OWNER, player.getUUID().toString());
         wolf.setOrderedToSit(false); wolf.setInSittingPose(false); wolf.setTarget(null); wolf.stopBeingAngry();
         // The existing onAddedToLevel path registers the actual successful in-instance spawn.
-    }
-    private static boolean full(ServerPlayer player,long run){
-        return BogatyrCompanions.packSize(player.level().getServer(),player.getUUID(),run)>=Config.WOLF_CAP.get();
     }
     private static UUID ownerId(Wolf wolf){
         return wolf.getOwnerReference()==null?null:wolf.getOwnerReference().getUUID();
     }
     private static boolean enrolled(Wolf wolf,long run){
         UUID owner=ownerId(wolf);
-        return wolf.isTame() && owner!=null && wolf.getPersistentData().getLongOr(RUN,0)==run
+        return managed(wolf) && wolf.isTame() && owner!=null && wolf.getPersistentData().getLongOr(RUN,0)==run
                 && owner.toString().equals(wolf.getPersistentData().getStringOr(OWNER,""));
     }
     private static void register(Wolf wolf,UUID owner,long run){
@@ -81,8 +69,10 @@ public final class BogatyrWolfEvents {
         data.recordUnique(run,"wolves:"+owner,BogatyrIdentity.id(wolf).toString());
         tune(wolf);BogatyrCompanions.track(wolf,true);
     }
-    /** Does not resolve an online owner or scan loaded entities: unloaded pack members still count. */
+    /** Player packs are uncapped; breeding still validates run membership and health without scans. */
     public static boolean breedingAllowed(Wolf first,Wolf second){
+        if(net.goui.cosmicdungeon.mercenary.MercenaryWolves.managed(first)
+                ||net.goui.cosmicdungeon.mercenary.MercenaryWolves.managed(second))return false;
         if(!managed(first)&&!managed(second))return true;
         if(!(first.level() instanceof ServerLevel level)||second.level()!=level
                 ||BogatyrRecovery.held(first)||BogatyrRecovery.held(second))return false;
@@ -91,8 +81,7 @@ public final class BogatyrWolfEvents {
                 ||!run.containsPlayer(ownerId(first))||!run.containsPlayer(ownerId(second))
                 ||run.isCompletionExited(ownerId(first))||run.isCompletionExited(ownerId(second)))return false;
         return WolfCareRules.healthy(first.getHealth(),first.getMaxHealth())
-                && WolfCareRules.healthy(second.getHealth(),second.getMaxHealth())
-                && BogatyrCompanions.packSize(level.getServer(),ownerId(first),run.runId())<Config.WOLF_CAP.get();
+                && WolfCareRules.healthy(second.getHealth(),second.getMaxHealth());
     }
     private static void tune(Wolf wolf){
         if(wolf.getAttribute(Attributes.MAX_HEALTH)!=null)wolf.getAttribute(Attributes.MAX_HEALTH).setBaseValue(Config.WOLF_HEALTH.get());
@@ -103,7 +92,8 @@ public final class BogatyrWolfEvents {
         BogatyrThreats.install(wolf);
     }
     @SubscribeEvent public static void interact(PlayerInteractEvent.EntityInteract event){
-        if(!(event.getEntity() instanceof ServerPlayer player)||!(event.getTarget() instanceof Wolf wolf))return;
+        if(!(event.getEntity() instanceof ServerPlayer player)||!(event.getTarget() instanceof Wolf wolf)
+                ||net.goui.cosmicdungeon.mercenary.MercenaryWolves.managed(wolf))return;
         if(managed(wolf)&&BogatyrRecovery.held(wolf)){
             event.setCanceled(true);event.setCancellationResult(InteractionResult.SUCCESS);return;
         }
@@ -113,7 +103,7 @@ public final class BogatyrWolfEvents {
         if(!wolf.isTame()&&stack.is(Items.BONE)){
             event.setCanceled(true);event.setCancellationResult(InteractionResult.SUCCESS);
             if(!bogatyr(player)){player.displayClientMessage(Component.literal("D1 wolf companions belong to the Bogatyr."),true);return;}
-            if(wolf.isAngry()||full(player,run.runId())){player.displayClientMessage(Component.literal("Your pack is full, or this wolf is angry."),true);return;}
+            if(wolf.isAngry()){player.displayClientMessage(Component.literal("This wolf is angry."),true);return;}
             stack.consume(1,player);
             boolean success=player.getRandom().nextDouble()<Config.WOLF_TAME_CHANCE.get()
                     && !net.neoforged.neoforge.event.EventHooks.onAnimalTame(wolf,player);
@@ -123,8 +113,7 @@ public final class BogatyrWolfEvents {
             }
             player.level().broadcastEntityEvent(wolf,success?(byte)7:(byte)6);
         }else if(wolf.isTame()){
-            // Adopt only the actual owner's in-instance wolf. Existing over-cap pets remain intact,
-            // but count against all future births/tames; joining/feeding never manufactures a pet.
+            // Adopt only the actual owner's in-instance player companion. Joining/feeding never manufactures a pet.
             if(wolf.isOwnedBy(player)&&bogatyr(player))register(wolf,player.getUUID(),run.runId());
             if(!enrolled(wolf,run.runId())||!wolf.isFood(stack))return;
             boolean wounded=wolf.getHealth()<wolf.getMaxHealth();
@@ -137,14 +126,12 @@ public final class BogatyrWolfEvents {
                 if(growth>0)((BogatyrGrowthAccess)wolf).cosmicdungeon$growByTicks(growth);
                 stack.consume(1,player);
                 wolf.gameEvent(net.minecraft.world.level.gameevent.GameEvent.EAT);
-            }else if(BogatyrCompanions.packSize(player.level().getServer(),ownerId(wolf),run.runId())>=Config.WOLF_CAP.get()){
-                event.setCanceled(true);event.setCancellationResult(InteractionResult.SUCCESS);
-                player.displayClientMessage(Component.literal("This wolf's pack is full."),true);
             }
         }
     }
     public static void added(Wolf wolf){
-        if(!(wolf.level() instanceof ServerLevel level))return;
+        if(net.goui.cosmicdungeon.mercenary.MercenaryWolves.managed(wolf)
+                ||!(wolf.level() instanceof ServerLevel level))return;
         if(managed(wolf))tune(wolf);
         var run=D1Members.run(level).orElse(null);if(run==null)return;
         UUID owner=ownerId(wolf);

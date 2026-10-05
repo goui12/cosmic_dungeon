@@ -1,6 +1,5 @@
 package net.goui.cosmicdungeon.playerclass.bogatyr;
 
-import net.goui.cosmicdungeon.Config;
 import net.goui.cosmicdungeon.auth.AccessPolicy;
 import net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData;
 import net.goui.cosmicdungeon.dungeon.d1.D1RunData;
@@ -103,7 +102,7 @@ public final class BogatyrCompanions {
         var entries=data.forOwner(player.getUUID());int active=data.activeCount(player.getUUID());
         int pages=Math.max(1,(entries.size()+31)/32);
         if(page>pages){source.sendFailure(Component.literal("Your companion roster has "+pages+" page(s)."));return 0;}
-        source.sendSuccess(()->Component.literal("Companions: "+active+" active / "+Config.WOLF_CAP.get()
+        source.sendSuccess(()->Component.literal("Companions: "+active+" active (uncapped)"
                 +"; "+(entries.size()-active)+" stored; "+entries.size()+" total. Page "+page+" / "+pages+"."),false);
         for(var entry:entries.stream().skip((page-1L)*32).limit(32).toList()){
             var archive=data.archive(entry.wolf()).orElse(null);
