@@ -74,13 +74,13 @@ public final class MercenaryBrain {
         if((entity.tickCount+entity.getId())%10!=0)return;
         var context=context(entity);
         var owner=context==null?null:context.owner();
-        if(owner==null){entity.regeneration().combat();entity.setTarget(null);entity.getNavigation().stop();lastPosition=null;stuck=0;return;}
+        if(owner==null){entity.potionCasting().cancel();entity.regeneration().combat();entity.setTarget(null);entity.getNavigation().stop();lastPosition=null;stuck=0;return;}
         entity.timers(entity.timers().advance(10));attack=Math.max(0,attack-10);collection=Math.max(0,collection-10);
         double distance=entity.distanceToSqr(owner);
         if(distance>16&&lastPosition!=null&&lastPosition.distanceToSqr(entity.position())<.09)stuck+=10;else stuck=0;
         lastPosition=entity.position();
         if(recover(distance,stuck)&&teleport(entity,owner,level)){stuck=0;distance=entity.distanceToSqr(owner);}
-        if(distance>256){entity.setTarget(null);MercenaryRegeneration.tick(entity,10,false);entity.getNavigation().moveTo(owner,1.15);return;}
+        if(distance>256){entity.potionCasting().cancel();entity.setTarget(null);MercenaryRegeneration.tick(entity,10,false);entity.getNavigation().moveTo(owner,1.15);return;}
         MercenaryWolves.tick(entity,level,owner,10);
         var candidates=new ArrayList<LivingEntity>();candidates.add(owner);candidates.add(entity);
         nearby(level,LivingEntity.class,entity.getBoundingBox().inflate(8),48,target->{

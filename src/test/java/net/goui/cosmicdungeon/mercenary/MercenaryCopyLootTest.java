@@ -69,10 +69,9 @@ final class MercenaryCopyLootTest {
         assertFalse(MercenaryCollection.receive(m,disguisedKey,recipes()));
         assertTrue(m.supplies().stream().allMatch(ItemStack::isEmpty));
     }
-    @Test void brewingInputsPotionsAndClassAmmunitionRemainAvailable(){
+    @Test void effectSplashesAndClassAmmunitionRemainAvailableWithoutReagents(){
         var hire=merc("theurgist").contract();
-        for(var stack:List.of(PotionContents.createItemStack(Items.POTION,Potions.WATER),
-                PotionContents.createItemStack(Items.SPLASH_POTION,Potions.HEALING),new ItemStack(Items.NETHER_WART),new ItemStack(Items.ARROW)))
+        for(var stack:List.of(PotionContents.createItemStack(Items.SPLASH_POTION,Potions.HEALING),new ItemStack(Items.ARROW)))
             assertTrue(MercenaryInventory.useful(stack,hire,recipes()));
         assertFalse(MercenaryInventory.useful(new ItemStack(Items.ARROW),merc("dragoon").contract(),recipes()));
     }
@@ -102,7 +101,8 @@ final class MercenaryCopyLootTest {
         chest.setItem(0,brew.copy());chest.setItem(1,new ItemStack(Items.ARROW,32));chest.setItem(2,new ItemStack(ModItems.DOOR_KEY.get()));
         assertTrue(MercenaryEquipment.equip(m,List.of(chest),recipes(),DIM));
         assertTrue(ItemStack.matches(brew,chest.getItem(0)));assertEquals(32,chest.getItem(1).getCount());assertTrue(chest.getItem(2).is(ModItems.DOOR_KEY.get()));
-        assertTrue(ItemStack.matches(brew,m.supplies().getFirst()));assertEquals(32,m.supplies().get(1).getCount());
+        assertTrue(m.supplies().stream().noneMatch(stack->stack.is(Items.NETHER_WART)));
+        assertEquals(32,m.supplies().getFirst().getCount());
         m.supplies().set(0,ItemStack.EMPTY);assertFalse(copy(m,chest,1));
         assertFalse(MercenaryEquipment.equip(m,List.of(chest),recipes(),DIM));
     }

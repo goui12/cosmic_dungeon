@@ -75,6 +75,7 @@
     "DungeonDifficultyEffectMixin",
     "SkillProjectileWeaponMixin",
     "SkillSplashPotionMixin",
+    "MercenaryPotionEffectMixin",
     "SkillCloudMixin",
     "SkillLingeringPotionMixin",
     "SkillDrinkPotionMixin",
