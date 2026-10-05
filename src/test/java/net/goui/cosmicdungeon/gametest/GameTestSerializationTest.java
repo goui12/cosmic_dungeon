@@ -37,7 +37,7 @@ public final class GameTestSerializationTest {
                 "slot_mapping", "legacy_run_codec", "farrows_chop_target_codec", "inventory_escrow_codec",
                 "startup_plan_one_player", "startup_plan_four_players", "startup_plan_six_players",
                 "startup_plan_duplicate_classes", "startup_definition_integrity", "startup_plan_party_counts",
-                "startup_plan_blank_entry", "class_selector_ready_eligibility", "startup_plan_rejects_none", "natural_armor_drop_policy", "mercenary_recovery", "mercenary_skills_lifecycle", "mercenary_skills_effects", "mercenary_potion_stock", "mercenary_potion_attribution", "mercenary_wolf_progression");
+                "startup_plan_blank_entry", "class_selector_ready_eligibility", "startup_plan_rejects_none", "natural_armor_drop_policy", "mercenary_recovery", "mercenary_skills_lifecycle", "mercenary_skills_effects", "mercenary_potion_stock", "mercenary_potion_attribution", "mercenary_wolf_progression", "mercenary_firework_persistence", "pyroclast_rocket_explosion", "pyroclast_rocket_denial");
         require(tests.keySet().stream().map(id -> id.getPath()).collect(java.util.stream.Collectors.toSet()).equals(expected),
                 "Every existing test ID remains registered");
         require(environments.size() == 2, "Both test environments remain registered");

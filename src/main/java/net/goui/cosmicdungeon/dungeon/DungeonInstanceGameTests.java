@@ -49,6 +49,9 @@ public final class DungeonInstanceGameTests {
         suite.add(id("mercenary_potion_stock"),net.goui.cosmicdungeon.mercenary.MercenaryPotionGameTests::freeStock);
         suite.add(id("mercenary_potion_attribution"),net.goui.cosmicdungeon.mercenary.MercenaryPotionGameTests::attribution);
         suite.add(id("mercenary_wolf_progression"),net.goui.cosmicdungeon.mercenary.MercenaryWolfGameTests::progression);
+        suite.add(id("mercenary_firework_persistence"),net.goui.cosmicdungeon.mercenary.MercenaryFireworkGameTests::persistence);
+        suite.add(id("pyroclast_rocket_explosion"),net.goui.cosmicdungeon.playerclass.d1.D1RocketGameTests::explosion);
+        suite.add(id("pyroclast_rocket_denial"),net.goui.cosmicdungeon.playerclass.d1.D1RocketGameTests::denied);
         return suite;
     }
 
