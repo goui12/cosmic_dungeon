@@ -27,12 +27,17 @@ public final class WolfEquipmentGameTests {
         mob.setItemSlot(EquipmentSlot.CHEST,authored.copy());
         mob.setDropChance(EquipmentSlot.CHEST,0.35F);
         var random=new LegacyRandomSource(0){
-            @Override public float nextFloat(){return 0;}
+            private boolean generationRoll=true;
+            // First roll enables armor; later rolls must NOT stop the armor loop.
+            @Override public float nextFloat(){
+                if(generationRoll){generationRoll=false;return 0;}
+                return 0.99F;
+            }
             @Override public int nextInt(int bound){return 0;}
         };
         mob.generate(random);
         for(var slot:new EquipmentSlot[]{EquipmentSlot.HEAD,EquipmentSlot.LEGS,EquipmentSlot.FEET}){
-            helper.assertTrue(!mob.getItemBySlot(slot).isEmpty(),Component.literal("Generated armor must remain equipped"));
+            helper.assertTrue(!mob.getItemBySlot(slot).isEmpty(),Component.literal("Generated armor must remain equipped: "+slot));
             helper.assertTrue(mob.getDropChances().byEquipment(slot)==Config.NATURAL_ARMOR_DROP_CHANCE.get().floatValue(),
                     Component.literal("Generated armor must use the independent drop setting"));
         }

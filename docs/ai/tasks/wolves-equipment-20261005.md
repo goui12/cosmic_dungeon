@@ -2,7 +2,8 @@
 
 Authorized by Cameron on 2026-10-04 PDT. Branch feature/wolves-equipment-20261005,
 stacked on Batch 1 feature/mercenary-identities-20261004. Release 1.5.4-alpha.1.
-Batches 3-9 are planned, not authorized by this implementation request.
+Cameron subsequently authorized verification of Batch 2 and implementation of Batch 3.
+Batches 4-9 remain planned, not authorized by this implementation request.
 
 ## Scope and integration ownership
 
@@ -45,7 +46,10 @@ Current explicit Cameron instructions control this batch; no fresh canon audit c
 
 Passed locally: Java 21 build, 278 native tests, two helper tests, 2,001 source JSON
 files and diff checks. Publisher safeguard suite: 11 checks passed.
-CI clean build/GameTests required before publication; local game/server launches are
+Initial CI 37258306527 passed clean build but exposed an incorrect random fixture:
+zero continuation rolls stopped vanilla armor generation. The fixture now enables
+generation once and supplies non-stopping continuation rolls; all armor, authored
+equipment and drop-rate assertions remain. CI clean build/GameTests must pass before publication; local game/server launches are
 not authorized. Exact results and deployment hashes belong in the private checkpoint.
 No datagen applicable: only code and hand-maintained mixin configuration change.
 
