@@ -52,6 +52,8 @@ public final class DungeonInstanceGameTests {
         suite.add(id("mercenary_firework_persistence"),net.goui.cosmicdungeon.mercenary.MercenaryFireworkGameTests::persistence);
         suite.add(id("pyroclast_rocket_explosion"),net.goui.cosmicdungeon.playerclass.d1.D1RocketGameTests::explosion);
         suite.add(id("pyroclast_rocket_denial"),net.goui.cosmicdungeon.playerclass.d1.D1RocketGameTests::denied);
+        suite.add(id("mercenary_lightning_persistence"),net.goui.cosmicdungeon.mercenary.MercenaryLightningGameTests::persistence);
+        suite.add(id("mercenary_lightning_combat"),net.goui.cosmicdungeon.mercenary.MercenaryLightningGameTests::combat);
         return suite;
     }
 

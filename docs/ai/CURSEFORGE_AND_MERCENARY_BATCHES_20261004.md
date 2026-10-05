@@ -1,9 +1,9 @@
 # Release and mercenary rollout, 2026-10-04
 
-Stage 1 and Batches 1-7 are authorized. Batches 1-6 are validated, published and installed;
-manual gameplay QA remains. Batch 7 implements Pyroclast fireworks; validation and delivery
-follow. Batches 8-9 remain planned, not authorized. Earlier D1 sets retain their cumulative
-licensed multiplayer QA.
+Stage 1 and Batches 1-8 are authorized. Batches 1-7 are validated, published and installed;
+manual gameplay QA remains. Batch 8 implements Dragoon chain lightning; validation and
+delivery follow. Batch 9 remains planned, not authorized. Earlier D1 sets retain their
+cumulative licensed multiplayer QA.
 
 ## Stage 1: public 1.5.2 Beta and publishing
 
@@ -103,12 +103,24 @@ licensed multiplayer QA.
 - Launch/run and one-detonation stamps prevent stale or repeated rockets from earning or
   regaining vanilla damage. Reuse server authority; no new packet or registry IDs.
 
-## 8. Dragoon chain lightning
+## 8. Dragoon chain lightning (implemented, 1.5.10-alpha.1)
 
-- Initial trigger: 50 successful hits. Chain hits also count toward the next trigger.
-- One successful chain cast reaches level 2, two further casts level 3, three further
-  casts level 4; level 5 totals ten casts. Each level reduces the hit threshold.
-- Count secondary hits without allowing recursive same-tick unbounded chains.
+- Start at 50 successful damaging hits. Threshold is max(5, 51-level), one fewer per
+  level until level 46. Native melee and attributed projectile hits count, including
+  lethal hits and absorbed damage; misses, blocked attacks and friendly damage do not.
+- Every actual secondary lightning hit adds one to the bank. No recursive event casts:
+  existing AI decisions spend at most one charge per 20 active ticks, without offline backlog.
+- A cast damaging an enemy earns one skill success regardless of target count: one cast
+  reaches level 2, two further casts level 3, three further level 4; level 5 totals ten.
+- Reuse configured Dragoon damage multiplier, radius, target/candidate limits, line of sight
+  and arc particles. Exclude the last primary victim, allies, pets and neutral animals.
+  Chain damage does not compound back into the stored primary-hit power.
+- Optional entity charge/power/victim/cooldown fields retain death/revival/reload; legacy
+  saves start empty. Existing run skill counters/HUD/chat remain; new dungeon resets both.
+- Require a living active contract and online hirer in the same run; cleanup/offline state
+  cannot cast. Failed casts earn no XP or hit credit and refund their charge.
+- Player Dragoon chance, damage, repair and authored equipment remain unchanged.
+  See [Batch 8 report](tasks/dragoon-lightning-20261005.md) for boundaries and manual QA.
 
 ## 9. Theurgist resurrection
 
@@ -125,4 +137,4 @@ licensed multiplayer QA.
 After these nine batches: verify multiplayer payments/donations, friendly fire and potion
 targeting, growth/reset/reload, wolf ownership, death-menu races, performance and both
 CurseForge client updates. Merge the completed source set into main and publish beta.
-Stable follows full beta acceptance. Two later gameplay batches remain (8-9); Batch 7 delivery and cumulative manual QA are pending.
+Stable follows full beta acceptance. One later gameplay batch remains (9); Batch 8 delivery and cumulative manual QA are pending.

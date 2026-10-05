@@ -122,7 +122,7 @@ public final class DragoonPassiveEvents {
         }
     }
 
-    private static void spawnLightningArc(ServerLevel level, LivingEntity from, LivingEntity to) {
+    public static void spawnLightningArc(ServerLevel level, LivingEntity from, LivingEntity to) {
         Vec3 start = from.position().add(0.0D, from.getBbHeight() * 0.55D, 0.0D);
         Vec3 end = to.position().add(0.0D, to.getBbHeight() * 0.55D, 0.0D);
         Vec3 delta = end.subtract(start);
