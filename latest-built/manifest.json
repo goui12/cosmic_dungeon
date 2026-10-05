@@ -2,12 +2,12 @@
     "schemaVersion":  1,
     "channel":  "TEST",
     "status":  "built",
-    "sourceCommit":  "aec14b26cc3f5fc9b6a72bd66535b2c8d96a547d",
-    "fileName":  "cosmicdungeon-1.5.5-alpha.1.jar",
-    "sha256":  "ee53b5eede94c88faad20cc7b6554762d69ef228eeb12c8b2e7ee287d3639689",
-    "size":  24259939,
+    "sourceCommit":  "0367075ff1e18efb2d8c4f75c98c94b70c532d95",
+    "fileName":  "cosmicdungeon-1.5.6-alpha.1.jar",
+    "sha256":  "621166c417cc174d3ba0b81e93d0ae18f09f449b6c54a0066ce165de800fea3f",
+    "size":  24276613,
     "minecraft":  "1.21.10",
     "neoForge":  "21.10.64",
-    "sourceFingerprint":  "DB9BC14A289C3D6D33DAB80EA5AB60432698FD0DED1E231FEA7E14E6C54E76EB",
-    "publishedUtc":  "2026-10-05T04:50:13.2299601Z"
+    "sourceFingerprint":  "2A47C34E4C0393400772453ABC92CD6B5F84684DC5B601F97C01FC71CA4C5FA7",
+    "publishedUtc":  "2026-10-05T05:17:26.9740182Z"
 }
