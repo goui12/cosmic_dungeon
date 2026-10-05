@@ -167,7 +167,7 @@ public final class D1PartyHud {
                 if (grouped) details.add(Component.literal("Difficulty: " + view.difficulty()));
                 for (var member : view.members()) details.add(Component.literal(member.name() + " / "
                         + ClassSelectorScreen.className(member.classId()).getString() + (member.ready() ? " / Ready" : " / Not Ready")));
-                for(var hire:view.mercenaries())details.add(Component.literal(hire.name()+" / "+MercenaryHudLayout.status(hire)));
+                for(var hire:view.mercenaries())for(String detail:MercenaryHudLayout.tooltip(hire))details.add(Component.literal(detail));
                 if (!grouped && view.invitation().accepted()) details.add(Component.literal("Finish agreement/class selection at Tamsin"));
                 graphics.setComponentTooltipForNextFrame(Minecraft.getInstance().font, details, mouseX, mouseY);
             }
@@ -202,11 +202,15 @@ public final class D1PartyHud {
         y=box.y()+box.height()+6;
         for(var hire:view.mercenaries()){
             graphics.fill(box.x(),y,box.x()+box.width(),y+26,0xD0181820);
-            line(graphics,hire.name(),y+2,0xFFE4C98A,mouseX,mouseY);
-            line(graphics,MercenaryHudLayout.status(hire),y+12,hire.status().equals("ACTIVE")?0xFFAAFFAA:0xFFDDDDDD,mouseX,mouseY);
+            // Schedule only the complete row tooltip: GuiGraphics keeps the first tooltip submitted.
+            line(graphics,hire.name(),y+2,0xFFE4C98A,-1,-1);
+            line(graphics,MercenaryHudLayout.status(hire),y+12,hire.status().equals("ACTIVE")?0xFFAAFFAA:0xFFDDDDDD,-1,-1);
             int width=box.width()-8;
             graphics.fill(box.x()+4,y+23,box.x()+4+width,y+25,0xFF553333);
             graphics.fill(box.x()+4,y+23,box.x()+4+MercenaryHudLayout.healthWidth(hire,width),y+25,0xFF66CC88);
+            if(mouseX>=box.x()&&mouseX<box.x()+box.width()&&mouseY>=y&&mouseY<y+26)
+                graphics.setComponentTooltipForNextFrame(Minecraft.getInstance().font,
+                        MercenaryHudLayout.tooltip(hire).stream().map(Component::literal).map(c->(Component)c).toList(),mouseX,mouseY);
             y+=28;
         }
     }

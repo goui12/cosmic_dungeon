@@ -1,12 +1,12 @@
-# Current rollout, 2026-10-04
+# Current rollout, 2026-10-05
 
 [CurseForge and mercenary batch plan](CURSEFORGE_AND_MERCENARY_BATCHES_20261004.md).
 Stage 1 publishing is established; companion moderation and licensed two-component
-app delivery remain pending. Batches 1-2 are validated and installed. Batch 3
-recovery/payment is implemented and locally validated; CI/release and cumulative manual QA
-are pending. Six later gameplay batches remain:
-4 shared progression; 5 Theurgist potions; 6 Bogatyr progression;
-7 Pyroclast fireworks; 8 Dragoon lightning; 9 Theurgist resurrection.
+app delivery remain pending. Batches 1-3 are validated, published and installed.
+Batch 4 shared mercenary progression is implemented; validation/release delivery
+and cumulative manual QA remain. Five later gameplay batches remain:
+5 Theurgist potions; 6 Bogatyr progression; 7 Pyroclast fireworks;
+8 Dragoon lightning; 9 Theurgist resurrection.
 The earlier zero-batch statements below refer to the previous completed request.
 
 ---
