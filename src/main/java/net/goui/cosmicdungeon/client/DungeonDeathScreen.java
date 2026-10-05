@@ -15,13 +15,40 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 /** The same server-validated vote remains usable without leaving the death screen. */
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID, value = Dist.CLIENT)
 public final class DungeonDeathScreen {
+    private static DeathScreen current;
+    private static Button resurrection;
+    private static int pendingTicks;
     private DungeonDeathScreen() {}
+    @SubscribeEvent public static void tick(net.neoforged.neoforge.client.event.ClientTickEvent.Post event){
+        var client=Minecraft.getInstance();
+        if(current!=client.screen){current=null;resurrection=null;pendingTicks=0;return;}
+        if(pendingTicks>0)pendingTicks--;
+        updateResurrection();
+    }
+    private static void updateResurrection(){
+        if(resurrection==null)return;
+        var client=Minecraft.getInstance();
+        var offer=net.goui.cosmicdungeon.client.screen.D1PartyHud.resurrectionOffer();
+        resurrection.visible=offer!=null&&client.player!=null&&client.player.isDeadOrDying()&&client.getConnection()!=null;
+        resurrection.active=resurrection.visible&&pendingTicks==0;
+        if(offer!=null)resurrection.setMessage(Component.literal("Accept Resurrection from "+offer.name()));
+    }
 
     @SubscribeEvent public static void init(ScreenEvent.Init.Post event) {
         if (!(event.getScreen() instanceof DeathScreen death)) return;
         var client = Minecraft.getInstance();
         if (client.player == null || client.getConnection() == null
                 || DungeonInstanceSlots.slotOf(client.player.level().dimension()).isEmpty()) return;
+        current=death;pendingTicks=0;
+        int width=Math.min(300,death.width-16);
+        resurrection=Button.builder(Component.literal("Accept Resurrection"),button->{
+            var offer=net.goui.cosmicdungeon.client.screen.D1PartyHud.resurrectionOffer();
+            if(offer==null||client.player==null||!client.player.isDeadOrDying()||client.getConnection()==null)return;
+            var revive=offer.resurrection();pendingTicks=20;button.active=false;
+            net.goui.cosmicdungeon.network.ModNetwork.sendToServer(new net.goui.cosmicdungeon.network.PartyPayloads.Resurrect(
+                    revive.run(),java.util.UUID.fromString(revive.mercenary()),java.util.UUID.fromString(revive.death())));
+        }).bounds((death.width-width)/2,death.height/4+144,width,20).build();
+        event.addListener(resurrection);updateResurrection();
         event.addListener(Button.builder(Component.literal("Forfeit"), button -> {
             client.setScreen(new ConfirmScreen(yes -> {
                 client.setScreen(death);

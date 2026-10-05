@@ -13,6 +13,11 @@ public final class MercenaryHudLayout {
         var lines=new java.util.ArrayList<String>();
         lines.add(row.name());lines.add(status(row));
         for(var skill:row.skills())lines.add(net.goui.cosmicdungeon.mercenary.MercenarySkill.description(skill.id(),skill.successes()));
+        if(row.resurrection().seconds()>=0){
+            int seconds=row.resurrection().seconds();
+            lines.add(seconds>0?String.format(Locale.ROOT,"Resurrection: %d:%02d",seconds/60,seconds%60)
+                    :row.status().equals("ACTIVE")?"Resurrection: Ready":"Resurrection: Unavailable");
+        }
         return java.util.List.copyOf(lines);
     }
     public static String status(PartyPayloads.Mercenary row){

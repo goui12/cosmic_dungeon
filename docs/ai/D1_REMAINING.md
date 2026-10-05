@@ -1,11 +1,14 @@
 # Current rollout, 2026-10-05
 
 [CurseForge and mercenary batch plan](CURSEFORGE_AND_MERCENARY_BATCHES_20261004.md).
-Stage 1 publishing is established; companion moderation and licensed two-component
-app delivery remain pending. Batches 1-7 are validated, published and installed.
-Batch 8 Dragoon chain lightning is implemented; validation/release delivery and cumulative
-manual QA remain. One later gameplay batch remains: 9 Theurgist resurrection
-(level-50 death-menu resurrection and three-minute cooldown). Stop before Batch 9.
+Stage 1 and Batches 1-8 are validated, published and installed. Companion moderation,
+licensed two-component app delivery and cumulative gameplay QA remain pending.
+Two implementation batches remain:
+9. Active: Theurgist resurrection at Positive Potions level 10, exact death position,
+   five seconds of invincibility, and a three-minute cooldown with HUD/death-menu controls.
+10. Planned: replay Tamsin's first-time lore/map with a top-right 20x18 "i" button,
+    then validated completed-set main merge and exact **1.6.0-beta** publication.
+Stop after Batch 9 until Batch 10 implementation is requested.
 The earlier zero-batch statements below refer to the previous completed request.
 
 ---

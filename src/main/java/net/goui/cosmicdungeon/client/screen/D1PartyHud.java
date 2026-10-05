@@ -26,6 +26,9 @@ public final class D1PartyHud {
         view = snapshot;
         updateControls();
     }
+    public static PartyPayloads.Mercenary resurrectionOffer(){
+        return view==null?null:view.mercenaries().stream().filter(row->row.resurrection().offered()).findFirst().orElse(null);
+    }
     private static void clear() { view = null; inventory = null; ready = leave = join = revive = null; }
     @SubscribeEvent public static void login(ClientPlayerNetworkEvent.LoggingIn event) { clear(); }
     @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { clear(); }
