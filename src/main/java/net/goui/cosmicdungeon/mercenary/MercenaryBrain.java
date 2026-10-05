@@ -76,6 +76,7 @@ public final class MercenaryBrain {
         var owner=context==null?null:context.owner();
         if(owner==null){entity.potionCasting().cancel();entity.regeneration().combat();entity.setTarget(null);entity.getNavigation().stop();lastPosition=null;stuck=0;return;}
         entity.timers(entity.timers().advance(10));attack=Math.max(0,attack-10);collection=Math.max(0,collection-10);
+        MercenaryFireworks.tick(entity,10);
         double distance=entity.distanceToSqr(owner);
         if(distance>16&&lastPosition!=null&&lastPosition.distanceToSqr(entity.position())<.09)stuck+=10;else stuck=0;
         lastPosition=entity.position();
@@ -92,6 +93,8 @@ public final class MercenaryBrain {
         MercenaryPotions.use(entity,candidates);
         LivingEntity target=candidates.stream().filter(t->enemy(context,entity,t)&&owner.distanceToSqr(t)<=64
                 &&entity.getSensing().hasLineOfSight(t)).min(Comparator.comparingDouble(entity::distanceToSqr)).orElse(null);
+        LivingEntity fireworkTarget=attack==0?MercenaryFireworks.target(entity,candidates):null;
+        if(fireworkTarget!=null)target=fireworkTarget;
         entity.setTarget(target);
         MercenaryRegeneration.tick(entity,10,target!=null);
         MercenaryWolves.command(entity,level,target);
@@ -100,7 +103,9 @@ public final class MercenaryBrain {
             entity.getLookControl().setLookAt(target,30,30);
             boolean ranged=entity.getMainHandItem().getItem() instanceof BowItem
                     ||entity.getMainHandItem().getItem() instanceof CrossbowItem;
-            if(ranged&&ammunition(entity,target)>=0){
+            if(fireworkTarget!=null&&MercenaryFireworks.launch(entity,fireworkTarget,level)){
+                entity.getNavigation().stop();attack=40;
+            }else if(ranged&&ammunition(entity,target)>=0){
                 entity.getNavigation().stop();
                 if(attack==0&&shoot(entity,target,level))attack=40;
             }else{

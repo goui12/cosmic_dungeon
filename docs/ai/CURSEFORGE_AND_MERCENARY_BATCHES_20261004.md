@@ -1,6 +1,9 @@
 # Release and mercenary rollout, 2026-10-04
 
-Stage 1 and Batches 1-6 are authorized. Batches 1-5 are validated, published and installed; manual gameplay QA remains. Batch 6 implements Bogatyr scaling and the publication approval gate; validation and delivery follow. Batches 7-9 are planned, not authorized. Earlier D1 sets retain their cumulative licensed multiplayer QA.
+Stage 1 and Batches 1-7 are authorized. Batches 1-6 are validated, published and installed;
+manual gameplay QA remains. Batch 7 implements Pyroclast fireworks; validation and delivery
+follow. Batches 8-9 remain planned, not authorized. Earlier D1 sets retain their cumulative
+licensed multiplayer QA.
 
 ## Stage 1: public 1.5.2 Beta and publishing
 
@@ -82,13 +85,23 @@ Stage 1 and Batches 1-6 are authorized. Batches 1-5 are validated, published and
 - Preserve protection from allied aggression, damage and harmful potion effects.
 - Player Bogatyr remains uncapped regardless of mercenary level/count.
 
-## 7. Pyroclast fireworks
+## 7. Pyroclast fireworks (implemented, 1.5.9-alpha.1)
 
-- Player and mercenary fireworks deal very high damage exclusively to enemies: never
-  players/allies, allied wolves, mercenaries or other friendly entities.
-- Mercenaries prioritize fireworks for groups of enemies. Replenish one every 30 seconds,
-  initially cap at five. Fireworks levels shorten restock time and every other level adds
-  one capacity. Define bounded cadences/damage based on existing combat before implementation.
+- Active player and mercenary Pyroclast rockets damage enemies exclusively, including native
+  unnamed rockets. New damage multiplier defaults to 10: Cinderbite/native 120 HP and
+  Cindermaul 150 HP at the center before falloff, defense and existing player skill bonuses.
+- Preserve existing radius, obstruction checks and candidate budget; no terrain damage.
+  Protect every player, mercenary, owned companion, friendly NPC and neutral animal.
+- Mercenaries start with five virtual rockets, use no materials, and prefer nearby clusters.
+  Maximum firing rate is one per two seconds, sharing the existing attack clock.
+- Restock one per 600 active ticks at level 1. Interval ceil(600/(1+.06*(level-1))),
+  floor 100 ticks. Capacity 5+floor((level-1)/2): six at 3, seven at 5.
+- A burst damaging at least one enemy earns one Fireworks success, independent of target count.
+  Existing group announcements, HUD skill tooltips and triangular thresholds apply.
+- Optional entity stock/timer data preserves death/revival/reload; legacy saves start with
+  five, a new dungeon resets levels/stock. No offline backlog or item/chest rewriting.
+- Launch/run and one-detonation stamps prevent stale or repeated rockets from earning or
+  regaining vanilla damage. Reuse server authority; no new packet or registry IDs.
 
 ## 8. Dragoon chain lightning
 
@@ -112,4 +125,4 @@ Stage 1 and Batches 1-6 are authorized. Batches 1-5 are validated, published and
 After these nine batches: verify multiplayer payments/donations, friendly fire and potion
 targeting, growth/reset/reload, wolf ownership, death-menu races, performance and both
 CurseForge client updates. Merge the completed source set into main and publish beta.
-Stable follows full beta acceptance. Three later gameplay batches remain (7-9); Batch 6 delivery and cumulative manual QA are pending.
+Stable follows full beta acceptance. Two later gameplay batches remain (8-9); Batch 7 delivery and cumulative manual QA are pending.
