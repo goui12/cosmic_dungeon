@@ -1,6 +1,6 @@
 # Release and mercenary rollout, 2026-10-04
 
-Stage 1 and Batches 1-4 are authorized. Batches 1-3 are validated, published and installed; manual gameplay QA remains. Batch 4 implements the shared skill foundation; validation and release delivery follow. Batches 5-9 are planned, not authorized. Earlier D1 batch sets retain their pending cumulative licensed multiplayer QA.
+Stage 1 and Batches 1-5 are authorized. Batches 1-4 are validated, published and installed; manual gameplay QA remains. Batch 5 implements Theurgist splash potions; validation and release delivery follow. Batches 6-9 are planned, not authorized. Earlier D1 sets retain their pending cumulative licensed multiplayer QA.
 
 ## Stage 1: public 1.5.2 Beta and publishing
 
@@ -55,7 +55,7 @@ Stage 1 and Batches 1-4 are authorized. Batches 1-3 are validated, published and
   Fireworks/Chain Lightning display level 1 until their later mechanics exist.
 - No player skill balance change or automatic skill-based combat scaling in this foundation.
 
-## 5. Theurgist potions
+## 5. Theurgist potions (implemented, 1.5.7-alpha.1)
 
 - Positive Potions gains success for buffing/healing an ally; Negative Potions for potion
   damage to an enemy. One success reaches level 2; two more reach 3; three more reach 4.
@@ -68,8 +68,9 @@ Stage 1 and Batches 1-4 are authorized. Batches 1-3 are validated, published and
   quality probability grows with Positive Potions, appreciably around 10 and almost
   always around 25; frequency also improves. Prefer effective healing/buffs over waste.
 - Goals include positive single-target potions placed/thrown on the ground for players,
-  negative splash potions at enemies and positive splash potions at allies. Resolve the
-  exact pickup-versus-impact behavior before implementing this otherwise ambiguous phrase.
+  negative splash potions at enemies and positive splash potions at allies. This implementation follows the explicit splash-only
+  requirement and aims at the player's feet. Optional clarification received no answer;
+  this is a documented interpretation, not a separately approved drinkable feature.
 
 ## 6. Bogatyr mercenary skill
 
@@ -108,4 +109,4 @@ Stage 1 and Batches 1-4 are authorized. Batches 1-3 are validated, published and
 After these nine batches: verify multiplayer payments/donations, friendly fire and potion
 targeting, growth/reset/reload, wolf ownership, death-menu races, performance and both
 CurseForge client updates. Merge the completed source set into main and publish beta.
-Stable follows full beta acceptance. Five later gameplay batches remain (5-9); Batch 4 validation and cumulative manual QA are pending.
+Stable follows full beta acceptance. Four later gameplay batches remain (6-9); Batch 5 delivery and cumulative manual QA are pending.

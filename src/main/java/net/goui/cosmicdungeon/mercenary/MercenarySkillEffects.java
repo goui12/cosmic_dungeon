@@ -44,9 +44,13 @@ public final class MercenarySkillEffects {
     }
     public static boolean timed(Entity source, LivingEntity target, MobEffectInstance incoming, BooleanSupplier apply) {
         var owner=caster(source);
-        if(owner==null || !MercenaryPotions.allows(source,target,incoming.getEffect().value())
-                || !MercenaryPotions.helpful(incoming.getEffect().value(),target.isInvertedHealAndHarm()))
+        if(owner==null || !MercenaryPotions.allows(source,target,incoming.getEffect().value()))
             return apply.getAsBoolean();
+        if(!MercenaryPotions.helpful(incoming.getEffect().value(),target.isInvertedHealAndHarm())){
+            ((MercenaryPotionCredit)(Object)incoming).cosmicdungeon$dose(
+                    new MercenaryPotionCredit.Dose(owner.getUUID(),owner.runId(),source.getPersistentData()));
+            return apply.getAsBoolean(); // Credit only when its native effect tick causes damage.
+        }
         var current=target.getEffect(incoming.getEffect());
         var before=current==null ? null : new MobEffectInstance(current);
         boolean changed=apply.getAsBoolean();

@@ -24,7 +24,7 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
             |(isCustomNameVisible()?16:0)|(isSilent()?32:0);
     }
     private void sleep(){
-        entityData.set(DORMANT,true);setHealth(1);deathTime=0;setNoAi(true);setNoGravity(true);
+        potionCasting.cancel();entityData.set(DORMANT,true);setHealth(1);deathTime=0;setNoAi(true);setNoGravity(true);
         setInvisible(true);setInvulnerable(true);setSilent(true);setCustomNameVisible(false);noPhysics=true;
         getNavigation().stop();setTarget(null);stopRiding();ejectPassengers();
         setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);clearFire();fallDistance=0;
@@ -66,6 +66,8 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
     private MercenaryContract contract;
     private long run;
     private final MercenaryBrain brain=new MercenaryBrain();
+    private final MercenaryPotionCasting potionCasting=new MercenaryPotionCasting();
+    MercenaryPotionCasting potionCasting(){return potionCasting;}
     private MercenaryTimers timers;
     private int wolfTicks=MercenaryWolves.INTERVAL;
     int wolfTicks(){return wolfTicks;}
@@ -114,7 +116,7 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
         out.putInt("mercenary_wolf_ticks",wolfTicks);
     }
     @Override public void readAdditionalSaveData(ValueInput in){
-        super.readAdditionalSaveData(in);regeneration.combat();
+        super.readAdditionalSaveData(in);regeneration.combat();potionCasting.cancel();
         contract=in.read("mercenary_contract",MercenaryContract.CODEC).orElse(null);
         // Existing contracts already contain the stable identity needed by older saves.
         if(contract!=null)setCustomName(net.minecraft.network.chat.Component.literal(contract.name()));

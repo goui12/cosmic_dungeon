@@ -132,11 +132,12 @@ final class MercenaryEntryTest {
         var armor=new ItemStack(Items.DIAMOND_CHESTPLATE);armor.set(DataComponents.CUSTOM_NAME,Component.literal("Authored mail"));
         armor.setDamageValue(17);var bow=new ItemStack(Items.BOW);var spare=new ItemStack(Items.BOW);
         var rockets=new ItemStack(Items.FIREWORK_ROCKET,32);rockets.set(DataComponents.CUSTOM_NAME,Component.literal("Emergency rockets"));
-        var original=List.of(armor,bow,spare,rockets,new ItemStack(Items.ARROW,32),new ItemStack(Items.NETHER_WART,4));var before=original.stream().map(ItemStack::copy).toList();
+        var original=List.of(armor,bow,spare,rockets,new ItemStack(Items.ARROW,32),new ItemStack(Items.NETHER_WART,4),
+                net.minecraft.world.item.alchemy.PotionContents.createItemStack(Items.SPLASH_POTION,net.minecraft.world.item.alchemy.Potions.HEALING));var before=original.stream().map(ItemStack::copy).toList();
         var plan=MercenaryEquipment.plan(original,starter(),54,recipes());assertNotNull(plan);
         assertTrue(ItemStack.matches(armor,plan.equipment().get(EquipmentSlot.CHEST)));
         assertTrue(ItemStack.matches(bow,plan.equipment().get(EquipmentSlot.MAINHAND)));
-        assertEquals(2,plan.supplies().size());assertTrue(plan.supplies().get(0).is(Items.ARROW));assertTrue(plan.supplies().get(1).is(Items.NETHER_WART));
+        assertEquals(2,plan.supplies().size());assertTrue(plan.supplies().get(0).is(Items.ARROW));assertTrue(plan.supplies().get(1).is(Items.SPLASH_POTION));
         for(int i=0;i<original.size();i++)assertTrue(ItemStack.matches(before.get(i),original.get(i)));
         assertNotSame(armor,plan.equipment().get(EquipmentSlot.CHEST));
         assertNull(MercenaryEquipment.plan(original,starter(),1,recipes()));

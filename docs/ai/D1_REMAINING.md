@@ -2,18 +2,17 @@
 
 [CurseForge and mercenary batch plan](CURSEFORGE_AND_MERCENARY_BATCHES_20261004.md).
 Stage 1 publishing is established; companion moderation and licensed two-component
-app delivery remain pending. Batches 1-3 are validated, published and installed.
-Batch 4 shared mercenary progression is implemented; validation/release delivery
-and cumulative manual QA remain. Five later gameplay batches remain:
-5 Theurgist potions; 6 Bogatyr progression; 7 Pyroclast fireworks;
-8 Dragoon lightning; 9 Theurgist resurrection.
+app delivery remain pending. Batches 1-4 are validated, published and installed.
+Batch 5 Theurgist potions is implemented; validation/release delivery and cumulative
+manual QA remain. Four later gameplay batches remain:
+6 Bogatyr progression; 7 Pyroclast fireworks; 8 Dragoon lightning; 9 Theurgist resurrection.
 The earlier zero-batch statements below refer to the previous completed request.
 
 ---
 
 # Testing rollout, 2026-10-03
 
-[Current approved queue](TESTING_ROLLOUT_20261003.md). Batches 1–11 are implemented and validated.
+[Current approved queue](TESTING_ROLLOUT_20261003.md). Batches 1â€“11 are implemented and validated.
 Zero implementation batches remain; cumulative licensed TEST acceptance is pending.
 [Batch 1 report](TESTING_BATCH_1_20261003.md) | [Batch 2 report](TESTING_BATCH_2_20261003.md) | [Batch 3 report](TESTING_BATCH_3_20261003.md) | [Batch 4 report](TESTING_BATCH_4_20261003.md) | [Batch 5 report](TESTING_BATCH_5_20261003.md) | [Batch 6 report](TESTING_BATCH_6_20261003.md) | [Batch 7 report](TESTING_BATCH_7_20261004.md) | [Batch 8 report](TESTING_BATCH_8_20261004.md) | [Batch 9 report](TESTING_BATCH_9_20261004.md) | [Batch 10 report](TESTING_BATCH_10_20261004.md) | [Batch 11 report](TESTING_BATCH_11_20261004.md).
 Batch 11 completes lifetime statistics, the teal pause-menu entry and eight curated leaderboards;
@@ -476,7 +475,7 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M23: Require marked repair components and update Elias's catalogue
 - M26: Implement direct shop repair and revised price formulas
 - M30: Remove the global instant-brewing override and implement approved class behavior
-- M36: Implement Tamsin’s persistent map and first-entry conversation
+- M36: Implement Tamsinâ€™s persistent map and first-entry conversation
 - M37: Replace incidental ready-order grouping with the specified party/invitation flow
 - M42: Add the campfire placement, ownership, lifetime and interaction rules
 - M61: Add Dragoon passive health-for-durability repair under the revised exclusions
@@ -512,7 +511,7 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M45: Implement the three scapula recruitment relics and assigned boss drops
 - M46: Implement all three pack totem auras without same-class stacking
 - M47: Implement four wolf armor tiers, recipes, repairs and totem synergies
-- M48: Unify Metalmancer’s four-tier staff and golem statistics
+- M48: Unify Metalmancerâ€™s four-tier staff and golem statistics
 - M49: Implement the complete ore/rest/heal exchange, not only doubled idle income
 - M50: Implement the individual Metalmancer equipment modifiers and stacking policy
 - M51: Validate held equipment and action context on every Metalmancer packet
@@ -523,12 +522,12 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M57: Deliver the Theurgist story arc without leaking internal epilogue knowledge
 - M59: Add Deadeye zoom, draw and range-based damage progression
 - M73: Populate all player-facing Codex and item descriptions with reveal controls
-- M74: Correct Vital Exchange I–IV to real transfer events and the right tier identities
+- M74: Correct Vital Exchange Iâ€“IV to real transfer events and the right tier identities
 - M75: Wire Binding Idol provider/return milestones into actual gameplay
 - M89: Build the remaining D2 rooms, encounters and progression hand-off
-- M90: Implement D3’s water/pressure puzzles and Dagon–Hydra state sequence
-- M91: Implement D4’s portal maze, reflection encounters and Web completion
-- M92: Implement D5’s trap construction, boss endings and persistent outcomes
+- M90: Implement D3â€™s water/pressure puzzles and Dagonâ€“Hydra state sequence
+- M91: Implement D4â€™s portal maze, reflection encounters and Web completion
+- M92: Implement D5â€™s trap construction, boss endings and persistent outcomes
 - M96: Create a checked-in approved language/codex corpus and lint inconsistent examples
 - M97: Implement Webbound Priest journal drops and staged reading
 - M108: Keep explicit future proposals and incompatible candidates outside automatic implementation

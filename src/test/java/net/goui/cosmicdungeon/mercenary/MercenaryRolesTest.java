@@ -39,8 +39,10 @@ final class MercenaryRolesTest {
         var before=new ArrayList<ItemStack>();for(int i=0;i<5;i++)before.add(stand.getItem(i).copy());
         var timers=entity.timers();
         assertTrue(MercenaryBrewing.brew(entity,stand,recipes()));
-        assertTrue(entity.supplies().get(0).get(DataComponents.POTION_CONTENTS).is(Potions.AWKWARD));
-        assertEquals(1,entity.supplies().get(1).getCount());assertEquals(timers,entity.timers());
+        assertTrue(entity.supplies().get(0).get(DataComponents.POTION_CONTENTS).is(Potions.WATER));
+        assertEquals(2,entity.supplies().get(1).getCount());
+        assertEquals(1,MercenaryBrewing.stock(entity.supplies(),true));assertEquals(1,MercenaryBrewing.stock(entity.supplies(),false));
+        assertEquals(timers.potions().get("minecraft:healing"),entity.timers().potions().get("minecraft:healing"));
         for(int i=0;i<5;i++)assertTrue(ItemStack.matches(before.get(i),stand.getItem(i)));
     }
     @Test void allOtherClassesRejectBrewingAndPotionSupportEvenWithLegacySupplies(){
@@ -66,22 +68,24 @@ final class MercenaryRolesTest {
         assertTrue(entity.supplies().get(0).get(DataComponents.POTION_CONTENTS).is(Potions.WATER));
         assertEquals(2,entity.supplies().get(1).getCount());
     }
-    @Test void portableProductionNoLongerBrewsAndExistingPotionCooldownsRemain(){
+    @Test void portableFreeStockPreservesLegacyMaterialsAndPotionCooldowns(){
         var entity=merc("theurgist");ingredients(entity);
         entity.timers(new MercenaryTimers(0,3600,Map.of("minecraft:healing",123)));
         MercenaryPotions.produce(entity,null);
         assertTrue(entity.supplies().get(0).get(DataComponents.POTION_CONTENTS).is(Potions.WATER));
         assertEquals(2,entity.supplies().get(1).getCount());assertFalse(entity.timers().ready("minecraft:healing"));
     }
-    @Test void onlyTheurgistRetainsTimedFallbackHealing(){
+    @Test void onlyTheurgistProducesFreeSplashStock(){
         var entity=merc("theurgist");entity.timers(new MercenaryTimers(0,0,Map.of()));
         MercenaryPotions.produce(entity,null);
         assertTrue(entity.supplies().getFirst().is(Items.SPLASH_POTION));
-        assertTrue(entity.supplies().getFirst().get(DataComponents.POTION_CONTENTS).is(Potions.HEALING));
-        assertEquals(MercenaryConfig.FALLBACK_TICKS.get(),entity.timers().fallback());
+        assertEquals(0,MercenaryBrewing.kind(entity.supplies().getFirst(),true));
+        assertFalse(entity.timers().ready(MercenaryPotionBalance.stockKey(true,false)));
+        assertEquals(1,MercenaryBrewing.stock(entity.supplies(),false));
     }
-    @Test void failedRecipeLeavesSuppliesAndStandIntact(){
-        var entity=merc("theurgist");entity.supplies().set(0,new ItemStack(Items.DIRT,64));
+    @Test void fullBagLeavesSuppliesAndStandIntact(){
+        var entity=merc("theurgist");
+        for(int i=0;i<entity.supplies().size();i++)entity.supplies().set(i,new ItemStack(Items.DIRT,64));
         var before=MercenaryInventory.copy(entity.supplies());var stand=stand();
         assertFalse(MercenaryBrewing.brew(entity,stand,recipes()));
         for(int i=0;i<before.size();i++)assertTrue(ItemStack.matches(before.get(i),entity.supplies().get(i)));
