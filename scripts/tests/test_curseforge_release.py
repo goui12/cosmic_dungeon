@@ -142,6 +142,53 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(multipart.call_args_list[1].args[0]['parentFileID'], 100)
         self.assertNotIn('main_loading_project', result)
 
+
+    @patch.dict(os.environ, {'CURSEFORGE_API_TOKEN': 'test-only'})
+    @patch.object(p, 'git', return_value='commit')
+    def test_unapproved_companion_keeps_both_files_without_relation_or_parent_archive(self, _git):
+        plan = p.validate('v1.5.2-beta.1', self.root)
+        receipt = self.root / 'receipt.json'
+        with patch.object(p, 'multipart', return_value=(b'jar', 'multipart/test')) as multipart:
+            with patch.object(p, 'request', side_effect=[self.entries, {'id': 90}, {'id': 100}]) as call:
+                result = p.publish(plan, receipt, 999, loading_slug='cosmic-loading-screen', link_loading=False)
+                self.assertEqual(call.call_count, 3)
+        self.assertNotIn('relations', multipart.call_args_list[1].args[0])
+        self.assertEqual(set(result['files']), {'main', 'loading_companion'})
+        self.assertIsNone(result['main_loading_project'])
+        self.assertFalse(result['loading_app_managed'])
+        self.assertEqual(result['pending_relation']['project_id'], 999)
+        with patch.object(p, 'request', return_value=self.entries) as call:
+            again = p.publish(plan, receipt, 999, loading_slug='cosmic-loading-screen', link_loading=False)
+            self.assertEqual(again['files'], result['files'])
+            self.assertEqual(call.call_count, 1)
+
+    @patch.dict(os.environ, {'CURSEFORGE_API_TOKEN': 'test-only'})
+    @patch.object(p, 'git', return_value='commit')
+    def test_later_approval_never_claims_to_relink_an_accepted_main(self, _git):
+        plan = p.validate('v1.5.2-beta.1', self.root)
+        receipt = self.root / 'receipt.json'
+        with patch.object(p, 'request', side_effect=[self.entries, {'id': 90}, {'id': 100}]):
+            p.publish(plan, receipt, 999, loading_slug='cosmic-loading-screen', link_loading=False)
+        with patch.object(p, 'request', return_value=self.entries) as call:
+            result = p.publish(plan, receipt, 999, loading_slug='cosmic-loading-screen', link_loading=True)
+            self.assertFalse(result['loading_app_managed'])
+            self.assertIsNone(result['main_loading_project'])
+            self.assertEqual(call.call_count, 1)
+
+    @patch.dict(os.environ, {'CURSEFORGE_API_TOKEN': 'test-only'})
+    @patch.object(p, 'git', return_value='commit')
+    def test_deferred_relation_does_not_weaken_unknown_upload_guard(self, _git):
+        plan = p.validate('v1.5.2-beta.1', self.root)
+        receipt = self.root / 'receipt.json'
+        with patch.object(p, 'request', side_effect=[self.entries, {'id': 90}, RuntimeError('timeout')]):
+            with self.assertRaises(RuntimeError):
+                p.publish(plan, receipt, 999, loading_slug='cosmic-loading-screen', link_loading=False)
+        self.assertEqual(json.loads(receipt.read_text())['pending']['role'], 'main')
+        with patch.object(p, 'request') as call:
+            with self.assertRaises(ValueError):
+                p.publish(plan, receipt, 999, loading_slug='cosmic-loading-screen', link_loading=False)
+            call.assert_not_called()
+
     def test_api_rejection_reports_reason_without_token(self):
         token = 'secret-do-not-log'
         body = json.dumps({'errorCode': 1009,

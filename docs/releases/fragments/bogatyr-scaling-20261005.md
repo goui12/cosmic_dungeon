@@ -1,0 +1,9 @@
+# Batch 6 - Bogatyr scaling and release follow-up
+
+- Bogatyr mercenary Wolves levels shorten summoning from the level-1 two-minute baseline, down to a 20-second minimum.
+- Pack capacity starts at five and gains one slot every two level-ups: six at level 3, seven at level 5.
+- Unloaded wolves still count; death frees a slot. Earned levels and capacity survive mercenary revival and reset in a new dungeon.
+- Growing packs receive commands in rotation; ally protection, wolf armor and uncapped dungeoneer Bogatyr packs are preserved.
+- Release uploads now defer the optional loading-screen dependency until its project approval is confirmed. Both matching JARs are retained without retrying uncertain uploads.
+
+Alpha for testing. Pyroclast fireworks, Dragoon lightning and Theurgist resurrection remain in later batches.

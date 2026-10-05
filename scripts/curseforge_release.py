@@ -147,7 +147,7 @@ def save_receipt(path, receipt, github_tag=None):
                        cwd=ROOT, check=True, stdout=subprocess.DEVNULL)
 
 
-def publish(plan, receipt_path, loading_project, github_tag=None, loading_slug=None):
+def publish(plan, receipt_path, loading_project, github_tag=None, loading_slug=None, link_loading=True):
     token = os.environ.get("CURSEFORGE_API_TOKEN", "").strip()
     if not token:
         raise ValueError("CURSEFORGE_API_TOKEN is missing. Use the local credential wrapper or Actions secret.")
@@ -187,8 +187,12 @@ def publish(plan, receipt_path, loading_project, github_tag=None, loading_slug=N
         receipt["files"][role] = {"project_id": project_id, "file_id": file_id}
         if role == "main":
             # Record which relation was actually sent with this accepted main file.
-            receipt["main_loading_project"] = loading_project
-            receipt["main_loading_slug"] = loading_slug if loading_project else None
+            receipt["main_loading_project"] = loading_project if link_loading else None
+            receipt["main_loading_slug"] = loading_slug if loading_project and link_loading else None
+            if loading_project and not link_loading:
+                receipt["loading_relation_deferred"] = loading_project
+                receipt["pending_relation"] = {"project_id": loading_project, "slug": loading_slug,
+                                               "reason": "companion relation approval not confirmed"}
         receipt.pop("pending")
         save_receipt(receipt_path, receipt, github_tag)
         print(f"CurseForge accepted {role}: project {project_id}, file {file_id} (moderation may still be pending).")
@@ -200,7 +204,7 @@ def publish(plan, receipt_path, loading_project, github_tag=None, loading_slug=N
                     gameVersionNames=game_version_names(entries, plan["minecraft"], True)))
     metadata = dict(common, displayName=f'Cosmic Dungeon {plan["version"]} - NeoForge {plan["minecraft"]}',
                     gameVersionNames=game_version_names(entries, plan["minecraft"]))
-    if loading_project:
+    if loading_project and link_loading:
         # Optional visual component: dedicated servers do not need the early-display library.
         metadata["relations"] = {"projects": [{"slug": loading_slug, "projectID": loading_project, "type": "optionalDependency"}]}
     main_id = upload("main", "main", plan["project_id"], metadata)
@@ -208,13 +212,17 @@ def publish(plan, receipt_path, loading_project, github_tag=None, loading_slug=N
     # needed without it; attaching to a still-processing parent can fail with HTTP500.
     main_linked = (loading_project and receipt.get("main_loading_project") == loading_project
                    and receipt.get("main_loading_slug") == loading_slug)
-    if not main_linked:
+    deferred_pair = (receipt.get("loading_relation_deferred") == loading_project
+                     and receipt["files"].get("loading_companion", {}).get("project_id") == loading_project
+                     and bool(loading_project))
+    if not main_linked and not deferred_pair:
         # Legacy/reconciled mains may predate companion configuration. Keep the
         # discoverable archive unless the accepted main is known to include its link.
         upload("loading_archive", "loading", plan["project_id"],
                dict(common, parentFileID=main_id, displayName=f'Loading screen archive {plan["version"]} (manual install)'))
     receipt["status"] = "submitted"
-    receipt["loading_app_managed"] = bool(loading_project)
+    # Presence of a companion project alone does not mean the accepted main links it.
+    receipt["loading_app_managed"] = bool(main_linked)
     save_receipt(receipt_path, receipt, github_tag)
     return receipt
 
@@ -244,6 +252,9 @@ def main():
     parser.add_argument("--receipt", type=Path, default=ROOT / "build/release/curseforge-receipt.json")
     parser.add_argument("--loading-project", type=int, default=int(os.environ.get("CURSEFORGE_LOADING_PROJECT_ID") or "0"))
     parser.add_argument("--loading-slug", default=os.environ.get("CURSEFORGE_LOADING_PROJECT_SLUG"))
+    parser.add_argument("--link-loading", action="store_true",
+                        default=os.environ.get("CURSEFORGE_LOADING_RELATION_APPROVED", "").lower() == "true",
+                        help="Declare the optional relation only after the companion project is approved.")
     parser.add_argument("--github-release", action="store_true")
     args = parser.parse_args()
     if args.command == "bump":
@@ -259,7 +270,7 @@ def main():
     else:
         if git("rev-parse", args.tag + "^{commit}") != git("rev-parse", "HEAD"):
             raise ValueError("Release tag does not identify the checked-out commit.")
-        publish(plan, args.receipt, args.loading_project, args.tag if args.github_release else None, args.loading_slug)
+        publish(plan, args.receipt, args.loading_project, args.tag if args.github_release else None, args.loading_slug, args.link_loading)
 
 
 if __name__ == "__main__":

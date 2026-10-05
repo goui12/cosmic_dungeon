@@ -70,6 +70,12 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
     MercenaryPotionCasting potionCasting(){return potionCasting;}
     private MercenaryTimers timers;
     private int wolfTicks=MercenaryWolves.INTERVAL;
+    private int wolfCommandCursor;
+    int nextWolfCommand(int size){
+        int index=Math.floorMod(wolfCommandCursor,size);
+        wolfCommandCursor=(index+1)%size;
+        return index;
+    }
     int wolfTicks(){return wolfTicks;}
     void wolfTicks(int ticks){wolfTicks=Math.clamp(ticks,0,MercenaryWolves.INTERVAL);}
     private MercenaryLootMemory lootMemory=new MercenaryLootMemory();
