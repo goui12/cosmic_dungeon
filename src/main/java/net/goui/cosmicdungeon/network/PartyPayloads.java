@@ -64,7 +64,35 @@ public final class PartyPayloads {
         public static final StreamCodec<ByteBuf,Skill> CODEC=StreamCodec.composite(
                 ByteBufCodecs.stringUtf8(24),Skill::id,ByteBufCodecs.VAR_INT,Skill::successes,Skill::new);
     }
-    public record Mercenary(String name,String owner,float health,float maxHealth,int respawnSeconds,String status,Recovery recovery,List<Skill> skills){
+    /** Empty death means hover-only cooldown state; a populated death is an offer for this viewer. */
+    public record Resurrection(long run,String mercenary,String death,int seconds){
+        public static final Resurrection LOCKED=new Resurrection(0,"","",-1);
+        public Resurrection{
+            if(run<0||seconds < -1||seconds>180||mercenary==null||death==null
+                    ||mercenary.length()>36||death.length()>36
+                    ||seconds==-1&&(run!=0||!mercenary.isEmpty()||!death.isEmpty())
+                    ||seconds>=0&&(run<=0||mercenary.isEmpty())
+                    ||!death.isEmpty()&&seconds!=0)throw new IllegalArgumentException("Invalid resurrection state");
+            if(!mercenary.isEmpty())java.util.UUID.fromString(mercenary);
+            if(!death.isEmpty())java.util.UUID.fromString(death);
+        }
+        public boolean offered(){return !death.isEmpty();}
+        public static final StreamCodec<ByteBuf,Resurrection> CODEC=StreamCodec.composite(
+                ByteBufCodecs.VAR_LONG,Resurrection::run,ByteBufCodecs.stringUtf8(36),Resurrection::mercenary,
+                ByteBufCodecs.stringUtf8(36),Resurrection::death,ByteBufCodecs.VAR_INT,Resurrection::seconds,Resurrection::new);
+    }
+    public record Resurrect(long run,java.util.UUID mercenary,java.util.UUID death) implements CustomPacketPayload{
+        public Resurrect{if(run<=0||mercenary==null||death==null)throw new IllegalArgumentException("Invalid resurrection request");}
+        public static final Type<Resurrect> TYPE=new Type<>(id("mercenary_resurrect"));
+        public static final StreamCodec<ByteBuf,Resurrect> STREAM_CODEC=StreamCodec.composite(
+                ByteBufCodecs.VAR_LONG,Resurrect::run,net.minecraft.core.UUIDUtil.STREAM_CODEC,Resurrect::mercenary,
+                net.minecraft.core.UUIDUtil.STREAM_CODEC,Resurrect::death,Resurrect::new);
+        @Override public Type<? extends CustomPacketPayload> type(){return TYPE;}
+    }
+    public record Mercenary(String name,String owner,float health,float maxHealth,int respawnSeconds,String status,Recovery recovery,List<Skill> skills,Resurrection resurrection){
+        public Mercenary(String name,String owner,float health,float maxHealth,int respawnSeconds,String status,Recovery recovery,List<Skill> skills){
+            this(name,owner,health,maxHealth,respawnSeconds,status,recovery,skills,Resurrection.LOCKED);
+        }
         public Mercenary(String name,String owner,float health,float maxHealth,int respawnSeconds,String status,Recovery recovery){
             this(name,owner,health,maxHealth,respawnSeconds,status,recovery,List.of());
         }
@@ -75,7 +103,7 @@ public final class PartyPayloads {
             skills=List.copyOf(skills);
             if(skills.size()>2||skills.stream().map(Skill::id).distinct().count()!=skills.size())
                 throw new IllegalArgumentException("Invalid mercenary skills");
-            if(recovery==null||name==null||owner==null||name.length()>64||owner.length()>16||!Float.isFinite(health)
+            if(resurrection==null||recovery==null||name==null||owner==null||name.length()>64||owner.length()>16||!Float.isFinite(health)
                     ||!Float.isFinite(maxHealth)||health<0||maxHealth<0||health>maxHealth
                     ||respawnSeconds < -1||respawnSeconds>600
                     ||!List.of("ACTIVE","RESPAWNING","UNLOADED").contains(status))
@@ -84,9 +112,9 @@ public final class PartyPayloads {
         public static final StreamCodec<ByteBuf,Mercenary> CODEC=StreamCodec.of((buf,row)->{
             ByteBufCodecs.stringUtf8(64).encode(buf,row.name());ByteBufCodecs.stringUtf8(16).encode(buf,row.owner());
             buf.writeFloat(row.health());buf.writeFloat(row.maxHealth());ByteBufCodecs.VAR_INT.encode(buf,row.respawnSeconds());
-            ByteBufCodecs.stringUtf8(16).encode(buf,row.status());Recovery.CODEC.encode(buf,row.recovery());Skill.CODEC.apply(ByteBufCodecs.list(2)).encode(buf,row.skills());
+            ByteBufCodecs.stringUtf8(16).encode(buf,row.status());Recovery.CODEC.encode(buf,row.recovery());Skill.CODEC.apply(ByteBufCodecs.list(2)).encode(buf,row.skills());Resurrection.CODEC.encode(buf,row.resurrection());
         },buf->new Mercenary(ByteBufCodecs.stringUtf8(64).decode(buf),ByteBufCodecs.stringUtf8(16).decode(buf),
-            buf.readFloat(),buf.readFloat(),ByteBufCodecs.VAR_INT.decode(buf),ByteBufCodecs.stringUtf8(16).decode(buf),Recovery.CODEC.decode(buf),Skill.CODEC.apply(ByteBufCodecs.list(2)).decode(buf)));
+            buf.readFloat(),buf.readFloat(),ByteBufCodecs.VAR_INT.decode(buf),ByteBufCodecs.stringUtf8(16).decode(buf),Recovery.CODEC.decode(buf),Skill.CODEC.apply(ByteBufCodecs.list(2)).decode(buf),Resurrection.CODEC.decode(buf)));
     }
     public record Options(String difficulty,Hire hire,List<Mercenary> mercenaries){
         public static final StreamCodec<ByteBuf,Options> CODEC=StreamCodec.composite(

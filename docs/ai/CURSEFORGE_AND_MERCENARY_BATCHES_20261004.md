@@ -1,9 +1,11 @@
 # Release and mercenary rollout, 2026-10-04
 
-Stage 1 and Batches 1-8 are authorized. Batches 1-7 are validated, published and installed;
-manual gameplay QA remains. Batch 8 implements Dragoon chain lightning; validation and
-delivery follow. Batch 9 remains planned, not authorized. Earlier D1 sets retain their
-cumulative licensed multiplayer QA.
+Stage 1 and Batches 1-9 are validated, published and installed. Batch 9 is
+**1.5.12-alpha.1**, with resurrection unlocked at Positive Potions level 10.
+Licensed gameplay QA and companion app-delivery acceptance remain pending.
+**One planned implementation batch remains: 10**, Tamsin lore/map replay and the completed-set
+**1.6.0-beta** release. Stop before Batch 10 implementation until requested.
+Earlier D1 sets retain their cumulative licensed multiplayer QA.
 
 ## Stage 1: public 1.5.2 Beta and publishing
 
@@ -122,19 +124,43 @@ cumulative licensed multiplayer QA.
 - Player Dragoon chance, damage, repair and authored equipment remain unchanged.
   See [Batch 8 report](tasks/dragoon-lightning-20261005.md) for boundaries and manual QA.
 
-## 9. Theurgist resurrection
+## 9. Theurgist resurrection (implemented and installed, 1.5.12-alpha.1)
 
-- At level 50, a living mercenary can resurrect a dead dungeoneer through the death menu:
-  "Accept Resurrection from <Name>". Determine which of the Theurgist skill levels governs
-  the threshold before this batch; do not silently infer combined/positive/negative level.
+- At **Positive Potions level 10**, a living Theurgist mercenary can resurrect a dead
+  dungeoneer through the death menu: "Accept Resurrection from <Name>". This explicit
+  2026-10-05 decision replaces the earlier level-50 requirement; Negative Potions is irrelevant.
 - Reappear at the exact death location with five seconds of invincibility. Reuse death
   inventory/forfeit state; no duplicate drops, inventory or race with normal respawn.
 - Mercenary resurrection cooldown is three minutes and appears in its group HUD hover
   once unlocked. Validate alive/same group/same instance/cooldown server-side on acceptance.
 
+## 10. Tamsin lore/map replay and 1.6.0-beta (planned)
+
+- Add an "i" button at the top right of the group selector, adjacent to Refresh/Close.
+  Match the existing Refresh dimensions: 20x18. Tooltip: replay Tamsin's introduction.
+- Replay the same first-time agreement/lore and map presentation using the existing
+  TamsinFlow and ClassSelectorScreen. Returning from replay restores the group selector.
+  Do not erase accepted onboarding, selected class, readiness, group membership or progress.
+- Own selector/Tamsin conversation routing and session-state tests in a separate chained
+  task. Expected files: ClassSelectorScreen, ClassSelectorMenu, TamsinFlow, TamsinService,
+  related presentation/flow tests; no new artwork, world content or registry IDs.
+- Verify first-time and returning players, repeated replay, refresh/close, resized GUI,
+  group leader/member sessions, invitations/readiness, and normal Start Adventure.
+- Verify the Positive Potions 9/10 boundary, resurrection eligibility, cooldown and HUD
+  delivered by Batch 9 as part of beta acceptance.
+- Exact release requested: **1.6.0-beta**. Extend the existing version parser, publisher
+  tests, and any workflow/AGENTS constraints to accept this form while preserving
+  numbered alpha/beta compatibility. Do not distribute another version under the same tag.
+- After clean validation and review, merge the completed source set into main through
+  validated PRs, then publish matching runtime/loading-screen artifacts to CurseForge.
+  Install each eligible stopped TEST / closed ADMIN target and verify both feeds.
+  No automatic client launch or server restart.
+
 ## Release acceptance
 
-After these nine batches: verify multiplayer payments/donations, friendly fire and potion
-targeting, growth/reset/reload, wolf ownership, death-menu races, performance and both
-CurseForge client updates. Merge the completed source set into main and publish beta.
-Stable follows full beta acceptance. One later gameplay batch remains (9); Batch 8 delivery and cumulative manual QA are pending.
+After all ten batches: verify multiplayer payments/donations, friendly fire and potion
+targeting, growth/reset/reload, wolf ownership, death-menu races, Tamsin replay, performance
+and both CurseForge client updates. Merge the completed source set into main and publish
+**1.6.0-beta**. Stable follows full licensed beta acceptance, which is a separate gate.
+One planned implementation batch remains: **10**. Batch 9 passed clean CI and all 33 GameTests;
+manual licensed acceptance remains pending.

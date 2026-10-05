@@ -64,6 +64,7 @@ public final class MercenaryRespawns {
                                                 MercenaryContract contract,String owner,java.util.UUID viewer){
         String name=contract.name();
         var skills=MercenarySkills.snapshot(server,run.runId(),contract);
+        var resurrection=MercenaryResurrection.snapshot(server,run,contract,viewer);
         var rest=run.mercenaryRests().get(contract.id());
         for(String dimension:run.dungeonDimensionIds()){
             var level=net.goui.cosmicdungeon.block.custom.ClassSelectorTeleportUtil.resolveLevel(server,dimension);
@@ -71,14 +72,14 @@ public final class MercenaryRespawns {
             if(level.getEntity(contract.id()) instanceof MercenaryEntity entity&&run.runId()==entity.runId()
                     &&contract.equals(entity.contract())){
                 if(entity.rest()!=null)rest=entity.rest();
-                else return new PartyPayloads.Mercenary(name,owner,entity.getHealth(),entity.getMaxHealth(),-1,"ACTIVE",PartyPayloads.Recovery.NONE,skills);
+                else return new PartyPayloads.Mercenary(name,owner,entity.getHealth(),entity.getMaxHealth(),-1,"ACTIVE",PartyPayloads.Recovery.NONE,skills,resurrection);
                 break;
             }
         }
-        if(rest==null)return new PartyPayloads.Mercenary(name,owner,0,0,-1,"UNLOADED",PartyPayloads.Recovery.NONE,skills);
+        if(rest==null)return new PartyPayloads.Mercenary(name,owner,0,0,-1,"UNLOADED",PartyPayloads.Recovery.NONE,skills,resurrection);
         boolean paid=MercenaryRevival.paid(server,run.runId(),contract.id(),rest);
         var controls=new PartyPayloads.Recovery(net.goui.cosmicdungeon.economy.MercenaryRevivePayment.id(run.runId(),contract.id(),rest.death(),rest.until()).toString(),rest.until(),MercenaryRevival.price(contract),
                 viewer.equals(contract.hirer())&&!paid&&!rest.due(server.overworld().getGameTime()));
-        return new PartyPayloads.Mercenary(name,owner,0,0,paid?0:rest.seconds(server.overworld().getGameTime()),"RESPAWNING",controls,skills);
+        return new PartyPayloads.Mercenary(name,owner,0,0,paid?0:rest.seconds(server.overworld().getGameTime()),"RESPAWNING",controls,skills,resurrection);
     }
 }
