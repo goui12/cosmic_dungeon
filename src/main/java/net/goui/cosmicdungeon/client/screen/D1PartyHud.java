@@ -202,8 +202,9 @@ public final class D1PartyHud {
         y=box.y()+box.height()+6;
         for(var hire:view.mercenaries()){
             graphics.fill(box.x(),y,box.x()+box.width(),y+26,0xD0181820);
-            line(graphics,hire.name(),y+2,0xFFE4C98A,mouseX,mouseY);
-            line(graphics,MercenaryHudLayout.status(hire),y+12,hire.status().equals("ACTIVE")?0xFFAAFFAA:0xFFDDDDDD,mouseX,mouseY);
+            // Schedule only the complete row tooltip: GuiGraphics keeps the first tooltip submitted.
+            line(graphics,hire.name(),y+2,0xFFE4C98A,-1,-1);
+            line(graphics,MercenaryHudLayout.status(hire),y+12,hire.status().equals("ACTIVE")?0xFFAAFFAA:0xFFDDDDDD,-1,-1);
             int width=box.width()-8;
             graphics.fill(box.x()+4,y+23,box.x()+4+width,y+25,0xFF553333);
             graphics.fill(box.x()+4,y+23,box.x()+4+MercenaryHudLayout.healthWidth(hire,width),y+25,0xFF66CC88);
