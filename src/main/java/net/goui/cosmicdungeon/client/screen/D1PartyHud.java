@@ -19,14 +19,14 @@ import net.neoforged.neoforge.client.event.*;
 public final class D1PartyHud {
     private static PartyPayloads.View view;
     private static Screen inventory;
-    private static Button ready, leave, join;
+    private static Button ready, leave, join, revive;
     private D1PartyHud() {}
     public static void receive(PartyPayloads.View snapshot) {
         if (snapshot.containerId() != -1) return;
         view = snapshot;
         updateControls();
     }
-    private static void clear() { view = null; inventory = null; ready = leave = join = null; }
+    private static void clear() { view = null; inventory = null; ready = leave = join = revive = null; }
     @SubscribeEvent public static void login(ClientPlayerNetworkEvent.LoggingIn event) { clear(); }
     @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { clear(); }
     private static boolean inventory(Screen screen) {
@@ -69,18 +69,44 @@ public final class D1PartyHud {
         join = Button.builder(Component.literal("Join Group"), button -> send("accept")).bounds(8, 8, 100, 20).build();
         leave.setTooltip(Tooltip.create(Component.literal("Leave Group (leaders disband their group)")));
         join.setTooltip(Tooltip.create(Component.literal("Join the inviting group for Dungeon 1")));
-        event.addListener(ready); event.addListener(leave); event.addListener(join);
+        revive=Button.builder(Component.literal("Revive"),button->{
+            var hire=ownRevival();if(hire==null)return;
+            ModNetwork.sendToServer(new PartyPayloads.Action(-1,hire.recovery().deadline(),"revive",hire.recovery().id()));
+        }).bounds(8,inventory.height-26,160,20).build();
+        event.addListener(ready); event.addListener(leave); event.addListener(join);event.addListener(revive);
         updateControls();
     }
     @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
-        if (inventory != Minecraft.getInstance().screen) { inventory = null; ready = leave = join = null; }
+        if (inventory != Minecraft.getInstance().screen) { inventory = null; ready = leave = join = revive = null; }
         else updateControls();
+    }
+    private static PartyPayloads.Mercenary ownRevival(){
+        return view==null?null:view.mercenaries().stream().filter(h->h.recovery().own()&&h.status().equals("RESPAWNING")).findFirst().orElse(null);
+    }
+    public static void revivePrompt(PartyPayloads.RevivePrompt prompt){
+        var mc=Minecraft.getInstance();var hire=ownRevival();
+        if(hire==null||!inventory(mc.screen)||!hire.recovery().id().equals(prompt.id())
+                ||hire.recovery().deadline()!=prompt.deadline())return;
+        var previous=mc.screen;
+        mc.setScreen(new net.minecraft.client.gui.screens.ConfirmScreen(yes->{
+            mc.setScreen(previous);
+            if(yes)ModNetwork.sendToServer(new PartyPayloads.Action(-1,prompt.deadline(),"revive_help",prompt.id()));
+        },Component.literal("Revive "+prompt.name()),Component.literal(
+                "You do not have the funds to revive the mercenary. Would you like to ask the group for help?")));
     }
     private static void updateControls() {
         var mc = Minecraft.getInstance();
         if (ready == null || inventory != mc.screen) return;
         var box = layout();
         boolean shown = visible();
+        var hire=ownRevival();
+        revive.visible=shown&&hire!=null;revive.active=revive.visible;
+        if(hire!=null){
+            revive.setMessage(Component.literal("Revive ("+hire.recovery().price()+" Trace)"));
+            revive.setTooltip(Tooltip.create(Component.literal("Revive "+hire.name()+" now")));
+        }
+        // Footer remains outside inventory slots at minimum GUI scale and with the recipe book open.
+        revive.setX(8);revive.setY(inventory.height-26);revive.setWidth(Math.min(224,inventory.width-16));
         boolean grouped = shown && !view.members().isEmpty();
         boolean lobby = grouped && !view.state().phase().equals("ACTIVE");
         var control = D1PartyPresentation.readiness(view, mc.player == null ? null : mc.player.getGameProfile().name());
@@ -109,13 +135,13 @@ public final class D1PartyHud {
         draw(event.getGuiGraphics(), event.getMouseX(), event.getMouseY());
         // Vanilla skips container widgets behind its narrow recipe-book overlay.
         if (bookVisible() && event.getScreen().width < 379 && ready != null)
-            for (Button button : List.of(ready, leave, join))
+            for (Button button : List.of(ready, leave, join, revive))
                 button.render(event.getGuiGraphics(), event.getMouseX(), event.getMouseY(), event.getPartialTick());
     }
     @SubscribeEvent public static void click(ScreenEvent.MouseButtonPressed.Pre event) {
         if (!visible() || !bookVisible() || event.getScreen().width >= 379 || ready == null) return;
         updateControls();
-        for (Button button : List.of(ready, leave, join)) {
+        for (Button button : List.of(ready, leave, join, revive)) {
             if (button.visible && button.active && button.mouseClicked(event.getMouseButtonEvent(), false)) {
                 event.getScreen().setFocused(button); event.setCanceled(true); return;
             }

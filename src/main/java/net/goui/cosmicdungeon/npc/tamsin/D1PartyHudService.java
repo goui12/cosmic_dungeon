@@ -54,7 +54,7 @@ final class D1PartyHudService {
                 name = previous == null || previous.recruitment().groupName().isBlank() ? "Dungeon 1" : previous.recruitment().groupName();
                 for(var hire:run.mercenaries())if(run.containsPlayer(hire.hirer())&&!run.isCompletionExited(hire.hirer()))
                     mercenaries.add(net.goui.cosmicdungeon.mercenary.MercenaryRespawns.status(server,run,hire,
-                        member(server,hire.hirer(),true,false).name()));
+                        member(server,hire.hirer(),true,false).name(),id));
                 phase = "ACTIVE"; capacity = rows.size()+mercenaries.size();
             }
             var view = new PartyPayloads.View(-1,

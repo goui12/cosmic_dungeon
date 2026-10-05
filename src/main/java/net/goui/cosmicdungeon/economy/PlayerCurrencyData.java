@@ -543,6 +543,31 @@ public final class PlayerCurrencyData extends SavedData {
     }
     private void operationHolds(AccountOperation op,int sign){if(op.reserved())adjustHold(op.delta()<0?heldDebit:heldCredit,op.owner(),Math.abs(op.delta())*sign);}
     private void putOperation(UUID id,AccountOperation op){var old=operations.get(id);if(old!=null)operationHolds(old,-1);operations.put(id,op);operationHolds(op,1);setDirty();}
+    /** Payment and the recoverable service entitlement share one existing account-save image.
+     * No item custody is involved, so this terminal operation is acknowledged immediately. */
+    public boolean payMercenaryRevive(long run,UUID mercenary,UUID death,long deadline,UUID payer,long amount){
+        if(amount<0||amount>50000000)throw new IllegalArgumentException("Invalid revival price");
+        UUID id=MercenaryRevivePayment.id(run,mercenary,death,deadline);
+        var old=operations.get(id);
+        if(old!=null){
+            if(!MercenaryRevivePayment.paid(this,run,mercenary,death,deadline))throw new IllegalStateException("Conflicting revival receipt");
+            return true; // The first payer already covered this death, including after reload.
+        }
+        requireDeathReady(payer);
+        if(availableTrace(payer)<amount)return false;
+        long before=getBalanceTrace(payer);
+        var op=new AccountOperation(payer,-amount,MercenaryRevivePayment.KIND,
+                MercenaryRevivePayment.related(mercenary,death,deadline),run,AccountTransfer.COMMITTED,
+                System.currentTimeMillis(),before,before-amount,new CompoundTag(),true,true);
+        var previousLedger=ledger.copy();var previousWealth=wealthReviews;
+        try{
+            operationJournal(id,op);
+            operations.put(id,op);balanceByPlayer.put(payer,before-amount);setDirty();return true;
+        }catch(RuntimeException failure){
+            ledger=previousLedger;wealthReviews=previousWealth;operations.remove(id);
+            balanceByPlayer.put(payer,before);setDirty();throw failure;
+        }
+    }
     public Optional<AccountOperation> operation(UUID id){return Optional.ofNullable(operations.get(id));}
     public Optional<UUID> pendingOperation(UUID owner){return Optional.ofNullable(operationByOwner.get(owner));}
     public AccountOperation reserveOperation(UUID id,UUID owner,long delta,String kind,String related,long run,CompoundTag plan,long now){

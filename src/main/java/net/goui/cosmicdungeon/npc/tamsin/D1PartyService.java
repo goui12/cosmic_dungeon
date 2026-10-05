@@ -146,6 +146,13 @@ public final class D1PartyService {
         };
     }
     private static void hudAction(ServerPlayer player, PartyPayloads.Action request) {
+        if(Set.of("revive","revive_help").contains(request.action())){
+            if(player.containerMenu!=player.inventoryMenu)return;
+            long tick=now(player.level().getServer());
+            if(request.action().equals("revive")&&tick-LAST_HUD_ACTION.getOrDefault(player.getUUID(),-1000000L)<Config.PARTY_ACTION_TICKS.get())return;
+            LAST_HUD_ACTION.put(player.getUUID(),tick);
+            net.goui.cosmicdungeon.mercenary.MercenaryRevival.action(player,request);syncViewers(player.level().getServer());return;
+        }
         if (!available(player) || player.containerMenu != player.inventoryMenu
                 || !Set.of("ready", "unready", "leave", "accept", "decline").contains(request.action())) return;
         var server = player.level().getServer();
@@ -368,12 +375,14 @@ public final class D1PartyService {
     @SubscribeEvent public static void dimension(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) withdraw(player);
     }
-    public static void clear() { LOBBY.clear(); VIEWERS.clear(); LAST_INVITE.clear(); LAST_HUD_ACTION.clear(); D1PartyHudService.clear(); }
+    public static void clear() { net.goui.cosmicdungeon.mercenary.MercenaryRevival.clear(); LOBBY.clear(); VIEWERS.clear(); LAST_INVITE.clear(); LAST_HUD_ACTION.clear(); D1PartyHudService.clear(); }
     @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) D1PartyHudService.track(player.getUUID());
     }
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         var root = Commands.literal("party");
+        root.then(Commands.literal("donate").then(Commands.argument("token",StringArgumentType.word()).executes(ctx ->
+                net.goui.cosmicdungeon.mercenary.MercenaryRevival.donate(ctx.getSource().getPlayerOrException(),StringArgumentType.getString(ctx,"token")))));
         for (String action : List.of("accept", "decline")) {
             root.then(Commands.literal(action).then(Commands.argument("token", StringArgumentType.word()).executes(ctx -> {
                 var player = ctx.getSource().getPlayerOrException();

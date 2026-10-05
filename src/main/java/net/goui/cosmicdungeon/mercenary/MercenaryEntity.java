@@ -12,6 +12,8 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
     private static final net.minecraft.network.syncher.EntityDataAccessor<Boolean> DORMANT=
         net.minecraft.network.syncher.SynchedEntityData.defineId(MercenaryEntity.class,net.minecraft.network.syncher.EntityDataSerializers.BOOLEAN);
     private MercenaryRest rest;
+    private final MercenaryRegeneration regeneration=new MercenaryRegeneration();
+    MercenaryRegeneration regeneration(){return regeneration;}
     @Override protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder){
         super.defineSynchedData(builder);builder.define(DORMANT,false);
     }
@@ -30,12 +32,12 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
     @Override public void die(net.minecraft.world.damagesource.DamageSource source){
         if(!(level() instanceof net.minecraft.server.level.ServerLevel level)||rest!=null)return;
         rest=new MercenaryRest(MercenaryRest.deadline(level.getServer().overworld().getGameTime()),
-            level.dimension().location().toString(),blockPosition().asLong(),restFlags());
+            level.dimension().location().toString(),blockPosition().asLong(),restFlags(),UUID.randomUUID());
         sleep();MercenaryRespawns.remember(this);
     }
     void resumeAfterRest(){
         if(rest==null)return;
-        var previous=rest;rest=null;entityData.set(DORMANT,false);noPhysics=false;
+        var previous=rest;rest=null;regeneration.combat();entityData.set(DORMANT,false);noPhysics=false;
         setNoAi(previous.flag(1));setNoGravity(previous.flag(2));setInvisible(previous.flag(4));
         setInvulnerable(previous.flag(8));setCustomNameVisible(previous.flag(16));setSilent(previous.flag(32));
         removeAllEffects();clearFire();setAirSupply(getMaxAirSupply());setTicksFrozen(0);
@@ -43,7 +45,9 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
     }
     @Override public boolean hurtServer(net.minecraft.server.level.ServerLevel level,
             net.minecraft.world.damagesource.DamageSource source,float amount){
-        return !dormant()&&super.hurtServer(level,source,amount);
+        boolean hurt=!dormant()&&super.hurtServer(level,source,amount);
+        if(hurt)regeneration.combat();
+        return hurt;
     }
     @Override public void tick(){
         if(dormant()){
@@ -110,7 +114,7 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
         out.putInt("mercenary_wolf_ticks",wolfTicks);
     }
     @Override public void readAdditionalSaveData(ValueInput in){
-        super.readAdditionalSaveData(in);
+        super.readAdditionalSaveData(in);regeneration.combat();
         contract=in.read("mercenary_contract",MercenaryContract.CODEC).orElse(null);
         // Existing contracts already contain the stable identity needed by older saves.
         if(contract!=null)setCustomName(net.minecraft.network.chat.Component.literal(contract.name()));
