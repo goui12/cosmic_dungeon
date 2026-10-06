@@ -57,6 +57,9 @@ public final class ModNetworkClient {
         ClassSelectorScreen.onTaxView(payload);
     }
 
+    public static void onMercenaryRevivePrompt(net.goui.cosmicdungeon.network.PartyPayloads.RevivePrompt payload){
+        net.goui.cosmicdungeon.client.screen.D1PartyHud.revivePrompt(payload);
+    }
     public static void onD1PartyView(net.goui.cosmicdungeon.network.PartyPayloads.View payload) {
         if (payload.containerId() == -1) net.goui.cosmicdungeon.client.screen.D1PartyHud.receive(payload);
         else ClassSelectorScreen.onPartyView(payload);

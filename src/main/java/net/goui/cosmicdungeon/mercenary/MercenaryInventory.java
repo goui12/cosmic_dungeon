@@ -32,7 +32,7 @@ public final class MercenaryInventory {
     public static boolean permitted(ItemStack stack,MercenaryContract contract){
         return contract!=null&&ClassItemOwnership.mayAcquire(stack,contract.id(),contract.classId());
     }
-    /** Only resources this AI can actually equip, shoot, drink/throw, or brew. Never keys. */
+    /** Only equipment, ammunition and useful splash effects. Never crafting/summoning supplies or keys. */
     public static boolean useful(ItemStack stack,MercenaryContract contract,PotionBrewing recipes){
         if(stack.isEmpty()||!permitted(stack,contract)
                 ||stack.getItem() instanceof net.goui.cosmicdungeon.item.custom.DoorKeyItem
@@ -58,7 +58,7 @@ public final class MercenaryInventory {
             return MercenaryBrain.attackArrow(stack,false)||MercenaryBrain.attackArrow(stack,true);
         }
         return MercenaryBrewing.enabled(contract)
-                &&(stack.getItem() instanceof PotionItem||recipes.isInput(stack)||recipes.isIngredient(stack));
+                &&MercenaryBrewing.effectSplash(stack);
     }
     /** Native recipes, including registered mod recipes; one reagent, one bottle per cycle. */
     public static List<ItemStack> brew(List<ItemStack> inventory,PotionBrewing recipes){

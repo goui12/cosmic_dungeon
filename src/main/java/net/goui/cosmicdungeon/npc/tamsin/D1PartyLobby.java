@@ -19,13 +19,14 @@ public final class D1PartyLobby {
         private final Set<UUID> ready = new HashSet<>();
         private final LinkedHashMap<UUID,String> hires=new LinkedHashMap<>();
         private final Map<UUID,Long> hireFees=new HashMap<>();
+        private final Map<UUID,UUID> hireIds=new HashMap<>();
         public long hireFee(UUID owner){return hireFees.getOrDefault(owner,0L);}
         public Map<UUID,String> hires(){return Collections.unmodifiableMap(hires);}
         public int occupied(){return members.size()+hires.size();}
         public List<net.goui.cosmicdungeon.mercenary.MercenaryContract> contracts(){
             var result=new ArrayList<net.goui.cosmicdungeon.mercenary.MercenaryContract>();
             for(var entry:hires.entrySet())result.add(new net.goui.cosmicdungeon.mercenary.MercenaryContract(
-                UUID.randomUUID(),entry.getKey(),entry.getValue(),members.size()+result.size()+1,hireFees.get(entry.getKey())));
+                hireIds.get(entry.getKey()),entry.getKey(),entry.getValue(),members.size()+result.size()+1,hireFees.get(entry.getKey())));
             return List.copyOf(result);
         }
         private Map<UUID, String> classes = Map.of();
@@ -184,17 +185,17 @@ public final class D1PartyLobby {
         if (p.difficulty != selected.get()) { p.difficulty = selected.get(); cancel(p); }
         return null;
     }
-    public String hire(UUID player,long expected,String classId){return hire(player,expected,classId,500);}
+    public String hire(UUID player,long expected,String classId){return hire(player,expected,classId,50);}
     public String hire(UUID player,long expected,String classId,long fee){
         if(fee<0||fee>100000000)return "Invalid mercenary fee.";
         var p=party(player);
         if(p==null||!current(player,expected)||p.phase==Phase.QUEUED||p.phase==Phase.PREPARING)
             return "Join a group and cancel queueing before changing a hire.";
-        if(classId.isEmpty()){if(p.hires.remove(player)!=null){p.hireFees.remove(player);cancel(p);}return null;}
+        if(classId.isEmpty()){if(p.hires.remove(player)!=null){p.hireFees.remove(player);p.hireIds.remove(player);cancel(p);}return null;}
         if(!net.goui.cosmicdungeon.mercenary.MercenaryContract.CLASSES.contains(classId))return "Choose an available mercenary class.";
         if(p.hires.containsKey(player))return "Release your current mercenary first.";
         if(p.occupied()>=p.capacity)return "This group is full.";
-        p.hires.put(player,classId);p.hireFees.put(player,fee);cancel(p);return null;
+        p.hires.put(player,classId);p.hireFees.put(player,fee);p.hireIds.put(player,UUID.randomUUID());cancel(p);return null;
     }
     public String unready(UUID player, long expected) {
         var p = party(player);
@@ -248,7 +249,7 @@ public final class D1PartyLobby {
         if (p == null || p.phase == Phase.PREPARING) return List.of();
         var affected = p.members();
         if (p.leader.equals(member)) complete(p);
-        else { p.members.remove(member); p.hires.remove(member); p.hireFees.remove(member); membership.remove(member); cancel(p); }
+        else { p.members.remove(member); p.hires.remove(member); p.hireFees.remove(member); p.hireIds.remove(member); membership.remove(member); cancel(p); }
         return affected;
     }
     public void complete(Party p) {

@@ -11,5 +11,6 @@ public abstract class DeathCurrencyPlayerMixin {
     @Inject(method="die",at=@At("TAIL"))
     private void cosmicdungeon$confirmedDeath(DamageSource source,CallbackInfo info){
         DeathCurrencyService.died((ServerPlayer)(Object)this);
+        net.goui.cosmicdungeon.mercenary.MercenaryResurrection.died((ServerPlayer)(Object)this);
     }
 }

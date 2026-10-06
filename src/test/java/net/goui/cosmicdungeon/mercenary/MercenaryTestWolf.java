@@ -23,5 +23,7 @@ final class MercenaryTestWolf extends Wolf {
         return target.freeze();
     }
     MercenaryTestWolf(){super(EntityType.WOLF,null);}
+    int ageForTest;
+    @Override public int getAge(){return ageForTest;} // Server age without a world/client-side lookup.
     @Override public RegistryAccess registryAccess(){return REGISTRIES;}
 }

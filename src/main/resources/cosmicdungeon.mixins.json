@@ -75,9 +75,11 @@
     "DungeonDifficultyEffectMixin",
     "SkillProjectileWeaponMixin",
     "SkillSplashPotionMixin",
+    "MercenaryPotionEffectMixin",
     "SkillCloudMixin",
     "SkillLingeringPotionMixin",
     "SkillDrinkPotionMixin",
-    "StatsCounterAccess"
+    "StatsCounterAccess",
+    "NaturalArmorDropsMixin"
   ]
 }

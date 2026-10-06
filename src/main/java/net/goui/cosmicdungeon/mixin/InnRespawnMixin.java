@@ -6,6 +6,11 @@ import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ServerPlayer.class)
 public abstract class InnRespawnMixin {
+    @Inject(method="findRespawnPositionAndUseSpawnBlock",at=@At("HEAD"),cancellable=true)
+    private void cosmicdungeon$resurrection(boolean charge,TeleportTransition.PostTeleportTransition after,CallbackInfoReturnable<TeleportTransition> ci){
+        var resurrection=net.goui.cosmicdungeon.mercenary.MercenaryResurrection.destination((ServerPlayer)(Object)this);
+        if(resurrection!=null)ci.setReturnValue(resurrection);
+    }
     @Inject(method="findRespawnPositionAndUseSpawnBlock",at=@At("RETURN"),cancellable=true)
     private void cosmicdungeon$fallback(boolean charge,TeleportTransition.PostTeleportTransition after,CallbackInfoReturnable<TeleportTransition> ci){
         ci.setReturnValue(net.goui.cosmicdungeon.npc.inn.InnService.fallback((ServerPlayer)(Object)this,ci.getReturnValue(),after));

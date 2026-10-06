@@ -74,13 +74,15 @@ public final class MercenaryBrain {
         if((entity.tickCount+entity.getId())%10!=0)return;
         var context=context(entity);
         var owner=context==null?null:context.owner();
-        if(owner==null){entity.setTarget(null);entity.getNavigation().stop();lastPosition=null;stuck=0;return;}
+        if(owner==null){entity.potionCasting().cancel();entity.regeneration().combat();entity.setTarget(null);entity.getNavigation().stop();lastPosition=null;stuck=0;return;}
         entity.timers(entity.timers().advance(10));attack=Math.max(0,attack-10);collection=Math.max(0,collection-10);
+        MercenaryFireworks.tick(entity,10);
+        MercenaryLightning.tick(entity,level,10);
         double distance=entity.distanceToSqr(owner);
         if(distance>16&&lastPosition!=null&&lastPosition.distanceToSqr(entity.position())<.09)stuck+=10;else stuck=0;
         lastPosition=entity.position();
         if(recover(distance,stuck)&&teleport(entity,owner,level)){stuck=0;distance=entity.distanceToSqr(owner);}
-        if(distance>256){entity.setTarget(null);entity.getNavigation().moveTo(owner,1.15);return;}
+        if(distance>256){entity.potionCasting().cancel();entity.setTarget(null);MercenaryRegeneration.tick(entity,10,false);entity.getNavigation().moveTo(owner,1.15);return;}
         MercenaryWolves.tick(entity,level,owner,10);
         var candidates=new ArrayList<LivingEntity>();candidates.add(owner);candidates.add(entity);
         nearby(level,LivingEntity.class,entity.getBoundingBox().inflate(8),48,target->{
@@ -92,14 +94,19 @@ public final class MercenaryBrain {
         MercenaryPotions.use(entity,candidates);
         LivingEntity target=candidates.stream().filter(t->enemy(context,entity,t)&&owner.distanceToSqr(t)<=64
                 &&entity.getSensing().hasLineOfSight(t)).min(Comparator.comparingDouble(entity::distanceToSqr)).orElse(null);
+        LivingEntity fireworkTarget=attack==0?MercenaryFireworks.target(entity,candidates):null;
+        if(fireworkTarget!=null)target=fireworkTarget;
         entity.setTarget(target);
+        MercenaryRegeneration.tick(entity,10,target!=null);
         MercenaryWolves.command(entity,level,target);
         if(distance>100){entity.getNavigation().moveTo(owner,1.15);return;}
         if(target!=null){
             entity.getLookControl().setLookAt(target,30,30);
             boolean ranged=entity.getMainHandItem().getItem() instanceof BowItem
                     ||entity.getMainHandItem().getItem() instanceof CrossbowItem;
-            if(ranged&&ammunition(entity,target)>=0){
+            if(fireworkTarget!=null&&MercenaryFireworks.launch(entity,fireworkTarget,level)){
+                entity.getNavigation().stop();attack=40;
+            }else if(ranged&&ammunition(entity,target)>=0){
                 entity.getNavigation().stop();
                 if(attack==0&&shoot(entity,target,level))attack=40;
             }else{
@@ -199,6 +206,11 @@ public final class MercenaryBrain {
         var owner=source.getEntity() instanceof MercenaryEntity m?m:MercenaryPotions.owner(source.getDirectEntity());
         if(owner!=null&&!enemy(owner,event.getEntity())
                 ||owner==null&&MercenaryPotions.marked(source.getDirectEntity()))event.setCanceled(true);
+    }
+    @SubscribeEvent public static void combatHit(net.neoforged.neoforge.event.entity.living.LivingDamageEvent.Post event){
+        var source=event.getSource();
+        var owner=source.getEntity() instanceof MercenaryEntity m?m:MercenaryPotions.owner(source.getDirectEntity());
+        if(owner!=null&&event.getNewDamage()>0)owner.regeneration().combat();
     }
     @SubscribeEvent(priority=EventPriority.LOWEST)
     public static void friendlyEffect(MobEffectEvent.Applicable event){

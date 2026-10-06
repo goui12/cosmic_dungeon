@@ -98,4 +98,30 @@ final class MobilePartyReadinessTest {
         assertFalse(D1PartyRules.sameStartingDimension("", ""));
         assertFalse(D1PartyRules.sameStartingDimension(null, "minecraft:overworld"));
     }
+
+    @Test void leaderReadyKeepsMenuAndStillRequiresAnExplicitAuthorizedStart() {
+        var lobby = pair(); var party = lobby.party(leader);
+        assertNull(lobby.begin(leader, party.revision(), Map.of(leader, "bogatyr", member, "theurgist")));
+        String error = lobby.ready(leader, party.revision());
+        assertNull(error);
+        assertFalse(D1PartyRules.closeAfterReady(party, leader, "ready", error));
+        assertEquals(D1PartyLobby.Phase.READY_CHECK, party.phase());
+        assertNotNull(lobby.queue(leader, party.revision()), "Other members still need to confirm");
+        error = lobby.ready(member, party.revision());
+        assertTrue(D1PartyRules.closeAfterReady(party, member, "ready", error));
+        assertNotNull(lobby.queue(member, party.revision()), "Keeping the menu open grants no authority");
+        assertNull(lobby.queue(leader, party.revision()));
+    }
+    @Test void rejectedOrDifferentActionsNeverDismissTheMenu() {
+        var lobby = pair(); var party = lobby.party(leader);
+        assertFalse(D1PartyRules.closeAfterReady(party, member, "ready", lobby.ready(member, party.revision())));
+        readyBoth(lobby); long old = party.revision();
+        assertNull(lobby.unready(member, old));
+        assertFalse(D1PartyRules.closeAfterReady(party, member, "ready", lobby.ready(member, old)));
+        assertFalse(D1PartyRules.closeAfterReady(party, member, "unready", null));
+        assertFalse(D1PartyRules.closeAfterReady(party, leader, "queue", null));
+        assertFalse(D1PartyRules.closeAfterReady(party, target, "ready", null));
+        assertFalse(D1PartyRules.closeAfterReady(null, member, "ready", null));
+    }
+
 }

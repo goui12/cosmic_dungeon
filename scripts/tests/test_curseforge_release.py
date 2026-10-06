@@ -36,9 +36,9 @@ class ReleaseTests(unittest.TestCase):
                         enumerate(['1.21.10', 'NeoForge', 'Java 21', 'Client', 'Server'], 1)]
 
     def test_channels_and_invalid_versions(self):
-        for version, kind in [('1.5.2-alpha.1', 'alpha'), ('1.5.2-beta.1', 'beta'), ('1.5.2', 'release')]:
+        for version, kind in [('1.5.2-alpha.1', 'alpha'), ('1.5.2-beta.1', 'beta'), ('1.6.0-beta', 'beta'), ('1.5.2', 'release')]:
             self.assertEqual(p.channel(version), kind)
-        for bad in ['1.5.2-beta', '1.5.02', '1.5.2-beta.0', '1.5.2/other']:
+        for bad in ['1.5.2-alpha', '1.5.02', '1.5.2-beta.0', '1.5.2/other', '1.6.0-beta.', '1.6.0-beta.01']:
             with self.assertRaises(ValueError):
                 p.channel(bad)
 
@@ -50,6 +50,42 @@ class ReleaseTests(unittest.TestCase):
         p.bump('beta', self.root)
         p.bump('release', self.root)
         self.assertEqual(p.properties(self.root)['mod_version'], '1.5.4')
+
+    def bare_beta_fixture(self):
+        old, new = '1.5.2-beta.1', '1.6.0-beta'
+        path = self.root / 'gradle.properties'
+        path.write_text(path.read_text().replace(old, new))
+        (self.root / f'docs/releases/{new}.md').write_text('Completed-set beta.')
+        for suffix in ['', '-loading-screen']:
+            source = self.root / f'build/libs/cosmicdungeon-{old}{suffix}.jar'
+            destination = self.root / f'build/libs/cosmicdungeon-{new}{suffix}.jar'
+            with zipfile.ZipFile(source) as jar:
+                contents = {name: jar.read(name).replace(old.encode(), new.encode()) for name in jar.namelist()}
+            with zipfile.ZipFile(destination, 'w') as jar:
+                for name, body in contents.items():
+                    jar.writestr(name, body)
+
+    def test_bare_beta_validates_both_exact_jar_versions(self):
+        self.bare_beta_fixture()
+        result = p.validate('v1.6.0-beta', self.root)
+        self.assertEqual(result['version'], '1.6.0-beta')
+        self.assertEqual(result['release_type'], 'beta')
+        with self.assertRaises(ValueError):
+            p.validate('v1.6.0-beta.1', self.root)
+
+    def test_bare_beta_promotes_without_changing_numeric_version(self):
+        self.bare_beta_fixture()
+        p.bump('release', self.root)
+        self.assertEqual(p.properties(self.root)['mod_version'], '1.6.0')
+
+    def test_next_alpha_after_bare_beta_increments_micro(self):
+        self.bare_beta_fixture()
+        p.bump('alpha', self.root)
+        self.assertEqual(p.properties(self.root)['mod_version'], '1.6.1-alpha.1')
+        path = self.root / 'gradle.properties'
+        path.write_text(path.read_text().replace('1.6.1-alpha.1', '1.6.1-alpha'))
+        with self.assertRaises(ValueError):
+            p.bump('beta', self.root)
 
     def test_actual_jar_metadata_is_checked(self):
         self.assertEqual(p.validate('v1.5.2-beta.1', self.root)['release_type'], 'beta')
@@ -141,6 +177,53 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(multipart.call_count, 2)
         self.assertEqual(multipart.call_args_list[1].args[0]['parentFileID'], 100)
         self.assertNotIn('main_loading_project', result)
+
+
+    @patch.dict(os.environ, {'CURSEFORGE_API_TOKEN': 'test-only'})
+    @patch.object(p, 'git', return_value='commit')
+    def test_unapproved_companion_keeps_both_files_without_relation_or_parent_archive(self, _git):
+        plan = p.validate('v1.5.2-beta.1', self.root)
+        receipt = self.root / 'receipt.json'
+        with patch.object(p, 'multipart', return_value=(b'jar', 'multipart/test')) as multipart:
+            with patch.object(p, 'request', side_effect=[self.entries, {'id': 90}, {'id': 100}]) as call:
+                result = p.publish(plan, receipt, 999, loading_slug='cosmic-loading-screen', link_loading=False)
+                self.assertEqual(call.call_count, 3)
+        self.assertNotIn('relations', multipart.call_args_list[1].args[0])
+        self.assertEqual(set(result['files']), {'main', 'loading_companion'})
+        self.assertIsNone(result['main_loading_project'])
+        self.assertFalse(result['loading_app_managed'])
+        self.assertEqual(result['pending_relation']['project_id'], 999)
+        with patch.object(p, 'request', return_value=self.entries) as call:
+            again = p.publish(plan, receipt, 999, loading_slug='cosmic-loading-screen', link_loading=False)
+            self.assertEqual(again['files'], result['files'])
+            self.assertEqual(call.call_count, 1)
+
+    @patch.dict(os.environ, {'CURSEFORGE_API_TOKEN': 'test-only'})
+    @patch.object(p, 'git', return_value='commit')
+    def test_later_approval_never_claims_to_relink_an_accepted_main(self, _git):
+        plan = p.validate('v1.5.2-beta.1', self.root)
+        receipt = self.root / 'receipt.json'
+        with patch.object(p, 'request', side_effect=[self.entries, {'id': 90}, {'id': 100}]):
+            p.publish(plan, receipt, 999, loading_slug='cosmic-loading-screen', link_loading=False)
+        with patch.object(p, 'request', return_value=self.entries) as call:
+            result = p.publish(plan, receipt, 999, loading_slug='cosmic-loading-screen', link_loading=True)
+            self.assertFalse(result['loading_app_managed'])
+            self.assertIsNone(result['main_loading_project'])
+            self.assertEqual(call.call_count, 1)
+
+    @patch.dict(os.environ, {'CURSEFORGE_API_TOKEN': 'test-only'})
+    @patch.object(p, 'git', return_value='commit')
+    def test_deferred_relation_does_not_weaken_unknown_upload_guard(self, _git):
+        plan = p.validate('v1.5.2-beta.1', self.root)
+        receipt = self.root / 'receipt.json'
+        with patch.object(p, 'request', side_effect=[self.entries, {'id': 90}, RuntimeError('timeout')]):
+            with self.assertRaises(RuntimeError):
+                p.publish(plan, receipt, 999, loading_slug='cosmic-loading-screen', link_loading=False)
+        self.assertEqual(json.loads(receipt.read_text())['pending']['role'], 'main')
+        with patch.object(p, 'request') as call:
+            with self.assertRaises(ValueError):
+                p.publish(plan, receipt, 999, loading_slug='cosmic-loading-screen', link_loading=False)
+            call.assert_not_called()
 
     def test_api_rejection_reports_reason_without_token(self):
         token = 'secret-do-not-log'

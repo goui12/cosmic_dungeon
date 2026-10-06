@@ -1,17 +1,53 @@
-# Current rollout, 2026-10-04
+# Current rollout, 2026-10-06
+
+Batch 10 is in progress: Tamsin replay and exact **1.6.0-beta** release.
+Then proceed with authorized Batch 11: trading preserves Ready state, Start Adventure
+cancels unfinished trades safely, and readiness/class HUD cleanup.
+[Approved new round, including settled wolf and potion decisions](PARTY_SKILLS_BATCHES_20261006.md).
+
+**17 batches including active 10; after 10 and 11, 15 remain (12-26).**
+
+- 12: player wolf friendly fire.
+- 13: spawner glow, pickaxe warning and firework destruction.
+- 14: complete party HP/effect HUD.
+- 15: current-run member inspection.
+- 16: latest-death inventory organization.
+- 17: Theurgist/Venefex mercenary split.
+- 18: Judicator mercenary progression.
+- 19: movable shared Skills panel, reset setting and recipe-book removal.
+- 20: Brewing Supplies/Kibble and generated recycling tags.
+- 21: universal inventory supply requests.
+- 22: player Theurgist crafting and resurrection.
+- 23: wolf commands and run-only wolf lifecycle.
+- 24: core wolf modes.
+- 25: advanced modes and performance validation.
+- 26: integration and final set Beta.
+
+Cumulative licensed gameplay and companion app acceptance remain separate.
+Stop after Batch 11; do not implement queued wolf/potion changes yet.
+
+---
+
+# Current rollout, 2026-10-05
 
 [CurseForge and mercenary batch plan](CURSEFORGE_AND_MERCENARY_BATCHES_20261004.md).
-Stage 1 release automation is in progress. Nine new gameplay batches remain:
-1 menu/identity; 2 wolves/equipment drops; 3 recovery/payment; 4 shared progression;
-5 Theurgist potions; 6 Bogatyr progression; 7 Pyroclast fireworks; 8 Dragoon lightning;
-9 Theurgist resurrection. Gameplay implementation waits until Stage 1 is established.
-The earlier zero-batch statements below refer to the previous completed request.
+Stage 1 and Batches 1-9 are validated, published and installed. Batch 9 is 1.5.12-alpha.1:
+Positive Potions level 10 resurrection, exact death position, five-second protection and
+three-minute cooldown. Clean CI plus all 33 GameTests passed.
+Companion moderation/licensed app delivery and cumulative gameplay QA remain pending.
+
+**One planned implementation batch remains:**
+10. Tamsin's top-right 20x18 "i" button replays first-time lore/map while preserving
+    agreement, class, group/readiness and progression; then validated completed-set
+    main merge and exact **1.6.0-beta** publication.
+Stop before Batch 10 implementation until requested. The earlier zero-batch statements
+below refer to the previous completed request.
 
 ---
 
 # Testing rollout, 2026-10-03
 
-[Current approved queue](TESTING_ROLLOUT_20261003.md). Batches 1–11 are implemented and validated.
+[Current approved queue](TESTING_ROLLOUT_20261003.md). Batches 1â€“11 are implemented and validated.
 Zero implementation batches remain; cumulative licensed TEST acceptance is pending.
 [Batch 1 report](TESTING_BATCH_1_20261003.md) | [Batch 2 report](TESTING_BATCH_2_20261003.md) | [Batch 3 report](TESTING_BATCH_3_20261003.md) | [Batch 4 report](TESTING_BATCH_4_20261003.md) | [Batch 5 report](TESTING_BATCH_5_20261003.md) | [Batch 6 report](TESTING_BATCH_6_20261003.md) | [Batch 7 report](TESTING_BATCH_7_20261004.md) | [Batch 8 report](TESTING_BATCH_8_20261004.md) | [Batch 9 report](TESTING_BATCH_9_20261004.md) | [Batch 10 report](TESTING_BATCH_10_20261004.md) | [Batch 11 report](TESTING_BATCH_11_20261004.md).
 Batch 11 completes lifetime statistics, the teal pause-menu entry and eight curated leaderboards;
@@ -474,7 +510,7 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M23: Require marked repair components and update Elias's catalogue
 - M26: Implement direct shop repair and revised price formulas
 - M30: Remove the global instant-brewing override and implement approved class behavior
-- M36: Implement Tamsin’s persistent map and first-entry conversation
+- M36: Implement Tamsinâ€™s persistent map and first-entry conversation
 - M37: Replace incidental ready-order grouping with the specified party/invitation flow
 - M42: Add the campfire placement, ownership, lifetime and interaction rules
 - M61: Add Dragoon passive health-for-durability repair under the revised exclusions
@@ -510,7 +546,7 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M45: Implement the three scapula recruitment relics and assigned boss drops
 - M46: Implement all three pack totem auras without same-class stacking
 - M47: Implement four wolf armor tiers, recipes, repairs and totem synergies
-- M48: Unify Metalmancer’s four-tier staff and golem statistics
+- M48: Unify Metalmancerâ€™s four-tier staff and golem statistics
 - M49: Implement the complete ore/rest/heal exchange, not only doubled idle income
 - M50: Implement the individual Metalmancer equipment modifiers and stacking policy
 - M51: Validate held equipment and action context on every Metalmancer packet
@@ -521,12 +557,12 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M57: Deliver the Theurgist story arc without leaking internal epilogue knowledge
 - M59: Add Deadeye zoom, draw and range-based damage progression
 - M73: Populate all player-facing Codex and item descriptions with reveal controls
-- M74: Correct Vital Exchange I–IV to real transfer events and the right tier identities
+- M74: Correct Vital Exchange Iâ€“IV to real transfer events and the right tier identities
 - M75: Wire Binding Idol provider/return milestones into actual gameplay
 - M89: Build the remaining D2 rooms, encounters and progression hand-off
-- M90: Implement D3’s water/pressure puzzles and Dagon–Hydra state sequence
-- M91: Implement D4’s portal maze, reflection encounters and Web completion
-- M92: Implement D5’s trap construction, boss endings and persistent outcomes
+- M90: Implement D3â€™s water/pressure puzzles and Dagonâ€“Hydra state sequence
+- M91: Implement D4â€™s portal maze, reflection encounters and Web completion
+- M92: Implement D5â€™s trap construction, boss endings and persistent outcomes
 - M96: Create a checked-in approved language/codex corpus and lint inconsistent examples
 - M97: Implement Webbound Priest journal drops and staged reading
 - M108: Keep explicit future proposals and incompatible candidates outside automatic implementation

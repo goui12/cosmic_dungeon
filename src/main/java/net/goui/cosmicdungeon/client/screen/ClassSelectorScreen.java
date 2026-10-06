@@ -19,6 +19,7 @@ import java.util.List;
 public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSelectorMenu> {
 
     private boolean loading = true;
+    private final TamsinReplay replay = new TamsinReplay();
     private final D1PartyPanel partyPanel = new D1PartyPanel();
     private final TamsinTaxPanel taxPanel = new TamsinTaxPanel();
     private String activeClass = "";
@@ -104,7 +105,7 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
         this.classButtons.clear();
         this.scissorEnabledThisFrame = false;
 
-        if (!loading && stage == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.MAP) {
+        if (!loading && displayedStage() == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.MAP) {
             var map = TamsinMapLayout.forViewport(this.width, this.height);
             this.imageWidth = map.width();
             this.imageHeight = map.height();
@@ -132,6 +133,15 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
                 .bounds(x + this.imageWidth - 78, y + 6, 20, 18)
                 .build());
 
+        if (!loading && TamsinReplay.canStart(stage)) {
+            var info = addRenderableWidget(Button.builder(Component.literal("i"), button -> {
+                replay.start(stage);
+                rebuildSelectorWidgets();
+            }).bounds(x + this.imageWidth - 102, y + 6, 20, 18).build());
+            info.setTooltip(net.minecraft.client.gui.components.Tooltip.create(
+                    Component.literal("Replay Tamsin's introduction")));
+        }
+
         // Compute list viewport area (used for scissor + scroll hit-test)
         this.listX = x + 18;
         this.listY = y + HEADER_H;
@@ -145,24 +155,24 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
             return;
         }
 
-        if (stage == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.AGREEMENT) {
+        if (displayedStage() == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.AGREEMENT) {
             addRenderableWidget(Button.builder(Component.literal("Yes"), b -> tamsinAction("yes"))
                     .bounds(x + 18, y + imageHeight - 27, 92, 20).build());
             addRenderableWidget(Button.builder(Component.literal("No"), b -> tamsinAction("no"))
                     .bounds(x + 120, y + imageHeight - 27, 92, 20).build());
             return;
         }
-        if (stage == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.MAP) {
+        if (displayedStage() == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.MAP) {
             addRenderableWidget(Button.builder(Component.literal("Continue"), b -> tamsinAction("continue"))
                     .bounds(x + 18, y + imageHeight - 27, imageWidth - 36, 20).build());
             return;
         }
 
-        if (stage == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.TAX) {
+        if (displayedStage() == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.TAX) {
             taxPanel.build(font, widget -> addRenderableWidget(widget), this::rebuildSelectorWidgets, x, y, menu.containerId);
             return;
         }
-        if (stage == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.READY) {
+        if (displayedStage() == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.READY) {
             partyPanel.build(font, widget -> addRenderableWidget(widget), this::rebuildSelectorWidgets, x, y, menu.containerId);
             return;
         }
@@ -201,7 +211,15 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
         updateButtonLayout();
     }
 
+    private net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage displayedStage() {
+        return replay.display(stage);
+    }
+
     private void tamsinAction(String action) {
+        if (replay.action(action)) {
+            rebuildSelectorWidgets();
+            return;
+        }
         this.loading = true;
         rebuildSelectorWidgets();
         net.goui.cosmicdungeon.network.ModNetwork.sendToServer(new ClassPayloads.C2S_TamsinAction(menu.containerId, action));
@@ -216,7 +234,7 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
     }
 
     private boolean renderConversation(GuiGraphics g, int x, int y) {
-        switch (stage) {
+        switch (displayedStage()) {
             case AGREEMENT -> {
                 int next = paragraph(g, "I found a map to something valuable underground.",
                         x + 18, y + 43, imageWidth - 36, 0xFFFFFFFF);
@@ -309,7 +327,7 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
         g.fill(x1, y1, x2, y2, 0xAA000000);
 
         // header text
-        g.drawString(this.font, stage == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.SELECTOR
+        g.drawString(this.font, displayedStage() == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.SELECTOR
                 ? "Tamsin: Choose class" : "Tamsin Vane", x1 + 10, y1 + 10, 0xFFFFFFFF, false);
 
         if (!loading && renderConversation(g, x1, y1)) return;
@@ -390,6 +408,7 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
             if (!(mc.screen instanceof ClassSelectorScreen screen) || screen.menu.containerId != payload.containerId()) return;
             try { screen.stage = net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.valueOf(payload.stage()); }
             catch (IllegalArgumentException invalid) { return; }
+            screen.replay.receive(screen.stage);
             screen.loading = false;
             screen.activeClass = payload.activeClassId() == null ? "" : payload.activeClassId();
 

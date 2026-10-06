@@ -29,6 +29,7 @@ public final class D1PartyService {
     private static final Set<UUID> VIEWERS = new HashSet<>();
     private static final Map<UUID, Long> LAST_INVITE = new HashMap<>();
     private static final Map<UUID, Long> LAST_HUD_ACTION = new HashMap<>();
+    private static final Map<UUID, Long> LAST_HELP_ACTION = new HashMap<>();
     private D1PartyService() {}
     private static long now(MinecraftServer server) { return server.overworld().getGameTime(); }
     private static void message(ServerPlayer player, String text) {
@@ -83,7 +84,7 @@ public final class D1PartyService {
             return new PartyPayloads.Member(member == null ? "Offline" : member.getGameProfile().name(),
                     member == null ? "none" : ClassData.getClassId(member), p.ready().contains(id), p.leader().equals(id));
         }).toList());
-        if(p!=null)p.hires().forEach((owner,cls)->members.add(new PartyPayloads.Member("Mercenary",cls,true,false)));
+        if(p!=null)p.contracts().forEach(hire->members.add(new PartyPayloads.Member(hire.name(),hire.classId(),true,false)));
         var i = LOBBY.invitation(player.getUUID());
         var sender = i == null ? null : player.level().getServer().getPlayerList().getPlayer(i.inviter());
         boolean leader = p != null && p.leader().equals(player.getUUID());
@@ -146,6 +147,15 @@ public final class D1PartyService {
         };
     }
     private static void hudAction(ServerPlayer player, PartyPayloads.Action request) {
+        if(Set.of("revive","revive_help").contains(request.action())){
+            if(player.containerMenu!=player.inventoryMenu)return;
+            long tick=now(player.level().getServer());
+            // Separate throttles let Yes follow Revive immediately while still bounding forged help packets.
+            var cooldown=request.action().equals("revive_help")?LAST_HELP_ACTION:LAST_HUD_ACTION;
+            if(tick-cooldown.getOrDefault(player.getUUID(),-1000000L)<Config.PARTY_ACTION_TICKS.get())return;
+            cooldown.put(player.getUUID(),tick);
+            net.goui.cosmicdungeon.mercenary.MercenaryRevival.action(player,request);syncViewers(player.level().getServer());return;
+        }
         if (!available(player) || player.containerMenu != player.inventoryMenu
                 || !Set.of("ready", "unready", "leave", "accept", "decline").contains(request.action())) return;
         var server = player.level().getServer();
@@ -264,7 +274,7 @@ public final class D1PartyService {
             }
             case "ready", "queue" -> {
                 error = readiness(player, request.revision(), request.action());
-                if (error == null && request.action().equals("ready")) player.closeContainer();
+                if (D1PartyRules.closeAfterReady(p, player.getUUID(), request.action(), error)) player.closeContainer();
             }
             default -> error = "Unknown group action.";
         }
@@ -361,19 +371,21 @@ public final class D1PartyService {
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             notifyRemoved(player.level().getServer(), player.getUUID(), "A member disconnected; group preparation cancelled.");
-            VIEWERS.remove(player.getUUID()); LAST_INVITE.remove(player.getUUID()); LAST_HUD_ACTION.remove(player.getUUID());
+            VIEWERS.remove(player.getUUID()); LAST_INVITE.remove(player.getUUID()); LAST_HUD_ACTION.remove(player.getUUID()); LAST_HELP_ACTION.remove(player.getUUID());
             D1PartyHudService.forget(player.getUUID()); syncViewers(player.level().getServer());
         }
     }
     @SubscribeEvent public static void dimension(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) withdraw(player);
     }
-    public static void clear() { LOBBY.clear(); VIEWERS.clear(); LAST_INVITE.clear(); LAST_HUD_ACTION.clear(); D1PartyHudService.clear(); }
+    public static void clear() { net.goui.cosmicdungeon.mercenary.MercenaryRevival.clear(); LOBBY.clear(); VIEWERS.clear(); LAST_INVITE.clear(); LAST_HUD_ACTION.clear(); LAST_HELP_ACTION.clear(); D1PartyHudService.clear(); }
     @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) D1PartyHudService.track(player.getUUID());
     }
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         var root = Commands.literal("party");
+        root.then(Commands.literal("donate").then(Commands.argument("token",StringArgumentType.word()).executes(ctx ->
+                net.goui.cosmicdungeon.mercenary.MercenaryRevival.donate(ctx.getSource().getPlayerOrException(),StringArgumentType.getString(ctx,"token")))));
         for (String action : List.of("accept", "decline")) {
             root.then(Commands.literal(action).then(Commands.argument("token", StringArgumentType.word()).executes(ctx -> {
                 var player = ctx.getSource().getPlayerOrException();

@@ -35,7 +35,7 @@ public final class MercenaryRespawns {
             for(var contract:run.mercenaries()){
                 if(!contract.hirer().equals(player.getUUID()))continue;
                 var rest=run.mercenaryRests().get(contract.id());
-                if(rest==null||!rest.due(server.overworld().getGameTime()))continue;
+                if(rest==null||!rest.due(server.overworld().getGameTime())&&!MercenaryRevival.paid(server,run.runId(),contract.id(),rest))continue;
                 var level=net.goui.cosmicdungeon.block.custom.ClassSelectorTeleportUtil.resolveLevel(server,rest.dimension());
                 if(level==null||level!=player.level()||!run.containsDimension(level.dimension()))continue;
                 var entity=level.getEntity(contract.id());
@@ -61,21 +61,25 @@ public final class MercenaryRespawns {
         }
     }
     public static PartyPayloads.Mercenary status(MinecraftServer server,DungeonRunRegistryData.RunRecord run,
-                                                MercenaryContract contract,String owner){
-        String name="Mercenary "+net.goui.cosmicdungeon.playerclass.api.ClassItemUtil.displayNameForClass(contract.classId());
+                                                MercenaryContract contract,String owner,java.util.UUID viewer){
+        String name=contract.name();
+        var skills=MercenarySkills.snapshot(server,run.runId(),contract);
+        var resurrection=MercenaryResurrection.snapshot(server,run,contract,viewer);
         var rest=run.mercenaryRests().get(contract.id());
         for(String dimension:run.dungeonDimensionIds()){
             var level=net.goui.cosmicdungeon.block.custom.ClassSelectorTeleportUtil.resolveLevel(server,dimension);
             if(level==null)continue;
             if(level.getEntity(contract.id()) instanceof MercenaryEntity entity&&run.runId()==entity.runId()
                     &&contract.equals(entity.contract())){
-                name=entity.getName().getString();if(name.length()>64)name=name.substring(0,64);
                 if(entity.rest()!=null)rest=entity.rest();
-                else return new PartyPayloads.Mercenary(name,owner,entity.getHealth(),entity.getMaxHealth(),-1,"ACTIVE");
+                else return new PartyPayloads.Mercenary(name,owner,entity.getHealth(),entity.getMaxHealth(),-1,"ACTIVE",PartyPayloads.Recovery.NONE,skills,resurrection);
                 break;
             }
         }
-        return rest==null?new PartyPayloads.Mercenary(name,owner,0,0,-1,"UNLOADED")
-                :new PartyPayloads.Mercenary(name,owner,0,0,rest.seconds(server.overworld().getGameTime()),"RESPAWNING");
+        if(rest==null)return new PartyPayloads.Mercenary(name,owner,0,0,-1,"UNLOADED",PartyPayloads.Recovery.NONE,skills,resurrection);
+        boolean paid=MercenaryRevival.paid(server,run.runId(),contract.id(),rest);
+        var controls=new PartyPayloads.Recovery(net.goui.cosmicdungeon.economy.MercenaryRevivePayment.id(run.runId(),contract.id(),rest.death(),rest.until()).toString(),rest.until(),MercenaryRevival.price(contract),
+                viewer.equals(contract.hirer())&&!paid&&!rest.due(server.overworld().getGameTime()));
+        return new PartyPayloads.Mercenary(name,owner,0,0,paid?0:rest.seconds(server.overworld().getGameTime()),"RESPAWNING",controls,skills,resurrection);
     }
 }

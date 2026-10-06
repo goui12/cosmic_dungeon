@@ -8,12 +8,12 @@ public final class MercenaryConfig {
     public static void define(ModConfigSpec.Builder b){
         b.push("mercenaries");
         HIRE_TRACE=b.comment("Trace per hire, reserved during entry and charged only after successful startup.")
-                .defineInRange("hireTrace",500,0,100000000);
-        BREW_TICKS=b.comment("Legacy brewing delay retained for configuration compatibility; Theurgists now brew instantly at nearby stands.")
+                .defineInRange("hireTrace",50,0,100000000);
+        BREW_TICKS=b.comment("Base active ticks per free Theurgist splash stock. Skills reduce this; nearby stands add instant batches at half this cadence.")
                 .defineInRange("brewTicks",400,20,1728000);
-        FALLBACK_TICKS=b.comment("Active ticks per fallback splash healing potion; no offline catch-up.")
+        FALLBACK_TICKS=b.comment("Legacy fallback timer retained for saved/config compatibility; free splash stock now uses brewTicks.")
                 .defineInRange("fallbackHealingTicks",3600,20,1728000);
-        POTION_TICKS=b.comment("Default active-tick cooldown per potion identity, shared across drink/splash/lingering.")
+        POTION_TICKS=b.comment("Base active-tick splash cooldown. Skill scaling and category/global limits also apply.")
                 .defineInRange("potionCooldownTicks",200,20,1728000);
         POTION_COOLDOWNS=b.comment("Individual potion ID=ticks overrides. Custom effects use custom.")
                 .defineListAllowEmpty("potionCooldowns",List.of("minecraft:healing=200","minecraft:strong_healing=300",

@@ -41,7 +41,9 @@ public final class Config {
     public static final ModConfigSpec.DoubleValue WOLF_SPEED;
     public static final ModConfigSpec.DoubleValue WOLF_FOLLOW_RANGE;
     public static final ModConfigSpec.DoubleValue WOLF_TELEPORT_DISTANCE;
-    public static final ModConfigSpec.IntValue WOLF_CAP;
+    /** Retained only so existing config files remain readable; player packs are uncapped. */
+    @Deprecated public static final ModConfigSpec.IntValue WOLF_CAP;
+    public static final ModConfigSpec.DoubleValue NATURAL_ARMOR_DROP_CHANCE;
     public static final ModConfigSpec.DoubleValue WOLF_RAW_HEAL, WOLF_COOKED_HEAL;
     public static final ModConfigSpec.IntValue WOLF_BREED_TICKS;
     public static final ModConfigSpec.DoubleValue WOLF_TAME_CHANCE;
@@ -68,6 +70,12 @@ public final class Config {
         net.goui.cosmicdungeon.dungeon.DungeonDifficultyConfig.define(B);
         net.goui.cosmicdungeon.playerclass.skill.ClassSkillConfig.define(B);
         net.goui.cosmicdungeon.mercenary.MercenaryConfig.define(B);
+        B.push("Loot");
+        NATURAL_ARMOR_DROP_CHANCE=B.comment("Base drop chance for newly generated vanilla difficulty armor; zero disables its drops, including Looting.",
+                "Does not remove armor or override authored spawner equipment/drop rates, held weapons or later picked-up/player-given gear.",
+                "Applies to new equipment only; existing mobs retain their saved drop chances.")
+                .defineInRange("naturalArmorDropChance",0.0,0.0,1.0);
+        B.pop();
         B.comment("Implementation work bounds; not lore or damage modifiers.").push("Performance");
         MENU_BALANCE_POLL_TICKS=B.comment("Server ticks between account HUD/inventory/chest and open vendor/trade/repair balance polls; unchanged values send no packet.")
                 .defineInRange("menuBalancePollTicks",20,5,200);
@@ -190,9 +198,8 @@ public final class Config {
                 .defineInRange("cookedMeatHealing",8.0,0.0,1024.0);
         WOLF_BREED_TICKS=B.comment("Wolf Internal: five seconds of breeding.")
                 .defineInRange("breedingTicks",100,1,1200);
-        WOLF_CAP = B.comment("Active companions per Bogatyr. Tamed bonds are permanent by default.",
-                "Unloaded existing wolves and prepared deliveries count. Stored archives keep ownership but free active slots.",
-                "TODO(D27/D28, D2+): temporary scapula recruits and scaling totem auras; see Bogatyr deferred notes.")
+        WOLF_CAP = B.comment("Legacy setting retained for compatibility; ignored. Player Bogatyr packs are uncapped.",
+                "Mercenary wolf limits are separate and are not controlled by this value.")
                 .defineInRange("maxWolves", 5, 1, 32);
         WOLF_TAME_CHANCE = B.comment("Probability per bone.").defineInRange("wolfTameChance", 0.33, 0.0, 1.0);
         WOLF_PUP_GROWTH = B.comment("Fraction of remaining pup growth per meat item. Wolf Internal: 10 percent.",
@@ -212,7 +219,7 @@ public final class Config {
                 "Positive values count loaded companion time; unload/archive/zero setting pauses the counter.",
                 "Changing the positive duration uses the existing active-time counter. On expiry the wolf is released",
                 "and worn armor becomes an owner-only world drop at its location, subject to ordinary world hazards.",
-                "The permanent companion cap is maxWolves above; no second conflicting cap is introduced.")
+                "Player Bogatyr companions have no pack-size cap.")
                 .defineInRange("wolfDurationMinutes",0,0,525600);
         WOLF_EXPIRY_POLL_TICKS=B.comment("Ticks between expired-bond release attempts; canceled armor drops retain the wolf.")
                 .defineInRange("expiryRetryTicks",20,1,1200);

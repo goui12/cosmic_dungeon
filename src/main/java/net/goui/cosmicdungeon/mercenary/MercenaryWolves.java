@@ -48,11 +48,15 @@ public final class MercenaryWolves {
     static int advance(int remaining,int elapsed){return Math.max(0,remaining-Math.max(0,elapsed));}
     static String key(UUID mercenary){return "mercenary_wolves:"+mercenary;}
     static String dismissed(UUID mercenary){return "mercenary_wolves_dismissed:"+mercenary;}
+    static int skillLevel(D1RunData data,Bond bond){
+        return MercenarySkill.level(data.count(bond.run(),MercenarySkills.key(bond.mercenary(),MercenarySkill.WOLVES)));
+    }
+    static int capacity(D1RunData data,Bond bond){return MercenaryWolfBalance.capacity(skillLevel(data,bond));}
     static boolean remember(D1RunData data,Bond bond,UUID wolf){
         if(data.count(bond.run(),dismissed(bond.mercenary()))!=0)return false;
         var ids=data.values(bond.run(),key(bond.mercenary()));
         if(ids.contains(wolf.toString()))return true;
-        return ids.size()<CAP&&data.recordUnique(bond.run(),key(bond.mercenary()),wolf.toString());
+        return ids.size()<capacity(data,bond)&&data.recordUnique(bond.run(),key(bond.mercenary()),wolf.toString());
     }
     static void died(D1RunData data,Bond bond,UUID wolf,Entity.RemovalReason reason){
         if(reason==Entity.RemovalReason.KILLED)data.removeUnique(bond.run(),key(bond.mercenary()),wolf.toString());
@@ -77,12 +81,13 @@ public final class MercenaryWolves {
     }
     public static void tick(MercenaryEntity entity,ServerLevel level,ServerPlayer hirer,int elapsed){
         if(!enabled(entity.contract()))return;
-        entity.wolfTicks(advance(entity.wolfTicks(),elapsed));
+        entity.wolfTicks(MercenaryWolfBalance.remaining(entity.wolfTicks(),elapsed,
+                MercenarySkills.level(entity,MercenarySkill.WOLVES)));
         if(entity.wolfTicks()>0)return;
         var data=D1RunData.get(level.getServer());
         var bond=new Bond(entity.runId(),entity.contract().id(),entity.contract().hirer());
         if(data.count(bond.run(),dismissed(bond.mercenary()))!=0
-                ||data.values(bond.run(),key(bond.mercenary())).size()>=CAP)return;
+                ||data.values(bond.run(),key(bond.mercenary())).size()>=capacity(data,bond))return;
         // Failed placement retries at most once per second, without spending a successful summon.
         entity.wolfTicks(20);
         var wolf=EntityType.WOLF.create(level,EntitySpawnReason.MOB_SUMMONED);
@@ -103,16 +108,26 @@ public final class MercenaryWolves {
         boolean added=false;
         try{added=level.addFreshEntity(wolf);}
         finally{if(!added)data.removeUnique(bond.run(),key(bond.mercenary()),wolf.getUUID().toString());}
-        if(added)entity.wolfTicks(INTERVAL);
+        if(added){
+            MercenarySkills.success(entity,MercenarySkill.WOLVES);
+            entity.wolfTicks(MercenaryWolfBalance.interval(MercenarySkills.level(entity,MercenarySkill.WOLVES)));
+        }
     }
     static boolean belongs(Wolf wolf,long run,MercenaryContract contract){
         return new Bond(run,contract.id(),contract.hirer()).equals(bond(wolf));
     }
     public static void command(MercenaryEntity mercenary,ServerLevel level,LivingEntity target){
         if(!enabled(mercenary.contract()))return;
-        for(String id:D1RunData.get(level.getServer()).values(mercenary.runId(),key(mercenary.getUUID())).stream().limit(CAP).toList()){
+        command(mercenary,D1RunData.get(level.getServer()).values(mercenary.runId(),key(mercenary.getUUID())),
+                level::getEntity,target);
+    }
+    static void command(MercenaryEntity mercenary,List<String> ids,java.util.function.Function<UUID,Entity> find,LivingEntity target){
+        if(!enabled(mercenary.contract()))return;
+        // Rotate through the saved roster; unloaded/sitting entries still advance the cursor.
+        for(int i=0;i<Math.min(ids.size(),MercenaryWolfBalance.COMMAND_BUDGET);i++){
+            String id=ids.get(mercenary.nextWolfCommand(ids.size()));
             UUID uuid;try{uuid=UUID.fromString(id);}catch(IllegalArgumentException invalid){continue;}
-            if(!(level.getEntity(uuid) instanceof Wolf wolf)||!belongs(wolf,mercenary.runId(),mercenary.contract())
+            if(!(find.apply(uuid) instanceof Wolf wolf)||!belongs(wolf,mercenary.runId(),mercenary.contract())
                     ||!wolf.isAlive()||wolf.isOrderedToSit())continue;
             if(target!=null&&!CompanionAllies.friendly(target))wolf.setTarget(target);
             else if(CompanionAllies.friendly(wolf.getTarget())){wolf.setTarget(null);wolf.stopBeingAngry();}
@@ -126,12 +141,13 @@ public final class MercenaryWolves {
         for(String dimension:run.dungeonDimensionIds()){
             var level=net.goui.cosmicdungeon.block.custom.ClassSelectorTeleportUtil.resolveLevel(server,dimension);
             if(level==null)continue;
-            for(String id:ids.stream().limit(CAP).toList()){
+            for(String id:ids.stream().limit(MercenaryWolfBalance.COMMAND_BUDGET).toList()){
                 UUID uuid;try{uuid=UUID.fromString(id);}catch(IllegalArgumentException invalid){continue;}
                 if(level.getEntity(uuid) instanceof Wolf wolf&&belongs(wolf,run.runId(),contract))wolf.discard();
             }
         }
-        // Unloaded wolves retain their marker and are rejected on their next join.
+        // Larger loaded packs retire through their existing 40-tick validation, keeping this
+        // immediate pass bounded. Unloaded wolves are rejected on their next join.
         data.setValue(run.runId(),key(contract.id()),null);
     }
     @SubscribeEvent(priority=EventPriority.LOWEST)

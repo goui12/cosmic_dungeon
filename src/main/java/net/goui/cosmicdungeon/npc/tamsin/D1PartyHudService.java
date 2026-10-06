@@ -42,7 +42,7 @@ final class D1PartyHudService {
             if (p != null) {
                 retainedIdentities.addAll(p.members());
                 rows = new ArrayList<>(p.members().stream().map(m -> member(server, m, p.ready().contains(m), p.leader().equals(m))).toList());
-                for(var cls:p.hires().values())rows.add(new PartyPayloads.Member("Mercenary",cls,true,false));
+                for(var hire:p.contracts())rows.add(new PartyPayloads.Member(hire.name(),hire.classId(),true,false));
                 name = p.name(); phase = p.phase().name(); capacity = p.capacity(); leader = p.leader().equals(id);
                 queue = lobby.queuePosition(p);
                 seconds = p.countdownEnd() < 0 ? -1 : (int)Math.max(0, (p.countdownEnd() - server.overworld().getGameTime() + 19) / 20);
@@ -54,7 +54,7 @@ final class D1PartyHudService {
                 name = previous == null || previous.recruitment().groupName().isBlank() ? "Dungeon 1" : previous.recruitment().groupName();
                 for(var hire:run.mercenaries())if(run.containsPlayer(hire.hirer())&&!run.isCompletionExited(hire.hirer()))
                     mercenaries.add(net.goui.cosmicdungeon.mercenary.MercenaryRespawns.status(server,run,hire,
-                        member(server,hire.hirer(),true,false).name()));
+                        member(server,hire.hirer(),true,false).name(),id));
                 phase = "ACTIVE"; capacity = rows.size()+mercenaries.size();
             }
             var view = new PartyPayloads.View(-1,

@@ -42,6 +42,20 @@ public final class DungeonInstanceGameTests {
         suite.add(id("startup_plan_blank_entry"), DungeonInstanceGameTests::startupPlanBlankEntry);
         suite.add(id("class_selector_ready_eligibility"), DungeonInstanceGameTests::classSelectorReadyEligibility);
         suite.add(id("startup_plan_rejects_none"), DungeonInstanceGameTests::startupPlanRejectsNone);
+        suite.add(id("natural_armor_drop_policy"), net.goui.cosmicdungeon.gametest.WolfEquipmentGameTests::naturalArmor);
+        suite.add(id("mercenary_recovery"),net.goui.cosmicdungeon.mercenary.MercenaryRecoveryGameTests::recovery);
+        suite.add(id("mercenary_skills_lifecycle"),net.goui.cosmicdungeon.mercenary.MercenarySkillsGameTests::lifecycle);
+        suite.add(id("mercenary_skills_effects"),net.goui.cosmicdungeon.mercenary.MercenarySkillsGameTests::effects);
+        suite.add(id("mercenary_potion_stock"),net.goui.cosmicdungeon.mercenary.MercenaryPotionGameTests::freeStock);
+        suite.add(id("mercenary_potion_attribution"),net.goui.cosmicdungeon.mercenary.MercenaryPotionGameTests::attribution);
+        suite.add(id("mercenary_wolf_progression"),net.goui.cosmicdungeon.mercenary.MercenaryWolfGameTests::progression);
+        suite.add(id("mercenary_firework_persistence"),net.goui.cosmicdungeon.mercenary.MercenaryFireworkGameTests::persistence);
+        suite.add(id("pyroclast_rocket_explosion"),net.goui.cosmicdungeon.playerclass.d1.D1RocketGameTests::explosion);
+        suite.add(id("pyroclast_rocket_denial"),net.goui.cosmicdungeon.playerclass.d1.D1RocketGameTests::denied);
+        suite.add(id("mercenary_lightning_persistence"),net.goui.cosmicdungeon.mercenary.MercenaryLightningGameTests::persistence);
+        suite.add(id("mercenary_lightning_combat"),net.goui.cosmicdungeon.mercenary.MercenaryLightningGameTests::combat);
+        suite.add(id("mercenary_resurrection_eligibility"),net.goui.cosmicdungeon.mercenary.MercenaryResurrectionGameTests::eligibility);
+        suite.add(id("mercenary_resurrection_respawn"),net.goui.cosmicdungeon.mercenary.MercenaryResurrectionGameTests::respawn);
         return suite;
     }
 

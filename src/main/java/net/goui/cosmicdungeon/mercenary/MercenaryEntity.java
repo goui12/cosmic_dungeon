@@ -12,6 +12,8 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
     private static final net.minecraft.network.syncher.EntityDataAccessor<Boolean> DORMANT=
         net.minecraft.network.syncher.SynchedEntityData.defineId(MercenaryEntity.class,net.minecraft.network.syncher.EntityDataSerializers.BOOLEAN);
     private MercenaryRest rest;
+    private final MercenaryRegeneration regeneration=new MercenaryRegeneration();
+    MercenaryRegeneration regeneration(){return regeneration;}
     @Override protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder){
         super.defineSynchedData(builder);builder.define(DORMANT,false);
     }
@@ -22,7 +24,7 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
             |(isCustomNameVisible()?16:0)|(isSilent()?32:0);
     }
     private void sleep(){
-        entityData.set(DORMANT,true);setHealth(1);deathTime=0;setNoAi(true);setNoGravity(true);
+        potionCasting.cancel();entityData.set(DORMANT,true);setHealth(1);deathTime=0;setNoAi(true);setNoGravity(true);
         setInvisible(true);setInvulnerable(true);setSilent(true);setCustomNameVisible(false);noPhysics=true;
         getNavigation().stop();setTarget(null);stopRiding();ejectPassengers();
         setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);clearFire();fallDistance=0;
@@ -30,12 +32,12 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
     @Override public void die(net.minecraft.world.damagesource.DamageSource source){
         if(!(level() instanceof net.minecraft.server.level.ServerLevel level)||rest!=null)return;
         rest=new MercenaryRest(MercenaryRest.deadline(level.getServer().overworld().getGameTime()),
-            level.dimension().location().toString(),blockPosition().asLong(),restFlags());
+            level.dimension().location().toString(),blockPosition().asLong(),restFlags(),UUID.randomUUID());
         sleep();MercenaryRespawns.remember(this);
     }
     void resumeAfterRest(){
         if(rest==null)return;
-        var previous=rest;rest=null;entityData.set(DORMANT,false);noPhysics=false;
+        var previous=rest;rest=null;regeneration.combat();entityData.set(DORMANT,false);noPhysics=false;
         setNoAi(previous.flag(1));setNoGravity(previous.flag(2));setInvisible(previous.flag(4));
         setInvulnerable(previous.flag(8));setCustomNameVisible(previous.flag(16));setSilent(previous.flag(32));
         removeAllEffects();clearFire();setAirSupply(getMaxAirSupply());setTicksFrozen(0);
@@ -43,7 +45,9 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
     }
     @Override public boolean hurtServer(net.minecraft.server.level.ServerLevel level,
             net.minecraft.world.damagesource.DamageSource source,float amount){
-        return !dormant()&&super.hurtServer(level,source,amount);
+        boolean hurt=!dormant()&&super.hurtServer(level,source,amount);
+        if(hurt)regeneration.combat();
+        return hurt;
     }
     @Override public void tick(){
         if(dormant()){
@@ -62,8 +66,22 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
     private MercenaryContract contract;
     private long run;
     private final MercenaryBrain brain=new MercenaryBrain();
+    private final MercenaryPotionCasting potionCasting=new MercenaryPotionCasting();
+    MercenaryPotionCasting potionCasting(){return potionCasting;}
     private MercenaryTimers timers;
+    private MercenaryFireworkStock fireworks=MercenaryFireworkStock.initial();
+    MercenaryFireworkStock fireworks(){return fireworks;}
+    void fireworks(MercenaryFireworkStock value){fireworks=java.util.Objects.requireNonNull(value);}
+    private MercenaryLightningState lightning=MercenaryLightningState.initial();
+    MercenaryLightningState lightning(){return lightning;}
+    void lightning(MercenaryLightningState value){lightning=java.util.Objects.requireNonNull(value);}
     private int wolfTicks=MercenaryWolves.INTERVAL;
+    private int wolfCommandCursor;
+    int nextWolfCommand(int size){
+        int index=Math.floorMod(wolfCommandCursor,size);
+        wolfCommandCursor=(index+1)%size;
+        return index;
+    }
     int wolfTicks(){return wolfTicks;}
     void wolfTicks(int ticks){wolfTicks=Math.clamp(ticks,0,MercenaryWolves.INTERVAL);}
     private MercenaryLootMemory lootMemory=new MercenaryLootMemory();
@@ -93,7 +111,7 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
     public void initialize(long run,MercenaryContract contract){
         if(this.contract!=null||run<=0)throw new IllegalStateException("Mercenary already initialized");
         this.run=run;this.contract=contract;setUUID(contract.id());
-        setCustomName(net.minecraft.network.chat.Component.literal("Mercenary "+contract.classId()));
+        setCustomName(net.minecraft.network.chat.Component.literal(contract.name()));
         setCustomNameVisible(true);
     }
     public MercenaryContract contract(){return contract;}
@@ -108,15 +126,21 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
         ContainerHelper.saveAllItems(out.child("mercenary_supplies"),supplies);
         lootMemory.save(out);
         out.putInt("mercenary_wolf_ticks",wolfTicks);
+        if(MercenaryFireworks.enabled(this))out.store("mercenary_fireworks",MercenaryFireworkStock.CODEC,fireworks);
+        if(MercenaryLightning.enabled(this))out.store("mercenary_lightning",MercenaryLightningState.CODEC,lightning);
     }
     @Override public void readAdditionalSaveData(ValueInput in){
-        super.readAdditionalSaveData(in);
+        super.readAdditionalSaveData(in);regeneration.combat();potionCasting.cancel();
         contract=in.read("mercenary_contract",MercenaryContract.CODEC).orElse(null);
+        // Existing contracts already contain the stable identity needed by older saves.
+        if(contract!=null)setCustomName(net.minecraft.network.chat.Component.literal(contract.name()));
         run=in.getLongOr("mercenary_run",0);
         timers=in.read("mercenary_timers",MercenaryTimers.CODEC).orElse(null);
         ContainerHelper.loadAllItems(in.childOrEmpty("mercenary_supplies"),supplies);
         lootMemory=MercenaryLootMemory.load(in);
         wolfTicks=MercenaryWolves.loadCooldown(in);
+        fireworks=in.read("mercenary_fireworks",MercenaryFireworkStock.CODEC).orElseGet(MercenaryFireworkStock::initial);
+        lightning=in.read("mercenary_lightning",MercenaryLightningState.CODEC).orElseGet(MercenaryLightningState::initial);
         rest=in.read("mercenary_rest",MercenaryRest.CODEC).orElse(null);
         if(rest!=null)sleep();
     }

@@ -1,0 +1,10 @@
+# Theurgist mercenary splash potions
+
+- Theurgist mercenaries now replenish free splash potions: healing, strength and speed for allies; harming and poison against enemies.
+- Brewing stands immediately create a free batch when its cooldown is ready. Player stand items and mercenary materials are not consumed.
+- Positive and Negative Potions levels improve their corresponding replenishment and throwing speed. Tier II positive potions become increasingly common, reaching 95% at level 25.
+- Brief aura flashes signal preparation and release. Support potions target players' feet; friendly-fire filtering remains per recipient.
+- Native poison damage can earn Negative Potions progress once per potion, including splashes hitting several enemies. Failed or immune effects earn nothing.
+- Mercenaries stop collecting brewing ingredients, bones, spawn eggs and non-splash bottles. Existing gear and legacy inventory contents are preserved.
+
+Alpha for testing. Class skill bonuses for Bogatyr, Pyroclast and Dragoon, and Theurgist resurrection, remain in later batches.

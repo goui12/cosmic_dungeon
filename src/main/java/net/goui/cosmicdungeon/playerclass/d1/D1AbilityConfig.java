@@ -5,7 +5,7 @@ import java.util.*;
 public final class D1AbilityConfig {
     public record Spell(ModConfigSpec.DoubleValue power,ModConfigSpec.IntValue duration){}
     public static final Map<String,Spell> SPELLS=new LinkedHashMap<>();
-    public static ModConfigSpec.DoubleValue ROCKET_RADIUS,SPICULE_DEBUFF_SCALE;
+    public static ModConfigSpec.DoubleValue ROCKET_RADIUS,ROCKET_DAMAGE_MULTIPLIER,SPICULE_DEBUFF_SCALE;
     public static ModConfigSpec.IntValue SPICULE_DEBUFF_CAP,ROCKET_CANDIDATE_LIMIT;
     private D1AbilityConfig(){}
     public static void define(ModConfigSpec.Builder b){
@@ -44,6 +44,8 @@ public final class D1AbilityConfig {
                 "Newer than rocket internal documents: Cindermaul maximum is 7.5 hearts, not seven.").push("Pyroclast");
         spell(b,"pyroclast","cinderbite",12,1,"Maximum explosion damage at the center; four-star authored vanilla rocket.");
         spell(b,"pyroclast","cindermaul",15,1,"Maximum explosion damage at the center; five-star authored vanilla rocket.");
+        ROCKET_DAMAGE_MULTIPLIER=b.comment("Cameron October 2026: powerful enemy-only Pyroclast fireworks. Multiplies base power without changing authored stacks.")
+                .defineInRange("rocketDamageMultiplier",10.0,0.0,100.0);
         ROCKET_RADIUS=b.comment("Blocks. Vanilla square-root falloff and obstruction checks; no terrain damage.")
                 .defineInRange("rocketExplosionRadius",5.0,0.5,32.0);
         ROCKET_CANDIDATE_LIMIT=b.comment("Maximum nearby living entities inspected per D1 explosion. At saturation some targets are omitted; at most two obstruction rays per candidate.")

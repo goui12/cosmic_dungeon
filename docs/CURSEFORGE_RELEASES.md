@@ -55,8 +55,17 @@ The companion **Cosmic Dungeon Loading Screen** now exists under the same owner:
 project ID `1727305`, slug `cosmic-dungeon-loading-screen`, with client-only file metadata.
 GitHub Actions variables `CURSEFORGE_LOADING_PROJECT_ID` and
 `CURSEFORGE_LOADING_PROJECT_SLUG` contain these values. Both projects receive
-the exact matching version automatically; the main file declares an optional visual
-dependency so dedicated-server installations do not require the helper.
+the exact matching version automatically. Set the repository variable
+CURSEFORGE_LOADING_RELATION_APPROVED=true only after the companion project is approved.
+The CLI equivalent is --link-loading (or the same process environment variable).
+Until then, new uploads omit that optional dependency and record pending_relation.
+Both exact JARs remain on their respective CurseForge projects and the GitHub prerelease;
+no redundant archive is attached to a processing parent for these explicitly deferred pairs.
+The companion may remain unavailable publicly until moderation completes; use the GitHub
+helper download or transitional updater meanwhile. This does not claim app migration is complete.
+Approved future releases can declare the optional visual dependency so dedicated servers
+do not require the helper. Changing the flag never rewrites an already accepted file.
+Older unlinked receipts without this explicit deferred-pair evidence retain archive recovery.
 Install both projects once in the client profile, and enable Beta (Alpha for testers).
 After the companion project exists, verify its approval, app recognition, and both updates
 in a clean profile before retiring the transitional PS1 updater.
@@ -109,3 +118,10 @@ companion project moderation and licensed-client app update testing remain separ
 The receipt records the companion ID/slug actually sent with a successful main upload.
 A reused older main without that evidence retains its archive fallback even after a
 companion is enabled; a retry never claims it added metadata to an already uploaded file.
+
+## Exact completed-set beta versions
+
+The publisher accepts both major.minor.patch-beta and numbered -beta.N versions.
+Batch 10 uses the explicitly requested 1.6.0-beta. Both jars and the tag must match
+that exact string; Beta tags still require merged main ancestry. Alpha builds retain
+-alpha.N; the next distributed alpha increments the patch (1.6.1-alpha.1).
