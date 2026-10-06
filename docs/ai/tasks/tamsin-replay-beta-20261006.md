@@ -60,3 +60,10 @@ Future improvement: localizing the shared conversation strings independently of 
 Java21 build successful:344 native JUnit tests (zero failures/errors/skips), plus loading helper tests.
 17 publisher safeguards passed;2,001 source JSON files parsed;git diff --check passed.
 No local game/GameTest-server launch, datagen or migration. CI native GameTests and release gates remain pending.
+
+
+## Published completed-set checkpoint
+PR227 merged to main e57b27bb78e592fca521e05bc78e305f23c55c2f after clean CI/all33 GameTests and completed automated review with no findings.
+Exact v1.6.0-beta released through run37491677475; CurseForge main9081740/helper9081737 accepted. Exact CI artifacts installed on closed ADMIN.
+TEST was observed running/paused, so server installation stayed pending. The subsequently authorized Batch11 alpha supersedes the beta for the next TEST installation; both versions remain archived.
+Batch11 report records current target status and licensed manual QA. Companion app-managed installation is still unverified.

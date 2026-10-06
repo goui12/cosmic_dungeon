@@ -16,7 +16,7 @@ Version1.6.1-alpha.1. Exclusive hotspots: D1 party queue/start, trade custody en
 ## Validation
 Java21 local Gradle build passed. Native JUnit: 349; loading asset tests: 2; JSON parsed: 2001. Diff checks passed.
 Three new native GameTests cover unfinished accepted trade/cursor/refunds/stale and unauthorized Start, completed native trade, and full-inventory recovery.
-Clean CI build/native GameTests and GitHub review pending. No local GameTest server/client launch.
+Clean CI run37494819836 passed build and all36 native GameTests; automated production review completed without findings. The fixture-only follow-up was manually reviewed. No local GameTest server/client launch.
 
 ## Data, performance, security and boundaries
 No registry, saved-data/NBT/schema/preset or authored-spawner changes; no migration. No datagen-managed resource changes; datagen not applicable.
@@ -35,14 +35,16 @@ No manual client interaction has been claimed.
 
 ## Rollout
 Batch10 merged/released successfully; ADMIN received exact beta main/helper. TEST was observed running/paused on2026-10-06 and remains prior revision until shutdown is verified. Server properties were read only; no restart.
-Batch11 alpha publishing/install receipts will be appended after clean CI/review. Companion app-managed delivery remains unverified.
+Batch11 alpha publishing/install receipts are recorded below. Companion app-managed delivery remains unverified.
 15 batches remain after11:12 wolf friendly fire;13 spawner visuals/warning/rockets;14 party HP/effects;15 run stats;16 inventory layout;17 potion mercenary split;18 Judicator;19 Skills UI;20 resources/tags;21 requests;22 player Theurgist;23 run-only wolves/commands;24 core modes;25 advanced modes/performance;26 integration/Beta.
 Future improvement: Batch14 replaces the remaining compact roster with complete HP/effect rows.
 
 ## Exact files
+
 - docs/ai/D1_REMAINING.md
 - docs/ai/PARTY_SKILLS_BATCHES_20261006.md
 - docs/ai/tasks/party-trade-readiness-20261006.md
+- docs/ai/tasks/tamsin-replay-beta-20261006.md
 - docs/releases/1.6.1-alpha.1.md
 - docs/releases/fragments/batch11-party-trade-readiness-20261006.md
 - gradle.properties
@@ -71,3 +73,18 @@ The completion fixture inserted uncatalogued items directly into offer container
 Fixtures now use catalogued apples/bread through native shift-click and explicitly finite survival inventories, so creative overflow semantics cannot invalidate the full-inventory scenario.
 All original final inventory/currency assertions remain; diagnostic actual values added. Production guards/transactions are unchanged.
 Automated GitHub review completed on6ae97532a9b3df458510d5468b7bfdff1f67b811 with no findings. Follow-up is limited to this native fixture and report; manually reviewed.
+
+## Verified completion and remaining deployment
+- Runtime/source: 8b1c671ec0c94328976cc5db75ac9a2c2c4014f5; PR228 remains open for SetA's later merge checkpoint. Batch10 completed-set PR227 is merged to main.
+- Exact release: 1.6.1-alpha.1, tag v1.6.1-alpha.1; CurseForge Release run 37495307261 succeeded on the same runtime source.
+- CurseForge main file 9081954, helper file 9081952, both submitted. Main SHA256 031f388058d287d5fb458b9dda8fc5a4608f10510561e903fa738875d93aca7d; helper SHA256 737b930c64ef61cfab026f6d55b813042a698307f4b4aaa8228a13acef09238d.
+- ADMIN client main/helper installed and hash-verified at 2026-10-06T16:29:39.5730401Z. No game/client launch.
+- TEST was rechecked at 2026-10-06T16:31:19.1591779Z: latest log [06Oct2026 11:01:12.537] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Server empty for 60 seconds, pausing. It remains prior1.5.12-alpha.1; no server jar/properties were changed and no restart attempted.
+- latest-built now points to the exact released CI artifact. current-test intentionally remains the prior matched deployment until stopped TEST receives the same alpha.
+- Protocol17 rejects an outdated server/client combination; wait for the TEST update before multiplayer QA.
+- Both release jars are archived on CurseForge/GitHub. Companion automatic app installation/moderation acceptance and licensed co-op/UI testing remain pending.
+- Release CI reran publisher tests, source JSON, clean build and all36 native GameTests. No schema migration or datagen was required.
+- Google metadata refresh remains blocked by expired authorization at2026-10-06T15:34:03Z; no fresh source semantic audit claim.
+- Stop here:15 queued batches12-26; wolfpack reset cleanup and the approved splash-potion pools are recorded for23/22.
+
+Final documentation-only checkpoint does not change the released runtime or reuse its tag.

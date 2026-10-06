@@ -3,7 +3,7 @@
 Status: Cameron authorized implementation of Batch10 and11 on2026-10-06 at08:29PDT.
 All original and follow-up questions are settled. Implement10 then11; stop before12.
 Batch10 merged through PR227: main e57b27bb78e592fca521e05bc78e305f23c55c2f; exact1.6.0-beta published.
-Batch11 starts from that merged baseline on feature/party-trade-readiness-20261006; runtime implementation and local build complete, clean CI/review pending.
+Batch11 starts from that merged baseline on feature/party-trade-readiness-20261006; validated/published1.6.1-alpha.1, all36 GameTests passed; ADMIN updated, TEST shutdown/install pending.
 Source: Cameron's original request, reviewed wolfpack mockup, and October6 08:16PDT clarification.
 This queue records requirements; implementation status is maintained in task reports and D1_REMAINING.
 Google source metadata refresh attempted2026-10-06T15:34:03Z: existing read-only authorization expired. Cached Tamsin/TamsinTax plus Cameron explicit settled corrections used; no fresh semantic audit claimed.
@@ -12,7 +12,7 @@ All earlier questions below the latest DECISIONS checkpoint are historical; do n
 ## Numbering and release sequence
 Queued Batch10: Tamsin20x18 top-right lore/map replay i; preserve actual class/group/ready/progress.
 Support exact1.6.0-beta, validate, merge completed prior set via PR and publish both jars.
-New round has16 batches11-26, including final integration/release.17 batches including queued10.
+Original round had16 batches11-26 plus queued10. Batches10/11 are complete;15 remain12-26, including final integration/release.
 The independent generic Skills UI warrants its own Batch19; prior19-25 become20-26.
 SetA11-16 party/combat/HUD/death recovery; SetB17-18 mercenary roles; SetC19-26 UI/resources/classes/wolves.
 Alpha micro revisions between implementation batches; validated set main merge/Beta after each set.

@@ -1,11 +1,11 @@
 # Current rollout, 2026-10-06
 
 Batch 10 merged through [PR227](https://github.com/goui12/cosmic_dungeon/pull/227); exact **1.6.0-beta** and helper accepted by CurseForge.
-Batch 11 runtime implementation and local tests passed; clean CI/review and **1.6.1-alpha.1** publication are in progress.
+Batch 11 is validated and published as **1.6.1-alpha.1**; [PR228/report](tasks/party-trade-readiness-20261006.md). All36 server GameTests passed. ADMIN is updated; TEST remains pending verified shutdown.
 It preserves readiness while trading, cancels unfinished trades at a valid leader Start, and cleans up HUD readiness/class labels.
 [Approved new round, including settled wolf and potion decisions](PARTY_SKILLS_BATCHES_20261006.md).
 
-**16 batches including active 11; after 11, 15 remain (12-26).**
+**15 planned batches remain (12-26). Batches10 and11 are implemented and published.**
 
 - 12: player wolf friendly fire.
 - 13: spawner glow, pickaxe warning and firework destruction.
