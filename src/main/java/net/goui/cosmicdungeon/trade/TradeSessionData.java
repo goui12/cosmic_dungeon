@@ -171,8 +171,14 @@ public final class TradeSessionData {
         if (player == null) return false;
         removePendingInvitesInvolving(player.getUUID());
         var session = get(player);
-        if (session != null) session.cancel("The group leader started the adventure");
-        return TradeCustody.beforeInventoryChange(player);
+        if (session == null) return TradeCustody.beforeInventoryChange(player);
+        // Keep the peer reference before cancellation removes the session from both indexes.
+        var otherId = player.getUUID().equals(session.a) ? session.b : session.a;
+        var other = player.level().getServer().getPlayerList().getPlayer(otherId);
+        session.cancel("The group leader started the adventure");
+        boolean playerRecovered = TradeCustody.beforeInventoryChange(player);
+        boolean otherRecovered = other != null && TradeCustody.beforeInventoryChange(other);
+        return playerRecovered && otherRecovered;
     }
 
     public static boolean isBusy(ServerPlayer p) {

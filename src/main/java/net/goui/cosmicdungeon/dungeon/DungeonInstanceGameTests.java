@@ -59,6 +59,7 @@ public final class DungeonInstanceGameTests {
         suite.add(id("party_trade_start"),net.goui.cosmicdungeon.npc.tamsin.PartyTradeGameTests::start);
         suite.add(id("party_trade_completed"),net.goui.cosmicdungeon.npc.tamsin.PartyTradeGameTests::completed);
         suite.add(id("party_trade_full_inventory"),net.goui.cosmicdungeon.npc.tamsin.PartyTradeGameTests::fullInventory);
+        suite.add(id("party_trade_outsider_recovery"),net.goui.cosmicdungeon.npc.tamsin.PartyTradeGameTests::outsiderRecoveryHold);
         return suite;
     }
 

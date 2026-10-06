@@ -141,4 +141,30 @@ public final class PartyTradeGameTests {
             helper.succeed();
         }
     }
+    @SuppressWarnings("unchecked")
+    public static void outsiderRecoveryHold(GameTestHelper helper) {
+        try(var f=new Fixture(helper)) {
+            var session=f.open();f.offer(session,f.member,Items.APPLE,3);f.offer(session,f.outsider,Items.BREAD,2);
+            final Set<ServerPlayer> holds;
+            try {
+                var field=TradeCustody.class.getDeclaredField("HOLDS");field.setAccessible(true);
+                holds=(Set<ServerPlayer>)field.get(null);
+            } catch(ReflectiveOperationException error) { throw new IllegalStateException(error); }
+            long revision=f.party.revision();
+            // Simulate the durable recovery guard independently of a real client's disconnect transport.
+            holds.add(f.outsider);
+            try {
+                f.check(f.start(f.leader,revision)!=null,"An outside trader's recovery hold blocks this Start");
+                f.readyUnchanged(revision);
+                f.check(!TradeSessionData.isBusy(f.member)&&!TradeSessionData.isBusy(f.outsider),
+                        "Both unfinished trade sessions still close");
+                f.check(!TradeCustody.held(f.member),"The party member is not the failed participant");
+                f.check(f.member.getInventory().countItem(Items.APPLE)==3,"Successful member refund remains intact");
+            } finally { holds.remove(f.outsider); }
+            f.check(TradeCustody.beforeInventoryChange(f.outsider),"Outside recovery can resume");
+            TradeCustody.claim(f.outsider);TradeCustody.claim(f.outsider);
+            f.check(f.outsider.getInventory().countItem(Items.BREAD)==2,"Outside refund is preserved exactly once");
+            helper.succeed();
+        }
+    }
 }
