@@ -88,3 +88,14 @@ Automated GitHub review completed on6ae97532a9b3df458510d5468b7bfdff1f67b811 wit
 - Stop here:15 queued batches12-26; wolfpack reset cleanup and the approved splash-potion pools are recorded for23/22.
 
 Final documentation-only checkpoint does not change the released runtime or reuse its tag.
+
+
+## Follow-up review correction, 2026-10-06
+PR229's cumulative review identified that endForAdventure checked only the party member's
+recovery result after cancelling a trade with an outsider. It now captures the peer before
+session removal and requires both participants' recovery checks. A native outsider-hold
+regression verifies rejected Start preserves readiness, closes both trade sessions, and
+retains exactly-once refunds. No currency/schema/protocol change or migration/datagen.
+This correction remains on Batch11's PR228; the immutable1.6.1-alpha.1 release is not changed.
+Distribute it with the next newly versioned Batch12 alpha after full validation.
+Exclusive follow-up hotspots: trade custody handoff and native test registration.
