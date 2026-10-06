@@ -99,3 +99,6 @@ retains exactly-once refunds. No currency/schema/protocol change or migration/da
 This correction remains on Batch11's PR228; the immutable1.6.1-alpha.1 release is not changed.
 Distribute it with the next newly versioned Batch12 alpha after full validation.
 Exclusive follow-up hotspots: trade custody handoff and native test registration.
+
+Follow-up result: CI37503507880 passed all37 native tests; outsider-hold correction is now
+included in published1.6.2-alpha.1 sourcebe96c8c3f1311797251788f92a62f315e74df625. Original1.6.1-alpha.1 tag remains immutable.

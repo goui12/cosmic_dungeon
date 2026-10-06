@@ -1,19 +1,16 @@
-## 2026-10-06 Batch12 in progress
-Approved Approach A workflow guard implemented in PR229; full native gates retained for gameplay/releases.
-Batch12 allied-wolf protection includes the reviewed Batch11 outsider-recovery correction.
-15 planned batches12-26 remain until this batch completes; do not mark publication/deployment complete early.
-
 # Current rollout, 2026-10-06
 
-Batch 10 merged through [PR227](https://github.com/goui12/cosmic_dungeon/pull/227); exact **1.6.0-beta** and helper accepted by CurseForge.
-Batch 11 is validated and published as **1.6.1-alpha.1**; [PR228/report](tasks/party-trade-readiness-20261006.md). All36 server GameTests passed. ADMIN is updated; TEST remains pending verified shutdown.
-It preserves readiness while trading, cancels unfinished trades at a valid leader Start, and cleans up HUD readiness/class labels.
-[Approved new round, including settled wolf and potion decisions](PARTY_SKILLS_BATCHES_20261006.md).
+Batch10 merged through PR227 and published exact1.6.0-beta.
+Batch11 published1.6.1-alpha.1, with outsider-recovery follow-up now included in1.6.2-alpha.1.
+Batch12 published1.6.2-alpha.1 through [PR230](https://github.com/goui12/cosmic_dungeon/pull/230);
+[exact files, evidence and manual QA](tasks/allied-wolf-protection-20261006.md).
+ADMIN has the exact published runtime/helper installed. TEST remains running/paused as of2026-10-06T17:48:21.4237164Z; its1.5.12-alpha.1 jar is unchanged. current-test stays at the prior matched build.
+Approach A is implemented in PR229:154second full baseline versus61second narrative-only CI,
+with identical protected inputs and successful baseline tests verified. Releases/gameplay keep full gates.
+[Approved plan](PARTY_SKILLS_BATCHES_20261006.md).
 
-**15 planned batches remain (12-26). Batches10 and11 are implemented and published.**
-
-- 12: player wolf friendly fire.
-- 13: spawner glow, pickaxe warning and firework destruction.
+**14 planned batches remain (13-26).**
+- 13: spawner glow, pickaxe warning and protected firework destruction.
 - 14: complete party HP/effect HUD.
 - 15: current-run member inspection.
 - 16: latest-death inventory organization.
@@ -27,9 +24,8 @@ It preserves readiness while trading, cancels unfinished trades at a valid leade
 - 24: core wolf modes.
 - 25: advanced modes and performance validation.
 - 26: integration and final set Beta.
-
 Cumulative licensed gameplay and companion app acceptance remain separate.
-Stop after Batch 11; do not implement queued wolf/potion changes yet.
+Stop after Batch12; the10-minute conditional extension was not met. Completed SetA merges/Beta after16.
 
 ---
 

@@ -42,3 +42,11 @@ it will be corrected on Batch11's existing branch before the next gameplay relea
 
 Full workflow including bytecode-free verifier passed CI37503267794. This final narrative update
 exercises real proof reuse; no gameplay or build inputs changed.
+
+## End-to-end verification complete
+Full CI37503267794 passed in154seconds; narrative-only CI37503654532 passed in61seconds.
+The latter ran all34 Python regressions, verified the full native baseline fingerprint and
+recorded the reused run; build/GameTests steps were explicitly skipped with evidence.
+Observed saving93seconds/about60percent for this checkpoint; no credit-cost estimate claimed.
+The prior Batch11 review finding was corrected on PR228/476a5261, passed CI37503507880,
+and is included in Batch12. Safe workspace reuse also avoided another full worktree copy.

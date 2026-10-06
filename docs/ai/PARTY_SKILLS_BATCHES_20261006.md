@@ -1,7 +1,7 @@
 # New batch round - decisions updated 2026-10-06
 
-Status: Cameron authorized implementation of Batch10 and11 on2026-10-06 at08:29PDT.
-All original and follow-up questions are settled. Implement10 then11; stop before12.
+Status: Batches10-12 are implemented, validated and published; current alpha1.6.2-alpha.1.
+All original and follow-up questions are settled. Stop after12; Batch13 is next when authorized.
 Batch10 merged through PR227: main e57b27bb78e592fca521e05bc78e305f23c55c2f; exact1.6.0-beta published.
 Batch11 starts from that merged baseline on feature/party-trade-readiness-20261006; validated/published1.6.1-alpha.1, all36 GameTests passed; ADMIN updated, TEST shutdown/install pending.
 Source: Cameron's original request, reviewed wolfpack mockup, and October6 08:16PDT clarification.
@@ -12,13 +12,13 @@ All earlier questions below the latest DECISIONS checkpoint are historical; do n
 ## Numbering and release sequence
 Queued Batch10: Tamsin20x18 top-right lore/map replay i; preserve actual class/group/ready/progress.
 Support exact1.6.0-beta, validate, merge completed prior set via PR and publish both jars.
-Original round had16 batches11-26 plus queued10. Batches10/11 are complete;15 remain12-26, including final integration/release.
+Original round had16 batches11-26 plus queued10. Batches10-12 are complete;14 remain13-26, including final integration/release.
 The independent generic Skills UI warrants its own Batch19; prior19-25 become20-26.
 SetA11-16 party/combat/HUD/death recovery; SetB17-18 mercenary roles; SetC19-26 UI/resources/classes/wolves.
 Alpha micro revisions between implementation batches; validated set main merge/Beta after each set.
 Do not reuse tags, preassign conflicting versions, merge test-builds or claim companion app verification without evidence.
 No game/client/GameTest-server automatic launch, no server restart. Existing independently checked deployment policy applies.
-No unresolved gameplay questions remain. Batch12 is now authorized, with Approach A workflow optimization approved.
+No unresolved gameplay questions remain. Batch12 completed; Approach A workflow optimization approved and verified.
 
 ## Confirmed common rules
 - Recycling is1 tagged item=1 resource. Consume only headroom to600; never waste donor/self items at cap.
@@ -53,7 +53,7 @@ ClassSelectorReadyManager/call sites, client D1PartyHud/MercenaryHudLayout and r
 Hotspots: trade/currency transaction boundaries, party readiness/entry, menu sessions/network.
 Tests: both-ready trade through completion/cancel; start during open/accepted/finalizing trade; full inventory returns;
 currency/drop custody, disconnect/death/class-change invalidations still work; roster/leader/membership remain authoritative.
-12. Player wolf friendly-fire protection (implementation/validation in progress)
+12. Player wolf friendly-fire protection (complete;1.6.2-alpha.1)
 Protect player-owned Bogatyr wolves and mercenary wolves against allied melee/projectiles/AOE/harmful effects.
 Preserve hostile damage/healing. Source gap verified: MercenaryWolves.protectedCompanion covers mercenary entity/marked wolves;
 BogatyrThreats prevents player-wolf outbound friendly damage, but lacks equivalent inbound guard.

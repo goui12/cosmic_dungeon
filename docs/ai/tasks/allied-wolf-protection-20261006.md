@@ -12,7 +12,8 @@ No migration or datagen needed. Existing authored spawners/chests/inventories re
 ## Validation
 Java21 build,349 JUnit tests, loading assets checks,2,001 JSON and diff checks passed.
 CI37504494392 passed all40 native GameTests and34 Python guard/publisher checks.
-Exact release/publication and final documentation validation remain pending.
+Corrected source full CI37505395568 and release CI37505674000 passed all40 native GameTests.
+Both CurseForge uploads accepted; final narrative checkpoint uses the approved proof verifier.
 Three new native GameTests cover owner/teammate/mercenary/companion damage, firework AOE,
 wolf armor durability, hostile and environmental damage, wild-wolf behavior, actual flaming
 tipped-arrow flight, splash/lingering instant and timed harm, and beneficial healing.
@@ -50,3 +51,16 @@ Clarified protocol17 is unchanged only relative to1.6.1-alpha.1; prior beta/prot
 matched client/server upgrades. This follow-up changes release/report text only. All runtime
 code and the successful40 native tests remain unchanged, and the conservative release-note
 boundary deliberately requests full CI again. No review finding was ignored.
+
+## Release and deployment completion
+Version1.6.2-alpha.1; tagv1.6.2-alpha.1; sourcebe96c8c3f1311797251788f92a62f315e74df625; PR230.
+CurseForge main project1326805 file9082469; loading companion project1727305 file9082467.
+Runtime SHA256:ce692f143a679e38d1b4ac0b8e48bf710c5a721bb2a056567cd7a08600dd18f7
+Loading SHA256:2dbb34a6fe2aadaf4609966209377ebda24a5d37a4da02e0774a1bfaf35fc6e2
+ADMIN has the exact published runtime/helper installed. TEST remains running/paused as of2026-10-06T17:48:21.4237164Z; its1.5.12-alpha.1 jar is unchanged. current-test stays at the prior matched build.
+No server restart, client launch or server.properties write. Upload acceptance is distinct from
+public moderation and licensed CurseForge-app delivery verification.
+349JUnit+2loading tests,34Python checks,2,001JSON and all40 nativeGameTests passed.
+Actual source reviewed at3051105538600689ee8b31d5dcc548f084a0dfd6; protocol-note follow-up manually verified against
+the recorded review finding and passed complete CI. No gameplay finding remains unaddressed.
+14 planned batches remain13-26. Stop after12 because the10-minute conditional extension was not met.
