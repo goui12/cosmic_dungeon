@@ -64,6 +64,7 @@ public final class D1RocketAbilities {
         if(spell==null)spell=D1AbilityConfig.get("pyroclast","cinderbite");
         double power=spell.power().get()*D1AbilityConfig.ROCKET_DAMAGE_MULTIPLIER.get();
         boolean damaged=burst(rocket,level,owner,power);
+        CosmicSpawnerFireworks.destroy(rocket,level,owner);
         if(damaged&&owner instanceof MercenaryEntity merc)MercenarySkills.success(merc,MercenarySkill.FIREWORKS);
         return true;
     }

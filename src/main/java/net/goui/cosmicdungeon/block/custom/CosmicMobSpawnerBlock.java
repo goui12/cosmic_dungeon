@@ -71,6 +71,29 @@ public class CosmicMobSpawnerBlock extends Block implements EntityBlock {
         };
     }
 
+    // Native nearby-block animation and ordinary dust depth testing: no outline, new render pass or packets.
+    @Override
+    public void animateTick(BlockState state, Level level, BlockPos pos, net.minecraft.util.RandomSource random) {
+        if (random.nextInt(3) != 0 || !(level.getBlockEntity(pos) instanceof CosmicSpawnerBlockEntity cosmic)
+                || !cosmic.isSpawnBlocked()) return;
+        var face = net.minecraft.core.Direction.getRandom(random);
+        if (level.getBlockState(pos.relative(face)).isSolidRender()) return;
+        double x = pos.getX() + 0.2 + random.nextDouble() * 0.6;
+        double y = pos.getY() + 0.2 + random.nextDouble() * 0.6;
+        double z = pos.getZ() + 0.2 + random.nextDouble() * 0.6;
+        if (face.getStepX() != 0) x = pos.getX() + 0.5 + face.getStepX() * 0.52;
+        if (face.getStepY() != 0) y = pos.getY() + 0.5 + face.getStepY() * 0.52;
+        if (face.getStepZ() != 0) z = pos.getZ() + 0.5 + face.getStepZ() * 0.52;
+        level.addParticle(new net.minecraft.core.particles.DustParticleOptions(0xB83A3A, 0.45F),
+                x, y, z, 0, 0.005, 0);
+    }
+
+    @Override
+    protected void attack(BlockState state, Level level, BlockPos pos, Player player) {
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)
+            net.goui.cosmicdungeon.block.entity.CosmicSpawnerFeedback.warn(serverPlayer);
+    }
+
     @Override
     public boolean triggerEvent(BlockState state, Level level, BlockPos pos, int id, int param) {
         BlockEntity be = level.getBlockEntity(pos);

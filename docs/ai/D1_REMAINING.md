@@ -25,7 +25,7 @@ with identical protected inputs and successful baseline tests verified. Releases
 - 25: advanced modes and performance validation.
 - 26: integration and final set Beta.
 Cumulative licensed gameplay and companion app acceptance remain separate.
-Stop after Batch12; the10-minute conditional extension was not met. Completed SetA merges/Beta after16.
+Batch13 explicitly authorized and in progress: [task report](tasks/spawner-feedback-fireworks-20261006.md). Stop after13. Completed SetA merges/Beta after16.
 
 ---
 

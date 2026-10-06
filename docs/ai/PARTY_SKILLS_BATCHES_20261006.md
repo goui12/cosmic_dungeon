@@ -59,7 +59,7 @@ Preserve hostile damage/healing. Source gap verified: MercenaryWolves.protectedC
 BogatyrThreats prevents player-wolf outbound friendly damage, but lacks equivalent inbound guard.
 Expected: CompanionAllies/BogatyrThreats/BogatyrWolfEvents and mercenary damage/projectile/effect guards.
 No30cap change in this narrow bug-fix batch; performance/cap belongs to later command/AI work.
-13. Cosmic spawner visual, pickaxe warning and firework destruction
+13. Cosmic spawner visual, pickaxe warning and firework destruction (in progress;1.6.3-alpha.1)
 Faint wall-occluded red appearance when blocked, no red through-wall silhouette/fill.
 Large throttled "You need a pickaxe to break that!" on wrong-tool attempt.
 Both player/mercenary Pyroclast fireworks break eligible cosmic spawners within5blocks, respecting existing obstruction/protection.
@@ -191,7 +191,7 @@ Licensed full beta gameplay verification remains required before stable.
 A. Packs end with the dungeon. No surviving-wolf preservation across resets; implement compatible lifecycle cleanup in23.
 B. Normal splash pool: night vision,invisibility,fire resistance,swiftness,healing,regeneration,strength,luck.
 Epic skill selects only real tierII variants from that list. No unresolved potion-pool question.
-Cameron authorizes Batch12; Batch13 only if the current work finishes within10minutes. Do not rush or skip quality gates.
+Cameron explicitly authorized Batch13 on2026-10-06. Stop after13; prior conditional continuation is superseded.
 
 ## Automated/manual verification and planning receipt
 All actual code batches follow AGENTS: narrow task/PR, exclusive hotspot ownership, Java21 build, CI clean build/native GameTests,

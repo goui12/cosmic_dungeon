@@ -63,6 +63,9 @@ public final class DungeonInstanceGameTests {
         suite.add(id("allied_wolf_damage"),net.goui.cosmicdungeon.mercenary.AlliedWolfGameTests::damage);
         suite.add(id("allied_wolf_projectiles"),net.goui.cosmicdungeon.mercenary.AlliedWolfGameTests::projectiles);
         suite.add(id("allied_wolf_potions"),net.goui.cosmicdungeon.mercenary.AlliedWolfGameTests::potions);
+        suite.add(id("cosmic_spawner_player"),net.goui.cosmicdungeon.playerclass.d1.CosmicSpawnerGameTests::player);
+        suite.add(id("cosmic_spawner_mercenary"),net.goui.cosmicdungeon.playerclass.d1.CosmicSpawnerGameTests::mercenary);
+        suite.add(id("cosmic_spawner_warning"),net.goui.cosmicdungeon.playerclass.d1.CosmicSpawnerGameTests::warning);
         return suite;
     }
 
