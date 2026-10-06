@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: integration-gate-${{ github.event.pull_request.number || github.ref }}
@@ -22,16 +23,30 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Validate checkpoint safeguards
+        run: python -m unittest discover -s scripts/tests -v
+      - name: Choose validation scope
+        id: checkpoint
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CHECKPOINT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: python scripts/docs_checkpoint.py
       - name: Set up Java 21
+        if: steps.checkpoint.outputs.full == 'true'
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
       - name: Set up Gradle
+        if: steps.checkpoint.outputs.full == 'true'
         uses: gradle/actions/setup-gradle@v6
       - name: Make Gradle wrapper executable
+        if: steps.checkpoint.outputs.full == 'true'
         run: chmod +x gradlew
       - name: Validate JSON under src
+        if: steps.checkpoint.outputs.full == 'true'
         run: |
           python3 - <<'PY'
           import json
@@ -50,9 +65,24 @@ jobs:
           print('All JSON files under src are valid.')
           PY
       - name: Clean build
+        if: steps.checkpoint.outputs.full == 'true'
         run: ./gradlew --no-daemon clean build --stacktrace
       - name: Run GameTests
+        if: steps.checkpoint.outputs.full == 'true'
         run: ./gradlew --no-daemon runGameTestServer --stacktrace
+      - name: Record full checkpoint proof
+        if: steps.checkpoint.outputs.full == 'true' && success()
+        env:
+          CHECKPOINT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: python scripts/docs_checkpoint.py --record-full
+      - name: Upload full checkpoint proof
+        if: steps.checkpoint.outputs.full == 'true' && success()
+        uses: actions/upload-artifact@v7
+        with:
+          name: checkpoint-proof-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 30
+          if-no-files-found: error
+          path: build/checkpoint/checkpoint-proof.json
       - name: Upload integration evidence
         if: always()
         uses: actions/upload-artifact@v7
@@ -61,6 +91,7 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
           path: |
+            build/checkpoint/*.json
             build/libs/*.jar
             build/reports/**
             build/test-results/**

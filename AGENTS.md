@@ -143,7 +143,7 @@ For every Cosmic Spawner change:
 ## NeoForge Data Generation and Resources
 
 - Use NeoForge datagen wherever the project and professional NeoForge conventions expect generated JSON.
-- Follow the repository’s existing separation between client and server generated resources.
+- Follow the repositoryâ€™s existing separation between client and server generated resources.
 - Do not create both generated and hand-authored versions of the same resource.
 - Run the relevant client and/or server datagen tasks when changing:
   - Item or block models.
@@ -156,7 +156,7 @@ For every Cosmic Spawner change:
   - Other resources already managed by project datagen.
 - Inspect generated changes before committing them.
 - Do not run or modify datagen when it is unrelated to the task.
-- Hand-authored configuration or profile JSON may remain hand-authored when that is the project’s established design.
+- Hand-authored configuration or profile JSON may remain hand-authored when that is the projectâ€™s established design.
 
 ## Documentation
 
@@ -302,7 +302,7 @@ Do not claim certainty beyond the evidence produced by the build, tests, code re
 ### Datagen, Build and Client Handoff (updated 2026-10-04)
 
 - Run runServerData for changes affecting generated server data, runClientData for changes affecting generated client resources, or both when both are affected. Run them sequentially and review generated changes before building. Do not run datagen for unrelated hand-authored PNG/audio/theme or documentation-only changes; state when it is not applicable.
-- Run the Java 21 Gradle build after every completed edit pass before handoff, including documentation/workflow passes. If a substantive fix changes build inputs, rebuild it. Preserve the tracked historical JAR; build does not authorize destructive clean or a binary-tracking-policy change.
+- Run the Java 21 Gradle build after every completed edit pass before handoff, including workflow passes. The narrowly verified narrative-checkpoint exception below supersedes this requirement only when its evidence checks pass. If a substantive fix changes build inputs, rebuild it. Preserve the tracked historical JAR; build does not authorize destructive clean or a binary-tracking-policy change.
 - Do not automatically launch runClient or any development client, including when asking Cameron to test. Only an explicit request for that launch authorizes it. Do not force-close an active game/world or start duplicate clients. If a running client blocks installation of a new build, ask Cameron to close that client; otherwise verify it is closed and install without another confirmation.
 - If Cameron explicitly requested a client launch, check startup with bounded logs/window status and fix failures caused by the current changes before handoff. Leave that requested client available; do not enter worlds or perform destructive gameplay automatically. A normal build/deployment handoff does not require a client launch.
 - Give a short numbered test list stating the screen/action, expected result, and relevant regression or boundary to check. Distinguish a successful launch from visual, audio, interaction or multiplayer acceptance.
@@ -338,3 +338,14 @@ Do not claim certainty beyond the evidence produced by the build, tests, code re
 - Preserve source/tag, SHA256, returned file IDs and upload receipts. Block blind retries after an uncertain upload; reconcile the author-console result first. Do not reuse a version/tag for different inputs. Upload acceptance and public moderation/app availability are separate outcomes.
 - Existing stopped-server/closed-client deployment checks remain mandatory and independently applied. Never auto-launch a development client or restart TEST.
 - The prior test-builds/PS1 path remains transitional until verified CurseForge delivery covers the requested client components. Never merge that binary branch into main. See docs/CURSEFORGE_RELEASES.md and docs/ai/CURSEFORGE_AND_MERCENARY_BATCHES_20261004.md.
+
+
+### Quality-preserving workflow optimization (Cameron, 2026-10-06)
+
+- Proactively recommend process optimizations and apply compatible improvements when their validation demonstrates that quality is preserved. Consolidate same-task edits and completion notes, batch independent reads, reuse unchanged source snapshots with explicit provenance, retain complete logs locally while returning bounded summaries, and avoid unrelated database/audit/datagen work and redundant polling.
+- Never weaken a valid test, reuse evidence for changed inputs, or bypass release, source/tag, artifact-hash, deployment-state, authentication, or migration safeguards to save time. Report measured savings and uncertainties; elapsed time is not a measured ChatGPT-credit cost.
+- If a proposed optimization conflicts with AGENTS.md, stop before implementing the conflict and ask Cameron one concrete either/or question. Record the answer; do not re-ask it.
+- Cameron approved Approach A: narrative checkpoint changes may reuse successful full integration evidence. This exception is limited to docs/ai/D1_REMAINING.md, docs/ai/PARTY_SKILLS_BATCHES_20261006.md, and direct Markdown task reports under docs/ai/tasks/. It does not exempt all documentation: docs/config-examples is a build input. AGENTS.md, workflows, scripts, tests, resources, source and build settings always require full validation.
+- Use scripts/docs_checkpoint.py (or --local before a local handoff) to verify a successful ancestor full Integration Gate from this repository/branch, matching every non-allowlisted tracked Git object and file mode, including the workflow and verifier. Record the baseline commit/run, fingerprint, changed documents and checks. Require evidence that both Clean build and Run GameTests actually passed; a reused, skipped, failed, missing, expired, fork, non-ancestor or mismatched proof does not qualify.
+- For qualifying narrative checkpoints run document/link/diff checks and verifier regression tests. Local --local exit 2 means the ordinary Java21 build is still required. The CI gate falls back to full testing on unavailable, ambiguous or changed evidence; never bypass a required status check.
+- Validate the verifier/workflow changes with full gates before relying on this exception. Gameplay/build/config/test/workflow changes and every CurseForge release retain their full required validation. Native GameTests remain in CI; automatic local Minecraft/client/server launch restrictions are unchanged.
