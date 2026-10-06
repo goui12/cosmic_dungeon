@@ -66,6 +66,8 @@ public final class DungeonInstanceGameTests {
         suite.add(id("cosmic_spawner_player"),net.goui.cosmicdungeon.playerclass.d1.CosmicSpawnerGameTests::player);
         suite.add(id("cosmic_spawner_mercenary"),net.goui.cosmicdungeon.playerclass.d1.CosmicSpawnerGameTests::mercenary);
         suite.add(id("cosmic_spawner_warning"),net.goui.cosmicdungeon.playerclass.d1.CosmicSpawnerGameTests::warning);
+        suite.add(id("party_health_player"),net.goui.cosmicdungeon.npc.tamsin.PartyHealthGameTests::player);
+        suite.add(id("party_health_mercenary"),net.goui.cosmicdungeon.npc.tamsin.PartyHealthGameTests::mercenary);
         return suite;
     }
 

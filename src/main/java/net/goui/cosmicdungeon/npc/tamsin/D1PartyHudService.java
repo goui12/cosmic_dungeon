@@ -27,6 +27,7 @@ final class D1PartyHudService {
         lobby.parties().forEach(p -> audience.addAll(p.members()));
         lobby.invitations().forEach(i -> audience.add(i.target()));
         var retainedIdentities = new HashSet<UUID>();
+        var vitals = new HashMap<UUID, PartyVitals>();
         for (UUID id : audience) {
             var player = server.getPlayerList().getPlayer(id);
             if (player == null) { LAST.remove(id); continue; }
@@ -49,7 +50,14 @@ final class D1PartyHudService {
             } else if (run != null && !run.isCompletionExited(id)) {
                 var roster = run.orderedPlayers().stream().filter(m -> !run.isCompletionExited(m)).limit(6).toList();
                 retainedIdentities.addAll(roster);
-                rows = roster.stream().map(m -> member(server, m, true, run.groupLeader().filter(m::equals).isPresent())).toList();
+                rows = roster.stream().map(m -> {
+                    var identity = member(server, m, false, run.groupLeader().filter(m::equals).isPresent());
+                    var health = vitals.computeIfAbsent(m, key -> {
+                        var subject = server.getPlayerList().getPlayer(key);
+                        return PartyVitalsSnapshot.capture(subject, subject != null && run.containsDimension(subject.level().dimension()));
+                    });
+                    return new PartyPayloads.Member(identity.name(),identity.classId(),false,identity.leader(),false,health);
+                }).toList();
                 var previous = LAST.get(id);
                 name = previous == null || previous.recruitment().groupName().isBlank() ? "Dungeon 1" : previous.recruitment().groupName();
                 for(var hire:run.mercenaries())if(run.containsPlayer(hire.hirer())&&!run.isCompletionExited(hire.hirer()))

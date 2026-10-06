@@ -72,7 +72,8 @@ public final class MercenaryRespawns {
             if(level.getEntity(contract.id()) instanceof MercenaryEntity entity&&run.runId()==entity.runId()
                     &&contract.equals(entity.contract())){
                 if(entity.rest()!=null)rest=entity.rest();
-                else return new PartyPayloads.Mercenary(name,owner,entity.getHealth(),entity.getMaxHealth(),-1,"ACTIVE",PartyPayloads.Recovery.NONE,skills,resurrection,contract.classId());
+                else if(entity.isAlive()) return new PartyPayloads.Mercenary(name,owner,entity.getHealth(),entity.getMaxHealth(),-1,"ACTIVE",PartyPayloads.Recovery.NONE,skills,resurrection,contract.classId(),
+                        net.goui.cosmicdungeon.npc.tamsin.PartyVitalsSnapshot.capture(entity,true));
                 break;
             }
         }

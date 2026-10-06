@@ -29,7 +29,7 @@ public final class D1PartyHud {
     public static PartyPayloads.Mercenary resurrectionOffer(){
         return view==null?null:view.mercenaries().stream().filter(row->row.resurrection().offered()).findFirst().orElse(null);
     }
-    private static void clear() { view = null; inventory = null; ready = leave = join = revive = null; }
+    private static void clear() { PartyHealthHud.reset(); view = null; inventory = null; ready = leave = join = revive = null; }
     @SubscribeEvent public static void login(ClientPlayerNetworkEvent.LoggingIn event) { clear(); }
     @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { clear(); }
     private static boolean inventory(Screen screen) {
@@ -52,7 +52,13 @@ public final class D1PartyHud {
         int left = inventory(screen) ? ((AbstractContainerScreen<?>)screen).getGuiLeft() : -1;
         return D1PartyHudLayout.forView(left, view == null ? 0 : view.members().size());
     }
-    public static int worldHeight() { return visible() ? layout().height() + MercenaryHudLayout.stackHeight(view.mercenaries().size()) + 8 : 0; }
+    private static boolean activeHealth() { return visible() && view.state().phase().equals("ACTIVE"); }
+    private static PartyHealthLayout healthLayout() {
+        var screen=Minecraft.getInstance().screen;
+        return inventory(screen)?PartyHealthHud.inventoryLayout(((AbstractContainerScreen<?>)screen).getGuiLeft(),screen.height)
+                :PartyHealthHud.worldLayout(view);
+    }
+    public static int worldHeight() { if(activeHealth())return PartyHealthHud.worldLayout(view).height()+8; return visible() ? layout().height() + MercenaryHudLayout.stackHeight(view.mercenaries().size()) + 8 : 0; }
     public static int inventoryAccountX() {
         return visible() && inventory(Minecraft.getInstance().screen) ? layout().x() + layout().width() + 8 : 8;
     }
@@ -64,6 +70,7 @@ public final class D1PartyHud {
     @SubscribeEvent public static void init(ScreenEvent.Init.Post event) {
         if (!inventory(event.getScreen())) return;
         inventory = event.getScreen();
+        PartyHealthHud.reset();
         ready = Button.builder(Component.literal("Ready"), button -> {
             var player = Minecraft.getInstance().player;
             if (player != null) send(D1PartyPresentation.readiness(view, player.getGameProfile().name()).action());
@@ -141,7 +148,20 @@ public final class D1PartyHud {
             for (Button button : List.of(ready, leave, join, revive))
                 button.render(event.getGuiGraphics(), event.getMouseX(), event.getMouseY(), event.getPartialTick());
     }
+    @SubscribeEvent public static void scroll(ScreenEvent.MouseScrolled.Pre event) {
+        if(activeHealth()&&inventory(event.getScreen())&&!bookVisible()
+                &&PartyHealthHud.wheel(view,healthLayout(),event.getMouseX(),event.getMouseY(),event.getScrollDeltaY()))event.setCanceled(true);
+    }
+    @SubscribeEvent public static void drag(ScreenEvent.MouseDragged.Pre event) {
+        if(activeHealth()&&inventory(event.getScreen())&&!bookVisible()&&event.getMouseButton()==0
+                &&PartyHealthHud.drag(view,healthLayout(),event.getMouseY()))event.setCanceled(true);
+    }
+    @SubscribeEvent public static void release(ScreenEvent.MouseButtonReleased.Pre event) {
+        if(event.getButton()==0&&PartyHealthHud.release())event.setCanceled(true);
+    }
     @SubscribeEvent public static void click(ScreenEvent.MouseButtonPressed.Pre event) {
+        if(activeHealth()&&inventory(event.getScreen())&&!bookVisible()&&event.getMouseButtonEvent().button()==0
+                &&PartyHealthHud.press(view,healthLayout(),event.getMouseX(),event.getMouseY())){event.setCanceled(true);return;}
         if (!visible() || !bookVisible() || event.getScreen().width >= 379 || ready == null) return;
         updateControls();
         for (Button button : List.of(ready, leave, join, revive)) {
@@ -157,6 +177,9 @@ public final class D1PartyHud {
             graphics.setComponentTooltipForNextFrame(font, List.of(Component.literal(text)), mouseX, mouseY);
     }
     private static void draw(GuiGraphics graphics, int mouseX, int mouseY) {
+        if(activeHealth()&&!bookVisible()) {
+            PartyHealthHud.draw(graphics,view,healthLayout(),inventory(Minecraft.getInstance().screen),mouseX,mouseY);return;
+        }
         var box = layout();
         graphics.fill(box.x(), box.y(), box.x() + box.width(), box.y() + box.height(), 0xD0181820);
         if (bookVisible()) {
@@ -169,7 +192,7 @@ public final class D1PartyHud {
                 details.add(Component.literal(grouped ? view.recruitment().groupName() : "Dungeon 1 invitation from " + view.invitation().inviter()));
                 if (grouped) details.add(Component.literal("Difficulty: " + view.difficulty()));
                 for (var member : view.members()) details.add(Component.literal(member.name() + " / "
-                        + ClassSelectorScreen.className(member.classId()).getString() + D1PartyPresentation.readySuffix(view, member)));
+                        + ClassSelectorScreen.className(member.classId()).getString() + (activeHealth() ? " / "+PartyHealthHud.status(member.vitals()) : D1PartyPresentation.readySuffix(view, member))));
                 for(var hire:view.mercenaries())for(String detail:MercenaryHudLayout.tooltip(hire))details.add(Component.literal(detail));
                 if (!grouped && view.invitation().accepted()) details.add(Component.literal("Finish agreement/class selection at Tamsin"));
                 graphics.setComponentTooltipForNextFrame(Minecraft.getInstance().font, details, mouseX, mouseY);
