@@ -2,11 +2,11 @@
 
 Status: Cameron authorized implementation of Batch10 and11 on2026-10-06 at08:29PDT.
 All original and follow-up questions are settled. Implement10 then11; stop before12.
-Code baseline remains cosmic_dungeon_batch9, HEAD22160f354e144c62cc7d3a3ba4c9b54e5deb0dc6.
-Fresh origin fetch: task branch local/remote0/0, tracked clean; existing untracked build outputs preserved.
+Batch10 merged through PR227: main e57b27bb78e592fca521e05bc78e305f23c55c2f; exact1.6.0-beta published.
+Batch11 starts from that merged baseline on feature/party-trade-readiness-20261006; runtime implementation and local build complete, clean CI/review pending.
 Source: Cameron's original request, reviewed wolfpack mockup, and October6 08:16PDT clarification.
 This queue records requirements; implementation status is maintained in task reports and D1_REMAINING.
-Google source metadata not refreshed; prior OAuth expiry is historical, not a new sync result.
+Google source metadata refresh attempted2026-10-06T15:34:03Z: existing read-only authorization expired. Cached Tamsin/TamsinTax plus Cameron explicit settled corrections used; no fresh semantic audit claimed.
 All earlier questions below the latest DECISIONS checkpoint are historical; do not re-ask settled decisions.
 
 ## Numbering and release sequence

@@ -81,7 +81,7 @@ final class D1PartyPanel {
         } else {
             var player = net.minecraft.client.Minecraft.getInstance().player;
             var ready = D1PartyPresentation.readiness(view, player == null ? null : player.getGameProfile().name());
-            boolean allReady = view.members().stream().allMatch(PartyPayloads.Member::ready);
+            boolean allReady = D1PartyPresentation.allHumansReady(view);
             button(add, ready.label(), x + 10, y + 144, 162, ready.enabled(), () -> send(containerId, ready.action(), ""));
             button(add, "Start Adventure!", x + 178, y + 144, 172,
                     state.leader() && state.phase().equals("READY_CHECK") && allReady, () -> send(containerId, "queue", ""));
@@ -143,9 +143,9 @@ final class D1PartyPanel {
             int rowY = y + 64;
             for (var member : view.members()) {
                 String row = (member.leader() ? "* " : "  ") + member.name() + " / "
-                        + ClassSelectorScreen.className(member.classId()).getString() + (member.ready() ? " / Ready" : "");
+                        + ClassSelectorScreen.className(member.classId()).getString() + (D1PartyPresentation.showsReadiness(view, member) && member.ready() ? " / Ready" : "");
                 graphics.drawString(font, font.plainSubstrByWidth(row, 340), x + 10, rowY,
-                        member.ready() ? 0xFFAAFFAA : 0xFFFFFFFF, false);
+                        D1PartyPresentation.showsReadiness(view, member) && member.ready() ? 0xFFAAFFAA : 0xFFFFFFFF, false);
                 rowY += 11;
             }
             String status = switch (state.phase()) {

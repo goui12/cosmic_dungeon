@@ -39,6 +39,7 @@ public final class TradeSessionData {
         }
 
         cleanupExpiredInvites(from);
+        if (!adventureAllowsTrade(from, to)) return;
 
         if (from.getUUID().equals(to.getUUID())) {
             from.sendSystemMessage(Component.literal("You cannot trade with yourself."));
@@ -85,6 +86,7 @@ public final class TradeSessionData {
             return false;
         }
 
+        if (!adventureAllowsTrade(accepter, inviter)) return false;
         InviteKey key = new InviteKey(inviter.getUUID(), accepter.getUUID());
         PendingInvite invite = invites.get(key);
         if (invite == null) {
@@ -155,6 +157,22 @@ public final class TradeSessionData {
 
     public static TradeSession get(ServerPlayer p) {
         return p == null ? null : sessions.get(p.getUUID());
+    }
+
+    private static boolean adventureAllowsTrade(ServerPlayer actor, ServerPlayer other) {
+        if (net.goui.cosmicdungeon.npc.tamsin.D1PartyService.tradingAllowed(actor)
+                && net.goui.cosmicdungeon.npc.tamsin.D1PartyService.tradingAllowed(other)) return true;
+        actor.sendSystemMessage(Component.literal("An adventure is starting. Trade again after entry."));
+        return false;
+    }
+
+    /** Uses existing custody recovery, including the other participant outside the starting party. */
+    public static boolean endForAdventure(ServerPlayer player) {
+        if (player == null) return false;
+        removePendingInvitesInvolving(player.getUUID());
+        var session = get(player);
+        if (session != null) session.cancel("The group leader started the adventure");
+        return TradeCustody.beforeInventoryChange(player);
     }
 
     public static boolean isBusy(ServerPlayer p) {

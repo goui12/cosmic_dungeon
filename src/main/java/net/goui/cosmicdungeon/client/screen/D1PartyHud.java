@@ -162,14 +162,14 @@ public final class D1PartyHud {
         if (bookVisible()) {
             boolean grouped = !view.members().isEmpty();
             line(graphics, grouped ? view.recruitment().groupName() : "Dungeon 1 invitation", box.y() + 2, 0xFFE4C98A, -1, -1);
-            line(graphics, !view.mercenaries().isEmpty() ? String.join(", ", view.mercenaries().stream().map(PartyPayloads.Mercenary::name).toList()) : grouped ? "Ready " + view.members().stream().filter(PartyPayloads.Member::ready).count() + "/" + view.members().size()
+            line(graphics, !view.mercenaries().isEmpty() ? String.join(", ", view.mercenaries().stream().map(MercenaryHudLayout::label).toList()) : grouped ? D1PartyPresentation.readySummary(view)
                     : "From: " + view.invitation().inviter(), box.y() + 13, 0xFFFFFFFF, -1, -1);
             if (mouseX >= box.x() && mouseX < box.x() + box.width() && mouseY >= box.y() && mouseY < box.y() + box.height()) {
                 var details = new java.util.ArrayList<Component>();
                 details.add(Component.literal(grouped ? view.recruitment().groupName() : "Dungeon 1 invitation from " + view.invitation().inviter()));
                 if (grouped) details.add(Component.literal("Difficulty: " + view.difficulty()));
                 for (var member : view.members()) details.add(Component.literal(member.name() + " / "
-                        + ClassSelectorScreen.className(member.classId()).getString() + (member.ready() ? " / Ready" : " / Not Ready")));
+                        + ClassSelectorScreen.className(member.classId()).getString() + D1PartyPresentation.readySuffix(view, member)));
                 for(var hire:view.mercenaries())for(String detail:MercenaryHudLayout.tooltip(hire))details.add(Component.literal(detail));
                 if (!grouped && view.invitation().accepted()) details.add(Component.literal("Finish agreement/class selection at Tamsin"));
                 graphics.setComponentTooltipForNextFrame(Minecraft.getInstance().font, details, mouseX, mouseY);
@@ -184,7 +184,7 @@ public final class D1PartyHud {
         }
         line(graphics, view.recruitment().groupName(), box.y() + 4, 0xFFE4C98A, mouseX, mouseY);
         String status = switch (view.state().phase()) {
-            case "READY_CHECK" -> "Ready " + view.members().stream().filter(PartyPayloads.Member::ready).count() + "/" + view.members().size();
+            case "READY_CHECK" -> D1PartyPresentation.readySummary(view);
             case "QUEUED" -> view.state().countdownSeconds() < 0 ? "Queue " + view.state().queuePosition()
                     : "Starting in " + view.state().countdownSeconds() + "s";
             case "PREPARING" -> "Preparing";
@@ -198,15 +198,15 @@ public final class D1PartyHud {
         for (var member : view.members()) {
             line(graphics, (member.leader() ? "* " : "") + member.name() + " / "
                     + ClassSelectorScreen.className(member.classId()).getString()
-                    + (member.ready() ? " / Ready" : " / Not Ready"), y,
-                    member.ready() ? 0xFFAAFFAA : 0xFFDDDDDD, mouseX, mouseY);
+                    + D1PartyPresentation.readySuffix(view, member), y,
+                    D1PartyPresentation.showsReadiness(view, member) && member.ready() ? 0xFFAAFFAA : 0xFFDDDDDD, mouseX, mouseY);
             y += 12;
         }
         y=box.y()+box.height()+6;
         for(var hire:view.mercenaries()){
             graphics.fill(box.x(),y,box.x()+box.width(),y+26,0xD0181820);
             // Schedule only the complete row tooltip: GuiGraphics keeps the first tooltip submitted.
-            line(graphics,hire.name(),y+2,0xFFE4C98A,-1,-1);
+            line(graphics,MercenaryHudLayout.label(hire),y+2,0xFFE4C98A,-1,-1);
             line(graphics,MercenaryHudLayout.status(hire),y+12,hire.status().equals("ACTIVE")?0xFFAAFFAA:0xFFDDDDDD,-1,-1);
             int width=box.width()-8;
             graphics.fill(box.x()+4,y+23,box.x()+4+width,y+25,0xFF553333);

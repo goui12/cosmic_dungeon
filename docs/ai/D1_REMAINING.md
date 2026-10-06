@@ -1,11 +1,11 @@
 # Current rollout, 2026-10-06
 
-Batch 10 is in progress: Tamsin replay and exact **1.6.0-beta** release.
-Then proceed with authorized Batch 11: trading preserves Ready state, Start Adventure
-cancels unfinished trades safely, and readiness/class HUD cleanup.
+Batch 10 merged through [PR227](https://github.com/goui12/cosmic_dungeon/pull/227); exact **1.6.0-beta** and helper accepted by CurseForge.
+Batch 11 runtime implementation and local tests passed; clean CI/review and **1.6.1-alpha.1** publication are in progress.
+It preserves readiness while trading, cancels unfinished trades at a valid leader Start, and cleans up HUD readiness/class labels.
 [Approved new round, including settled wolf and potion decisions](PARTY_SKILLS_BATCHES_20261006.md).
 
-**17 batches including active 10; after 10 and 11, 15 remain (12-26).**
+**16 batches including active 11; after 11, 15 remain (12-26).**
 
 - 12: player wolf friendly fire.
 - 13: spawner glow, pickaxe warning and firework destruction.

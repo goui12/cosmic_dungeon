@@ -212,11 +212,17 @@ public final class D1PartyLobby {
         p.ready.add(player); // Same ready-check revision permits simultaneous confirmations; duplicates are idempotent.
         return null;
     }
-    public String queue(UUID leader, long expected) {
+    public String queueProblem(UUID leader, long expected) {
         var p = party(leader);
         if (p == null || !p.leader.equals(leader)) return "Only the group leader can submit the queue.";
         if (!current(leader, expected) || p.phase != Phase.READY_CHECK || !p.ready.equals(p.members))
             return "Every member must confirm ready first.";
+        return null;
+    }
+    public String queue(UUID leader, long expected) {
+        String problem = queueProblem(leader, expected);
+        if (problem != null) return problem;
+        var p = party(leader);
         p.phase = Phase.QUEUED; p.queueOrder = ++queueSequence; changed(p); return null;
     }
     public List<Party> queued() {

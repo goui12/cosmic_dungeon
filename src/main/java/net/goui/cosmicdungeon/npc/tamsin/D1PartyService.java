@@ -84,7 +84,7 @@ public final class D1PartyService {
             return new PartyPayloads.Member(member == null ? "Offline" : member.getGameProfile().name(),
                     member == null ? "none" : ClassData.getClassId(member), p.ready().contains(id), p.leader().equals(id));
         }).toList());
-        if(p!=null)p.contracts().forEach(hire->members.add(new PartyPayloads.Member(hire.name(),hire.classId(),true,false)));
+        if(p!=null)p.contracts().forEach(hire->members.add(new PartyPayloads.Member(hire.name(),hire.classId(),false,false,true)));
         var i = LOBBY.invitation(player.getUUID());
         var sender = i == null ? null : player.level().getServer().getPlayerList().getPlayer(i.inviter());
         boolean leader = p != null && p.leader().equals(player.getUUID());
@@ -143,7 +143,7 @@ public final class D1PartyService {
         return switch (action) {
             case "ready" -> LOBBY.ready(player.getUUID(), revision);
             case "unready" -> LOBBY.unready(player.getUUID(), revision);
-            default -> LOBBY.queue(player.getUUID(), revision);
+            default -> D1PartyTrades.start(player.level().getServer(), LOBBY, player.getUUID(), revision);
         };
     }
     private static void hudAction(ServerPlayer player, PartyPayloads.Action request) {
@@ -297,6 +297,10 @@ public final class D1PartyService {
             var party = LOBBY.party(player.getUUID());
             notify(server, party, player.getGameProfile().name() + " joined. All ready confirmations cleared.");
         }
+    }
+    /** Trading remains available through readiness, and again after dungeon entry. */
+    public static boolean tradingAllowed(ServerPlayer player) {
+        return player != null && D1PartyTrades.allowed(LOBBY.party(player.getUUID()));
     }
     public static void withdraw(ServerPlayer player) {
         var p = LOBBY.party(player.getUUID());
