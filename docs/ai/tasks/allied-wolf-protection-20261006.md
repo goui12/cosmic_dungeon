@@ -44,6 +44,8 @@ Future improvement: complete the already planned wolf command/lifecycle/performa
 - docs/ai/tasks/allied-wolf-protection-20261006.md
 - docs/ai/PARTY_SKILLS_BATCHES_20261006.md
 - docs/ai/D1_REMAINING.md
+- docs/ai/tasks/docs-checkpoint-reuse-20261006.md (final optimization evidence)
+- docs/ai/tasks/party-trade-readiness-20261006.md (follow-up release receipt)
 
 ## Review correction
 Automated review of3051105 found ambiguous network wording in the new release note.
