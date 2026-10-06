@@ -64,3 +64,10 @@ Future improvement: Batch14 replaces the remaining compact roster with complete 
 - src/test/java/net/goui/cosmicdungeon/client/screen/PartyIdentityCodecTest.java
 - src/test/java/net/goui/cosmicdungeon/gametest/GameTestSerializationTest.java
 - src/test/java/net/goui/cosmicdungeon/npc/tamsin/PartyTradePolicyTest.java
+
+## First clean CI follow-up
+Run37493700745 passed clean build and34/36 native GameTests; two new fixture assertions failed (completed exchange and full-inventory recovery).
+The completion fixture inserted uncatalogued items directly into offer containers; actual trade validation correctly rejected them.
+Fixtures now use catalogued apples/bread through native shift-click and explicitly finite survival inventories, so creative overflow semantics cannot invalidate the full-inventory scenario.
+All original final inventory/currency assertions remain; diagnostic actual values added. Production guards/transactions are unchanged.
+Automated GitHub review completed on6ae97532a9b3df458510d5468b7bfdff1f67b811 with no findings. Follow-up is limited to this native fixture and report; manually reviewed.

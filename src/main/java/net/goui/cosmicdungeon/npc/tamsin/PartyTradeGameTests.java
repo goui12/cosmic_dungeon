@@ -54,6 +54,8 @@ public final class PartyTradeGameTests {
                 @Override public void send(net.minecraft.network.protocol.Packet<?> packet){}
                 @Override public void send(net.minecraft.network.protocol.Packet<?> packet,io.netty.channel.ChannelFutureListener listener){}
             };
+            p.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+            check(!p.hasInfiniteMaterials(),"Trade fixtures use finite survival inventories");
             p.setHealth(20);p.setPos(helper.absoluteVec(new net.minecraft.world.phys.Vec3(1,3,1)));
             var root=new CompoundTag();root.putString(ClassData.KEY_CLASS_ID,"theurgist");p.getPersistentData().put(ClassData.ROOT_TAG,root);
             actors.add(p);players.put(p.getUUID(),p);online.add(p);CurrencyService.setBalanceTrace(p,100);
@@ -66,8 +68,11 @@ public final class PartyTradeGameTests {
         }
         void offer(TradeSessionData.TradeSession session,ServerPlayer player,Item item,int amount) {
             player.getInventory().setItem(0,new ItemStack(item,amount));
-            session.getContainerFor(player,true).setItem(0,player.getInventory().removeItemNoUpdate(0));
-            session.onOfferChanged(player);
+            check(net.goui.cosmicdungeon.economy.pricing.ItemTransferRules.tradeEligible(player.getInventory().getItem(0)),
+                    "Fixture item must satisfy the unchanged trade catalog");
+            ((TradeMenu)player.containerMenu).quickMoveStack(player,TradeMenu.HOTBAR_START);
+            check(player.getInventory().getItem(0).isEmpty()
+                    &&session.getContainerFor(player,true).getItem(0).getCount()==amount,"Native shift-click places the actual offered stack");
         }
         void readyUnchanged(long revision) {
             check(party.phase()==D1PartyLobby.Phase.READY_CHECK&&party.revision()==revision
@@ -85,7 +90,7 @@ public final class PartyTradeGameTests {
     public static void start(GameTestHelper helper) {
         try(var f=new Fixture(helper)) {
             long revision=f.party.revision();var session=f.open();f.readyUnchanged(revision);
-            f.offer(session,f.member,Items.DIAMOND,3);f.offer(session,f.outsider,Items.EMERALD,2);
+            f.offer(session,f.member,Items.APPLE,3);f.offer(session,f.outsider,Items.BREAD,2);
             f.member.containerMenu.setCarried(new ItemStack(Items.GOLD_INGOT,5));
             session.setCurrency(f.member,25);session.setReady(f.member,true);session.setReady(f.outsider,true);
             session.setConfirm(f.member,true);f.readyUnchanged(revision);
@@ -95,11 +100,11 @@ public final class PartyTradeGameTests {
             f.check(f.party.phase()==D1PartyLobby.Phase.QUEUED&&f.party.ready().size()==2,"Start queues the same ready group");
             f.check(!TradeSessionData.isBusy(f.member)&&!TradeSessionData.isBusy(f.outsider)
                     &&f.member.containerMenu==f.member.inventoryMenu&&f.outsider.containerMenu==f.outsider.inventoryMenu,"Start closes both menus, including outsider");
-            f.check(f.member.getInventory().countItem(Items.DIAMOND)==3&&f.member.getInventory().countItem(Items.GOLD_INGOT)==5
-                    &&f.outsider.getInventory().countItem(Items.EMERALD)==2,"Offers and cursor return to their original owners once");
+            f.check(f.member.getInventory().countItem(Items.APPLE)==3&&f.member.getInventory().countItem(Items.GOLD_INGOT)==5
+                    &&f.outsider.getInventory().countItem(Items.BREAD)==2,"Offers and cursor return to their original owners once");
             f.check(CurrencyService.getBalanceTrace(f.member)==100&&CurrencyService.getBalanceTrace(f.outsider)==100,"Unfinished payment is never charged");
             session.setConfirm(f.outsider,true);session.cancel("duplicate");
-            f.check(f.member.getInventory().countItem(Items.DIAMOND)==3&&CurrencyService.getBalanceTrace(f.member)==100,"Stale confirm/cancel cannot transfer or duplicate");
+            f.check(f.member.getInventory().countItem(Items.APPLE)==3&&CurrencyService.getBalanceTrace(f.member)==100,"Stale confirm/cancel cannot transfer or duplicate");
             TradeSessionData.invite(f.outsider,f.member);
             f.check(!TradeSessionData.acceptInvite(f.member,f.outsider)&&!TradeSessionData.isBusy(f.member),"Queued participant cannot reopen a trade");
             f.lobby.startCountdown(f.party,0,1);f.check(f.lobby.prepare(f.party,1),"Fixture enters preparation");
@@ -111,26 +116,28 @@ public final class PartyTradeGameTests {
     public static void completed(GameTestHelper helper) {
         try(var f=new Fixture(helper)) {
             long revision=f.party.revision();var session=f.open();
-            f.offer(session,f.member,Items.DIAMOND,3);f.offer(session,f.outsider,Items.EMERALD,2);
+            f.offer(session,f.member,Items.APPLE,3);f.offer(session,f.outsider,Items.BREAD,2);
             session.setCurrency(f.member,25);session.setReady(f.member,true);session.setReady(f.outsider,true);
             session.setConfirm(f.member,true);session.setConfirm(f.outsider,true);
             f.check(!TradeSessionData.isBusy(f.member),"Both confirmations complete the native trade");
             f.readyUnchanged(revision);
-            f.check(f.outsider.getInventory().countItem(Items.DIAMOND)==3&&f.member.getInventory().countItem(Items.EMERALD)==2
-                    &&CurrencyService.getBalanceTrace(f.member)==75&&CurrencyService.getBalanceTrace(f.outsider)==125,"Completed items and Trace change owners exactly once");
+            f.check(f.outsider.getInventory().countItem(Items.APPLE)==3&&f.member.getInventory().countItem(Items.BREAD)==2
+                    &&CurrencyService.getBalanceTrace(f.member)==75&&CurrencyService.getBalanceTrace(f.outsider)==125,"Completed items and Trace change owners exactly once; actual="+f.outsider.getInventory().countItem(Items.APPLE)+"/"
+                    +f.member.getInventory().countItem(Items.BREAD)+"/"+CurrencyService.getBalanceTrace(f.member)+"/"+CurrencyService.getBalanceTrace(f.outsider));
             f.ok(f.start(f.leader,revision));
-            f.check(f.outsider.getInventory().countItem(Items.DIAMOND)==3&&CurrencyService.getBalanceTrace(f.member)==75,"Adventure start never reverses a completed trade");
+            f.check(f.outsider.getInventory().countItem(Items.APPLE)==3&&CurrencyService.getBalanceTrace(f.member)==75,"Adventure start never reverses a completed trade");
             helper.succeed();
         }
     }
     public static void fullInventory(GameTestHelper helper) {
         try(var f=new Fixture(helper)) {
-            var session=f.open();f.offer(session,f.member,Items.DIAMOND,3);
+            var session=f.open();f.offer(session,f.member,Items.APPLE,3);
             for(int i=0;i<36;i++)f.member.getInventory().setItem(i,new ItemStack(Items.STONE,64));
             f.ok(f.start(f.leader,f.party.revision()));
-            f.check(f.member.getInventory().countItem(Items.STONE)==2304&&f.member.getInventory().countItem(Items.DIAMOND)==0,"Full inventory is never overwritten");
+            f.check(f.member.getInventory().countItem(Items.STONE)==2304&&f.member.getInventory().countItem(Items.APPLE)==0,"Full inventory is never overwritten");
             f.member.getInventory().setItem(0,ItemStack.EMPTY);TradeCustody.claim(f.member);TradeCustody.claim(f.member);
-            f.check(f.member.getInventory().countItem(Items.DIAMOND)==3,"Overflow stays recoverable and is claimed once");
+            f.check(f.member.getInventory().countItem(Items.APPLE)==3,"Overflow stays recoverable and is claimed once; actual="+f.member.getInventory().countItem(Items.APPLE)
+                    +", pending="+net.goui.cosmicdungeon.item.identity.ProtectedItemRecovery.pendingHere(f.member));
             helper.succeed();
         }
     }
