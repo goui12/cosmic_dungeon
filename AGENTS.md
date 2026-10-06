@@ -329,7 +329,7 @@ Do not claim certainty beyond the evidence produced by the build, tests, code re
 
 ### Versioned CurseForge releases (Cameron, 2026-10-04)
 
-- Every newly distributed TEST update must increment the patch/micro number in gradle.properties mod_version before building. Rebuilding unchanged inputs keeps its version. Use major.minor.patch-alpha.N between batches, beta.N after a completed collection of batches, and no suffix only after full beta gameplay testing.
+- Every newly distributed TEST update must increment the patch/micro number in gradle.properties mod_version before building. Rebuilding unchanged inputs keeps its version. Use major.minor.patch-alpha.N between batches, beta or beta.N after a completed collection of batches (honor an explicitly requested exact version such as 1.6.0-beta), and no suffix only after full beta gameplay testing.
 - Use scripts/curseforge_release.py bump --channel alpha or beta, and add docs/releases/<version>.md. Stable promotion removes the tested beta suffix. The first public release under this workflow is 1.5.2-beta.1.
 - A completed batch set includes a validated PR merge into GitHub main and its Beta publication. This request is standing merge/upload authorization; do not ask again for a routine completed-set merge or configured CurseForge upload. Preserve unrelated changes and stop for a real merge conflict or failed validation gate.
 - After a validated client-build update, commit/push the source and its unique v<mod_version> tag. The CurseForge Release Actions workflow performs clean build/native tests/GameTests, validates actual jar versions, and uploads the exact artifacts. Do not use a second concurrent publisher. Beta/stable tags must point to merged main source.

@@ -18,14 +18,14 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 API = "https://minecraft.curseforge.com/api"
 REPO = "goui12/cosmic_dungeon"
-VERSION = re.compile(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(alpha|beta)\.([1-9]\d*))?\Z")
+VERSION = re.compile(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(alpha|beta)(?:\.([1-9]\d*))?)?\Z")
 SERVICE = "META-INF/services/net.neoforged.neoforgespi.earlywindow.ImmediateWindowProvider"
 
 
 def channel(version):
     match = VERSION.fullmatch(version)
-    if not match:
-        raise ValueError("Use major.minor.patch[-alpha.N|-beta.N].")
+    if not match or match[4] == "alpha" and match[5] is None:
+        raise ValueError("Use major.minor.patch[-alpha.N|-beta|-beta.N].")
     return match[4] or "release"
 
 
@@ -232,7 +232,7 @@ def bump(kind, root=ROOT):
     text = path.read_text(encoding="utf-8-sig")
     old = properties(root)["mod_version"].strip()
     match = VERSION.fullmatch(old)
-    if not match:
+    if not match or match[4] == "alpha" and match[5] is None:
         raise ValueError("Current mod_version is not a supported version.")
     if kind == "release":
         if match[4] != "beta":

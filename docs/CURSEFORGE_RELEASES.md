@@ -118,3 +118,10 @@ companion project moderation and licensed-client app update testing remain separ
 The receipt records the companion ID/slug actually sent with a successful main upload.
 A reused older main without that evidence retains its archive fallback even after a
 companion is enabled; a retry never claims it added metadata to an already uploaded file.
+
+## Exact completed-set beta versions
+
+The publisher accepts both major.minor.patch-beta and numbered -beta.N versions.
+Batch 10 uses the explicitly requested 1.6.0-beta. Both jars and the tag must match
+that exact string; Beta tags still require merged main ancestry. Alpha builds retain
+-alpha.N; the next distributed alpha increments the patch (1.6.1-alpha.1).

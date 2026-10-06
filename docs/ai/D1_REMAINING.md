@@ -1,3 +1,33 @@
+# Current rollout, 2026-10-06
+
+Batch 10 is in progress: Tamsin replay and exact **1.6.0-beta** release.
+Then proceed with authorized Batch 11: trading preserves Ready state, Start Adventure
+cancels unfinished trades safely, and readiness/class HUD cleanup.
+[Approved new round, including settled wolf and potion decisions](PARTY_SKILLS_BATCHES_20261006.md).
+
+**17 batches including active 10; after 10 and 11, 15 remain (12-26).**
+
+- 12: player wolf friendly fire.
+- 13: spawner glow, pickaxe warning and firework destruction.
+- 14: complete party HP/effect HUD.
+- 15: current-run member inspection.
+- 16: latest-death inventory organization.
+- 17: Theurgist/Venefex mercenary split.
+- 18: Judicator mercenary progression.
+- 19: movable shared Skills panel, reset setting and recipe-book removal.
+- 20: Brewing Supplies/Kibble and generated recycling tags.
+- 21: universal inventory supply requests.
+- 22: player Theurgist crafting and resurrection.
+- 23: wolf commands and run-only wolf lifecycle.
+- 24: core wolf modes.
+- 25: advanced modes and performance validation.
+- 26: integration and final set Beta.
+
+Cumulative licensed gameplay and companion app acceptance remain separate.
+Stop after Batch 11; do not implement queued wolf/potion changes yet.
+
+---
+
 # Current rollout, 2026-10-05
 
 [CurseForge and mercenary batch plan](CURSEFORGE_AND_MERCENARY_BATCHES_20261004.md).

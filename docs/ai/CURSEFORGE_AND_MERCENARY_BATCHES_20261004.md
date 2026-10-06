@@ -3,8 +3,8 @@
 Stage 1 and Batches 1-9 are validated, published and installed. Batch 9 is
 **1.5.12-alpha.1**, with resurrection unlocked at Positive Potions level 10.
 Licensed gameplay QA and companion app-delivery acceptance remain pending.
-**One planned implementation batch remains: 10**, Tamsin lore/map replay and the completed-set
-**1.6.0-beta** release. Stop before Batch 10 implementation until requested.
+**Batch 10 is in progress**, Tamsin lore/map replay and the completed-set
+**1.6.0-beta** release. Cameron authorized Batch 10 and then Batch 11 on October 6.
 Earlier D1 sets retain their cumulative licensed multiplayer QA.
 
 ## Stage 1: public 1.5.2 Beta and publishing
@@ -162,5 +162,5 @@ After all ten batches: verify multiplayer payments/donations, friendly fire and 
 targeting, growth/reset/reload, wolf ownership, death-menu races, Tamsin replay, performance
 and both CurseForge client updates. Merge the completed source set into main and publish
 **1.6.0-beta**. Stable follows full licensed beta acceptance, which is a separate gate.
-One planned implementation batch remains: **10**. Batch 9 passed clean CI and all 33 GameTests;
+The new round is recorded in [Party/Skills batches](PARTY_SKILLS_BATCHES_20261006.md); stop after authorized Batch 11. Batch 9 passed clean CI and all 33 GameTests;
 manual licensed acceptance remains pending.

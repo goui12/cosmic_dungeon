@@ -36,9 +36,9 @@ class ReleaseTests(unittest.TestCase):
                         enumerate(['1.21.10', 'NeoForge', 'Java 21', 'Client', 'Server'], 1)]
 
     def test_channels_and_invalid_versions(self):
-        for version, kind in [('1.5.2-alpha.1', 'alpha'), ('1.5.2-beta.1', 'beta'), ('1.5.2', 'release')]:
+        for version, kind in [('1.5.2-alpha.1', 'alpha'), ('1.5.2-beta.1', 'beta'), ('1.6.0-beta', 'beta'), ('1.5.2', 'release')]:
             self.assertEqual(p.channel(version), kind)
-        for bad in ['1.5.2-beta', '1.5.02', '1.5.2-beta.0', '1.5.2/other']:
+        for bad in ['1.5.2-alpha', '1.5.02', '1.5.2-beta.0', '1.5.2/other', '1.6.0-beta.', '1.6.0-beta.01']:
             with self.assertRaises(ValueError):
                 p.channel(bad)
 
@@ -50,6 +50,42 @@ class ReleaseTests(unittest.TestCase):
         p.bump('beta', self.root)
         p.bump('release', self.root)
         self.assertEqual(p.properties(self.root)['mod_version'], '1.5.4')
+
+    def bare_beta_fixture(self):
+        old, new = '1.5.2-beta.1', '1.6.0-beta'
+        path = self.root / 'gradle.properties'
+        path.write_text(path.read_text().replace(old, new))
+        (self.root / f'docs/releases/{new}.md').write_text('Completed-set beta.')
+        for suffix in ['', '-loading-screen']:
+            source = self.root / f'build/libs/cosmicdungeon-{old}{suffix}.jar'
+            destination = self.root / f'build/libs/cosmicdungeon-{new}{suffix}.jar'
+            with zipfile.ZipFile(source) as jar:
+                contents = {name: jar.read(name).replace(old.encode(), new.encode()) for name in jar.namelist()}
+            with zipfile.ZipFile(destination, 'w') as jar:
+                for name, body in contents.items():
+                    jar.writestr(name, body)
+
+    def test_bare_beta_validates_both_exact_jar_versions(self):
+        self.bare_beta_fixture()
+        result = p.validate('v1.6.0-beta', self.root)
+        self.assertEqual(result['version'], '1.6.0-beta')
+        self.assertEqual(result['release_type'], 'beta')
+        with self.assertRaises(ValueError):
+            p.validate('v1.6.0-beta.1', self.root)
+
+    def test_bare_beta_promotes_without_changing_numeric_version(self):
+        self.bare_beta_fixture()
+        p.bump('release', self.root)
+        self.assertEqual(p.properties(self.root)['mod_version'], '1.6.0')
+
+    def test_next_alpha_after_bare_beta_increments_micro(self):
+        self.bare_beta_fixture()
+        p.bump('alpha', self.root)
+        self.assertEqual(p.properties(self.root)['mod_version'], '1.6.1-alpha.1')
+        path = self.root / 'gradle.properties'
+        path.write_text(path.read_text().replace('1.6.1-alpha.1', '1.6.1-alpha'))
+        with self.assertRaises(ValueError):
+            p.bump('beta', self.root)
 
     def test_actual_jar_metadata_is_checked(self):
         self.assertEqual(p.validate('v1.5.2-beta.1', self.root)['release_type'], 'beta')
