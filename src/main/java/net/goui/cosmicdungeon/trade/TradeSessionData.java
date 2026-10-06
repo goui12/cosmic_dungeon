@@ -166,19 +166,31 @@ public final class TradeSessionData {
         return false;
     }
 
-    /** Uses existing custody recovery, including the other participant outside the starting party. */
-    public static boolean endForAdventure(ServerPlayer player) {
+    /** The lobby owns unresolved peer/session dependencies across Start retries. Server thread only. */
+    public static boolean endForAdventure(ServerPlayer player, Map<UUID, UUID> recoveryPeers) {
         if (player == null) return false;
         removePendingInvitesInvolving(player.getUUID());
         var session = get(player);
-        if (session == null) return TradeCustody.beforeInventoryChange(player);
-        // Keep the peer reference before cancellation removes the session from both indexes.
-        var otherId = player.getUUID().equals(session.a) ? session.b : session.a;
-        var other = player.level().getServer().getPlayerList().getPlayer(otherId);
-        session.cancel("The group leader started the adventure");
-        boolean playerRecovered = TradeCustody.beforeInventoryChange(player);
-        boolean otherRecovered = other != null && TradeCustody.beforeInventoryChange(other);
-        return playerRecovered && otherRecovered;
+        if (session != null) {
+            var otherId = player.getUUID().equals(session.a) ? session.b : session.a;
+            // Remember before cancellation removes both indexes, even if recovery fails or disconnects.
+            recoveryPeers.put(otherId, session.id());
+            session.cancel("The group leader started the adventure");
+        }
+        boolean recovered = TradeCustody.beforeInventoryChange(player);
+        var iterator = recoveryPeers.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var dependency = iterator.next();
+            var other = player.level().getServer().getPlayerList().getPlayer(dependency.getKey());
+            if (other == null || TradeCustody.held(other)) { recovered = false; continue; }
+            var current = get(other);
+            // A different live trade can only open after old custody/transactions reconcile.
+            // Do not cancel an outsider's subsequent unrelated trade while retrying this Start.
+            boolean resolved = current != null && !current.id().equals(dependency.getValue())
+                    || TradeCustody.beforeInventoryChange(other);
+            if (resolved) iterator.remove(); else recovered = false;
+        }
+        return recovered;
     }
 
     public static boolean isBusy(ServerPlayer p) {

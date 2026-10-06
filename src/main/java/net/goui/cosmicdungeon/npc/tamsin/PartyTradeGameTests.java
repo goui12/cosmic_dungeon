@@ -159,11 +159,28 @@ public final class PartyTradeGameTests {
                 f.check(!TradeSessionData.isBusy(f.member)&&!TradeSessionData.isBusy(f.outsider),
                         "Both unfinished trade sessions still close");
                 f.check(!TradeCustody.held(f.member),"The party member is not the failed participant");
+                for(int retry=0;retry<3;retry++) {
+                    f.check(f.start(f.leader,revision)!=null,"Every retry retains the outside recovery dependency");
+                    f.readyUnchanged(revision);
+                }
                 f.check(f.member.getInventory().countItem(Items.APPLE)==3,"Successful member refund remains intact");
             } finally { holds.remove(f.outsider); }
+            f.players.remove(f.outsider.getUUID());
+            try {
+                f.check(f.start(f.leader,revision)!=null,"An offline peer does not bypass pending recovery");
+                f.readyUnchanged(revision);
+            } finally {f.players.put(f.outsider.getUUID(),f.outsider);}
             f.check(TradeCustody.beforeInventoryChange(f.outsider),"Outside recovery can resume");
             TradeCustody.claim(f.outsider);TradeCustody.claim(f.outsider);
             f.check(f.outsider.getInventory().countItem(Items.BREAD)==2,"Outside refund is preserved exactly once");
+            var next=f.player("NextTrader");
+            TradeSessionData.invite(f.outsider,next);
+            f.check(TradeSessionData.acceptInvite(next,f.outsider),"A recovered outsider can open a new independent trade");
+            f.ok(f.start(f.leader,revision));
+            f.check(TradeSessionData.isBusy(f.outsider)&&TradeSessionData.isBusy(next),
+                    "Resolving an old dependency does not cancel the outsider's later unrelated trade");
+            f.check(f.member.getInventory().countItem(Items.APPLE)==3&&f.outsider.getInventory().countItem(Items.BREAD)==2,
+                    "Retries and subsequent Start never duplicate either refund");
             helper.succeed();
         }
     }

@@ -8,3 +8,5 @@ Protocol 18 requires both ends updated. No datagen or migration.
 Validation pending: Java21 build, focused codec/layout/native snapshot tests, CI clean build/native GameTests, review and release.
 Manual QA: full party including self/mercs; damage/heal/effect add/remove; death/relog/outside dungeon; GUI scales and scrollbar; recipe-book compact hover; revive/skills regression.
 Canon: same-day Google OAuth expiry at 15:34Z, cached sources plus explicit approved user requirements; no fresh semantic audit claimed.
+
+Review follow-up owns TradeSessionData, D1PartyTrades and PartyTradeGameTests: retain cancelled-session peer recovery across valid Start retries in the existing transient lobby lifetime. No new persistence. Extend native hold regression with repeated attempts, offline peer, recovery and a later unrelated outsider trade. Full build/CI rerun required for changed inputs.
