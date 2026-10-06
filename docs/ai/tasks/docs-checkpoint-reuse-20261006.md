@@ -39,3 +39,6 @@ All349 JUnit and2 loading tests remain intact;34 Python checks pass.
 This narrative-only completion update exercises the approved evidence-reuse path.
 GitHub review of the cumulative PR found a prior Batch11 outsider-recovery result omission;
 it will be corrected on Batch11's existing branch before the next gameplay release.
+
+Full workflow including bytecode-free verifier passed CI37503267794. This final narrative update
+exercises real proof reuse; no gameplay or build inputs changed.
