@@ -10,7 +10,9 @@ No new entity scans, AI ticks, packets, registries, saved-data fields or depende
 No migration or datagen needed. Existing authored spawners/chests/inventories remain untouched.
 
 ## Validation
-Pending full Java21 build/CI and exact release verification.
+Java21 build,349 JUnit tests, loading assets checks,2,001 JSON and diff checks passed.
+CI37504494392 passed all40 native GameTests and34 Python guard/publisher checks.
+Exact release/publication and final documentation validation remain pending.
 Three new native GameTests cover owner/teammate/mercenary/companion damage, firework AOE,
 wolf armor durability, hostile and environmental damage, wild-wolf behavior, actual flaming
 tipped-arrow flight, splash/lingering instant and timed harm, and beneficial healing.
@@ -41,3 +43,10 @@ Future improvement: complete the already planned wolf command/lifecycle/performa
 - docs/ai/tasks/allied-wolf-protection-20261006.md
 - docs/ai/PARTY_SKILLS_BATCHES_20261006.md
 - docs/ai/D1_REMAINING.md
+
+## Review correction
+Automated review of3051105 found ambiguous network wording in the new release note.
+Clarified protocol17 is unchanged only relative to1.6.1-alpha.1; prior beta/protocol16 needs
+matched client/server upgrades. This follow-up changes release/report text only. All runtime
+code and the successful40 native tests remain unchanged, and the conservative release-note
+boundary deliberately requests full CI again. No review finding was ignored.
