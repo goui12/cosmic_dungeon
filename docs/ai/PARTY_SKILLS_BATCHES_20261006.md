@@ -1,7 +1,7 @@
 # New batch round - decisions updated 2026-10-06
 
-Status: Batches10-12 are implemented, validated and published; current alpha1.6.2-alpha.1.
-All original and follow-up questions are settled. Stop after12; Batch13 is next when authorized.
+Status: Batches10-13 are implemented, validated and published; current alpha1.6.3-alpha.1.
+All original and follow-up questions are settled. Stop after13; Batch14 is next when authorized.
 Batch10 merged through PR227: main e57b27bb78e592fca521e05bc78e305f23c55c2f; exact1.6.0-beta published.
 Batch11 starts from that merged baseline on feature/party-trade-readiness-20261006; validated/published1.6.1-alpha.1, all36 GameTests passed; ADMIN updated, TEST shutdown/install pending.
 Source: Cameron's original request, reviewed wolfpack mockup, and October6 08:16PDT clarification.
@@ -12,13 +12,13 @@ All earlier questions below the latest DECISIONS checkpoint are historical; do n
 ## Numbering and release sequence
 Queued Batch10: Tamsin20x18 top-right lore/map replay i; preserve actual class/group/ready/progress.
 Support exact1.6.0-beta, validate, merge completed prior set via PR and publish both jars.
-Original round had16 batches11-26 plus queued10. Batches10-12 are complete;14 remain13-26, including final integration/release.
+Original round had16 batches11-26 plus queued10. Batches10-13 are complete;13 remain14-26, including final integration/release.
 The independent generic Skills UI warrants its own Batch19; prior19-25 become20-26.
 SetA11-16 party/combat/HUD/death recovery; SetB17-18 mercenary roles; SetC19-26 UI/resources/classes/wolves.
 Alpha micro revisions between implementation batches; validated set main merge/Beta after each set.
 Do not reuse tags, preassign conflicting versions, merge test-builds or claim companion app verification without evidence.
 No game/client/GameTest-server automatic launch, no server restart. Existing independently checked deployment policy applies.
-No unresolved gameplay questions remain. Batch12 completed; Approach A workflow optimization approved and verified.
+No unresolved gameplay questions remain. Batch13 completed; Approach A workflow optimization approved and verified.
 
 ## Confirmed common rules
 - Recycling is1 tagged item=1 resource. Consume only headroom to600; never waste donor/self items at cap.
@@ -59,7 +59,7 @@ Preserve hostile damage/healing. Source gap verified: MercenaryWolves.protectedC
 BogatyrThreats prevents player-wolf outbound friendly damage, but lacks equivalent inbound guard.
 Expected: CompanionAllies/BogatyrThreats/BogatyrWolfEvents and mercenary damage/projectile/effect guards.
 No30cap change in this narrow bug-fix batch; performance/cap belongs to later command/AI work.
-13. Cosmic spawner visual, pickaxe warning and firework destruction (in progress;1.6.3-alpha.1)
+13. Cosmic spawner visual, pickaxe warning and firework destruction (complete;1.6.3-alpha.1)
 Faint wall-occluded red appearance when blocked, no red through-wall silhouette/fill.
 Large throttled "You need a pickaxe to break that!" on wrong-tool attempt.
 Both player/mercenary Pyroclast fireworks break eligible cosmic spawners within5blocks, respecting existing obstruction/protection.

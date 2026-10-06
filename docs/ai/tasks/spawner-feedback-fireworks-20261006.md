@@ -24,12 +24,12 @@ Datagen is not applicable: no model/tag/loot/recipe/resource JSON changes.
 No server.properties edits, server restart, local Minecraft/GameTest launch or direct main push.
 
 ## Validation and delivery
-Pending Java21 local build and full Integration Gate, including all43 native GameTests.
+Java21 local build passed; full Integration Gate37535581848 and release CI37536085063 passed all43 native GameTests.
 Three new native tests cover player/mercenary real shared detonation, radius/walls, pre-removal shielding,
 Start/Detonate/Break vetoes, ordinary terrain, native bottle drops, duplicate/ended-run denial, title text and throttling.
-Existing349JUnit +2loading assets and34Python checks, all source JSON and diff checks remain required.
-Review comments, release receipt/hash provenance, independently eligible target installation and final narrative checkpoint pending.
-TEST last checked21:29:57Z: no shutdown in latest session; server1.5.12-alpha.1 left intact. ADMIN closed,1.6.2-alpha.1 installed.
+349JUnit +2loading assets,34Python checks, all2,001 source JSON files and diff checks passed.
+Code review completed without findings on the exact release source. Publication and eligible ADMIN installation verified below. Final narrative checkpoint uses Approach A proof reuse.
+Initial preflight at21:29:57Z: no shutdown in latest session; server1.5.12-alpha.1 left intact. ADMIN closed,1.6.2-alpha.1 installed.
 Google read-only authorization expired earlier today; cached Pyroclast doc16FD3wxi-Uen_DRzItDHdSrSZvkGNwa_r-ZeUYiswxoE
 plus explicit settled Cameron requirements used. Audit/BATCH13_SPAWNER_SOURCE_20261006.json records cached hash; no fresh audit claimed.
 
@@ -57,3 +57,17 @@ Future improvement: measure visibility and particle subtlety on the authored map
 - `docs/ai/tasks/spawner-feedback-fireworks-20261006.md`
 - `docs/ai/PARTY_SKILLS_BATCHES_20261006.md`
 - `docs/ai/D1_REMAINING.md`
+
+## Release and delivery completion
+Version1.6.3-alpha.1; tagv1.6.3-alpha.1; source5970d8413e042dbb8bacd997aaf9a4823cc9397a; [PR231](https://github.com/goui12/cosmic_dungeon/pull/231).
+CurseForge main project1326805 file9084271; loading companion project1727305 file9084269.
+Runtime SHA256:a6405e491db27602512046884dd90800c5da065af4d558c48a0a0e268192e9ba
+Loading SHA256:eabf69998ee09b0c8ed2614c3c8631000af758a001f9aca53bc8f6257fc5e2dd
+ADMIN has the exact published runtime/helper installed. TEST has no shutdown evidence in its latest session as of2026-10-06T21:50:59.0425583Z; its cosmicdungeon-1.5.12-alpha.1.jar remains unchanged. current-test stays at the prior matched build.
+No server.properties write, server restart or client launch. Latest-built points to the exact CI release.
+Upload acceptance remains distinct from public moderation and licensed CurseForge-app companion delivery;
+the release receipt still records the unconfirmed companion relationship.
+No migration/datagen. Manual checks above remain pending, including visual subtlety and authored-map reset acceptance.
+13 planned batches remain14-26. Stop after13; completed SetA merges/Beta after16.
+Optimization: reused the checkout and existing delivery helpers, consolidated notes, used bounded logs,
+and retained full runtime/release tests. Local final narrative verification passed: reused full baseline37535581848 on identical protected inputs;34 verifier/publisher regressions passed. GitHub applies the same required checkpoint gate.

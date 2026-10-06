@@ -1,16 +1,15 @@
 # Current rollout, 2026-10-06
 
-Batch10 merged through PR227 and published exact1.6.0-beta.
-Batch11 published1.6.1-alpha.1, with outsider-recovery follow-up now included in1.6.2-alpha.1.
-Batch12 published1.6.2-alpha.1 through [PR230](https://github.com/goui12/cosmic_dungeon/pull/230);
-[exact files, evidence and manual QA](tasks/allied-wolf-protection-20261006.md).
-ADMIN has the exact published runtime/helper installed. TEST remains running/paused as of2026-10-06T17:48:21.4237164Z; its1.5.12-alpha.1 jar is unchanged. current-test stays at the prior matched build.
-Approach A is implemented in PR229:154second full baseline versus61second narrative-only CI,
-with identical protected inputs and successful baseline tests verified. Releases/gameplay keep full gates.
+Batch10 merged through PR227 and published exact1.6.0-beta. Batches11/12 are published.
+Batch13 published1.6.3-alpha.1 through [PR231](https://github.com/goui12/cosmic_dungeon/pull/231);
+[exact14 files, test evidence and manual QA](tasks/spawner-feedback-fireworks-20261006.md).
+ADMIN has the exact published runtime/helper installed. TEST has no shutdown evidence in its latest session as of2026-10-06T21:50:59.0425583Z; its cosmicdungeon-1.5.12-alpha.1.jar remains unchanged. current-test stays at the prior matched build.
+Full Integration Gate37535581848 and release CI37536085063 passed43 native tests.
+349JUnit+2loading,34Python,2,001JSON passed; code review completed without findings.
+Approach A retains full runtime/release gates and verifies reused proof for narrative-only checkpoints.
 [Approved plan](PARTY_SKILLS_BATCHES_20261006.md).
 
-**14 planned batches remain (13-26).**
-- 13: spawner glow, pickaxe warning and protected firework destruction.
+**13 planned batches remain (14-26).**
 - 14: complete party HP/effect HUD.
 - 15: current-run member inspection.
 - 16: latest-death inventory organization.
@@ -25,7 +24,7 @@ with identical protected inputs and successful baseline tests verified. Releases
 - 25: advanced modes and performance validation.
 - 26: integration and final set Beta.
 Cumulative licensed gameplay and companion app acceptance remain separate.
-Batch13 explicitly authorized and in progress: [task report](tasks/spawner-feedback-fireworks-20261006.md). Stop after13. Completed SetA merges/Beta after16.
+Stop after Batch13. Completed SetA merges/Beta after16.
 
 ---
 
