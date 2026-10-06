@@ -32,3 +32,10 @@ No new gameplay/UI to test. Existing licensed multiplayer QA remains separate.
 Authentication, release publisher, stopped-server/closed-client checks and artifact hashes unchanged.
 Possible future improvement: consolidate routine evidence retrieval around these compact receipts.
 Batch12 allied-wolf protection remains next; it will receive full gameplay validation.
+
+## Full validation checkpoint
+CI37502567598 passed the clean build and all36 native GameTests on3bc3856c.
+All349 JUnit and2 loading tests remain intact;34 Python checks pass.
+This narrative-only completion update exercises the approved evidence-reuse path.
+GitHub review of the cumulative PR found a prior Batch11 outsider-recovery result omission;
+it will be corrected on Batch11's existing branch before the next gameplay release.
