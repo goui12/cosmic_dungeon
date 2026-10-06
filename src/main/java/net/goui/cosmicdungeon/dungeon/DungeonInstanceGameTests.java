@@ -60,6 +60,9 @@ public final class DungeonInstanceGameTests {
         suite.add(id("party_trade_completed"),net.goui.cosmicdungeon.npc.tamsin.PartyTradeGameTests::completed);
         suite.add(id("party_trade_full_inventory"),net.goui.cosmicdungeon.npc.tamsin.PartyTradeGameTests::fullInventory);
         suite.add(id("party_trade_outsider_recovery"),net.goui.cosmicdungeon.npc.tamsin.PartyTradeGameTests::outsiderRecoveryHold);
+        suite.add(id("allied_wolf_damage"),net.goui.cosmicdungeon.mercenary.AlliedWolfGameTests::damage);
+        suite.add(id("allied_wolf_projectiles"),net.goui.cosmicdungeon.mercenary.AlliedWolfGameTests::projectiles);
+        suite.add(id("allied_wolf_potions"),net.goui.cosmicdungeon.mercenary.AlliedWolfGameTests::potions);
         return suite;
     }
 

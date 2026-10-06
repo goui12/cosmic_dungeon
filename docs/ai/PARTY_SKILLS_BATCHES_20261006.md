@@ -18,7 +18,7 @@ SetA11-16 party/combat/HUD/death recovery; SetB17-18 mercenary roles; SetC19-26 
 Alpha micro revisions between implementation batches; validated set main merge/Beta after each set.
 Do not reuse tags, preassign conflicting versions, merge test-builds or claim companion app verification without evidence.
 No game/client/GameTest-server automatic launch, no server restart. Existing independently checked deployment policy applies.
-No unresolved gameplay questions remain. Batch10 and11 are authorized.
+No unresolved gameplay questions remain. Batch12 is now authorized, with Approach A workflow optimization approved.
 
 ## Confirmed common rules
 - Recycling is1 tagged item=1 resource. Consume only headroom to600; never waste donor/self items at cap.
@@ -53,7 +53,7 @@ ClassSelectorReadyManager/call sites, client D1PartyHud/MercenaryHudLayout and r
 Hotspots: trade/currency transaction boundaries, party readiness/entry, menu sessions/network.
 Tests: both-ready trade through completion/cancel; start during open/accepted/finalizing trade; full inventory returns;
 currency/drop custody, disconnect/death/class-change invalidations still work; roster/leader/membership remain authoritative.
-12. Player wolf friendly-fire protection
+12. Player wolf friendly-fire protection (implementation/validation in progress)
 Protect player-owned Bogatyr wolves and mercenary wolves against allied melee/projectiles/AOE/harmful effects.
 Preserve hostile damage/healing. Source gap verified: MercenaryWolves.protectedCompanion covers mercenary entity/marked wolves;
 BogatyrThreats prevents player-wolf outbound friendly damage, but lacks equivalent inbound guard.
@@ -191,7 +191,7 @@ Licensed full beta gameplay verification remains required before stable.
 A. Packs end with the dungeon. No surviving-wolf preservation across resets; implement compatible lifecycle cleanup in23.
 B. Normal splash pool: night vision,invisibility,fire resistance,swiftness,healing,regeneration,strength,luck.
 Epic skill selects only real tierII variants from that list. No unresolved potion-pool question.
-Cameron now authorizes10 and11 only; continue them through validation/publication/deployment eligibility checks.
+Cameron authorizes Batch12; Batch13 only if the current work finishes within10minutes. Do not rush or skip quality gates.
 
 ## Automated/manual verification and planning receipt
 All actual code batches follow AGENTS: narrow task/PR, exclusive hotspot ownership, Java21 build, CI clean build/native GameTests,

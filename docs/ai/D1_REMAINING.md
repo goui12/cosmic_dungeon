@@ -1,3 +1,8 @@
+## 2026-10-06 Batch12 in progress
+Approved Approach A workflow guard implemented in PR229; full native gates retained for gameplay/releases.
+Batch12 allied-wolf protection includes the reviewed Batch11 outsider-recovery correction.
+15 planned batches12-26 remain until this batch completes; do not mark publication/deployment complete early.
+
 # Current rollout, 2026-10-06
 
 Batch 10 merged through [PR227](https://github.com/goui12/cosmic_dungeon/pull/227); exact **1.6.0-beta** and helper accepted by CurseForge.
