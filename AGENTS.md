@@ -143,7 +143,7 @@ For every Cosmic Spawner change:
 ## NeoForge Data Generation and Resources
 
 - Use NeoForge datagen wherever the project and professional NeoForge conventions expect generated JSON.
-- Follow the repositoryâ€™s existing separation between client and server generated resources.
+- Follow the repository’s existing separation between client and server generated resources.
 - Do not create both generated and hand-authored versions of the same resource.
 - Run the relevant client and/or server datagen tasks when changing:
   - Item or block models.
@@ -156,7 +156,7 @@ For every Cosmic Spawner change:
   - Other resources already managed by project datagen.
 - Inspect generated changes before committing them.
 - Do not run or modify datagen when it is unrelated to the task.
-- Hand-authored configuration or profile JSON may remain hand-authored when that is the projectâ€™s established design.
+- Hand-authored configuration or profile JSON may remain hand-authored when that is the project’s established design.
 
 ## Documentation
 

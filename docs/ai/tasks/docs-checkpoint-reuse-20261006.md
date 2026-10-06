@@ -19,7 +19,8 @@ machine-readable decision/proof artifacts. No runtime/saved-data/network/registr
 no migration or datagen is applicable. No mod version change or newly distributed JAR is needed.
 
 ## Validation and measured baseline
-Pending: verifier regressions, existing publisher checks, Java21 build, full integration CI.
+Passed locally: 17 verifier regressions plus 17 publisher checks; Java21 build and diff checks.
+Pending: full integration CI and actual narrative-only follow-up reuse.
 Batch11 final four-file narrative checkpoint CI37496418873 took144seconds, including53seconds
 clean build and28seconds nativeGameTests. Credit savings cannot be measured from this evidence.
 First rollout deliberately performs full tests because the workflow/verifier themselves changed.
