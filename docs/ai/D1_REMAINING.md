@@ -1,16 +1,15 @@
 # Current rollout, 2026-10-06
 
-Batch10 merged through PR227 and published exact1.6.0-beta. Batches11/12 are published.
-Batch13 published1.6.3-alpha.1 through [PR231](https://github.com/goui12/cosmic_dungeon/pull/231);
-[exact14 files, test evidence and manual QA](tasks/spawner-feedback-fireworks-20261006.md).
-ADMIN has the exact published runtime/helper installed. TEST has no shutdown evidence in its latest session as of2026-10-06T21:50:59.0425583Z; its cosmicdungeon-1.5.12-alpha.1.jar remains unchanged. current-test stays at the prior matched build.
-Full Integration Gate37535581848 and release CI37536085063 passed43 native tests.
-349JUnit+2loading,34Python,2,001JSON passed; code review completed without findings.
-Approach A retains full runtime/release gates and verifies reused proof for narrative-only checkpoints.
-[Approved plan](PARTY_SKILLS_BATCHES_20261006.md).
+Batches10-14 implemented, validated and published. Current alpha1.6.4-alpha.1 through [PR232](https://github.com/goui12/cosmic_dungeon/pull/232).
+[Exact22 task files, evidence, deployment and manual QA](tasks/party-health-effects-20261006.md).
+TEST shutdown observed; exact CI runtime installed on TEST and ADMIN, matching helper installed on ADMIN.
+Both hashes verified and current-test promoted; server.properties unchanged, no restart or client launch.
+Full Integration Gate37541085447 and release CI37541580285 passed45 native GameTests.
+355JUnit+2loading,34Python,2,001JSON passed; inherited trade retry finding fixed and correction manually reviewed and fresh full CI passed.
+Approach A retains full runtime/release gates and verifies reused evidence for narrative-only checkpoints.
+[Approved batch plan](PARTY_SKILLS_BATCHES_20261006.md).
 
-**13 planned batches remain (14-26).**
-- 14: complete party HP/effect HUD.
+**12 planned batches remain (15-26).**
 - 15: current-run member inspection.
 - 16: latest-death inventory organization.
 - 17: Theurgist/Venefex mercenary split.
@@ -24,7 +23,7 @@ Approach A retains full runtime/release gates and verifies reused proof for narr
 - 25: advanced modes and performance validation.
 - 26: integration and final set Beta.
 Cumulative licensed gameplay and companion app acceptance remain separate.
-Stop after Batch13. Completed SetA merges/Beta after16.
+Stop after Batch14. Completed SetA merges/Beta after16.
 
 ---
 

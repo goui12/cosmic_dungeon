@@ -1,9 +1,9 @@
 # New batch round - decisions updated 2026-10-06
 
-Status: Batches10-13 are implemented, validated and published; current alpha1.6.3-alpha.1.
-All original and follow-up questions are settled. Stop after13; Batch14 is next when authorized.
+Status: Batches10-14 are implemented, validated and published; current alpha1.6.4-alpha.1.
+All original and follow-up questions are settled. Stop after14; Batch15 is next when authorized.
 Batch10 merged through PR227: main e57b27bb78e592fca521e05bc78e305f23c55c2f; exact1.6.0-beta published.
-Batch11 starts from that merged baseline on feature/party-trade-readiness-20261006; validated/published1.6.1-alpha.1, all36 GameTests passed; ADMIN updated, TEST shutdown/install pending.
+Batch11 starts from that merged baseline on feature/party-trade-readiness-20261006; validated/published1.6.1-alpha.1. TEST deployment backlog was resolved before14; both targets now use1.6.4-alpha.1.
 Source: Cameron's original request, reviewed wolfpack mockup, and October6 08:16PDT clarification.
 This queue records requirements; implementation status is maintained in task reports and D1_REMAINING.
 Google source metadata refresh attempted2026-10-06T15:34:03Z: existing read-only authorization expired. Cached Tamsin/TamsinTax plus Cameron explicit settled corrections used; no fresh semantic audit claimed.
@@ -12,13 +12,13 @@ All earlier questions below the latest DECISIONS checkpoint are historical; do n
 ## Numbering and release sequence
 Queued Batch10: Tamsin20x18 top-right lore/map replay i; preserve actual class/group/ready/progress.
 Support exact1.6.0-beta, validate, merge completed prior set via PR and publish both jars.
-Original round had16 batches11-26 plus queued10. Batches10-13 are complete;13 remain14-26, including final integration/release.
+Original round had16 batches11-26 plus queued10. Batches10-14 are complete;12 remain15-26, including final integration/release.
 The independent generic Skills UI warrants its own Batch19; prior19-25 become20-26.
 SetA11-16 party/combat/HUD/death recovery; SetB17-18 mercenary roles; SetC19-26 UI/resources/classes/wolves.
 Alpha micro revisions between implementation batches; validated set main merge/Beta after each set.
 Do not reuse tags, preassign conflicting versions, merge test-builds or claim companion app verification without evidence.
 No game/client/GameTest-server automatic launch, no server restart. Existing independently checked deployment policy applies.
-No unresolved gameplay questions remain. Batch13 completed; Approach A workflow optimization approved and verified.
+No unresolved gameplay questions remain. Batch14 completed; Approach A workflow optimization approved and verified.
 
 ## Confirmed common rules
 - Recycling is1 tagged item=1 resource. Consume only headroom to600; never waste donor/self items at cap.
@@ -65,7 +65,7 @@ Large throttled "You need a pickaxe to break that!" on wrong-tool attempt.
 Both player/mercenary Pyroclast fireworks break eligible cosmic spawners within5blocks, respecting existing obstruction/protection.
 Expected: CosmicSpawnerRenderer/CosmicMobSpawnerBlock and firework explosion services; preserve access/reset/drop lifecycle.
 No planned NBT/preset/schema change, no planned spawner migration; authored placements/presets must survive updates.
-14. Complete group HUD
+14. Complete group HUD (complete;1.6.4-alpha.1)
 All human members including self plus mercenaries: current/maxHP, name/class, small positive/negative effect icons under HP.
 Explicit dead/offline/unloaded states; no stale health presented as current. World view read-only, inventory supports mouse.
 Expected: D1PartyHud/Layout/MercenaryHudLayout, D1PartyHudService, PartyPayloads, ModNetwork.
