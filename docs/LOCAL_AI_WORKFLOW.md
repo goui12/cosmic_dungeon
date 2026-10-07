@@ -2,7 +2,7 @@
 
 ## Entry points
 
-- Repository: `C:\Users\Cameron\Documents\mod_development\cosmic_dungeon`.
+- Active repository: read `CosmicDungeon_AI/BatchRunner/config.json`.
 - Human-auditable cache: sibling folder `CosmicDungeon_AI`, starting at `CURRENT_STATE.md` and `DECISIONS.md`.
 - Machine-specific, non-secret settings: `CosmicDungeon_AI/config.json`. Do not commit this file.
 - Encrypted credential: `%LOCALAPPDATA%\CosmicDungeon\secrets\test-sftp.credential.xml`; never copy it into the cache, repository, logs or chat.
@@ -19,7 +19,7 @@
 | `.\gradlew.bat clean` | Delete build outputs; currently also deletes a tracked 1.5.0 jar. Preserve it and resolve policy first. |
 
 Optional logged wrapper: `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-local.ps1 -Task build`.
-A successful build issues a local receipt with the Git commit, build-input fingerprint, jar SHA256 and log path. Deployment rejects missing/stale receipts.
+A successful build issues a local receipt with the Git commit, build-input fingerprint, jar SHA256 and log path. Deployment uses the exact CI publication receipt. Legacy feed publication requires explicit `-PublishLegacyFeed`.
 The same wrapper accepts the other four tasks. Cameron revoked automatic development-client launches on 2026-10-04; a new explicit launch request is required. clean still refuses to destroy a tracked build artifact. No Gradle heap setting is changed.
 
 ## Credential setup and trust
@@ -40,17 +40,17 @@ The scripts use WinSCP's installed .NET assembly with SecurePassword and a pinne
 `... -Action Launch -Apply` opens the verified CurseForge shortcut only after client-path confirmation. Cameron performs legitimate Microsoft login/Play as Goui12. It does not automate authentication or guarantee an instance has started.
 `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\capture-client.ps1 -Seconds 30 -IntervalSeconds 5` samples target-client CPU/RAM to CSV and stops automatically. Duration is capped at 300 seconds. It neither launches Minecraft nor attaches a profiler. CPU percentages are normalized to the whole machine, not one core.
 
-## Coordinated deployment and recovery
+## CurseForge and TEST deployment (2026-10-07)
 
-1. Cameron confirmed `Cosmic Dungeon ADMINISTRATIVE ACCESS ONLY` on 2026-09-15; ClientPathConfirmed is now true. The standing deployment policy authorizes installation when the target is closed; it does not authorize a client launch.
-2. Save the credential locally; verify the test identity with Probe. The helper checks the pinned host/account/root, the observed internal port (`ExpectedServerPort=25565`), and `online-mode=true`. Public `GamePort=12250` and SFTP port 22 are separate. Do not modify the working server.properties; changed values require a decision, not an automatic repair. These checks do not independently verify Akliz port forwarding.
-3. Build with build-local.ps1 and inspect the result. Datagen must have been run first when relevant.
-4. Review `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\deploy-mod.ps1` (dry run). An explicit -Jar selects a specific artifact; otherwise the exact mod_version artifact is used, never the newest arbitrary jar.
-5. Cameron stops the TEST server through the Akliz web panel and closes the client. Inspect current SFTP logs and local target-client processes yourself. "Stopping the server" in the latest session with no later startup/activity is sufficient stopped evidence, per Cameron on 2026-10-04. Once both targets are ready, run `...\deploy-mod.ps1 -Apply -ServerStopped -ClientClosed`.
-6. The script stages and SHA256-verifies both copies before temporarily moving old CosmicDungeon jars aside. It checks both installed hashes and preserves unrelated mods/configs/worlds. After verified installation and publication, retained rollback JARs are optional and may be pruned without asking; keep the compact deployment receipt.
-7. It does NOT restart the server. Cameron starts it through the Akliz web panel after successful deployment verification. Panel/console automation is not configured. Client/server mod directories are intentionally not blindly mirrored.
-8. On caught activation failure it attempts rollback. This is not a distributed atomic transaction: power loss or loss of SFTP during swapping can require manual recovery. `deploy-pending.json` blocks further deployments until reviewed.
-9. Keep server stopped during recovery. Inspect the local `backups/<id>/manifest.json` and remote `.cosmic-ai-backups/<id>`. Restore only the listed CosmicDungeon jar(s), preserve failed-new artifacts, compare both targets, and clear a pending journal only after verified recovery.
+1. Validate/commit/push source and unique tag. CurseForge Actions builds/tests and publishes runtime plus companion.
+2. Download exact tagged runtime and curseforge-receipt.json from the GitHub release; no additional artifact/readback hashes.
+3. Use `scripts/deploy-mod.ps1 -Jar <runtime> -ReleaseReceipt <receipt>` for dry run. It validates source/version/receipt, pinned TEST identity and current shutdown logs.
+4. Add `-Apply` to update stopped TEST with fresh shutdown check, staging byte count and acknowledged transfer/rename journals. No client target is read/changed.
+5. Preserve server.properties, unrelated mods/config/worlds and legitimate authentication. No restart/client launch. Save compact receipt and finish; clients use CurseForge.
+6. Unknown state or deploy-pending.json blocks. Reconcile old/staged/backup/target paths before retrying uncertain operations. Retain recovery files as needed, not permanent rollback copies.
+
+Latest-session "Stopping the server" without later startup/activity suffices; normal
+shutdown saves are accepted. Ask for shutdown only when observed running.
 
 ## Cache freshness and limits
 
@@ -59,26 +59,13 @@ Use live Git status/commit and relevant file hashes to invalidate stale code not
 The cache soft budget is 512 MiB; log snapshots are capped at 16 MiB each. Prune obsolete deployment JAR copies as needed without additional confirmation; Cameron does not require historical rollbacks. Preserve authoritative source snapshots, compact receipts and any files needed by an unresolved deployment journal. No automatic ongoing monitoring is enabled.
 
 
-## Authorized edit-to-test handoff (updated 2026-10-04)
+## Handoff and support
 
-1. Complete scoped edits and relevant datagen, then build using Java 21 and inspect checks.
-2. Read current TEST logs through pinned SFTP and independently inspect the target client processes. Accept the latest session's "Stopping the server" indicator with no later startup/activity. Install the intended build to each eligible stopped target without another confirmation; never give a deployment tool a false state assertion.
-3. Preserve target identity, provenance, staging, hashes and deployment records. Old deployment JAR copies may be pruned without asking; retain files still needed by an unresolved transaction.
-4. Publish current-test only after both installed hashes match. Never automatically launch the client or restart the server.
-5. Provide short gameplay QA steps and distinguish automated checks from pending licensed multiplayer testing.
-
-Local dedicated/GameTest server launches still require separate authorization. No background watcher is enabled.
-When the connector is unavailable, include:
-npx.cmd -y @wonderwhy-er/desktop-commander@latest remote
-
-
-## Public releases, 2026-10-04
-
-The versioned CurseForge workflow in [CURSEFORGE_RELEASES.md](CURSEFORGE_RELEASES.md)
-is now the publishing target. Each distributed test increments mod_version; completed
-source sets merge into main through a validated PR and release as Beta. Stable waits
-for full beta gameplay acceptance. The user's request grants those routine merges/uploads.
-Keep the stopped-server/closed-client rules and never auto-launch the development client.
-The artifact-only test-builds feed is transitional until the loading-screen companion
-and theme setup have verified CurseForge app distribution. Do not claim that an
-Additional Files upload replaces the tester updater.
+Finish task/source notes before final build/commit where possible.
+After CurseForge and sFTP, only compact external completion is needed.
+Report automated results and short pending licensed GUI/multiplayer QA separately.
+Legacy test-builds/updater is optional, not a completion gate.
+See [CurseForge releases](CURSEFORGE_RELEASES.md) for publication/retry/moderation.
+No automatic local dedicated/GameTest/development client/CurseForge/TEST launch.
+If Remote Desktop fails, report incomplete step and provide:
+`npx.cmd -y @wonderwhy-er/desktop-commander@latest remote`.

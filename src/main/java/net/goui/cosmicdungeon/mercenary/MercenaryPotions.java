@@ -40,12 +40,19 @@ public final class MercenaryPotions {
         return effect.getCategory()==MobEffectCategory.BENEFICIAL;
     }
     public static boolean permits(boolean helpful,boolean ally,boolean enemy){return helpful?ally:enemy;}
+    static boolean roleAllows(MercenaryContract contract,MobEffect effect,boolean inverted){
+        boolean positive=helpful(effect,false);
+        return MercenaryBrewing.supports(contract,positive)&&positive==helpful(effect,inverted);
+    }
     public static boolean allows(Entity source,LivingEntity target,MobEffect effect){
         if(MercenaryWolves.protectedCompanion(target)&&MercenaryBrain.friendlySource(source)
                 &&!helpful(effect,target.isInvertedHealAndHarm()))return false;
         var mercenary=owner(source);
         if(!marked(source)&&mercenary==null)return true;
         if(mercenary==null||MercenaryBrain.hirer(mercenary)==null)return false;
+        // Potion role boundaries must not disable other classes' existing tipped-arrow effects.
+        if((source instanceof AbstractThrownPotion||source instanceof AreaEffectCloud)
+                &&!roleAllows(mercenary.contract(),effect,target.isInvertedHealAndHarm()))return false;
         return permits(helpful(effect,target.isInvertedHealAndHarm()),MercenaryBrain.ally(mercenary,target),
                 MercenaryBrain.enemy(mercenary,target));
     }

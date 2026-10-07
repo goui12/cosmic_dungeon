@@ -11,7 +11,17 @@ import net.minecraft.world.level.block.entity.*;
 public final class MercenaryBrewing {
     private MercenaryBrewing(){}
     public static boolean enabled(MercenaryContract contract){
-        return contract!=null&&"theurgist".equals(contract.classId());
+        return supports(contract,true)||supports(contract,false);
+    }
+    static boolean supports(MercenaryContract contract,boolean positive){
+        return (positive?MercenarySkill.POSITIVE_POTIONS:MercenarySkill.NEGATIVE_POTIONS).supports(contract);
+    }
+    /** Opposite/mixed legacy stock stays intact but is not collected or cast. */
+    static boolean roleSplash(ItemStack stack,MercenaryContract contract){
+        if(!effectSplash(stack))return false;
+        for(var effect:stack.getOrDefault(DataComponents.POTION_CONTENTS,PotionContents.EMPTY).getAllEffects())
+            if(!supports(contract,MercenaryPotions.helpful(effect.getEffect().value(),false)))return false;
+        return true;
     }
     static boolean brew(MercenaryEntity entity,BaseContainerBlockEntity stand,PotionBrewing recipes){
         if(!enabled(entity.contract())||!(stand instanceof BrewingStandBlockEntity)
@@ -39,7 +49,8 @@ public final class MercenaryBrewing {
             case 0 -> strong?Potions.STRONG_HEALING:Potions.HEALING;
             case 1 -> strong?Potions.STRONG_STRENGTH:Potions.STRENGTH;
             default -> strong?Potions.STRONG_SWIFTNESS:Potions.SWIFTNESS;
-        } : kind==0?Potions.HARMING:Potions.POISON;
+        } : kind==0?(strong?Potions.STRONG_HARMING:Potions.HARMING)
+                :(strong?Potions.STRONG_POISON:Potions.POISON);
         return PotionContents.createItemStack(Items.SPLASH_POTION,potion);
     }
     static int kind(ItemStack stack,boolean positive){
@@ -55,7 +66,7 @@ public final class MercenaryBrewing {
         return -1;
     }
     static boolean restock(MercenaryEntity entity,boolean positive,boolean stand){
-        if(!enabled(entity.contract()))return false;
+        if(!supports(entity.contract(),positive))return false;
         String key=MercenaryPotionBalance.stockKey(positive,stand);
         if(!entity.timers().ready(key))return false;
         var skill=positive?MercenarySkill.POSITIVE_POTIONS:MercenarySkill.NEGATIVE_POTIONS;
@@ -69,7 +80,7 @@ public final class MercenaryBrewing {
             int kind=kind(stack,positive);if(kind>=0)counts[kind]+=Math.min(stack.getCount(),6);
         }
         int chosen=0;for(int i=1;i<counts.length;i++)if(counts[i]<counts[chosen])chosen=i;
-        boolean strong=positive&&entity.getRandom().nextDouble()<MercenaryPotionBalance.qualityChance(level);
+        boolean strong=entity.getRandom().nextDouble()<MercenaryPotionBalance.qualityChance(level);
         return MercenaryInventory.insert(entity.supplies(),create(positive,chosen,strong));
     }
 }

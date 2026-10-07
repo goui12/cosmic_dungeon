@@ -67,11 +67,9 @@ Approved future releases can declare the optional visual dependency so dedicated
 do not require the helper. Changing the flag never rewrites an already accepted file.
 Older unlinked receipts without this explicit deferred-pair evidence retain archive recovery.
 Install both projects once in the client profile, and enable Beta (Alpha for testers).
-After the companion project exists, verify its approval, app recognition, and both updates
-in a clean profile before retiring the transitional PS1 updater.
+App recognition and both updates remain licensed manual QA, not a local-install or legacy-feed gate for a batch.
 
-Existing configured clients: close Minecraft and replace the old helper with the matching
-`cosmicdungeon-<version>-loading-screen.jar` in `mods`. Keep only one helper version.
+Clients update through CurseForge. Do not copy runtime/helper JARs into Cameron's local test profile during a batch.
 The helper bundles the theme JSON and four authored PNGs. Before NeoForge loads the theme,
 the selected Cosmic provider installs/refreshes only its own assets under config/fml,
 preserving unrelated files and settings. Unchanged files are not rewritten. Asset preparation
@@ -91,9 +89,21 @@ upload: inspect the author console and reconcile the file ID rather than blindly
 again. GitHub retains this checkpoint in a draft release even if a job is interrupted.
 Accepted upload is not proof of moderation approval or visibility in the app.
 
-Keep existing stopped-server/closed-client verification and hash-checked TEST deployment.
-Never launch a development client automatically. The legacy test-builds feed remains a
-transition path until both CurseForge client components have verified app distribution.
+## Batch finish: CurseForge and sFTP (Cameron, 2026-10-07)
+
+After successful publication, download the exact tagged runtime and publication receipt
+from its GitHub release. Use `scripts/deploy-mod.ps1 -Jar <runtime> -ReleaseReceipt <receipt>`
+for a dry run; add `-Apply` after it establishes fresh TEST shutdown evidence.
+CI retains full build/test/version/hash provenance. No extra post-publication artifact,
+staging or installed/readback hashes. Deployment retains pinned SFTP, exact source/version/
+receipt, byte counts, acknowledged transfer/renames and a transaction journal.
+Preserve server.properties, unrelated mods and worlds. No restart or client launch.
+
+Only TEST receives a direct copy. No local-client/helper installation, client-process
+gate, hash parity or routine current-test feed remains. After acknowledged sFTP, save
+one compact completion receipt and stop at the requested batch limit.
+Unknown state or pending journal blocks replacement. Reconcile uncertain operations
+using planned paths/receipts before retrying. Legacy updater is explicit opt-in.
 
 ## API version-name correction (2026-10-04)
 

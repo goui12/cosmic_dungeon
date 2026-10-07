@@ -7,18 +7,20 @@ import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.projectile.AbstractThrownPotion;
 import java.util.function.BooleanSupplier;
 
-/** Observe completed native applications, never attempts. At most one success/category/potion. */
+/** Observe completed native applications, never attempts. At most one success per potion. */
 public final class MercenarySkillEffects {
     private static final String CREDIT="cosmicdungeon_mercenary_skill_credit_v1";
     private MercenarySkillEffects() {}
     private static MercenaryEntity caster(Entity source) {
         if (!(source instanceof AbstractThrownPotion) && !(source instanceof AreaEffectCloud)) return null;
         var owner=MercenaryPotions.owner(source);
-        return owner!=null && MercenarySkill.POSITIVE_POTIONS.supports(owner.contract()) ? owner : null;
+        return owner!=null && MercenaryBrewing.enabled(owner.contract()) ? owner : null;
     }
     static boolean credit(CompoundTag source, MercenarySkill skill, BooleanSupplier award) {
         var credits=source.getCompoundOrEmpty(CREDIT);
-        if (credits.getBooleanOr(skill.id(),false) || !award.getAsBoolean()) return false;
+        if (credits.getBooleanOr(MercenarySkill.POSITIVE_POTIONS.id(),false)
+                || credits.getBooleanOr(MercenarySkill.NEGATIVE_POTIONS.id(),false)
+                || !award.getAsBoolean()) return false;
         credits.putBoolean(skill.id(),true); source.put(CREDIT,credits); return true;
     }
     private static void credit(Entity source, MercenaryEntity owner, MercenarySkill skill) {
@@ -46,7 +48,9 @@ public final class MercenarySkillEffects {
         var owner=caster(source);
         if(owner==null || !MercenaryPotions.allows(source,target,incoming.getEffect().value()))
             return apply.getAsBoolean();
-        if(!MercenaryPotions.helpful(incoming.getEffect().value(),target.isInvertedHealAndHarm())){
+        boolean positive=MercenaryPotions.helpful(incoming.getEffect().value(),target.isInvertedHealAndHarm());
+        if(!positive&&(incoming.getEffect().equals(net.minecraft.world.effect.MobEffects.POISON)
+                ||incoming.getEffect().equals(net.minecraft.world.effect.MobEffects.WITHER))){
             ((MercenaryPotionCredit)(Object)incoming).cosmicdungeon$dose(
                     new MercenaryPotionCredit.Dose(owner.getUUID(),owner.runId(),source.getPersistentData()));
             return apply.getAsBoolean(); // Credit only when its native effect tick causes damage.
@@ -55,7 +59,7 @@ public final class MercenarySkillEffects {
         var before=current==null ? null : new MobEffectInstance(current);
         boolean changed=apply.getAsBoolean();
         if (changed && improved(before,target.getEffect(incoming.getEffect())))
-            credit(source,owner,MercenarySkill.POSITIVE_POTIONS);
+            credit(source,owner,positive?MercenarySkill.POSITIVE_POTIONS:MercenarySkill.NEGATIVE_POTIONS);
         return changed;
     }
 }

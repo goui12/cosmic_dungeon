@@ -1,0 +1,7 @@
+- Theurgist mercenaries now produce/use positive potions only; their negative skill is hidden while old saved counters and stock remain intact.
+- Venefex mercenaries produce/use negative potions, starting at level0 and advancing after1,3,6,10 cumulative successful casts, then triangular thresholds.
+- Misses, immune targets and ineffective applications earn no progress; one potion can earn only one success across targets/ticks. Effective non-damaging debuffs count.
+- Existing material-free brewing, skill-scaled cadence/quality, ally protection and Theurgist resurrection unlock/cooldown remain.
+- Batch delivery now ends with CurseForge publication and stopped TEST sFTP update. No direct local-client copy or post-publication hash/readback loop.
+
+Alpha for SetB; validated set merge/Beta follows Batch18. Licensed multiplayer/UI acceptance remains pending.

@@ -54,6 +54,8 @@ public final class DungeonInstanceGameTests {
         suite.add(id("pyroclast_rocket_denial"),net.goui.cosmicdungeon.playerclass.d1.D1RocketGameTests::denied);
         suite.add(id("mercenary_lightning_persistence"),net.goui.cosmicdungeon.mercenary.MercenaryLightningGameTests::persistence);
         suite.add(id("mercenary_lightning_combat"),net.goui.cosmicdungeon.mercenary.MercenaryLightningGameTests::combat);
+        suite.add(id("mercenary_judicator_combat"),net.goui.cosmicdungeon.mercenary.MercenaryJudicatorGameTests::combat);
+        suite.add(id("mercenary_judicator_progression"),net.goui.cosmicdungeon.mercenary.MercenaryJudicatorGameTests::progression);
         suite.add(id("mercenary_resurrection_eligibility"),net.goui.cosmicdungeon.mercenary.MercenaryResurrectionGameTests::eligibility);
         suite.add(id("mercenary_resurrection_respawn"),net.goui.cosmicdungeon.mercenary.MercenaryResurrectionGameTests::respawn);
         suite.add(id("party_trade_start"),net.goui.cosmicdungeon.npc.tamsin.PartyTradeGameTests::start);

@@ -35,6 +35,19 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
             level.dimension().location().toString(),blockPosition().asLong(),restFlags(),UUID.randomUUID());
         sleep();MercenaryRespawns.remember(this);
     }
+    @Override public boolean killedEntity(net.minecraft.server.level.ServerLevel level,LivingEntity victim,
+            net.minecraft.world.damagesource.DamageSource source){
+        boolean accepted=super.killedEntity(level,victim,source);
+        if(accepted)MercenaryJudicator.killed(this,victim,source);
+        return accepted;
+    }
+    @Override public void awardKillScore(Entity victim,net.minecraft.world.damagesource.DamageSource source){
+        super.awardKillScore(victim,source);
+        // Native kill credit also handles a later environmental death. Fatal owned attacks use killedEntity.
+        if(victim instanceof LivingEntity living
+                &&net.goui.cosmicdungeon.dungeon.DungeonKillCredit.controller(source.getEntity())==null)
+            MercenaryJudicator.killed(this,living,source);
+    }
     void resumeAfterRest(){
         if(rest==null)return;
         var previous=rest;rest=null;regeneration.combat();entityData.set(DORMANT,false);noPhysics=false;

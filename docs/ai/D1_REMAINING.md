@@ -1,35 +1,33 @@
 # Current rollout, 2026-10-07
 
-Batch15 member current-run inspection is implemented, validated, published and installed as **1.6.5-alpha.1** through [PR233](https://github.com/goui12/cosmic_dungeon/pull/233).
-Runtime/tag source: 54caa86fc988cc0e3c3d1e76ed550f8072c2d779. Full Integration Gate 37558694546 and release CI 37559317965 passed all 47 native GameTests; 359 local Java tests, 34 Python safeguards and 2,001 source JSON files passed.
-Automatic review completed without findings on the exact runtime source.
-CurseForge main 9085566 and loading companion 9085565 submitted; moderation/licensed profile delivery remain unverified.
-Exact CI main SHA256 8d9c447c9c600ed34f19642d5de51836d099596f577c8830d9d33c636b47f50d; loading helper SHA256 c4150bb75ecdefdd5df832662b9be40a477d63f0253fd57921f02817f24ab1b7.
-Fresh observed stopped TEST and closed ADMIN received the exact runtime; matching helper installed on ADMIN.
-Read-only installed hashes match both targets and both latest-built/current-test feeds. Journals resolved.
-No server.properties change, server restart, local GameTest/server, client launch or forced close.
-Protocol19 requires matching client/server. Existing run storage was extended with compatible additive keys; no new schema/registry/preset migration or datagen.
-Licensed visual/interaction/multiplayer QA and CurseForge companion acceptance remain pending.
+Batch18: Judicator mercenary and Set B Beta target **1.6.8-beta.1**.
+Implemented on feature/judicator-mercenary-20261007; validated completed Set B merges
+through its PR before Beta publication. Exact completion, source/CI/publication and
+TEST sFTP facts live in BatchRunner/receipts/batch-18.json and linked evidence.
+This source note does not infer that future publication/deployment has already happened.
+Batch17 completed:1.6.7-alpha.1, CurseForge main9087282/helper9087280, TEST sFTP installed.
 
-[Exact task files and manual QA](tasks/member-run-inspection-20261007.md).
-[Approved batch plan](PARTY_SKILLS_BATCHES_20261006.md).
+Judicator Combat starts0; cumulative hostile kills1,3,6,12,24 then doubling.
+Successful direct attacks roll L% (capped100%) for L HP to hostiles within2blocks;
+secondary damage cannot recursively burst. Allies remain protected; death retains
+run progress and the next run resets it. No authored chest edits or save/network migration.
+Set B includes Batch17 Theurgist/Venefex role split and the retained legacy safeguards.
+Licensed HUD/co-op/world and CurseForge app acceptance remain pending TESTING.
 
-**11 planned batches remain (16-26).**
-- 16: latest-death inventory organization and Set A Beta.
-- 17: Theurgist/Venefex mercenary split.
-- 18: Judicator mercenary progression and Set B Beta.
-- 19: movable shared Skills panel, reset setting and recipe-book removal.
+Deployment ends after CurseForge and stopped TEST sFTP. No local-client installation,
+post-publication artifact hashes or routine legacy-feed audit.
+[Exact scope/files/QA](tasks/judicator-mercenary-20261007.md).
+[Approved plan](PARTY_SKILLS_BATCHES_20261006.md).
+
+**After Batch18 completes,8 planned batches remain (19–26); stop after18.**
+- 19: movable Skills panel, reset setting and recipe-book removal.
 - 20: Brewing Supplies/Kibble and generated recycling tags.
-- 21: universal inventory supply requests.
+- 21: group supply requests.
 - 22: player Theurgist crafting and resurrection.
-- 23: wolf commands and run-only wolf lifecycle.
+- 23: paid wolf commands and run-only pack lifecycle.
 - 24: core wolf modes.
-- 25: advanced modes and performance validation.
+- 25: advanced wolf modes and performance.
 - 26: integration and final set Beta.
-
-Cameron explicitly transferred exclusive queue ownership to Work after Batch14.
-Proceed consecutively through26 with validated set merges/Beta after16,18,26; stop after26.
-Manual gameplay acceptance remains pending and does not block the approved implementation queue.
 
 ---
 

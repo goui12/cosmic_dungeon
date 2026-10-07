@@ -15,14 +15,18 @@ import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 public final class MercenaryPotionGameTests {
     private MercenaryPotionGameTests(){}
     public static void freeStock(GameTestHelper helper){
-        var level=helper.getLevel();var merc=new MercenaryEntity(ModEntities.MERCENARY.get(),level);
-        merc.initialize(Long.MAX_VALUE-105,new MercenaryContract(UUID.randomUUID(),UUID.randomUUID(),"theurgist",2,50));
-        var stand=new BrewingStandBlockEntity(BlockPos.ZERO,Blocks.BREWING_STAND.defaultBlockState());
-        stand.setItem(3,new ItemStack(Items.NETHER_WART,7));
-        helper.assertTrue(MercenaryBrewing.brew(merc,stand,level.potionBrewing()),Component.literal("Empty mercenary brews instantly without supplies"));
-        helper.assertTrue(stand.getItem(3).getCount()==7&&MercenaryBrewing.stock(merc.supplies(),true)==1
-                &&MercenaryBrewing.stock(merc.supplies(),false)==1,Component.literal("Stand materials untouched; positive and negative splash produced"));
-        helper.assertTrue(!MercenaryBrewing.brew(merc,stand,level.potionBrewing()),Component.literal("Repeated workstation pass obeys cadence"));
+        var level=helper.getLevel();
+        for(String role:List.of("theurgist","venefex")){
+            var merc=new MercenaryEntity(ModEntities.MERCENARY.get(),level);
+            merc.initialize(Long.MAX_VALUE-105,new MercenaryContract(UUID.randomUUID(),UUID.randomUUID(),role,2,50));
+            var stand=new BrewingStandBlockEntity(BlockPos.ZERO,Blocks.BREWING_STAND.defaultBlockState());
+            stand.setItem(3,new ItemStack(Items.NETHER_WART,7));boolean positive=role.equals("theurgist");
+            helper.assertTrue(MercenaryBrewing.brew(merc,stand,level.potionBrewing()),Component.literal("Empty "+role+" brews instantly without supplies"));
+            helper.assertTrue(stand.getItem(3).getCount()==7&&MercenaryBrewing.stock(merc.supplies(),positive)==1
+                    &&MercenaryBrewing.stock(merc.supplies(),!positive)==0,Component.literal("Stand materials untouched; only assigned role produced"));
+            helper.assertTrue(!MercenaryBrewing.brew(merc,stand,level.potionBrewing()),Component.literal("Repeated workstation pass obeys cadence"));
+        }
+        MercenaryPotionRoleGameTests.verify(helper);
         helper.succeed();
     }
     public static void attribution(GameTestHelper helper){

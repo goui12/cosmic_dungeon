@@ -39,6 +39,58 @@ final class MercenarySkillsTest {
             assertEquals(level,MercenarySkill.threshold(level+1)-threshold);
         }
     }
+    @Test void venefexUsesZeroBasedTriangularLevelsWithoutShiftingOtherSkills() {
+        var skill=MercenarySkill.NEGATIVE_POTIONS;
+        int[] totals={0,1,3,6,10};
+        for(int level=0;level<totals.length;level++){
+            assertEquals(level,skill.levelFor(totals[level]));
+            assertEquals(totals[level],skill.thresholdFor(level));
+        }
+        for(int level=1;level<1000;level++){
+            int threshold=(int)skill.thresholdFor(level);
+            assertEquals(level-1,skill.levelFor(threshold-1));
+            assertEquals(level,skill.levelFor(threshold));
+            assertEquals(level+1,skill.thresholdFor(level+1)-threshold);
+        }
+        assertEquals(65535,skill.levelFor(Integer.MAX_VALUE));
+        assertEquals("Negative Potions - Level 0 (0/1)",MercenarySkill.description(skill.id(),0));
+        assertEquals("Negative Potions - Level 2 (1/3)",MercenarySkill.description(skill.id(),4));
+        for(var other:MercenarySkill.values())if(other!=skill&&other!=MercenarySkill.COMBAT)
+            assertEquals(MercenarySkill.level(10),other.levelFor(10));
+    }
+    @Test void combatUsesDoublingGoalsAndExistingRunPersistenceAndPacketFormat() throws Exception {
+        var skill=MercenarySkill.COMBAT;var hire=contract("judicator");var active=run(18,hire);var data=data();
+        data.setCount(18,"future_counter",37);data.setValue(18,"future_value","preserved");
+        for(int i=0;i<13;i++)MercenarySkills.record(data,active,hire,skill);
+        var loaded=reload(data);
+        assertEquals(13,MercenarySkills.successes(loaded,18,hire,skill));
+        assertEquals(4,skill.levelFor(13));
+        assertEquals(0,MercenarySkills.successes(loaded,19,hire,skill));
+        assertEquals(37,loaded.count(18,"future_counter"));
+        assertEquals(List.of("preserved"),loaded.values(18,"future_value"));
+        var row=new PartyPayloads.Mercenary("Judicator","Owner",20,20,-1,"ACTIVE",
+                PartyPayloads.Recovery.NONE,List.of(new PartyPayloads.Skill("combat",13)));
+        var buf=Unpooled.buffer();try{
+            PartyPayloads.Mercenary.CODEC.encode(buf,row);
+            assertEquals(row,PartyPayloads.Mercenary.CODEC.decode(buf));assertEquals(0,buf.readableBytes());
+        }finally{buf.release();}
+        assertTrue(MercenaryHudLayout.tooltip(row).contains("Combat - Level 4 (1/12)"));
+    }
+    @Test void dormantLegacyCountersStayStoredWithoutConvertingTheurgistIdentity() throws Exception {
+        var data=data();var theurgist=contract("theurgist");var active=run(1,theurgist);
+        String retired=MercenarySkills.key(theurgist.id(),MercenarySkill.NEGATIVE_POTIONS);
+        data.setCount(1,retired,1225);data.setCount(1,"future_custom_counter",37);
+        data.setValue(1,"future_custom_value","keep-me");
+        assertEquals(-1,MercenarySkills.record(data,active,theurgist,MercenarySkill.NEGATIVE_POTIONS));
+        MercenarySkills.record(data,active,theurgist,MercenarySkill.POSITIVE_POTIONS);
+        var loaded=reload(data);
+        assertEquals(1225,loaded.count(1,retired));assertEquals(37,loaded.count(1,"future_custom_counter"));
+        assertEquals(List.of("keep-me"),loaded.values(1,"future_custom_value"));
+        assertEquals("theurgist",theurgist.classId());
+        assertEquals(List.of(MercenarySkill.POSITIVE_POTIONS),MercenarySkill.forContract(theurgist));
+        var venefex=new MercenaryContract(UUID.randomUUID(),owner,"venefex",3,50);
+        assertEquals(0,MercenarySkill.NEGATIVE_POTIONS.levelFor(MercenarySkills.successes(loaded,1,venefex,MercenarySkill.NEGATIVE_POTIONS)));
+    }
     @Test void countersCannotOverflowOrBecomeNegative() {
         assertEquals(Integer.MAX_VALUE,MercenarySkill.advance(Integer.MAX_VALUE));
         assertEquals(65536,MercenarySkill.level(Integer.MAX_VALUE));
@@ -48,12 +100,12 @@ final class MercenarySkillsTest {
         assertThrows(IllegalArgumentException.class,()->MercenarySkill.advance(-1));
     }
     @Test void onlyRequestedSkillsAreAssignedToTheirClasses() {
-        assertEquals(List.of(MercenarySkill.POSITIVE_POTIONS,MercenarySkill.NEGATIVE_POTIONS),
-                MercenarySkill.forContract(contract("theurgist")));
+        assertEquals(List.of(MercenarySkill.POSITIVE_POTIONS),MercenarySkill.forContract(contract("theurgist")));
+        assertEquals(List.of(MercenarySkill.NEGATIVE_POTIONS),MercenarySkill.forContract(contract("venefex")));
         assertEquals(List.of(MercenarySkill.WOLVES),MercenarySkill.forContract(contract("bogatyr")));
         assertEquals(List.of(MercenarySkill.FIREWORKS),MercenarySkill.forContract(contract("pyroclast")));
         assertEquals(List.of(MercenarySkill.CHAIN_LIGHTNING),MercenarySkill.forContract(contract("dragoon")));
-        assertTrue(MercenarySkill.forContract(contract("judicator")).isEmpty());
+        assertEquals(List.of(MercenarySkill.COMBAT),MercenarySkill.forContract(contract("judicator")));
         assertThrows(IllegalArgumentException.class,()->MercenarySkill.fromId("invented"));
     }
     @Test void oldRunDataStartsAtOneAndUnrelatedObjectivesSurviveReload() throws Exception {
@@ -95,13 +147,16 @@ final class MercenarySkillsTest {
         assertFalse(MercenarySkills.admitted(run,contract,UUID.randomUUID(),"cosmicdungeon:d1_instance_1",MercenarySkill.WOLVES,false));
     }
     @Test void onePotionCannotMultiplyExperienceAcrossTargetsEffectsOrReload() {
-        var source=new CompoundTag();var awarded=new AtomicInteger();
-        assertTrue(MercenarySkillEffects.credit(source,MercenarySkill.POSITIVE_POTIONS,()->{awarded.incrementAndGet();return true;}));
-        var saved=source.copy();
-        for(int i=0;i<48;i++)assertFalse(MercenarySkillEffects.credit(saved,MercenarySkill.POSITIVE_POTIONS,()->{awarded.incrementAndGet();return true;}));
-        assertEquals(1,awarded.get());
-        assertTrue(MercenarySkillEffects.credit(saved,MercenarySkill.NEGATIVE_POTIONS,()->{awarded.incrementAndGet();return true;}));
-        assertEquals(2,awarded.get());
+        for(var first:List.of(MercenarySkill.POSITIVE_POTIONS,MercenarySkill.NEGATIVE_POTIONS)){
+            var source=new CompoundTag();var awarded=new AtomicInteger();
+            assertTrue(MercenarySkillEffects.credit(source,first,()->{awarded.incrementAndGet();return true;}));
+            var saved=source.copy();
+            for(var restored:List.of(source,saved))
+                for(var category:List.of(MercenarySkill.POSITIVE_POTIONS,MercenarySkill.NEGATIVE_POTIONS))
+                    for(int i=0;i<48;i++)
+                        assertFalse(MercenarySkillEffects.credit(restored,category,()->{awarded.incrementAndGet();return true;}));
+            assertEquals(1,awarded.get(),first+" cast credits only once across categories, recipients and NBT copies");
+        }
     }
     @Test void rejectedOrImmuneEffectDoesNotSpendTheSuccessfulPotionCredit() {
         var source=new CompoundTag();
@@ -122,7 +177,7 @@ final class MercenarySkillsTest {
             PartyPayloads.Mercenary.CODEC.encode(buf,row);
             assertEquals(row,PartyPayloads.Mercenary.CODEC.decode(buf));assertEquals(0,buf.readableBytes());
         }finally{buf.release();}
-        assertEquals(List.of("Edmund","Respawn 8:20","Positive Potions - Level 5 (0/5)","Negative Potions - Level 3 (0/3)"),
+        assertEquals(List.of("Edmund","Respawn 8:20","Positive Potions - Level 5 (0/5)","Negative Potions - Level 2 (0/3)"),
                 MercenaryHudLayout.tooltip(row));
     }
     @Test void packetsRejectUnknownNegativeDuplicateAndOversizedSkillRows() {
