@@ -13,21 +13,21 @@ public final class SkillsPanelComponent {
     private static void text(GuiGraphics g,Font font,String text,Rect box,int color){
         g.drawString(font,font.plainSubstrByWidth(text,Math.max(0,box.width()-8)),box.x()+4,box.y()+5,color,false);
     }
-    private static void tooltip(GuiGraphics g,Font font,String text,int x,int y){
-        if(x>=0&&y>=0)g.setComponentTooltipForNextFrame(font,List.of(Component.literal(text)),x,y);
+    private static void tooltip(GuiGraphics g,Font font,Component text,int x,int y){
+        if(x>=0&&y>=0)g.setComponentTooltipForNextFrame(font,List.of(text),x,y);
     }
     /** Reserve the topmost tooltip before vanilla schedules a covered inventory-slot tooltip. */
     public static void tooltip(GuiGraphics g,Font font,SkillsPanelModel model,SkillsPanelState state,int mouseX,int mouseY){
-        var box=state.geometry();String tip=null;
-        if(box.help().contains(mouseX,mouseY))tip="Open the class guide";
-        else if(box.minimize().contains(mouseX,mouseY))tip=state.minimized()?"Expand Skills":"Minimize Skills";
-        else if(box.header().contains(mouseX,mouseY))tip=model.title()+" — drag to move";
-        else if(box.resource().contains(mouseX,mouseY))tip=model.resource()+"\n"+model.resourceTooltip();
+        var box=state.geometry();Component tip=null;
+        if(box.help().contains(mouseX,mouseY))tip=Component.literal("Open the class guide");
+        else if(box.minimize().contains(mouseX,mouseY))tip=Component.literal(state.minimized()?"Expand Skills":"Minimize Skills");
+        else if(box.header().contains(mouseX,mouseY))tip=Component.literal(model.title()+" — drag to move");
+        else if(box.resource().contains(mouseX,mouseY))tip=model.resourceTooltip();
         else if(box.body().contains(mouseX,mouseY)){
-            tip="Skills";
-            if(box.track().contains(mouseX,mouseY)&&state.scroll().max()>0)tip="Scroll Skills";
+            tip=Component.literal("Skills");
+            if(box.track().contains(mouseX,mouseY)&&state.scroll().max()>0)tip=Component.literal("Scroll Skills");
             else for(int i=0;i<model.actions().size();i++)if(box.row(i,state.scroll().offset()).contains(mouseX,mouseY)){
-                var action=model.actions().get(i);tip=action.label()+"\n"+action.tooltip();break;
+                tip=model.actions().get(i).tooltip();break;
             }
         }
         if(tip!=null)tooltip(g,font,tip,mouseX,mouseY);
@@ -41,7 +41,8 @@ public final class SkillsPanelComponent {
         g.drawCenteredString(font,"i",box.help().x()+box.help().width()/2,box.help().y()+2,0xFFFFFFFF);
         fill(g,box.minimize(),0xFF344B5D);
         g.drawCenteredString(font,state.minimized()?"+":"−",box.minimize().x()+box.minimize().width()/2,box.minimize().y()+2,0xFFFFFFFF);
-        fill(g,box.resource(),0xFF1E303F);text(g,font,model.resource(),box.resource(),0xFFB9DBED);
+        if(model.resourceSnapshot()!=null)ClassResourceBar.draw(g,font,box.resource(),model.resourceSnapshot());
+        else {fill(g,box.resource(),0xFF1E303F);text(g,font,model.resource(),box.resource(),0xFFB9DBED);}
         if(box.body().height()>0){
             g.enableScissor(box.body().x(),box.body().y(),box.body().right(),box.body().bottom());
             try{

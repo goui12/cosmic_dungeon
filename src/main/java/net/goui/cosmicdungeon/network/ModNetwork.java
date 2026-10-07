@@ -32,7 +32,12 @@ public final class ModNetwork {
     private ModNetwork() {}
 
     public static void registerPayloadHandlers(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("19");
+        final PayloadRegistrar registrar = event.registrar("20");
+        registrar.playToClient(ClassResourcePayloads.View.TYPE,ClassResourcePayloads.View.STREAM_CODEC,
+                (payload,ctx)->ctx.enqueueWork(()->ClientNetworkDispatch.dispatch("onClassResource",payload)));
+        registrar.playToServer(ClassResourcePayloads.Recycle.TYPE,ClassResourcePayloads.Recycle.STREAM_CODEC,
+                (payload,ctx)->ctx.enqueueWork(()->{if(ctx.player() instanceof ServerPlayer player)
+                    net.goui.cosmicdungeon.playerclass.resource.ClassResourceService.recycle(player,payload);}));
         registrar.playToServer(LeaderboardPayloads.Request.TYPE,LeaderboardPayloads.Request.CODEC,
             (payload,ctx)->ctx.enqueueWork(()->{if(ctx.player() instanceof net.minecraft.server.level.ServerPlayer player)
                 net.goui.cosmicdungeon.leaderboard.LeaderboardService.request(player,payload);}));

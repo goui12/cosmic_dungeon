@@ -1,28 +1,26 @@
 # Current rollout, 2026-10-07
 
-Batch19: reusable Skills panel and shared inventory layout, target **1.6.9-alpha.1**.
-Implemented on feature/skills-panel-foundation-20261007; this starts Set C and stays
-on its task branch until the validated Set C merge at26. Exact completion,
-source/CI/publication and TEST sFTP facts live in BatchRunner/receipts/batch-19.json
-and linked evidence. This source note does not claim future delivery already happened.
-Batch18 completed:1.6.8-beta.1, PR236 merged, CurseForge main9087871/helper9087870,
-TEST sFTP installed; main7c58a5c5d4639e4533d9663db0675e3a43f9a3d4.
+Batch20: Brewing Supplies/Kibble resources, tagged recycling, bars and guide,
+target **1.6.10-alpha.1**, on feature/class-resource-ledger-20261007.
+The task branch builds on Batch19 source56ca66f04d7cdf40e2943b31674161ef198abb46;
+Set C remains unmerged until26. Exact completion/source/CI/publication/TEST facts
+live in BatchRunner/receipts/batch-20.json and linked evidence.
+Batch19 completed:1.6.9-alpha.1, PR237 open, CurseForge main9088085/helper9088084,
+TEST sFTP installed. This note does not pre-claim future delivery.
 
-Client-only Skills panel: stored per-class placement, minimize with resource header,
-uniform action rows, wheel/drag scrollbar, shared HUD/account/Requests reservations,
-exact class-guide shortcut and Reset Skill Panel UI. Remove all recipe-book GUI
-surfaces while preserving crafting authorization. Bogatyr/Theurgist guide entries
-use existing mechanics; real resource balances and further class actions remain
-their approved later cards. No world migration or new gameplay packets.
+Each player's class resource starts at0 each active run, grows1/sec online to600,
+survives death/relogin, and has no offline catch-up. Recycling uses the authoritative
+generated16-item Brewing Supplies /6-item Kibble tags and consumes only headroom.
+Styled world/inventory bars and minimized counts use server snapshots. The H guide
+lists currently bound tag contents; Request Supplies is visibly unavailable until21.
 Licensed GUI/co-op/world and CurseForge app acceptance remain pending TESTING.
 
 Delivery ends after CurseForge and stopped TEST sFTP. No local-client installation,
 post-publication artifact hashes or routine legacy-feed audit.
-[Exact scope/files/QA](tasks/skills-panel-foundation-20261007.md).
+[Exact scope/files/QA](tasks/class-resource-ledger-20261007.md).
 [Approved plan](PARTY_SKILLS_BATCHES_20261006.md).
 
-**After Batch19 completes,7 planned batches remain (20–26); stop after19.**
-- 20: Brewing Supplies/Kibble and generated recycling tags.
+**After Batch20 completes,6 planned batches remain (21-26); stop after20.**
 - 21: group supply requests.
 - 22: player Theurgist crafting and resurrection.
 - 23: paid wolf commands and run-only pack lifecycle.

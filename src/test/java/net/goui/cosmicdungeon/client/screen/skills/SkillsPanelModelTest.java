@@ -10,7 +10,7 @@ final class SkillsPanelModelTest {
             var model=SkillsPanelModel.initial(id);
             assertEquals(id,model.classId());
             assertEquals("Resource: —",model.resource());
-            assertEquals("No resource balance available.",model.resourceTooltip());
+            assertEquals("No resource balance available.",model.resourceTooltip().getString());
             if(Set.of("bogatyr","theurgist").contains(id)){
                 assertEquals(1,model.actions().size());
                 assertEquals("guide",model.actions().getFirst().id());

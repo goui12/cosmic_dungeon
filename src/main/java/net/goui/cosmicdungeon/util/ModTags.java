@@ -57,6 +57,8 @@ public final class ModTags {
 
     public static final class Items {
         private Items() {}
+        public static final TagKey<Item> BREWING_SUPPLIES = create("brewing_supplies");
+        public static final TagKey<Item> KIBBLE = create("kibble");
 
         // ===== Existing tags =====
         public static final TagKey<Item> TRANSFORMABLE_ITEMS = create("transformable_items");

@@ -9,6 +9,10 @@ public final class CosmicDungeonOptionsIntegration {
     private CosmicDungeonOptionsIntegration() {}
 
     public static void registerConfigScreen(ModContainer container) {
+        net.goui.cosmicdungeon.client.screen.skills.ClassResourceClient.recycleAction(snapshot ->
+                net.goui.cosmicdungeon.network.ModNetwork.sendToServer(
+                        new net.goui.cosmicdungeon.network.ClassResourcePayloads.Recycle(
+                                snapshot.runId(),snapshot.resourceId(),snapshot.revision())));
         net.goui.cosmicdungeon.client.screen.skills.SkillsPanelClient.classHelp((parent, classId) ->
                 net.minecraft.client.Minecraft.getInstance().setScreen(
                         net.goui.cosmicdungeon.client.screen.HelpMenuScreen.forClass(parent, classId)));

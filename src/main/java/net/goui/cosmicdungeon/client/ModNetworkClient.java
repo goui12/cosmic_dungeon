@@ -38,6 +38,12 @@ public final class ModNetworkClient {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private ModNetworkClient() {}
+    public static void onClassResource(net.goui.cosmicdungeon.network.ClassResourcePayloads.View payload){
+        net.goui.cosmicdungeon.client.screen.skills.ClassResourceClient.receive(
+                new net.goui.cosmicdungeon.client.screen.skills.ClassResourceSnapshot(
+                        payload.runId(),payload.resourceId(),payload.amount(),payload.cap(),
+                        payload.active(),payload.alive(),payload.recyclable(),payload.revision()));
+    }
     public static void onLeaderboard(net.goui.cosmicdungeon.network.LeaderboardPayloads.View payload){
         net.goui.cosmicdungeon.client.screen.LeaderboardScreen.receive(payload);
     }

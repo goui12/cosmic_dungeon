@@ -3,17 +3,28 @@ package net.goui.cosmicdungeon.client.screen.skills;
 import java.util.List;
 import java.util.Objects;
 import net.goui.cosmicdungeon.playerclass.api.ClassKeys;
+import net.minecraft.network.chat.Component;
 
-/** Display/action descriptions only. A future server-authorized provider supplies real resource snapshots. */
-public record SkillsPanelModel(String classId,String title,String resource,String resourceTooltip,List<Action> actions) {
-    public record Action(String id,String label,String tooltip,boolean enabled){
-        public Action{Objects.requireNonNull(id);Objects.requireNonNull(label);Objects.requireNonNull(tooltip);}
+/** Display/action descriptions only; rich text and optional authoritative resource presentation are reusable. */
+public record SkillsPanelModel(String classId,String title,String resource,Component resourceTooltip,
+                               List<Action> actions,ClassResourceSnapshot resourceSnapshot) {
+    public record Action(String id,String label,Component tooltip,boolean enabled){
+        public Action{Objects.requireNonNull(id);Objects.requireNonNull(label);tooltip=Objects.requireNonNull(tooltip).copy();}
+        public Action(String id,String label,String tooltip,boolean enabled){this(id,label,Component.literal(tooltip),enabled);}
+    }
+    public SkillsPanelModel(String classId,String title,String resource,String tooltip,List<Action> actions){
+        this(classId,title,resource,Component.literal(tooltip),actions,null);
+    }
+    public SkillsPanelModel(String classId,String title,String resource,Component tooltip,List<Action> actions){
+        this(classId,title,resource,tooltip,actions,null);
     }
     public SkillsPanelModel {
         Objects.requireNonNull(classId);Objects.requireNonNull(title);Objects.requireNonNull(resource);
-        Objects.requireNonNull(resourceTooltip);actions=List.copyOf(actions);
+        resourceTooltip=Objects.requireNonNull(resourceTooltip).copy();actions=List.copyOf(actions);
         if(actions.size()>128||actions.stream().map(Action::id).distinct().count()!=actions.size())
             throw new IllegalArgumentException("Invalid skill actions");
+        if(resourceSnapshot!=null&&!resourceSnapshot.matches(classId))
+            throw new IllegalArgumentException("Resource snapshot belongs to another class");
     }
     public static SkillsPanelModel initial(String rawClass){
         String id=ClassKeys.clamp(rawClass);

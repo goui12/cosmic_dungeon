@@ -26,7 +26,7 @@ public record SharedInventoryLayout(Rect group,Rect requests,Rect skillsDefault,
         var requests=bounded(right,Math.max(8,guiTop),Math.min(160,Math.max(0,sw-right-8)),
                 Math.min(Math.max(36,imageHeight),Math.max(0,sh-16)),sw,sh);
         var account=bounded(guiLeft,Math.max(2,guiTop-32),Math.min(imageWidth,176),29,sw,sh);
-        var world=bounded((sw-182)/2,sh-56,Math.min(182,sw-8),12,sw,sh);
+        var world=ClassResourceBar.world(sw,sh,39);
         return new SharedInventoryLayout(group,requests,skills,account,world,sw,sh,compact);
     }
 }
