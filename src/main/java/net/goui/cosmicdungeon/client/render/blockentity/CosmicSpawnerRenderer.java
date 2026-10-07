@@ -58,7 +58,7 @@ public class CosmicSpawnerRenderer implements BlockEntityRenderer<CosmicSpawnerB
     public void submit(State state, PoseStack poseStack, SubmitNodeCollector collector, CameraRenderState cameraState) {
         if (state.resolvedState != null) {
             collector.submitBlock(poseStack, state.resolvedState, state.lightCoords, OverlayTexture.NO_OVERLAY,
-                    state.be != null && state.be.isSpawnBlocked() ? 0xFFFF3030 : 0);
+                    0);
         }
 
         CosmicSpawnerBlockEntity be = state.be;

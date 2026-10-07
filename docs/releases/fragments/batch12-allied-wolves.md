@@ -1,0 +1,1 @@
+Player-owned Bogatyr wolves now share the established allied damage/projectile/potion protection used by mercenary companions. Enemy damage and beneficial effects remain effective; no save format change.

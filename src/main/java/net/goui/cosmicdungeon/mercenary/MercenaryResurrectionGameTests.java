@@ -147,6 +147,12 @@ public final class MercenaryResurrectionGameTests {
                 f.check(MercenaryResurrection.destination(f.player)==null,"Forced destination cannot leak to ordinary respawn");
                 MercenaryResurrection.accept(f.player,request);MercenaryResurrection.accept(revived,request);
                 f.check(f.players.get(f.player.getUUID())==revived,"Duplicate and stale old-player requests cannot respawn twice");
+                var layout=net.goui.cosmicdungeon.dungeon.d1.DeathInventoryLayout.read(f.data,f.id,revived);
+                f.check(layout!=null&&layout.death().equals(death.id()),"Native resurrection must retain latest physical-drop layout");
+                for(var drop:drops){drop.setNoPickUpDelay();drop.playerTouch(revived);}
+                f.check(revived.getInventory().getItem(0).is(Items.DIAMOND)
+                        &&revived.getInventory().getItem(0).getCount()==2,
+                        "Resurrection recovers only the original physical items after native pickup");
                 var damage=new EntityInvulnerabilityCheckEvent(revived,revived.damageSources().fellOutOfWorld(),false);
                 NeoForge.EVENT_BUS.post(damage);f.check(damage.isInvulnerable(),"Five-second protection includes void damage");
                 long tick=server.overworld().getGameTime();

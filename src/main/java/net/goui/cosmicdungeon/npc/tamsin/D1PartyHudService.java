@@ -14,6 +14,7 @@ final class D1PartyHudService {
     static void track(UUID player) { LAST.putIfAbsent(player, null); }
     static void forget(UUID player) { LAST.remove(player); }
     static void clear() { LAST.clear(); IDENTITIES.clear(); }
+    static PartyPayloads.Member identity(MinecraftServer server,UUID id) { return member(server,id,false,false); }
     private static PartyPayloads.Member member(MinecraftServer server, UUID id, boolean ready, boolean leader) {
         var player = server.getPlayerList().getPlayer(id);
         var known = IDENTITIES.get(id);
@@ -27,6 +28,7 @@ final class D1PartyHudService {
         lobby.parties().forEach(p -> audience.addAll(p.members()));
         lobby.invitations().forEach(i -> audience.add(i.target()));
         var retainedIdentities = new HashSet<UUID>();
+        var vitals = new HashMap<UUID, PartyVitals>();
         for (UUID id : audience) {
             var player = server.getPlayerList().getPlayer(id);
             if (player == null) { LAST.remove(id); continue; }
@@ -42,14 +44,21 @@ final class D1PartyHudService {
             if (p != null) {
                 retainedIdentities.addAll(p.members());
                 rows = new ArrayList<>(p.members().stream().map(m -> member(server, m, p.ready().contains(m), p.leader().equals(m))).toList());
-                for(var hire:p.contracts())rows.add(new PartyPayloads.Member(hire.name(),hire.classId(),true,false));
+                for(var hire:p.contracts())rows.add(new PartyPayloads.Member(hire.name(),hire.classId(),false,false,true));
                 name = p.name(); phase = p.phase().name(); capacity = p.capacity(); leader = p.leader().equals(id);
                 queue = lobby.queuePosition(p);
                 seconds = p.countdownEnd() < 0 ? -1 : (int)Math.max(0, (p.countdownEnd() - server.overworld().getGameTime() + 19) / 20);
             } else if (run != null && !run.isCompletionExited(id)) {
                 var roster = run.orderedPlayers().stream().filter(m -> !run.isCompletionExited(m)).limit(6).toList();
                 retainedIdentities.addAll(roster);
-                rows = roster.stream().map(m -> member(server, m, true, run.groupLeader().filter(m::equals).isPresent())).toList();
+                rows = roster.stream().map(m -> {
+                    var identity = member(server, m, false, run.groupLeader().filter(m::equals).isPresent());
+                    var health = vitals.computeIfAbsent(m, key -> {
+                        var subject = server.getPlayerList().getPlayer(key);
+                        return PartyVitalsSnapshot.capture(subject, subject != null && run.containsDimension(subject.level().dimension()));
+                    });
+                    return new PartyPayloads.Member(identity.name(),identity.classId(),false,identity.leader(),false,health,m.toString());
+                }).toList();
                 var previous = LAST.get(id);
                 name = previous == null || previous.recruitment().groupName().isBlank() ? "Dungeon 1" : previous.recruitment().groupName();
                 for(var hire:run.mercenaries())if(run.containsPlayer(hire.hirer())&&!run.isCompletionExited(hire.hirer()))
@@ -58,7 +67,7 @@ final class D1PartyHudService {
                 phase = "ACTIVE"; capacity = rows.size()+mercenaries.size();
             }
             var view = new PartyPayloads.View(-1,
-                    new PartyPayloads.State(lobby.revision(id), phase, leader, capacity, queue, seconds), rows,
+                    new PartyPayloads.State(phase.equals("ACTIVE")?run.runId():lobby.revision(id), phase, leader, capacity, queue, seconds), rows,
                     new PartyPayloads.Invite(invitation == null ? "" : invitation.token(),
                             sender == null ? "" : sender.getGameProfile().name(), invitation != null && invitation.accepted(), false),
                     new PartyPayloads.Recruitment(name, false, 0, 1, List.of()),

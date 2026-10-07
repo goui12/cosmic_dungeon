@@ -1,24 +1,24 @@
 # New batch round - decisions updated 2026-10-06
 
-Status: Cameron authorized implementation of Batch10 and11 on2026-10-06 at08:29PDT.
-All original and follow-up questions are settled. Implement10 then11; stop before12.
-Code baseline remains cosmic_dungeon_batch9, HEAD22160f354e144c62cc7d3a3ba4c9b54e5deb0dc6.
-Fresh origin fetch: task branch local/remote0/0, tracked clean; existing untracked build outputs preserved.
+Status: Batches10-15 are implemented, validated and published; current alpha1.6.5-alpha.1.
+All original and follow-up questions are settled. Exclusive Work handoff accepted after14; continue16-26 and stop after26.
+Batch10 merged through PR227: main e57b27bb78e592fca521e05bc78e305f23c55c2f; exact1.6.0-beta published.
+Batch11 starts from that merged baseline on feature/party-trade-readiness-20261006; validated/published1.6.1-alpha.1. TEST deployment backlog was resolved before14; both targets now use1.6.5-alpha.1.
 Source: Cameron's original request, reviewed wolfpack mockup, and October6 08:16PDT clarification.
 This queue records requirements; implementation status is maintained in task reports and D1_REMAINING.
-Google source metadata not refreshed; prior OAuth expiry is historical, not a new sync result.
+Google source metadata refresh attempted2026-10-06T15:34:03Z: existing read-only authorization expired. Cached Tamsin/TamsinTax plus Cameron explicit settled corrections used; no fresh semantic audit claimed.
 All earlier questions below the latest DECISIONS checkpoint are historical; do not re-ask settled decisions.
 
 ## Numbering and release sequence
 Queued Batch10: Tamsin20x18 top-right lore/map replay i; preserve actual class/group/ready/progress.
 Support exact1.6.0-beta, validate, merge completed prior set via PR and publish both jars.
-New round has16 batches11-26, including final integration/release.17 batches including queued10.
+Original round had16 batches11-26 plus queued10. Batches10-15 are complete;11 remain16-26, including final integration/release.
 The independent generic Skills UI warrants its own Batch19; prior19-25 become20-26.
 SetA11-16 party/combat/HUD/death recovery; SetB17-18 mercenary roles; SetC19-26 UI/resources/classes/wolves.
 Alpha micro revisions between implementation batches; validated set main merge/Beta after each set.
 Do not reuse tags, preassign conflicting versions, merge test-builds or claim companion app verification without evidence.
 No game/client/GameTest-server automatic launch, no server restart. Existing independently checked deployment policy applies.
-No unresolved gameplay questions remain. Batch10 and11 are authorized.
+No unresolved gameplay questions remain. Batch15 completed; Approach A workflow optimization approved and verified.
 
 ## Confirmed common rules
 - Recycling is1 tagged item=1 resource. Consume only headroom to600; never waste donor/self items at cap.
@@ -53,19 +53,19 @@ ClassSelectorReadyManager/call sites, client D1PartyHud/MercenaryHudLayout and r
 Hotspots: trade/currency transaction boundaries, party readiness/entry, menu sessions/network.
 Tests: both-ready trade through completion/cancel; start during open/accepted/finalizing trade; full inventory returns;
 currency/drop custody, disconnect/death/class-change invalidations still work; roster/leader/membership remain authoritative.
-12. Player wolf friendly-fire protection
+12. Player wolf friendly-fire protection (complete;1.6.2-alpha.1)
 Protect player-owned Bogatyr wolves and mercenary wolves against allied melee/projectiles/AOE/harmful effects.
 Preserve hostile damage/healing. Source gap verified: MercenaryWolves.protectedCompanion covers mercenary entity/marked wolves;
 BogatyrThreats prevents player-wolf outbound friendly damage, but lacks equivalent inbound guard.
 Expected: CompanionAllies/BogatyrThreats/BogatyrWolfEvents and mercenary damage/projectile/effect guards.
 No30cap change in this narrow bug-fix batch; performance/cap belongs to later command/AI work.
-13. Cosmic spawner visual, pickaxe warning and firework destruction
+13. Cosmic spawner visual, pickaxe warning and firework destruction (complete;1.6.3-alpha.1)
 Faint wall-occluded red appearance when blocked, no red through-wall silhouette/fill.
 Large throttled "You need a pickaxe to break that!" on wrong-tool attempt.
 Both player/mercenary Pyroclast fireworks break eligible cosmic spawners within5blocks, respecting existing obstruction/protection.
 Expected: CosmicSpawnerRenderer/CosmicMobSpawnerBlock and firework explosion services; preserve access/reset/drop lifecycle.
 No planned NBT/preset/schema change, no planned spawner migration; authored placements/presets must survive updates.
-14. Complete group HUD
+14. Complete group HUD (complete;1.6.4-alpha.1)
 All human members including self plus mercenaries: current/maxHP, name/class, small positive/negative effect icons under HP.
 Explicit dead/offline/unloaded states; no stale health presented as current. World view read-only, inventory supports mouse.
 Expected: D1PartyHud/Layout/MercenaryHudLayout, D1PartyHudService, PartyPayloads, ModNetwork.
@@ -191,7 +191,7 @@ Licensed full beta gameplay verification remains required before stable.
 A. Packs end with the dungeon. No surviving-wolf preservation across resets; implement compatible lifecycle cleanup in23.
 B. Normal splash pool: night vision,invisibility,fire resistance,swiftness,healing,regeneration,strength,luck.
 Epic skill selects only real tierII variants from that list. No unresolved potion-pool question.
-Cameron now authorizes10 and11 only; continue them through validation/publication/deployment eligibility checks.
+Cameron explicitly authorized Batch13 on2026-10-06. Stop after13; prior conditional continuation is superseded.
 
 ## Automated/manual verification and planning receipt
 All actual code batches follow AGENTS: narrow task/PR, exclusive hotspot ownership, Java21 build, CI clean build/native GameTests,

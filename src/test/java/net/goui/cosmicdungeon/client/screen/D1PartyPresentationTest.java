@@ -34,6 +34,25 @@ final class D1PartyPresentationTest {
         assertFalse(D1PartyPresentation.readiness(null, null).enabled());
     }
 
+    @Test void mercenariesNeverParticipateInReadyPresentationOrHumanLookup() {
+        var human = new PartyPayloads.Member("Cameron", "pyroclast", true, true);
+        var hire = new PartyPayloads.Member("Cameron", "theurgist", false, false, true);
+        var original = view("READY_CHECK", true, true);
+        var mixed = new PartyPayloads.View(1, original.state(), List.of(hire, human), original.invitation());
+        assertEquals("", D1PartyPresentation.readySuffix(mixed, hire));
+        assertEquals(" / Ready", D1PartyPresentation.readySuffix(mixed, human));
+        assertEquals("Ready 1/1", D1PartyPresentation.readySummary(mixed));
+        assertTrue(D1PartyPresentation.allHumansReady(mixed));
+        assertEquals("unready", D1PartyPresentation.readiness(mixed, "Cameron").action());
+    }
+
+    @Test void activeDungeonHidesReadinessEvenForOfflineOrUnreadyRows() {
+        var active = view("ACTIVE", true, false);
+        active.members().forEach(member -> assertEquals("", D1PartyPresentation.readySuffix(active, member)));
+        assertEquals("Dungeon 1", D1PartyPresentation.readySummary(active));
+        assertFalse(D1PartyPresentation.readiness(active, "Cameron").enabled());
+    }
+
     @Test void mapIsSquareAndFitsNormalGuiScalesWithControlsOutsideIt() {
         for (int[] viewport : new int[][]{{320, 240}, {426, 240}, {640, 360}, {960, 600}, {1920, 1080}}) {
             var map = TamsinMapLayout.forViewport(viewport[0], viewport[1]);

@@ -32,7 +32,7 @@ public final class ModNetwork {
     private ModNetwork() {}
 
     public static void registerPayloadHandlers(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("16");
+        final PayloadRegistrar registrar = event.registrar("19");
         registrar.playToServer(LeaderboardPayloads.Request.TYPE,LeaderboardPayloads.Request.CODEC,
             (payload,ctx)->ctx.enqueueWork(()->{if(ctx.player() instanceof net.minecraft.server.level.ServerPlayer player)
                 net.goui.cosmicdungeon.leaderboard.LeaderboardService.request(player,payload);}));
@@ -362,6 +362,14 @@ public final class ModNetwork {
 
         registrar.playToClient(PartyPayloads.RevivePrompt.TYPE,PartyPayloads.RevivePrompt.STREAM_CODEC,
                 (payload,ctx)->ctx.enqueueWork(()->ClientNetworkDispatch.dispatch("onMercenaryRevivePrompt",payload)));
+
+        registrar.playToServer(PartyInspectionPayloads.Request.TYPE,PartyInspectionPayloads.Request.STREAM_CODEC,
+                (payload,ctx)->ctx.enqueueWork(()->{
+                    if(ctx.player() instanceof ServerPlayer player)
+                        net.goui.cosmicdungeon.npc.tamsin.PartyInspectionService.request(player,payload);
+                }));
+        registrar.playToClient(PartyInspectionPayloads.View.TYPE,PartyInspectionPayloads.View.STREAM_CODEC,
+                (payload,ctx)->ctx.enqueueWork(()->ClientNetworkDispatch.dispatch("onPartyInspection",payload)));
 
         /* ===================== VENDOR ===================== */
         registrar.playToClient(VendorPayloads.S2C_VendorBalance.TYPE, VendorPayloads.S2C_VendorBalance.STREAM_CODEC,

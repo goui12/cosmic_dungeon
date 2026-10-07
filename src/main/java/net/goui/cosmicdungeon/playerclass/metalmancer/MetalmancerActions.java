@@ -89,6 +89,21 @@ public final class MetalmancerActions {
         saveMmRoot(sp, mmRoot);
     }
 
+    /** Read the exact existing action timers without creating state or changing readiness. */
+    public static java.util.List<net.goui.cosmicdungeon.network.PartyInspectionPayloads.Reading> inspectionCooldowns(ServerPlayer player) {
+        var state=player.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).getCompoundOrEmpty(KEY_MM_ROOT);
+        String[] keys={KEY_CD_MAGNET_L,KEY_CD_MAGNET_R,KEY_CD_FILE_L,KEY_CD_FILE_R,KEY_CD_STAFF_SUM,KEY_CD_STAFF_REF};
+        String[] labels={"Magnet attack","Magnet chain","Forage","Golem recall","Golem summon","Reforge"};
+        var result=new java.util.ArrayList<net.goui.cosmicdungeon.network.PartyInspectionPayloads.Reading>();
+        long now=player.level().getGameTime();
+        for(int i=0;i<keys.length;i++) {
+            long remaining=Math.max(0,state.getLongOr(keys[i],0)-now);
+            result.add(new net.goui.cosmicdungeon.network.PartyInspectionPayloads.Reading(labels[i],
+                    remaining==0?"Ready":((remaining/20)+(remaining%20==0?0:1))+"s"));
+        }
+        return java.util.List.copyOf(result);
+    }
+
     /* ----------------- PD helpers ----------------- */
 
     private static CompoundTag getOrCreateMmRoot(ServerPlayer sp) {

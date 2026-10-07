@@ -16,10 +16,24 @@ public final class PartyPayloads {
                 ByteBufCodecs.stringUtf8(16), Action::action, ByteBufCodecs.stringUtf8(36), Action::target, Action::new);
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
-    public record Member(String name, String classId, boolean ready, boolean leader) {
-        public static final StreamCodec<ByteBuf, Member> CODEC = StreamCodec.composite(
-                ByteBufCodecs.stringUtf8(16), Member::name, ByteBufCodecs.stringUtf8(32), Member::classId,
-                ByteBufCodecs.BOOL, Member::ready, ByteBufCodecs.BOOL, Member::leader, Member::new);
+    public record Member(String name, String classId, boolean ready, boolean leader, boolean mercenary, PartyVitals vitals, String memberId) {
+        public Member { if(memberId==null||memberId.length()>36)throw new IllegalArgumentException("Invalid member ID");
+            if(!memberId.isEmpty())java.util.UUID.fromString(memberId); }
+        public Member(String name,String classId,boolean ready,boolean leader,boolean mercenary,PartyVitals vitals) {
+            this(name,classId,ready,leader,mercenary,vitals,"");
+        }
+        public Member(String name, String classId, boolean ready, boolean leader, boolean mercenary) {
+            this(name, classId, ready, leader, mercenary, PartyVitals.UNLOADED);
+        }
+        public Member(String name, String classId, boolean ready, boolean leader) {
+            this(name, classId, ready, leader, false);
+        }
+        public static final StreamCodec<ByteBuf, Member> CODEC = StreamCodec.of((buf,row)->{
+            ByteBufCodecs.stringUtf8(16).encode(buf,row.name());ByteBufCodecs.stringUtf8(32).encode(buf,row.classId());
+            buf.writeBoolean(row.ready());buf.writeBoolean(row.leader());buf.writeBoolean(row.mercenary());
+            PartyVitals.CODEC.encode(buf,row.vitals());ByteBufCodecs.stringUtf8(36).encode(buf,row.memberId());
+        },buf->new Member(ByteBufCodecs.stringUtf8(16).decode(buf),ByteBufCodecs.stringUtf8(32).decode(buf),
+                buf.readBoolean(),buf.readBoolean(),buf.readBoolean(),PartyVitals.CODEC.decode(buf),ByteBufCodecs.stringUtf8(36).decode(buf)));
     }
     public record State(long revision, String phase, boolean leader, int capacity, int queuePosition, int countdownSeconds) {
         public static final StreamCodec<ByteBuf, State> CODEC = StreamCodec.composite(
@@ -89,7 +103,15 @@ public final class PartyPayloads {
                 net.minecraft.core.UUIDUtil.STREAM_CODEC,Resurrect::death,Resurrect::new);
         @Override public Type<? extends CustomPacketPayload> type(){return TYPE;}
     }
-    public record Mercenary(String name,String owner,float health,float maxHealth,int respawnSeconds,String status,Recovery recovery,List<Skill> skills,Resurrection resurrection){
+    public record Mercenary(String name,String owner,float health,float maxHealth,int respawnSeconds,String status,Recovery recovery,List<Skill> skills,Resurrection resurrection,String classId,PartyVitals vitals){
+        public Mercenary(String name,String owner,float health,float maxHealth,int respawnSeconds,String status,Recovery recovery,List<Skill> skills,Resurrection resurrection,String classId){
+            this(name,owner,health,maxHealth,respawnSeconds,status,recovery,skills,resurrection,classId,
+                    status.equals("ACTIVE") ? new PartyVitals(health,maxHealth,"ACTIVE",List.of(),0)
+                            : status.equals("RESPAWNING") ? PartyVitals.DEAD : PartyVitals.UNLOADED);
+        }
+        public Mercenary(String name,String owner,float health,float maxHealth,int respawnSeconds,String status,Recovery recovery,List<Skill> skills,Resurrection resurrection){
+            this(name,owner,health,maxHealth,respawnSeconds,status,recovery,skills,resurrection,"");
+        }
         public Mercenary(String name,String owner,float health,float maxHealth,int respawnSeconds,String status,Recovery recovery,List<Skill> skills){
             this(name,owner,health,maxHealth,respawnSeconds,status,recovery,skills,Resurrection.LOCKED);
         }
@@ -101,9 +123,12 @@ public final class PartyPayloads {
         }
         public Mercenary{
             skills=List.copyOf(skills);
+            if(vitals==null || status.equals("ACTIVE") && (!vitals.state().equals("ACTIVE") || health!=vitals.health() || maxHealth!=vitals.maxHealth())
+                    || !status.equals("ACTIVE") && (vitals.state().equals("ACTIVE") || health!=0 || maxHealth!=0))
+                throw new IllegalArgumentException("Inconsistent mercenary vitals");
             if(skills.size()>2||skills.stream().map(Skill::id).distinct().count()!=skills.size())
                 throw new IllegalArgumentException("Invalid mercenary skills");
-            if(resurrection==null||recovery==null||name==null||owner==null||name.length()>64||owner.length()>16||!Float.isFinite(health)
+            if(classId==null||classId.length()>32||resurrection==null||recovery==null||name==null||owner==null||name.length()>64||owner.length()>16||!Float.isFinite(health)
                     ||!Float.isFinite(maxHealth)||health<0||maxHealth<0||health>maxHealth
                     ||respawnSeconds < -1||respawnSeconds>600
                     ||!List.of("ACTIVE","RESPAWNING","UNLOADED").contains(status))
@@ -112,9 +137,9 @@ public final class PartyPayloads {
         public static final StreamCodec<ByteBuf,Mercenary> CODEC=StreamCodec.of((buf,row)->{
             ByteBufCodecs.stringUtf8(64).encode(buf,row.name());ByteBufCodecs.stringUtf8(16).encode(buf,row.owner());
             buf.writeFloat(row.health());buf.writeFloat(row.maxHealth());ByteBufCodecs.VAR_INT.encode(buf,row.respawnSeconds());
-            ByteBufCodecs.stringUtf8(16).encode(buf,row.status());Recovery.CODEC.encode(buf,row.recovery());Skill.CODEC.apply(ByteBufCodecs.list(2)).encode(buf,row.skills());Resurrection.CODEC.encode(buf,row.resurrection());
+            ByteBufCodecs.stringUtf8(16).encode(buf,row.status());Recovery.CODEC.encode(buf,row.recovery());Skill.CODEC.apply(ByteBufCodecs.list(2)).encode(buf,row.skills());Resurrection.CODEC.encode(buf,row.resurrection());ByteBufCodecs.stringUtf8(32).encode(buf,row.classId());PartyVitals.CODEC.encode(buf,row.vitals());
         },buf->new Mercenary(ByteBufCodecs.stringUtf8(64).decode(buf),ByteBufCodecs.stringUtf8(16).decode(buf),
-            buf.readFloat(),buf.readFloat(),ByteBufCodecs.VAR_INT.decode(buf),ByteBufCodecs.stringUtf8(16).decode(buf),Recovery.CODEC.decode(buf),Skill.CODEC.apply(ByteBufCodecs.list(2)).decode(buf),Resurrection.CODEC.decode(buf)));
+            buf.readFloat(),buf.readFloat(),ByteBufCodecs.VAR_INT.decode(buf),ByteBufCodecs.stringUtf8(16).decode(buf),Recovery.CODEC.decode(buf),Skill.CODEC.apply(ByteBufCodecs.list(2)).decode(buf),Resurrection.CODEC.decode(buf),ByteBufCodecs.stringUtf8(32).decode(buf),PartyVitals.CODEC.decode(buf)));
     }
     public record Options(String difficulty,Hire hire,List<Mercenary> mercenaries){
         public static final StreamCodec<ByteBuf,Options> CODEC=StreamCodec.composite(
@@ -126,7 +151,7 @@ public final class PartyPayloads {
             ByteBufCodecs.stringUtf8(32),Hire::selectedClass,ByteBufCodecs.VAR_INT,Hire::price,Hire::new);
     }
     public record View(int containerId, State state, List<Member> members, Invite invitation, Recruitment recruitment, String difficulty, Hire hire, List<Mercenary> mercenaries) implements CustomPacketPayload {
-        public View { mercenaries=List.copyOf(mercenaries);if(mercenaries.size()>3)throw new IllegalArgumentException("Too many mercenaries"); }
+        public View { members=List.copyOf(members); mercenaries=List.copyOf(mercenaries);if(mercenaries.size()>3)throw new IllegalArgumentException("Too many mercenaries"); }
         public View(int containerId,State state,List<Member> members,Invite invitation,Recruitment recruitment,String difficulty,Hire hire){
             this(containerId,state,members,invitation,recruitment,difficulty,hire,List.of());
         }

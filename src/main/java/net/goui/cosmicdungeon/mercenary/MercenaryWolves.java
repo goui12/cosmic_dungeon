@@ -35,8 +35,11 @@ public final class MercenaryWolves {
     public static boolean managed(Entity entity){
         return entity instanceof Wolf&&entity.getPersistentData().contains(MARKER);
     }
+    /** Shared incoming-hit/effect guard, including saved player wolves with offline owners. */
     public static boolean protectedCompanion(Entity entity){
-        return entity instanceof MercenaryEntity||managed(entity);
+        return entity instanceof MercenaryEntity||managed(entity)
+                ||entity instanceof Wolf wolf
+                &&net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrWolfEvents.owned(wolf);
     }
     static Bond bond(Wolf wolf){return wolf.getPersistentData().read(MARKER,Bond.CODEC)
             .filter(b->b.run()>0&&!b.mercenary().equals(b.hirer())).orElse(null);}

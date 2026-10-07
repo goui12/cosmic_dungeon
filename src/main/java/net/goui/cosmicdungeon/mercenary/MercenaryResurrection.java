@@ -38,21 +38,30 @@ public final class MercenaryResurrection {
         return recovery.completed(player.getUUID())<run.runId()
                 &&!(handoff!=null&&handoff.run()==run.runId()&&handoff.kind().equals("cleanup"));
     }
-    static DungeonRunRegistryData.RunRecord activeRun(ServerPlayer player){
+    public static DungeonRunRegistryData.RunRecord activeRun(ServerPlayer player){
         var server=player.level().getServer();
         return DungeonRunRegistryData.get(server).findRunForPlayer(player.getUUID())
                 .filter(r->r.stateEnum()==DungeonRunState.ACTIVE&&r.dungeonId().equals("dungeon_1")
                         &&!D1RunData.get(server).sealed(r.runId())&&member(player,r)).orElse(null);
     }
-    /** Called at ServerPlayer.die's final tail, after the cancelled-death return and native drops. */
-    public static void died(ServerPlayer player){
+    /**
+     * Creates the canonical latest-death token before native drops. Repeated die calls before
+     * respawn reuse it so a second invocation cannot replace the physical-drop provenance.
+     */
+    public static MercenaryResurrectionState.Death prepareDeath(ServerPlayer player){
         player.getPersistentData().remove(PROTECTION);
-        if(!player.isDeadOrDying())return;
-        var run=activeRun(player);if(run==null)return;
-        MercenaryResurrectionState.remember(D1RunData.get(player.level().getServer()),run.runId(),player.getUUID(),
-                new MercenaryResurrectionState.Death(UUID.randomUUID(),player.level().dimension().location().toString(),
-                        player.position(),player.getYRot(),player.getXRot()));
+        if(!player.isDeadOrDying())return null;
+        var run=activeRun(player);if(run==null)return null;
+        var data=D1RunData.get(player.level().getServer());
+        var current=MercenaryResurrectionState.death(data,run.runId(),player.getUUID());
+        if(current!=null)return current;
+        var death=new MercenaryResurrectionState.Death(UUID.randomUUID(),
+                player.level().dimension().location().toString(),player.position(),player.getYRot(),player.getXRot());
+        MercenaryResurrectionState.remember(data,run.runId(),player.getUUID(),death);
+        return death;
     }
+    /** Final-tail fallback for keep-inventory/spectator-native paths; normally pre-drop already prepared it. */
+    public static void died(ServerPlayer player){ prepareDeath(player); }
     static MercenaryEntity available(ServerPlayer player,DungeonRunRegistryData.RunRecord run,MercenaryContract contract){
         if(!player.isDeadOrDying()||activeRun(player)!=run||!MercenarySkill.POSITIVE_POTIONS.supports(contract)
                 ||MercenarySkill.level(MercenarySkills.successes(D1RunData.get(player.level().getServer()),run.runId(),

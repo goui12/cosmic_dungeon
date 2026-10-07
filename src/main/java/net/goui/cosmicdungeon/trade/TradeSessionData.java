@@ -39,6 +39,7 @@ public final class TradeSessionData {
         }
 
         cleanupExpiredInvites(from);
+        if (!adventureAllowsTrade(from, to)) return;
 
         if (from.getUUID().equals(to.getUUID())) {
             from.sendSystemMessage(Component.literal("You cannot trade with yourself."));
@@ -85,6 +86,7 @@ public final class TradeSessionData {
             return false;
         }
 
+        if (!adventureAllowsTrade(accepter, inviter)) return false;
         InviteKey key = new InviteKey(inviter.getUUID(), accepter.getUUID());
         PendingInvite invite = invites.get(key);
         if (invite == null) {
@@ -155,6 +157,40 @@ public final class TradeSessionData {
 
     public static TradeSession get(ServerPlayer p) {
         return p == null ? null : sessions.get(p.getUUID());
+    }
+
+    private static boolean adventureAllowsTrade(ServerPlayer actor, ServerPlayer other) {
+        if (net.goui.cosmicdungeon.npc.tamsin.D1PartyService.tradingAllowed(actor)
+                && net.goui.cosmicdungeon.npc.tamsin.D1PartyService.tradingAllowed(other)) return true;
+        actor.sendSystemMessage(Component.literal("An adventure is starting. Trade again after entry."));
+        return false;
+    }
+
+    /** The lobby owns unresolved peer/session dependencies across Start retries. Server thread only. */
+    public static boolean endForAdventure(ServerPlayer player, Map<UUID, UUID> recoveryPeers) {
+        if (player == null) return false;
+        removePendingInvitesInvolving(player.getUUID());
+        var session = get(player);
+        if (session != null) {
+            var otherId = player.getUUID().equals(session.a) ? session.b : session.a;
+            // Remember before cancellation removes both indexes, even if recovery fails or disconnects.
+            recoveryPeers.put(otherId, session.id());
+            session.cancel("The group leader started the adventure");
+        }
+        boolean recovered = TradeCustody.beforeInventoryChange(player);
+        var iterator = recoveryPeers.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var dependency = iterator.next();
+            var other = player.level().getServer().getPlayerList().getPlayer(dependency.getKey());
+            if (other == null || TradeCustody.held(other)) { recovered = false; continue; }
+            var current = get(other);
+            // A different live trade can only open after old custody/transactions reconcile.
+            // Do not cancel an outsider's subsequent unrelated trade while retrying this Start.
+            boolean resolved = current != null && !current.id().equals(dependency.getValue())
+                    || TradeCustody.beforeInventoryChange(other);
+            if (resolved) iterator.remove(); else recovered = false;
+        }
+        return recovered;
     }
 
     public static boolean isBusy(ServerPlayer p) {

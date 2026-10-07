@@ -1,19 +1,23 @@
-# Current rollout, 2026-10-06
+# Current rollout, 2026-10-07
 
-Batch 10 is in progress: Tamsin replay and exact **1.6.0-beta** release.
-Then proceed with authorized Batch 11: trading preserves Ready state, Start Adventure
-cancels unfinished trades safely, and readiness/class HUD cleanup.
-[Approved new round, including settled wolf and potion decisions](PARTY_SKILLS_BATCHES_20261006.md).
+Batch15 member current-run inspection is implemented, validated, published and installed as **1.6.5-alpha.1** through [PR233](https://github.com/goui12/cosmic_dungeon/pull/233).
+Runtime/tag source: 54caa86fc988cc0e3c3d1e76ed550f8072c2d779. Full Integration Gate 37558694546 and release CI 37559317965 passed all 47 native GameTests; 359 local Java tests, 34 Python safeguards and 2,001 source JSON files passed.
+Automatic review completed without findings on the exact runtime source.
+CurseForge main 9085566 and loading companion 9085565 submitted; moderation/licensed profile delivery remain unverified.
+Exact CI main SHA256 8d9c447c9c600ed34f19642d5de51836d099596f577c8830d9d33c636b47f50d; loading helper SHA256 c4150bb75ecdefdd5df832662b9be40a477d63f0253fd57921f02817f24ab1b7.
+Fresh observed stopped TEST and closed ADMIN received the exact runtime; matching helper installed on ADMIN.
+Read-only installed hashes match both targets and both latest-built/current-test feeds. Journals resolved.
+No server.properties change, server restart, local GameTest/server, client launch or forced close.
+Protocol19 requires matching client/server. Existing run storage was extended with compatible additive keys; no new schema/registry/preset migration or datagen.
+Licensed visual/interaction/multiplayer QA and CurseForge companion acceptance remain pending.
 
-**17 batches including active 10; after 10 and 11, 15 remain (12-26).**
+[Exact task files and manual QA](tasks/member-run-inspection-20261007.md).
+[Approved batch plan](PARTY_SKILLS_BATCHES_20261006.md).
 
-- 12: player wolf friendly fire.
-- 13: spawner glow, pickaxe warning and firework destruction.
-- 14: complete party HP/effect HUD.
-- 15: current-run member inspection.
-- 16: latest-death inventory organization.
+**11 planned batches remain (16-26).**
+- 16: latest-death inventory organization and Set A Beta.
 - 17: Theurgist/Venefex mercenary split.
-- 18: Judicator mercenary progression.
+- 18: Judicator mercenary progression and Set B Beta.
 - 19: movable shared Skills panel, reset setting and recipe-book removal.
 - 20: Brewing Supplies/Kibble and generated recycling tags.
 - 21: universal inventory supply requests.
@@ -23,8 +27,9 @@ cancels unfinished trades safely, and readiness/class HUD cleanup.
 - 25: advanced modes and performance validation.
 - 26: integration and final set Beta.
 
-Cumulative licensed gameplay and companion app acceptance remain separate.
-Stop after Batch 11; do not implement queued wolf/potion changes yet.
+Cameron explicitly transferred exclusive queue ownership to Work after Batch14.
+Proceed consecutively through26 with validated set merges/Beta after16,18,26; stop after26.
+Manual gameplay acceptance remains pending and does not block the approved implementation queue.
 
 ---
 

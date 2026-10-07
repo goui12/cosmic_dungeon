@@ -56,6 +56,22 @@ public final class DungeonInstanceGameTests {
         suite.add(id("mercenary_lightning_combat"),net.goui.cosmicdungeon.mercenary.MercenaryLightningGameTests::combat);
         suite.add(id("mercenary_resurrection_eligibility"),net.goui.cosmicdungeon.mercenary.MercenaryResurrectionGameTests::eligibility);
         suite.add(id("mercenary_resurrection_respawn"),net.goui.cosmicdungeon.mercenary.MercenaryResurrectionGameTests::respawn);
+        suite.add(id("party_trade_start"),net.goui.cosmicdungeon.npc.tamsin.PartyTradeGameTests::start);
+        suite.add(id("party_trade_completed"),net.goui.cosmicdungeon.npc.tamsin.PartyTradeGameTests::completed);
+        suite.add(id("party_trade_full_inventory"),net.goui.cosmicdungeon.npc.tamsin.PartyTradeGameTests::fullInventory);
+        suite.add(id("party_trade_outsider_recovery"),net.goui.cosmicdungeon.npc.tamsin.PartyTradeGameTests::outsiderRecoveryHold);
+        suite.add(id("allied_wolf_damage"),net.goui.cosmicdungeon.mercenary.AlliedWolfGameTests::damage);
+        suite.add(id("allied_wolf_projectiles"),net.goui.cosmicdungeon.mercenary.AlliedWolfGameTests::projectiles);
+        suite.add(id("allied_wolf_potions"),net.goui.cosmicdungeon.mercenary.AlliedWolfGameTests::potions);
+        suite.add(id("cosmic_spawner_player"),net.goui.cosmicdungeon.playerclass.d1.CosmicSpawnerGameTests::player);
+        suite.add(id("cosmic_spawner_mercenary"),net.goui.cosmicdungeon.playerclass.d1.CosmicSpawnerGameTests::mercenary);
+        suite.add(id("cosmic_spawner_warning"),net.goui.cosmicdungeon.playerclass.d1.CosmicSpawnerGameTests::warning);
+        suite.add(id("party_health_player"),net.goui.cosmicdungeon.npc.tamsin.PartyHealthGameTests::player);
+        suite.add(id("party_health_mercenary"),net.goui.cosmicdungeon.npc.tamsin.PartyHealthGameTests::mercenary);
+        suite.add(id("party_inspection_access"),net.goui.cosmicdungeon.npc.tamsin.PartyInspectionGameTests::access);
+        suite.add(id("party_inspection_counters"),net.goui.cosmicdungeon.npc.tamsin.PartyInspectionGameTests::counters);
+        suite.add(id("death_inventory_lifecycle"),DeathInventoryGameTests::lifecycle);
+        suite.add(id("death_inventory_pickup"),DeathInventoryGameTests::pickup);
         return suite;
     }
 
