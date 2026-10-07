@@ -23,8 +23,8 @@ No runtime dependencies, heap changes, per-wolf/entity scans or detail polling o
 Datagen not applicable to hand-authored mixin registration and Java UI/network changes.
 
 ## Validation and QA
-Local Java21 build passed; packet identity/bounds and all existing tests retained. Full clean CI/native
-GameTests and exact release verification remain required before publication. Native additions cover
+Local Java21 build and full clean CI/native GameTests passed; packet identity/bounds and all existing tests retained.
+Exact release CI, upload receipts and independently installed hashes verified. Native additions cover
 outsider/stale-run/reset denial, offline state, actual heal/overheal/cancellation, hostile damage,
 real/cancelled/duplicate death, old data defaults, save/load and next-run isolation.
 Licensed acceptance pending:
@@ -61,3 +61,17 @@ Potential improvement: integrate this view with the shared panel geometry in app
 - src/main/resources/cosmicdungeon.mixins.json
 - src/test/java/net/goui/cosmicdungeon/gametest/GameTestSerializationTest.java
 - src/test/java/net/goui/cosmicdungeon/network/PartyInspectionPayloadsTest.java
+
+## Final runtime and deployment evidence
+Batch15 member current-run inspection is implemented, validated, published and installed as **1.6.5-alpha.1** through [PR233](https://github.com/goui12/cosmic_dungeon/pull/233).
+Runtime/tag source: 54caa86fc988cc0e3c3d1e76ed550f8072c2d779. Full Integration Gate 37558694546 and release CI 37559317965 passed all 47 native GameTests; 359 local Java tests, 34 Python safeguards and 2,001 source JSON files passed.
+Automatic review completed without findings on the exact runtime source.
+CurseForge main 9085566 and loading companion 9085565 submitted; moderation/licensed profile delivery remain unverified.
+Exact CI main SHA256 8d9c447c9c600ed34f19642d5de51836d099596f577c8830d9d33c636b47f50d; loading helper SHA256 c4150bb75ecdefdd5df832662b9be40a477d63f0253fd57921f02817f24ab1b7.
+Fresh observed stopped TEST and closed ADMIN received the exact runtime; matching helper installed on ADMIN.
+Read-only installed hashes match both targets and both latest-built/current-test feeds. Journals resolved.
+No server.properties change, server restart, local GameTest/server, client launch or forced close.
+Protocol19 requires matching client/server. Existing run storage was extended with compatible additive keys; no new schema/registry/preset migration or datagen.
+Licensed visual/interaction/multiplayer QA and CurseForge companion acceptance remain pending.
+
+The final narrative checkpoint uses only the approved Approach A allowlist and its verified ancestor fingerprint.
