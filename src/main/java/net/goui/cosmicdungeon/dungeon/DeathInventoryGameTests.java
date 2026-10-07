@@ -114,7 +114,7 @@ public final class DeathInventoryGameTests {
                     NeoForge.EVENT_BUS.unregister(cancel);
                 }
 
-                f.player.setHealth(f.player.getMaxHealth());
+                f.player.setHealth(0);
                 f.player.die(f.player.damageSources().generic());
                 var death = MercenaryResurrectionState.death(f.data, f.runId, f.player.getUUID());
                 var layout = DeathInventoryLayout.read(f.data, f.runId, f.player);
@@ -132,6 +132,43 @@ public final class DeathInventoryGameTests {
                 f.check(same.equals(MercenaryResurrectionState.death(
                                 f.data, f.runId, f.player.getUUID()).id()),
                         "Repeated death preparation replaced the latest-death token");
+                // Existing run serialization must retain layouts without changing legacy save shapes.
+                try {
+                    var field = D1RunData.class.getDeclaredField("CODEC");
+                    field.setAccessible(true);
+                    @SuppressWarnings("unchecked")
+                    var codec = (com.mojang.serialization.Codec<D1RunData>)field.get(null);
+                    var encoded = codec.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, f.data).getOrThrow();
+                    var decoded = codec.parse(com.mojang.serialization.JsonOps.INSTANCE, encoded).getOrThrow();
+                    var loaded = DeathInventoryLayout.read(decoded, f.runId, f.player);
+                    f.check(loaded != null && loaded.death().equals(same)
+                                    && loaded.entry(10).template().getCount() == 2,
+                            "Latest layout did not survive run save/load");
+                    var legacy = codec.parse(com.mojang.serialization.JsonOps.INSTANCE,
+                            com.google.gson.JsonParser.parseString("{\"runs\":[]}")).getOrThrow();
+                    f.check(DeathInventoryLayout.read(legacy, f.runId, f.player) == null,
+                            "Old saves must have no synthetic death layout");
+                } catch (ReflectiveOperationException error) {
+                    throw new IllegalStateException(error);
+                }
+
+                f.player.setHealth(f.player.getMaxHealth());
+                f.check(DeathInventoryRecovery.beginPickup(f.player, diamond) != null,
+                        "Latest physical drop should remain eligible after life is restored");
+                net.goui.cosmicdungeon.mercenary.MercenaryResurrection.respawned(
+                        new net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerRespawnEvent(f.player, false));
+                f.player.getInventory().setItem(8, new ItemStack(Items.APPLE));
+                f.player.setHealth(0);
+                f.player.die(f.player.damageSources().generic());
+                var newer = DeathInventoryLayout.read(f.data, f.runId, f.player);
+                f.check(newer != null && !newer.death().equals(same) && newer.entry(8) != null,
+                        "New real death must replace previous history");
+                f.player.setHealth(f.player.getMaxHealth());
+                f.check(DeathInventoryRecovery.beginPickup(f.player, diamond) == null && !diamond.isRemoved(),
+                        "Old-death item must remain physical but lose automatic organization");
+                f.data.clearRun(f.runId);
+                f.check(DeathInventoryLayout.read(f.data, f.runId, f.player) == null,
+                        "Run retirement must clear the latest layout");
                 helper.succeed();
             } finally {
                 keep.set(oldKeep, server);
@@ -189,6 +226,77 @@ public final class DeathInventoryGameTests {
                         "Occupied new contents were overwritten or recovered items were lost");
             } finally {
                 keep.set(oldKeep, server);
+                f.level.getEntitiesOfClass(ItemEntity.class, f.player.getBoundingBox().inflate(8)).forEach(Entity::discard);
+            }
+        }
+        try (var f = new Fixture(helper, Long.MAX_VALUE - 304)) {
+            var keep = f.level.getGameRules().getRule(GameRules.RULE_KEEPINVENTORY);
+            boolean oldKeep = keep.get();
+            try {
+                keep.set(false, f.level.getServer());
+                f.player.getInventory().setItem(15, new ItemStack(Items.EMERALD, 5));
+                f.player.setHealth(0);
+                f.player.die(f.player.damageSources().generic());
+                var death = MercenaryResurrectionState.death(f.data, f.runId, f.player.getUUID());
+                var emerald = f.drop(new DeathInventoryRecovery.Provenance(
+                        f.player.getUUID(), death.id(), f.runId, 15));
+                f.check(emerald != null, "Expected marked partial-pickup drop");
+                f.player.setHealth(f.player.getMaxHealth());
+                for (int slot = 0; slot < 36; slot++)
+                    f.player.getInventory().setItem(slot, new ItemStack(Items.STONE, 64));
+                f.player.getInventory().setItem(0, new ItemStack(Items.EMERALD, 63));
+                emerald.setNoPickUpDelay();
+                emerald.playerTouch(f.player);
+                f.check(emerald.getItem().getCount() == 4
+                                && f.player.getInventory().getItem(0).getCount() == 64
+                                && f.player.getInventory().getItem(15).is(Items.STONE),
+                        "Partial pickup must preserve occupied target and remaining physical count");
+                f.player.getInventory().setItem(15, ItemStack.EMPTY);
+                emerald.playerTouch(f.player);
+                f.check(f.player.getInventory().getItem(15).getCount() == 4
+                                && f.player.getInventory().getItem(0).getCount() == 64,
+                        "Later recovery must not move preexisting matching stacks");
+            } finally {
+                keep.set(oldKeep, f.level.getServer());
+                f.level.getEntitiesOfClass(ItemEntity.class, f.player.getBoundingBox().inflate(8)).forEach(Entity::discard);
+            }
+        }
+        try (var f = new Fixture(helper, Long.MAX_VALUE - 305)) {
+            var keep = f.level.getGameRules().getRule(GameRules.RULE_KEEPINVENTORY);
+            boolean oldKeep = keep.get();
+            try {
+                keep.set(false, f.level.getServer());
+                f.player.getInventory().setItem(15, new ItemStack(Items.EMERALD, 5));
+                f.player.setHealth(0);
+                f.player.die(f.player.damageSources().generic());
+                var death = MercenaryResurrectionState.death(f.data, f.runId, f.player.getUUID());
+                var emerald = f.drop(new DeathInventoryRecovery.Provenance(
+                        f.player.getUUID(), death.id(), f.runId, 15));
+                f.check(emerald != null, "Expected guarded pickup drop");
+                f.player.setHealth(f.player.getMaxHealth());
+                var unmarked = new ItemEntity(f.level, f.player.getX(), f.player.getY(), f.player.getZ(),
+                        new ItemStack(Items.EMERALD));
+                f.check(!DeathInventoryRecovery.mayMerge(emerald, unmarked),
+                        "Unrelated physical items must not inherit death provenance");
+                unmarked.getPersistentData().merge(emerald.getPersistentData().copy());
+                f.check(DeathInventoryRecovery.mayMerge(emerald, unmarked),
+                        "Identical death-slot provenance must remain merge-compatible");
+                unmarked.getPersistentData().getCompoundOrEmpty("cosmicdungeon_death_inventory_v1")
+                        .putString("owner", UUID.randomUUID().toString());
+                f.check(DeathInventoryRecovery.beginPickup(f.player, unmarked) == null
+                                && !DeathInventoryRecovery.mayMerge(emerald, unmarked),
+                        "Another owner's drops cannot be organized or merged as this owner's");
+                f.player.inventoryMenu.setCarried(new ItemStack(Items.STONE));
+                f.check(DeathInventoryRecovery.beginPickup(f.player, emerald) == null,
+                        "Cursor custody must block optional organization");
+                emerald.setNoPickUpDelay();
+                emerald.playerTouch(f.player);
+                f.check(f.player.getInventory().countItem(Items.EMERALD) == 5
+                                && f.player.getInventory().getItem(15).isEmpty(),
+                        "Unsafe organization must still allow ordinary native pickup");
+                f.player.inventoryMenu.setCarried(ItemStack.EMPTY);
+            } finally {
+                keep.set(oldKeep, f.level.getServer());
                 f.level.getEntitiesOfClass(ItemEntity.class, f.player.getBoundingBox().inflate(8)).forEach(Entity::discard);
             }
         }
