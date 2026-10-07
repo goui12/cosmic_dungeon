@@ -1,35 +1,39 @@
 # Current rollout, 2026-10-07
 
-Batch15 member current-run inspection is implemented, validated, published and installed as **1.6.5-alpha.1** through [PR233](https://github.com/goui12/cosmic_dungeon/pull/233).
-Runtime/tag source: 54caa86fc988cc0e3c3d1e76ed550f8072c2d779. Full Integration Gate 37558694546 and release CI 37559317965 passed all 47 native GameTests; 359 local Java tests, 34 Python safeguards and 2,001 source JSON files passed.
-Automatic review completed without findings on the exact runtime source.
-CurseForge main 9085566 and loading companion 9085565 submitted; moderation/licensed profile delivery remain unverified.
-Exact CI main SHA256 8d9c447c9c600ed34f19642d5de51836d099596f577c8830d9d33c636b47f50d; loading helper SHA256 c4150bb75ecdefdd5df832662b9be40a477d63f0253fd57921f02817f24ab1b7.
-Fresh observed stopped TEST and closed ADMIN received the exact runtime; matching helper installed on ADMIN.
-Read-only installed hashes match both targets and both latest-built/current-test feeds. Journals resolved.
-No server.properties change, server restart, local GameTest/server, client launch or forced close.
-Protocol19 requires matching client/server. Existing run storage was extended with compatible additive keys; no new schema/registry/preset migration or datagen.
-Licensed visual/interaction/multiplayer QA and CurseForge companion acceptance remain pending.
+Batch16 latest-death inventory organization completes **Set A Beta 1.6.6-beta.1** through [PR234](https://github.com/goui12/cosmic_dungeon/pull/234).
+Only actual newly recovered quantities move toward the latest death's hotbar/inventory/equipment slots.
+Missing or stolen items are never recreated; new/occupied contents remain intact.
+Runtime/tag source: ad91c1296fe1820ec82a0e454f346dd2d4059d2e. PR234 merged Set A into main with the same tested tree.
+PR CI 37580829518, merged-main CI 37581180762 and release CI 37581500010 passed all 49 native GameTests.
+Local Java 21 build (364 tests), 34 Python safeguards, 2,001 source JSON files and diff checks passed.
+Automatic review completed without findings; later native-fixture-only corrections were reviewed and fully retested.
+CurseForge main 9086976 and loading companion 9086975 submitted; moderation/licensed app delivery remain unverified.
+Exact CI main SHA256: a8badbe279ad3bcd2a6144af811b24aa2bc5426c8be5321499a4c0dc4d427142.
+Matching helper SHA256: c87228f2170c442805e2411dc3d81184b28801203335607f0f1fa36a08348d65.
+Fresh independently observed stopped TEST and closed ADMIN received the exact CI runtime; ADMIN helper also matches.
+Installed hashes and latest-built/current-test feeds match; deployment journals resolved.
+No local client/GameTest/server launch, forced close, restart or server.properties change.
+Compatible additive layout data stays in existing D1RunData; no registry/spawner/preset/network schema migration or datagen.
+Licensed multiplayer/visual interaction and CurseForge companion app acceptance remain pending.
 
-[Exact task files and manual QA](tasks/member-run-inspection-20261007.md).
-[Approved batch plan](PARTY_SKILLS_BATCHES_20261006.md).
+[Exact changed files and QA](tasks/death-inventory-organization-20261007.md).
+[Approved remaining plan](PARTY_SKILLS_BATCHES_20261006.md).
 
-**11 planned batches remain (16-26).**
-- 16: latest-death inventory organization and Set A Beta.
-- 17: Theurgist/Venefex mercenary split.
-- 18: Judicator mercenary progression and Set B Beta.
-- 19: movable shared Skills panel, reset setting and recipe-book removal.
+**10 planned batches remain (17-26). Queue PAUSED after 16 at Cameron's explicit request.**
+- 17: Theurgist/Venefex mercenary potion roles.
+- 18: Judicator progression/combat and Set B Beta.
+- 19: movable Skills panel, reset setting and recipe-book removal.
 - 20: Brewing Supplies/Kibble and generated recycling tags.
-- 21: universal inventory supply requests.
-- 22: player Theurgist crafting and resurrection.
-- 23: wolf commands and run-only wolf lifecycle.
+- 21: group supply requests.
+- 22: player Theurgist potion crafting and resurrection.
+- 23: paid wolf commands and run-only wolf lifecycle.
 - 24: core wolf modes.
-- 25: advanced modes and performance validation.
+- 25: advanced wolf modes and performance validation.
 - 26: integration and final set Beta.
 
-Cameron explicitly transferred exclusive queue ownership to Work after Batch14.
-Proceed consecutively through26 with validated set merges/Beta after16,18,26; stop after26.
-Manual gameplay acceptance remains pending and does not block the approved implementation queue.
+Cameron confirmed the prior recovery worker was stopped before this run reconciled ownership.
+Do not claim 17 or continue automatically until Cameron resumes the queue.
+Manual licensed gameplay acceptance remains pending, separate from automated completion.
 
 ---
 

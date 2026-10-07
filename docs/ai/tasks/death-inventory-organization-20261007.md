@@ -37,9 +37,12 @@ or runtime telemetry change is introduced.
 
 ## Validation status and QA
 
-Java21 compilation and the focused pure recovery-planner test pass at implementation checkpoint. Full local
-build/Java tests, source JSON/diff checks, clean CI/native GameTests, automated review, merged-main Set A
-Integration Gate, exact Beta release and independent target hash verification are required before completion.
+Java 21 local build (364 tests), 34 Python safeguards and 2,001 JSON files passed. PR, merged-main and release clean CI
+passed all 49 native GameTests; automatic review completed without findings. Native fixtures use real
+ServerPlayer death/respawn and explicit Survival capacity; no assertion was removed or weakened.
+Coverage includes cancellation/duplicate death, save/load/legacy defaults, latest-death replacement/retirement,
+partial/merged pickups, occupied targets, provenance, cursor/external-menu custody, recovered armor and
+physical pickup following the existing duplicate-resurrection race check.
 No local GameTest/server, Minecraft client or server is launched.
 
 Pending licensed acceptance:
@@ -54,6 +57,8 @@ item could not return to its former slot because the player intentionally occupi
 
 ## Exact task files
 
+- docs/ai/D1_REMAINING.md
+- docs/ai/PARTY_SKILLS_BATCHES_20261006.md
 - docs/ai/tasks/death-inventory-organization-20261007.md
 - docs/releases/1.6.6-beta.1.md
 - docs/releases/fragments/batch16-death-inventory-organization.md
@@ -64,6 +69,7 @@ item could not return to its former slot because the player intentionally occupi
 - src/main/java/net/goui/cosmicdungeon/dungeon/d1/DeathInventoryRecovery.java
 - src/main/java/net/goui/cosmicdungeon/item/identity/ProtectedItemLifecycle.java
 - src/main/java/net/goui/cosmicdungeon/mercenary/MercenaryResurrection.java
+- src/main/java/net/goui/cosmicdungeon/mercenary/MercenaryResurrectionGameTests.java
 - src/main/java/net/goui/cosmicdungeon/mixin/DeathCurrencyPlayerMixin.java
 - src/main/java/net/goui/cosmicdungeon/mixin/DeathInventoryItemMixin.java
 - src/main/resources/cosmicdungeon.mixins.json
@@ -72,4 +78,17 @@ item could not return to its former slot because the player intentionally occupi
 
 ## Final runtime and deployment evidence
 
-Pending full validation, review, merged-main Set A Beta publication and target verification.
+Runtime/tag source: ad91c1296fe1820ec82a0e454f346dd2d4059d2e. PR234 merged Set A into main with the same tested tree.
+PR CI 37580829518, merged-main CI 37581180762 and release CI 37581500010 passed all 49 native GameTests.
+Local Java 21 build (364 tests), 34 Python safeguards, 2,001 source JSON files and diff checks passed.
+Automatic review completed without findings; later native-fixture-only corrections were reviewed and fully retested.
+CurseForge main 9086976 and loading companion 9086975 submitted; moderation/licensed app delivery remain unverified.
+Exact CI main SHA256: a8badbe279ad3bcd2a6144af811b24aa2bc5426c8be5321499a4c0dc4d427142.
+Matching helper SHA256: c87228f2170c442805e2411dc3d81184b28801203335607f0f1fa36a08348d65.
+Fresh independently observed stopped TEST and closed ADMIN received the exact CI runtime; ADMIN helper also matches.
+Installed hashes and latest-built/current-test feeds match; deployment journals resolved.
+No local client/GameTest/server launch, forced close, restart or server.properties change.
+Compatible additive layout data stays in existing D1RunData; no registry/spawner/preset/network schema migration or datagen.
+Licensed multiplayer/visual interaction and CurseForge companion app acceptance remain pending.
+
+Queue paused after 16 at Cameron's request; 10 batches (17-26) remain. Batch 17 has not been claimed.
