@@ -95,6 +95,9 @@ public final class DungeonInstanceGameTests {
         suite.add(id("bogatyr_companionship"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrTacticsGameTests::companionship);
         suite.add(id("bogatyr_danger_close"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrTacticsGameTests::dangerClose);
         suite.add(id("bogatyr_work_scaling"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrTacticsGameTests::workScaling);
+        suite.add(id("set_c_supply_crafting_cap"),net.goui.cosmicdungeon.playerclass.resource.SupplyRequestGameTests::craftingAndCapIntegration);
+        suite.add(id("set_c_resurrection_resource_death"),net.goui.cosmicdungeon.playerclass.theurgist.TheurgistActionGameTests::resourceDeathIntegration);
+        suite.add(id("set_c_pack_transitions"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrTacticsGameTests::packTransitionIntegration);
         return suite;
     }
 

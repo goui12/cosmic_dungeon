@@ -259,4 +259,46 @@ public final class SupplyRequestGameTests {
             helper.succeed();
         }
     }
+
+    /** Server-thread interleavings across independent feature sessions retain consent and cap limits. */
+    public static void craftingAndCapIntegration(GameTestHelper helper){
+        try(var f=new Fixture(helper,Long.MAX_VALUE-2601,"theurgist","judicator")){
+            f.amount(0,597);f.supplies(1,8);f.fresh();f.request(0);
+            var card=f.view(1).cards().getFirst();f.check(card.yield()==3,"Initial consent is limited to three items");
+            var accept=f.action(1,Decision.ACCEPT,List.of(card.requestId()));
+            f.check(net.goui.cosmicdungeon.playerclass.theurgist.TheurgistCrafting.craft(f.p(0),f.run,false)
+                    &&f.amount(0)==577,"Crafting spends the actual shared ledger before consent arrives");
+            SupplyRequests.action(f.p(1),accept);
+            f.check(f.amount(0)==580&&f.p(1).getInventory().getItem(0).getCount()==5,
+                    "New headroom never expands the donor's previously displayed three-item consent");
+            f.check(f.p(0).getInventory().getItem(0).is(Items.SPLASH_POTION),"Supply settlement preserves the already-crafted physical potion");
+            f.reload(0);f.reload(1);
+            f.check(f.amount(0)==580&&f.p(0).getInventory().getItem(0).is(Items.SPLASH_POTION)
+                    &&f.p(1).getInventory().getItem(0).getCount()==5,"Native reload retains both features' paired item/resource results");
+            f.check(f.p(1).getInventory().getItem(0).getHoverName().getString().equals("Authored sugar")
+                    &&f.root(0).getStringOr("future_marker","").equals("preserved"),"Interleaved transactions preserve authored components and unknown owner fields");
+        }
+        try(var f=new Fixture(helper,Long.MAX_VALUE-2602,"theurgist","judicator")){
+            f.amount(0,597);f.supplies(1,8);f.fresh();f.request(0);
+            var accept=f.action(1,Decision.ACCEPT,List.of(f.view(1).cards().getFirst().requestId()));
+            long now=f.level.getServer().getTickCount();
+            ClassResourceService.pulse(f.p(0),now,false);
+            for(int i=1;i<=3;i++)ClassResourceService.pulse(f.p(0),now+20*i,true);
+            f.check(f.amount(0)==600,"Online regeneration wins the race to the shared cap");
+            SupplyRequests.action(f.p(1),accept);
+            f.check(f.amount(0)==600&&f.p(1).getInventory().getItem(0).getCount()==8&&f.view(1).cards().isEmpty(),
+                    "An old consent at the now-full cap consumes nothing and expires");
+        }
+        try(var f=new Fixture(helper,Long.MAX_VALUE-2603,"theurgist","judicator","pyroclast")){
+            f.amount(0,599);f.supplies(1,8);f.supplies(2,8);f.fresh();f.request(0);
+            var first=f.action(1,Decision.ACCEPT,List.of(f.view(1).cards().getFirst().requestId()));
+            var second=f.action(2,Decision.ACCEPT,List.of(f.view(2).cards().getFirst().requestId()));
+            SupplyRequests.action(f.p(1),first);SupplyRequests.action(f.p(2),second);
+            f.check(f.amount(0)==600&&f.p(1).getInventory().getItem(0).getCount()==7
+                    &&f.p(2).getInventory().getItem(0).getCount()==8,"Two donors racing one headroom consume exactly one total item");
+            f.check(SupplyTransferData.get(f.level.getServer()).image().equals(f.journalBefore),"Cross-feature cap races leave no unsettled transfer");
+        }
+        helper.succeed();
+    }
+
 }

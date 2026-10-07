@@ -179,4 +179,49 @@ public final class BogatyrTacticsGameTests {
             helper.succeed();
         }finally{BogatyrWork.end();}
     }
+
+    public static void packTransitionIntegration(GameTestHelper helper){
+        try(var f=new BogatyrCommandGameTests.Fixture(helper,Long.MAX_VALUE-2605)){
+            var wolves=new ArrayList<Wolf>();for(int i=0;i<30;i++)wolves.add(f.wolf(0,0,-2,i%3-1));
+            var foreign=f.wolf(1,0,2,1);var patient=f.current.get(1);patient.setHealth(4);
+            var enemy=mob(f,EntityType.ZOMBIE,2,2,200);
+            f.amount(50);long now=f.level.getGameTime()+100;int phase=0;
+            // Each active mode follows Stand Ground, exercising real goal and sit transitions in a pack.
+            for(var mode:List.of(WolfMode.DEFENSIVE,WolfMode.AGGRESSIVE,WolfMode.STRATEGIC,WolfMode.SEARCH_AND_RESCUE,WolfMode.DANGER_CLOSE)){
+                f.check(BogatyrModes.select(f.p(),f.run,WolfMode.STAND_GROUND),"Whole-pack hold accepted");
+                for(var wolf:wolves)f.check(wolf.isOrderedToSit()&&wolf.getTarget()==null&&wolf.getNavigation().isDone(),"Hold clears every loaded wolf");
+                f.check(BogatyrModes.select(f.p(),f.run,mode),"Free active mode accepted after hold");
+                enemy.setTarget(mode==WolfMode.SEARCH_AND_RESCUE?patient:f.p());
+                for(var wolf:wolves){
+                    f.check(!wolf.isOrderedToSit()&&!wolf.isInSittingPose()&&BogatyrModes.mode(wolf)==mode,"All pack members resume the selected mode");
+                    f.check(decide(wolf,now+100*(++phase))==enemy,"Mode transition selects the real eligible attacker");
+                    float own=wolf.getHealth(),ally=foreign.getHealth();
+                    f.check(!wolf.hurtServer(f.level,patient.damageSources().playerAttack(patient),1)&&wolf.getHealth()==own,
+                            "Friendly incoming damage stays blocked across every active mode");
+                    f.check(!foreign.hurtServer(f.level,wolf.damageSources().mobAttack(wolf),1)&&foreign.getHealth()==ally,
+                            "Outgoing damage to another owner's pack stays blocked across mode changes");
+                }
+                f.check(BogatyrModes.mode(foreign)==WolfMode.DEFENSIVE&&!foreign.isOrderedToSit(),"Other owner's mode remains independent");
+            }
+            f.check(f.amount()==50,"All pack transitions and failed friendly attacks leave Kibble untouched");
+            f.check(BogatyrModes.select(f.p(),f.run,WolfMode.SEARCH_AND_RESCUE),"Rescue is active at retirement");
+            enemy.setTarget(patient);long guardTime=now+10_000;
+            for(var wolf:wolves)f.check(decide(wolf,guardTime)==enemy,"Every retiring guard has an actual patient");
+            float beforeRetire=patient.getHealth();
+            for(long tick=guardTime;tick<guardTime+100;tick++){
+                for(var wolf:wolves)BogatyrRescue.guard(wolf,patient,tick);
+                BogatyrRescue.pulse(f.level.getServer(),tick);
+            }
+            f.check(patient.hasEffect(ModMobEffects.COMPANIONSHIP)&&patient.getHealth()==beforeRetire,
+                    "Actual continuous protection reaches the heal boundary with a visible marker");
+            for(var wolf:wolves)BogatyrRescue.guard(wolf,patient,guardTime+100);
+            f.check(BogatyrRunLifecycle.retire(f.level.getServer(),f.runs.get(f.run)),"Active advanced-mode pack retires durably");
+            f.check(wolves.stream().allMatch(net.minecraft.world.entity.Entity::isRemoved)&&foreign.isRemoved()&&f.pack().isEmpty(),
+                    "Run completion removes both owners' live packs without cross-run preservation");
+            BogatyrRescue.pulse(f.level.getServer(),guardTime+100);
+            f.check(!patient.hasEffect(ModMobEffects.COMPANIONSHIP)&&patient.getHealth()==beforeRetire,"No rescue marker or due heal survives pack retirement");
+            helper.succeed();
+        }
+    }
+
 }

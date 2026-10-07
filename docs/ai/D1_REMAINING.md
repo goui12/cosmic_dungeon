@@ -1,33 +1,29 @@
 # Current rollout, 2026-10-07
 
-Batch25: Bogatyr advanced wolf modes, target **1.6.15-alpha.1**, on
-feature/bogatyr-advanced-modes-20261007. Baseline is Batch24
-810c141471a3e9a6220961d17afdac79337726cf; Set C remains unmerged until26.
-Exact completion/source/CI/publication/TEST facts live in
-BatchRunner/receipts/batch-25.json and linked evidence.
-Batch24 completed:1.6.14-alpha.1, PR242 open, full CI37692343676,
-CurseForge main9093717/helper9093715, stopped TEST sFTP installed.
-This source note does not pre-claim Batch25 delivery.
+Batch26: final Set C integration, target **1.6.16-beta.1**, on
+feature/set-c-integration-20261007. Baseline Batch25:
+ce1090505fd2df8afe45f906bb508b55e0fc6800.
+Exact main-merge/source/CI/publication/TEST facts live in
+BatchRunner/receipts/batch-26.json and linked evidence.
+Batch25 completed: PR243, full CI37696933160, release37697267289,
+CurseForge main9094153/helper9094152, stopped TEST sFTP installed.
+This source note does not pre-claim Batch26 delivery.
 
-All six free modes use the existing authoritative selection. Strategic prioritizes
-ranged enemies then maximum health. Search and Rescue protects nearby current-run
-party players at3 hearts or less, interposes and redirects actual attackers.
-Companionship heals1 heart/5seconds per guarded player, never multiplied by pack size.
-Danger Close constrains paths to16 blocks from the moving master, retains an eligible
-current kill, then prioritizes threats to the master.
+Set C integrates movable/resettable class panels,600-cap resources and tagged recycling,
+explicit group supply consent, player Theurgist crafting/resurrection, run-only paid
+Wolfpack care and all six free combat modes. Cross-component client and native tests
+exercise shared input, transactions, latest death, mode changes and friendly protection.
+Earlier old-save/reset/relog and1/30/120-wolf work regressions remain required.
+No new cap or gameplay/schema migration is introduced by this integration batch.
 
-Owner-shared, staggered decisions and path budgets separate heavy work from cheap
-boundary checks. Native CI compares1/30/120-wolf samples against Aggressive; exact
-measurement receipts retain the counters/timing and limits. Packs remain uncapped.
-Old saves/unknown fields and authored content remain intact.
-
-Licensed visual/co-op and natural pathfinding acceptance remain pending TESTING.
-Delivery ends after CurseForge and stopped TEST sFTP.
-[Exact scope/files/QA](tasks/bogatyr-advanced-modes-20261007.md).
+[Coverage, exact files and manual QA](tasks/set-c-integration-20261007.md).
 [Approved plan](PARTY_SKILLS_BATCHES_20261006.md).
+[Set C Beta notes](../releases/1.6.16-beta.1.md).
 
-**After Batch25 completes,1 planned batch remains (26); stop after25.**
-- 26: integration and final set Beta.
+**After Batch26 completes,0 planned implementation batches remain. Stop at26.**
+Licensed full Beta GUI/co-op/terrain acceptance remains TESTING before stable.
+Delivery ends with matching CurseForge files and stopped TEST sFTP; no local-client
+installation, additional post-publication artifact hashes or legacy feed gate.
 
 ---
 

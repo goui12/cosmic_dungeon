@@ -235,4 +235,43 @@ public final class TheurgistActionGameTests {
             helper.succeed();
         }
     }
+
+    public static void resourceDeathIntegration(GameTestHelper helper){
+        try(var f=new Fixture(helper,Long.MAX_VALUE-2604,"theurgist","judicator")){
+            f.amount(0,120);f.p(1).setHealth(0);
+            var firstDeath=MercenaryResurrection.prepareDeath(f.p(1));f.fresh();f.offer(0,1);
+            var offer=f.view(1).offer();var oldAccept=f.action(1,TheurgistPayloads.Kind.ACCEPT,offer.caster(),offer.id());
+            f.check(TheurgistCrafting.craft(f.p(0),f.run,false)&&f.amount(0)==100,"A pending offer does not reserve supplies against a valid craft");
+            TheurgistActions.action(f.p(1),oldAccept);
+            f.check(f.p(1).isDeadOrDying()&&f.amount(0)==100&&f.view(1).offer()==null,
+                    "Acceptance revalidates resources spent by another feature without respawn or extra debit");
+
+            f.amount(0,140);f.fresh();f.offer(0,1);offer=f.view(1).offer();
+            oldAccept=f.action(1,TheurgistPayloads.Kind.ACCEPT,offer.caster(),offer.id());
+            var old=f.p(1);var next=f.level.getServer().getPlayerList().respawn(old,false,net.minecraft.world.entity.Entity.RemovalReason.KILLED);
+            next.connection.player=next;f.current.set(1,next);f.owned.add(next);next.setPos(f.origin.add(1,0,0));
+            next.getInventory().setItem(8,new ItemStack(Items.APPLE,3));next.setHealth(0);
+            var latest=MercenaryResurrection.prepareDeath(next);
+            f.check(latest!=null&&!latest.id().equals(firstDeath.id()),"Native respawn followed by a new death replaces the canonical token");
+            var data=D1RunData.get(f.level.getServer());
+            net.goui.cosmicdungeon.dungeon.d1.DeathInventoryLayout.capture(data,f.run,next,latest.id());
+            next.getInventory().setItem(8,ItemStack.EMPTY); // Missing physical drops must never be recreated from the layout.
+            TheurgistActions.action(old,oldAccept);f.sync();
+            f.check(next.isDeadOrDying()&&f.amount(0)==140&&f.view(1).offer()==null,"An old player/offer cannot resurrect a newer death");
+            f.fresh();f.offer(0,1);f.decision(1,TheurgistPayloads.Kind.ACCEPT);
+            var restored=f.players.get(next.getUUID());f.current.set(1,restored);f.owned.add(restored);
+            var layout=net.goui.cosmicdungeon.dungeon.d1.DeathInventoryLayout.read(data,f.run,restored);
+            f.check(restored!=next&&restored.isAlive()&&restored.position().equals(latest.position())&&f.amount(0)==20,
+                    "Fresh acceptance restores only the latest death and debits120 once");
+            f.check(layout!=null&&layout.death().equals(latest.id())&&layout.entry(8).template().getCount()==3
+                    &&restored.getInventory().getItem(8).isEmpty(),"Native resurrection retains organization metadata without recreating missing inventory");
+            f.reload(0);f.check(f.amount(0)==20&&f.p(0).getInventory().getItem(0).is(Items.SPLASH_POTION),
+                    "Caster reload retains the earlier potion and final shared resource balance");
+            data.clearRun(f.run);
+            f.check(net.goui.cosmicdungeon.dungeon.d1.DeathInventoryLayout.read(data,f.run,restored)==null,
+                    "Run cleanup clears the integrated death organization record");
+            helper.succeed();
+        }
+    }
+
 }

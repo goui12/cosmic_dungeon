@@ -125,7 +125,7 @@ final class BogatyrModesClientTest {
                 WolfMode.STAND_GROUND,true));
         var breed=model().actions().stream().filter(a->a.id().equals(BogatyrClient.BREED)).findFirst().orElseThrow();
         assertFalse(breed.enabled());assertFalse(BogatyrClient.activate(BogatyrClient.BREED));
-        assertTrue(breed.tooltip().getString().contains("Switch to Defensive or Aggressive before breeding."));
+        assertTrue(breed.tooltip().getString().contains("Switch out of Stand Ground before breeding."));
         selected(WolfMode.STAND_GROUND);
         assertTrue(BogatyrClient.activate(BogatyrClient.modeId(WolfMode.DEFENSIVE)));
         assertTrue(care.isEmpty());

@@ -64,7 +64,7 @@ public final class BogatyrClient {
                     .withStyle(ChatFormatting.YELLOW)
                     .append(Component.literal("Kibble").withStyle(ChatFormatting.BLUE,ChatFormatting.BOLD));
             if(kind==Kind.BREED&&view.run()>0&&view.mode()==WolfMode.STAND_GROUND)
-                tooltip.append(Component.literal("\nSwitch to Defensive or Aggressive before breeding.").withStyle(ChatFormatting.YELLOW));
+                tooltip.append(Component.literal("\nSwitch out of Stand Ground before breeding.").withStyle(ChatFormatting.YELLOW));
             if(!enabled)tooltip.append(Component.literal("\n"+(pending?"Waiting for the server."
                     :"No eligible, affordable action is currently available.")).withStyle(ChatFormatting.GRAY));
             actions.add(new SkillsPanelModel.Action(IDS.get(index),

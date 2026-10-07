@@ -1,5 +1,15 @@
 # Update 1.5.1 Notes
 
+## Later release assembly: Set C Beta
+
+The inventory Skills, class resources, group consent, player Theurgist and run-only
+Wolfpack work from Batches19-26 is assembled in
+[1.6.16-beta.1](1.6.16-beta.1.md). This supersedes older planned/stub descriptions
+only for those completed features; the historical1.5.1 entries below retain their context.
+See the [integration report](../ai/tasks/set-c-integration-20261007.md) for automated
+coverage, compatibility and the remaining licensed gameplay acceptance.
+
+
 ## Dungeon party leadership
 
 - The first player to ready up through the class selector is now announced as the **Group Leader** for that dungeon run.
