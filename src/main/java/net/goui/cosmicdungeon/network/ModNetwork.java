@@ -32,7 +32,12 @@ public final class ModNetwork {
     private ModNetwork() {}
 
     public static void registerPayloadHandlers(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("21");
+        final PayloadRegistrar registrar = event.registrar("22");
+        registrar.playToClient(TheurgistPayloads.View.TYPE,TheurgistPayloads.View.STREAM_CODEC,
+                (payload,ctx)->ctx.enqueueWork(()->ClientNetworkDispatch.dispatch("onTheurgistActions",payload)));
+        registrar.playToServer(TheurgistPayloads.Action.TYPE,TheurgistPayloads.Action.STREAM_CODEC,
+                (payload,ctx)->ctx.enqueueWork(()->{if(ctx.player() instanceof net.minecraft.server.level.ServerPlayer player)
+                    net.goui.cosmicdungeon.playerclass.theurgist.TheurgistActions.action(player,payload);}));
         registrar.playToClient(SupplyRequestPayloads.View.TYPE,SupplyRequestPayloads.View.STREAM_CODEC,
                 (payload,ctx)->ctx.enqueueWork(()->ClientNetworkDispatch.dispatch("onSupplyRequests",payload)));
         registrar.playToServer(SupplyRequestPayloads.Action.TYPE,SupplyRequestPayloads.Action.STREAM_CODEC,

@@ -35,6 +35,12 @@ public final class ClassResourceHelp {
         result.add(HelpMenuContent.HelpBlock.heading("Group supplies"));
         result.add(HelpMenuContent.HelpBlock.paragraph("Request Supplies asks the other living players in your active dungeon group. Their inventory Requests column previews the items and resource yield; nothing is taken unless they accept. Accept All follows the displayed order and uses only remaining supplies and capacity."));
         result.add(HelpMenuContent.HelpBlock.paragraph("Each requester has one pending request per resource and teammate. Death, logout or leaving the run cancels pending consent. Changed inventory previews refresh before an acceptance can take items."));
+        if(kind==ClassResourceKind.BREWING_SUPPLIES){
+            result.add(HelpMenuContent.HelpBlock.heading("Theurgist Skills"));
+            result.add(HelpMenuContent.HelpBlock.paragraph("Craft a potion spends 20 Brewing Supplies for one random positive tier I splash potion: night vision, invisibility, fire resistance, swiftness, healing, regeneration, strength or luck. Craft an epic potion spends 40 for a tier II swiftness, healing, regeneration or strength splash potion. No bottles, fuel or stand are required. A full inventory consumes no supplies."));
+            result.add(HelpMenuContent.HelpBlock.paragraph("Your positive thrown potions benefit allies, their pets and mercenaries, but do not affect hostile mobs, including healing damage against undead. You can still manually brew negative potions at a brewing stand."));
+            result.add(HelpMenuContent.HelpBlock.paragraph("When a teammate dies, open your inventory and choose Resurrect <player>. Their death screen offers Accept and Decline. Successful acceptance spends 120 of your Brewing Supplies and returns them to their latest death position with five seconds of protection. There is no player cooldown or extra skill-level requirement; you must remain alive in the same active dungeon and able to pay. Declined, stale and failed offers cost nothing. Mercenary resurrection keeps its separate level and cooldown."));
+        }
         result.add(HelpMenuContent.HelpBlock.heading("Convertible supplies"));
         for(var name:items)result.add(new HelpMenuContent.HelpBlock(HelpMenuContent.Kind.BULLET,Component.empty(),name.copy()));
         if(items.isEmpty())result.add(HelpMenuContent.HelpBlock.paragraph("No convertible supplies are enabled by this server."));

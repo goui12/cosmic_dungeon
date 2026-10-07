@@ -17,6 +17,7 @@ public final class SkillPotions {
         return attack != null && attack.cls().equals("theurgist") && attack.skill().equals("potions");
     }
     public static void inherit(Entity cloud, Entity projectile) {
+        net.goui.cosmicdungeon.playerclass.theurgist.TheurgistPotionProtection.inherit(cloud,projectile);
         net.goui.cosmicdungeon.mercenary.MercenaryPotions.inherit(cloud,projectile);
         if (projectile.getPersistentData().contains(ClassSkills.SHOT))
             cloud.getPersistentData().put(ClassSkills.SHOT,projectile.getPersistentData().getCompoundOrEmpty(ClassSkills.SHOT).copy());

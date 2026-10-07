@@ -78,6 +78,11 @@ public final class DungeonInstanceGameTests {
         suite.add(id("class_resource_lifecycle_persistence"),net.goui.cosmicdungeon.playerclass.resource.ClassResourceGameTests::persistenceDeathAndOnlineLifecycle);
         suite.add(id("supply_requests_consent_bulk"),net.goui.cosmicdungeon.playerclass.resource.SupplyRequestGameTests::consentAndBulk);
         suite.add(id("supply_requests_save_recovery"),net.goui.cosmicdungeon.playerclass.resource.SupplyRequestGameTests::saveRecovery);
+        suite.add(id("theurgist_potion_splash_safety"),net.goui.cosmicdungeon.playerclass.theurgist.TheurgistPotionGameTests::splashSafety);
+        suite.add(id("theurgist_potion_cloud_attribution"),net.goui.cosmicdungeon.playerclass.theurgist.TheurgistPotionGameTests::cloudAttribution);
+        suite.add(id("theurgist_crafting"),net.goui.cosmicdungeon.playerclass.theurgist.TheurgistActionGameTests::crafting);
+        suite.add(id("theurgist_player_resurrection"),net.goui.cosmicdungeon.playerclass.theurgist.TheurgistActionGameTests::resurrection);
+        suite.add(id("theurgist_revival_recovery"),net.goui.cosmicdungeon.playerclass.theurgist.TheurgistActionGameTests::recovery);
         return suite;
     }
 

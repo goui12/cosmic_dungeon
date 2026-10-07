@@ -1,7 +1,7 @@
 # New batch round - decisions updated 2026-10-06
 
-Status: Batches10-20 are implemented, validated and published; Batch20 runtime1.6.10-alpha.1 is installed on TEST.
-All original and follow-up questions are settled. Cameron resumed for Batch21 on2026-10-07; stop after21. Set C continues with1.6.11-alpha.1.
+Status: Batches10-21 are implemented, validated and published; Batch21 runtime1.6.11-alpha.1 is installed on TEST.
+All original and follow-up questions are settled. Cameron resumed for Batch22 on2026-10-07; stop after22. Set C continues with1.6.12-alpha.1.
 Batch10 merged through PR227: main e57b27bb78e592fca521e05bc78e305f23c55c2f; exact1.6.0-beta published.
 Batch11 starts from that merged baseline on feature/party-trade-readiness-20261006; validated/published1.6.1-alpha.1. TEST deployment backlog was resolved before14; current delivery is CurseForge plus TEST sFTP; local client delivery is not a batch gate.
 Source: Cameron's original request, reviewed wolfpack mockup, and October6 08:16PDT clarification.
@@ -12,7 +12,7 @@ All earlier questions below the latest DECISIONS checkpoint are historical; do n
 ## Numbering and release sequence
 Queued Batch10: Tamsin20x18 top-right lore/map replay i; preserve actual class/group/ready/progress.
 Support exact1.6.0-beta, validate, merge completed prior set via PR and publish both jars.
-Original round had16 batches11-26 plus queued10. Batches10-20 completed, including Set B Beta, generic Skills and class resources. Batch21 implements group supply requests and consent. After its release/deployment,5 remain22-26. Stop after21.
+Original round had16 batches11-26 plus queued10. Batches10-21 completed, including Set B Beta, generic Skills, class resources and supply requests. Batch22 implements player Theurgist crafting/resurrection. After its release/deployment,4 remain23-26. Stop after22.
 The independent generic Skills UI warrants its own Batch19; prior19-25 become20-26.
 SetA11-16 party/combat/HUD/death recovery; SetB17-18 mercenary roles; SetC19-26 UI/resources/classes/wolves.
 Alpha micro revisions between implementation batches; validated set main merge/Beta after each set.

@@ -82,6 +82,7 @@
     "SkillLingeringPotionMixin",
     "SkillDrinkPotionMixin",
     "StatsCounterAccess",
-    "NaturalArmorDropsMixin"
+    "NaturalArmorDropsMixin",
+    "ResurrectionReceiptMixin"
   ]
 }

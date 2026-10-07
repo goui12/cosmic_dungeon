@@ -27,7 +27,12 @@ public final class ClassResourceService {
     private static void write(ServerPlayer p,ClassResourceLedger ledger){
         p.getPersistentData().put(ClassData.ROOT_TAG,ledger.applyTo(root(p)));
     }
-    public static boolean blocked(ServerPlayer p){return HOLDS.contains(p)||SupplyTransfers.blocked(p);}
+    public static void hold(ServerPlayer p,Exception failure){
+        if(!HOLDS.add(p))return;
+        com.mojang.logging.LogUtils.getLogger().error("Class resource transaction preserved for {}",p.getUUID(),failure);
+        p.connection.disconnect(Component.literal("Your class resource transaction needs a save check. Please reconnect."));
+    }
+    public static boolean blocked(ServerPlayer p){return HOLDS.contains(p)||SupplyTransfers.blocked(p)||net.goui.cosmicdungeon.playerclass.theurgist.TheurgistRevival.blocked(p);}
     public static Optional<DungeonRunRegistryData.RunRecord> activeRun(ServerPlayer p){
         if(blocked(p)||p.isSpectator()||AccessPolicy.isDeveloper(p))return Optional.empty();
         return DungeonRunRegistryData.get(p.level().getServer()).findRunForInstanceDimension(p.level().dimension())

@@ -38,6 +38,9 @@ public final class ModNetworkClient {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private ModNetworkClient() {}
+    public static void onTheurgistActions(net.goui.cosmicdungeon.network.TheurgistPayloads.View payload){
+        net.goui.cosmicdungeon.client.screen.skills.TheurgistClient.receive(payload);
+    }
     public static void onSupplyRequests(net.goui.cosmicdungeon.network.SupplyRequestPayloads.View payload){
         net.goui.cosmicdungeon.client.screen.requests.SupplyRequestsClient.receive(
                 new net.goui.cosmicdungeon.client.screen.requests.SupplyRequestsSnapshot(
