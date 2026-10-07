@@ -67,6 +67,8 @@ public final class DeathInventoryGameTests {
             classTag.putBoolean("run_temp", true);
             player.getPersistentData().put(net.goui.cosmicdungeon.playerclass.api.ClassData.ROOT_TAG, classTag);
             player.connection.player = player;
+            player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+            check(!player.hasInfiniteMaterials(), "Recovery fixture must use survival inventory capacity");
             player.setPos(helper.absoluteVec(new net.minecraft.world.phys.Vec3(.5, 10.5, .5)));
             try {
                 var rf = DungeonRunRegistryData.class.getDeclaredField("runsById");
@@ -280,7 +282,9 @@ public final class DeathInventoryGameTests {
                 f.check(emerald.getItem().getCount() == 4
                                 && f.player.getInventory().getItem(0).getCount() == 64
                                 && f.player.getInventory().getItem(15).is(Items.STONE),
-                        "Partial pickup must preserve occupied target and remaining physical count");
+                        "Partial pickup must preserve occupied target and remaining physical count; remaining="
+                                + emerald.getItem().getCount() + ", slot0=" + f.player.getInventory().getItem(0)
+                                + ", target=" + f.player.getInventory().getItem(15));
                 f.player.getInventory().setItem(15, ItemStack.EMPTY);
                 emerald.playerTouch(f.player);
                 f.check(f.player.getInventory().getItem(15).getCount() == 4
