@@ -19,8 +19,8 @@ public final class MercenarySkills {
         return run>0 && skill.supports(contract) ? data.count(run,key(contract.id(),skill)) : 0;
     }
     public static int level(MercenaryEntity entity, MercenarySkill skill) {
-        if (!(entity.level() instanceof ServerLevel level)) return 1;
-        return MercenarySkill.level(successes(D1RunData.get(level.getServer()),entity.runId(),entity.contract(),skill));
+        if (!(entity.level() instanceof ServerLevel level)) return skill.levelFor(0);
+        return skill.levelFor(successes(D1RunData.get(level.getServer()),entity.runId(),entity.contract(),skill));
     }
     public static List<PartyPayloads.Skill> snapshot(MinecraftServer server, long run, MercenaryContract contract) {
         var data=D1RunData.get(server);
@@ -58,7 +58,7 @@ public final class MercenarySkills {
         int before=successes(data,run.runId(),entity.contract(),skill);
         int after=record(data,run,entity.contract(),skill);
         if (after<=before) return false;
-        int oldLevel=MercenarySkill.level(before), newLevel=MercenarySkill.level(after);
+        int oldLevel=skill.levelFor(before), newLevel=skill.levelFor(after);
         if (newLevel>oldLevel) {
             var message=Component.literal(entity.contract().name()+" reached level "+newLevel+" in "+skill.title()+"!");
             for (var id:run.orderedPlayers().stream().limit(6).toList()) {

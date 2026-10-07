@@ -41,13 +41,13 @@ final class MercenaryRolesTest {
         assertTrue(MercenaryBrewing.brew(entity,stand,recipes()));
         assertTrue(entity.supplies().get(0).get(DataComponents.POTION_CONTENTS).is(Potions.WATER));
         assertEquals(2,entity.supplies().get(1).getCount());
-        assertEquals(1,MercenaryBrewing.stock(entity.supplies(),true));assertEquals(1,MercenaryBrewing.stock(entity.supplies(),false));
+        assertEquals(1,MercenaryBrewing.stock(entity.supplies(),true));assertEquals(0,MercenaryBrewing.stock(entity.supplies(),false));
         assertEquals(timers.potions().get("minecraft:healing"),entity.timers().potions().get("minecraft:healing"));
         for(int i=0;i<5;i++)assertTrue(ItemStack.matches(before.get(i),stand.getItem(i)));
     }
     @Test void allOtherClassesRejectBrewingAndPotionSupportEvenWithLegacySupplies(){
         for(String role:MercenaryContract.CLASSES){
-            if(role.equals("theurgist"))continue;
+            if(role.equals("theurgist")||role.equals("venefex"))continue;
             var entity=merc(role);ingredients(entity);var before=MercenaryInventory.copy(entity.supplies());
             entity.timers(new MercenaryTimers(0,0,Map.of()));
             assertFalse(MercenaryBrewing.brew(entity,stand(),recipes()));
@@ -75,13 +75,27 @@ final class MercenaryRolesTest {
         assertTrue(entity.supplies().get(0).get(DataComponents.POTION_CONTENTS).is(Potions.WATER));
         assertEquals(2,entity.supplies().get(1).getCount());assertFalse(entity.timers().ready("minecraft:healing"));
     }
-    @Test void onlyTheurgistProducesFreeSplashStock(){
+    @Test void theurgistProducesOnlyPositiveFreeSplashStock(){
         var entity=merc("theurgist");entity.timers(new MercenaryTimers(0,0,Map.of()));
         MercenaryPotions.produce(entity,null);
         assertTrue(entity.supplies().getFirst().is(Items.SPLASH_POTION));
         assertEquals(0,MercenaryBrewing.kind(entity.supplies().getFirst(),true));
         assertFalse(entity.timers().ready(MercenaryPotionBalance.stockKey(true,false)));
+        assertEquals(0,MercenaryBrewing.stock(entity.supplies(),false));
+    }
+    @Test void venefexFreeBrewingAndCollectionFollowNegativeRoleWithoutTouchingLegacyItems(){
+        var entity=merc("venefex");ingredients(entity);var stand=stand();
+        var legacy=PotionContents.createItemStack(Items.SPLASH_POTION,Potions.HEALING);
+        entity.supplies().set(2,legacy.copy());stand.setItem(4,new ItemStack(Items.BLAZE_POWDER,9));
+        assertTrue(MercenaryBrewing.brew(entity,stand,recipes()));
+        assertEquals(9,stand.getItem(4).getCount());assertEquals(2,entity.supplies().get(1).getCount());
+        assertTrue(ItemStack.matches(legacy,entity.supplies().get(2)));
         assertEquals(1,MercenaryBrewing.stock(entity.supplies(),false));
+        assertFalse(MercenaryInventory.useful(legacy,entity.contract(),recipes()));
+        assertTrue(MercenaryInventory.useful(MercenaryBrewing.create(false,1,false),entity.contract(),recipes()));
+        assertFalse(MercenaryBrewing.restock(entity,true,false));
+        assertTrue(entity.timers().ready(MercenaryPotionBalance.stockKey(true,false)));
+        assertFalse(MercenaryInventory.useful(MercenaryBrewing.create(false,1,false),merc("theurgist").contract(),recipes()));
     }
     @Test void fullBagLeavesSuppliesAndStandIntact(){
         var entity=merc("theurgist");

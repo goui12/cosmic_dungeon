@@ -5,7 +5,7 @@ import java.util.List;
 /** The requested independent mercenary skills; player weapon progression is separate. */
 public enum MercenarySkill {
     POSITIVE_POTIONS("positive_potions", "theurgist", "Positive Potions"),
-    NEGATIVE_POTIONS("negative_potions", "theurgist", "Negative Potions"),
+    NEGATIVE_POTIONS("negative_potions", "venefex", "Negative Potions"),
     WOLVES("wolves", "bogatyr", "Wolves"),
     FIREWORKS("fireworks", "pyroclast", "Fireworks"),
     CHAIN_LIGHTNING("chain_lightning", "dragoon", "Chain Lightning");
@@ -40,13 +40,20 @@ public enum MercenarySkill {
         }
         return low;
     }
+    /** Venefex alone starts at zero; retain every existing skill's legacy curve. */
+    public int levelFor(int successes) {
+        return level(successes)-(this==NEGATIVE_POTIONS?1:0);
+    }
+    public long thresholdFor(int level) {
+        return threshold(this==NEGATIVE_POTIONS?Math.addExact(level,1):level);
+    }
     public static int advance(int successes) {
         if (successes<0) throw new IllegalArgumentException("Negative mercenary progress");
         return successes==Integer.MAX_VALUE ? successes : successes+1;
     }
     public static String description(String id, int successes) {
         var skill=fromId(id);
-        int level=level(successes);
-        return skill.title()+" - Level "+level+" ("+(successes-threshold(level))+"/"+level+")";
+        int level=skill.levelFor(successes), needed=skill==NEGATIVE_POTIONS?level+1:level;
+        return skill.title()+" - Level "+level+" ("+(successes-skill.thresholdFor(level))+"/"+needed+")";
     }
 }

@@ -1,7 +1,7 @@
 # New batch round - decisions updated 2026-10-06
 
 Status: Batches10-16 are implemented, validated and published; Set A Beta1.6.6-beta.1 is merged and installed.
-All original and follow-up questions are settled. Cameron explicitly requested pause after16; do not claim17 until resumed.
+All original and follow-up questions are settled. Cameron resumed for Batch17 on2026-10-07; stop after17.
 Batch10 merged through PR227: main e57b27bb78e592fca521e05bc78e305f23c55c2f; exact1.6.0-beta published.
 Batch11 starts from that merged baseline on feature/party-trade-readiness-20261006; validated/published1.6.1-alpha.1. TEST deployment backlog was resolved before14; both targets now use1.6.6-beta.1.
 Source: Cameron's original request, reviewed wolfpack mockup, and October6 08:16PDT clarification.
@@ -12,12 +12,12 @@ All earlier questions below the latest DECISIONS checkpoint are historical; do n
 ## Numbering and release sequence
 Queued Batch10: Tamsin20x18 top-right lore/map replay i; preserve actual class/group/ready/progress.
 Support exact1.6.0-beta, validate, merge completed prior set via PR and publish both jars.
-Original round had16 batches11-26 plus queued10. Batches10-16 are complete;10 remain17-26, including final integration/release. Queue paused after16.
+Original round had16 batches11-26 plus queued10. Batches10-16 completed; Batch17 implemented in its task branch. After its release/deployment,9 remain18-26. Stop after17.
 The independent generic Skills UI warrants its own Batch19; prior19-25 become20-26.
 SetA11-16 party/combat/HUD/death recovery; SetB17-18 mercenary roles; SetC19-26 UI/resources/classes/wolves.
 Alpha micro revisions between implementation batches; validated set main merge/Beta after each set.
 Do not reuse tags, preassign conflicting versions, merge test-builds or claim companion app verification without evidence.
-No game/client/GameTest-server automatic launch, no server restart. Existing independently checked deployment policy applies.
+No automatic game/client/GameTest-server launch or restart. Current delivery is CurseForge plus stopped TEST sFTP only; no local-client copy or post-publication hashes.
 No unresolved gameplay questions remain. Batch16 and validated Set A Beta completed; Approach A remains narrowly approved.
 
 ## Confirmed common rules

@@ -14,9 +14,10 @@ import static org.junit.jupiter.api.Assertions.*;
 final class MercenaryPotionsTest {
     @org.junit.jupiter.api.BeforeAll static void config()throws Exception{MercenaryEntryTest.config();}
     @org.junit.jupiter.api.AfterAll static void unload(){MercenaryEntryTest.unloadConfig();}
-    private static MercenaryEntity merc(){
+    private static MercenaryEntity merc(){return merc("theurgist");}
+    private static MercenaryEntity merc(String role){
         var entity=new MercenaryEntity(ModEntities.MERCENARY.get(),null);
-        entity.initialize(44,new MercenaryContract(UUID.randomUUID(),UUID.randomUUID(),"theurgist",2,50));
+        entity.initialize(44,new MercenaryContract(UUID.randomUUID(),UUID.randomUUID(),role,2,50));
         return entity;
     }
     @Test void qualityAnchorsMonotonicAndBounded(){
@@ -44,13 +45,16 @@ final class MercenaryPotionsTest {
         }
     }
     @Test void freeProductionHasHardStockAndNoCatchUpBurst(){
-        var entity=merc();
-        for(int i=0;i<20;i++){MercenaryPotions.produce(entity,null);entity.timers(entity.timers().advance(100000));}
-        assertEquals(6,MercenaryBrewing.stock(entity.supplies(),true));assertEquals(6,MercenaryBrewing.stock(entity.supplies(),false));
-        assertEquals(12,entity.supplies().stream().mapToInt(ItemStack::getCount).sum());
+        for(String role:List.of("theurgist","venefex")){
+            var entity=merc(role);boolean positive=role.equals("theurgist");
+            for(int i=0;i<20;i++){MercenaryPotions.produce(entity,null);entity.timers(entity.timers().advance(100000));}
+            assertEquals(6,MercenaryBrewing.stock(entity.supplies(),positive));
+            assertEquals(0,MercenaryBrewing.stock(entity.supplies(),!positive));
+            assertEquals(6,entity.supplies().stream().mapToInt(ItemStack::getCount).sum());
+        }
         var empty=merc();MercenaryPotions.produce(empty,null);var saved=empty.timers();
         MercenaryPotions.produce(empty,null);
-        assertEquals(2,empty.supplies().stream().mapToInt(ItemStack::getCount).sum());assertEquals(saved,empty.timers());
+        assertEquals(1,empty.supplies().stream().mapToInt(ItemStack::getCount).sum());assertEquals(saved,empty.timers());
     }
     @Test void allClassesRejectCraftingSuppliesAndNonSplashBottles(){
         var builder=new PotionBrewing.Builder(FeatureFlags.DEFAULT_FLAGS);PotionBrewing.addVanillaMixes(builder);var recipes=builder.build();
@@ -78,7 +82,24 @@ final class MercenaryPotionsTest {
         assertTrue(second.once(()->{awards.incrementAndGet();return true;}));
         for(int i=0;i<50;i++)assertFalse(first.once(()->{awards.incrementAndGet();return true;}));
         assertEquals(1,awards.get());
-        assertTrue(MercenarySkillEffects.credit(source,MercenarySkill.POSITIVE_POTIONS,()->true));
+        assertFalse(MercenarySkillEffects.credit(source,MercenarySkill.POSITIVE_POTIONS,()->true));
+    }
+    @Test void roleFiltersBlockWrongStockMixedEffectsAndUndeadInversion(){
+        var positive=merc("theurgist").contract();var negative=merc("venefex").contract();
+        var healing=MercenaryBrewing.create(true,0,false);var poison=MercenaryBrewing.create(false,1,false);
+        assertTrue(MercenaryBrewing.roleSplash(healing,positive));assertFalse(MercenaryBrewing.roleSplash(poison,positive));
+        assertTrue(MercenaryBrewing.roleSplash(poison,negative));assertFalse(MercenaryBrewing.roleSplash(healing,negative));
+        var mixed=healing.copy();mixed.set(net.minecraft.core.component.DataComponents.POTION_CONTENTS,
+                mixed.get(net.minecraft.core.component.DataComponents.POTION_CONTENTS).withEffectAdded(new MobEffectInstance(MobEffects.POISON,100)));
+        assertFalse(MercenaryBrewing.roleSplash(mixed,positive));assertFalse(MercenaryBrewing.roleSplash(mixed,negative));
+        assertTrue(MercenaryPotions.roleAllows(positive,MobEffects.INSTANT_HEALTH.value(),false));
+        assertFalse(MercenaryPotions.roleAllows(positive,MobEffects.INSTANT_HEALTH.value(),true));
+        assertFalse(MercenaryPotions.roleAllows(positive,MobEffects.INSTANT_DAMAGE.value(),false));
+        assertTrue(MercenaryPotions.roleAllows(negative,MobEffects.INSTANT_DAMAGE.value(),false));
+        assertFalse(MercenaryPotions.roleAllows(negative,MobEffects.INSTANT_DAMAGE.value(),true));
+        assertFalse(MercenaryPotions.roleAllows(negative,MobEffects.INSTANT_HEALTH.value(),true));
+        assertTrue(MercenaryBrewing.create(false,0,true).get(net.minecraft.core.component.DataComponents.POTION_CONTENTS).is(Potions.STRONG_HARMING));
+        assertTrue(MercenaryBrewing.create(false,1,true).get(net.minecraft.core.component.DataComponents.POTION_CONTENTS).is(Potions.STRONG_POISON));
     }
     @Test void stockAndThrowTimersRoundTripWithoutNewSchema(){
         var timers=new MercenaryTimers(400,3600,Map.of()).used(MercenaryPotionBalance.stockKey(true,false),100)

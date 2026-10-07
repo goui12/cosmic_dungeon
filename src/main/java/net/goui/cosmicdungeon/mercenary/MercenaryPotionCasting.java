@@ -25,11 +25,12 @@ final class MercenaryPotionCasting {
                 ||old.getAmplifier()==incoming.getAmplifier()&&!old.isInfiniteDuration()&&old.getDuration()<40;
     }
     private static int score(MercenaryEntity entity,LivingEntity target,ItemStack stack,boolean combat){
-        if(!MercenaryBrewing.effectSplash(stack)||!target.isAlive()||!target.isAffectedByPotions()
+        if(!MercenaryBrewing.roleSplash(stack,entity.contract())||!target.isAlive()||!target.isAffectedByPotions()
                 ||entity.distanceToSqr(target)>64||!entity.getSensing().hasLineOfSight(target))return -1;
         int score=-1;
         for(var effect:stack.getOrDefault(DataComponents.POTION_CONTENTS,PotionContents.EMPTY).getAllEffects()){
-            if(!MercenaryPotions.allows(entity,target,effect.getEffect().value())||!target.canBeAffected(effect))continue;
+            if(!MercenaryPotions.roleAllows(entity.contract(),effect.getEffect().value(),target.isInvertedHealAndHarm())
+                    ||!MercenaryPotions.allows(entity,target,effect.getEffect().value())||!target.canBeAffected(effect))continue;
             boolean helpful=MercenaryPotions.helpful(effect.getEffect().value(),target.isInvertedHealAndHarm());
             if(helpful){
                 if(!combat&&!(target instanceof ServerPlayer))continue;
@@ -87,7 +88,7 @@ final class MercenaryPotionCasting {
             if(!MercenaryBrewing.effectSplash(stack)||!entity.timers().ready(MercenaryPotions.key(stack)))continue;
             for(var candidate:candidates){
                 var category=skill(entity,candidate);
-                if(!entity.timers().ready(MercenaryPotionBalance.throwKey(category)))continue;
+                if(!category.supports(entity.contract())||!entity.timers().ready(MercenaryPotionBalance.throwKey(category)))continue;
                 int score=score(entity,candidate,stack,combat);
                 if(score>best){best=score;slot=i;target=candidate.getUUID();prepared=stack.copyWithCount(1);skill=category;}
             }
