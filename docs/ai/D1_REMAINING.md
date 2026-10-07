@@ -1,27 +1,30 @@
 # Current rollout, 2026-10-07
 
-Batch20: Brewing Supplies/Kibble resources, tagged recycling, bars and guide,
-target **1.6.10-alpha.1**, on feature/class-resource-ledger-20261007.
-The task branch builds on Batch19 source56ca66f04d7cdf40e2943b31674161ef198abb46;
-Set C remains unmerged until26. Exact completion/source/CI/publication/TEST facts
-live in BatchRunner/receipts/batch-20.json and linked evidence.
-Batch19 completed:1.6.9-alpha.1, PR237 open, CurseForge main9088085/helper9088084,
-TEST sFTP installed. This note does not pre-claim future delivery.
+Batch21: group supply requests and consent, target **1.6.11-alpha.1**,
+on feature/group-supply-requests-20261007. Baseline is Batch20 source
+d4a504ca4813c5fc5a987fd4c681825a20f9c7f7; Set C remains unmerged until26.
+Exact completion/source/CI/publication/TEST facts live in
+BatchRunner/receipts/batch-21.json and linked evidence.
+Batch20 completed:1.6.10-alpha.1, PR238 open, full CI37651371163,
+CurseForge main9090616/helper9090615, stopped TEST sFTP installed.
+This source note does not pre-claim Batch21 delivery.
 
-Each player's class resource starts at0 each active run, grows1/sec online to600,
-survives death/relogin, and has no offline catch-up. Recycling uses the authoritative
-generated16-item Brewing Supplies /6-item Kibble tags and consumes only headroom.
-Styled world/inventory bars and minimized counts use server snapshots. The H guide
-lists currently bound tag contents; Request Supplies is visibly unavailable until21.
-Licensed GUI/co-op/world and CurseForge app acceptance remain pending TESTING.
+The right inventory Requests column shows independent boxed requests, exact item/
+resource previews, per-card and bulk consent, wheel and draggable scrolling.
+Only actual same-run group members can exchange tagged supplies. Execution rechecks
+class, life, inventory, transaction state and resource headroom; bulk follows visible
+creation order and cannot consume more than consented. Bounded ephemeral requests
+cancel on death/logout/leave, while saved resource balances remain independent.
+Two-owner native save proofs and a pending-only world journal recover interrupted
+transfers without duplicate charges or resource credits.
 
-Delivery ends after CurseForge and stopped TEST sFTP. No local-client installation,
+Licensed UI, co-op/world and CurseForge app acceptance remain pending TESTING.
+Delivery ends after CurseForge and stopped TEST sFTP; no local-client installation,
 post-publication artifact hashes or routine legacy-feed audit.
-[Exact scope/files/QA](tasks/class-resource-ledger-20261007.md).
+[Exact scope/files/QA](tasks/group-supply-requests-20261007.md).
 [Approved plan](PARTY_SKILLS_BATCHES_20261006.md).
 
-**After Batch20 completes,6 planned batches remain (21-26); stop after20.**
-- 21: group supply requests.
+**After Batch21 completes,5 planned batches remain (22-26); stop after21.**
 - 22: player Theurgist crafting and resurrection.
 - 23: paid wolf commands and run-only pack lifecycle.
 - 24: core wolf modes.
@@ -49,7 +52,7 @@ below refer to the previous completed request.
 
 # Testing rollout, 2026-10-03
 
-[Current approved queue](TESTING_ROLLOUT_20261003.md). Batches 1â€“11 are implemented and validated.
+[Current approved queue](TESTING_ROLLOUT_20261003.md). Batches 1Ã¢â‚¬â€œ11 are implemented and validated.
 Zero implementation batches remain; cumulative licensed TEST acceptance is pending.
 [Batch 1 report](TESTING_BATCH_1_20261003.md) | [Batch 2 report](TESTING_BATCH_2_20261003.md) | [Batch 3 report](TESTING_BATCH_3_20261003.md) | [Batch 4 report](TESTING_BATCH_4_20261003.md) | [Batch 5 report](TESTING_BATCH_5_20261003.md) | [Batch 6 report](TESTING_BATCH_6_20261003.md) | [Batch 7 report](TESTING_BATCH_7_20261004.md) | [Batch 8 report](TESTING_BATCH_8_20261004.md) | [Batch 9 report](TESTING_BATCH_9_20261004.md) | [Batch 10 report](TESTING_BATCH_10_20261004.md) | [Batch 11 report](TESTING_BATCH_11_20261004.md).
 Batch 11 completes lifetime statistics, the teal pause-menu entry and eight curated leaderboards;
@@ -512,7 +515,7 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M23: Require marked repair components and update Elias's catalogue
 - M26: Implement direct shop repair and revised price formulas
 - M30: Remove the global instant-brewing override and implement approved class behavior
-- M36: Implement Tamsinâ€™s persistent map and first-entry conversation
+- M36: Implement TamsinÃ¢â‚¬â„¢s persistent map and first-entry conversation
 - M37: Replace incidental ready-order grouping with the specified party/invitation flow
 - M42: Add the campfire placement, ownership, lifetime and interaction rules
 - M61: Add Dragoon passive health-for-durability repair under the revised exclusions
@@ -548,7 +551,7 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M45: Implement the three scapula recruitment relics and assigned boss drops
 - M46: Implement all three pack totem auras without same-class stacking
 - M47: Implement four wolf armor tiers, recipes, repairs and totem synergies
-- M48: Unify Metalmancerâ€™s four-tier staff and golem statistics
+- M48: Unify MetalmancerÃ¢â‚¬â„¢s four-tier staff and golem statistics
 - M49: Implement the complete ore/rest/heal exchange, not only doubled idle income
 - M50: Implement the individual Metalmancer equipment modifiers and stacking policy
 - M51: Validate held equipment and action context on every Metalmancer packet
@@ -559,12 +562,12 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M57: Deliver the Theurgist story arc without leaking internal epilogue knowledge
 - M59: Add Deadeye zoom, draw and range-based damage progression
 - M73: Populate all player-facing Codex and item descriptions with reveal controls
-- M74: Correct Vital Exchange Iâ€“IV to real transfer events and the right tier identities
+- M74: Correct Vital Exchange IÃ¢â‚¬â€œIV to real transfer events and the right tier identities
 - M75: Wire Binding Idol provider/return milestones into actual gameplay
 - M89: Build the remaining D2 rooms, encounters and progression hand-off
-- M90: Implement D3â€™s water/pressure puzzles and Dagonâ€“Hydra state sequence
-- M91: Implement D4â€™s portal maze, reflection encounters and Web completion
-- M92: Implement D5â€™s trap construction, boss endings and persistent outcomes
+- M90: Implement D3Ã¢â‚¬â„¢s water/pressure puzzles and DagonÃ¢â‚¬â€œHydra state sequence
+- M91: Implement D4Ã¢â‚¬â„¢s portal maze, reflection encounters and Web completion
+- M92: Implement D5Ã¢â‚¬â„¢s trap construction, boss endings and persistent outcomes
 - M96: Create a checked-in approved language/codex corpus and lint inconsistent examples
 - M97: Implement Webbound Priest journal drops and staged reading
 - M108: Keep explicit future proposals and incompatible candidates outside automatic implementation

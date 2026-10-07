@@ -76,6 +76,8 @@ public final class DungeonInstanceGameTests {
         suite.add(id("death_inventory_pickup"),DeathInventoryGameTests::pickup);
         suite.add(id("class_resource_tag_recycling"),net.goui.cosmicdungeon.playerclass.resource.ClassResourceGameTests::generatedTagsAndRecycleGuards);
         suite.add(id("class_resource_lifecycle_persistence"),net.goui.cosmicdungeon.playerclass.resource.ClassResourceGameTests::persistenceDeathAndOnlineLifecycle);
+        suite.add(id("supply_requests_consent_bulk"),net.goui.cosmicdungeon.playerclass.resource.SupplyRequestGameTests::consentAndBulk);
+        suite.add(id("supply_requests_save_recovery"),net.goui.cosmicdungeon.playerclass.resource.SupplyRequestGameTests::saveRecovery);
         return suite;
     }
 

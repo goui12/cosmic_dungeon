@@ -3,6 +3,7 @@ package net.goui.cosmicdungeon.client.screen.skills;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.BiConsumer;
+import net.goui.cosmicdungeon.client.screen.requests.SupplyRequestsClient;
 import net.goui.cosmicdungeon.playerclass.api.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -62,7 +63,9 @@ public final class SkillsPanelClient {
         return player==null||!player.containerMenu.getCarried().isEmpty();
     }
     public static boolean ownsInput(Screen candidate,double x,double y){
-        return candidate==screen&&state!=null&&!carrying()&&(state.captured()||state.geometry().panel().contains(x,y));
+        boolean held=carrying();
+        return !held&&(SupplyRequestsClient.ownsInput(candidate,x,y,false)
+                ||candidate==screen&&state!=null&&(state.captured()||state.geometry().panel().contains(x,y)));
     }
     private static void warn(Exception error){
         if(!warned){com.mojang.logging.LogUtils.getLogger().warn("Could not save Skills panel layout; original file retained",error);warned=true;}
@@ -81,25 +84,35 @@ public final class SkillsPanelClient {
         if(state!=null){state.release();state=new SkillsPanelState(layout(screen),null);}
     }
     @SubscribeEvent(priority=EventPriority.LOWEST)
-    public static void init(ScreenEvent.Init.Post event){refresh(event.getScreen());}
+    public static void init(ScreenEvent.Init.Post event){refresh(event.getScreen());SupplyRequestsClient.init(event.getScreen());}
     @SubscribeEvent(priority=EventPriority.HIGHEST)
     public static void tooltip(ScreenEvent.Render.Pre event){
-        if(refresh(event.getScreen())&&!carrying())
+        if(!refresh(event.getScreen())||carrying())return;
+        if(!state.captured())SupplyRequestsClient.tooltip(screen,event.getGuiGraphics(),event.getMouseX(),event.getMouseY(),false);
+        if(!SupplyRequestsClient.ownsInput(screen,event.getMouseX(),event.getMouseY(),false))
             SkillsPanelComponent.tooltip(event.getGuiGraphics(),Minecraft.getInstance().font,model,state,event.getMouseX(),event.getMouseY());
     }
     @SubscribeEvent(priority=EventPriority.LOWEST)
     public static void render(ScreenEvent.Render.Post event){
         if(!refresh(event.getScreen()))return;
+        boolean held=carrying();
+        SupplyRequestsClient.draw(screen,event.getGuiGraphics(),event.getMouseX(),event.getMouseY(),held||state.captured());
+        boolean suppress=held||SupplyRequestsClient.captured();
         SkillsPanelComponent.draw(event.getGuiGraphics(),Minecraft.getInstance().font,
-                model,state,carrying()?-1:event.getMouseX(),carrying()?-1:event.getMouseY());
+                model,state,suppress?-1:event.getMouseX(),suppress?-1:event.getMouseY());
         // Native carried/touchscreen item rendering stays above the movable overlay.
         ((AbstractContainerScreen<?>)event.getScreen()).renderCarriedItem(event.getGuiGraphics(),event.getMouseX(),event.getMouseY());
     }
     @SubscribeEvent(priority=EventPriority.HIGHEST)
     public static void press(ScreenEvent.MouseButtonPressed.Pre event){
         if(!refresh(event.getScreen()))return;
-        var result=state.press(event.getMouseX(),event.getMouseY(),event.getMouseButtonEvent().button(),carrying());
-        if(!result.consumed())return;
+        boolean held=carrying();
+        if(!state.captured()&&SupplyRequestsClient.press(screen,event.getMouseX(),event.getMouseY(),event.getMouseButtonEvent().button(),held)){
+            event.setCanceled(true);return;
+        }
+        boolean captured=state.captured();
+        var result=state.press(event.getMouseX(),event.getMouseY(),event.getMouseButtonEvent().button(),held);
+        if(!result.consumed()){if(captured&&!held)event.setCanceled(true);return;}
         event.setCanceled(true);
         if(result.changed())persist();
         if(result.help()){help.accept(screen,classId);return;}
@@ -115,24 +128,34 @@ public final class SkillsPanelClient {
     }
     @SubscribeEvent(priority=EventPriority.HIGHEST)
     public static void drag(ScreenEvent.MouseDragged.Pre event){
+        if(SupplyRequestsClient.drag(event.getScreen(),event.getMouseY(),event.getMouseButton(),carrying())){
+            event.setCanceled(true);return;
+        }
         if(screen==event.getScreen()&&state!=null&&state.drag(event.getMouseX(),event.getMouseY(),event.getMouseButton(),carrying()))
             event.setCanceled(true);
     }
     @SubscribeEvent(priority=EventPriority.HIGHEST)
     public static void release(ScreenEvent.MouseButtonReleased.Pre event){
+        if(SupplyRequestsClient.release(event.getScreen(),event.getButton())&&!carrying())event.setCanceled(true);
         if(screen==event.getScreen()&&state!=null){
             boolean owned=state.release(event.getButton());persist();if(owned&&!carrying())event.setCanceled(true);
         }
     }
     @SubscribeEvent(priority=EventPriority.HIGHEST)
     public static void scroll(ScreenEvent.MouseScrolled.Pre event){
-        if(refresh(event.getScreen())&&state.wheel(event.getMouseX(),event.getMouseY(),event.getScrollDeltaY(),carrying()))
-            event.setCanceled(true);
+        if(!refresh(event.getScreen()))return;
+        boolean held=carrying();
+        if(state.captured()&&!held){state.wheel(event.getMouseX(),event.getMouseY(),event.getScrollDeltaY(),false);event.setCanceled(true);return;}
+        if(SupplyRequestsClient.wheel(screen,event.getMouseX(),event.getMouseY(),event.getScrollDeltaY(),held)
+                ||SupplyRequestsClient.captured()&&!held){event.setCanceled(true);return;}
+        if(state.wheel(event.getMouseX(),event.getMouseY(),event.getScrollDeltaY(),held))event.setCanceled(true);
     }
     @SubscribeEvent public static void close(ScreenEvent.Closing event){
+        SupplyRequestsClient.close(event.getScreen());
         if(screen==event.getScreen()){persist();if(state!=null)state.release();screen=null;classId=null;state=null;model=null;}
     }
+    @SubscribeEvent public static void login(ClientPlayerNetworkEvent.LoggingIn event){SupplyRequestsClient.clear();}
     @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event){
-        persist();if(state!=null)state.release();screen=null;classId=null;state=null;model=null;
+        SupplyRequestsClient.clear();persist();if(state!=null)state.release();screen=null;classId=null;state=null;model=null;
     }
 }

@@ -9,6 +9,11 @@ public final class CosmicDungeonOptionsIntegration {
     private CosmicDungeonOptionsIntegration() {}
 
     public static void registerConfigScreen(ModContainer container) {
+        net.goui.cosmicdungeon.client.screen.requests.SupplyRequestsClient.actions(action ->
+                net.goui.cosmicdungeon.network.ModNetwork.sendToServer(
+                        new net.goui.cosmicdungeon.network.SupplyRequestPayloads.Action(action.runId(),action.revision(),
+                                net.goui.cosmicdungeon.network.SupplyRequestPayloads.Decision.valueOf(action.decision().name()),
+                                action.requestIds())));
         net.goui.cosmicdungeon.client.screen.skills.ClassResourceClient.recycleAction(snapshot ->
                 net.goui.cosmicdungeon.network.ModNetwork.sendToServer(
                         new net.goui.cosmicdungeon.network.ClassResourcePayloads.Recycle(

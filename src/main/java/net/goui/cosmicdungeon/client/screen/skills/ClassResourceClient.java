@@ -2,6 +2,7 @@ package net.goui.cosmicdungeon.client.screen.skills;
 
 import java.util.Objects;
 import java.util.function.Consumer;
+import net.goui.cosmicdungeon.client.screen.requests.SupplyRequestsClient;
 import net.goui.cosmicdungeon.playerclass.api.ClassData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -24,11 +25,13 @@ public final class ClassResourceClient {
         if(installed)return;installed=true;
         for(String id:new String[]{"theurgist","bogatyr"})SkillsPanelClient.register(id,new SkillsPanelClient.Provider(){
             @Override public SkillsPanelModel view(LocalPlayer player){
-                return ClassResourcePresentation.panel(id,STATE.snapshot(),STATE.awaitingAction()||sender==null);
+                return ClassResourcePresentation.panel(id,STATE.snapshot(),STATE.awaitingAction()||sender==null,
+                        SupplyRequestsClient.canRequest(STATE.snapshot()));
             }
             @Override public void activate(LocalPlayer player,String action){
-                if(sender!=null&&action.equals("recycle")&&ClassData.getClassId(player).equals(id))
-                    STATE.recycle(id).ifPresent(sender);
+                if(!ClassData.getClassId(player).equals(id))return;
+                if(action.equals("request_supplies")&&SupplyRequestsClient.canRequest(STATE.snapshot()))SupplyRequestsClient.request();
+                else if(sender!=null&&action.equals("recycle"))STATE.recycle(id).ifPresent(sender);
             }
         });
     }

@@ -38,6 +38,16 @@ public final class ModNetworkClient {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private ModNetworkClient() {}
+    public static void onSupplyRequests(net.goui.cosmicdungeon.network.SupplyRequestPayloads.View payload){
+        net.goui.cosmicdungeon.client.screen.requests.SupplyRequestsClient.receive(
+                new net.goui.cosmicdungeon.client.screen.requests.SupplyRequestsSnapshot(
+                        payload.runId(),payload.revision(),payload.active(),payload.alive(),payload.canRequest(),
+                        payload.cards().stream().map(card->new net.goui.cosmicdungeon.client.screen.requests.SupplyRequestsSnapshot.Card(
+                                card.requestId(),card.requesterId(),card.requesterName(),card.requesterClass(),card.resourceId(),
+                                card.yield(),card.ingredients().stream().map(item->
+                                    new net.goui.cosmicdungeon.client.screen.requests.SupplyRequestsSnapshot.Ingredient(item.stack())).toList(),
+                                card.canAccept())).toList()));
+    }
     public static void onClassResource(net.goui.cosmicdungeon.network.ClassResourcePayloads.View payload){
         net.goui.cosmicdungeon.client.screen.skills.ClassResourceClient.receive(
                 new net.goui.cosmicdungeon.client.screen.skills.ClassResourceSnapshot(

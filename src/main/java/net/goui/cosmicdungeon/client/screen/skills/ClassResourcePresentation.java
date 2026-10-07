@@ -11,23 +11,29 @@ public final class ClassResourcePresentation {
         return Component.literal(snapshot.tooltipName()+" <"+snapshot.amount()+" / "+snapshot.cap()+">")
                 .withStyle(ChatFormatting.BLUE,ChatFormatting.BOLD);
     }
-    public static Component requestTooltip(String resourceName){
-        return Component.literal("Click to request supplies from your group. If they accept, their supplies will be automatically recycled into your ")
+    public static Component requestTooltip(String resourceName){return requestTooltip(resourceName,false);}
+    public static Component requestTooltip(String resourceName,boolean available){
+        var result=Component.literal("Click to request supplies from your group. If they accept, their supplies will be automatically recycled into your ")
                 .withStyle(ChatFormatting.YELLOW)
-                .append(Component.literal(resourceName).withStyle(ChatFormatting.BLUE,ChatFormatting.BOLD))
-                .append(Component.literal("\nNo supply requests available.").withStyle(ChatFormatting.GRAY).withStyle(style->style.withBold(false)));
+                .append(Component.literal(resourceName).withStyle(ChatFormatting.BLUE,ChatFormatting.BOLD));
+        if(!available)result.append(Component.literal("\nNo supply requests available.").withStyle(ChatFormatting.GRAY).withStyle(style->style.withBold(false)));
+        return result;
     }
     public static Component recycleTooltip(String resourceName){
         return Component.literal("Click to convert all items into ").withStyle(ChatFormatting.YELLOW)
                 .append(Component.literal(resourceName).withStyle(ChatFormatting.BLUE,ChatFormatting.BOLD));
     }
     public static SkillsPanelModel panel(String classId,ClassResourceSnapshot snapshot,boolean awaitingAction){
+        return panel(classId,snapshot,awaitingAction,false);
+    }
+    public static SkillsPanelModel panel(String classId,ClassResourceSnapshot snapshot,boolean awaitingAction,boolean canRequest){
         var base=SkillsPanelModel.initial(classId);
         if(!classId.equals("theurgist")&&!classId.equals("bogatyr"))return base;
         boolean present=snapshot!=null&&snapshot.matches(classId);
         String name=classId.equals("theurgist")?"brewing supplies":"Kibble";
         var actions=new ArrayList<SkillsPanelModel.Action>();
-        actions.add(new SkillsPanelModel.Action("request_supplies","Request Supplies",requestTooltip(name),false));
+        boolean request=present&&canRequest&&!awaitingAction&&snapshot.active()&&snapshot.alive()&&snapshot.amount()<snapshot.cap();
+        actions.add(new SkillsPanelModel.Action("request_supplies","Request Supplies",requestTooltip(name,request),request));
         actions.add(new SkillsPanelModel.Action("recycle","Recycle",recycleTooltip(name),
                 present&&snapshot.canRecycle()&&!awaitingAction));
         actions.addAll(base.actions());

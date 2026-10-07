@@ -27,13 +27,17 @@ public final class ClassResourceService {
     private static void write(ServerPlayer p,ClassResourceLedger ledger){
         p.getPersistentData().put(ClassData.ROOT_TAG,ledger.applyTo(root(p)));
     }
-    public static boolean blocked(ServerPlayer p){return HOLDS.contains(p);}
+    public static boolean blocked(ServerPlayer p){return HOLDS.contains(p)||SupplyTransfers.blocked(p);}
+    public static Optional<DungeonRunRegistryData.RunRecord> activeRun(ServerPlayer p){
+        if(blocked(p)||p.isSpectator()||AccessPolicy.isDeveloper(p))return Optional.empty();
+        return DungeonRunRegistryData.get(p.level().getServer()).findRunForInstanceDimension(p.level().dimension())
+                .filter(r->r.stateEnum()==DungeonRunState.ACTIVE&&r.containsPlayer(p.getUUID())&&!r.isCompletionExited(p.getUUID()))
+                .filter(r->!r.dungeonId().equals("dungeon_1")||!D1RunData.get(p.level().getServer()).sealed(r.runId()));
+    }
     private static Context context(ServerPlayer p){
         if(blocked(p)||p.isSpectator()||AccessPolicy.isDeveloper(p))return null;
         var kind=ClassResourceKind.forClass(ClassData.getClassId(p)).orElse(null);if(kind==null)return null;
-        var run=DungeonRunRegistryData.get(p.level().getServer()).findRunForInstanceDimension(p.level().dimension())
-                .filter(r->r.stateEnum()==DungeonRunState.ACTIVE&&r.containsPlayer(p.getUUID())&&!r.isCompletionExited(p.getUUID()))
-                .filter(r->!r.dungeonId().equals("dungeon_1")||!D1RunData.get(p.level().getServer()).sealed(r.runId())).orElse(null);
+        var run=activeRun(p).orElse(null);
         return run==null?null:new Context(run.runId(),kind);
     }
     private static void invalid(ServerPlayer p,RuntimeException error){
@@ -92,7 +96,7 @@ public final class ClassResourceService {
         try{ledger=ClassResourceLedger.forRun(root(p),context.run());}
         catch(RuntimeException invalid){invalid(p,invalid);return;}
         if(ledger.revision()!=request.revision()){send(p,view(p,context,ledger));return;}
-        if(!InventoryTransactionGuard.beforeInventoryChange(p))return;
+        if(!InventoryTransactionGuard.beforeCurrentInventoryAction(p))return;
         // Recheck after any existing transaction reconciliation; no container or stale state may become authorization.
         context=context(p);
         if(context==null||context.run()!=request.runId()||!context.kind().id().equals(request.resourceId())
