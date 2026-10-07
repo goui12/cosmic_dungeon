@@ -10,6 +10,7 @@ public abstract class DeathCurrencyPlayerMixin {
     // TAIL is the final return only. NeoForge's cancelled-death early return must never debit Trace.
     @Inject(method="die",at=@At("TAIL"))
     private void cosmicdungeon$confirmedDeath(DamageSource source,CallbackInfo info){
+        net.goui.cosmicdungeon.dungeon.d1.RunMemberStats.died((ServerPlayer)(Object)this);
         DeathCurrencyService.died((ServerPlayer)(Object)this);
         net.goui.cosmicdungeon.mercenary.MercenaryResurrection.died((ServerPlayer)(Object)this);
     }

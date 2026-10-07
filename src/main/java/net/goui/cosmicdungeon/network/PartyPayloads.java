@@ -16,17 +16,24 @@ public final class PartyPayloads {
                 ByteBufCodecs.stringUtf8(16), Action::action, ByteBufCodecs.stringUtf8(36), Action::target, Action::new);
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
-    public record Member(String name, String classId, boolean ready, boolean leader, boolean mercenary, PartyVitals vitals) {
+    public record Member(String name, String classId, boolean ready, boolean leader, boolean mercenary, PartyVitals vitals, String memberId) {
+        public Member { if(memberId==null||memberId.length()>36)throw new IllegalArgumentException("Invalid member ID");
+            if(!memberId.isEmpty())java.util.UUID.fromString(memberId); }
+        public Member(String name,String classId,boolean ready,boolean leader,boolean mercenary,PartyVitals vitals) {
+            this(name,classId,ready,leader,mercenary,vitals,"");
+        }
         public Member(String name, String classId, boolean ready, boolean leader, boolean mercenary) {
             this(name, classId, ready, leader, mercenary, PartyVitals.UNLOADED);
         }
         public Member(String name, String classId, boolean ready, boolean leader) {
             this(name, classId, ready, leader, false);
         }
-        public static final StreamCodec<ByteBuf, Member> CODEC = StreamCodec.composite(
-                ByteBufCodecs.stringUtf8(16), Member::name, ByteBufCodecs.stringUtf8(32), Member::classId,
-                ByteBufCodecs.BOOL, Member::ready, ByteBufCodecs.BOOL, Member::leader,
-                ByteBufCodecs.BOOL, Member::mercenary, PartyVitals.CODEC, Member::vitals, Member::new);
+        public static final StreamCodec<ByteBuf, Member> CODEC = StreamCodec.of((buf,row)->{
+            ByteBufCodecs.stringUtf8(16).encode(buf,row.name());ByteBufCodecs.stringUtf8(32).encode(buf,row.classId());
+            buf.writeBoolean(row.ready());buf.writeBoolean(row.leader());buf.writeBoolean(row.mercenary());
+            PartyVitals.CODEC.encode(buf,row.vitals());ByteBufCodecs.stringUtf8(36).encode(buf,row.memberId());
+        },buf->new Member(ByteBufCodecs.stringUtf8(16).decode(buf),ByteBufCodecs.stringUtf8(32).decode(buf),
+                buf.readBoolean(),buf.readBoolean(),buf.readBoolean(),PartyVitals.CODEC.decode(buf),ByteBufCodecs.stringUtf8(36).decode(buf)));
     }
     public record State(long revision, String phase, boolean leader, int capacity, int queuePosition, int countdownSeconds) {
         public static final StreamCodec<ByteBuf, State> CODEC = StreamCodec.composite(

@@ -58,6 +58,9 @@ public final class D1PartyHud {
         return inventory(screen)?PartyHealthHud.inventoryLayout(((AbstractContainerScreen<?>)screen).getGuiLeft(),screen.height)
                 :PartyHealthHud.worldLayout(view);
     }
+    static boolean inspectionCurrent(long run,String subject) {
+        return activeHealth()&&view.state().revision()==run&&view.members().stream().anyMatch(m->m.memberId().equals(subject));
+    }
     public static int worldHeight() { if(activeHealth())return PartyHealthHud.worldLayout(view).height()+8; return visible() ? layout().height() + MercenaryHudLayout.stackHeight(view.mercenaries().size()) + 8 : 0; }
     public static int inventoryAccountX() {
         return visible() && inventory(Minecraft.getInstance().screen) ? layout().x() + layout().width() + 8 : 8;
@@ -162,6 +165,14 @@ public final class D1PartyHud {
     @SubscribeEvent public static void click(ScreenEvent.MouseButtonPressed.Pre event) {
         if(activeHealth()&&inventory(event.getScreen())&&!bookVisible()&&event.getMouseButtonEvent().button()==0
                 &&PartyHealthHud.press(view,healthLayout(),event.getMouseX(),event.getMouseY())){event.setCanceled(true);return;}
+        if(activeHealth()&&inventory(event.getScreen())&&!bookVisible()&&event.getMouseButtonEvent().button()==0
+                &&Minecraft.getInstance().player.containerMenu.getCarried().isEmpty()) {
+            var member=PartyHealthHud.memberAt(view,healthLayout(),event.getMouseX(),event.getMouseY());
+            if(member!=null) {
+                Minecraft.getInstance().setScreen(new PartyInspectionScreen(event.getScreen(),view.state().revision(),member));
+                event.setCanceled(true);return;
+            }
+        }
         if (!visible() || !bookVisible() || event.getScreen().width >= 379 || ready == null) return;
         updateControls();
         for (Button button : List.of(ready, leave, join, revive)) {

@@ -105,6 +105,16 @@ final class PartyHealthHud {
             g.setComponentTooltipForNextFrame(font,details,mx,my);
         }
     }
+    static PartyPayloads.Member memberAt(PartyPayloads.View view,PartyHealthLayout box,double mx,double my) {
+        if(!box.contains(mx,my)||mx>=box.x()+box.width()-6||my<box.y()+PartyHealthLayout.HEADER)return null;
+        int y=box.y()+PartyHealthLayout.HEADER-box.clampScroll(scroll,content(rows(view),box));
+        for(var member:view.members()) {
+            int height=box.rowHeight(member.vitals().effects().size())+(member.vitals().omittedEffects()>0?10:0);
+            if(my>=y&&my<y+height)return member.mercenary()||member.memberId().isEmpty()?null:member;
+            y+=height;
+        }
+        return null;
+    }
     static boolean wheel(PartyPayloads.View view,PartyHealthLayout box,double mx,double my,double delta) {
         if(!box.contains(mx,my)||my<box.y()+PartyHealthLayout.HEADER||delta==0)return false;
         scroll=box.clampScroll(scroll-(int)Math.copySign(24,delta),content(rows(view),box));return true;

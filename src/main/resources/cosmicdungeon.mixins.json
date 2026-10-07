@@ -59,6 +59,7 @@
     "BogatyrLifecycleMixin",
     "RepairCustodySaveMixin",
     "DeathCurrencyPlayerMixin",
+    "RunHealingMixin",
     "DeathCurrencyItemMixin",
     "DeathCurrencyEntityMixin",
     "InnHeartMixin",
