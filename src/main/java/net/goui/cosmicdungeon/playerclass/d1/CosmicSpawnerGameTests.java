@@ -39,11 +39,18 @@ public final class CosmicSpawnerGameTests {
         final Map<Long,DungeonRunRegistryData.RunRecord> runs; final Map<UUID,ServerPlayer> players;
         final Map<BlockPos,BlockState> blocks = new LinkedHashMap<>();
         final Map<BlockPos,CompoundTag> entities = new HashMap<>();
+        final Set<UUID> preexistingItems = new HashSet<>();
         final List<Packet<?>> packets = new ArrayList<>();
         final io.netty.channel.embedded.EmbeddedChannel channel = new io.netty.channel.embedded.EmbeddedChannel();
         @SuppressWarnings("unchecked") Fixture(GameTestHelper helper,long id) {
             this.helper=helper;this.id=id;level=helper.getLevel();var server=level.getServer();
-            origin=helper.absoluteVec(new Vec3(1.5,14.5,1.5));
+            var anchor=helper.absoluteVec(new Vec3(1.5,14.5,1.5));
+            // Keep all +/-6 block offsets and native drops in the already accessible helper chunk.
+            // Block presence alone does not make a neighboring chunk's entity sections queryable.
+            var chunk=new net.minecraft.world.level.ChunkPos(BlockPos.containing(anchor));
+            origin=new Vec3(chunk.getMinBlockX()+8.5,anchor.y,chunk.getMinBlockZ()+8.5);
+            level.getEntitiesOfClass(ItemEntity.class,new net.minecraft.world.phys.AABB(origin,origin).inflate(8))
+                    .forEach(item->preexistingItems.add(item.getUUID()));
             var profile=new GameProfile(UUID.randomUUID(),"SpawnerTest");
             player=new ServerPlayer(server,level,profile,ClientInformation.createDefault());
             var connection=new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND) {
@@ -90,8 +97,12 @@ public final class CosmicSpawnerGameTests {
         }
         void check(boolean value,String message){helper.assertTrue(value,Component.literal(message));}
         boolean remains(BlockPos pos){return level.getBlockState(pos).is(ModBlocks.COSMIC_MOB_SPAWNER.get());}
+        List<ItemEntity> newDrops(){
+            return level.getEntitiesOfClass(ItemEntity.class,new net.minecraft.world.phys.AABB(origin,origin).inflate(8))
+                    .stream().filter(item->!preexistingItems.contains(item.getUUID())).toList();
+        }
         @Override public void close(){
-            level.getEntitiesOfClass(ItemEntity.class,new net.minecraft.world.phys.AABB(origin,origin).inflate(8)).forEach(ItemEntity::discard);
+            newDrops().forEach(ItemEntity::discard);
             blocks.forEach(level::setBlockAndUpdate);
             entities.forEach((pos,tag)->{var be=level.getBlockEntity(pos);if(be!=null)be.loadWithComponents(
                     net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING,level.registryAccess(),tag));});
@@ -124,9 +135,9 @@ public final class CosmicSpawnerGameTests {
                         "Even event-added ordinary terrain remains intact");
                 f.check(authored.equals(((CosmicSpawnerBlockEntity)f.level.getBlockEntity(protectedPos)).saveWithoutMetadata(f.level.registryAccess())),
                         "Protected authored block-entity data remains byte-equivalent");
-                int bottles=f.level.getEntitiesOfClass(ItemEntity.class,new net.minecraft.world.phys.AABB(f.origin,f.origin).inflate(8))
-                        .stream().filter(i->i.getItem().is(Items.EXPERIENCE_BOTTLE)).mapToInt(i->i.getItem().getCount()).sum();
-                f.check(bottles>=6&&bottles<=10,"Two spawners use existing three-to-five XP bottle loot");
+                int bottles=f.newDrops().stream().filter(i->i.getItem().is(Items.EXPERIENCE_BOTTLE))
+                        .mapToInt(i->i.getItem().getCount()).sum();
+                f.check(bottles>=6&&bottles<=10,"Two spawners use existing three-to-five XP bottle loot; observed "+bottles+" new bottles");
                 f.spawner(-2,0,0);D1RocketAbilities.explode(shot,f.level);
                 f.check(f.remains(exposed),"Repeated callback cannot destroy more blocks or duplicate drops");
                 var canceled=f.rocket(hired?f.merc:f.player);

@@ -68,7 +68,7 @@ final class MercenaryPotionRoleGameTests {
         }
     }
     static void verify(GameTestHelper helper){
-        try(var f=new Fixture(helper,"theurgist",Long.MAX_VALUE-106)){
+        try(var f=new Fixture(helper,"theurgist",Long.MAX_VALUE-1701)){
             var enemy=f.enemy(EntityType.SPIDER,1);enemy.setHealth(10);f.merc.setHealth(4);
             f.splash(MercenaryBrewing.create(true,0,false),f.merc);
             f.check(f.merc.getHealth()>4&&enemy.getHealth()==10,"Theurgist heals ally without helping enemies");
@@ -84,7 +84,7 @@ final class MercenaryPotionRoleGameTests {
             f.check(MercenarySkills.snapshot(f.level.getServer(),f.id,f.contract).size()==1,
                     "Theurgist exposes only its positive skill");
         }
-        try(var f=new Fixture(helper,"venefex",Long.MAX_VALUE-107)){
+        try(var f=new Fixture(helper,"venefex",Long.MAX_VALUE-1702)){
             var first=f.enemy(EntityType.CREEPER,1);var second=f.enemy(EntityType.CREEPER,2);
             var immune=f.enemy(EntityType.ZOMBIE,3);
             f.check(MercenarySkills.level(f.merc,MercenarySkill.NEGATIVE_POTIONS)==0,"Venefex starts at level zero");

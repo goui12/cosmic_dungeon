@@ -37,6 +37,12 @@ recorded in CosmicDungeon_AI/BatchRunner/receipts/batch-17.json and linked evide
 This source document does not assert a future release/deployment already happened.
 SetB remains on the task branch until18. No client/server/GameTest launch or restart.
 
+## Native fixture correction
+Initial full CI passed clean build and potion scenarios but exposed the existing spawner
+loot query crossing inaccessible adjacent entity sections at tick0. Keep all6–10 loot and
+protection assertions; center fixture geometry inside its current chunk, count/clean only
+new drops, and assign potion fixtures unused run IDs. No spawner gameplay change.
+
 ## Pending licensed testing
 1. Hire Theurgist and Venefex: only their assigned potion skill appears; new Venefex starts0.
 2. Injure allies and fight hostiles: Theurgist benefits allies only, Venefex harms enemies only,
@@ -75,3 +81,4 @@ Possible follow-up: reusable task-card summaries can reduce future historical re
 - src/test/java/net/goui/cosmicdungeon/mercenary/MercenaryPotionsTest.java
 - src/test/java/net/goui/cosmicdungeon/mercenary/MercenaryRolesTest.java
 - src/test/java/net/goui/cosmicdungeon/mercenary/MercenarySkillsTest.java
+- src/main/java/net/goui/cosmicdungeon/playerclass/d1/CosmicSpawnerGameTests.java
