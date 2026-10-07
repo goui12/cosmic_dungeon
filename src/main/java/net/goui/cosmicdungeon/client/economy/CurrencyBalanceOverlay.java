@@ -47,12 +47,14 @@ public final class CurrencyBalanceOverlay {
         if(!ready()||!(event.getScreen() instanceof AbstractContainerScreen<?> screen))return;
         boolean inventory=screen instanceof InventoryScreen;
         if(!inventory && !CurrencyBalanceClient.VIEW.classChest(screen.getMenu().containerId))return;
-        int width=screen.width;
-        // Header keeps currency outside slots, equipment, recipe book and right-hand potion effects.
-        // Vanilla's minimum 320x240 GUI leaves this space above both inventory and three-row class chests.
-        int y=Math.max(2,screen.getGuiTop()-32);
-        int x = net.goui.cosmicdungeon.client.screen.D1PartyHud.inventoryAccountX();
-        draw(event.getGuiGraphics(),x,y,width-x-8,true,event.getMouseX(),event.getMouseY());
+        if (inventory) {
+            var account=net.goui.cosmicdungeon.client.screen.D1PartyHud.inventoryLayout(screen).account();
+            boolean covered=net.goui.cosmicdungeon.client.screen.skills.SkillsPanelClient.ownsInput(screen,event.getMouseX(),event.getMouseY());
+            draw(event.getGuiGraphics(),account.x(),account.y(),account.width(),true,covered?-1:event.getMouseX(),covered?-1:event.getMouseY());
+        } else {
+            int y=Math.max(2,screen.getGuiTop()-32);
+            draw(event.getGuiGraphics(),8,y,screen.width-16,true,event.getMouseX(),event.getMouseY());
+        }
     }
     /** Reuses the inventory account presentation inside screens with a reserved header. */
     public static void drawAccount(GuiGraphics g,int x,int y,int maxWidth,int mouseX,int mouseY) {
@@ -84,6 +86,6 @@ public final class CurrencyBalanceOverlay {
                     Component.literal(available+" Trace available"),
                     Component.translatable("hud.cosmicdungeon.account.read_only")),mouseX,mouseY);
     }
-    // TODO(native TEST): verify GUI scales/recipe-book positioning, resource packs and two licensed clients;
+    // TODO(native TEST): verify GUI scales/shared inventory positioning, resource packs and two licensed clients;
     // exercise deposits, reserved payments, cancellation, death, respawn, reconnect and dungeon travel.
 }

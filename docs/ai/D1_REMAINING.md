@@ -1,26 +1,27 @@
 # Current rollout, 2026-10-07
 
-Batch18: Judicator mercenary and Set B Beta target **1.6.8-beta.1**.
-Implemented on feature/judicator-mercenary-20261007; validated completed Set B merges
-through its PR before Beta publication. Exact completion, source/CI/publication and
-TEST sFTP facts live in BatchRunner/receipts/batch-18.json and linked evidence.
-This source note does not infer that future publication/deployment has already happened.
-Batch17 completed:1.6.7-alpha.1, CurseForge main9087282/helper9087280, TEST sFTP installed.
+Batch19: reusable Skills panel and shared inventory layout, target **1.6.9-alpha.1**.
+Implemented on feature/skills-panel-foundation-20261007; this starts Set C and stays
+on its task branch until the validated Set C merge at26. Exact completion,
+source/CI/publication and TEST sFTP facts live in BatchRunner/receipts/batch-19.json
+and linked evidence. This source note does not claim future delivery already happened.
+Batch18 completed:1.6.8-beta.1, PR236 merged, CurseForge main9087871/helper9087870,
+TEST sFTP installed; main7c58a5c5d4639e4533d9663db0675e3a43f9a3d4.
 
-Judicator Combat starts0; cumulative hostile kills1,3,6,12,24 then doubling.
-Successful direct attacks roll L% (capped100%) for L HP to hostiles within2blocks;
-secondary damage cannot recursively burst. Allies remain protected; death retains
-run progress and the next run resets it. No authored chest edits or save/network migration.
-Set B includes Batch17 Theurgist/Venefex role split and the retained legacy safeguards.
-Licensed HUD/co-op/world and CurseForge app acceptance remain pending TESTING.
+Client-only Skills panel: stored per-class placement, minimize with resource header,
+uniform action rows, wheel/drag scrollbar, shared HUD/account/Requests reservations,
+exact class-guide shortcut and Reset Skill Panel UI. Remove all recipe-book GUI
+surfaces while preserving crafting authorization. Bogatyr/Theurgist guide entries
+use existing mechanics; real resource balances and further class actions remain
+their approved later cards. No world migration or new gameplay packets.
+Licensed GUI/co-op/world and CurseForge app acceptance remain pending TESTING.
 
-Deployment ends after CurseForge and stopped TEST sFTP. No local-client installation,
+Delivery ends after CurseForge and stopped TEST sFTP. No local-client installation,
 post-publication artifact hashes or routine legacy-feed audit.
-[Exact scope/files/QA](tasks/judicator-mercenary-20261007.md).
+[Exact scope/files/QA](tasks/skills-panel-foundation-20261007.md).
 [Approved plan](PARTY_SKILLS_BATCHES_20261006.md).
 
-**After Batch18 completes,8 planned batches remain (19–26); stop after18.**
-- 19: movable Skills panel, reset setting and recipe-book removal.
+**After Batch19 completes,7 planned batches remain (20–26); stop after19.**
 - 20: Brewing Supplies/Kibble and generated recycling tags.
 - 21: group supply requests.
 - 22: player Theurgist crafting and resurrection.

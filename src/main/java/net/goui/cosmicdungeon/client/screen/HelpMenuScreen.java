@@ -22,6 +22,7 @@ public final class HelpMenuScreen extends Screen {
     private static final int PANE_BACKGROUND = 0x88000000;
     private static final int SCROLL_STEP = 18;
     private static final float PAGE_TITLE_SCALE = 1.12F;
+    private final Screen parent;
     private final HelpScrollPane navScroll = new HelpScrollPane();
     private final Map<String, HelpScrollPane> contentScrolls = new HashMap<>();
     private final Deque<HelpMenuContent.HelpNode> path = new ArrayDeque<>();
@@ -29,7 +30,24 @@ public final class HelpMenuScreen extends Screen {
     private HelpMenuContent.Page currentPage = HelpMenuContent.GET_STARTED;
     private HelpMenuGeometry geometry = HelpMenuGeometry.centered(0, 0);
 
-    public HelpMenuScreen() { super(Component.translatable("screen.cosmicdungeon.help_menu")); }
+    public HelpMenuScreen() { this(null); }
+
+    private HelpMenuScreen(Screen parent) {
+        super(Component.translatable("screen.cosmicdungeon.help_menu"));
+        this.parent = parent;
+    }
+
+    public static HelpMenuScreen forClass(Screen parent, String classId) {
+        HelpMenuScreen screen = new HelpMenuScreen(parent);
+        screen.path.push(HelpMenuContent.ROOT);
+        screen.currentDirectory = HelpMenuContent.classDirectory();
+        screen.currentPage = HelpMenuContent.classGuide(classId);
+        return screen;
+    }
+
+    @Override public void onClose() {
+        if (minecraft != null) minecraft.setScreen(parent);
+    }
 
     @Override protected void init() {
         super.init();

@@ -636,6 +636,24 @@ Once all six blooms are rescued from the dungeon, Watson’s soul is released. H
             HelpBlock.bullet("Class access, vendors, trades, currency, progression, teleports, achievements, and dungeon systems remain server-authoritative."),
             HelpBlock.tip("The H menu is only a guide; it never grants access or changes saved data."))); }
 
+    /** Exact existing H-guide pages; unknown/unselected classes open the class index. */
+    public static Page classGuide(String classId) {
+        if (classId == null) return CLASSES;
+        return switch (classId) {
+            case "bogatyr" -> BOGATYR;
+            case "dragoon" -> DRAGOON;
+            case "judicator" -> JUDICATOR;
+            case "pyroclast" -> PYROCLAST;
+            case "theurgist" -> THEURGIST;
+            case "venefex" -> VENEFEX;
+            default -> CLASSES;
+        };
+    }
+
+    public static HelpNode classDirectory() {
+        return ROOT.children().stream().filter(node -> node.page() == CLASSES).findFirst().orElseThrow();
+    }
+
     private static Page page(String id, String title, boolean enabled, List<HelpBlock> blocks) { return new Page(id, Component.literal(title), enabled, blocks); }
     public record Page(String id, Component title, boolean enabled, List<HelpBlock> blocks) {}
     public record HelpNode(Page page, List<HelpNode> children) {
