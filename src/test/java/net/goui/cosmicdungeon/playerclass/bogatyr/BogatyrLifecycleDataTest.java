@@ -27,6 +27,9 @@ class BogatyrLifecycleDataTest {
         var persistent=new CompoundTag();WolfIdentity.set(persistent,wolf);entity.put("NeoForgeData",persistent);
         data.putArchive(wolf,new WolfArchive(WolfArchive.PREPARED,UUID.randomUUID(),23,"test:run",12,"",0,entity));
         var raw=data.image();raw.getCompoundOrEmpty("archives").getCompoundOrEmpty(wolf.toString()).putString("future_archive","keep");
+        var observed=data(raw);observed.retireArchive(wolf);observed.retireRecord(entry);
+        assertEquals("keep",observed.image().getCompoundOrEmpty("retired_records").getCompoundOrEmpty(wolf.toString())
+                .getCompoundOrEmpty("archive").getStringOr("future_archive",""));
         data=data(raw);data.identityHold("test:run",wolf);data.markRunRetired(23);data.retireRecord(entry);
         var round=data(data.image());
         assertTrue(round.runRetired(23));assertEquals(0,round.count(owner));assertTrue(round.archive(wolf).isEmpty());

@@ -78,6 +78,10 @@ public final class BogatyrCommandGameTests {
                 var pos=center.offset(dx,dy,dz);check(level.hasChunkAt(pos),"Fixture never loads a chunk");
                 blocks.put(pos,level.getBlockState(pos));level.setBlockAndUpdate(pos,dy==-1?Blocks.STONE.defaultBlockState():Blocks.AIR.defaultBlockState());
             }
+            for(var player:current){
+                level.addNewPlayer(player);
+                check(level.getEntity(player.getUUID())==player&&!player.isRemoved(),"Fixture owner enters native entity lookup");
+            }
         }
         private static Object field(Class<?> type,String name,Object owner)throws ReflectiveOperationException{
             var field=type.getDeclaredField(name);field.setAccessible(true);return field.get(owner);
@@ -128,8 +132,12 @@ public final class BogatyrCommandGameTests {
             try{image=NbtIo.readCompressed(level.getServer().getWorldPath(LevelResource.PLAYER_DATA_DIR).resolve(old.getStringUUID()+".dat"),NbtAccounter.create(64L*1024*1024));}
             catch(IOException error){throw new IllegalStateException(error);}
             BogatyrActions.forget(old);ClassResourceService.forget(old);
+            level.removePlayerImmediately(old,Entity.RemovalReason.DISCARDED);
+            check(old.isRemoved()&&level.getEntity(old.getUUID())==null,"Native disconnect invalidates cached owner references");
             var next=create(old.getGameProfile());next.load(TagValueInput.create(ProblemReporter.DISCARDING,level.registryAccess(),image));
             online.remove(old);online.add(next);players.put(next.getUUID(),next);current.set(0,next);next.connection.player=next;next.setPos(origin);
+            level.addRespawnedPlayer(next);
+            check(level.getEntity(next.getUUID())==next&&!next.isRemoved(),"Reloaded owner replaces native UUID lookup");
         }
         CompoundTag savedWolf(Wolf wolf){
             try{
@@ -169,7 +177,9 @@ public final class BogatyrCommandGameTests {
             }catch(ReflectiveOperationException error){throw new IllegalStateException(error);}
             if(!directory.flushVerified(server))throw new IllegalStateException("Fixture companion cleanup");
             for(var player:current){
-                var id=player.getUUID();players.remove(id);online.removeIf(p->p.getUUID().equals(id));
+                var id=player.getUUID();level.removePlayerImmediately(player,Entity.RemovalReason.DISCARDED);
+                check(level.getEntity(id)==null,"Fixture owner leaves native entity lookup");
+                players.remove(id);online.removeIf(p->p.getUUID().equals(id));
                 if(advancements.get(id) instanceof net.minecraft.server.PlayerAdvancements progress)progress.stopListening();
                 stats.remove(id);advancements.remove(id);
             }
@@ -267,7 +277,9 @@ public final class BogatyrCommandGameTests {
             f.check(BogatyrCommands.reconcile(f.p())&&f.amount()==35,"Durable native outcome settles exactly one debit");
             f.reloadOwner();journal.put(f.p().getUUID(),pending);f.check(journal.flushVerified(),"Simulate crash after paid owner receipt before world acknowledgment");
             f.check(BogatyrCommands.reconcile(f.p())&&f.amount()==35,"Persisted owner receipt prevents replay debit");
-            f.check(wolf.getHealth()==wolf.getMaxHealth()&&f.pack().size()==1,"Recovery never replays entity effects or creates replacement wolves");
+            f.check(wolf.isOwnedBy(f.p())&&wolf.getOwner()==f.p(),"Cached native wolf owner resolves the current reloaded player");
+            f.check(wolf.getHealth()==wolf.getMaxHealth(),"Recovery preserves the already saved full-health outcome");
+            f.check(f.pack().size()==1,"Recovery never creates replacement wolves; loaded own pack="+f.pack().size());
             f.check(f.root().getStringOr("future_marker","").equals("preserved"),"Unknown owner fields survive payment");
             var prepared=pending.copy();prepared.putString("id",UUID.randomUUID().toString());prepared.putString("phase","prepared");
             prepared.put("ledger",f.ledger().image());prepared.putInt("cost",0);prepared.remove("outcomes");
@@ -282,7 +294,9 @@ public final class BogatyrCommandGameTests {
             var image=f.savedWolf(wolf);var bond=BogatyrIdentity.id(wolf);wolf.discard();
             f.check(BogatyrCompanionData.get(f.level.getServer()).find(bond).isPresent()&&f.pack().isEmpty(),"Unloaded active-run companion remains in its native directory without being a care target");
             var restored=f.readWolf(image);f.check(f.level.addFreshEntity(restored)&&!restored.isRemoved(),"Active-run native save reload remains accepted");
-            f.check(restored.isOwnedBy(f.p())&&BogatyrIdentity.id(restored).equals(bond)&&restored.getPersistentData().getStringOr("future_wolf_marker","").equals("preserved"),"Ordinary reload preserves owner, stable bond and unknown entity fields");
+            f.check(restored.isOwnedBy(f.p())&&restored.getOwner()==f.p(),"UUID-backed native wolf owner resolves the current fixture player");
+            f.check(BogatyrIdentity.id(restored).equals(bond),"Ordinary native reload preserves stable bond");
+            f.check(restored.getPersistentData().getStringOr("future_wolf_marker","").equals("preserved"),"Ordinary native reload preserves unknown entity fields");
             var nativeImage=f.savedWolf(restored);restored.discard();
             var data=BogatyrCompanionData.get(f.level.getServer());var entry=data.find(bond).orElseThrow();
             long oldRun=Long.MAX_VALUE-2391;f.check(!f.runs.containsKey(oldRun)&&!data.runRetired(oldRun),"Unique legacy source run");

@@ -38,7 +38,7 @@ public final class BogatyrCommands {
         for(var entry:BogatyrCompanionData.get(level.getServer()).forOwner(p.getUUID())){
             if(entry.run()!=run||!entry.dimension().equals(level.dimension().location().toString()))continue;
             if(level.getEntity(entry.entityUuid()) instanceof Wolf wolf&&wolf.isAlive()&&!wolf.isRemoved()&&wolf.isAddedToLevel()
-                    &&wolf.isTame()&&wolf.isOwnedBy(p)&&BogatyrWolfEvents.managed(wolf)&&BogatyrIdentity.id(wolf).equals(entry.wolf())
+                    &&wolf.isTame()&&p.getUUID().equals(BogatyrCompanions.owner(wolf))&&BogatyrWolfEvents.managed(wolf)&&BogatyrIdentity.id(wolf).equals(entry.wolf())
                     &&wolf.getPersistentData().getLongOr(BogatyrWolfEvents.RUN,0)==run&&!BogatyrRecovery.held(wolf))result.add(wolf);
         }
         result.sort(Comparator.comparing(Wolf::getUUID));return result;

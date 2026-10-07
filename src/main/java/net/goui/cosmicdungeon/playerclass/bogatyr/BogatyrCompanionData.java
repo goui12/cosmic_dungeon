@@ -87,10 +87,10 @@ public final class BogatyrCompanionData extends SavedData {
         if(!companions.containsKey(entry.wolf()))return;
         var archive=archives.get(entry.wolf());
         {
-            var audit=original.getCompoundOrEmpty("retired_records").copy();var record=new net.minecraft.nbt.CompoundTag();
+            var audit=original.getCompoundOrEmpty("retired_records").copy();var record=audit.getCompoundOrEmpty(entry.wolf().toString()).copy();
             var full=image();
             for(var value:full.getListOrEmpty("companions"))if(value instanceof net.minecraft.nbt.CompoundTag c&&c.getStringOr("wolf","").equals(entry.wolf().toString()))record.put("companion",c.copy());
-            record.put("archive",full.getCompoundOrEmpty("archives").getCompoundOrEmpty(entry.wolf().toString()).copy());
+            if(archive!=null)record.put("archive",full.getCompoundOrEmpty("archives").getCompoundOrEmpty(entry.wolf().toString()).copy());
             audit.put(entry.wolf().toString(),record);original.put("retired_records",audit);
         }
         identityHolds.remove(entry.dimension()+"|"+entry.entityUuid());

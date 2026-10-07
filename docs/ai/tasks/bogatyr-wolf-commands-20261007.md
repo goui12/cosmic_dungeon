@@ -59,6 +59,11 @@ independent review, then exact-source full clean CI/native GameTests. No datagen
 changed. Local compilation is not a gameplay test. Controller receipts record actual
 counts/source/CI/publication/deployment; this document does not pre-claim delivery.
 
+Initial CI passed the clean build and62/64 native cases; two new reload fixtures exposed
+missing native world-player registration in the test harness. The fixtures now register
+and remove actual player entities across reloads, retaining strict ownership/bond/no-replay
+assertions. Paid roster ownership uses saved UUIDs plus current server-player identity.
+
 Native/unit coverage targets partial care/cooldowns, full heal ordering, successful and
 rejected summon, loaded-only whole-affordability Regroup, duplicate/stale actions,
 native player/entity save pairing, exact settlement/no replay and run retirement with
