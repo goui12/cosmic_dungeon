@@ -267,12 +267,11 @@ public final class HelpMenuContent {
             HelpBlock.paragraph("A survivalist, cold-weather endurance racer, and hardened wolf-handler from the frozen Russian Federation reaches, the Bogatyr favors traditional weaponry and grit."),
             HelpBlock.bullet("Damage identity: fights alongside loyal wolf companions as a class role theme."),
             HelpBlock.bullet("Can use Bogatyr-attuned gear and class chests."),
-            HelpBlock.bullet("Tame wolves with bones. Active wolves count toward your pack limit, including unloaded pets; stored pets keep their bond without using an active slot."),
-            HelpBlock.command("Companion roster", "/d1 wolves [page]"),
-            HelpBlock.bullet("Append a companion ID from your roster to call or recover to choose that pet."),
-            HelpBlock.command("Recall a stored or main-world companion into your active D1 Bogatyr run", "/d1 wolves call"),
-            HelpBlock.command("Return a stored companion in the main world after reset", "/d1 wolves recover"),
-            HelpBlock.tip("One companion returns at a time. Stand on clear, solid ground; it returns seated.")));
+            HelpBlock.bullet("Tame wolves with bones or use Wolfpack Skills. Packs are uncapped and belong to the current dungeon run."),
+            HelpBlock.command("Living loaded Wolfpack count in this dungeon", "/d1 wolves"),
+            HelpBlock.bullet("Open inventory Skills for Breed, Summon, Regroup and Heal, with exact Kibble costs and affected counts."),
+            HelpBlock.tip("Active packs survive saves and reconnects. Completion, forfeit or reset ends the pack; old archives cannot be recalled.")));
+
 
     public static final Page DRAGOON = page("class.dragoon", "Dragoon", true, List.of(
             HelpBlock.heading("Dragoon"),

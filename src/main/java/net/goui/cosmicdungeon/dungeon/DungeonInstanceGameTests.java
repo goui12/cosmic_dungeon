@@ -83,6 +83,10 @@ public final class DungeonInstanceGameTests {
         suite.add(id("theurgist_crafting"),net.goui.cosmicdungeon.playerclass.theurgist.TheurgistActionGameTests::crafting);
         suite.add(id("theurgist_player_resurrection"),net.goui.cosmicdungeon.playerclass.theurgist.TheurgistActionGameTests::resurrection);
         suite.add(id("theurgist_revival_recovery"),net.goui.cosmicdungeon.playerclass.theurgist.TheurgistActionGameTests::recovery);
+        suite.add(id("bogatyr_care_breeding"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommandGameTests::careAndBreeding);
+        suite.add(id("bogatyr_summon_regroup"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommandGameTests::summonAndRegroup);
+        suite.add(id("bogatyr_command_save_recovery"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommandGameTests::commandSaveRecovery);
+        suite.add(id("bogatyr_run_retirement"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommandGameTests::runRetirement);
         return suite;
     }
 

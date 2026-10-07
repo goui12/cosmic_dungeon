@@ -22,6 +22,7 @@ public final class InventoryTransactionGuard {
     }
     public static boolean otherTransactionsReady(ServerPlayer p){return net.goui.cosmicdungeon.playerclass.theurgist.TheurgistRevival.beforeInventoryChange(p)&&net.goui.cosmicdungeon.playerclass.resource.SupplyTransfers.beforeInventoryChange(p)&&!net.goui.cosmicdungeon.playerclass.resource.ClassResourceService.blocked(p)&&!net.goui.cosmicdungeon.dungeon.ChopTravelRecovery.blocked(p)&&!net.goui.cosmicdungeon.economy.DeathCurrencyService.blocked(p)&&net.goui.cosmicdungeon.vendor.CommerceTransactions.beforeInventoryChange(p)&&RepairTransactions.beforeInventoryChange(p)&&TradeCustody.beforeInventoryChange(p);}
     public static boolean readyForCleanup(MinecraftServer server,List<UUID> owners){
+        if(!net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommands.readyForCleanup(server,owners))return false;
         if(!net.goui.cosmicdungeon.playerclass.theurgist.TheurgistRevival.readyForCleanup(server,owners))return false;
         if(!net.goui.cosmicdungeon.playerclass.resource.SupplyTransfers.readyForCleanup(server,owners))return false;
         if(!D1WatsonRecovery.readyForCleanup(server,owners))return false;

@@ -15,8 +15,8 @@ import net.minecraft.world.level.saveddata.SavedDataType;
 import java.util.*;
 
 /**
- * Permanent identity/location directory, independent of resettable D1 counters.
- * Location entries never recreate pets; separate verified archives preserve exact images across reset.
+ * Run identity/location directory with compatible legacy reads and durable retirement tombstones.
+ * Active native entities survive saves; retired archive audit images can never recreate pets.
  */
 public final class BogatyrCompanionData extends SavedData {
     public record Companion(UUID wolf, UUID owner, long run, String dimension, long position, boolean located, UUID entityUuid) {
@@ -34,11 +34,76 @@ public final class BogatyrCompanionData extends SavedData {
         ).apply(i,(wolf,owner,run,dimension,position,located,physical)->
                 new Companion(wolf,owner,run,dimension,position,located,physical.orElse(wolf))));
     }
-    private static final Codec<BogatyrCompanionData> CODEC=RecordCodecBuilder.create(i->i.group(
+    private static final Codec<BogatyrCompanionData> KNOWN_CODEC=RecordCodecBuilder.create(i->i.group(
             Companion.CODEC.listOf().optionalFieldOf("companions",List.of()).forGetter((BogatyrCompanionData d)->List.copyOf(d.companions.values())),
             Codec.unboundedMap(UUIDUtil.STRING_CODEC,WolfArchive.CODEC).optionalFieldOf("archives",Map.of()).forGetter((BogatyrCompanionData d)->d.archives),
             Codec.STRING.listOf().optionalFieldOf("identity_holds",List.of()).forGetter((BogatyrCompanionData d)->List.copyOf(d.identityHolds))
     ).apply(i,BogatyrCompanionData::load));
+    private net.minecraft.nbt.CompoundTag original=new net.minecraft.nbt.CompoundTag();
+    private final Set<Long> retiredRuns=new LinkedHashSet<>();
+    static final Codec<BogatyrCompanionData> CODEC=net.minecraft.nbt.CompoundTag.CODEC.comapFlatMap(tag->{
+        try{
+            var data=KNOWN_CODEC.parse(NbtOps.INSTANCE,tag).getOrThrow();data.original=tag.copy();
+            if(tag.contains("retired_runs")){
+                if(!(tag.get("retired_runs") instanceof net.minecraft.nbt.ListTag list))throw new IllegalArgumentException("Invalid retired runs");
+                for(var value:list){
+                    if(!(value instanceof net.minecraft.nbt.LongTag id)||id.longValue()<=0)throw new IllegalArgumentException("Invalid retired run");
+                    data.retiredRuns.add(id.longValue());
+                }
+            }
+            return com.mojang.serialization.DataResult.success(data);
+        }catch(Exception error){return com.mojang.serialization.DataResult.error(()->error.toString());}
+    },BogatyrCompanionData::image);
+    /** Overlay known values on the original image, including unknown per-record/archive fields. */
+    net.minecraft.nbt.CompoundTag image(){
+        var next=original.copy();var known=(net.minecraft.nbt.CompoundTag)KNOWN_CODEC.encodeStart(NbtOps.INSTANCE,this).getOrThrow();
+        var oldEntries=new HashMap<String,net.minecraft.nbt.CompoundTag>();
+        for(var value:original.getListOrEmpty("companions"))if(value instanceof net.minecraft.nbt.CompoundTag entry)
+            oldEntries.put(entry.getStringOr("wolf",""),entry);
+        var entries=new net.minecraft.nbt.ListTag();
+        for(var value:known.getListOrEmpty("companions")){
+            var entry=(net.minecraft.nbt.CompoundTag)value;
+            var merged=oldEntries.getOrDefault(entry.getStringOr("wolf",""),new net.minecraft.nbt.CompoundTag()).copy();
+            for(var key:List.of("wolf","owner","run","dimension","position","located","entity_uuid"))merged.remove(key);
+            merged.merge(entry);entries.add(merged);
+        }
+        next.put("companions",entries);
+        var archives=new net.minecraft.nbt.CompoundTag();var oldArchives=original.getCompoundOrEmpty("archives");
+        var newArchives=known.getCompoundOrEmpty("archives");
+        for(var key:newArchives.keySet()){
+            var merged=oldArchives.getCompoundOrEmpty(key).copy();
+            for(var field:List.of("phase","transaction","run","source_dimension","source_position","target_dimension","target_position","entity","target_run"))merged.remove(field);
+            merged.merge(newArchives.getCompoundOrEmpty(key));archives.put(key,merged);
+        }
+        next.put("archives",archives);next.put("identity_holds",known.getListOrEmpty("identity_holds").copy());
+        var retired=new net.minecraft.nbt.ListTag();retiredRuns.forEach(id->retired.add(net.minecraft.nbt.LongTag.valueOf(id)));
+        next.put("retired_runs",retired);return next;
+    }
+    public List<Companion> entries(){return List.copyOf(companions.values());}
+    public boolean runRetired(long run){return retiredRuns.contains(run);}
+    public void markRunRetired(long run){if(run>0&&retiredRuns.add(run))setDirty();}
+    /** Retained audit images can never be delivered and do not participate in active indices. */
+    public void retireRecord(Companion entry){
+        if(!companions.containsKey(entry.wolf()))return;
+        var archive=archives.get(entry.wolf());
+        {
+            var audit=original.getCompoundOrEmpty("retired_records").copy();var record=new net.minecraft.nbt.CompoundTag();
+            var full=image();
+            for(var value:full.getListOrEmpty("companions"))if(value instanceof net.minecraft.nbt.CompoundTag c&&c.getStringOr("wolf","").equals(entry.wolf().toString()))record.put("companion",c.copy());
+            record.put("archive",full.getCompoundOrEmpty("archives").getCompoundOrEmpty(entry.wolf().toString()).copy());
+            audit.put(entry.wolf().toString(),record);original.put("retired_records",audit);
+        }
+        identityHolds.remove(entry.dimension()+"|"+entry.entityUuid());
+        if(archive!=null)identityHolds.remove(archive.targetDimension()+"|"+entry.wolf());
+        release(entry.wolf(),entry.owner());setDirty();
+    }
+    public void retireArchive(UUID wolf){
+        if(!archives.containsKey(wolf))return;
+        var audit=original.getCompoundOrEmpty("retired_records").copy();var record=audit.getCompoundOrEmpty(wolf.toString()).copy();
+        record.put("archive",image().getCompoundOrEmpty("archives").getCompoundOrEmpty(wolf.toString()).copy());
+        audit.put(wolf.toString(),record);original.put("retired_records",audit);
+        setArchive(wolf,null);setDirty();
+    }
     private static final SavedDataType<BogatyrCompanionData> TYPE=new SavedDataType<>(
             "cosmicdungeon_bogatyr_companions_v1",BogatyrCompanionData::new,CODEC);
     private static final Set<MinecraftServer> VALIDATED=Collections.newSetFromMap(new WeakHashMap<>());
@@ -101,7 +166,7 @@ public final class BogatyrCompanionData extends SavedData {
     public boolean flushVerified(MinecraftServer server){
         try{
             setDirty();server.overworld().getDataStorage().saveAndJoin();
-            var saved=read(server);return companions.equals(saved.companions)&&archives.equals(saved.archives)&&identityHolds.equals(saved.identityHolds);
+            var saved=read(server);return image().equals(saved.image());
         }catch(Exception error){
             com.mojang.logging.LogUtils.getLogger().error("Companion directory save not verified; retaining run roster",error);
             setDirty();return false;

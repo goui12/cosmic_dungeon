@@ -1,30 +1,33 @@
 # Current rollout, 2026-10-07
 
-Batch22: player Theurgist potion crafting and resurrection, target **1.6.12-alpha.1**,
-on feature/player-theurgist-actions-20261007. Baseline is Batch21 source
-a039d8a633a44a1f67efc4f938f962583de85ce4; Set C remains unmerged until26.
+Batch23: Bogatyr Wolfpack paid care and run-only lifecycle, target **1.6.13-alpha.1**,
+on feature/bogatyr-wolf-commands-20261007. Baseline is Batch22 source
+e1b00cff0f45cb1d611636f683af3cb52f7012e0; Set C remains unmerged until26.
 Exact completion/source/CI/publication/TEST facts live in
-BatchRunner/receipts/batch-22.json and linked evidence.
-Batch21 completed:1.6.11-alpha.1, PR239 open, full CI37658333150,
-CurseForge main9091176/helper9091174, stopped TEST sFTP installed.
-This source note does not pre-claim Batch22 delivery.
+BatchRunner/receipts/batch-23.json and linked evidence.
+Batch22 completed:1.6.12-alpha.1, PR240 open, full CI37667874244,
+CurseForge main9091758/helper9091757, stopped TEST sFTP installed.
+This source note does not pre-claim Batch23 delivery.
 
-Players craft normal20/epic40 positive physical splash potions through Skills;
-full inventories lose no resources. Throw-time Theurgist attribution prevents
-positive effects on hostiles while retaining allies, pets and mercenaries, manual
-negative brewing and other classes. Living Theurgists offer same-run teammates
-resurrection; the dead player accepts/declines. Only successful acceptance costs120,
-with no player cooldown or extra level gate. Shared native latest-death tokens,
-position/protection and pending owner save proofs prevent duplicate respawn/debit.
+Bogatyr Skills previews exact counts and Kibble costs for Breed5, Summon30,
+Regroup1 and Heal5. Breed/Heal support affordable subsets; Regroup requires the
+whole affected loaded pack's cost, stays in the current dimension and loads no
+chunks. Failed/no-op actions cost nothing. Wolves mate natively; own pups are tame.
+Ten equal wolf rows reuse the movable/minimized Skills panel; six mode rows remain
+disabled for24-25. No measured reason supports a cap, so packs remain uncapped.
 
-Licensed GUI, co-op/world and CurseForge app acceptance remain pending TESTING.
-Delivery ends after CurseForge and stopped TEST sFTP. No local-client installation,
-post-publication artifact hashes or routine legacy-feed audit.
-[Exact scope/files/QA](tasks/player-theurgist-actions-20261007.md).
+Active packs retain native save/load. Completion/forfeit/reset retire run ownership
+before cleanup; late native wolves from ended runs are discarded. Legacy archive
+delivery is retired, with old images preserved as non-deliverable audit records.
+Commands use native entity save proofs and exact owner debits; ambiguous interrupted
+preparation stays held for review without automatic replay/refund.
+
+Licensed visual/co-op, natural pathfinding and actual OS/disk-fault acceptance remain
+pending TESTING. Delivery ends after CurseForge and stopped TEST sFTP.
+[Exact scope/files/QA](tasks/bogatyr-wolf-commands-20261007.md).
 [Approved plan](PARTY_SKILLS_BATCHES_20261006.md).
 
-**After Batch22 completes,4 planned batches remain (23-26); stop after22.**
-- 23: paid wolf commands and run-only pack lifecycle.
+**After Batch23 completes,3 planned batches remain (24-26); stop after23.**
 - 24: core wolf modes.
 - 25: advanced wolf modes and performance.
 - 26: integration and final set Beta.

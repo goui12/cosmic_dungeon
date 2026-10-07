@@ -20,20 +20,21 @@ public final class ClassResourceClient {
     private ClassResourceClient(){}
     public static void receive(ClassResourceSnapshot snapshot){install();STATE.receive(Objects.requireNonNull(snapshot));}
     public static void recycleAction(Consumer<ClassResourceSnapshot> callback){sender=Objects.requireNonNull(callback);install();}
-    public static void clear(){STATE.clear();TheurgistClient.clear();}
+    public static void clear(){STATE.clear();TheurgistClient.clear();BogatyrClient.clear();}
     private static void install(){
         if(installed)return;installed=true;
         for(String id:new String[]{"theurgist","bogatyr"})SkillsPanelClient.register(id,new SkillsPanelClient.Provider(){
             @Override public SkillsPanelModel view(LocalPlayer player){
                 var base=ClassResourcePresentation.panel(id,STATE.snapshot(),STATE.awaitingAction()||sender==null,
                         SupplyRequestsClient.canRequest(STATE.snapshot()));
-                return id.equals("theurgist")?TheurgistClient.augment(base):base;
+                return id.equals("theurgist")?TheurgistClient.augment(base):BogatyrClient.augment(base);
             }
             @Override public void activate(LocalPlayer player,String action){
                 if(!ClassData.getClassId(player).equals(id))return;
                 if(action.equals("request_supplies")&&SupplyRequestsClient.canRequest(STATE.snapshot()))SupplyRequestsClient.request();
                 else if(sender!=null&&action.equals("recycle"))STATE.recycle(id).ifPresent(sender);
                 else if(id.equals("theurgist"))TheurgistClient.activate(action);
+                else if(id.equals("bogatyr"))BogatyrClient.activate(action);
             }
         });
     }

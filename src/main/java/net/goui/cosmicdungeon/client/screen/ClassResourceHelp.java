@@ -41,6 +41,12 @@ public final class ClassResourceHelp {
             result.add(HelpMenuContent.HelpBlock.paragraph("Your positive thrown potions benefit allies, their pets and mercenaries, but do not affect hostile mobs, including healing damage against undead. You can still manually brew negative potions at a brewing stand."));
             result.add(HelpMenuContent.HelpBlock.paragraph("When a teammate dies, open your inventory and choose Resurrect <player>. Their death screen offers Accept and Decline. Successful acceptance spends 120 of your Brewing Supplies and returns them to their latest death position with five seconds of protection. There is no player cooldown or extra skill-level requirement; you must remain alive in the same active dungeon and able to pay. Declined, stale and failed offers cost nothing. Mercenary resurrection keeps its separate level and cooldown."));
         }
+        if(kind==ClassResourceKind.KIBBLE){
+            result.add(HelpMenuContent.HelpBlock.heading("Wolfpack"));
+            result.add(HelpMenuContent.HelpBlock.paragraph("Breed spends 5 Kibble per healthy eligible adult placed in love mode, including an affordable single wolf. Pups are yours and tame; juveniles and breeding cooldowns are respected. Wolves stand up and mate naturally."));
+            result.add(HelpMenuContent.HelpBlock.paragraph("Summon spends 30 Kibble for one successfully placed tamed wolf. Regroup costs 1 per living loaded wolf moved in your current dungeon and requires enough for the whole affected pack. It never retrieves unloaded, dead, archived or other-dimension wolves. Heal costs 5 per injured living loaded wolf, fully healing the lowest health first as far as your balance allows."));
+            result.add(HelpMenuContent.HelpBlock.paragraph("Buttons preview the exact affected count and total cost. Changed eligibility refreshes the preview; failed actions cost nothing. Packs remain uncapped and last only for this dungeon run. Normal saves and reconnects retain active packs; completion, forfeit and reset retire them. The six mode buttons are currently unavailable."));
+        }
         result.add(HelpMenuContent.HelpBlock.heading("Convertible supplies"));
         for(var name:items)result.add(new HelpMenuContent.HelpBlock(HelpMenuContent.Kind.BULLET,Component.empty(),name.copy()));
         if(items.isEmpty())result.add(HelpMenuContent.HelpBlock.paragraph("No convertible supplies are enabled by this server."));
