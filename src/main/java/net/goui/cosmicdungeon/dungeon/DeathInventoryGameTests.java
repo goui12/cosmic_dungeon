@@ -20,7 +20,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameRules;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 
 /** Native death/drop/pickup coverage for latest-death organization. */
@@ -31,7 +30,8 @@ public final class DeathInventoryGameTests {
         final GameTestHelper helper;
         final ServerLevel level;
         final long runId;
-        final ServerPlayer player;
+        ServerPlayer player;
+        final io.netty.channel.embedded.EmbeddedChannel channel = new io.netty.channel.embedded.EmbeddedChannel();
         final D1RunData data;
         final Map<Long, DungeonRunRegistryData.RunRecord> runs;
         final Map<UUID, ServerPlayer> players;
@@ -43,7 +43,29 @@ public final class DeathInventoryGameTests {
             this.runId = runId;
             level = helper.getLevel();
             var server = level.getServer();
-            player = FakePlayerFactory.get(level, new GameProfile(UUID.randomUUID(), "DeathLayoutTest"));
+            var profile = new GameProfile(UUID.randomUUID(), "DeathLayoutTest");
+            // FakePlayer overrides die; use the real ServerPlayer lifecycle with an in-memory connection.
+            player = new ServerPlayer(server, level, profile, net.minecraft.server.level.ClientInformation.createDefault());
+            var connection = new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND) {
+                @Override public io.netty.channel.Channel channel() { return channel; }
+                @Override public boolean isConnected() { return true; }
+            };
+            net.neoforged.neoforge.network.registration.ChannelAttributes.setConnectionType(connection,
+                    net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
+            net.neoforged.neoforge.network.registration.ChannelAttributes.setPayloadSetup(connection,
+                    net.neoforged.neoforge.network.registration.NetworkPayloadSetup.empty());
+            player.connection = new net.minecraft.server.network.ServerGamePacketListenerImpl(server, connection, player,
+                    net.minecraft.server.network.CommonListenerCookie.createInitial(profile, false)) {
+                @Override public void send(net.minecraft.network.protocol.Packet<?> packet) {}
+                @Override public void send(net.minecraft.network.protocol.Packet<?> packet,
+                        io.netty.channel.ChannelFutureListener listener) {}
+                @Override public void resetPosition() {}
+                @Override public void teleport(double x, double y, double z, float yaw, float pitch) {}
+            };
+            var classTag = new net.minecraft.nbt.CompoundTag();
+            classTag.putString(net.goui.cosmicdungeon.playerclass.api.ClassData.KEY_CLASS_ID, "metalmancer");
+            classTag.putBoolean("run_temp", true);
+            player.getPersistentData().put(net.goui.cosmicdungeon.playerclass.api.ClassData.ROOT_TAG, classTag);
             player.connection.player = player;
             player.setPos(helper.absoluteVec(new net.minecraft.world.phys.Vec3(.5, 10.5, .5)));
             try {
@@ -68,6 +90,8 @@ public final class DeathInventoryGameTests {
             players.put(player.getUUID(), player);
             online.add(player);
             data = D1RunData.get(server);
+            check(net.goui.cosmicdungeon.mercenary.MercenaryResurrection.activeRun(player) != null,
+                    "Fixture player must be an eligible connected run member");
         }
 
         void check(boolean condition, String message) {
@@ -85,6 +109,7 @@ public final class DeathInventoryGameTests {
             if (!player.isRemoved()) level.removePlayerImmediately(player, Entity.RemovalReason.DISCARDED);
             runs.remove(runId);
             data.clearRun(runId);
+            channel.finishAndReleaseAll();
         }
     }
 
@@ -155,8 +180,13 @@ public final class DeathInventoryGameTests {
                 f.player.setHealth(f.player.getMaxHealth());
                 f.check(DeathInventoryRecovery.beginPickup(f.player, diamond) != null,
                         "Latest physical drop should remain eligible after life is restored");
-                net.goui.cosmicdungeon.mercenary.MercenaryResurrection.respawned(
-                        new net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerRespawnEvent(f.player, false));
+                var deathPosition = f.player.position();
+                f.player.setHealth(0);
+                f.player = server.getPlayerList().respawn(f.player, false, Entity.RemovalReason.KILLED);
+                f.player.connection.player = f.player;
+                f.player.setPos(deathPosition);
+                f.check(DeathInventoryLayout.read(f.data, f.runId, f.player).death().equals(same),
+                        "Normal native respawn must preserve latest-death layout");
                 f.player.getInventory().setItem(8, new ItemStack(Items.APPLE));
                 f.player.setHealth(0);
                 f.player.die(f.player.damageSources().generic());
@@ -267,6 +297,7 @@ public final class DeathInventoryGameTests {
             try {
                 keep.set(false, f.level.getServer());
                 f.player.getInventory().setItem(15, new ItemStack(Items.EMERALD, 5));
+                f.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD, new ItemStack(Items.IRON_HELMET));
                 f.player.setHealth(0);
                 f.player.die(f.player.damageSources().generic());
                 var death = MercenaryResurrectionState.death(f.data, f.runId, f.player.getUUID());
@@ -286,6 +317,10 @@ public final class DeathInventoryGameTests {
                 f.check(DeathInventoryRecovery.beginPickup(f.player, unmarked) == null
                                 && !DeathInventoryRecovery.mayMerge(emerald, unmarked),
                         "Another owner's drops cannot be organized or merged as this owner's");
+                f.player.containerMenu = net.minecraft.world.inventory.ChestMenu.threeRows(7, f.player.getInventory());
+                f.check(DeathInventoryRecovery.beginPickup(f.player, emerald) == null,
+                        "An open external inventory menu must block optional organization");
+                f.player.containerMenu = f.player.inventoryMenu;
                 f.player.inventoryMenu.setCarried(new ItemStack(Items.STONE));
                 f.check(DeathInventoryRecovery.beginPickup(f.player, emerald) == null,
                         "Cursor custody must block optional organization");
@@ -295,6 +330,12 @@ public final class DeathInventoryGameTests {
                                 && f.player.getInventory().getItem(15).isEmpty(),
                         "Unsafe organization must still allow ordinary native pickup");
                 f.player.inventoryMenu.setCarried(ItemStack.EMPTY);
+                var helmet = f.level.getEntitiesOfClass(ItemEntity.class, f.player.getBoundingBox().inflate(4),
+                        item -> item.getItem().is(Items.IRON_HELMET)).stream().findFirst().orElseThrow();
+                helmet.setNoPickUpDelay();
+                helmet.playerTouch(f.player);
+                f.check(f.player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.HEAD).is(Items.IRON_HELMET),
+                        "Actual recovered armor must re-equip through valid slot placement rules");
             } finally {
                 keep.set(oldKeep, f.level.getServer());
                 f.level.getEntitiesOfClass(ItemEntity.class, f.player.getBoundingBox().inflate(8)).forEach(Entity::discard);
