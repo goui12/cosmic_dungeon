@@ -1,4 +1,4 @@
 package net.goui.cosmicdungeon.playerclass.bogatyr;
 
-/** Only approved core modes have wire IDs; future controls cannot request an unfinished behavior. */
-public enum WolfMode { DEFENSIVE, STAND_GROUND, AGGRESSIVE }
+/** Append-only wire/save identities; existing core selections retain their meanings. */
+public enum WolfMode { DEFENSIVE, STAND_GROUND, AGGRESSIVE, STRATEGIC, SEARCH_AND_RESCUE, DANGER_CLOSE }

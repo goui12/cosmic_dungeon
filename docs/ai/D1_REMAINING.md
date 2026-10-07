@@ -1,32 +1,32 @@
 # Current rollout, 2026-10-07
 
-Batch24: Bogatyr core wolf modes, target **1.6.14-alpha.1**, on
-feature/bogatyr-core-modes-20261007. Baseline is Batch23
-43f6f31151360df64ea247833bb33b8c44d82005; Set C remains unmerged until26.
+Batch25: Bogatyr advanced wolf modes, target **1.6.15-alpha.1**, on
+feature/bogatyr-advanced-modes-20261007. Baseline is Batch24
+810c141471a3e9a6220961d17afdac79337726cf; Set C remains unmerged until26.
 Exact completion/source/CI/publication/TEST facts live in
-BatchRunner/receipts/batch-24.json and linked evidence.
-Batch23 completed:1.6.13-alpha.1, PR241 open, full CI37686135307,
-CurseForge main9093095/helper9093094, stopped TEST sFTP installed.
-This source note does not pre-claim Batch24 delivery.
+BatchRunner/receipts/batch-25.json and linked evidence.
+Batch24 completed:1.6.14-alpha.1, PR242 open, full CI37692343676,
+CurseForge main9093717/helper9093715, stopped TEST sFTP installed.
+This source note does not pre-claim Batch25 delivery.
 
-Defensive protects the master and reacts to attacks on the pack. Stand Ground
-immediately clears movement/target/retaliation and remains sitting under attack.
-Aggressive attacks hostiles nearest the master and works outward. Another core mode
-stands wolves up. Mode changes are free, authoritative and selected with one border.
-Breed is disabled during Stand Ground; existing paid care/run-only lifecycle remains.
+All six free modes use the existing authoritative selection. Strategic prioritizes
+ranged enemies then maximum health. Search and Rescue protects nearby current-run
+party players at3 hearts or less, interposes and redirects actual attackers.
+Companionship heals1 heart/5seconds per guarded player, never multiplied by pack size.
+Danger Close constrains paths to16 blocks from the moving master, retains an eligible
+current kill, then prioritizes threats to the master.
 
-Owner/run mode records preserve old saves and unknown fields; native normal saves
-retain selection and unloaded wolves apply it on return. Target scans and heavy paths
-are bounded and staggered around one second. Packs remain uncapped; the three advanced
-mode rows remain disabled for25.
+Owner-shared, staggered decisions and path budgets separate heavy work from cheap
+boundary checks. Native CI compares1/30/120-wolf samples against Aggressive; exact
+measurement receipts retain the counters/timing and limits. Packs remain uncapped.
+Old saves/unknown fields and authored content remain intact.
 
 Licensed visual/co-op and natural pathfinding acceptance remain pending TESTING.
 Delivery ends after CurseForge and stopped TEST sFTP.
-[Exact scope/files/QA](tasks/bogatyr-core-modes-20261007.md).
+[Exact scope/files/QA](tasks/bogatyr-advanced-modes-20261007.md).
 [Approved plan](PARTY_SKILLS_BATCHES_20261006.md).
 
-**After Batch24 completes,2 planned batches remain (25-26); stop after24.**
-- 25: advanced wolf modes and performance.
+**After Batch25 completes,1 planned batch remains (26); stop after25.**
 - 26: integration and final set Beta.
 
 ---

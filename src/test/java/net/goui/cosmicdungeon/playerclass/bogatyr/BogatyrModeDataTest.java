@@ -67,7 +67,7 @@ final class BogatyrModeDataTest {
         var wrongEntry=validRoot();wrongEntry.getCompoundOrEmpty(WolfModeData.KEY).putInt(OWNER+"/24",7);
         var missingMode=validRoot();missingMode.getCompoundOrEmpty(WolfModeData.KEY).getCompoundOrEmpty(OWNER+"/24").remove("mode");
         var wrongMode=validRoot();wrongMode.getCompoundOrEmpty(WolfModeData.KEY).getCompoundOrEmpty(OWNER+"/24").putInt("mode",0);
-        var futureMode=validRoot();futureMode.getCompoundOrEmpty(WolfModeData.KEY).getCompoundOrEmpty(OWNER+"/24").putString("mode","STRATEGIC");
+        var futureMode=validRoot();futureMode.getCompoundOrEmpty(WolfModeData.KEY).getCompoundOrEmpty(OWNER+"/24").putString("mode","FUTURE_MODE_26");
         for(var root:List.of(wrongRoot,futureSchema,absentSchema,badSchema,wrongEntry,missingMode,wrongMode,futureMode)){
             var bytes=bytes(root);
             assertEquals(new WolfModeData.State(WolfMode.STAND_GROUND,false),WolfModeData.read(root,OWNER,24));

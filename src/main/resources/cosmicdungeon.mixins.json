@@ -31,6 +31,7 @@
     "BogatyrSitMixin",
     "BogatyrDamageMixin",
     "BogatyrMeleeMixin",
+    "BogatyrNavigationMixin",
     "BogatyrFollowMixin",
     "BogatyrBreedMixin",
     "D1ArrowMixin",

@@ -716,5 +716,6 @@
   "advancements.cosmicdungeon.achievements.dungeon_1_insane.title": "Dungeon 1: Insane",
   "advancements.cosmicdungeon.achievements.dungeon_1_insane.desc": "Complete Dungeon 1 on Insane difficulty or higher.",
   "advancements.cosmicdungeon.achievements.dungeon_1_ridiculous.title": "Dungeon 1: Ridiculous",
-  "advancements.cosmicdungeon.achievements.dungeon_1_ridiculous.desc": "Complete Dungeon 1 on Ridiculous difficulty or higher."
+  "advancements.cosmicdungeon.achievements.dungeon_1_ridiculous.desc": "Complete Dungeon 1 on Ridiculous difficulty or higher.",
+  "effect.cosmicdungeon.companionship": "Companionship"
 }

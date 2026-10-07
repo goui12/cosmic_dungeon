@@ -32,7 +32,7 @@ import net.minecraft.world.phys.Vec3;
 /** Synchronous native entity/player saves in one already loaded chunk; fixture owners and blocks are restored. */
 public final class BogatyrCommandGameTests {
     private BogatyrCommandGameTests(){}
-    private static final class Fixture implements AutoCloseable {
+    static final class Fixture implements AutoCloseable {
         final GameTestHelper helper;final ServerLevel level;final Vec3 origin;final long run;
         final List<ServerPlayer> current=new ArrayList<>(),owned=new ArrayList<>(),online;
         final Map<Long,DungeonRunRegistryData.RunRecord> runs;final Map<UUID,ServerPlayer> players;
@@ -120,7 +120,7 @@ public final class BogatyrCommandGameTests {
             wolf.tame(current.get(owner));BogatyrIdentity.fresh(wolf);
             wolf.getPersistentData().putLong(BogatyrWolfEvents.RUN,run);
             wolf.getPersistentData().putString(BogatyrWolfEvents.OWNER,current.get(owner).getStringUUID());
-            wolf.snapTo(origin.x+dx,origin.y,origin.z+dz,0,0);wolf.setNoAi(true);
+            wolf.snapTo(origin.x+dx,origin.y,origin.z+dz,0,0);wolf.setNoAi(true);wolf.setOnGround(true);
             wolf.setOrderedToSit(false);wolf.setInSittingPose(false);wolf.setAge(age);
             check(level.addFreshEntity(wolf)&&wolf.isAddedToLevel()&&!wolf.isRemoved(),"Native wolf accepted in loaded fixture chunk");
             BogatyrWolfEvents.register(wolf,current.get(owner).getUUID(),run);wolf.setHealth(wolf.getMaxHealth());
@@ -158,7 +158,7 @@ public final class BogatyrCommandGameTests {
         void check(boolean condition,String message){helper.assertTrue(condition,Component.literal(message));}
         @Override @SuppressWarnings("unchecked") public void close(){
             var server=level.getServer();var directory=BogatyrCompanionData.get(server);
-            for(var player:owned){BogatyrActions.forget(player);ClassResourceService.forget(player);}
+            for(var player:owned){BogatyrActions.forget(player);ClassResourceService.forget(player);BogatyrRescue.forget(player);}
             for(var player:current)for(var entry:directory.forOwner(player.getUUID())){
                 if(entry.run()!=run&&!extraRuns.contains(entry.run()))throw new IllegalStateException("Foreign fixture wolf");
                 bonds.add(entry.wolf());if(level.getEntity(entry.entityUuid()) instanceof Wolf wolf)wolf.discard();

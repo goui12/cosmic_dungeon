@@ -8,7 +8,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
-/** Four bounded server quotes; a client can only request the captured generation. */
+/** Four bounded care quotes and six mode IDs; clients can only request the captured generation. */
 public final class BogatyrPayloads {
     public enum Kind { BREED,SUMMON,REGROUP,HEAL }
     public record Quote(int count,int cost,boolean enabled){

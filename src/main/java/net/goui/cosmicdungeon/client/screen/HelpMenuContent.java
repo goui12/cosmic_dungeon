@@ -271,6 +271,8 @@ public final class HelpMenuContent {
             HelpBlock.command("Living loaded Wolfpack count in this dungeon", "/d1 wolves"),
             HelpBlock.bullet("Open inventory Skills for Breed, Summon, Regroup and Heal, with exact Kibble costs and affected counts."),
             HelpBlock.bullet("Free modes: Defensive protects the master and pack; Stand Ground sits and holds even under attack; Aggressive attacks nearby hostiles nearest the master first."),
+            HelpBlock.bullet("Strategic prioritizes ranged enemies, then maximum health. Search and Rescue protects nearby party players at 3 hearts or less; Companionship restores 1 heart every 5 seconds per guarded player."),
+            HelpBlock.bullet("Danger Close stays within 16 blocks of the moving master, finishes an eligible current target, then prioritizes threats to the master."),
             HelpBlock.tip("Select another mode to stand up. Breed is unavailable during Stand Ground. Your mode is saved with the current run."),
             HelpBlock.tip("Active packs survive saves and reconnects. Completion, forfeit or reset ends the pack; old archives cannot be recalled.")));
 

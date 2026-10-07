@@ -17,11 +17,12 @@ public final class BogatyrModes {
     private static final Map<Wolf,WolfMode> APPLIED=new WeakHashMap<>();
     private BogatyrModes(){}
     public static void clear(){APPLIED.clear();}
-    public static WolfMode mode(Wolf wolf){
+    private static WolfMode savedMode(Wolf wolf){
         if(!(wolf.level() instanceof ServerLevel level)||!BogatyrWolfEvents.managed(wolf))return WolfMode.DEFENSIVE;
         return BogatyrCompanionData.get(level.getServer()).mode(BogatyrCompanions.owner(wolf),
                 wolf.getPersistentData().getLongOr(BogatyrWolfEvents.RUN,0)).mode();
     }
+    public static WolfMode mode(Wolf wolf){var value=APPLIED.get(wolf);return value==null?savedMode(wolf):value;}
     public static boolean standing(Wolf wolf){
         return wolf.level() instanceof ServerLevel&&BogatyrWolfEvents.managed(wolf)&&mode(wolf)==WolfMode.STAND_GROUND;
     }
@@ -43,19 +44,20 @@ public final class BogatyrModes {
     }
     static void apply(Wolf wolf,boolean command){
         if(!(wolf.level() instanceof ServerLevel)||!BogatyrWolfEvents.managed(wolf))return;
-        var mode=mode(wolf);var old=APPLIED.put(wolf,mode);
+        var mode=savedMode(wolf);var old=APPLIED.put(wolf,mode);
         if(command||old!=mode){
             wolf.targetSelector.getAvailableGoals().stream().filter(net.minecraft.world.entity.ai.goal.WrappedGoal::isRunning).forEach(net.minecraft.world.entity.ai.goal.WrappedGoal::stop);
             wolf.goalSelector.getAvailableGoals().stream().filter(net.minecraft.world.entity.ai.goal.WrappedGoal::isRunning).filter(g->g.getFlags().contains(Goal.Flag.MOVE)||g.getFlags().contains(Goal.Flag.JUMP))
                     .forEach(net.minecraft.world.entity.ai.goal.WrappedGoal::stop);
             wolf.getNavigation().stop();wolf.setTarget(null);wolf.stopBeingAngry();
             wolf.setLastHurtByMob(null);wolf.setLastHurtMob(null);
-            BogatyrThreats.reset(wolf);
+            BogatyrThreats.reset(wolf);wolf.getNavigation().updatePathfinderMaxVisitedNodes();
             if(mode!=WolfMode.STAND_GROUND&&(command||old==WolfMode.STAND_GROUND)){
                 wolf.setOrderedToSit(false);wolf.setInSittingPose(false);
             }
         }
         if(mode==WolfMode.STAND_GROUND)hold(wolf);
+        else {BogatyrBoundary.check(wolf);BogatyrRescue.tickWolf(wolf);}
     }
     public static void hold(Wolf wolf){
         wolf.getNavigation().stop();wolf.setTarget(null);wolf.stopBeingAngry();

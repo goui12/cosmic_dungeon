@@ -90,6 +90,11 @@ public final class DungeonInstanceGameTests {
         suite.add(id("bogatyr_mode_stand_ground"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommandGameTests::modeStandGround);
         suite.add(id("bogatyr_mode_targets"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommandGameTests::modeTargets);
         suite.add(id("bogatyr_mode_persistence"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommandGameTests::modePersistenceAuthority);
+        suite.add(id("bogatyr_strategic"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrTacticsGameTests::strategic);
+        suite.add(id("bogatyr_rescue"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrTacticsGameTests::rescue);
+        suite.add(id("bogatyr_companionship"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrTacticsGameTests::companionship);
+        suite.add(id("bogatyr_danger_close"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrTacticsGameTests::dangerClose);
+        suite.add(id("bogatyr_work_scaling"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrTacticsGameTests::workScaling);
         return suite;
     }
 

@@ -25,11 +25,15 @@ public final class BogatyrClient {
             "Fully heal injured, living, loaded wolves you own, starting with the lowest health. Costs 5 Kibble per wolf; heal as many as you can afford.");
     private static final List<String> MODES=List.of("Defensive","Stand Ground","Aggressive",
             "Strategic","Search and Rescue","Danger Close");
-    private static final List<WolfMode> CORE_MODES=List.of(WolfMode.DEFENSIVE,WolfMode.STAND_GROUND,WolfMode.AGGRESSIVE);
+    private static final List<WolfMode> MODE_KEYS=List.of(WolfMode.DEFENSIVE,WolfMode.STAND_GROUND,WolfMode.AGGRESSIVE,
+            WolfMode.STRATEGIC,WolfMode.SEARCH_AND_RESCUE,WolfMode.DANGER_CLOSE);
     private static final List<String> MODE_DETAILS=List.of(
             "Protect you and react when you or your wolves are attacked. Switching to this mode stands your wolves up.",
             "Sit immediately, stop moving and stop attacking. Your wolves remain seated even when attacked.",
-            "Attack hostile creatures nearest you first, then work outward. Switching to this mode stands your wolves up.");
+            "Attack hostile creatures nearest you first, then work outward. Switching to this mode stands your wolves up.",
+            "Prioritize ranged hostiles, then those with the highest maximum health. Equal priorities use a stable order. Switching to this mode stands your wolves up.",
+            "Protect players in your active dungeon party at 6 HP (3 hearts) or less. Interpose between them and their actual attackers, drawing enemy attention. Companionship restores 2 HP every 100 ticks (5 seconds) per protected player in total, regardless of how many wolves guard them. Switching to this mode stands your wolves up.",
+            "Stay within 16 blocks of you as you move. Paths stay inside that boundary; wolves stop pursuit and return if you move the boundary away. Finish the current target while it remains inside the boundary, then prioritize threats to you. Switching to this mode stands your wolves up.");
     private static View view=empty();
     private static Consumer<BogatyrPayloads.Action> sender;
     private static Consumer<BogatyrPayloads.ModeAction> modeSender;
@@ -39,7 +43,7 @@ public final class BogatyrClient {
             new Quote(0,0,false),new Quote(0,0,false),new Quote(0,0,false),new Quote(0,0,false)));}
     public static void actions(Consumer<BogatyrPayloads.Action> callback){sender=Objects.requireNonNull(callback);}
     public static void modeActions(Consumer<BogatyrPayloads.ModeAction> callback){modeSender=Objects.requireNonNull(callback);}
-    public static String modeId(WolfMode mode){return "bogatyr_mode_"+CORE_MODES.indexOf(Objects.requireNonNull(mode));}
+    public static String modeId(WolfMode mode){return "bogatyr_mode_"+MODE_KEYS.indexOf(Objects.requireNonNull(mode));}
     public static void clear(){view=empty();pending=false;}
     public static void accept(View value){
         Objects.requireNonNull(value);
@@ -67,25 +71,21 @@ public final class BogatyrClient {
                     LABELS.get(index)+" "+quote.count()+" ["+quote.cost()+"]",tooltip,enabled));
         }
         for(int i=0;i<MODES.size();i++){
-            if(i>=CORE_MODES.size()){
-                actions.add(new SkillsPanelModel.Action("bogatyr_mode_"+i,MODES.get(i),"This wolf mode is not available.",false));
-                continue;
-            }
             boolean enabled=modeSender!=null&&ready()&&view.modesEnabled();
-            boolean selected=view.run()>0&&view.mode()==CORE_MODES.get(i);
+            boolean selected=view.run()>0&&view.mode()==MODE_KEYS.get(i);
             var tooltip=Component.literal(MODE_DETAILS.get(i)+"\nCost: 0 ").withStyle(ChatFormatting.YELLOW)
                     .append(Component.literal("Kibble").withStyle(ChatFormatting.BLUE,ChatFormatting.BOLD));
             if(selected)tooltip.append(Component.literal("\nSelected mode.").withStyle(ChatFormatting.AQUA));
             if(!enabled)tooltip.append(Component.literal("\n"+(pending?"Waiting for the server."
                     :"Wolf modes are currently unavailable.")).withStyle(ChatFormatting.GRAY));
-            actions.add(new SkillsPanelModel.Action(modeId(CORE_MODES.get(i)),MODES.get(i),tooltip,enabled,selected));
+            actions.add(new SkillsPanelModel.Action(modeId(MODE_KEYS.get(i)),MODES.get(i),tooltip,enabled,selected));
         }
         return new SkillsPanelModel(base.classId(),"Wolfpack",base.resource(),base.resourceTooltip(),
                 actions,base.resourceSnapshot());
     }
     public static boolean activate(String actionId){
         if(!ready())return false;
-        for(var mode:CORE_MODES)if(modeId(mode).equals(actionId)){
+        for(var mode:MODE_KEYS)if(modeId(mode).equals(actionId)){
             if(modeSender==null||!view.modesEnabled())return false;
             var action=new BogatyrPayloads.ModeAction(view.run(),view.revision(),mode);pending=true;
             try{modeSender.accept(action);return true;}catch(RuntimeException failure){pending=false;throw failure;}
