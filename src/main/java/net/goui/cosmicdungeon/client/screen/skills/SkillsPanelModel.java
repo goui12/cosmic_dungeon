@@ -8,9 +8,11 @@ import net.minecraft.network.chat.Component;
 /** Display/action descriptions only; rich text and optional authoritative resource presentation are reusable. */
 public record SkillsPanelModel(String classId,String title,String resource,Component resourceTooltip,
                                List<Action> actions,ClassResourceSnapshot resourceSnapshot) {
-    public record Action(String id,String label,Component tooltip,boolean enabled){
+    public record Action(String id,String label,Component tooltip,boolean enabled,boolean selected){
         public Action{Objects.requireNonNull(id);Objects.requireNonNull(label);tooltip=Objects.requireNonNull(tooltip).copy();}
-        public Action(String id,String label,String tooltip,boolean enabled){this(id,label,Component.literal(tooltip),enabled);}
+        public Action(String id,String label,Component tooltip,boolean enabled){this(id,label,tooltip,enabled,false);}
+        public Action(String id,String label,String tooltip,boolean enabled){this(id,label,Component.literal(tooltip),enabled,false);}
+        public Action(String id,String label,String tooltip,boolean enabled,boolean selected){this(id,label,Component.literal(tooltip),enabled,selected);}
     }
     public SkillsPanelModel(String classId,String title,String resource,String tooltip,List<Action> actions){
         this(classId,title,resource,Component.literal(tooltip),actions,null);

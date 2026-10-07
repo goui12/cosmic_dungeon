@@ -20,6 +20,17 @@ final class SkillsPanelModelTest {
         assertEquals("none",SkillsPanelModel.initial("unknown").classId());
         assertTrue(SkillsPanelModel.initial("none").actions().isEmpty());
     }
+    @Test void selectedPresentationIsIndependentOfEnabledAndLegacyConstructorsStayUnselected(){
+        var tip=net.minecraft.network.chat.Component.literal("Authoritative selected mode");
+        var selected=new SkillsPanelModel.Action("mode","Stand Ground",tip,false,true);
+        tip.append(" changed");
+        assertTrue(selected.selected());assertFalse(selected.enabled());
+        assertEquals("Authoritative selected mode",selected.tooltip().getString());
+        assertFalse(new SkillsPanelModel.Action("old","Old","Existing tooltip",true).selected());
+        assertFalse(new SkillsPanelModel.Action("old_component","Old",tip,false).selected());
+        var model=new SkillsPanelModel("bogatyr","Wolfpack","Kibble: 0","",List.of(selected));
+        assertSame(selected,model.actions().getFirst());
+    }
     @Test void futureResourceAndDeadPlayerRowsUseTheSameImmutableModelWithoutInventingCounts(){
         var actions=new ArrayList<SkillsPanelModel.Action>();
         for(int i=0;i<20;i++)actions.add(new SkillsPanelModel.Action("action_"+i,"Action "+i,"Server-validated provider action",i%2==0));

@@ -79,6 +79,11 @@ public final class BogatyrCompanionData extends SavedData {
         var retired=new net.minecraft.nbt.ListTag();retiredRuns.forEach(id->retired.add(net.minecraft.nbt.LongTag.valueOf(id)));
         next.put("retired_runs",retired);return next;
     }
+    WolfModeData.State mode(UUID owner,long run){return WolfModeData.read(original,owner,run);}
+    boolean setMode(UUID owner,long run,WolfMode mode){
+        if(!WolfModeData.write(original,owner,run,mode))return false;
+        setDirty();return true;
+    }
     public List<Companion> entries(){return List.copyOf(companions.values());}
     public boolean runRetired(long run){return retiredRuns.contains(run);}
     public void markRunRetired(long run){if(run>0&&retiredRuns.add(run))setDirty();}

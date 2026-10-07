@@ -57,6 +57,7 @@ public final class BogatyrCommands {
         return null;
     }
     static Plan plan(ServerPlayer p,long run,Kind kind,List<Wolf> pack,int amount){
+        if(kind==Kind.BREED&&BogatyrCompanionData.get(p.level().getServer()).mode(p.getUUID(),run).mode()==WolfMode.STAND_GROUND)return new Plan(run,kind,List.of());
         var eligible=new ArrayList<Wolf>();
         if(kind==Kind.REGROUP&&pack.stream().anyMatch(w->w.isPassenger()||w.isVehicle()||w.isLeashed()))
             return new Plan(run,kind,List.of());

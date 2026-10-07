@@ -1,34 +1,31 @@
 # Current rollout, 2026-10-07
 
-Batch23: Bogatyr Wolfpack paid care and run-only lifecycle, target **1.6.13-alpha.1**,
-on feature/bogatyr-wolf-commands-20261007. Baseline is Batch22 source
-e1b00cff0f45cb1d611636f683af3cb52f7012e0; Set C remains unmerged until26.
+Batch24: Bogatyr core wolf modes, target **1.6.14-alpha.1**, on
+feature/bogatyr-core-modes-20261007. Baseline is Batch23
+43f6f31151360df64ea247833bb33b8c44d82005; Set C remains unmerged until26.
 Exact completion/source/CI/publication/TEST facts live in
-BatchRunner/receipts/batch-23.json and linked evidence.
-Batch22 completed:1.6.12-alpha.1, PR240 open, full CI37667874244,
-CurseForge main9091758/helper9091757, stopped TEST sFTP installed.
-This source note does not pre-claim Batch23 delivery.
+BatchRunner/receipts/batch-24.json and linked evidence.
+Batch23 completed:1.6.13-alpha.1, PR241 open, full CI37686135307,
+CurseForge main9093095/helper9093094, stopped TEST sFTP installed.
+This source note does not pre-claim Batch24 delivery.
 
-Bogatyr Skills previews exact counts and Kibble costs for Breed5, Summon30,
-Regroup1 and Heal5. Breed/Heal support affordable subsets; Regroup requires the
-whole affected loaded pack's cost, stays in the current dimension and loads no
-chunks. Failed/no-op actions cost nothing. Wolves mate natively; own pups are tame.
-Ten equal wolf rows reuse the movable/minimized Skills panel; six mode rows remain
-disabled for24-25. No measured reason supports a cap, so packs remain uncapped.
+Defensive protects the master and reacts to attacks on the pack. Stand Ground
+immediately clears movement/target/retaliation and remains sitting under attack.
+Aggressive attacks hostiles nearest the master and works outward. Another core mode
+stands wolves up. Mode changes are free, authoritative and selected with one border.
+Breed is disabled during Stand Ground; existing paid care/run-only lifecycle remains.
 
-Active packs retain native save/load. Completion/forfeit/reset retire run ownership
-before cleanup; late native wolves from ended runs are discarded. Legacy archive
-delivery is retired, with old images preserved as non-deliverable audit records.
-Commands use native entity save proofs and exact owner debits; ambiguous interrupted
-preparation stays held for review without automatic replay/refund.
+Owner/run mode records preserve old saves and unknown fields; native normal saves
+retain selection and unloaded wolves apply it on return. Target scans and heavy paths
+are bounded and staggered around one second. Packs remain uncapped; the three advanced
+mode rows remain disabled for25.
 
-Licensed visual/co-op, natural pathfinding and actual OS/disk-fault acceptance remain
-pending TESTING. Delivery ends after CurseForge and stopped TEST sFTP.
-[Exact scope/files/QA](tasks/bogatyr-wolf-commands-20261007.md).
+Licensed visual/co-op and natural pathfinding acceptance remain pending TESTING.
+Delivery ends after CurseForge and stopped TEST sFTP.
+[Exact scope/files/QA](tasks/bogatyr-core-modes-20261007.md).
 [Approved plan](PARTY_SKILLS_BATCHES_20261006.md).
 
-**After Batch23 completes,3 planned batches remain (24-26); stop after23.**
-- 24: core wolf modes.
+**After Batch24 completes,2 planned batches remain (25-26); stop after24.**
 - 25: advanced wolf modes and performance.
 - 26: integration and final set Beta.
 

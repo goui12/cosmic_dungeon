@@ -85,13 +85,13 @@ final class BogatyrClientTest {
     }
     @Test void runChangesClearPendingAndLogoutClearsAllCapabilities(){
         BogatyrClient.accept(view(23,100));assertTrue(BogatyrClient.activate(BogatyrClient.BREED));
-        BogatyrClient.accept(view(24,1));assertFalse(BogatyrClient.pending());
+        BogatyrClient.accept(view(24,101));assertFalse(BogatyrClient.pending());
         assertTrue(BogatyrClient.activate(BogatyrClient.HEAL));assertEquals(24,sent.getLast().run());
-        assertEquals(1,sent.getLast().revision());
-        BogatyrClient.accept(new View(0,2,0,List.of(new Quote(0,0,false),new Quote(0,0,false),
+        assertEquals(101,sent.getLast().revision());
+        BogatyrClient.accept(new View(0,102,0,List.of(new Quote(0,0,false),new Quote(0,0,false),
                 new Quote(0,0,false),new Quote(0,0,false))));
         assertFalse(BogatyrClient.pending());assertFalse(BogatyrClient.activate(BogatyrClient.HEAL));
-        BogatyrClient.accept(view(24,3));BogatyrClient.clear();
+        BogatyrClient.accept(view(24,103));BogatyrClient.clear();
         assertFalse(row(BogatyrClient.BREED).enabled());assertFalse(BogatyrClient.pending());
         var other=SkillsPanelModel.initial("theurgist");assertSame(other,BogatyrClient.augment(other));
     }

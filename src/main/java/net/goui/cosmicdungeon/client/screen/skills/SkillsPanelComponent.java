@@ -10,6 +10,13 @@ import net.goui.cosmicdungeon.client.screen.skills.SharedInventoryLayout.Rect;
 public final class SkillsPanelComponent {
     private SkillsPanelComponent(){}
     private static void fill(GuiGraphics g,Rect r,int color){g.fill(r.x(),r.y(),r.right(),r.bottom(),color);}
+    private static void border(GuiGraphics g,Rect r,int color){
+        if(r.width()<=0||r.height()<=0)return;
+        g.fill(r.x(),r.y(),r.right(),r.y()+1,color);
+        g.fill(r.x(),r.bottom()-1,r.right(),r.bottom(),color);
+        g.fill(r.x(),r.y(),r.x()+1,r.bottom(),color);
+        g.fill(r.right()-1,r.y(),r.right(),r.bottom(),color);
+    }
     private static void text(GuiGraphics g,Font font,String text,Rect box,int color){
         g.drawString(font,font.plainSubstrByWidth(text,Math.max(0,box.width()-8)),box.x()+4,box.y()+5,color,false);
     }
@@ -52,6 +59,7 @@ public final class SkillsPanelComponent {
                     if(!row.intersects(box.body()))continue;
                     var action=model.actions().get(i);boolean hovered=box.body().contains(mouseX,mouseY)&&row.contains(mouseX,mouseY);
                     fill(g,row,!action.enabled()?0xFF26303A:hovered?0xFF42617B:0xFF31495E);
+                    if(action.selected())border(g,row,0xFF8ED8FF);
                     String label=font.plainSubstrByWidth(action.label(),Math.max(0,row.width()-8));
                     g.drawCenteredString(font,label,row.x()+row.width()/2,row.y()+6,action.enabled()?0xFFFFFFFF:0xFF89939E);
 

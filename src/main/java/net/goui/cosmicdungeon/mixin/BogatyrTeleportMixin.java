@@ -13,6 +13,6 @@ public abstract class BogatyrTeleportMixin {
     @Inject(method="shouldTryTeleportToOwner",at=@At("HEAD"),cancellable=true)
     private void cosmicdungeon$distance(CallbackInfoReturnable<Boolean> cir){
         if((Object)this instanceof Wolf wolf&&BogatyrWolfEvents.managed(wolf)&&wolf.getOwner()!=null)
-            cir.setReturnValue(wolf.distanceToSqr(wolf.getOwner())>Math.pow(Config.WOLF_TELEPORT_DISTANCE.get(),2));
+            cir.setReturnValue(!net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrModes.standing(wolf)&&wolf.distanceToSqr(wolf.getOwner())>Math.pow(Config.WOLF_TELEPORT_DISTANCE.get(),2));
     }
 }

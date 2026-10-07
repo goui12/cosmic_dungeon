@@ -270,6 +270,8 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Tame wolves with bones or use Wolfpack Skills. Packs are uncapped and belong to the current dungeon run."),
             HelpBlock.command("Living loaded Wolfpack count in this dungeon", "/d1 wolves"),
             HelpBlock.bullet("Open inventory Skills for Breed, Summon, Regroup and Heal, with exact Kibble costs and affected counts."),
+            HelpBlock.bullet("Free modes: Defensive protects the master and pack; Stand Ground sits and holds even under attack; Aggressive attacks nearby hostiles nearest the master first."),
+            HelpBlock.tip("Select another mode to stand up. Breed is unavailable during Stand Ground. Your mode is saved with the current run."),
             HelpBlock.tip("Active packs survive saves and reconnects. Completion, forfeit or reset ends the pack; old archives cannot be recalled.")));
 
 

@@ -174,6 +174,7 @@ public final class BogatyrCommandGameTests {
                 retired.remove(run);retired.removeAll(extraRuns);
                 var original=(CompoundTag)field(BogatyrCompanionData.class,"original",directory);
                 var audit=original.getCompoundOrEmpty("retired_records");for(var bond:bonds)audit.remove(bond.toString());
+                var modes=original.getCompoundOrEmpty(WolfModeData.KEY);for(var player:current){modes.remove(player.getUUID()+"/"+run);BogatyrThreats.invalidate(player.getUUID());}
             }catch(ReflectiveOperationException error){throw new IllegalStateException(error);}
             if(!directory.flushVerified(server))throw new IllegalStateException("Fixture companion cleanup");
             for(var player:current){
@@ -327,6 +328,106 @@ public final class BogatyrCommandGameTests {
             var late=f.readWolf(nativeImage);f.level.addFreshEntity(late);
             f.check(late.isRemoved()&&f.level.getEntity(late.getUUID())==null,"Late native load of ended-run wolf is discarded before readmission");
             f.check(BogatyrRunLifecycle.resetBlocker(f.level).isEmpty(),"Retired legacy archive cannot block source reset");
+            helper.succeed();
+        }
+    }
+
+    private static net.minecraft.world.entity.Mob hostile(Fixture f,EntityType<? extends net.minecraft.world.entity.Mob> type,int dx,int dz){
+        var mob=type.create(f.level,EntitySpawnReason.MOB_SUMMONED);f.check(mob!=null,"Native hostile factory");
+        mob.setNoAi(true);mob.snapTo(f.origin.x+dx,f.origin.y,f.origin.z+dz,0,0);
+        f.check(f.level.addFreshEntity(mob),"Native hostile accepted");f.extras.add(mob);return mob;
+    }
+    private static void decide(Wolf wolf){
+        var goal=wolf.targetSelector.getAvailableGoals().stream().map(net.minecraft.world.entity.ai.goal.WrappedGoal::getGoal)
+                .filter(g->g instanceof BogatyrThreats.ProtectOwner).findFirst().orElseThrow();
+        try{var field=goal.getClass().getDeclaredField("nextChoice");field.setAccessible(true);field.setLong(goal,Long.MIN_VALUE);}
+        catch(ReflectiveOperationException error){throw new IllegalStateException(error);}
+        if(goal.canUse()){goal.start();goal.tick();}
+    }
+    public static void modeStandGround(GameTestHelper helper){
+        try(var f=new Fixture(helper,Long.MAX_VALUE-2401)){
+            var wolf=f.wolf(0,0,-2,0);var foreign=f.wolf(1,0,2,0);var hostile=hostile(f,EntityType.ZOMBIE,2,2);
+            hostile.setTarget(f.p());wolf.setTarget(hostile);
+            var melee=wolf.goalSelector.getAvailableGoals().stream()
+                    .filter(g->g.getGoal() instanceof net.minecraft.world.entity.ai.goal.MeleeAttackGoal).findFirst().orElseThrow();
+            melee.start();wolf.getNavigation().moveTo(hostile,1);
+            f.amount(0);BogatyrActions.sync(f.p(),true);var before=f.view();
+            f.check(before.modesEnabled(),"Zero Kibble still permits free core modes");
+            BogatyrActions.mode(f.p(),new BogatyrPayloads.ModeAction(before.run(),before.revision(),WolfMode.STAND_GROUND));
+            f.check(f.view().mode()==WolfMode.STAND_GROUND&&f.amount()==0,"Mode acknowledgment is authoritative and free");
+            f.check(wolf.isOrderedToSit()&&wolf.isInSittingPose()&&wolf.getNavigation().isDone()
+                    &&wolf.getTarget()==null&&!melee.isRunning(),"Stand Ground immediately stops running movement, path and target");
+            f.check(!foreign.isOrderedToSit(),"Another owner's pack is untouched");
+            wolf.setOrderedToSit(false);wolf.setInSittingPose(false);
+            f.check(wolf.isOrderedToSit()&&wolf.isInSittingPose(),"Vanilla sit cleanup cannot override Stand Ground");
+            float health=wolf.getHealth();f.check(wolf.hurtServer(f.level,hostile.damageSources().mobAttack(hostile),1),"Real native damage is accepted");
+            f.check(wolf.getHealth()<health&&wolf.isOrderedToSit()&&wolf.isInSittingPose()
+                    &&wolf.getTarget()==null&&wolf.getLastHurtByMob()==null&&wolf.getLastHurtMob()==null,"Damage preserves sitting and clears retaliation immediately");
+            wolf.setTarget(hostile);f.check(wolf.getTarget()==null,"Native retaliation proposals are blocked");
+            f.p().setLastHurtByMob(hostile);
+            var hold=wolf.goalSelector.getAvailableGoals().stream().map(net.minecraft.world.entity.ai.goal.WrappedGoal::getGoal)
+                    .filter(g->g instanceof BogatyrModes.StandGround).findFirst().orElseThrow();
+            f.check(hold.canUse(),"Stand Ground holds even when the nearby master was attacked");
+            f.p().setPos(f.origin.x+256,f.origin.y,f.origin.z);
+            f.check(!wolf.shouldTryTeleportToOwner(),"Stand Ground suppresses far-owner auto teleport");f.p().setPos(f.origin);
+            f.amount(30);f.check(f.plan(Kind.BREED).count()==0&&!f.execute(Kind.BREED)&&f.amount()==30,"Stand Ground cannot charge Breed without allowing native movement");
+            var current=f.view();BogatyrActions.mode(f.p(),new BogatyrPayloads.ModeAction(current.run(),current.revision(),WolfMode.DEFENSIVE));
+            f.check(!wolf.isOrderedToSit()&&!wolf.isInSittingPose()&&f.view().mode()==WolfMode.DEFENSIVE,"A new mode stands the pack up without a care cooldown");
+            helper.succeed();
+        }
+    }
+    public static void modeTargets(GameTestHelper helper){
+        try(var f=new Fixture(helper,Long.MAX_VALUE-2402)){
+            var wolf=f.wolf(0,0,-3,0);var mate=f.wolf(0,0,-2,0);
+            var near=hostile(f,EntityType.ZOMBIE,1,0);var far=hostile(f,EntityType.SKELETON,3,0);
+            f.check(BogatyrModes.mode(wolf)==WolfMode.DEFENSIVE,"Existing saves start Defensive");
+            f.p().setLastHurtMob(far);wolf.setTarget(far);
+            f.check(wolf.getTarget()==null,"Defensive ignores master's outgoing-only offense and native skeleton hunting");
+            near.setTarget(f.p());wolf.setTarget(near);f.check(wolf.getTarget()==near,"Defensive protects a threatened master");
+            near.setTarget(null);wolf.setTarget(null);f.p().setLastHurtByMob(far);wolf.setTarget(far);
+            f.check(wolf.getTarget()==far,"Defensive reacts to an actual master's attacker");f.p().setLastHurtByMob(null);
+            mate.hurtServer(f.level,near.damageSources().mobAttack(near),1);wolf.setTarget(near);
+            f.check(wolf.getTarget()==near,"A wolf's attacker becomes a pack-wide defensive threat");
+            wolf.setTarget(f.current.get(1));f.check(wolf.getTarget()==null,"Another friendly player remains protected");
+            f.check(BogatyrModes.select(f.p(),f.run,WolfMode.AGGRESSIVE),"Aggressive selected");
+            decide(wolf);f.check(wolf.getTarget()==near,"Aggressive starts nearest the master, ahead of a farther skeleton");
+            near.setHealth(0);decide(wolf);f.check(wolf.getTarget()==far,"Aggressive works outward after the nearest threat dies");
+            var passive=EntityType.SHEEP.create(f.level,EntitySpawnReason.MOB_SUMMONED);f.check(passive!=null,"Native passive factory");
+            passive.snapTo(f.origin);f.check(f.level.addFreshEntity(passive),"Native passive accepted");f.extras.add(passive);
+            wolf.setTarget(passive);f.check(wolf.getTarget()==null,"Aggressive never hunts passive prey");
+            var melee=wolf.goalSelector.getAvailableGoals().stream().map(net.minecraft.world.entity.ai.goal.WrappedGoal::getGoal)
+                    .filter(g->g instanceof net.minecraft.world.entity.ai.goal.MeleeAttackGoal).findFirst().orElseThrow();
+            melee.start();
+            try{f.check((int)Fixture.field(net.minecraft.world.entity.ai.goal.MeleeAttackGoal.class,"ticksUntilNextPathRecalculation",melee)>=20,
+                    "Native melee path rebuild is staggered at roughly one second");}
+            catch(ReflectiveOperationException error){throw new IllegalStateException(error);}
+            helper.succeed();
+        }
+    }
+    public static void modePersistenceAuthority(GameTestHelper helper){
+        try(var f=new Fixture(helper,Long.MAX_VALUE-2403)){
+            var wolf=f.wolf(0,0,2,2);wolf.getPersistentData().putString("future_mode_wolf","keep");
+            var image=f.savedWolf(wolf);wolf.discard();f.check(f.pack().isEmpty(),"Unloaded pack fixture has no command target");
+            f.amount(0);BogatyrActions.sync(f.p(),true);var initial=f.view();
+            var request=new BogatyrPayloads.ModeAction(initial.run(),initial.revision(),WolfMode.STAND_GROUND);
+            BogatyrActions.mode(f.p(),request);f.check(f.view().mode()==WolfMode.STAND_GROUND,"Owner/run selection persists with no loaded wolves");
+            BogatyrActions.mode(f.p(),new BogatyrPayloads.ModeAction(initial.run(),initial.revision(),WolfMode.AGGRESSIVE));
+            f.check(f.view().mode()==WolfMode.STAND_GROUND,"Stale generation cannot replace current selection");
+            f.check(!BogatyrModes.select(f.current.get(1),f.run+1,WolfMode.AGGRESSIVE),"Foreign or inactive run is rejected");
+            f.check(BogatyrCompanionData.get(f.level.getServer()).mode(f.current.get(1).getUUID(),f.run).mode()==WolfMode.DEFENSIVE,"Mode does not leak between owners");
+            f.check(PlayerSaveProof.save(f.p()),"Owner reconnect image saved");f.reloadOwner();BogatyrActions.sync(f.p(),true);
+            f.check(f.view().mode()==WolfMode.STAND_GROUND&&f.view().revision()>initial.revision(),"Reconnect retains selection with a fresh session generation");
+            var restored=f.readWolf(image);f.check(f.level.addFreshEntity(restored),"Native unloaded wolf returns");
+            f.check(restored.isOrderedToSit()&&restored.isInSittingPose()&&BogatyrModes.mode(restored)==WolfMode.STAND_GROUND,
+                    "Unloaded wolf adopts persisted mode immediately on native load");
+            f.check(restored.getPersistentData().getStringOr("future_mode_wolf","").equals("keep"),"Unknown wolf data survives the mode upgrade");
+            var directory=BogatyrCompanionData.get(f.level.getServer());f.check(directory.flushVerified(f.level.getServer()),"Mode is verified in native SavedData");
+            var round=BogatyrCompanionData.CODEC.parse(NbtOps.INSTANCE,directory.image()).getOrThrow();
+            f.check(round.mode(f.p().getUUID(),f.run).mode()==WolfMode.STAND_GROUND,"SavedData reload retains owner/run mode");
+            f.check(round.mode(f.p().getUUID(),f.run+1).mode()==WolfMode.DEFENSIVE,"A later run does not inherit the prior run's mode");
+            var before=f.view();f.p().getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).putString(ClassData.KEY_CLASS_ID,"theurgist");
+            BogatyrActions.mode(f.p(),new BogatyrPayloads.ModeAction(before.run(),before.revision(),WolfMode.AGGRESSIVE));
+            f.check(f.view().run()==0&&directory.mode(f.p().getUUID(),f.run).mode()==WolfMode.STAND_GROUND,"Execution rechecks actual class before changing mode");
             helper.succeed();
         }
     }

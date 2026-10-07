@@ -10,6 +10,7 @@ public final class CosmicDungeonOptionsIntegration {
 
     public static void registerConfigScreen(ModContainer container) {
         net.goui.cosmicdungeon.client.screen.skills.BogatyrClient.actions(net.goui.cosmicdungeon.network.ModNetwork::sendToServer);
+        net.goui.cosmicdungeon.client.screen.skills.BogatyrClient.modeActions(net.goui.cosmicdungeon.network.ModNetwork::sendToServer);
         net.goui.cosmicdungeon.client.screen.skills.TheurgistClient.actions(net.goui.cosmicdungeon.network.ModNetwork::sendToServer);
         net.goui.cosmicdungeon.client.screen.requests.SupplyRequestsClient.actions(action ->
                 net.goui.cosmicdungeon.network.ModNetwork.sendToServer(

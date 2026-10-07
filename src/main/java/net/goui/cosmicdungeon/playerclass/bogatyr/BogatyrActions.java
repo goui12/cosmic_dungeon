@@ -34,17 +34,26 @@ public final class BogatyrActions {
                     var plan=able?BogatyrCommands.plan(p,run.runId(),kind,pack,amount):new BogatyrCommands.Plan(run.runId(),kind,List.of());
                     plans.add(plan);quotes.add(new BogatyrPayloads.Quote(plan.count(),plan.cost(),plan.count()>0));
                 }
-                next=new BogatyrPayloads.View(run.runId(),0,pack.size(),quotes);
+                var mode=BogatyrCompanionData.get(p.level().getServer()).mode(p.getUUID(),run.runId());
+                next=new BogatyrPayloads.View(run.runId(),0,pack.size(),quotes,mode.mode(),able&&mode.writable());
             }
         }catch(RuntimeException failure){
             com.mojang.logging.LogUtils.getLogger().error("Wolfpack view preserved for {}",p.getUUID(),failure);
         }
-        boolean same=s.sent!=null&&s.sent.run()==next.run()&&s.sent.loaded()==next.loaded()&&s.sent.quotes().equals(next.quotes())&&s.plans.equals(plans);
+        boolean same=s.sent!=null&&s.sent.run()==next.run()&&s.sent.loaded()==next.loaded()&&s.sent.quotes().equals(next.quotes())&&s.plans.equals(plans)
+                &&s.sent.mode()==next.mode()&&s.sent.modesEnabled()==next.modesEnabled();
         if(force||!same){
             if(generation==Long.MAX_VALUE)throw new IllegalStateException("Wolfpack generation exhausted");
             s.revision=++generation;s.plans=List.copyOf(plans);
-            s.sent=new BogatyrPayloads.View(next.run(),s.revision,next.loaded(),next.quotes());ModNetwork.sendTo(p,s.sent);
+            s.sent=new BogatyrPayloads.View(next.run(),s.revision,next.loaded(),next.quotes(),next.mode(),next.modesEnabled());ModNetwork.sendTo(p,s.sent);
         }
+    }
+    public static void mode(ServerPlayer p,BogatyrPayloads.ModeAction request){
+        var s=SESSIONS.get(p);
+        try{
+            if(s==null||s.sent==null||!s.sent.modesEnabled()||s.sent.run()!=request.run()||s.sent.revision()!=request.revision())return;
+            BogatyrModes.select(p,request.run(),request.mode());
+        }finally{sync(p,true);}
     }
     public static void action(ServerPlayer p,BogatyrPayloads.Action request){
         var s=SESSIONS.get(p);
