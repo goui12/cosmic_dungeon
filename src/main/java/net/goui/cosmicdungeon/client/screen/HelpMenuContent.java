@@ -267,12 +267,15 @@ public final class HelpMenuContent {
             HelpBlock.paragraph("A survivalist, cold-weather endurance racer, and hardened wolf-handler from the frozen Russian Federation reaches, the Bogatyr favors traditional weaponry and grit."),
             HelpBlock.bullet("Damage identity: fights alongside loyal wolf companions as a class role theme."),
             HelpBlock.bullet("Can use Bogatyr-attuned gear and class chests."),
-            HelpBlock.bullet("Tame wolves with bones. Active wolves count toward your pack limit, including unloaded pets; stored pets keep their bond without using an active slot."),
-            HelpBlock.command("Companion roster", "/d1 wolves [page]"),
-            HelpBlock.bullet("Append a companion ID from your roster to call or recover to choose that pet."),
-            HelpBlock.command("Recall a stored or main-world companion into your active D1 Bogatyr run", "/d1 wolves call"),
-            HelpBlock.command("Return a stored companion in the main world after reset", "/d1 wolves recover"),
-            HelpBlock.tip("One companion returns at a time. Stand on clear, solid ground; it returns seated.")));
+            HelpBlock.bullet("Tame wolves with bones or use Wolfpack Skills. Packs are uncapped and belong to the current dungeon run."),
+            HelpBlock.command("Living loaded Wolfpack count in this dungeon", "/d1 wolves"),
+            HelpBlock.bullet("Open inventory Skills for Breed, Summon, Regroup and Heal, with exact Kibble costs and affected counts."),
+            HelpBlock.bullet("Free modes: Defensive protects the master and pack; Stand Ground sits and holds even under attack; Aggressive attacks nearby hostiles nearest the master first."),
+            HelpBlock.bullet("Strategic prioritizes ranged enemies, then maximum health. Search and Rescue protects nearby party players at 3 hearts or less; Companionship restores 1 heart every 5 seconds per guarded player."),
+            HelpBlock.bullet("Danger Close stays within 16 blocks of the moving master, finishes an eligible current target, then prioritizes threats to the master."),
+            HelpBlock.tip("Select another mode to stand up. Breed is unavailable during Stand Ground. Your mode is saved with the current run."),
+            HelpBlock.tip("Active packs survive saves and reconnects. Completion, forfeit or reset ends the pack; old archives cannot be recalled.")));
+
 
     public static final Page DRAGOON = page("class.dragoon", "Dragoon", true, List.of(
             HelpBlock.heading("Dragoon"),
@@ -635,6 +638,24 @@ Once all six blooms are rescued from the dungeon, Watson’s soul is released. H
             HelpBlock.paragraph("Cosmic Dungeon validates gameplay-sensitive behavior on the server."),
             HelpBlock.bullet("Class access, vendors, trades, currency, progression, teleports, achievements, and dungeon systems remain server-authoritative."),
             HelpBlock.tip("The H menu is only a guide; it never grants access or changes saved data."))); }
+
+    /** Exact existing H-guide pages; unknown/unselected classes open the class index. */
+    public static Page classGuide(String classId) {
+        if (classId == null) return CLASSES;
+        return switch (classId) {
+            case "bogatyr" -> BOGATYR;
+            case "dragoon" -> DRAGOON;
+            case "judicator" -> JUDICATOR;
+            case "pyroclast" -> PYROCLAST;
+            case "theurgist" -> THEURGIST;
+            case "venefex" -> VENEFEX;
+            default -> CLASSES;
+        };
+    }
+
+    public static HelpNode classDirectory() {
+        return ROOT.children().stream().filter(node -> node.page() == CLASSES).findFirst().orElseThrow();
+    }
 
     private static Page page(String id, String title, boolean enabled, List<HelpBlock> blocks) { return new Page(id, Component.literal(title), enabled, blocks); }
     public record Page(String id, Component title, boolean enabled, List<HelpBlock> blocks) {}

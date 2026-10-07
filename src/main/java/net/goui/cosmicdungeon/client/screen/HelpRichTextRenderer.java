@@ -19,13 +19,13 @@ final class HelpRichTextRenderer {
 
     static int measure(Font font, HelpMenuContent.Page page, int width) {
         int y = 0;
-        for (HelpMenuContent.HelpBlock block : page.blocks()) y += blockHeight(font, block, width);
+        for (HelpMenuContent.HelpBlock block : ClassResourceHelp.blocks(page)) y += blockHeight(font, block, width);
         return y + BOTTOM_PADDING;
     }
 
     static void render(GuiGraphics g, Font font, HelpMenuContent.Page page, int x, int y, int width) {
         int cursor = y;
-        for (HelpMenuContent.HelpBlock block : page.blocks()) {
+        for (HelpMenuContent.HelpBlock block : ClassResourceHelp.blocks(page)) {
             cursor += renderBlock(g, font, block, x, cursor, width);
         }
     }

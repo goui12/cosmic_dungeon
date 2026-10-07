@@ -44,7 +44,7 @@ public final class MercenaryResurrectionState {
     static void remember(D1RunData data,long run,UUID player,Death death){
         data.setValue(run,deathKey(player),encode(death));
     }
-    static void clearDeath(D1RunData data,long run,UUID player){data.setValue(run,deathKey(player),null);}
+    public static void clearDeath(D1RunData data,long run,UUID player){data.setValue(run,deathKey(player),null);}
     static long readyAt(D1RunData data,long run,UUID mercenary){
         var values=data.values(run,cooldownKey(mercenary));
         if(values.isEmpty())return 0; // Existing worlds and newly instantiated runs start ready.

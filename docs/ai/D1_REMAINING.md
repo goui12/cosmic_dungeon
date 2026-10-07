@@ -1,33 +1,29 @@
 # Current rollout, 2026-10-07
 
-Batch18: Judicator mercenary and Set B Beta target **1.6.8-beta.1**.
-Implemented on feature/judicator-mercenary-20261007; validated completed Set B merges
-through its PR before Beta publication. Exact completion, source/CI/publication and
-TEST sFTP facts live in BatchRunner/receipts/batch-18.json and linked evidence.
-This source note does not infer that future publication/deployment has already happened.
-Batch17 completed:1.6.7-alpha.1, CurseForge main9087282/helper9087280, TEST sFTP installed.
+Batch26: final Set C integration, target **1.6.16-beta.1**, on
+feature/set-c-integration-20261007. Baseline Batch25:
+ce1090505fd2df8afe45f906bb508b55e0fc6800.
+Exact main-merge/source/CI/publication/TEST facts live in
+BatchRunner/receipts/batch-26.json and linked evidence.
+Batch25 completed: PR243, full CI37696933160, release37697267289,
+CurseForge main9094153/helper9094152, stopped TEST sFTP installed.
+This source note does not pre-claim Batch26 delivery.
 
-Judicator Combat starts0; cumulative hostile kills1,3,6,12,24 then doubling.
-Successful direct attacks roll L% (capped100%) for L HP to hostiles within2blocks;
-secondary damage cannot recursively burst. Allies remain protected; death retains
-run progress and the next run resets it. No authored chest edits or save/network migration.
-Set B includes Batch17 Theurgist/Venefex role split and the retained legacy safeguards.
-Licensed HUD/co-op/world and CurseForge app acceptance remain pending TESTING.
+Set C integrates movable/resettable class panels,600-cap resources and tagged recycling,
+explicit group supply consent, player Theurgist crafting/resurrection, run-only paid
+Wolfpack care and all six free combat modes. Cross-component client and native tests
+exercise shared input, transactions, latest death, mode changes and friendly protection.
+Earlier old-save/reset/relog and1/30/120-wolf work regressions remain required.
+No new cap or gameplay/schema migration is introduced by this integration batch.
 
-Deployment ends after CurseForge and stopped TEST sFTP. No local-client installation,
-post-publication artifact hashes or routine legacy-feed audit.
-[Exact scope/files/QA](tasks/judicator-mercenary-20261007.md).
+[Coverage, exact files and manual QA](tasks/set-c-integration-20261007.md).
 [Approved plan](PARTY_SKILLS_BATCHES_20261006.md).
+[Set C Beta notes](../releases/1.6.16-beta.1.md).
 
-**After Batch18 completes,8 planned batches remain (19–26); stop after18.**
-- 19: movable Skills panel, reset setting and recipe-book removal.
-- 20: Brewing Supplies/Kibble and generated recycling tags.
-- 21: group supply requests.
-- 22: player Theurgist crafting and resurrection.
-- 23: paid wolf commands and run-only pack lifecycle.
-- 24: core wolf modes.
-- 25: advanced wolf modes and performance.
-- 26: integration and final set Beta.
+**After Batch26 completes,0 planned implementation batches remain. Stop at26.**
+Licensed full Beta GUI/co-op/terrain acceptance remains TESTING before stable.
+Delivery ends with matching CurseForge files and stopped TEST sFTP; no local-client
+installation, additional post-publication artifact hashes or legacy feed gate.
 
 ---
 
@@ -50,7 +46,7 @@ below refer to the previous completed request.
 
 # Testing rollout, 2026-10-03
 
-[Current approved queue](TESTING_ROLLOUT_20261003.md). Batches 1â€“11 are implemented and validated.
+[Current approved queue](TESTING_ROLLOUT_20261003.md). Batches 1ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“11 are implemented and validated.
 Zero implementation batches remain; cumulative licensed TEST acceptance is pending.
 [Batch 1 report](TESTING_BATCH_1_20261003.md) | [Batch 2 report](TESTING_BATCH_2_20261003.md) | [Batch 3 report](TESTING_BATCH_3_20261003.md) | [Batch 4 report](TESTING_BATCH_4_20261003.md) | [Batch 5 report](TESTING_BATCH_5_20261003.md) | [Batch 6 report](TESTING_BATCH_6_20261003.md) | [Batch 7 report](TESTING_BATCH_7_20261004.md) | [Batch 8 report](TESTING_BATCH_8_20261004.md) | [Batch 9 report](TESTING_BATCH_9_20261004.md) | [Batch 10 report](TESTING_BATCH_10_20261004.md) | [Batch 11 report](TESTING_BATCH_11_20261004.md).
 Batch 11 completes lifetime statistics, the teal pause-menu entry and eight curated leaderboards;
@@ -513,7 +509,7 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M23: Require marked repair components and update Elias's catalogue
 - M26: Implement direct shop repair and revised price formulas
 - M30: Remove the global instant-brewing override and implement approved class behavior
-- M36: Implement Tamsinâ€™s persistent map and first-entry conversation
+- M36: Implement TamsinÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s persistent map and first-entry conversation
 - M37: Replace incidental ready-order grouping with the specified party/invitation flow
 - M42: Add the campfire placement, ownership, lifetime and interaction rules
 - M61: Add Dragoon passive health-for-durability repair under the revised exclusions
@@ -549,7 +545,7 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M45: Implement the three scapula recruitment relics and assigned boss drops
 - M46: Implement all three pack totem auras without same-class stacking
 - M47: Implement four wolf armor tiers, recipes, repairs and totem synergies
-- M48: Unify Metalmancerâ€™s four-tier staff and golem statistics
+- M48: Unify MetalmancerÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s four-tier staff and golem statistics
 - M49: Implement the complete ore/rest/heal exchange, not only doubled idle income
 - M50: Implement the individual Metalmancer equipment modifiers and stacking policy
 - M51: Validate held equipment and action context on every Metalmancer packet
@@ -560,12 +556,12 @@ Conduits and the unmade D1 backpack remain explicitly deferred under Q&A D42/D48
 - M57: Deliver the Theurgist story arc without leaking internal epilogue knowledge
 - M59: Add Deadeye zoom, draw and range-based damage progression
 - M73: Populate all player-facing Codex and item descriptions with reveal controls
-- M74: Correct Vital Exchange Iâ€“IV to real transfer events and the right tier identities
+- M74: Correct Vital Exchange IÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“IV to real transfer events and the right tier identities
 - M75: Wire Binding Idol provider/return milestones into actual gameplay
 - M89: Build the remaining D2 rooms, encounters and progression hand-off
-- M90: Implement D3â€™s water/pressure puzzles and Dagonâ€“Hydra state sequence
-- M91: Implement D4â€™s portal maze, reflection encounters and Web completion
-- M92: Implement D5â€™s trap construction, boss endings and persistent outcomes
+- M90: Implement D3ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s water/pressure puzzles and DagonÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“Hydra state sequence
+- M91: Implement D4ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s portal maze, reflection encounters and Web completion
+- M92: Implement D5ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s trap construction, boss endings and persistent outcomes
 - M96: Create a checked-in approved language/codex corpus and lint inconsistent examples
 - M97: Implement Webbound Priest journal drops and staged reading
 - M108: Keep explicit future proposals and incompatible candidates outside automatic implementation

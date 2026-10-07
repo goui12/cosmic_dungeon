@@ -17,6 +17,9 @@ public final class D1EffectAtlasProvider implements DataProvider {
             source.addProperty("resource","cosmicdungeon:mob_effect/"+entry.getKey());
             source.addProperty("sprite","cosmicdungeon:"+entry.getKey());sources.add(source);
         });
+        var companionship=new JsonObject();companionship.addProperty("type","minecraft:single");
+        companionship.addProperty("resource","minecraft:mob_effect/regeneration");
+        companionship.addProperty("sprite","cosmicdungeon:companionship");sources.add(companionship);
         root.add("sources",sources);
         return DataProvider.saveStable(cache,root,output.getOutputFolder(PackOutput.Target.RESOURCE_PACK)
                 .resolve("minecraft/atlases/mob_effects.json"));

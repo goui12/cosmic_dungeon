@@ -26,8 +26,8 @@ public final class HelpMenuKeybindClient {
     public static void onClientTick(ClientTickEvent.Post event) {
         Minecraft minecraft = Minecraft.getInstance();
         while (HELP_MENU_KEY.consumeClick()) {
-            if (minecraft.screen instanceof HelpMenuScreen) {
-                minecraft.setScreen(null);
+            if (minecraft.screen instanceof HelpMenuScreen help) {
+                help.onClose();
             } else if (minecraft.screen == null) {
                 minecraft.setScreen(new HelpMenuScreen());
             }

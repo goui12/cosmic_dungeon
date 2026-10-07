@@ -24,7 +24,7 @@ public final class BogatyrCompanions {
     public static void track(Wolf wolf,boolean exactPosition){
         if(!(wolf.level() instanceof ServerLevel level)||!wolf.isTame()
                 ||!BogatyrWolfEvents.managed(wolf)||owner(wolf)==null||wolf.isRemoved()||!wolf.isAddedToLevel())return;
-        if(!BogatyrIdentity.observe(wolf))return;
+        if(!BogatyrRunLifecycle.active(level.getServer(),wolf.getPersistentData().getLongOr(BogatyrWolfEvents.RUN,0),owner(wolf))||!BogatyrIdentity.observe(wolf))return;
         var data=BogatyrCompanionData.get(level.getServer());
         UUID identity=BogatyrIdentity.id(wolf);
         var old=data.find(identity).orElse(null);
@@ -41,7 +41,7 @@ public final class BogatyrCompanions {
     public static void added(Wolf wolf){
         if(!(wolf.level() instanceof ServerLevel level)||!wolf.isAddedToLevel()
                 ||level.getEntity(wolf.getUUID())!=wolf)return;
-        if(BogatyrWolfEvents.managed(wolf)&&!BogatyrIdentity.observe(wolf))return;
+        if(BogatyrWolfEvents.managed(wolf)&&(!BogatyrRunLifecycle.admit(wolf)||!BogatyrIdentity.observe(wolf)))return;
         BogatyrWolfEvents.added(wolf);track(wolf,true);BogatyrRecovery.onObserved(wolf);
     }
     public static void removing(Wolf wolf,Entity.RemovalReason reason){
@@ -58,67 +58,20 @@ public final class BogatyrCompanions {
         // DISCARD is not proof of death. Keep a hold for explicit recovery/inspection.
     }
     @SubscribeEvent public static void tick(EntityTickEvent.Post event){
-        if(event.getEntity() instanceof Wolf wolf){BogatyrRecovery.onObserved(wolf);BogatyrDuration.tick(wolf);track(wolf,false);}
+        if(event.getEntity() instanceof Wolf wolf&&BogatyrRunLifecycle.admit(wolf)){BogatyrRecovery.onObserved(wolf);BogatyrDuration.tick(wolf);track(wolf,false);}
     }
     public static void preserveRun(MinecraftServer server,DungeonRunRegistryData.RunRecord run){
-        if(!run.dungeonId().equals("dungeon_1")||run.dungeonDimensionIds().isEmpty())return;
-        var data=BogatyrCompanionData.get(server);
-        for(UUID owner:run.orderedPlayers())
-            for(String id:D1RunData.get(server).values(run.runId(),"wolves:"+owner))
-                data.preserveLegacy(UUID.fromString(id),owner,run.runId(),run.dungeonDimensionIds().getFirst());
+        // Kept as a source-compatible no-op: run-only packs never manufacture directory entries.
     }
     public static boolean preserveBeforeCleanup(MinecraftServer server,DungeonRunRegistryData.RunRecord run){
-        preserveRun(server,run);
-        // Verify the independent directory on disk BEFORE its legacy source roster can be cleared.
-        return !run.dungeonId().equals("dungeon_1")||BogatyrCompanionData.get(server).flushVerified(server);
+        return BogatyrRunLifecycle.retire(server,run);
     }
     public static int packSize(MinecraftServer server,UUID owner,long runId){
-        DungeonRunRegistryData.get(server).getRun(runId).ifPresent(run->preserveRun(server,run));
-        return BogatyrCompanionData.get(server).activeCount(owner);
+        return (int)BogatyrCompanionData.get(server).forOwner(owner).stream().filter(e->e.run()==runId).count();
     }
-    /** Preflight every target before ANY purge/filesystem replacement. Never load chunks here. */
-    public static Optional<String> resetBlocker(ServerLevel level){
-        var server=level.getServer();
-        boolean associatedRun=false;
-        for(var run:DungeonRunRegistryData.get(server).listAllRuns())
-            if(run.containsDimension(level.dimension())&&run.dungeonId().equals("dungeon_1")){
-                preserveRun(server,run);associatedRun=true;
-            }
-        var data=BogatyrCompanionData.get(server);
-        // Even a wolf already moved outside must be durable before its old source roster is erased.
-        if(associatedRun&&!data.flushVerified(server))
-            return Optional.of("Companion directory could not be verified on disk; retaining this instance.");
-        if(data.dimensionHeld(level.dimension().location().toString()))
-            return Optional.of("Companion identity conflict requires review before this instance can reset.");
-        if(!data.pendingInDimension(level.dimension().location().toString()).isEmpty())
-            return Optional.of("A companion delivery must be reconciled before resetting this instance.");
-        var entries=data.inDimension(level.dimension().location().toString());
-        if(entries.stream().allMatch(c->data.readyForSourceReset(c.wolf())))return Optional.empty();
-        return Optional.of("Companion recovery must finish before resetting "+level.dimension().location()
-                +": "+entries.size()+" saved wolf identities remain. Use /d1 wolves inspect.");
-    }
-    private static int roster(net.minecraft.commands.CommandSourceStack source,int page)throws com.mojang.brigadier.exceptions.CommandSyntaxException{
-        var player=source.getPlayerOrException();var data=BogatyrCompanionData.get(source.getServer());
-        var entries=data.forOwner(player.getUUID());int active=data.activeCount(player.getUUID());
-        int pages=Math.max(1,(entries.size()+31)/32);
-        if(page>pages){source.sendFailure(Component.literal("Your companion roster has "+pages+" page(s)."));return 0;}
-        source.sendSuccess(()->Component.literal("Companions: "+active+" active (uncapped)"
-                +"; "+(entries.size()-active)+" stored; "+entries.size()+" total. Page "+page+" / "+pages+"."),false);
-        for(var entry:entries.stream().skip((page-1L)*32).limit(32).toList()){
-            var archive=data.archive(entry.wolf()).orElse(null);
-            String status=archive==null||archive.phase().equals(WolfArchive.DONE)
-                    ?(entry.located()?"active":"location needs review")
-                    :switch(archive.phase()){
-                        case WolfArchive.STORED->"stored";
-                        case WolfArchive.PREPARED->"waiting for dungeon reset";
-                        default->"return pending";
-                    };
-            source.sendSuccess(()->Component.literal(entry.wolf()+" | "+status+" | "+entry.dimension()),false);
-        }
-        return entries.size();
-    }
+    public static Optional<String> resetBlocker(ServerLevel level){return BogatyrRunLifecycle.resetBlocker(level);}
     public static void register(com.mojang.brigadier.CommandDispatcher<net.minecraft.commands.CommandSourceStack> dispatcher){
-        BogatyrReview.register(dispatcher);
+        // Legacy delivery/review mutation commands are retired; roster/inspection remains read-only.
         dispatcher.register(Commands.literal("d1").then(Commands.literal("wolves")
                 .then(Commands.literal("recover").executes(ctx->BogatyrRecovery.recover(ctx.getSource().getPlayerOrException()))
                         .then(Commands.argument("bond",net.minecraft.commands.arguments.UuidArgument.uuid())
@@ -142,11 +95,11 @@ public final class BogatyrCompanions {
                     return entries.size();
                 }))));
     }
-    // TODO(M44 recovery review): inspect uncertain legacy/identity/delivery holds before explicit recovery.
-    // Wolf Internal 10-3IgopUqHKyPHuZDKlpa64JMYXmq-_8GgKtQFhLX3c (2026-04-25) makes tamed
-    // wolves permanent. Stored wolves can return in the main world or an active owner D1 Bogatyr run.
-    // Existing main-world pets now transfer through reserved/removing source receipts before delivery.
-    // Q&A D27's zero-permanent duration and owner-only armor drop on expiry are implemented.
-    // D2+ scapula recruitment/totem auras remain deferred; bounded source-ranked threats are implemented.
-    // Verified live-source review exists; damaged/missing/cloned saves and licensed failure tests still require explicit investigation.
+    // Wolfpacks now end with their dungeon run; paid Regroup only visits living loaded pack members.
+    private static int roster(net.minecraft.commands.CommandSourceStack source,int page)throws com.mojang.brigadier.exceptions.CommandSyntaxException{
+        var player=source.getPlayerOrException();var run=net.goui.cosmicdungeon.playerclass.resource.ClassResourceService.activeRun(player).orElse(null);
+        int count=run==null?0:BogatyrCommands.loaded(player,run.runId()).size();
+        source.sendSuccess(()->Component.literal("Wolfpack: "+count+" living loaded wolves in this dungeon. Use Skills for paid care. Packs end with the run."),false);
+        return count;
+    }
 }

@@ -49,6 +49,11 @@
       "type": "minecraft:single",
       "resource": "cosmicdungeon:mob_effect/verdant_jolt",
       "sprite": "cosmicdungeon:verdant_jolt"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/regeneration",
+      "sprite": "cosmicdungeon:companionship"
     }
   ]
 }

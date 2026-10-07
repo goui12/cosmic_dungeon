@@ -223,7 +223,7 @@ public final class Config {
                 .defineInRange("wolfDurationMinutes",0,0,525600);
         WOLF_EXPIRY_POLL_TICKS=B.comment("Ticks between expired-bond release attempts; canceled armor drops retain the wolf.")
                 .defineInRange("expiryRetryTicks",20,1,1200);
-        WOLF_THREAT_POLL_TICKS=B.comment("Ticks between source-ranked threat selection; shared per-owner candidate cache.")
+        WOLF_THREAT_POLL_TICKS=B.comment("Ticks between core mode target decisions; shared per-owner candidate cache and staggered wolf checks.")
                 .defineInRange("threatPollTicks",20,1,200);
         WOLF_THREAT_CANDIDATES=B.comment("Maximum nearby mobs inspected per spatial threat query; follow range sets radius.")
                 .defineInRange("threatCandidateLimit",64,8,256);

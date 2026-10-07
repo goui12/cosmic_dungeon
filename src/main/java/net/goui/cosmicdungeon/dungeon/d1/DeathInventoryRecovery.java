@@ -12,7 +12,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Provenance and bounded reordering for physical items from the latest real D1 death.
+ * Provenance and bounded reordering for physical items from the latest real dungeon death.
  * The layout never owns items: native world entities and the player's real inventory remain authoritative.
  */
 public final class DeathInventoryRecovery {
@@ -40,7 +40,7 @@ public final class DeathInventoryRecovery {
 
     /** Called after NeoForge's cancellable death hook and before native death loot starts. */
     public static void prepareDeath(ServerPlayer player) {
-        var run = MercenaryResurrection.activeRun(player);
+        var run = MercenaryResurrection.deathRun(player);
         if (run == null) return;
         var death = MercenaryResurrection.prepareDeath(player);
         if (death == null) return;
@@ -60,7 +60,7 @@ public final class DeathInventoryRecovery {
     /** Marks the actual world entity produced from one real inventory slot. */
     public static void markDrop(ServerPlayer player, ItemEntity item, int slot) {
         if (item == null || slot < 0) return;
-        var run = MercenaryResurrection.activeRun(player);
+        var run = MercenaryResurrection.deathRun(player);
         if (run == null) return;
         var data = D1RunData.get(player.level().getServer());
         var death = MercenaryResurrectionState.death(data, run.runId(), player.getUUID());
@@ -108,7 +108,7 @@ public final class DeathInventoryRecovery {
     public static Pickup beginPickup(ServerPlayer player, ItemEntity item) {
         var provenance = provenance(item);
         if (provenance == null || !provenance.owner().equals(player.getUUID()) || !player.isAlive()) return null;
-        var run = MercenaryResurrection.activeRun(player);
+        var run = MercenaryResurrection.deathRun(player);
         if (run == null || run.runId() != provenance.run()) return null;
         var layout = DeathInventoryLayout.read(D1RunData.get(player.level().getServer()), run.runId(), player);
         if (layout == null || !layout.death().equals(provenance.death()) || layout.entry(provenance.slot()) == null
@@ -126,7 +126,7 @@ public final class DeathInventoryRecovery {
         var provenance = provenance(item);
         if (provenance == null || provenance.run() != pickup.run() || !provenance.death().equals(pickup.death())
                 || provenance.slot() != pickup.targetSlot() || !provenance.owner().equals(player.getUUID())) return;
-        var run = MercenaryResurrection.activeRun(player);
+        var run = MercenaryResurrection.deathRun(player);
         if (run == null || run.runId() != pickup.run()) return;
         var layout = DeathInventoryLayout.read(D1RunData.get(player.level().getServer()), run.runId(), player);
         if (layout == null || !layout.death().equals(pickup.death()) || layout.entry(pickup.targetSlot()) == null) return;

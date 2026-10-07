@@ -9,20 +9,28 @@ import java.util.UUID;
 /** Shared gate for inventory replacement; recovery precedes dungeon/Chop escrow transitions. */
 public final class InventoryTransactionGuard {
     private InventoryTransactionGuard(){}
-    public static boolean blocked(ServerPlayer p){return D1WatsonRecovery.blocked(p)||net.goui.cosmicdungeon.dungeon.DungeonInventoryHandoffs.blocked(p)||net.goui.cosmicdungeon.dungeon.ChopTravelRecovery.blocked(p)||net.goui.cosmicdungeon.economy.DeathCurrencyService.blocked(p)||net.goui.cosmicdungeon.vendor.CommerceTransactions.blocked(p)||RepairTransactions.blocked(p)||net.goui.cosmicdungeon.trade.TradeTransactions.blocked(p);}
+    public static boolean blocked(ServerPlayer p){return net.goui.cosmicdungeon.playerclass.resource.ClassResourceService.blocked(p)||D1WatsonRecovery.blocked(p)||net.goui.cosmicdungeon.dungeon.DungeonInventoryHandoffs.blocked(p)||net.goui.cosmicdungeon.dungeon.ChopTravelRecovery.blocked(p)||net.goui.cosmicdungeon.economy.DeathCurrencyService.blocked(p)||net.goui.cosmicdungeon.vendor.CommerceTransactions.blocked(p)||RepairTransactions.blocked(p)||net.goui.cosmicdungeon.trade.TradeTransactions.blocked(p);}
+    /** Inventory UI actions only: already-clean state needs no close-window/recovery side effects. */
+    public static boolean beforeCurrentInventoryAction(ServerPlayer p){
+        return p.containerMenu==p.inventoryMenu&&p.inventoryMenu.getCarried().isEmpty()&&!blocked(p);
+    }
     public static boolean beforeInventoryChange(ServerPlayer p){return !D1WatsonRecovery.blocked(p)&&!net.goui.cosmicdungeon.dungeon.DungeonInventoryHandoffs.blocked(p)&&otherTransactionsReady(p);}
     public static boolean beforeDungeonCleanup(ServerPlayer p,long run,String reason){
         return D1WatsonRecovery.permitsCleanup(p.level().getServer(),run,reason)
                 &&D1WatsonRecovery.readyForCleanup(p.level().getServer(),List.of(p.getUUID()))
                 &&!net.goui.cosmicdungeon.dungeon.DungeonInventoryHandoffs.blocked(p)&&otherTransactionsReady(p);
     }
-    public static boolean otherTransactionsReady(ServerPlayer p){return !net.goui.cosmicdungeon.dungeon.ChopTravelRecovery.blocked(p)&&!net.goui.cosmicdungeon.economy.DeathCurrencyService.blocked(p)&&net.goui.cosmicdungeon.vendor.CommerceTransactions.beforeInventoryChange(p)&&RepairTransactions.beforeInventoryChange(p)&&TradeCustody.beforeInventoryChange(p);}
+    public static boolean otherTransactionsReady(ServerPlayer p){return net.goui.cosmicdungeon.playerclass.theurgist.TheurgistRevival.beforeInventoryChange(p)&&net.goui.cosmicdungeon.playerclass.resource.SupplyTransfers.beforeInventoryChange(p)&&!net.goui.cosmicdungeon.playerclass.resource.ClassResourceService.blocked(p)&&!net.goui.cosmicdungeon.dungeon.ChopTravelRecovery.blocked(p)&&!net.goui.cosmicdungeon.economy.DeathCurrencyService.blocked(p)&&net.goui.cosmicdungeon.vendor.CommerceTransactions.beforeInventoryChange(p)&&RepairTransactions.beforeInventoryChange(p)&&TradeCustody.beforeInventoryChange(p);}
     public static boolean readyForCleanup(MinecraftServer server,List<UUID> owners){
+        if(!net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommands.readyForCleanup(server,owners))return false;
+        if(!net.goui.cosmicdungeon.playerclass.theurgist.TheurgistRevival.readyForCleanup(server,owners))return false;
+        if(!net.goui.cosmicdungeon.playerclass.resource.SupplyTransfers.readyForCleanup(server,owners))return false;
         if(!D1WatsonRecovery.readyForCleanup(server,owners))return false;
         if(!net.goui.cosmicdungeon.dungeon.ChopTravelRecovery.readyForCleanup(server,owners))return false;
         if(owners.stream().anyMatch(owner->net.goui.cosmicdungeon.economy.PlayerCurrencyData.get(server).pendingDeath(owner)))return false;
         if(!RepairTransactions.readyForCleanup(server,owners))return false;
         for(UUID owner:owners){var p=server.getPlayerList().getPlayer(owner);
+            if(p!=null&&net.goui.cosmicdungeon.playerclass.resource.ClassResourceService.blocked(p))return false;
             if(p!=null&&net.goui.cosmicdungeon.vendor.CommerceTransactions.blocked(p)&&!net.goui.cosmicdungeon.vendor.CommerceTransactions.beforeInventoryChange(p))return false;
             if(net.goui.cosmicdungeon.economy.PlayerCurrencyData.get(server).pendingOperation(owner).isPresent())return false;
             if(p!=null&&net.goui.cosmicdungeon.trade.TradeTransactions.blocked(p)&&!TradeCustody.beforeInventoryChange(p))return false;

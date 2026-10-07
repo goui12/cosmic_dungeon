@@ -74,6 +74,30 @@ public final class DungeonInstanceGameTests {
         suite.add(id("party_inspection_counters"),net.goui.cosmicdungeon.npc.tamsin.PartyInspectionGameTests::counters);
         suite.add(id("death_inventory_lifecycle"),DeathInventoryGameTests::lifecycle);
         suite.add(id("death_inventory_pickup"),DeathInventoryGameTests::pickup);
+        suite.add(id("class_resource_tag_recycling"),net.goui.cosmicdungeon.playerclass.resource.ClassResourceGameTests::generatedTagsAndRecycleGuards);
+        suite.add(id("class_resource_lifecycle_persistence"),net.goui.cosmicdungeon.playerclass.resource.ClassResourceGameTests::persistenceDeathAndOnlineLifecycle);
+        suite.add(id("supply_requests_consent_bulk"),net.goui.cosmicdungeon.playerclass.resource.SupplyRequestGameTests::consentAndBulk);
+        suite.add(id("supply_requests_save_recovery"),net.goui.cosmicdungeon.playerclass.resource.SupplyRequestGameTests::saveRecovery);
+        suite.add(id("theurgist_potion_splash_safety"),net.goui.cosmicdungeon.playerclass.theurgist.TheurgistPotionGameTests::splashSafety);
+        suite.add(id("theurgist_potion_cloud_attribution"),net.goui.cosmicdungeon.playerclass.theurgist.TheurgistPotionGameTests::cloudAttribution);
+        suite.add(id("theurgist_crafting"),net.goui.cosmicdungeon.playerclass.theurgist.TheurgistActionGameTests::crafting);
+        suite.add(id("theurgist_player_resurrection"),net.goui.cosmicdungeon.playerclass.theurgist.TheurgistActionGameTests::resurrection);
+        suite.add(id("theurgist_revival_recovery"),net.goui.cosmicdungeon.playerclass.theurgist.TheurgistActionGameTests::recovery);
+        suite.add(id("bogatyr_care_breeding"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommandGameTests::careAndBreeding);
+        suite.add(id("bogatyr_summon_regroup"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommandGameTests::summonAndRegroup);
+        suite.add(id("bogatyr_command_save_recovery"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommandGameTests::commandSaveRecovery);
+        suite.add(id("bogatyr_run_retirement"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommandGameTests::runRetirement);
+        suite.add(id("bogatyr_mode_stand_ground"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommandGameTests::modeStandGround);
+        suite.add(id("bogatyr_mode_targets"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommandGameTests::modeTargets);
+        suite.add(id("bogatyr_mode_persistence"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommandGameTests::modePersistenceAuthority);
+        suite.add(id("bogatyr_strategic"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrTacticsGameTests::strategic);
+        suite.add(id("bogatyr_rescue"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrTacticsGameTests::rescue);
+        suite.add(id("bogatyr_companionship"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrTacticsGameTests::companionship);
+        suite.add(id("bogatyr_danger_close"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrTacticsGameTests::dangerClose);
+        suite.add(id("bogatyr_work_scaling"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrTacticsGameTests::workScaling);
+        suite.add(id("set_c_supply_crafting_cap"),net.goui.cosmicdungeon.playerclass.resource.SupplyRequestGameTests::craftingAndCapIntegration);
+        suite.add(id("set_c_resurrection_resource_death"),net.goui.cosmicdungeon.playerclass.theurgist.TheurgistActionGameTests::resourceDeathIntegration);
+        suite.add(id("set_c_pack_transitions"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrTacticsGameTests::packTransitionIntegration);
         return suite;
     }
 

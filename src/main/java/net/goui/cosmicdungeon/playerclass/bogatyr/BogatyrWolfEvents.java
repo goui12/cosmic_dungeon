@@ -27,6 +27,11 @@ public final class BogatyrWolfEvents {
     private BogatyrWolfEvents(){}
     public static boolean managed(Wolf wolf){return !net.goui.cosmicdungeon.mercenary.MercenaryWolves.managed(wolf)
             && wolf.getPersistentData().getLongOr(RUN,0)>0;}
+    static java.util.Optional<net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData.RunRecord> currentRun(ServerLevel level){
+        return net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData.get(level.getServer()).findRunForInstanceDimension(level.dimension())
+                .filter(r->r.stateEnum()==net.goui.cosmicdungeon.dungeon.DungeonRunState.ACTIVE)
+                .filter(r->!r.dungeonId().equals("dungeon_1")||!D1RunData.get(level.getServer()).sealed(r.runId()));
+    }
     private static boolean bogatyr(ServerPlayer player){return "bogatyr".equals(ClassData.getClassId(player));}
     public static boolean owned(Wolf wolf) {
         return !net.goui.cosmicdungeon.mercenary.MercenaryWolves.managed(wolf) && wolf.isTame() && (managed(wolf) || wolf.getPersistentData().contains(OWNER)
@@ -55,9 +60,10 @@ public final class BogatyrWolfEvents {
         return managed(wolf) && wolf.isTame() && owner!=null && wolf.getPersistentData().getLongOr(RUN,0)==run
                 && owner.toString().equals(wolf.getPersistentData().getStringOr(OWNER,""));
     }
-    private static void register(Wolf wolf,UUID owner,long run){
+    static void register(Wolf wolf,UUID owner,long run){
         if(net.goui.cosmicdungeon.mercenary.MercenaryWolves.managed(wolf))return; // Summoned run companions are not permanent player pets.
         if(!(wolf.level() instanceof ServerLevel level)||owner==null||!owner.equals(ownerId(wolf)))return;
+        if(managed(wolf)&&!BogatyrRunLifecycle.admit(wolf))return;
         if(!managed(wolf))BogatyrIdentity.fresh(wolf);
         if(!BogatyrIdentity.observe(wolf))return;
         long oldRun=wolf.getPersistentData().getLongOr(RUN,0);
@@ -76,7 +82,7 @@ public final class BogatyrWolfEvents {
         if(!managed(first)&&!managed(second))return true;
         if(!(first.level() instanceof ServerLevel level)||second.level()!=level
                 ||BogatyrRecovery.held(first)||BogatyrRecovery.held(second))return false;
-        var run=D1Members.run(level).orElse(null);
+        var run=currentRun(level).orElse(null);
         if(run==null||!enrolled(first,run.runId())||!enrolled(second,run.runId())
                 ||!run.containsPlayer(ownerId(first))||!run.containsPlayer(ownerId(second))
                 ||run.isCompletionExited(ownerId(first))||run.isCompletionExited(ownerId(second)))return false;
@@ -97,7 +103,7 @@ public final class BogatyrWolfEvents {
         if(managed(wolf)&&BogatyrRecovery.held(wolf)){
             event.setCanceled(true);event.setCancellationResult(InteractionResult.SUCCESS);return;
         }
-        var run=D1Members.run(player.level()).orElse(null);
+        var run=currentRun(player.level()).orElse(null);
         if(run==null||!D1Members.inside(player,run))return;
         var stack=event.getItemStack();
         if(!wolf.isTame()&&stack.is(Items.BONE)){
@@ -129,11 +135,16 @@ public final class BogatyrWolfEvents {
             }
         }
     }
+    @SubscribeEvent(priority=EventPriority.HIGHEST) public static void join(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event){
+        if(event.getEntity() instanceof Wolf wolf&&event.getLevel() instanceof ServerLevel&&!BogatyrRunLifecycle.admit(wolf))
+            event.setCanceled(true);
+    }
     public static void added(Wolf wolf){
         if(net.goui.cosmicdungeon.mercenary.MercenaryWolves.managed(wolf)
                 ||!(wolf.level() instanceof ServerLevel level))return;
+        if(managed(wolf)&&!BogatyrRunLifecycle.admit(wolf))return;
         if(managed(wolf))tune(wolf);
-        var run=D1Members.run(level).orElse(null);if(run==null)return;
+        var run=currentRun(level).orElse(null);if(run==null)return;
         UUID owner=ownerId(wolf);
         // Re-register the saved identity without requiring the owner to be online.
         if(owner!=null&&enrolled(wolf,run.runId())&&run.containsPlayer(owner)&&!run.isCompletionExited(owner)){
@@ -148,7 +159,7 @@ public final class BogatyrWolfEvents {
         if(!(event.getChild() instanceof Wolf child)||!breedingAllowed(parent,mate)){
             event.setCanceled(true);return;
         }
-        var run=D1Members.run((ServerLevel)parent.level()).orElseThrow();
+        var run=currentRun((ServerLevel)parent.level()).orElseThrow();
         UUID owner=ownerId(parent);
         // Vanilla assigns the first parent's owner. Keep that UUID and its collar, even offline.
         // Enrollment happens on actual onAddedToLevel, not a possibly canceled birth event.
@@ -165,9 +176,5 @@ public final class BogatyrWolfEvents {
     // D3 T3 Untested Scapula 22% / Unchained Pack; T4 Hardened Scapula 32% / Wild Fury.
     // Add relic lifetime, health/armor/bleed/lifesteal/regeneration and strongest-aura-only rules
     // from the newest linked documents. Keep vanilla dyed D1 wolf armor and authored chests intact.
-    // TODO(M44, recovery acceptance): Wolf Internal calls tamed wolves permanent.
-    // Reset archives exact living wolves; stored pets can now return directly to a later D1 run.
-    // Main-world companions now transfer through exact source-save and source-absence receipts.
-    // Never copy an unloaded wolf or cross another party's instance; keep unknown deliveries held.
-    // Review uncertain/legacy holds explicitly; test both stored and existing-pet recall in licensed TEST.
+    // Run-only lifetime supersedes old permanent-pet archive/retrieval behavior.
 }

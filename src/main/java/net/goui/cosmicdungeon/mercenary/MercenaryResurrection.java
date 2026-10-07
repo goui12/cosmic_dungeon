@@ -24,12 +24,12 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 public final class MercenaryResurrection {
     private static final String PROTECTION="cosmicdungeon_resurrection_protected_until";
     private static final String REQUEST="cosmicdungeon_resurrection_request_until";
-    private record Respawn(ServerPlayer original,TeleportTransition transition){}
+    private record Respawn(ServerPlayer original,TeleportTransition transition,java.util.function.Consumer<ServerPlayer> completed){}
     // Exists only within a synchronous native respawn call; cannot leak into later ordinary respawns.
     private static final ThreadLocal<Respawn> RESPAWN=new ThreadLocal<>();
     private MercenaryResurrection(){}
     private static long now(MinecraftServer server){return server.overworld().getGameTime();}
-    static boolean member(ServerPlayer player,DungeonRunRegistryData.RunRecord run){
+    public static boolean member(ServerPlayer player,DungeonRunRegistryData.RunRecord run){
         if(player==null||run==null||!run.containsPlayer(player.getUUID())||run.isCompletionExited(player.getUUID())
                 ||!run.containsDimension(player.level().dimension())||player.isSpectator()||AccessPolicy.isDeveloper(player))return false;
         var server=player.level().getServer();
@@ -44,6 +44,14 @@ public final class MercenaryResurrection {
                 .filter(r->r.stateEnum()==DungeonRunState.ACTIVE&&r.dungeonId().equals("dungeon_1")
                         &&!D1RunData.get(server).sealed(r.runId())&&member(player,r)).orElse(null);
     }
+    /** Shared latest-death authority for every active dungeon; mercenary availability remains D1-only. */
+    public static DungeonRunRegistryData.RunRecord deathRun(ServerPlayer player){
+        var server=player.level().getServer();
+        return DungeonRunRegistryData.get(server).findRunForPlayer(player.getUUID())
+                .filter(r->r.stateEnum()==DungeonRunState.ACTIVE&&member(player,r))
+                .filter(r->!r.dungeonId().equals("dungeon_1")||!D1RunData.get(server).sealed(r.runId())).orElse(null);
+    }
+    public static boolean respawning(){return RESPAWN.get()!=null;}
     /**
      * Creates the canonical latest-death token before native drops. Repeated die calls before
      * respawn reuse it so a second invocation cannot replace the physical-drop provenance.
@@ -51,13 +59,14 @@ public final class MercenaryResurrection {
     public static MercenaryResurrectionState.Death prepareDeath(ServerPlayer player){
         player.getPersistentData().remove(PROTECTION);
         if(!player.isDeadOrDying())return null;
-        var run=activeRun(player);if(run==null)return null;
+        var run=deathRun(player);if(run==null)return null;
         var data=D1RunData.get(player.level().getServer());
         var current=MercenaryResurrectionState.death(data,run.runId(),player.getUUID());
         if(current!=null)return current;
         var death=new MercenaryResurrectionState.Death(UUID.randomUUID(),
                 player.level().dimension().location().toString(),player.position(),player.getYRot(),player.getXRot());
         MercenaryResurrectionState.remember(data,run.runId(),player.getUUID(),death);
+        net.goui.cosmicdungeon.playerclass.theurgist.TheurgistActions.deathNotice(player,run);
         return death;
     }
     /** Final-tail fallback for keep-inventory/spectator-native paths; normally pre-drop already prepared it. */
@@ -85,7 +94,7 @@ public final class MercenaryResurrection {
         int seconds=MercenaryResurrectionState.seconds(MercenaryResurrectionState.readyAt(data,run.runId(),contract.id()),now(server));
         var player=server.getPlayerList().getPlayer(viewer);
         var death=player!=null&&player.isDeadOrDying()?MercenaryResurrectionState.death(data,run.runId(),viewer):null;
-        boolean offer=death!=null&&death.dimension().equals(player.level().dimension().location().toString())
+        boolean offer=death!=null&&!net.goui.cosmicdungeon.playerclass.theurgist.TheurgistActions.hasOffer(player)&&death.dimension().equals(player.level().dimension().location().toString())
                 &&available(player,run,contract)!=null;
         return new PartyPayloads.Resurrection(run.runId(),contract.id().toString(),offer?death.id().toString():"",seconds);
     }
@@ -95,7 +104,8 @@ public final class MercenaryResurrection {
         if(last>tick&&last-tick<=20)return;
         player.getPersistentData().putLong(REQUEST,tick+10);
         var run=activeRun(player);
-        if(run==null||run.runId()!=request.run()||!player.isDeadOrDying()||RESPAWN.get()!=null)return;
+        if(run==null||run.runId()!=request.run()||!player.isDeadOrDying()||RESPAWN.get()!=null
+                ||net.goui.cosmicdungeon.playerclass.theurgist.TheurgistActions.hasOffer(player))return;
         var contract=run.mercenaries().stream().filter(c->c.id().equals(request.mercenary())).findFirst().orElse(null);
         if(contract==null||available(player,run,contract)==null)return;
         var data=D1RunData.get(server);
@@ -108,17 +118,34 @@ public final class MercenaryResurrection {
         if(!data.flushVerified()){
             player.sendSystemMessage(Component.literal("Resurrection could not be saved safely. Use normal respawn."));return;
         }
-        var transition=new TeleportTransition(player.level(),death.position(),Vec3.ZERO,death.yaw(),death.pitch(),TeleportTransition.DO_NOTHING);
-        RESPAWN.set(new Respawn(player,transition));
+        perform(player,death,contract.name(),replacement->{});
+    }
+    /** One synchronous native engine shared by mercenary and explicitly accepted player offers. */
+    public static ServerPlayer perform(ServerPlayer player,MercenaryResurrectionState.Death death,String caster,
+                                        java.util.function.Consumer<ServerPlayer> completed){
+        if(RESPAWN.get()!=null)return null;
+        var server=player.level().getServer();
+        var level=server.getLevel(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION,
+                net.minecraft.resources.ResourceLocation.parse(death.dimension())));
+        if(level==null)return null;
+        var transition=new TeleportTransition(level,death.position(),Vec3.ZERO,death.yaw(),death.pitch(),TeleportTransition.DO_NOTHING);
+        RESPAWN.set(new Respawn(player,transition,completed));
         try{
             var replacement=server.getPlayerList().respawn(player,false,Entity.RemovalReason.KILLED);
-            replacement.connection.player=replacement;
-            replacement.connection.resetPosition();
-            if(replacement.isAlive()&&replacement.level()==transition.newLevel()){
-                replacement.getPersistentData().putLong(PROTECTION,now(server)+MercenaryResurrectionState.PROTECTION_TICKS);
-                replacement.sendSystemMessage(Component.literal(contract.name()+" resurrected you. Invulnerable for 5 seconds."));
-            }
+            replacement.connection.player=replacement;replacement.connection.resetPosition();
+            if(!validReplacement(replacement,RESPAWN.get()))return null;
+            completed.accept(replacement);
+            replacement.getPersistentData().putLong(PROTECTION,now(server)+MercenaryResurrectionState.PROTECTION_TICKS);
+            replacement.sendSystemMessage(Component.literal(caster+" resurrected you. Invulnerable for 5 seconds."));
+            return replacement;
         }finally{RESPAWN.remove();}
+    }
+    private static boolean validReplacement(ServerPlayer p,Respawn active){
+        return active!=null&&p!=active.original()&&p.getUUID().equals(active.original().getUUID())&&p.isAlive()&&!p.isDeadOrDying()
+                &&p.level()==active.transition().newLevel()&&p.position().distanceToSqr(active.transition().position())<0.000001;
+    }
+    public static void beforeRespawnListeners(ServerPlayer player){
+        var active=RESPAWN.get();if(validReplacement(player,active))active.completed().accept(player);
     }
     /** HEAD override prevents bed/anchor consumption while retaining the original respawn configuration. */
     public static TeleportTransition destination(ServerPlayer player){

@@ -25,6 +25,14 @@ public class ModItemTagProvider extends BlockTagCopyingItemTagProvider {
 
     @Override
     protected void addTags(HolderLookup.Provider provider) {
+        this.tag(ModTags.Items.BREWING_SUPPLIES).add(
+                Items.SUGAR, Items.RABBIT_FOOT, Items.GLISTERING_MELON_SLICE, Items.SPIDER_EYE,
+                Items.BLAZE_POWDER, Items.GOLDEN_CARROT, Items.GHAST_TEAR, Items.PUFFERFISH,
+                Items.MAGMA_CREAM, Items.TURTLE_HELMET, Items.PHANTOM_MEMBRANE, Items.BREEZE_ROD,
+                Items.STONE, Items.COBWEB, Items.FERMENTED_SPIDER_EYE, Items.SLIME_BLOCK);
+        this.tag(ModTags.Items.KIBBLE).add(
+                Items.ROTTEN_FLESH, Items.BEEF, Items.PORKCHOP, Items.MUTTON, Items.CHICKEN, Items.RABBIT);
+
         // Bow/crossbow selection uses the native arrows tag; special ammunition stays finite.
         var d1Arrows = this.tag(net.minecraft.tags.ItemTags.ARROWS);
         ModItems.d1Ammunition().stream()

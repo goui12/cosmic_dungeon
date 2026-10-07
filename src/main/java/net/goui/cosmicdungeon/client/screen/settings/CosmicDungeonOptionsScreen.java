@@ -24,6 +24,9 @@ public final class CosmicDungeonOptionsScreen extends Screen {
                 Minecraft.getInstance().setScreen(new CosmicSpawnerHudOptionsScreen(this)))
                 .bounds(centerX - 100, y, 200, 20)
                 .build());
+        addRenderableWidget(Button.builder(Component.literal("Reset Skill Panel UI"), b ->
+                net.goui.cosmicdungeon.client.screen.skills.SkillsPanelClient.resetLayout())
+                .bounds(centerX - 100, y + 24, 200, 20).build());
         addRenderableWidget(Button.builder(Component.literal("Done"), b -> onClose())
                 .bounds(centerX - 100, this.height - 28, 200, 20)
                 .build());
