@@ -8,7 +8,8 @@ public enum MercenarySkill {
     NEGATIVE_POTIONS("negative_potions", "venefex", "Negative Potions"),
     WOLVES("wolves", "bogatyr", "Wolves"),
     FIREWORKS("fireworks", "pyroclast", "Fireworks"),
-    CHAIN_LIGHTNING("chain_lightning", "dragoon", "Chain Lightning");
+    CHAIN_LIGHTNING("chain_lightning", "dragoon", "Chain Lightning"),
+    COMBAT("combat", "judicator", "Combat");
 
     private final String id, classId, title;
     MercenarySkill(String id, String classId, String title) {
@@ -40,11 +41,13 @@ public enum MercenarySkill {
         }
         return low;
     }
-    /** Venefex alone starts at zero; retain every existing skill's legacy curve. */
+    /** Role-specific curves never change existing saved success totals. */
     public int levelFor(int successes) {
+        if(this==COMBAT)return MercenaryJudicator.level(successes);
         return level(successes)-(this==NEGATIVE_POTIONS?1:0);
     }
     public long thresholdFor(int level) {
+        if(this==COMBAT)return MercenaryJudicator.threshold(level);
         return threshold(this==NEGATIVE_POTIONS?Math.addExact(level,1):level);
     }
     public static int advance(int successes) {
@@ -53,7 +56,8 @@ public enum MercenarySkill {
     }
     public static String description(String id, int successes) {
         var skill=fromId(id);
-        int level=skill.levelFor(successes), needed=skill==NEGATIVE_POTIONS?level+1:level;
+        int level=skill.levelFor(successes);
+        long needed=skill.thresholdFor(level+1)-skill.thresholdFor(level);
         return skill.title()+" - Level "+level+" ("+(successes-skill.thresholdFor(level))+"/"+needed+")";
     }
 }

@@ -55,8 +55,26 @@ final class MercenarySkillsTest {
         assertEquals(65535,skill.levelFor(Integer.MAX_VALUE));
         assertEquals("Negative Potions - Level 0 (0/1)",MercenarySkill.description(skill.id(),0));
         assertEquals("Negative Potions - Level 2 (1/3)",MercenarySkill.description(skill.id(),4));
-        for(var other:MercenarySkill.values())if(other!=skill)
+        for(var other:MercenarySkill.values())if(other!=skill&&other!=MercenarySkill.COMBAT)
             assertEquals(MercenarySkill.level(10),other.levelFor(10));
+    }
+    @Test void combatUsesDoublingGoalsAndExistingRunPersistenceAndPacketFormat() throws Exception {
+        var skill=MercenarySkill.COMBAT;var hire=contract("judicator");var active=run(18,hire);var data=data();
+        data.setCount(18,"future_counter",37);data.setValue(18,"future_value","preserved");
+        for(int i=0;i<13;i++)MercenarySkills.record(data,active,hire,skill);
+        var loaded=reload(data);
+        assertEquals(13,MercenarySkills.successes(loaded,18,hire,skill));
+        assertEquals(4,skill.levelFor(13));
+        assertEquals(0,MercenarySkills.successes(loaded,19,hire,skill));
+        assertEquals(37,loaded.count(18,"future_counter"));
+        assertEquals(List.of("preserved"),loaded.values(18,"future_value"));
+        var row=new PartyPayloads.Mercenary("Judicator","Owner",20,20,-1,"ACTIVE",
+                PartyPayloads.Recovery.NONE,List.of(new PartyPayloads.Skill("combat",13)));
+        var buf=Unpooled.buffer();try{
+            PartyPayloads.Mercenary.CODEC.encode(buf,row);
+            assertEquals(row,PartyPayloads.Mercenary.CODEC.decode(buf));assertEquals(0,buf.readableBytes());
+        }finally{buf.release();}
+        assertTrue(MercenaryHudLayout.tooltip(row).contains("Combat - Level 4 (1/12)"));
     }
     @Test void dormantLegacyCountersStayStoredWithoutConvertingTheurgistIdentity() throws Exception {
         var data=data();var theurgist=contract("theurgist");var active=run(1,theurgist);
@@ -87,7 +105,7 @@ final class MercenarySkillsTest {
         assertEquals(List.of(MercenarySkill.WOLVES),MercenarySkill.forContract(contract("bogatyr")));
         assertEquals(List.of(MercenarySkill.FIREWORKS),MercenarySkill.forContract(contract("pyroclast")));
         assertEquals(List.of(MercenarySkill.CHAIN_LIGHTNING),MercenarySkill.forContract(contract("dragoon")));
-        assertTrue(MercenarySkill.forContract(contract("judicator")).isEmpty());
+        assertEquals(List.of(MercenarySkill.COMBAT),MercenarySkill.forContract(contract("judicator")));
         assertThrows(IllegalArgumentException.class,()->MercenarySkill.fromId("invented"));
     }
     @Test void oldRunDataStartsAtOneAndUnrelatedObjectivesSurviveReload() throws Exception {

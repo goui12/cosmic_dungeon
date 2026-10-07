@@ -1,9 +1,9 @@
 # New batch round - decisions updated 2026-10-06
 
-Status: Batches10-16 are implemented, validated and published; Set A Beta1.6.6-beta.1 is merged and installed.
-All original and follow-up questions are settled. Cameron resumed for Batch17 on2026-10-07; stop after17.
+Status: Batches10-17 are implemented, validated and published; Batch17 runtime1.6.7-alpha.1 is installed on TEST.
+All original and follow-up questions are settled. Cameron resumed for Batch18 on2026-10-07; stop after18. Set B Beta target1.6.8-beta.1.
 Batch10 merged through PR227: main e57b27bb78e592fca521e05bc78e305f23c55c2f; exact1.6.0-beta published.
-Batch11 starts from that merged baseline on feature/party-trade-readiness-20261006; validated/published1.6.1-alpha.1. TEST deployment backlog was resolved before14; both targets now use1.6.6-beta.1.
+Batch11 starts from that merged baseline on feature/party-trade-readiness-20261006; validated/published1.6.1-alpha.1. TEST deployment backlog was resolved before14; current delivery is CurseForge plus TEST sFTP; local client delivery is not a batch gate.
 Source: Cameron's original request, reviewed wolfpack mockup, and October6 08:16PDT clarification.
 This queue records requirements; implementation status is maintained in task reports and D1_REMAINING.
 Google source metadata refresh attempted2026-10-06T15:34:03Z: existing read-only authorization expired. Cached Tamsin/TamsinTax plus Cameron explicit settled corrections used; no fresh semantic audit claimed.
@@ -12,7 +12,7 @@ All earlier questions below the latest DECISIONS checkpoint are historical; do n
 ## Numbering and release sequence
 Queued Batch10: Tamsin20x18 top-right lore/map replay i; preserve actual class/group/ready/progress.
 Support exact1.6.0-beta, validate, merge completed prior set via PR and publish both jars.
-Original round had16 batches11-26 plus queued10. Batches10-16 completed; Batch17 implemented in its task branch. After its release/deployment,9 remain18-26. Stop after17.
+Original round had16 batches11-26 plus queued10. Batches10-17 completed; Batch18 implements Judicator and the Set B merge/Beta. After its release/deployment,8 remain19-26. Stop after18.
 The independent generic Skills UI warrants its own Batch19; prior19-25 become20-26.
 SetA11-16 party/combat/HUD/death recovery; SetB17-18 mercenary roles; SetC19-26 UI/resources/classes/wolves.
 Alpha micro revisions between implementation batches; validated set main merge/Beta after each set.

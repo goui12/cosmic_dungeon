@@ -1,26 +1,25 @@
 # Current rollout, 2026-10-07
 
-Batch17: Theurgist/Venefex potion-role split, release target **1.6.7-alpha.1**.
-Implemented on feature/mercenary-potion-roles-20261007; publication/deployment must be
-confirmed by the current BatchRunner completion receipt, not inferred from this source note.
-Batch16 was verified merged (PR234), full native CI/release successful and sFTP deployed
-as1.6.6-beta.1; its uploads/deployment were not repeated.
+Batch18: Judicator mercenary and Set B Beta target **1.6.8-beta.1**.
+Implemented on feature/judicator-mercenary-20261007; validated completed Set B merges
+through its PR before Beta publication. Exact completion, source/CI/publication and
+TEST sFTP facts live in BatchRunner/receipts/batch-18.json and linked evidence.
+This source note does not infer that future publication/deployment has already happened.
+Batch17 completed:1.6.7-alpha.1, CurseForge main9087282/helper9087280, TEST sFTP installed.
 
-Theurgist now has positive-only production/casting/HUD; Venefex negative-only with
-zero initial level and cumulative1,3,6,10 triangular successes. Saved identities, legacy
-and unknown counters remain; resurrection stays Positive Potions10 and3-minute cooldown.
-Full runtime tests remain required; licensed HUD/multiplayer and CurseForge app QA pending.
-No spawner/registry/network schema changes or datagen.
+Judicator Combat starts0; cumulative hostile kills1,3,6,12,24 then doubling.
+Successful direct attacks roll L% (capped100%) for L HP to hostiles within2blocks;
+secondary damage cannot recursively burst. Allies remain protected; death retains
+run progress and the next run resets it. No authored chest edits or save/network migration.
+Set B includes Batch17 Theurgist/Venefex role split and the retained legacy safeguards.
+Licensed HUD/co-op/world and CurseForge app acceptance remain pending TESTING.
 
-AGENTS compacted5359→1680 words; installed batch skill705→522 words.
-Deployment ends after CurseForge and stopped TEST sFTP. No local-client copy,
-post-publication hash readback or routine legacy-feed audit. See current workflow docs.
-
-[Exact scope/files/QA](tasks/mercenary-potion-roles-20261007.md).
+Deployment ends after CurseForge and stopped TEST sFTP. No local-client installation,
+post-publication artifact hashes or routine legacy-feed audit.
+[Exact scope/files/QA](tasks/judicator-mercenary-20261007.md).
 [Approved plan](PARTY_SKILLS_BATCHES_20261006.md).
 
-**After Batch17 completes,9 planned batches remain (18–26); stop after17.**
-- 18: Judicator progression/combat and SetB Beta.
+**After Batch18 completes,8 planned batches remain (19–26); stop after18.**
 - 19: movable Skills panel, reset setting and recipe-book removal.
 - 20: Brewing Supplies/Kibble and generated recycling tags.
 - 21: group supply requests.

@@ -43,7 +43,7 @@ public final class MercenarySkills {
         data.setCount(run.runId(),key(contract.id(),skill),next);
         return next;
     }
-    /** Server-only callback for a verified summon, potion effect, firework or chain cast. */
+    /** Server-only callback for a verified summon, potion effect, cast or credited hostile kill. */
     public static boolean success(MercenaryEntity entity, MercenarySkill skill) {
         if (!(entity.level() instanceof ServerLevel level) || !entity.isAlive()) return false;
         var server=level.getServer();
