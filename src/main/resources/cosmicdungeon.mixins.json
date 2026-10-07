@@ -61,6 +61,7 @@
     "DeathCurrencyPlayerMixin",
     "RunHealingMixin",
     "DeathCurrencyItemMixin",
+    "DeathInventoryItemMixin",
     "DeathCurrencyEntityMixin",
     "InnHeartMixin",
     "InnFluidMixin",

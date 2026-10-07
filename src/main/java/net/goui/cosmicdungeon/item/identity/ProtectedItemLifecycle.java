@@ -1,6 +1,7 @@
 package net.goui.cosmicdungeon.item.identity;
 
 import net.goui.cosmicdungeon.auth.AccessPolicy;
+import net.goui.cosmicdungeon.dungeon.d1.DeathInventoryRecovery;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
@@ -20,7 +21,8 @@ public final class ProtectedItemLifecycle {
             var stack = inventory.getItem(slot);
             if (!stack.isEmpty() && !retain(player, stack)) {
                 ClassItemOwnership.bind(player, stack);
-                player.drop(stack, true, false);
+                var dropped = player.drop(stack, true, false);
+                DeathInventoryRecovery.markDrop(player, dropped, slot);
                 inventory.setItem(slot, ItemStack.EMPTY);
             }
         }
