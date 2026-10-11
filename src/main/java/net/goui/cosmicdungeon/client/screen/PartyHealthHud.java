@@ -27,7 +27,7 @@ final class PartyHealthHud {
         var result=new ArrayList<Row>();
         for(var member:view.members()) {
             String label=(member.leader()?"* ":"")+member.name()+" / "+ClassSelectorScreen.className(member.classId()).getString();
-            result.add(new Row(label,member.vitals(),List.of(label,status(member.vitals())),member.memberId()));
+            result.add(new Row(label,member.vitals(),List.of(label,status(member.vitals()),D1PartyPresentation.sharingStatus(member)),member.memberId()));
         }
         for(var hire:view.mercenaries()) result.add(new Row(MercenaryHudLayout.label(hire),hire.vitals(),MercenaryHudLayout.tooltip(hire),""));
         return result;

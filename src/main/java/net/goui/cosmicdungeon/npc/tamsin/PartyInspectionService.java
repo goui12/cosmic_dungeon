@@ -36,6 +36,7 @@ public final class PartyInspectionService {
         var vitals=PartyVitalsSnapshot.capture(subject,subject!=null&&run.containsDimension(subject.level().dimension()));
         var data=D1RunData.get(server);
         var readings=new ArrayList<PartyInspectionPayloads.Reading>();
+        readings.add(new PartyInspectionPayloads.Reading("Group resources",GroupResourceConsent.choice(data,run.runId(),request.subject())));
         readings.add(new PartyInspectionPayloads.Reading("Run kills",Integer.toString(data.count(run.runId(),"kills:"+request.subject()))));
         for(String metric:List.of("damage","healing_received","deaths")) {
             String label=switch(metric){case "damage"->"Damage dealt to hostiles (HP)";case "healing_received"->"Healing received (HP)";default->"Run deaths";};

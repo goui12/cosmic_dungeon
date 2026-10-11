@@ -22,7 +22,8 @@ import net.neoforged.neoforge.client.event.*;
 public final class D1PartyHud {
     private static PartyPayloads.View view;
     private static Screen inventory;
-    private static Button ready, leave, join, revive;
+    private static Button ready, leave, join, revive, resources;
+    private static String promptedContext = "";
     private static final PanelScroll lobbyScroll = new PanelScroll();
     private D1PartyHud() {}
     public static void receive(PartyPayloads.View snapshot) {
@@ -30,10 +31,20 @@ public final class D1PartyHud {
         view = snapshot;
         updateControls();
     }
+    static PartyPayloads.View currentView() { return view; }
+    private static void promptConsent() {
+        var mc = Minecraft.getInstance();
+        if (!D1PartyPresentation.needsConsent(view) || mc.player == null
+                || mc.player.containerMenu != mc.player.inventoryMenu || !mc.player.isAlive()
+                || !(mc.screen == null || inventory(mc.screen))
+                || promptedContext.equals(view.sharing().context())) return;
+        promptedContext = view.sharing().context();
+        mc.setScreen(new GroupResourceConsentScreen(mc.screen, promptedContext));
+    }
     public static PartyPayloads.Mercenary resurrectionOffer(){
         return view==null?null:view.mercenaries().stream().filter(row->row.resurrection().offered()).findFirst().orElse(null);
     }
-    private static void clear() { PartyInspectionHover.clear(); lobbyScroll.reset(); PartyHealthHud.reset(); view = null; inventory = null; ready = leave = join = revive = null; }
+    private static void clear() { PartyInspectionHover.clear(); lobbyScroll.reset(); PartyHealthHud.reset(); view = null; inventory = null; ready = leave = join = revive = resources = null; promptedContext = ""; }
     @SubscribeEvent public static void login(ClientPlayerNetworkEvent.LoggingIn event) { clear(); }
     @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { clear(); }
     private static boolean inventory(Screen screen) {
@@ -51,7 +62,7 @@ public final class D1PartyHud {
         var screen = Minecraft.getInstance().screen;
         if (inventory(screen)) {
             var group = inventoryLayout((AbstractContainerScreen<?>)screen).group();
-            return new D1PartyHudLayout(group.x(), group.y(), group.width(), Math.max(24, group.height() - 48));
+            return new D1PartyHudLayout(group.x(), group.y(), group.width(), Math.max(24, group.height() - 72));
         }
         return D1PartyHudLayout.forView(-1, view == null ? 0 : view.members().size());
     }
@@ -60,7 +71,7 @@ public final class D1PartyHud {
         var screen = Minecraft.getInstance().screen;
         if (inventory(screen)) {
             var group = inventoryLayout((AbstractContainerScreen<?>)screen).group();
-            return new PartyHealthLayout(group.x(), group.y(), group.width(), group.height(), 1, 0);
+            return new PartyHealthLayout(group.x(), group.y(), group.width(), Math.max(24, group.height() - 24), 1, 0);
         }
         return PartyHealthHud.worldLayout(view);
     }
@@ -94,13 +105,18 @@ public final class D1PartyHud {
             var hire=ownRevival();if(hire==null)return;
             ModNetwork.sendToServer(new PartyPayloads.Action(-1,hire.recovery().deadline(),"revive",hire.recovery().id()));
         }).bounds(8,inventory.height-26,160,20).build();
-        event.addListener(ready); event.addListener(leave); event.addListener(join);event.addListener(revive);
+        resources = Button.builder(Component.literal("Resources"), button -> {
+            if (view != null && !view.sharing().context().isEmpty())
+                Minecraft.getInstance().setScreen(new GroupResourceConsentScreen(inventory, view.sharing().context()));
+        }).bounds(8, 8, 100, 20).build();
+        event.addListener(ready); event.addListener(leave); event.addListener(join); event.addListener(revive); event.addListener(resources);
         updateControls();
     }
     @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
-        if (inventory != Minecraft.getInstance().screen) { lobbyScroll.release(); PartyHealthHud.release(); inventory = null; ready = leave = join = revive = null; }
+        if (inventory != Minecraft.getInstance().screen) { lobbyScroll.release(); PartyHealthHud.release(); inventory = null; ready = leave = join = revive = resources = null; }
         else updateControls();
         PartyInspectionHover.tick();
+        promptConsent();
     }
     private static PartyPayloads.Mercenary ownRevival(){
         return view==null?null:view.mercenaries().stream().filter(h->h.recovery().own()&&h.status().equals("RESPAWNING")).findFirst().orElse(null);
@@ -134,12 +150,19 @@ public final class D1PartyHud {
         var control = D1PartyPresentation.readiness(view, mc.player == null ? null : mc.player.getGameProfile().name());
         ready.setMessage(Component.literal(control.label()));
         ready.setTooltip(Tooltip.create(Component.literal(control.label())));
-        ready.visible = lobby; ready.active = lobby && control.enabled();
+        ready.visible = lobby; ready.active = lobby && control.enabled() && !D1PartyPresentation.needsConsent(view);
         leave.visible = lobby; leave.active = lobby && !view.state().phase().equals("PREPARING");
         join.visible = shown && !grouped && !view.invitation().token().isEmpty();
         join.active = join.visible && !view.invitation().accepted();
         for (Button button : List.of(ready, leave, join)) { button.setX(box.x()); button.setWidth(box.width()); }
         ready.setY(box.controlsY()); leave.setY(box.controlsY() + 24); join.setY(box.controlsY());
+        resources.visible = grouped && !view.sharing().context().isEmpty();
+        resources.active = resources.visible && !view.state().phase().equals("PREPARING");
+        resources.setMessage(Component.literal("Resources: " + (resources.visible ? view.sharing().choice().equals("UNKNOWN") ? "Choose" : view.sharing().choice() : "")));
+        resources.setTooltip(Tooltip.create(Component.literal("Change your YES/NO contribution choice")));
+        resources.setX(box.x()); resources.setWidth(box.width());
+        var groupBox = inventoryLayout((AbstractContainerScreen<?>) inventory).group();
+        resources.setY(lobby ? box.controlsY() + 48 : groupBox.y() + groupBox.height() - 20);
     }
     @SubscribeEvent public static void hud(RenderGuiEvent.Post event) {
         var mc = Minecraft.getInstance();
@@ -156,7 +179,7 @@ public final class D1PartyHud {
         leave.setTooltip(Tooltip.create(Component.literal("Leave Group (leaders disband their group)")));
         join.setTooltip(Tooltip.create(Component.literal("Join the inviting group for Dungeon 1")));
         if (SkillsPanelClient.ownsInput(event.getScreen(),event.getMouseX(),event.getMouseY()))
-            for (Button button:List.of(ready,leave,join,revive)) button.setTooltip(null);
+            for (Button button:List.of(ready,leave,join,revive,resources)) button.setTooltip(null);
     }
     @SubscribeEvent public static void screen(ScreenEvent.Render.Post event) {
         if (!visible() || !inventory(event.getScreen())) return;
@@ -299,7 +322,12 @@ public final class D1PartyHud {
         } else for (var member:view.members()) {
             line(g,(member.leader()?"* ":"")+member.name()+" / "+ClassSelectorScreen.className(member.classId()).getString()
                     +D1PartyPresentation.readySuffix(view,member),y,
-                    D1PartyPresentation.showsReadiness(view,member)&&member.ready()?0xFFAAFFAA:0xFFDDDDDD,mouseX,pointerY);
+                    D1PartyPresentation.showsReadiness(view,member)&&member.ready()?0xFFAAFFAA:0xFFDDDDDD,-1,-1);
+            if (!lobbyScroll.captured() && mouseX >= box.x() && mouseX < box.x() + box.width() - 6
+                    && pointerY >= y && pointerY < y + 11)
+                g.setComponentTooltipForNextFrame(Minecraft.getInstance().font,
+                        D1PartyPresentation.memberDetails(view, member).stream().map(Component::literal)
+                                .map(line -> (Component) line).toList(), mouseX, pointerY);
             y+=12;
         }
         for (var hire:view.mercenaries()) {

@@ -5,10 +5,11 @@
 **20 planned batches:19 Alphas (1.7.1 through1.7.19), then1.8.0 Beta.**
 Batch1 published1.7.1-alpha.2 (PR246; CI38110117751; release38110321123; CurseForge9125456/helper9125454). TEST delivery is pending: current server startup followed by empty-server pause does not establish shutdown.
 Batch2 published1.7.2-alpha.1 (PR247; CI38111900746; release38112081876; CurseForge9125610/helper9125609); TEST remained running, delivery pending.
-Batch3 implementation is ready under Cameron's explicit 'Proceed to batch3' instruction.
-[Batch1 report](tasks/BATCH_1_7_01_20261011.md) | [Batch2 report](tasks/BATCH_1_7_02_20261011.md) | [Batch3 report](tasks/BATCH_1_7_03_20261011.md).
-17 later cards (Batch4–20) remain PLANNED; stop after Batch3.
-Authoritative exact results: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json, batch-02.json and batch-03.json.
+Batch3 published1.7.3-alpha.1 (PR248; CI38113479812; release38113666453; CurseForge9125762/helper9125761); TEST remained running, delivery pending.
+Batch4 implements Tamsin consent/progression under Cameron's explicit "Proceed to batch4" instruction.
+[Batch1 report](tasks/BATCH_1_7_01_20261011.md) | [Batch2 report](tasks/BATCH_1_7_02_20261011.md) | [Batch3 report](tasks/BATCH_1_7_03_20261011.md) | [Batch4 report](tasks/BATCH_1_7_04_20261011.md).
+16 later cards (Batch5–20) remain PLANNED; stop after Batch4.
+Authoritative exact results: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json through batch-04.json.
 The previous15–26 controller is COMPLETE; do not reset/reuse its receipts or infer autonomous execution.
 
 The plan covers inventory/class art/tooltips, ownership/trades, Tamsin sharing,

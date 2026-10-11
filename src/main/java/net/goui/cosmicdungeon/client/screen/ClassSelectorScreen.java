@@ -109,6 +109,10 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
             var map = TamsinMapLayout.forViewport(this.width, this.height);
             this.imageWidth = map.width();
             this.imageHeight = map.height();
+        } else if (!loading && displayedStage() == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.READY) {
+            var box = D1PartyPanelLayout.forViewport(this.width, this.height);
+            this.imageWidth = box.width();
+            this.imageHeight = box.height();
         } else {
             this.imageWidth = 360;
             this.imageHeight = 240;
@@ -173,7 +177,9 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
             return;
         }
         if (displayedStage() == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.READY) {
-            partyPanel.build(font, widget -> addRenderableWidget(widget), this::rebuildSelectorWidgets, x, y, menu.containerId);
+            partyPanel.build(font, widget -> addRenderableWidget(widget), this::rebuildSelectorWidgets, x, y, menu.containerId,
+                    new D1PartyPanelLayout(imageWidth, imageHeight),
+                    minecraft.player == null ? null : minecraft.player.getGameProfile().name());
             return;
         }
         var group = addRenderableWidget(Button.builder(Component.literal("Group"), button ->
@@ -261,7 +267,7 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
             }
             case TAX -> { taxPanel.render(g, font, x, y); return true; }
             case READY -> {
-                partyPanel.render(g, font, x, y);
+                partyPanel.render(g, font, x, y, new D1PartyPanelLayout(imageWidth, imageHeight));
                 return true;
             }
             default -> { return false; }
@@ -359,6 +365,8 @@ public final class ClassSelectorScreen extends AbstractContainerScreen<ClassSele
         }
 
         this.renderTooltip(g, mouseX, mouseY);
+        if (!loading && displayedStage() == net.goui.cosmicdungeon.npc.tamsin.TamsinFlow.Stage.READY)
+            partyPanel.tooltip(g, font, leftPos, topPos, new D1PartyPanelLayout(imageWidth, imageHeight), mouseX, mouseY);
     }
 
     @Override

@@ -30,6 +30,7 @@ public final class D1PartyService {
     private static final Map<UUID, Long> LAST_INVITE = new HashMap<>();
     private static final Map<UUID, Long> LAST_HUD_ACTION = new HashMap<>();
     private static final Map<UUID, Long> LAST_HELP_ACTION = new HashMap<>();
+    private static final Map<UUID, Long> LAST_SHARING_ACTION = new HashMap<>();
     private D1PartyService() {}
     private static long now(MinecraftServer server) { return server.overworld().getGameTime(); }
     private static void message(ServerPlayer player, String text) {
@@ -82,7 +83,8 @@ public final class D1PartyService {
         var members = p == null ? new ArrayList<PartyPayloads.Member>() : new ArrayList<>(p.members().stream().map(id -> {
             var member = player.level().getServer().getPlayerList().getPlayer(id);
             return new PartyPayloads.Member(member == null ? "Offline" : member.getGameProfile().name(),
-                    member == null ? "none" : ClassData.getClassId(member), p.ready().contains(id), p.leader().equals(id));
+                    member == null ? "none" : ClassData.getClassId(member), p.ready().contains(id), p.leader().equals(id),
+                    false,PartyVitals.UNLOADED,id.toString(),p.resourceSharing(id));
         }).toList());
         if(p!=null)p.contracts().forEach(hire->members.add(new PartyPayloads.Member(hire.name(),hire.classId(),false,false,true)));
         var i = LOBBY.invitation(player.getUUID());
@@ -100,7 +102,7 @@ public final class D1PartyService {
                         leader, capacity, LOBBY.queuePosition(p), countdown), members,
                 new PartyPayloads.Invite(i == null ? "" : i.token(), sender == null ? "" : sender.getGameProfile().name(),
                         i != null && i.accepted(), canInvite), recruitment(player, menu, p, anchor), p == null ? "HARD" : p.difficulty().name(),
-                new PartyPayloads.Hire(p==null?"":p.hires().getOrDefault(player.getUUID(),""),p!=null&&p.hires().containsKey(player.getUUID())?(int)p.hireFee(player.getUUID()):net.goui.cosmicdungeon.mercenary.MercenaryConfig.HIRE_TRACE.get()));
+                new PartyPayloads.Hire(p==null?"":p.hires().getOrDefault(player.getUUID(),""),p!=null&&p.hires().containsKey(player.getUUID())?(int)p.hireFee(player.getUUID()):net.goui.cosmicdungeon.mercenary.MercenaryConfig.HIRE_TRACE.get()),List.of(),GroupResourceConsent.view(player,p));
         if (force || !view.equals(menu.lastPartyView)) {
             menu.lastPartyView = view; ModNetwork.sendTo(player, view);
         }
@@ -180,7 +182,25 @@ public final class D1PartyService {
         if (error != null) message(player, error);
         syncViewers(server);
     }
+    private static void sharingAction(ServerPlayer player,PartyPayloads.Action request) {
+        if(request.containerId()==-1) {
+            if(player.containerMenu!=player.inventoryMenu)return;
+        } else if(!(player.containerMenu instanceof ClassSelectorMenu menu)||menu.containerId!=request.containerId()
+                ||menu.tamsinNpc()==null||!menu.stillValid(player)||menu.stage()!=TamsinFlow.Stage.READY||!onboarded(player))return;
+        var server=player.level().getServer();
+        long tick=now(server);
+        if(tick-LAST_SHARING_ACTION.getOrDefault(player.getUUID(),-1000000L)<Config.PARTY_ACTION_TICKS.get())return;
+        LAST_SHARING_ACTION.put(player.getUUID(),tick);
+        var party=LOBBY.party(player.getUUID());
+        boolean enabled=request.action().equals("resources_yes");
+        String error=party!=null ? (!onboarded(player) ? "Group is unavailable." :
+                LOBBY.resourceSharing(player.getUUID(),request.revision(),request.target(),enabled))
+                : GroupResourceConsent.choose(player,request.revision(),request.target(),enabled);
+        if(error!=null)message(player,error);
+        show(player,true);syncViewers(server);
+    }
     public static void action(ServerPlayer player, PartyPayloads.Action request) {
+        if(Set.of("resources_yes","resources_no").contains(request.action())){sharingAction(player,request);return;}
         if (request.containerId() == -1) { hudAction(player, request); return; }
         if (!(player.containerMenu instanceof ClassSelectorMenu menu) || menu.containerId != request.containerId()
                 || menu.tamsinNpc() == null || !menu.stillValid(player) || !onboarded(player)) return;
@@ -359,7 +379,9 @@ public final class D1PartyService {
                                 p.contracts(),
                                 net.goui.cosmicdungeon.dungeon.DungeonDifficultyConfig.snapshot(p.difficulty()),
                                 () -> LOBBY.party(p.leader()) == p && rosterProblem(server, p, true) == null);
+                        if(success)GroupResourceConsent.carryIntoRun(server,p);
                     } catch (RuntimeException failure) {
+                        success=false;
                         com.mojang.logging.LogUtils.getLogger().error("D1 party entry failed; cancelling preparation", failure);
                         var leader = server.getPlayerList().getPlayer(p.leader());
                         if (leader != null) DungeonLifecycleService.abortActiveRunForPlayer(leader);
@@ -375,14 +397,14 @@ public final class D1PartyService {
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             notifyRemoved(player.level().getServer(), player.getUUID(), "A member disconnected; group preparation cancelled.");
-            VIEWERS.remove(player.getUUID()); LAST_INVITE.remove(player.getUUID()); LAST_HUD_ACTION.remove(player.getUUID()); LAST_HELP_ACTION.remove(player.getUUID());
+            VIEWERS.remove(player.getUUID()); LAST_INVITE.remove(player.getUUID()); LAST_HUD_ACTION.remove(player.getUUID()); LAST_HELP_ACTION.remove(player.getUUID()); LAST_SHARING_ACTION.remove(player.getUUID());
             D1PartyHudService.forget(player.getUUID()); syncViewers(player.level().getServer());
         }
     }
     @SubscribeEvent public static void dimension(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) withdraw(player);
     }
-    public static void clear() { net.goui.cosmicdungeon.mercenary.MercenaryRevival.clear(); LOBBY.clear(); VIEWERS.clear(); LAST_INVITE.clear(); LAST_HUD_ACTION.clear(); LAST_HELP_ACTION.clear(); D1PartyHudService.clear(); }
+    public static void clear() { net.goui.cosmicdungeon.mercenary.MercenaryRevival.clear(); LOBBY.clear(); VIEWERS.clear(); LAST_INVITE.clear(); LAST_HUD_ACTION.clear(); LAST_HELP_ACTION.clear(); LAST_SHARING_ACTION.clear(); D1PartyHudService.clear(); }
     @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) D1PartyHudService.track(player.getUUID());
     }

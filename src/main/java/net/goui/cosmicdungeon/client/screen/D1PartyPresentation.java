@@ -7,6 +7,34 @@ final class D1PartyPresentation {
     private D1PartyPresentation() {}
     record ReadyControl(String label, String action, boolean enabled) {}
 
+    static boolean needsConsent(PartyPayloads.View view) {
+        return view != null && !view.sharing().context().isEmpty() && view.sharing().choice().equals("UNKNOWN");
+    }
+    static ReadyControl forward(PartyPayloads.View view) {
+        boolean assembly = view.state().phase().equals("ASSEMBLY");
+        return new ReadyControl(assembly ? "Begin ready check" : "Start Adventure!", assembly ? "begin" : "queue",
+                view.state().leader() && (assembly || view.state().phase().equals("READY_CHECK") && allHumansReady(view)));
+    }
+    static String sharingStatus(PartyPayloads.Member member) {
+        if (member.mercenary()) return "Group resources: not applicable";
+        return "Group resources: " + switch (member.resourceSharing()) {
+            case "YES" -> "YES";
+            case "NO" -> "NO";
+            default -> "Not chosen (no contribution)";
+        };
+    }
+    static java.util.List<String> memberDetails(PartyPayloads.View view, PartyPayloads.Member member) {
+        String status = view.state().phase().equals("ACTIVE") ? PartyHealthHud.status(member.vitals())
+                : member.mercenary() ? "Mercenary" : member.ready() ? "Ready" : "Not Ready";
+        return java.util.List.of(member.name() + " / " + ClassSelectorScreen.className(member.classId()).getString(),
+                status, sharingStatus(member));
+    }
+    static java.util.List<String> consentExplanation(String choice) {
+        return java.util.List.of("May your group use ingredients from your inventory, sharing contributions as evenly as possible?",
+                "Only an explicit YES enables sharing. You can change this in Resources.",
+                "Your choice: " + (choice.equals("UNKNOWN") ? "not chosen; no contribution" : choice));
+    }
+
     static boolean showsReadiness(PartyPayloads.View view, PartyPayloads.Member member) {
         return !member.mercenary() && !view.state().phase().equals("ACTIVE");
     }
