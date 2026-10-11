@@ -35,6 +35,7 @@
     "BogatyrTeleportMixin",
     "BogatyrSitMixin",
     "BogatyrOwnerTargetMixin",
+    "BogatyrOwnerAttackMixin",
     "BogatyrDamageMixin",
     "BogatyrMeleeMixin",
     "BogatyrNavigationMixin",
