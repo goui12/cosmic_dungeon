@@ -108,7 +108,7 @@ public class TradeMenu extends AbstractContainerMenu implements net.goui.cosmicd
                 return ItemStack.EMPTY;
             }
         } else if (isPlayerInventorySlot(idx) || isHotbarSlot(idx)) {
-            if (!canEditOwnOffer(p) || !net.goui.cosmicdungeon.economy.pricing.ItemTransferRules.tradeEligible(inSlot)) {
+            if (!canEditOwnOffer(p) || !TradeItemTransfer.mayOffer(inSlot, p.getUUID())) {
                 return ItemStack.EMPTY;
             }
             if (!moveItemStackTo(inSlot, OWN_OFFER_START, OWN_OFFER_START + OWN_OFFER_COUNT, false)) {
@@ -192,7 +192,7 @@ public class TradeMenu extends AbstractContainerMenu implements net.goui.cosmicd
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return canEditOwnOffer(self) && net.goui.cosmicdungeon.economy.pricing.ItemTransferRules.tradeEligible(stack);
+            return canEditOwnOffer(self) && TradeItemTransfer.mayOffer(stack, self.getUUID());
         }
 
         @Override

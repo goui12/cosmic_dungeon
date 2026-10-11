@@ -32,7 +32,7 @@ public final class GameTestSerializationTest {
             registration.setAccessible(true);
             registration.invoke(field.get(null), event);
         }
-        var expected = Set.of("trade_finalization/item_only", "trade_finalization/currency_only",
+        var expected = Set.of("trade_ownership_balance","trade_cancel_disconnect","ownership_drop_paths","ownership_pickup","ownership_death_drops","trade_finalization/item_only", "trade_finalization/currency_only",
                 "trade_finalization/mixed", "trade_finalization/full_inventory", "trade_finalization/capacity_limit",
                 "slot_mapping", "legacy_run_codec", "farrows_chop_target_codec", "inventory_escrow_codec",
                 "startup_plan_one_player", "startup_plan_four_players", "startup_plan_six_players",

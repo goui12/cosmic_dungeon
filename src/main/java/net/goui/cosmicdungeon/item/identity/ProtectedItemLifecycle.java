@@ -7,7 +7,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
 
 /** Retain exact stacks in vanilla Inventory/equipment, not a second cross-file item store.
- * Cameron 2026-10-03: attuned gear drops with permanent ownership. Explicit non-gear no-drop items remain retained.
+ * Player gear, ammunition and legacy no-drop belongings now drop with owner-only collection.
+ * Currency recovery tokens and uninspectable nested contents remain retained.
  * The dungeon failure/abandonment recovery still replaces this inventory with its outside snapshot. */
 public final class ProtectedItemLifecycle {
     private ProtectedItemLifecycle() {}

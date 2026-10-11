@@ -45,6 +45,9 @@ public final class TradeTransactions {
                 }else{
                     if(!TradeCustody.pending(p))throw new IllegalStateException("Verified owner custody is missing; restore review required");
                     var projected=plan.project(p.getUUID(),TradeCustody.read(p),outcome.equals(AccountTransfer.COMMITTED));
+                    // Only a durable COMMITTED decision may change offered item owners.
+                    // The saved before-images and this owner's cursor remain untouched.
+                    if(outcome.equals(AccountTransfer.COMMITTED)) projected=TradeItemTransfer.projectOffers(p,projected);
                     var root=p.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).copy();
                     TradeCustody.write(p,projected);
                     if(!TradeCustody.release(p)){p.getPersistentData().put(ClassData.ROOT_TAG,root);return false;}

@@ -184,4 +184,75 @@ public final class PartyTradeGameTests {
             helper.succeed();
         }
     }
+
+    public static void ownershipAndBalance(GameTestHelper helper) {
+        try(var f=new Fixture(helper)) {
+            CurrencyService.setBalanceTrace(f.member,200_000);
+            CurrencyService.setBalanceTrace(f.outsider,200_000);
+            var session=f.open();
+            for(var denomination:net.goui.cosmicdungeon.economy.CurrencyDenomination.values()) {
+                session.adjustCurrency(f.member,denomination.id(),10);
+                f.check(TradeOfferBalance.remaining(CurrencyService.getAvailableTrace(f.member),10*denomination.traceValue())
+                        ==200_000-10*denomination.traceValue(),"Every denomination subtracts exactly once from the offer preview");
+                session.adjustCurrency(f.member,denomination.id(),-10);
+            }
+            var sword=new ItemStack(Items.DIAMOND_SWORD);
+            sword.setDamageValue(17);
+            net.minecraft.world.item.component.CustomData.update(net.minecraft.core.component.DataComponents.CUSTOM_DATA,sword,t->{
+                t.putString(net.goui.cosmicdungeon.item.identity.ClassItemOwnership.KEY,f.member.getUUID().toString());
+                t.putBoolean("no_trade",true);t.putString("future","untouched");
+            });
+            f.member.getInventory().setItem(0,sword);
+            f.check(!net.goui.cosmicdungeon.item.identity.ItemMovementGuard.denyClick(f.member,TradeMenu.HOTBAR_START,0,
+                    net.minecraft.world.inventory.ClickType.QUICK_MOVE),"Packet guard admits an owned ordinary sword to trade custody");
+            ((TradeMenu)f.member.containerMenu).quickMoveStack(f.member,TradeMenu.HOTBAR_START);
+            f.check(session.getContainerFor(f.member,true).getItem(0).is(Items.DIAMOND_SWORD),"Unpriced sword enters offer");
+            var potion=new ItemStack(Items.SPLASH_POTION);
+            net.goui.cosmicdungeon.playerclass.api.ClassItemUtil.attune(potion,"theurgist",1,1,0);
+            f.outsider.getInventory().setItem(0,potion);
+            f.check(!net.goui.cosmicdungeon.item.identity.ItemMovementGuard.denyClick(f.outsider,TradeMenu.HOTBAR_START,0,
+                    net.minecraft.world.inventory.ClickType.QUICK_MOVE),"Attuned potion is permitted through actual click guard");
+            ((TradeMenu)f.outsider.containerMenu).quickMoveStack(f.outsider,TradeMenu.HOTBAR_START);
+            f.check(session.getContainerFor(f.outsider,true).getItem(0).is(Items.SPLASH_POTION),"Potion exemption reaches native offer");
+            f.member.containerMenu.setCarried(new ItemStack(Items.GOLD_INGOT,3));
+            session.setCurrency(f.member,5);session.setCurrency(f.outsider,10);
+            session.setReady(f.member,true);session.setReady(f.outsider,true);
+            session.setConfirm(f.member,true);session.setConfirm(f.outsider,true);
+            f.check(!TradeSessionData.isBusy(f.member),"Native mixed trade commits");
+            f.check(CurrencyService.getBalanceTrace(f.member)==200_005&&CurrencyService.getBalanceTrace(f.outsider)==199_995,
+                    "Simultaneous currency offers settle once in opposite directions");
+            ItemStack received=ItemStack.EMPTY;
+            for(int i=0;i<36;i++)if(f.outsider.getInventory().getItem(i).is(Items.DIAMOND_SWORD))received=f.outsider.getInventory().getItem(i);
+            f.check(!received.isEmpty()&&f.outsider.getUUID().equals(net.goui.cosmicdungeon.item.identity.ClassItemOwnership.owner(received))
+                    &&received.getDamageValue()==17,"Committed sword retains authored damage and acquires recipient custody");
+            f.check(f.member.getInventory().countItem(Items.SPLASH_POTION)==1&&f.member.getInventory().countItem(Items.GOLD_INGOT)==3,
+                    "Potion transfers while original cursor remains with its owner");
+            session.cancel("stale");session.setConfirm(f.member,true);
+            f.check(f.outsider.getInventory().countItem(Items.DIAMOND_SWORD)==1&&CurrencyService.getBalanceTrace(f.member)==200_005,
+                    "Stale traffic cannot duplicate delivery/payment");
+            var dropped=f.outsider.drop(received.copy(),false);
+            f.check(dropped!=null&&f.outsider.getUUID().equals(dropped.getTarget()),"Recipient owns subsequent ground drop");
+            if(dropped!=null)dropped.discard();
+            helper.succeed();
+        }
+    }
+    public static void cancelAndDisconnect(GameTestHelper helper) {
+        for(boolean disconnect:new boolean[]{false,true})try(var f=new Fixture(helper)) {
+            var session=f.open();
+            var armor=new ItemStack(Items.IRON_CHESTPLATE);
+            net.minecraft.world.item.component.CustomData.update(net.minecraft.core.component.DataComponents.CUSTOM_DATA,armor,
+                    t->t.putString(net.goui.cosmicdungeon.item.identity.ClassItemOwnership.KEY,f.member.getUUID().toString()));
+            f.member.getInventory().setItem(0,armor);
+            ((TradeMenu)f.member.containerMenu).quickMoveStack(f.member,TradeMenu.HOTBAR_START);
+            session.setCurrency(f.member,5);session.setCurrency(f.outsider,10);
+            if(disconnect)TradeSessionData.handleLogout(f.member);else session.cancel("requested");
+            f.check(CurrencyService.getAvailableTrace(f.member)==100&&CurrencyService.getAvailableTrace(f.outsider)==100,
+                    "Cancel/disconnect leaves both complete available balances");
+            f.check(f.member.getInventory().countItem(Items.IRON_CHESTPLATE)==1&&f.outsider.getInventory().countItem(Items.IRON_CHESTPLATE)==0,
+                    "Cancel/disconnect returns armor only to the original owner");
+            session.cancel("duplicate");TradeCustody.claim(f.member);
+            f.check(f.member.getInventory().countItem(Items.IRON_CHESTPLATE)==1,"Repeated recovery never duplicates");
+        }
+        helper.succeed();
+    }
 }

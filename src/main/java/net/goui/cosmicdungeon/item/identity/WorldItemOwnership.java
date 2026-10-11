@@ -12,7 +12,8 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.item.ItemTossEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
 
-/** Item ownership persists on the stack as well as the dropped entity. */
+/** Every player-tossed/death-dropped stack gets native persistent entity ownership.
+ * Existing attuned stack ownership and authored components remain intact. */
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID)
 public final class WorldItemOwnership {
     private WorldItemOwnership() {}
@@ -25,8 +26,6 @@ public final class WorldItemOwnership {
             return; // Invalid owner data remains intact and cannot be collected.
         }
         if (AccessPolicy.isDeveloper(player)) return;
-        if (!ItemProvenanceService.requiresProvenance(stack) && !ItemProvenanceService.present(stack)
-                && !ItemMovementRules.flags(stack).privateStorage()) return;
         var chopOwner = stack.get(ModDataComponents.CHOP_OWNER.get());
         if (chopOwner != null) entity.setTarget(chopOwner);
         else if (entity.getTarget() == null) entity.setTarget(player.getUUID());

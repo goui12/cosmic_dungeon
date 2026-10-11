@@ -58,6 +58,11 @@ public final class DungeonInstanceGameTests {
         suite.add(id("mercenary_judicator_progression"),net.goui.cosmicdungeon.mercenary.MercenaryJudicatorGameTests::progression);
         suite.add(id("mercenary_resurrection_eligibility"),net.goui.cosmicdungeon.mercenary.MercenaryResurrectionGameTests::eligibility);
         suite.add(id("mercenary_resurrection_respawn"),net.goui.cosmicdungeon.mercenary.MercenaryResurrectionGameTests::respawn);
+        suite.add(id("trade_ownership_balance"),net.goui.cosmicdungeon.npc.tamsin.PartyTradeGameTests::ownershipAndBalance);
+        suite.add(id("trade_cancel_disconnect"),net.goui.cosmicdungeon.npc.tamsin.PartyTradeGameTests::cancelAndDisconnect);
+        suite.add(id("ownership_drop_paths"),net.goui.cosmicdungeon.item.identity.OwnershipDropGameTests::dropPaths);
+        suite.add(id("ownership_pickup"),net.goui.cosmicdungeon.item.identity.OwnershipDropGameTests::ownerPickup);
+        suite.add(id("ownership_death_drops"),net.goui.cosmicdungeon.item.identity.OwnershipDropGameTests::deathDrops);
         suite.add(id("party_trade_start"),net.goui.cosmicdungeon.npc.tamsin.PartyTradeGameTests::start);
         suite.add(id("party_trade_completed"),net.goui.cosmicdungeon.npc.tamsin.PartyTradeGameTests::completed);
         suite.add(id("party_trade_full_inventory"),net.goui.cosmicdungeon.npc.tamsin.PartyTradeGameTests::fullInventory);

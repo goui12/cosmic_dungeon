@@ -26,6 +26,13 @@ public final class ItemMovementGuard {
         var clickedFlags = ItemMovementRules.flags(clicked);
         if ((!clicked.isEmpty() && !ClassItemOwnership.mayAcquire(player, clicked))
                 || (!carried.isEmpty() && !ClassItemOwnership.mayAcquire(player, carried))) return true;
+        // TradeMenu owns read-only peer slots, acceptance locks and server-side item eligibility.
+        // Its escrow is an authorized custody route, not a public storage container.
+        if (menu instanceof net.goui.cosmicdungeon.trade.TradeMenu) {
+            if (type == ClickType.THROW) return slot != null && clickedFlags.noDrop();
+            if (type == ClickType.PICKUP && slotId == -999) return cursor.noDrop();
+            return false;
+        }
         // Do not turn overflow recovery into an expandable personal storage interface.
         // Existing carried/input items can still return; make room and claim before lifting more.
         if (carried.isEmpty() && clickedFlags.noDrop() && ProtectedItemRecovery.pendingHere(player)
@@ -95,8 +102,8 @@ public final class ItemMovementGuard {
         }
     }
     // Protected cursor/forced-unequip returns now use ProtectedItemRecovery in the player's
-    // own save and explicit dungeon inventory scope. Voluntary toss is still refused before removal.
+    // own save and explicit dungeon inventory scope. Only guarded currency/unknown nested contents refuse voluntary toss before removal.
     // TODO(M10/M114, licensed TEST): verify every live container/prediction path and installed
-    // capability adapter. Gear Trading 2.0 requires no class-gear transfer or wrong-owner recovery.
+    // capability adapter. Explicitly attuned non-potions cannot trade; successful ordinary trades transfer custody.
     // Keep normal droppable gear's environmental loss and intentional failed-run inventory resets.
 }
