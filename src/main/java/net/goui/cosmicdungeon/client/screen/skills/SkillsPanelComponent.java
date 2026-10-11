@@ -34,7 +34,8 @@ public final class SkillsPanelComponent {
             tip=Component.literal("Skills");
             if(box.track().contains(mouseX,mouseY)&&state.scroll().max()>0)tip=Component.literal("Scroll Skills");
             else for(int i=0;i<model.actions().size();i++)if(box.row(i,state.scroll().offset()).contains(mouseX,mouseY)){
-                tip=model.actions().get(i).tooltip();break;
+                var action=model.actions().get(i);
+                tip=SkillBindingLabels.tooltip(action.id(),action.label(),action.tooltip());break;
             }
         }
         if(tip!=null)tooltip(g,font,tip,mouseX,mouseY);
@@ -60,8 +61,8 @@ public final class SkillsPanelComponent {
                     var action=model.actions().get(i);boolean hovered=box.body().contains(mouseX,mouseY)&&row.contains(mouseX,mouseY);
                     fill(g,row,!action.enabled()?0xFF26303A:hovered?0xFF42617B:0xFF31495E);
                     if(action.selected())border(g,row,0xFF8ED8FF);
-                    String label=font.plainSubstrByWidth(action.label(),Math.max(0,row.width()-8));
-                    g.drawCenteredString(font,label,row.x()+row.width()/2,row.y()+6,action.enabled()?0xFFFFFFFF:0xFF89939E);
+                    SkillBindingLabels.draw(g,font,action.id(),action.label(),row,
+                            action.enabled()?0xFFFFFFFF:0xFF89939E);
 
                 }
             }finally{g.disableScissor();}

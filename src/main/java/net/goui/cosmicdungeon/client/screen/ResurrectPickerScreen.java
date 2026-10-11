@@ -15,6 +15,7 @@ import net.minecraft.network.chat.Component;
 public final class ResurrectPickerScreen extends Screen {
     private record Row(Target target, Button button) {}
     private final AbstractContainerScreen<?> parent;
+    private final net.minecraft.world.inventory.AbstractContainerMenu menu;
     private final long run;
     private final List<Row> rows = new ArrayList<>();
     private List<Target> displayed = List.of();
@@ -27,14 +28,16 @@ public final class ResurrectPickerScreen extends Screen {
     public ResurrectPickerScreen(AbstractContainerScreen<?> parent) {
         super(Component.literal("Resurrect..."));
         this.parent = parent;
+        var player = net.minecraft.client.Minecraft.getInstance().player;
+        this.menu = parent != null ? parent.getMenu() : player == null ? null : player.inventoryMenu;
         run = TheurgistClient.view().run();
     }
     private int panelWidth() { return Math.max(120, Math.min(360, width - 24)); }
     private int capacity() { return Math.max(1, (height - 130) / 24); }
     private boolean current() {
         return minecraft != null && minecraft.player != null && minecraft.getConnection() != null
-                && minecraft.player.isAlive() && minecraft.player.containerMenu == parent.getMenu()
-                && parent.getMenu().getCarried().isEmpty() && TheurgistClient.view().run() == run
+                && minecraft.player.isAlive() && menu != null && minecraft.player.containerMenu == menu
+                && menu.getCarried().isEmpty() && TheurgistClient.view().run() == run
                 && TheurgistClient.canOpenPicker();
     }
     @Override protected void init() {
@@ -69,7 +72,9 @@ public final class ResurrectPickerScreen extends Screen {
             var target = TheurgistClient.view().targets().stream()
                     .filter(t -> t.player().equals(row.target().player()) && t.death().equals(row.target().death())).findFirst();
             row.button().active = current() && !TheurgistClient.pending() && target.map(Target::available).orElse(false);
-            row.button().setTooltip(Tooltip.create(TheurgistClient.targetTooltip(target.orElse(row.target()))));
+            row.button().setTooltip(Tooltip.create(TheurgistClient.targetTooltip(target.orElse(row.target())).copy()
+                    .append(Component.literal("\nOpen member picker: ").withStyle(net.minecraft.ChatFormatting.GRAY))
+                    .append(net.goui.cosmicdungeon.client.SkillKeybindClient.hint("theurgist_resurrect"))));
         }
         previous.active = page > 0; next.active = page + 1 < currentPage.pages();
     }

@@ -718,5 +718,10 @@
   "advancements.cosmicdungeon.achievements.dungeon_1_ridiculous.title": "Dungeon 1: Ridiculous",
   "advancements.cosmicdungeon.achievements.dungeon_1_ridiculous.desc": "Complete Dungeon 1 on Ridiculous difficulty or higher.",
   "effect.cosmicdungeon.companionship": "Companionship",
-  "gui.cosmicdungeon.inventory.class_guide": "Open your class guide"
+  "gui.cosmicdungeon.inventory.class_guide": "Open your class guide",
+  "key.cosmicdungeon.bogatyr_patrol": "Bogatyr: Patrol",
+  "key.cosmicdungeon.bogatyr_stay": "Bogatyr: Stay",
+  "key.cosmicdungeon.bogatyr_feed_pack": "Bogatyr: Feed Pack",
+  "key.cosmicdungeon.theurgist_resurrect": "Theurgist: Resurrect...",
+  "key.cosmicdungeon.unbound": "Unbound"
 }

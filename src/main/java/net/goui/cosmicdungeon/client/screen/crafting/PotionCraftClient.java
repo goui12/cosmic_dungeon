@@ -44,6 +44,7 @@ public final class PotionCraftClient {
     private static PotionPaletteLayout layout() {
         return PotionPaletteLayout.of(screen.width, screen.height, screen.getGuiLeft(), screen.getGuiTop(), screen.getXSize(), STATE.entries().size());
     }
+    public static boolean inputCaptured(Screen candidate) { return candidate == screen && pressedButtons != 0; }
     public static boolean ownsInput(Screen candidate, double x, double y) {
         return current(candidate) && layout().panel().contains(x, y);
     }

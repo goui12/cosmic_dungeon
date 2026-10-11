@@ -1,9 +1,13 @@
 package net.goui.cosmicdungeon.client.screen;
 
+import net.goui.cosmicdungeon.client.SkillKeybindClient;
+import net.goui.cosmicdungeon.client.screen.skills.SkillBindingLabels;
+import net.goui.cosmicdungeon.client.screen.skills.SharedInventoryLayout.Rect;
 import net.goui.cosmicdungeon.client.screen.skills.SkillsPanelClient;
 import net.goui.cosmicdungeon.client.screen.skills.TheurgistClient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -42,8 +46,14 @@ public final class InventoryResurrectButton extends Button {
         // Keep rendering eligibility checks so late class/run sync can reveal the action.
         active = available();
         if (!ClassInventoryPresentation.theme().classId().equals("theurgist")) { setTooltip(null); description = Component.empty(); return; }
-        Component current = TheurgistClient.resurrectionTooltip();
+        Component current = SkillBindingLabels.tooltip("theurgist_resurrect", "Resurrect", TheurgistClient.resurrectionTooltip());
+        Component message = Component.literal("Resurrect... ").append(SkillKeybindClient.hint("theurgist_resurrect"));
+        if (!message.equals(getMessage())) setMessage(message);
         if (!description.equals(current)) { description = current; setTooltip(Tooltip.create(current)); }
         super.renderWidget(g, mx, my, partialTick);
+    }
+    @Override public void renderString(GuiGraphics g, Font font, int color) {
+        SkillBindingLabels.draw(g, font, "theurgist_resurrect", "Resurrect...",
+                new Rect(getX(), getY(), getWidth(), getHeight()), color);
     }
 }
