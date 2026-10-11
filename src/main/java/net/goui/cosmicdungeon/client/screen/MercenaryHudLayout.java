@@ -17,12 +17,21 @@ public final class MercenaryHudLayout {
         var lines=new java.util.ArrayList<String>();
         lines.add(label(row));lines.add(status(row));
         for(var skill:row.skills())lines.add(net.goui.cosmicdungeon.mercenary.MercenarySkill.description(skill.id(),skill.successes()));
-        if(row.resurrection().seconds()>=0){
-            int seconds=row.resurrection().seconds();
-            lines.add(seconds>0?String.format(Locale.ROOT,"Resurrection: %d:%02d",seconds/60,seconds%60)
-                    :row.status().equals("ACTIVE")?"Resurrection: Ready":"Resurrection: Unavailable");
+        if(row.classId().equals("theurgist")||row.resurrection().seconds()>=0){
+            var view=net.goui.cosmicdungeon.client.screen.skills.TheurgistClient.view();
+            var matches=view.casters().stream().filter(c->c.mercenary()
+                    &&(row.resurrection().mercenary().isEmpty()?c.name().equals(row.name()):
+                    c.id().toString().equals(row.resurrection().mercenary()))).toList();
+            var state=matches.size()==1&&(row.resurrection().run()==0||row.resurrection().run()==view.run())
+                    ?matches.getFirst().resurrection():fallbackResurrection(row);
+            lines.add("Resurrection: "+ResurrectionPresentation.status(state));
         }
         return java.util.List.copyOf(lines);
+    }
+    private static net.goui.cosmicdungeon.network.TheurgistPayloads.Resurrection fallbackResurrection(PartyPayloads.Mercenary row){
+        int seconds=row.resurrection().seconds();
+        String state=seconds<0?"LOCKED":!row.status().equals("ACTIVE")?"UNAVAILABLE":seconds>0?"COOLDOWN":"READY";
+        return new net.goui.cosmicdungeon.network.TheurgistPayloads.Resurrection(state,seconds);
     }
     public static String status(PartyPayloads.Mercenary row){
         return switch(row.status()){

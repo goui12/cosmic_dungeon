@@ -22,10 +22,11 @@ public final class DungeonDeathScreen {
     private static Button resurrection,playerAccept,playerDecline;
     private static TheurgistPayloads.Offer displayedPlayerOffer;
     private static int pendingTicks;
+    private static net.goui.cosmicdungeon.client.screen.DeathResurrectionRoster roster;
     private DungeonDeathScreen() {}
     @SubscribeEvent public static void tick(net.neoforged.neoforge.client.event.ClientTickEvent.Post event){
         var client=Minecraft.getInstance();
-        if(current!=client.screen){current=null;resurrection=null;playerAccept=null;playerDecline=null;displayedPlayerOffer=null;pendingTicks=0;return;}
+        if(current!=client.screen){current=null;resurrection=null;playerAccept=null;playerDecline=null;displayedPlayerOffer=null;pendingTicks=0;roster=null;return;}
         if(pendingTicks>0)pendingTicks--;
         updateResurrection();
     }
@@ -41,7 +42,7 @@ public final class DungeonDeathScreen {
             if(playerOffer!=null){
                 playerAccept.setMessage(Component.literal("Accept resurrection from "+playerOffer.name()));
                 playerAccept.setTooltip(Tooltip.create(TheurgistClient.offerTooltip(playerOffer)));
-                playerDecline.setTooltip(Tooltip.create(Component.literal("Decline resurrection from "+playerOffer.name()+". No supplies are spent.")));
+                playerDecline.setTooltip(Tooltip.create(Component.literal("Decline resurrection from "+playerOffer.name()+". No cooldown starts.")));
             }
         }
         var offer=net.goui.cosmicdungeon.client.screen.D1PartyHud.resurrectionOffer();
@@ -50,12 +51,18 @@ public final class DungeonDeathScreen {
         if(offer!=null)resurrection.setMessage(Component.literal("Accept Resurrection from "+offer.name()));
     }
 
+    @SubscribeEvent public static void render(ScreenEvent.Render.Post event) {
+        if (event.getScreen() == current && roster != null)
+            roster.render(event.getGuiGraphics(), event.getMouseX(), event.getMouseY());
+    }
+
     @SubscribeEvent public static void init(ScreenEvent.Init.Post event) {
         if (!(event.getScreen() instanceof DeathScreen death)) return;
         var client = Minecraft.getInstance();
         if (client.player == null || client.getConnection() == null
                 || DungeonInstanceSlots.slotOf(client.player.level().dimension()).isEmpty()) return;
         current=death;pendingTicks=0;displayedPlayerOffer=null;
+        roster=new net.goui.cosmicdungeon.client.screen.DeathResurrectionRoster(event);
         int width=Math.min(300,death.width-16);
         resurrection=Button.builder(Component.literal("Accept Resurrection"),button->{
             var offer=net.goui.cosmicdungeon.client.screen.D1PartyHud.resurrectionOffer();

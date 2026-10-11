@@ -28,31 +28,31 @@ final class TheurgistClientTest {
         TheurgistClient.receive(new View(22,9,true,true,true,true,List.of(),null));
         assertTrue(TheurgistClient.activate(TheurgistClient.EPIC));assertEquals(Kind.EPIC,sent.getLast().kind());
     }
-    @Test void resurrectionUsesTheExactDisplayedDeathAndAvailabilityWithoutCooldown(){
+    @Test void resurrectionUsesTheExactDisplayedDeathAndAuthoritativeAvailability(){
         var target=new Target(UUID.randomUUID(),"Teammate",UUID.randomUUID(),true);
         TheurgistClient.receive(new View(22,10,true,true,false,false,List.of(target),null));
         String original=TheurgistClient.actionId(target);
-        assertTrue(row(original).enabled());assertEquals("Resurrect Teammate [120]",row(original).label());
-        assertTrue(row(original).tooltip().getString().contains("only if they accept"));
+        assertTrue(row(original).enabled());assertEquals("Resurrect Teammate",row(original).label());
+        assertTrue(row(original).tooltip().getString().contains("teammate must accept"));
         var replacement=new Target(target.player(),target.name(),UUID.randomUUID(),true);
         TheurgistClient.receive(new View(22,11,true,true,false,false,List.of(replacement),null));
         assertFalse(TheurgistClient.activate(original));assertTrue(sent.isEmpty());
         assertTrue(TheurgistClient.activate(TheurgistClient.actionId(replacement)));
         assertEquals(new TheurgistPayloads.Action(22,11,Kind.OFFER,replacement.player(),replacement.death()),sent.getFirst());
         TheurgistClient.receive(new View(22,12,true,true,false,false,List.of(replacement),null));
-        assertTrue(TheurgistClient.activate(TheurgistClient.actionId(replacement)),"Acknowledgement, not an invented cooldown, gates the next action");
+        assertTrue(TheurgistClient.activate(TheurgistClient.actionId(replacement)),"Only the authoritative availability, never a client timer, permits another offer");
         TheurgistClient.receive(new View(22,13,true,true,false,false,
                 List.of(new Target(target.player(),target.name(),replacement.death(),false)),null));
         assertFalse(TheurgistClient.activate(TheurgistClient.actionId(replacement)));
     }
-    @Test void deathOffersUseCasterAndOfferIdWithExplicitAcceptDeclineAndHonestPayer(){
+    @Test void deathOffersUseCasterAndOfferIdWithExplicitAcceptDeclineAndNoCost(){
         var offer=new Offer(UUID.randomUUID(),UUID.randomUUID(),"Caster",UUID.randomUUID());
         var view=new View(22,20,false,false,false,false,List.of(),offer);TheurgistClient.receive(view);
         assertEquals(offer,TheurgistClient.offer());assertTrue(TheurgistClient.canRespond());
         assertTrue(TheurgistClient.acceptOffer());
         assertEquals(new TheurgistPayloads.Action(22,20,Kind.ACCEPT,offer.caster(),offer.id()),sent.getFirst());
         assertFalse(TheurgistClient.declineOffer());assertEquals(offer,TheurgistClient.offer());
-        assertTrue(TheurgistClient.offerTooltip(offer).getString().contains("Caster pays 120 Brewing Supplies only if resurrection succeeds"));
+        assertTrue(TheurgistClient.offerTooltip(offer).getString().contains("No item or resource cost. Caster starts a 3-minute cooldown only if resurrection succeeds"));
         TheurgistClient.receive(view);assertTrue(TheurgistClient.declineOffer());
         assertEquals(Kind.DECLINE,sent.getLast().kind());assertEquals(offer.id(),sent.getLast().token());
         TheurgistClient.receive(new View(22,21,false,false,false,false,List.of(),null));
@@ -82,5 +82,19 @@ final class TheurgistClientTest {
         var panel=new SkillsPanelState(SharedInventoryLayout.of(320,240,72,37,176,166),null);panel.actions(model.actions().size());
         assertTrue(panel.scroll().max()>0);assertTrue(panel.scroll().thumbHeight()>0);
         assertEquals(32,model.actions().stream().filter(a->a.id().startsWith(TheurgistClient.RESURRECT)&&a.enabled()).count());
+    }
+    @Test void pickerAvailabilityAndCooldownAreAuthoritativeAndDoNotInventAnUnlock(){
+        var ready=new Resurrection("READY",0);
+        TheurgistClient.receive(new View(22,1,true,true,false,false,List.of(),null,ready,List.of()));
+        assertTrue(TheurgistClient.canOpenPicker());assertTrue(TheurgistClient.resurrectionTooltip().getString().contains("No item or resource cost"));
+        var target=new Target(UUID.randomUUID(),"Teammate",UUID.randomUUID(),false);
+        TheurgistClient.receive(new View(22,2,true,true,false,false,List.of(target),null,new Resurrection("COOLDOWN",180),List.of()));
+        assertTrue(TheurgistClient.canOpenPicker(),"Cooldown still allows reviewing the picker");
+        assertTrue(TheurgistClient.resurrectionTooltip().getString().contains("3:00"));
+        assertFalse(TheurgistClient.activate(TheurgistClient.actionId(target)));
+        TheurgistClient.receive(new View(22,3,true,true,false,false,List.of(target),null,new Resurrection("READY",0),List.of()));
+        assertFalse(TheurgistClient.activate(TheurgistClient.actionId(target)),"A zero cooldown alone never overrides target capability");
+        TheurgistClient.receive(new View(22,4,true,false,false,false,List.of(),null,new Resurrection("DEAD",30),List.of()));
+        assertFalse(TheurgistClient.canOpenPicker());TheurgistClient.clear();assertFalse(TheurgistClient.canOpenPicker());
     }
 }

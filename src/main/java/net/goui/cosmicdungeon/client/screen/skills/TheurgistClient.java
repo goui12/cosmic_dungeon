@@ -22,6 +22,17 @@ public final class TheurgistClient {
         view=value;
     }
     public static boolean pending(){return pending;}
+    public static View view(){return view;}
+    public static boolean canOpenPicker(){return sender!=null&&view.run()>0&&view.theurgist()&&view.alive();}
+    public static Component resurrectionTooltip(){
+        return Component.literal("Resurrect: offer revival at a teammate's latest death position. No item or resource cost. "
+                +"A successful resurrection starts your 3-minute cooldown. The teammate must accept within 60 seconds.\n"
+                +net.goui.cosmicdungeon.client.screen.ResurrectionPresentation.status(view.resurrection()));
+    }
+    public static Component targetTooltip(Target target){
+        return resurrectionTooltip().copy().append(Component.literal("\n"+target.name()+": "
+                +(pending?"Waiting for the server.":target.available()?"Available for an offer.":"Not currently available for an offer.")));
+    }
     private static boolean ready(){return sender!=null&&!pending&&view.run()>0;}
     public static Offer offer(){return view.run()>0&&!view.alive()?view.offer():null;}
     public static boolean canRespond(){return ready()&&offer()!=null;}
@@ -48,13 +59,11 @@ public final class TheurgistClient {
         if(view.theurgist()&&view.alive()&&!view.targets().isEmpty()){
             for(var target:view.targets()){
                 boolean enabled=available&&target.available();
-                actions.add(new SkillsPanelModel.Action(actionId(target),"Resurrect "+target.name()+" [120]",
-                        availability(cost("Offer resurrection to "+target.name()+" at their latest death position in this dungeon. "
-                                +"You pay only if they accept and resurrection succeeds. No cooldown.",120),
-                                enabled,"Requires 120 Brewing Supplies and an eligible dead teammate."),enabled));
+                actions.add(new SkillsPanelModel.Action(actionId(target),"Resurrect "+target.name(),
+                        availability(targetTooltip(target),enabled,"Requires an eligible dead teammate and a ready resurrection."),enabled));
             }
         }else actions.add(new SkillsPanelModel.Action("theurgist_resurrect_none","Resurrect...",
-                Component.literal("No teammate currently needs resurrection."),false));
+                resurrectionTooltip().copy().append(Component.literal("\nNo teammate currently needs resurrection.")),false));
         return new SkillsPanelModel(base.classId(),base.title(),base.resource(),base.resourceTooltip(),actions,base.resourceSnapshot());
     }
     private static boolean send(Kind kind,UUID target,UUID token){
@@ -74,6 +83,6 @@ public final class TheurgistClient {
     public static boolean declineOffer(){var offer=offer();return offer!=null&&send(Kind.DECLINE,offer.caster(),offer.id());}
     public static Component offerTooltip(Offer offer){
         return Component.literal("Resurrection from "+offer.name()+". You return to your latest death position. "
-                +offer.name()+" pays 120 Brewing Supplies only if resurrection succeeds.");
+                +"Accept or decline within 60 seconds. No item or resource cost. "+offer.name()+" starts a 3-minute cooldown only if resurrection succeeds.");
     }
 }

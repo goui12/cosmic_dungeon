@@ -14,7 +14,9 @@ import net.minecraft.server.level.ServerPlayer;
 
 /** Ephemeral explicit offers, current-death tokens and server-thread class/resource permissions. */
 public final class TheurgistActions {
-    private record Pending(UUID id,long run,UUID caster,UUID target,UUID death){}
+    static final int OFFER_TICKS=20*60;
+    record Pending(UUID id,long run,UUID caster,UUID target,UUID death,long expires){}
+    static boolean unexpired(long expires,long now){return now>=0&&expires>now&&expires-now<=OFFER_TICKS;}
     private static final class Session {TheurgistPayloads.View sent;long revision,lastAction=Long.MIN_VALUE;}
     private static final class State{
         final Map<UUID,Session> sessions=new HashMap<>();
@@ -35,11 +37,13 @@ public final class TheurgistActions {
     }
     private static boolean valid(MinecraftServer server,Pending offer){
         var c=server.getPlayerList().getPlayer(offer.caster());var t=server.getPlayerList().getPlayer(offer.target());
-        if(!caster(c)||!connected(t)||!t.isDeadOrDying()||c==t)return false;
+        if(!unexpired(offer.expires(),server.overworld().getGameTime())||!caster(c)||!connected(t)||!t.isDeadOrDying()||c==t)return false;
         var cr=MercenaryResurrection.deathRun(c);var tr=MercenaryResurrection.deathRun(t);
-        if(cr==null||tr==null||cr.runId()!=offer.run()||tr.runId()!=offer.run()||amount(c,offer.run())<RevivalPlan.COST
+        if(cr==null||tr==null||cr.runId()!=offer.run()||tr.runId()!=offer.run()||ResurrectionCooldown.seconds(c)!=0
                 ||TheurgistRevival.blocked(c)||TheurgistRevival.blocked(t))return false;
-        var death=death(t,offer.run());return death!=null&&death.id().equals(offer.death())&&tr.containsDimension(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION,net.minecraft.resources.ResourceLocation.parse(death.dimension())));
+        var death=death(t,offer.run());if(death==null||!death.id().equals(offer.death()))return false;
+        var dimension=net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION,net.minecraft.resources.ResourceLocation.parse(death.dimension()));
+        return tr.containsDimension(dimension)&&server.getLevel(dimension)!=null;
     }
     private static Pending offer(ServerPlayer p){
         var state=state(p.level().getServer());var offer=state.offers.get(p.getUUID());
@@ -50,7 +54,7 @@ public final class TheurgistActions {
         var server=target.level().getServer();
         for(UUID id:run.orderedPlayers()){
             var c=server.getPlayerList().getPlayer(id);
-            if(c!=target&&caster(c))c.sendSystemMessage(Component.literal(target.getGameProfile().name()+" has died. Open your inventory to offer resurrection (120 Brewing Supplies on acceptance)."));
+            if(c!=target&&caster(c))c.sendSystemMessage(Component.literal(target.getGameProfile().name()+" has died. Open your inventory to offer resurrection (free; three-minute cooldown after success)."));
         }
     }
     public static void invalidate(ServerPlayer p){
@@ -78,11 +82,12 @@ public final class TheurgistActions {
                     var t=p.level().getServer().getPlayerList().getPlayer(id);var tr=t==null?null:MercenaryResurrection.deathRun(t);
                     var death=tr!=null&&tr.runId()==run.runId()?death(t,run.runId()):null;
                     if(death!=null)targets.add(new TheurgistPayloads.Target(id,t.getGameProfile().name(),death.id(),
-                            available&&balance>=RevivalPlan.COST&&ready(t)&&offer(t)==null));
+                            available&&ResurrectionCooldown.seconds(p)==0&&ready(t)&&offer(t)==null));
                 }
                 var pending=offer(p);TheurgistPayloads.Offer shown=null;
                 if(pending!=null){var c=p.level().getServer().getPlayerList().getPlayer(pending.caster());shown=new TheurgistPayloads.Offer(pending.id(),pending.caster(),c.getGameProfile().name(),pending.death());}
-                view=new TheurgistPayloads.View(run.runId(),session.revision,cls,living,space&&balance>=20,space&&balance>=40,targets,shown);
+                view=new TheurgistPayloads.View(run.runId(),session.revision,cls,living,space&&balance>=20,space&&balance>=40,targets,shown,net.goui.cosmicdungeon.npc.tamsin.ResurrectionStatusService.player(p,run),
+                        net.goui.cosmicdungeon.npc.tamsin.ResurrectionStatusService.roster(p,run));
             }
         }catch(RuntimeException error){
             if(state(p.level().getServer()).warned.add(p.getUUID()))com.mojang.logging.LogUtils.getLogger().error("Theurgist actions disabled without changing data: {}",p.getUUID(),error);
@@ -90,7 +95,7 @@ public final class TheurgistActions {
         }
         if(!acknowledge&&view.equals(session.sent))return;
         session.revision=Math.addExact(session.revision,1);
-        view=new TheurgistPayloads.View(view.run(),session.revision,view.theurgist(),view.alive(),view.normal(),view.epic(),view.targets(),view.offer());
+        view=new TheurgistPayloads.View(view.run(),session.revision,view.theurgist(),view.alive(),view.normal(),view.epic(),view.targets(),view.offer(),view.resurrection(),view.casters());
         session.sent=view;ModNetwork.sendTo(p,view);
     }
     public static void action(ServerPlayer p,TheurgistPayloads.Action request){
@@ -107,13 +112,13 @@ public final class TheurgistActions {
                     changed=TheurgistCrafting.craft(p,run.runId(),request.kind()==TheurgistPayloads.Kind.EPIC);
                 }
                 case OFFER->{
-                    if(!caster(p)||!ready(p)||amount(p,run.runId())<RevivalPlan.COST
+                    if(!caster(p)||!ready(p)||ResurrectionCooldown.seconds(p)!=0
                             ||sent.targets().stream().noneMatch(t->t.player().equals(request.target())&&t.death().equals(request.token())&&t.available()))return;
                     var target=server.getPlayerList().getPlayer(request.target());if(target==null||!ready(target)||offer(target)!=null)return;
-                    var candidate=new Pending(UUID.randomUUID(),run.runId(),p.getUUID(),target.getUUID(),request.token());
+                    var candidate=new Pending(UUID.randomUUID(),run.runId(),p.getUUID(),target.getUUID(),request.token(),Math.addExact(server.overworld().getGameTime(),OFFER_TICKS));
                     if(!valid(server,candidate))return;
                     state(server).offers.put(target.getUUID(),candidate);changed=true;
-                    target.sendSystemMessage(Component.literal(p.getGameProfile().name()+" offers resurrection. Accept or decline on your death screen."));
+                    target.sendSystemMessage(Component.literal(p.getGameProfile().name()+" offers resurrection. Accept or decline on your death screen within 60 seconds."));
                 }
                 case ACCEPT,DECLINE->{
                     var offer=offer(p);

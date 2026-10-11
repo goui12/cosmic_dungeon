@@ -50,11 +50,13 @@ public final class PartyInspectionService {
             readings.add(new PartyInspectionPayloads.Reading(label,String.format(Locale.ROOT,"%.1f",
                     RunMemberStats.value(data,run.runId(),request.subject(),metric))));
         }
+        if(identity.classId().equals("theurgist")||subject==null&&ResurrectionStatusService.offlineTheurgist(data,run.runId(),request.subject()))
+            readings.add(new PartyInspectionPayloads.Reading("Resurrect",ResurrectionStatusService.describe(ResurrectionStatusService.player(subject,run))));
         if(vitals.state().equals("ACTIVE")) {
             if(ClassData.getClassId(subject).equals("metalmancer")) {
                 readings.add(new PartyInspectionPayloads.Reading("Ore",SatchelApi.get(subject)+" / "+SatchelApi.capacity(subject)));
                 readings.addAll(MetalmancerActions.inspectionCooldowns(subject));
-            } else readings.add(new PartyInspectionPayloads.Reading("Ability cooldowns","No timed class action"));
+            } else if(!ClassData.getClassId(subject).equals("theurgist")) readings.add(new PartyInspectionPayloads.Reading("Ability cooldowns","No timed class action"));
             var shown=new HashSet<net.minecraft.resources.ResourceLocation>();
             int extra=0;
             for(int i=0;i<subject.getInventory().getContainerSize();i++) {

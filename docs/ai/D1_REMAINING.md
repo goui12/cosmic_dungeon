@@ -3,11 +3,11 @@
 [1.7 Alpha / 1.8 Beta batch plan](tasks/ALPHA_1_7_BATCH_PLAN_20261010.md).
 
 **20 planned batches:19 Alphas (1.7.1 through1.7.19), then1.8.0 Beta.**
-Batches1-7 published; cumulative1.7.7-alpha.1 (PR252; CI38149578130; release38149788949; CurseForge9130777/helper9130775) was deployed to freshly stopped TEST via sFTP. This supersedes earlier1-4 pending delivery; TEST left stopped.
-Batch8 implements safe crafted-potion stacks and lifecycle under Cameron's explicit "proceed to batch 8" instruction.
-[Batch1 report](tasks/BATCH_1_7_01_20261011.md) | [Batch2 report](tasks/BATCH_1_7_02_20261011.md) | [Batch3 report](tasks/BATCH_1_7_03_20261011.md) | [Batch4 report](tasks/BATCH_1_7_04_20261011.md) | [Batch5 report](tasks/BATCH_1_7_05_20261011.md) | [Batch6 report](tasks/BATCH_1_7_06_20261011.md) | [Batch7 report](tasks/BATCH_1_7_07_20261011.md) | [Batch8 report](tasks/BATCH_1_7_08_20261011.md).
-12 later cards (Batch9-20) remain PLANNED; stop after Batch8.
-Authoritative exact results: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json through batch-08.json.
+Batches1-8 published; cumulative1.7.8-alpha.1 (PR253; CI38152269946; release38152513894; CurseForge9131131/helper9131130) was deployed to freshly stopped TEST via sFTP. TEST left stopped.
+Batch9 implements free player resurrection, persistent cooldowns, inventory picker and party/death status under Cameron's explicit "proceed to batch 9" instruction.
+[Batch9 report](tasks/BATCH_1_7_09_20261011.md); earlier reports remain in this directory.
+11 later cards (Batch10-20) remain PLANNED; stop after Batch9.
+Authoritative exact results: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json through batch-09.json.
 The previous15–26 controller is COMPLETE; do not reset/reuse its receipts or infer autonomous execution.
 
 The plan covers inventory/class art/tooltips, ownership/trades, Tamsin sharing,

@@ -11,7 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
-/** Pending two-owner proof: target success is durable before the caster is ever charged. */
+/** Target success is durable before committing the free cooldown (or settling a legacy debit). */
 public final class TheurgistRevival {
     public static final String CUSTODY="theurgist_revival_reservation_v1",RECEIPT="theurgist_revival_receipt_v1";
     private static final ThreadLocal<RevivalPlan> ACTIVE=new ThreadLocal<>();
@@ -43,10 +43,9 @@ public final class TheurgistRevival {
         if(ACTIVE.get()!=null||blocked(caster)||blocked(target)||MercenaryResurrection.respawning())return false;
         var server=caster.level().getServer();ServerPlayer actualTarget=target;
         try{
-            var before=root(caster).copy();var ledger=ClassResourceLedger.forRun(before,run);
-            if(ledger.amount(ClassResourceKind.BREWING_SUPPLIES)<RevivalPlan.COST)return false;
-            // Normalize old/default ledger shape before binding the native owner reservation.
-            root(caster,ledger.applyTo(before));var plan=RevivalPlan.create(caster.getUUID(),target.getUUID(),death.id(),run,ledger);
+            var before=ResurrectionCooldown.read(root(caster));long now=server.overworld().getGameTime();
+            if(ResurrectionCooldown.seconds(before,now)!=0)return false;
+            var plan=RevivalPlan.free(caster.getUUID(),target.getUUID(),death.id(),run,before,now);
             var data=RevivalData.get(server);data.reserve(plan);
             if(!data.flushVerified())throw new IllegalStateException("Revival prepare not verified");
             ACTIVE.set(plan);
@@ -101,9 +100,9 @@ public final class TheurgistRevival {
                 if(plan.acknowledged(p.getUUID()))throw new IllegalStateException("Acknowledged revival receipt missing");
                 if(success){
                     if(p.getUUID().equals(plan.target()))throw new IllegalStateException("Successful target receipt missing");
-                    if(!custody.equals(plan.reservation(p.getUUID()))||!root(p).getCompoundOrEmpty(ClassResourceLedger.KEY).equals(plan.tag("before")))
+                    if(!custody.equals(plan.reservation(p.getUUID()))||!(plan.schema()==2?ResurrectionCooldown.read(root(p)):root(p).getCompoundOrEmpty(ClassResourceLedger.KEY)).equals(plan.tag("before")))
                         throw new IllegalStateException("Revival caster proof differs from plan");
-                    var n=root(p).copy();n.put(ClassResourceLedger.KEY,plan.tag("after"));root(p,n);
+                    var n=root(p).copy();n.put(plan.stateKey(),plan.tag("after"));root(p,n);
                 }else if(!custody.isEmpty()&&!custody.equals(plan.reservation(p.getUUID())))throw new IllegalStateException("Cancelled revival custody differs");
                 var n=root(p).copy();n.remove(CUSTODY);n.put(RECEIPT,plan.receipt(p.getUUID(),success));root(p,n);
             }else if(!custody.isEmpty())throw new IllegalStateException("Settled revival still has custody");
