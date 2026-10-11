@@ -55,7 +55,10 @@ shutdown saves are accepted. Ask for shutdown only when observed running.
 ## Cache freshness and limits
 
 Keep `CURRENT_STATE.md` compact; update it after milestones. `DECISIONS.md` separates pending, approved and rejected choices. Source snapshots must include file ID/URL, source revision/modified time, fetched UTC time, content hash and explicit coverage; initialize sources/index.json without claiming unavailable content is cached.
-Use live Git status/commit and relevant file hashes to invalidate stale code notes. Before code alignment, refresh metadata for relevant Google Docs and fetch changed, missing or partial sources. A historic title-match/access result is not a full semantic read.
+Use live Git status/commit and relevant file hashes to invalidate stale code notes. Cameron's 2026-10-10 instruction makes the local repo backup the canon source for this workflow:
+C:/Users/Cameron/Documents/mod_development/cosmic_dungeon/Google Docs and Sheet/.
+Read relevant Docs/ exports/native JSON and Sheets/Dungeon Crawl Master Sheet.xlsx, using Audit/DOCUMENT_INDEX.md, the saved manifest and Audit/STATUS.md for provenance and coverage. The backup is not duplicated in every worktree. Preserve recorded revisions/fetch times/hashes and distinguish cached source review from current online freshness; a historic title/access result is not a semantic read.
+No Google Drive/OpenAI connector, live metadata refresh, Sync-Google or OAuth/login is required. Earlier refresh/setup instructions remain historical/optional; do not follow them automatically. Report specific missing or ambiguous local content and ask only when it affects an unresolved decision. Latest explicit user requirements take precedence; online refresh requires a separate request.
 The cache soft budget is 512 MiB; log snapshots are capped at 16 MiB each. Prune obsolete deployment JAR copies as needed without additional confirmation; Cameron does not require historical rollbacks. Preserve authoritative source snapshots, compact receipts and any files needed by an unresolved deployment journal. No automatic ongoing monitoring is enabled.
 
 
