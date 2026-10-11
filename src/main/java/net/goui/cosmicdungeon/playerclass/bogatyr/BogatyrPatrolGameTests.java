@@ -199,7 +199,11 @@ public final class BogatyrPatrolGameTests {
             BogatyrModes.select(f.p(),f.run,WolfMode.PATROL);
             f.check(!goal.canUse()&&wolf.getTarget()==null,"Before/during Stay owner timestamps are forgotten without changing owner state");
             f.check(f.p().getLastHurtByMob()==hostile,"Other owner combat systems keep their own state");
-            f.p().tickCount=40;f.p().invulnerableTime=0;f.p().hurtServer(f.level,hostile.damageSources().mobAttack(hostile),1);
+            f.p().setClientLoaded(true);f.p().tickCount=40;f.p().invulnerableTime=0;float health=f.p().getHealth();
+            f.check(f.p().hurtServer(f.level,hostile.damageSources().mobAttack(hostile),1)&&f.p().getHealth()<health,
+                    "Client-ready native fixture accepts hostile damage");
+            f.check(f.p().getLastHurtByMob()==hostile&&f.p().getLastHurtByMobTimestamp()==40,
+                    "Fresh hit records the actual attacker and current timestamp");
             f.check(goal.canUse(),"Fresh incoming owner damage restores native defense");goal.start();
             f.check(wolf.getTarget()==hostile,"Fresh owner attacker is accepted by damage-history guard");
             helper.succeed();
