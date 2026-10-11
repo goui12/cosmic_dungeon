@@ -41,6 +41,9 @@ public final class ModNetworkClient {
     public static void onBogatyrActions(net.goui.cosmicdungeon.network.BogatyrPayloads.View payload){
         net.goui.cosmicdungeon.client.screen.skills.BogatyrClient.accept(payload);
     }
+    public static void onPotionCraft(net.goui.cosmicdungeon.network.PotionCraftPayloads.View payload) {
+        net.goui.cosmicdungeon.client.screen.crafting.PotionCraftClient.receive(payload);
+    }
     public static void onTheurgistActions(net.goui.cosmicdungeon.network.TheurgistPayloads.View payload){
         net.goui.cosmicdungeon.client.screen.skills.TheurgistClient.receive(payload);
     }

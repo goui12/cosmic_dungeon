@@ -128,42 +128,44 @@ public final class ClassResourceGameTests {
             exactTag(f,ClassResourceKind.KIBBLE,"rotten_flesh,beef,porkchop,mutton,chicken,rabbit");
             var inventory=f.player.getInventory();
             inventory.setItem(0,new ItemStack(Items.SUGAR,8));inventory.setItem(1,new ItemStack(Items.DIAMOND,4));
-            inventory.setItem(2,new ItemStack(Items.BEEF,5));inventory.setItem(3,new ItemStack(Items.COOKED_BEEF,2));
+            inventory.setItem(2,new ItemStack(Items.BEEF,8));inventory.setItem(3,new ItemStack(Items.COOKED_BEEF,2));
             inventory.setItem(4,new ItemStack(Items.SALMON,2));
-            f.ledger(f.ledger().withAmount(ClassResourceKind.BREWING_SUPPLIES,597));f.freshSession();
-            f.check(f.view().amount()==597&&f.view().recyclable(),"Server advertises real eligible headroom");
-            var first=f.request("brewing_supplies");ClassResourceService.recycle(f.player,first);
-            f.check(f.amount(ClassResourceKind.BREWING_SUPPLIES)==600&&inventory.getItem(0).getCount()==5,
-                    "Only three tagged items consumed at the cap");
-            f.check(inventory.getItem(1).getCount()==4&&inventory.getItem(2).getCount()==5,"Unrelated and other-class ingredients unchanged");
-            f.check(PlayerSaveProof.matches(PlayerSaveProof.snapshot(f.player),f.disk()),"Accepted native save contains the item debit and resource credit together");
-            long accepted=f.ledger().revision();
-            ClassResourceService.recycle(f.player,first);
-            f.check(f.ledger().revision()==accepted&&inventory.getItem(0).getCount()==5,"Immediate duplicate cannot charge twice");
+            f.ledger(f.ledger().withAmount(ClassResourceKind.BREWING_SUPPLIES,597));var retired=f.root().copy();f.freshSession();
+            f.check(f.view().runId()==0&&!f.view().active()&&!f.view().recyclable(),"Theurgist Brewing Supplies has no active HUD or recycle capability");
+            for(int tick=100;tick<=200;tick+=20)ClassResourceService.pulse(f.player,tick,true);
+            for(String kind:List.of("brewing_supplies","kibble"))ClassResourceService.recycle(f.player,f.request(kind));
+            f.check(f.root().equals(retired)&&inventory.getItem(0).getCount()==8&&inventory.getItem(2).getCount()==8,
+                    "Retired Brewing Supplies neither regenerates nor recycles and preserves its historical owner fields");
+            f.setClass("bogatyr");f.ledger(f.ledger().withAmount(ClassResourceKind.KIBBLE,597));f.freshSession();
+            f.check(f.view().amount()==597&&f.view().recyclable(),"Bogatyr retains real Kibble headroom until its scheduled rework");
+            var first=f.request("kibble");ClassResourceService.recycle(f.player,first);
+            f.check(f.amount(ClassResourceKind.KIBBLE)==600&&inventory.getItem(2).getCount()==5,
+                    "Only three tagged meat items are consumed at the Kibble cap");
+            f.check(inventory.getItem(0).getCount()==8&&inventory.getItem(1).getCount()==4,
+                    "Unrelated and retired brewing ingredients remain unchanged");
+            f.check(PlayerSaveProof.matches(PlayerSaveProof.snapshot(f.player),f.disk()),"Accepted native save contains the Kibble debit and credit together");
+            long accepted=f.ledger().revision();ClassResourceService.recycle(f.player,first);
+            f.check(f.ledger().revision()==accepted&&inventory.getItem(2).getCount()==5,"Immediate duplicate cannot charge twice");
             f.freshSession();ClassResourceService.recycle(f.player,first);
-            f.check(f.ledger().revision()==accepted&&f.amount(ClassResourceKind.BREWING_SUPPLIES)==600,"Old token stays stale after session replacement");
-            f.freshSession();ClassResourceService.recycle(f.player,new ClassResourcePayloads.Recycle(f.runId,"kibble",accepted));
-            f.check(f.ledger().revision()==accepted&&inventory.getItem(2).getCount()==5,"Forged other-class request consumes nothing");
-            f.freshSession();ClassResourceService.recycle(f.player,new ClassResourcePayloads.Recycle(f.runId-100,"brewing_supplies",accepted));
-            f.check(f.ledger().revision()==accepted,"Stale run cannot mutate current action generation");
-            f.freshSession();ClassResourceService.recycle(f.player,f.request("brewing_supplies"));
-            f.check(f.amount(ClassResourceKind.BREWING_SUPPLIES)==600&&inventory.getItem(0).getCount()==5&&!f.view().recyclable(),"Full resource cannot waste remaining ingredients");
-            f.ledger(f.ledger().withAmount(ClassResourceKind.BREWING_SUPPLIES,590));f.freshSession();
-            var carriedRequest=f.request("brewing_supplies");
-            f.player.inventoryMenu.setCarried(new ItemStack(Items.DIAMOND));
+            f.check(f.ledger().revision()==accepted&&f.amount(ClassResourceKind.KIBBLE)==600,"Old token remains stale after session replacement");
+            f.freshSession();ClassResourceService.recycle(f.player,new ClassResourcePayloads.Recycle(f.runId,"brewing_supplies",accepted));
+            f.check(f.ledger().revision()==accepted&&inventory.getItem(0).getCount()==8,"Forged retired-resource request consumes nothing");
+            f.freshSession();ClassResourceService.recycle(f.player,new ClassResourcePayloads.Recycle(f.runId-100,"kibble",accepted));
+            f.check(f.ledger().revision()==accepted,"Stale run cannot mutate the current action generation");
+            f.freshSession();ClassResourceService.recycle(f.player,f.request("kibble"));
+            f.check(f.amount(ClassResourceKind.KIBBLE)==600&&inventory.getItem(2).getCount()==5&&!f.view().recyclable(),"Full resource never wastes remaining ingredients");
+            f.ledger(f.ledger().withAmount(ClassResourceKind.KIBBLE,590));f.freshSession();
+            var carriedRequest=f.request("kibble");f.player.inventoryMenu.setCarried(new ItemStack(Items.DIAMOND));
             ClassResourceService.recycle(f.player,carriedRequest);
             f.check(f.ledger().revision()>carriedRequest.revision()&&f.view().revision()==f.ledger().revision(),
                     "Rejected carried-item race acknowledges the pending generation");
-            f.check(f.amount(ClassResourceKind.BREWING_SUPPLIES)==590&&inventory.getItem(0).getCount()==5
+            f.check(f.amount(ClassResourceKind.KIBBLE)==590&&inventory.getItem(2).getCount()==5
                     &&f.player.inventoryMenu.getCarried().is(Items.DIAMOND),"Rejected action preserves held and inventory items");
-            f.player.inventoryMenu.setCarried(ItemStack.EMPTY);f.freshSession();
-            ClassResourceService.recycle(f.player,f.request("brewing_supplies"));
-            f.check(f.amount(ClassResourceKind.BREWING_SUPPLIES)==595&&inventory.getItem(0).isEmpty(),"Fresh acknowledged retry consumes remaining five eligible items exactly once");
-            f.setClass("bogatyr");f.freshSession();ClassResourceService.recycle(f.player,f.request("kibble"));
-            f.check(f.amount(ClassResourceKind.KIBBLE)==5&&f.amount(ClassResourceKind.BREWING_SUPPLIES)==595&&inventory.getItem(2).isEmpty(),
-                    "Kibble uses its own balance and eligible raw meat");
-            f.check(inventory.getItem(1).getCount()==4&&inventory.getItem(3).getCount()==2&&inventory.getItem(4).getCount()==2,
-                    "Diamonds, cooked meat and fish are never recycled");
+            f.player.inventoryMenu.setCarried(ItemStack.EMPTY);f.freshSession();ClassResourceService.recycle(f.player,f.request("kibble"));
+            f.check(f.amount(ClassResourceKind.KIBBLE)==595&&f.amount(ClassResourceKind.BREWING_SUPPLIES)==597&&inventory.getItem(2).isEmpty(),
+                    "Fresh acknowledged retry consumes exactly the remaining five meats without touching legacy supplies");
+            f.check(inventory.getItem(0).getCount()==8&&inventory.getItem(1).getCount()==4&&inventory.getItem(3).getCount()==2&&inventory.getItem(4).getCount()==2,
+                    "Sugar, diamonds, cooked meat and fish are never recycled into Kibble");
             helper.succeed();
         }
     }

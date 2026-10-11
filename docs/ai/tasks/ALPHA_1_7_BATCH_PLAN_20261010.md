@@ -1,16 +1,16 @@
 # Cosmic Dungeon 1.7 Alpha series and 1.8 Beta plan
 
 Approved design baseline: Cameron's October 10, 2026 requests and clarifications, through 20:09 PDT.
-Status: Batches1-8 published and cumulative1.7.8-alpha.1 deployed to stopped TEST; Batch9 IN PROGRESS under explicit user instruction; Batch10-20 PLANNED. See BATCH_1_7_09_20261011.md and exact controller receipts.
+Status: Batches1-9 completed; Batch9 1.7.9-alpha.1 published and delivered to stopped TEST. Batch10 IN PROGRESS; Batch11-20 PLANNED. From Batch10 onward, Alpha builds finish at CurseForge under Cameron's October11 instruction; Beta/official builds alone receive sFTP. See current batch reports and exact controller receipts.
 The earlier 15-26 controller remains COMPLETE. Initialize a separately identified 1.7 series only after an implementation/start instruction; archive old receipts and never reuse their batch IDs as new evidence.
 
 ## Release and completion contract
 
 - Batches 1-19 each produce one published Alpha. Batch1 uses1.7.1-alpha.2 because candidate1 failed native fixture tests before upload; its old tag remains immutable. Batches2-19 use1.7.2-alpha.1 through1.7.19-alpha.1. Batch20 produces1.8.0-beta.1.
-- Each card includes implementation, its relevant tests, review, full clean/native CI, a unique source tag, CurseForge runtime plus matching companion, and stopped TEST sFTP delivery. No feature is considered implemented merely because its interface appears.
+- Each card includes implementation, its relevant tests, review, full clean/native CI, a unique source tag, CurseForge runtime plus matching companion, and channel-appropriate completion (Alpha publication only; Beta/official stopped TEST sFTP). No feature is considered implemented merely because its interface appears.
 - Fix failures before publishing a card. Never reuse a published version/tag for different bytes. Beta is an audit/release batch, not a place to conceal unfinished features.
 - Preserve Java21, server authority, authored chest stacks/loadouts/renamed rockets, existing worlds/spawner IDs and unknown save data. No automated local game/GameTest/client/server launch, restart, or server.properties edits.
-- After CurseForge, update only TEST through pinned sFTP after current shutdown evidence; save compact completion and stop at the authorized boundary. No local client/helper installs or additional post-publication hash/readback loops.
+- After CurseForge, Alpha builds save compact completion and stop: no sFTP or server checks. Beta/official builds update only TEST through pinned sFTP after current shutdown evidence, then complete. Stop at the authorized boundary. No local client/helper installs or additional post-publication hash/readback loops.
 - Use the local canon backup at C:/Users/Cameron/Documents/mod_development/cosmic_dungeon/Google Docs and Sheet/. No Google connector, OAuth or live refresh gate. Read relevant local lore/recipes; preserve recorded provenance and coverage limits.
 - Each batch report records requirement IDs, changed surfaces, build/CI/release/TEST evidence, actual manual acceptance versus TESTING, every failed GameTest and disposition, outstanding TODOs, and one useful AI recommendation for that batch (or explicitly none justified). Final Beta consolidates these without erasing failures that later passed.
 - Common automated gates do not prove GUI readability or licensed multiplayer behavior. List concrete manual checks and retain their real status.

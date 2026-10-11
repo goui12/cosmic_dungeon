@@ -4,6 +4,8 @@ Set-StrictMode -Version Latest
 $count=0
 function Check([bool]$Ok,[string]$Name){if(!$Ok){throw $Name};$script:count++}
 function Reject([scriptblock]$Action,[string]$Name){$failed=$false;try{& $Action}catch{$failed=$true};Check $failed $Name}
+foreach($v in @('1.8.0-beta','1.8.0-beta.1','1.8.0')) {Assert-CDServerReleaseChannel $v;$count++}
+foreach($v in @('1.7.10-alpha.1','1.8.0-rc.1','', '1.8.0garbage')) {Reject {Assert-CDServerReleaseChannel $v} "Wrong delivery channel: $v"}
 $stop='[Server thread/INFO]: Stopping the server'
 Check ((Assert-CDShutdownTail @('Starting minecraft server version 1.21.10',$stop)) -eq $stop) 'Latest shutdown accepted'
 Check ((Assert-CDShutdownTail @($stop,'Saving players','Saving worlds','ThreadedAnvilChunkStorage: All chunks are saved')) -eq $stop) 'Shutdown saves accepted'
@@ -23,6 +25,8 @@ $r.status='pending'
 Reject {Assert-CDPublishedRelease $r 'cosmicdungeon-1.6.7-alpha.1.jar' $commit} 'Uncertain publication denied'
 $r.status='submitted';$r.files.loading_companion.file_id=0
 Reject {Assert-CDPublishedRelease $r 'cosmicdungeon-1.6.7-alpha.1.jar' $commit} 'Incomplete companion denied'
+$r.files.loading_companion.file_id=2;$r.version='1.8.0'
+Assert-CDPublishedRelease $r 'cosmicdungeon-1.8.0.jar' $commit;$count++
 function FakeSession([int]$FailAt){
     $x=[pscustomobject]@{Files=@{'old'=1;'stage'=2};Calls=0;FailAt=$FailAt}
     $x | Add-Member ScriptMethod MoveFile {

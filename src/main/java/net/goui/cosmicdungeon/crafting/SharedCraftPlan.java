@@ -12,9 +12,11 @@ public final class SharedCraftPlan {
     public SharedCraftPlan(CompoundTag source) {
         if (source.sizeInBytes() > 4 * 1024 * 1024) throw new IllegalArgumentException("Crafting image exceeds4MiB");
         image = source.copy();
-        if (!(image.get("schema") instanceof IntTag) || !Set.of(1, 2).contains(image.getIntOr("schema", 0)))
+        if (!(image.get("schema") instanceof IntTag) || !Set.of(1, 2, 3).contains(image.getIntOr("schema", 0)))
             throw new IllegalArgumentException("Unsupported shared crafting schema");
         id(); recipient();
+        if (cursor()) for (String key : List.of("cursor_before", "cursor_after"))
+            if (!(image.get(key) instanceof CompoundTag)) throw new IllegalArgumentException("Missing crafting cursor image");
         if (hasFuel()) {
             if (!(image.get("fuel") instanceof CompoundTag)) throw new IllegalArgumentException("Missing brewing fuel transition");
             BrewingFuel.validatePlan(fuel());
@@ -61,7 +63,9 @@ public final class SharedCraftPlan {
         if (value.isBlank() || value.length() > max || value.chars().anyMatch(c -> c < 32))
             throw new IllegalArgumentException("Crafting text");
     }
-    public boolean hasFuel() { return image.getIntOr("schema", 0) == 2; }
+    public boolean hasFuel() { return image.getIntOr("schema", 0) >= 2; }
+    public boolean cursor() { return image.getIntOr("schema", 0) == 3; }
+    public CompoundTag cursor(boolean after) { return tag(after ? "cursor_after" : "cursor_before"); }
     public CompoundTag fuel() { return tag("fuel"); }
     public UUID id() { return UUID.fromString(image.getStringOr("id", "")); }
     public UUID recipient() { return UUID.fromString(image.getStringOr("recipient", "")); }

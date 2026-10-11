@@ -100,21 +100,10 @@ public final class SupplyRequestGameTests {
         int amount(int index){return ledger(index).amount(ClassResourceKind.BREWING_SUPPLIES);}
         void sync(){SupplyRequests.syncAll(level.getServer());}
         void fresh(){for(var player:current)SupplyRequests.forget(player);sync();}
-        SupplyRequestPayloads.View view(int index){
-            var list=packets.get(p(index).getUUID());
-            for(int n=list.size()-1;n>=0;n--)if(list.get(n) instanceof ClientboundCustomPayloadPacket packet
-                    &&packet.payload() instanceof SupplyRequestPayloads.View view)return view;
-            throw new IllegalStateException("No native supply view for "+index);
-        }
-        SupplyRequestPayloads.Action action(int index,Decision decision,List<UUID> ids){
-            var view=view(index);return new SupplyRequestPayloads.Action(view.runId(),view.revision(),decision,ids);
-        }
-        void request(int index){check(view(index).canRequest(),"Requester has actual server availability");SupplyRequests.action(p(index),action(index,Decision.REQUEST,List.of()));}
         void supplies(int donor,int count){
             var stack=new ItemStack(Items.SUGAR,count);stack.set(DataComponents.CUSTOM_NAME,Component.literal("Authored sugar"));
             p(donor).getInventory().setItem(0,stack);p(donor).getInventory().setItem(1,new ItemStack(Items.DIAMOND,4));
         }
-        void prepareRequests(){amount(0,597);amount(1,0);supplies(2,8);fresh();request(0);request(1);}
         Path file(int index){return level.getServer().getWorldPath(LevelResource.PLAYER_DATA_DIR).resolve(p(index).getStringUUID()+".dat");}
         CompoundTag disk(int index){
             try{return NbtIo.readCompressed(file(index),NbtAccounter.create(64L*1024*1024));}
@@ -158,67 +147,34 @@ public final class SupplyRequestGameTests {
     }
 
     public static void consentAndBulk(GameTestHelper helper){
-        try(var f=new Fixture(helper,Long.MAX_VALUE-2101,"theurgist","theurgist","judicator")){
-            f.amount(0,597);f.amount(1,0);f.supplies(2,8);f.fresh();
-            var duplicate=f.action(0,Decision.REQUEST,List.of());f.request(0);
-            SupplyRequests.action(f.p(0),duplicate);
-            f.check(f.view(2).cards().size()==1&&!f.view(0).canRequest(),"Duplicate requester produces one card per donor");
-            f.request(1);var quote=f.view(2);
-            f.check(quote.cards().size()==2&&quote.cards().get(0).requesterId().equals(f.p(0).getUUID())
-                    &&quote.cards().get(1).requesterId().equals(f.p(1).getUUID()),"Independent requests coexist in creation order");
-            f.check(quote.cards().get(0).yield()==3&&quote.cards().get(1).yield()==8
-                    &&quote.cards().get(0).requesterName().equals(f.p(0).getGameProfile().name()),"Exact requester and individual cap-limited yields");
-            var shown=quote.cards().get(0).ingredients().getFirst().stack();
-            f.check(shown.getCount()==3&&shown.getHoverName().getString().equals("Authored sugar"),"Preview preserves native item components and consumed count");
-            var buffer=new RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(),f.level.registryAccess());
-            try{
-                SupplyRequestPayloads.View.STREAM_CODEC.encode(buffer,quote);
-                f.check(quote.equals(SupplyRequestPayloads.View.STREAM_CODEC.decode(buffer))&&buffer.readableBytes()==0,
-                        "Native registry-backed payload roundtrip preserves exact quoted stacks/components");
-            }finally{buffer.release();}
-            var stale=f.action(2,Decision.ACCEPT,List.of(quote.cards().getFirst().requestId()));
-            f.p(2).getInventory().getItem(0).grow(1);int packetCount=f.packets.get(f.p(2).getUUID()).size();
-            SupplyRequests.action(f.p(2),stale);
-            f.check(f.p(2).getInventory().getItem(0).getCount()==9&&f.amount(0)==597&&f.amount(1)==0,
-                    "Changed donor inventory refreshes consent without charging");
-            f.check(f.packets.get(f.p(2).getUUID()).size()>packetCount&&f.view(2).revision()>quote.revision(),
-                    "Stale quote receives a fresh generation and authoritative items");
-
-            f.prepareRequests();quote=f.view(2);var survivor=quote.cards().get(1).requestId();
-            SupplyRequests.action(f.p(2),f.action(2,Decision.DENY,List.of(quote.cards().getFirst().requestId())));
-            f.check(f.view(2).cards().size()==1&&f.view(2).cards().getFirst().requestId().equals(survivor)
-                    &&f.p(2).getInventory().getItem(0).getCount()==8,"Deny changes only its own card and no items");
-            SupplyRequests.forget(f.p(0));SupplyRequests.sync(f.p(0),true);
-            SupplyRequests.action(f.p(0),f.action(0,Decision.ACCEPT,List.of(survivor)));
-            f.check(f.p(2).getInventory().getItem(0).getCount()==8&&f.amount(1)==0,"Wrong owner cannot accept another donor's card");
-            f.prepareRequests();quote=f.view(2);
-            SupplyRequests.action(f.p(2),new SupplyRequestPayloads.Action(f.run-100,quote.revision(),Decision.ACCEPT,
-                    List.of(quote.cards().getFirst().requestId())));
-            f.check(f.p(2).getInventory().getItem(0).getCount()==8&&f.amount(0)==597,"Wrong run consumes nothing");
-
-            f.prepareRequests();quote=f.view(2);
-            var bulk=f.action(2,Decision.ACCEPT_ALL,quote.cards().stream().map(SupplyRequestPayloads.Card::requestId).toList());
-            f.packets.values().forEach(List::clear);SupplyRequests.action(f.p(2),bulk);
-            f.check(f.amount(0)==600&&f.amount(1)==5&&f.p(2).getInventory().getItem(0).isEmpty(),
-                    "Ordered bulk gives three supplies to the nearly-full first owner and only the remaining five to the second");
-            f.check(f.p(2).getInventory().getItem(1).getCount()==4,"Bulk preserves unrelated authored inventory");
-            f.check(f.view(2).cards().isEmpty(),"Accepted donor cards finish independently");
+        try(var f=new Fixture(helper,Long.MAX_VALUE-2101,"theurgist","bogatyr","judicator")){
+            f.amount(0,597);f.amount(1,12);f.supplies(2,8);
+            var roots=f.current.stream().map(player->player.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).copy()).toList();
+            var inventories=f.current.stream().map(ChopTravelRecovery::saveInventory).toList();
+            f.fresh();
+            for(int owner=0;owner<f.current.size();owner++){
+                SupplyRequests.sync(f.p(owner),true);
+                for(var decision:Decision.values()){
+                    var ids=decision==Decision.REQUEST?List.<UUID>of():List.of(UUID.randomUUID());
+                    var stale=new SupplyRequestPayloads.Action(f.run,7,decision,ids);
+                    SupplyRequests.action(f.p(owner),stale);SupplyRequests.action(f.p(owner),stale);
+                    SupplyRequests.action(f.p(owner),new SupplyRequestPayloads.Action(f.run-100,0,decision,ids));
+                }
+            }
+            f.sync();
+            for(int owner=0;owner<f.current.size();owner++){
+                f.check(f.root(owner).equals(roots.get(owner))&&ChopTravelRecovery.saveInventory(f.p(owner)).equals(inventories.get(owner)),
+                        "Retired request, single and bulk decisions preserve every owner's ledger, authored components and inventory");
+                f.check(PlayerSaveProof.save(f.p(owner)),"Preserved owner still supports native saving");f.reload(owner);
+                f.check(f.root(owner).equals(roots.get(owner))&&ChopTravelRecovery.saveInventory(f.p(owner)).equals(inventories.get(owner)),
+                        "Reload cannot reactivate or apply a retired request");
+            }
+            f.check(f.packets.values().stream().flatMap(List::stream).noneMatch(packet->
+                    packet instanceof ClientboundCustomPayloadPacket custom&&custom.payload() instanceof SupplyRequestPayloads.View),
+                    "No class receives the retired Requests UI snapshot");
             f.check(f.packets.values().stream().flatMap(List::stream).noneMatch(packet->packet instanceof ClientboundContainerClosePacket),
-                    "Inventory consent must not send any native close-window packet");
-            SupplyRequests.action(f.p(2),bulk);
-            f.check(f.amount(0)==600&&f.amount(1)==5,"Duplicate bulk cannot grant a second credit");
-            f.check(SupplyTransferData.get(f.level.getServer()).image().equals(f.journalBefore),"Completed native transfers leave no fixture journal entries");
-
-            f.amount(0,597);f.fresh();f.request(0);
-            SupplyRequestEvents.logout(new PlayerEvent.PlayerLoggedOutEvent(f.p(0)));f.sync();
-            f.check(f.view(2).cards().isEmpty(),"Logout expires consent involving that player");
-            f.fresh();f.request(0);long beforeDeath=f.view(0).revision();
-            f.p(0).setHealth(0);SupplyRequestEvents.died(new LivingDeathEvent(f.p(0),f.p(0).damageSources().generic()));f.sync();
-            f.check(f.view(2).cards().isEmpty()&&!f.view(0).alive()&&f.view(0).revision()>beforeDeath,
-                    "Death invalidates consent and advances the same-connection view generation");
-            f.p(0).setHealth(20);long beforeRespawn=f.view(0).revision();
-            SupplyRequestEvents.respawn(new PlayerEvent.PlayerRespawnEvent(f.p(0),false));
-            f.check(f.view(0).revision()>beforeRespawn,"Respawn never resets the same connection to an old generation");
+                    "Retired requests never close a native menu");
+            f.check(SupplyTransferData.get(f.level.getServer()).image().equals(f.journalBefore),"No retired decision starts a new transfer");
             helper.succeed();
         }
     }
@@ -260,43 +216,43 @@ public final class SupplyRequestGameTests {
         }
     }
 
-    /** Server-thread interleavings across independent feature sessions retain consent and cap limits. */
+    /** Retirement cannot reinterpret or erase an already committed pre-upgrade transfer. */
     public static void craftingAndCapIntegration(GameTestHelper helper){
         try(var f=new Fixture(helper,Long.MAX_VALUE-2601,"theurgist","judicator")){
-            f.amount(0,597);f.supplies(1,8);f.fresh();f.request(0);
-            var card=f.view(1).cards().getFirst();f.check(card.yield()==3,"Initial consent is limited to three items");
-            var accept=f.action(1,Decision.ACCEPT,List.of(card.requestId()));
-            f.check(net.goui.cosmicdungeon.playerclass.theurgist.TheurgistCrafting.craft(f.p(0),f.run,false)
-                    &&f.amount(0)==577,"Crafting spends the actual shared ledger before consent arrives");
-            SupplyRequests.action(f.p(1),accept);
-            f.check(f.amount(0)==580&&f.p(1).getInventory().getItem(0).getCount()==5,
-                    "New headroom never expands the donor's previously displayed three-item consent");
-            f.check(f.p(0).getInventory().getItem(0).is(Items.SPLASH_POTION),"Supply settlement preserves the already-crafted physical potion");
+            f.amount(0,597);f.supplies(1,8);var plan=f.plan(1,0,3);var data=SupplyTransferData.get(f.level.getServer());
+            data.reserve(plan);f.check(data.flushVerified(),"Legacy prepared transfer is durable");
+            f.custody(0,plan);f.custody(1,plan);data.commit(plan.id());f.check(data.flushVerified(),"Legacy commit remains durable before retirement entrypoints run");
+            var pending=data.image();var recipient=f.root(0).copy();var donor=f.root(1).copy();
+            f.check(!net.goui.cosmicdungeon.playerclass.theurgist.TheurgistCrafting.craft(f.p(0),f.run,false),
+                    "Retired random crafting cannot interfere with reserved legacy balances");
+            ClassResourceService.pulse(f.p(0),100,false);ClassResourceService.pulse(f.p(0),120,true);
+            SupplyRequests.syncAll(f.level.getServer());
+            SupplyRequests.action(f.p(1),new SupplyRequestPayloads.Action(f.run,0,Decision.ACCEPT,List.of(UUID.randomUUID())));
+            f.check(data.image().equals(pending)&&f.root(0).equals(recipient)&&f.root(1).equals(donor)
+                    &&f.p(1).getInventory().getItem(0).getCount()==8,
+                    "Retired gameplay preserves the exact pending decision and both custody records without prematurely consuming items");
+            f.check(SupplyTransfers.reconcile(f.p(1))&&SupplyTransfers.reconcile(f.p(0)),
+                    "Explicit legacy recovery remains available after Requests and Brewing Supplies retirement");
+            f.check(f.amount(0)==600&&f.p(1).getInventory().getItem(0).getCount()==5,
+                    "Committed old transfer settles its three-item debit and capped historical credit exactly once");
             f.reload(0);f.reload(1);
-            f.check(f.amount(0)==580&&f.p(0).getInventory().getItem(0).is(Items.SPLASH_POTION)
-                    &&f.p(1).getInventory().getItem(0).getCount()==5,"Native reload retains both features' paired item/resource results");
+            f.check(SupplyTransfers.reconcile(f.p(0))&&SupplyTransfers.reconcile(f.p(1))&&f.amount(0)==600
+                    &&f.p(1).getInventory().getItem(0).getCount()==5,"Reloaded old transfer cannot apply twice");
             f.check(f.p(1).getInventory().getItem(0).getHoverName().getString().equals("Authored sugar")
-                    &&f.root(0).getStringOr("future_marker","").equals("preserved"),"Interleaved transactions preserve authored components and unknown owner fields");
+                    &&f.root(0).getStringOr("future_marker","").equals("preserved"),"Recovery preserves authored components and unknown owner fields");
+            f.check(data.image().equals(f.journalBefore),"Recovered legacy plan retires only its own journal entry");
         }
-        try(var f=new Fixture(helper,Long.MAX_VALUE-2602,"theurgist","judicator")){
-            f.amount(0,597);f.supplies(1,8);f.fresh();f.request(0);
-            var accept=f.action(1,Decision.ACCEPT,List.of(f.view(1).cards().getFirst().requestId()));
-            long now=f.level.getServer().getTickCount();
-            ClassResourceService.pulse(f.p(0),now,false);
-            for(int i=1;i<=3;i++)ClassResourceService.pulse(f.p(0),now+20*i,true);
-            f.check(f.amount(0)==600,"Online regeneration wins the race to the shared cap");
-            SupplyRequests.action(f.p(1),accept);
-            f.check(f.amount(0)==600&&f.p(1).getInventory().getItem(0).getCount()==8&&f.view(1).cards().isEmpty(),
-                    "An old consent at the now-full cap consumes nothing and expires");
-        }
-        try(var f=new Fixture(helper,Long.MAX_VALUE-2603,"theurgist","judicator","pyroclast")){
-            f.amount(0,599);f.supplies(1,8);f.supplies(2,8);f.fresh();f.request(0);
-            var first=f.action(1,Decision.ACCEPT,List.of(f.view(1).cards().getFirst().requestId()));
-            var second=f.action(2,Decision.ACCEPT,List.of(f.view(2).cards().getFirst().requestId()));
-            SupplyRequests.action(f.p(1),first);SupplyRequests.action(f.p(2),second);
-            f.check(f.amount(0)==600&&f.p(1).getInventory().getItem(0).getCount()==7
-                    &&f.p(2).getInventory().getItem(0).getCount()==8,"Two donors racing one headroom consume exactly one total item");
-            f.check(SupplyTransferData.get(f.level.getServer()).image().equals(f.journalBefore),"Cross-feature cap races leave no unsettled transfer");
+        try(var f=new Fixture(helper,Long.MAX_VALUE-2602,"theurgist","judicator","pyroclast")){
+            f.amount(0,597);f.supplies(1,8);f.supplies(2,8);
+            var before=f.root(0).copy();
+            ClassResourceService.pulse(f.p(0),100,false);
+            for(int tick=120;tick<=180;tick+=20)ClassResourceService.pulse(f.p(0),tick,true);
+            ClassResourceService.recycle(f.p(0),new net.goui.cosmicdungeon.network.ClassResourcePayloads.Recycle(f.run,"brewing_supplies",f.ledger(0).revision()));
+            for(int donor=1;donor<=2;donor++)
+                SupplyRequests.action(f.p(donor),new SupplyRequestPayloads.Action(f.run,0,Decision.ACCEPT_ALL,List.of(UUID.randomUUID())));
+            f.check(f.root(0).equals(before)&&f.p(1).getInventory().getItem(0).getCount()==8&&f.p(2).getInventory().getItem(0).getCount()==8,
+                    "Retired regeneration, recycling and racing bulk donors cannot change a historical balance or consume either inventory");
+            f.check(SupplyTransferData.get(f.level.getServer()).image().equals(f.journalBefore),"Retired interleavings create no unsettled transfer");
         }
         helper.succeed();
     }

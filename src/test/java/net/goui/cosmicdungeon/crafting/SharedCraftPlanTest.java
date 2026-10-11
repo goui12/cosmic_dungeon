@@ -132,4 +132,19 @@ class SharedCraftPlanTest {
         assertEquals(2,data.pending().size());assertEquals(independent.id(),data.pending(d).id());
         raw.putInt("schema",2);assertThrows(IllegalArgumentException.class,()->new SharedCraftData(raw));
     }
+
+    @Test void cursorSchemaIsAdditiveImmutableAndRequiresBothOwnerImages() {
+        var old=plan();assertFalse(old.cursor());assertFalse(old.hasFuel());
+        var source=old.image();source.putInt("schema",3);source.put("fuel",BrewingFuel.plan(BrewingFuel.empty(),3));
+        var before=new CompoundTag();var after=new CompoundTag();after.putString("fixture","cursor_after");
+        source.put("cursor_before",before);source.put("cursor_after",after);source.putString("future_cursor","preserved");
+        var cursor=new SharedCraftPlan(source);assertTrue(cursor.cursor());assertTrue(cursor.hasFuel());
+        assertEquals(source,SharedCraftPlan.CODEC.encodeStart(NbtOps.INSTANCE,cursor).getOrThrow());
+        var exposed=cursor.cursor(true);exposed.putString("fixture","tampered");assertEquals(after,cursor.cursor(true));
+        var committed=cursor.commit();assertEquals("preserved",committed.image().getStringOr("future_cursor",""));
+        for(String key:List.of("cursor_before","cursor_after","fuel")){
+            var missing=source.copy();missing.remove(key);assertThrows(IllegalArgumentException.class,()->new SharedCraftPlan(missing));
+        }
+        source.putInt("schema",4);assertThrows(IllegalArgumentException.class,()->new SharedCraftPlan(source));
+    }
 }

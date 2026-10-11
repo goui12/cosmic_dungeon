@@ -23,12 +23,13 @@ public final class SharedCrafting {
                 throw new IllegalArgumentException("Crafting requirement");
         }
     }
-    public record Recipe(String id, String skill, Set<String> classes, List<Requirement> requirements, ItemStack output, CompoundTag fuel) {
+    public record Recipe(String id, String skill, Set<String> classes, List<Requirement> requirements, ItemStack output, CompoundTag fuel, boolean cursor) {
         public Recipe {
             if (id == null || id.isBlank() || id.length() > 128 || skill == null || skill.isBlank() || skill.length() > 128)
                 throw new IllegalArgumentException("Crafting recipe identity");
             fuel = fuel == null ? null : fuel.copy();
             if (fuel != null) BrewingFuel.validatePlan(fuel);
+            if (cursor && (fuel == null || output.getCount() != 1)) throw new IllegalArgumentException("Cursor crafts require one fueled potion");
             classes = Set.copyOf(classes); requirements = List.copyOf(requirements); output = output.copy();
             if (classes.isEmpty() || classes.size() > 16 || requirements.isEmpty() || requirements.size() > 16
                     || requirements.stream().map(Requirement::key).distinct().count() != requirements.size()
@@ -36,8 +37,11 @@ public final class SharedCrafting {
                     || output.isEmpty() || output.getCount() > output.getMaxStackSize())
                 throw new IllegalArgumentException("Crafting recipe bounds");
         }
+        public Recipe(String id, String skill, Set<String> classes, List<Requirement> requirements, ItemStack output, CompoundTag fuel) {
+            this(id, skill, classes, requirements, output, fuel, false);
+        }
         public Recipe(String id, String skill, Set<String> classes, List<Requirement> requirements, ItemStack output) {
-            this(id, skill, classes, requirements, output, null);
+            this(id, skill, classes, requirements, output, null, false);
         }
         @Override public CompoundTag fuel() { return fuel == null ? null : fuel.copy(); }
         @Override public ItemStack output() { return output.copy(); }
@@ -61,9 +65,10 @@ public final class SharedCrafting {
         return p != null && p.connection != null && !p.hasDisconnected() && p.connection.isAcceptingMessages()
                 && p.level().getServer().getPlayerList().getPlayer(p.getUUID()) == p;
     }
-    static boolean availableOwner(ServerPlayer p, boolean reserved) {
+    static boolean availableOwner(ServerPlayer p, boolean reserved) { return availableOwner(p, reserved, false); }
+    static boolean availableOwner(ServerPlayer p, boolean reserved, boolean allowCursor) {
         return online(p) && p.isAlive() && !p.isDeadOrDying() && !p.isSpectator() && !AccessPolicy.isDeveloper(p)
-                && p.containerMenu == p.inventoryMenu && p.inventoryMenu.getCarried().isEmpty()
+                && p.containerMenu == p.inventoryMenu && (allowCursor || p.inventoryMenu.getCarried().isEmpty())
                 && !(reserved ? InventoryTransactionGuard.blockedExceptCrafting(p) : InventoryTransactionGuard.blocked(p));
     }
     private static DungeonRunRegistryData.RunRecord run(ServerPlayer p, long expected, Recipe recipe) {
@@ -101,7 +106,7 @@ public final class SharedCrafting {
     }
     public static Availability preview(ServerPlayer player, long expected, Recipe recipe) {
         var run = run(player, expected, recipe);
-        if (run == null || !availableOwner(player, false) || SharedCraftData.get(player.level().getServer()).pendingRun(expected) != null)
+        if (run == null || !availableOwner(player, false, recipe.cursor()) || SharedCraftData.get(player.level().getServer()).pendingRun(expected) != null)
             return new Availability(0, 0);
         var stocks = new ArrayList<SharedResourcePlanner.Stock>();
         for (var owner : participants(player, run)) stocks.add(new SharedResourcePlanner.Stock(owner.getUUID(),
@@ -117,7 +122,7 @@ public final class SharedCrafting {
             if (current == null) return false;
             for (UUID owner : plan.owners()) {
                 var donor = player.level().getServer().getPlayerList().getPlayer(owner);
-                if (!availableOwner(donor, true) || (!owner.equals(player.getUUID())
+                if (!availableOwner(donor, true, recipe.cursor() && owner.equals(player.getUUID())) || (!owner.equals(player.getUUID())
                         && !GroupResourceConsent.canContribute(player, donor, expected))) return false;
             }
             return true;
@@ -126,7 +131,7 @@ public final class SharedCrafting {
     /** Package-visible for native recovery tests; creates no reservation and mutates no owner. */
     static SharedCraftPlan prepare(ServerPlayer player, long expected, Recipe recipe) {
         var run = run(player, expected, recipe);
-        if (run == null || !availableOwner(player, false) || SharedCraftData.get(player.level().getServer()).pendingRun(expected) != null) return null;
+        if (run == null || !availableOwner(player, false, recipe.cursor()) || SharedCraftData.get(player.level().getServer()).pendingRun(expected) != null) return null;
         var server = player.level().getServer();
         DungeonMetricsService.begin(server, run, false);
         var players = participants(player, run); var inventories = new LinkedHashMap<UUID, NonNullList<ItemStack>>();
@@ -156,7 +161,7 @@ public final class SharedCrafting {
                 }
                 if (remaining != 0) throw new IllegalStateException("Live ingredient allocation differs");
             }
-            if (id.equals(player.getUUID()) && !insert(after, recipe.output())) return null;
+            if (id.equals(player.getUUID()) && !recipe.cursor() && !insert(after, recipe.output())) return null;
             var owner = new CompoundTag(); owner.put("before", ChopTravelRecovery.encode(player, before));
             owner.put("after", ChopTravelRecovery.encode(player, after)); owner.put("debits", debits); owner.putBoolean("ack", false);
             owners.put(id.toString(), owner);
@@ -170,6 +175,13 @@ public final class SharedCrafting {
         var output = NonNullList.withSize(player.getInventory().getContainerSize(), ItemStack.EMPTY); output.set(0, recipe.output());
         image.put("output", ChopTravelRecovery.encode(player, output)); image.putBoolean("committed", false); image.putBoolean("metrics_ack", false);
         if (recipe.fuel() != null) { image.putInt("schema", 2); image.put("fuel", recipe.fuel()); }
+        if (recipe.cursor()) {
+            var result = PotionOutputPlacement.cursor(player.inventoryMenu.getCarried(), recipe.output());
+            if (result == null) return null;
+            image.putInt("schema", 3);
+            image.put("cursor_before", net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairCustody.encode(player, player.inventoryMenu.getCarried()));
+            image.put("cursor_after", net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairCustody.encode(player, result));
+        }
         var plan = new SharedCraftPlan(image); SharedCraftTransactions.validateImages(player, plan); return plan;
     }
     /** Apply a detached plan only after full capacity is known; failed partial merges change nothing. */

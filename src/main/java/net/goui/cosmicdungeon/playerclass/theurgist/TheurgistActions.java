@@ -75,7 +75,7 @@ public final class TheurgistActions {
             if(run==null||TheurgistRevival.blocked(p))view=TheurgistPayloads.View.empty(session.revision);
             else{
                 boolean cls=ClassData.getClassId(p).equals("theurgist"),living=alive(p),available=cls&&living&&ready(p);
-                int balance=cls?amount(p,run.runId()):0;boolean space=available&&TheurgistCrafting.freeSlot(p)>=0;
+                // Random Brewing Supplies potion skills retired; resurrection remains independent.
                 var targets=new ArrayList<TheurgistPayloads.Target>();
                 if(cls&&living)for(UUID id:run.orderedPlayers()){
                     if(id.equals(p.getUUID())||targets.size()>=TheurgistPayloads.MAX_TARGETS)continue;
@@ -86,7 +86,7 @@ public final class TheurgistActions {
                 }
                 var pending=offer(p);TheurgistPayloads.Offer shown=null;
                 if(pending!=null){var c=p.level().getServer().getPlayerList().getPlayer(pending.caster());shown=new TheurgistPayloads.Offer(pending.id(),pending.caster(),c.getGameProfile().name(),pending.death());}
-                view=new TheurgistPayloads.View(run.runId(),session.revision,cls,living,space&&balance>=20,space&&balance>=40,targets,shown,net.goui.cosmicdungeon.npc.tamsin.ResurrectionStatusService.player(p,run),
+                view=new TheurgistPayloads.View(run.runId(),session.revision,cls,living,false,false,targets,shown,net.goui.cosmicdungeon.npc.tamsin.ResurrectionStatusService.player(p,run),
                         net.goui.cosmicdungeon.npc.tamsin.ResurrectionStatusService.roster(p,run));
             }
         }catch(RuntimeException error){
@@ -107,10 +107,7 @@ public final class TheurgistActions {
             var sent=session.sent;var run=MercenaryResurrection.deathRun(p);
             if(!connected(p)||sent==null||run==null||request.run()!=run.runId()||request.revision()!=sent.revision())return;
             switch(request.kind()){
-                case CRAFT,EPIC->{
-                    if(!caster(p))return;
-                    changed=TheurgistCrafting.craft(p,run.runId(),request.kind()==TheurgistPayloads.Kind.EPIC);
-                }
+                case CRAFT,EPIC->{ return; } // Retired packet kinds cannot spend legacy balances.
                 case OFFER->{
                     if(!caster(p)||!ready(p)||ResurrectionCooldown.seconds(p)!=0
                             ||sent.targets().stream().noneMatch(t->t.player().equals(request.target())&&t.death().equals(request.token())&&t.available()))return;

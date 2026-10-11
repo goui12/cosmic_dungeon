@@ -85,6 +85,10 @@ public final class DungeonInstanceGameTests {
         suite.add(id("shared_resource_guards"),net.goui.cosmicdungeon.crafting.SharedResourceGameTests::guards);
         suite.add(id("potion_recipe_transactions"),net.goui.cosmicdungeon.crafting.PotionCraftingGameTests::transactions);
         suite.add(id("potion_fuel_recovery"),net.goui.cosmicdungeon.crafting.PotionCraftingGameTests::recovery);
+        suite.add(id("potion_palette_cursor"),net.goui.cosmicdungeon.crafting.PotionCraftingGameTests::paletteCursor);
+        suite.add(id("potion_palette_recovery"),net.goui.cosmicdungeon.crafting.PotionCraftingGameTests::paletteRecovery);
+        suite.add(id("potion_palette_actions"),net.goui.cosmicdungeon.crafting.PotionCraftingGameTests::paletteActions);
+        suite.add(id("potion_palette_lifecycle"),net.goui.cosmicdungeon.crafting.PotionCraftingGameTests::paletteLifecycle);
         suite.add(id("stack_menu_lifecycle"),net.goui.cosmicdungeon.crafting.PotionStackGameTests::menu);
         suite.add(id("stack_consumption_lifecycle"),net.goui.cosmicdungeon.crafting.PotionStackGameTests::consumption);
         suite.add(id("stack_custody_lifecycle"),net.goui.cosmicdungeon.crafting.PotionStackGameTests::custody);

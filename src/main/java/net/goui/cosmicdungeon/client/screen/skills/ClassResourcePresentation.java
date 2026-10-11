@@ -28,12 +28,10 @@ public final class ClassResourcePresentation {
     }
     public static SkillsPanelModel panel(String classId,ClassResourceSnapshot snapshot,boolean awaitingAction,boolean canRequest){
         var base=SkillsPanelModel.initial(classId);
-        if(!classId.equals("theurgist")&&!classId.equals("bogatyr"))return base;
+        if(!classId.equals("bogatyr"))return base; // Brewing Supplies and Requests are retired.
         boolean present=snapshot!=null&&snapshot.matches(classId);
-        String name=classId.equals("theurgist")?"brewing supplies":"Kibble";
+        String name="Kibble";
         var actions=new ArrayList<SkillsPanelModel.Action>();
-        boolean request=present&&canRequest&&!awaitingAction&&snapshot.active()&&snapshot.alive()&&snapshot.amount()<snapshot.cap();
-        actions.add(new SkillsPanelModel.Action("request_supplies","Request Supplies",requestTooltip(name,request),request));
         actions.add(new SkillsPanelModel.Action("recycle","Recycle",recycleTooltip(name),
                 present&&snapshot.canRecycle()&&!awaitingAction));
         actions.addAll(base.actions());

@@ -71,12 +71,12 @@ final class BogatyrClientTest {
         BogatyrClient.accept(view(23,5));var model=BogatyrClient.augment(generic);
         assertEquals("Wolfpack",model.title());assertEquals(generic.resource(),model.resource());
         assertEquals(generic.resourceTooltip(),model.resourceTooltip());assertSame(snapshot,model.resourceSnapshot());
-        assertEquals(12,model.actions().size());assertEquals(generic.actions().get(0),model.actions().get(0));
-        assertEquals(generic.actions().get(1),model.actions().get(1));
+        assertEquals(11,model.actions().size());assertEquals(generic.actions().get(0),model.actions().get(0));
+        assertTrue(model.actions().stream().noneMatch(a->a.id().equals("request_supplies")));
         assertFalse(model.actions().stream().anyMatch(a->a.id().equals("guide")));
         assertEquals(List.of("Defensive","Stand Ground","Aggressive","Strategic","Search and Rescue","Danger Close"),
-                model.actions().subList(6,12).stream().map(SkillsPanelModel.Action::label).toList());
-        for(var mode:model.actions().subList(6,12)){
+                model.actions().subList(5,11).stream().map(SkillsPanelModel.Action::label).toList());
+        for(var mode:model.actions().subList(5,11)){
             assertFalse(mode.enabled());assertFalse(BogatyrClient.activate(mode.id()));
         }
         var panel=new SkillsPanelState(SharedInventoryLayout.of(320,240,72,37,176,166),null);

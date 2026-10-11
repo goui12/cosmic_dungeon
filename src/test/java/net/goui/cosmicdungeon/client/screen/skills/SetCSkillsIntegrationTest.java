@@ -52,8 +52,8 @@ final class SetCSkillsIntegrationTest {
         var combined=id.equals("bogatyr")?BogatyrClient.augment(base):TheurgistClient.augment(base);
         assertSame(resource,combined.resourceSnapshot(),"Class actions must retain the authoritative shared resource");
         assertEquals(base.resourceTooltip(),combined.resourceTooltip());
-        assertEquals(List.of("request_supplies","recycle"),
-                combined.actions().subList(0,2).stream().map(SkillsPanelModel.Action::id).toList());
+        assertEquals("recycle",combined.actions().getFirst().id());
+        assertTrue(combined.actions().stream().noneMatch(a->a.id().equals("request_supplies")));
         return combined;
     }
 
@@ -79,9 +79,9 @@ final class SetCSkillsIntegrationTest {
     }
 
     @Test void fullyComposedPanelsKeepEveryActionReachableAtSupportedSurvivalAndCreativeScales() {
-        for(var id:List.of("bogatyr","theurgist")) {
+        for(var id:List.of("bogatyr")) {
             var combined=model(id);
-            assertEquals(id.equals("bogatyr")?12:69,combined.actions().size());
+            assertEquals(11,combined.actions().size());
             for(int[] size:new int[][]{{320,240},{426,240},{640,360},{854,480}})
                 for(int image:new int[]{176,195}) {
                     var shared=layout(size[0],size[1],image);
@@ -110,7 +110,7 @@ final class SetCSkillsIntegrationTest {
     @Test void simultaneousRequestsAndSkillsKeepIndependentScrollConsentAndItemDragOwnership() {
         var shared=layout(640,360,176);
         var panel=new SkillsPanelState(shared,null);
-        panel.actions(model("theurgist").actions().size());
+        panel.actions(model("bogatyr").actions().size());
         var requests=requests(shared);
         var requestBody=requests.geometry().body();
         requests.wheel(requestBody.x()+2,requestBody.y()+2,-10000,false);
@@ -158,7 +158,7 @@ final class SetCSkillsIntegrationTest {
         var path=directory.resolve("skills.json");
         var preferences=new SkillsPanelPreferences(path);
         var shared=layout(854,480,176);
-        for(var id:List.of("bogatyr","theurgist")) {
+        for(var id:List.of("bogatyr")) {
             var combined=model(id);
             var panel=new SkillsPanelState(shared,null);
             panel.actions(combined.actions().size());
@@ -175,9 +175,10 @@ final class SetCSkillsIntegrationTest {
             assertEquals(177,combined.resourceSnapshot().amount(),"Moving or minimizing is presentation only");
         }
         var loaded=new SkillsPanelPreferences(path);
-        assertNotEquals(loaded.get("bogatyr"),loaded.get("theurgist"));
+        assertTrue(loaded.get("bogatyr").isPresent());
+        assertTrue(loaded.get("theurgist").isEmpty(),"Hidden caster Skills cannot acquire new placements");
         var smaller=layout(320,240,195);
-        for(var id:List.of("bogatyr","theurgist")) {
+        for(var id:List.of("bogatyr")) {
             var panel=new SkillsPanelState(smaller,loaded.get(id).orElseThrow());
             panel.actions(model(id).actions().size());
             bounded(panel,smaller);
@@ -191,7 +192,7 @@ final class SetCSkillsIntegrationTest {
         }
         assertTrue(loaded.reset());
         var reset=new SkillsPanelPreferences(path);
-        for(var id:List.of("bogatyr","theurgist")) {
+        for(var id:List.of("bogatyr")) {
             assertTrue(reset.get(id).isEmpty());
             var panel=new SkillsPanelState(shared,reset.get(id).orElse(null));
             panel.actions(model(id).actions().size());

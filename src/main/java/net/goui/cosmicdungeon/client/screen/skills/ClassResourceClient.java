@@ -2,7 +2,6 @@ package net.goui.cosmicdungeon.client.screen.skills;
 
 import java.util.Objects;
 import java.util.function.Consumer;
-import net.goui.cosmicdungeon.client.screen.requests.SupplyRequestsClient;
 import net.goui.cosmicdungeon.playerclass.api.ClassData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -25,14 +24,12 @@ public final class ClassResourceClient {
         if(installed)return;installed=true;
         for(String id:new String[]{"theurgist","bogatyr"})SkillsPanelClient.register(id,new SkillsPanelClient.Provider(){
             @Override public SkillsPanelModel view(LocalPlayer player){
-                var base=ClassResourcePresentation.panel(id,STATE.snapshot(),STATE.awaitingAction()||sender==null,
-                        SupplyRequestsClient.canRequest(STATE.snapshot()));
+                var base=ClassResourcePresentation.panel(id,STATE.snapshot(),STATE.awaitingAction()||sender==null);
                 return id.equals("theurgist")?TheurgistClient.augment(base):BogatyrClient.augment(base);
             }
             @Override public void activate(LocalPlayer player,String action){
                 if(!ClassData.getClassId(player).equals(id))return;
-                if(action.equals("request_supplies")&&SupplyRequestsClient.canRequest(STATE.snapshot()))SupplyRequestsClient.request();
-                else if(sender!=null&&action.equals("recycle"))STATE.recycle(id).ifPresent(sender);
+                if(id.equals("bogatyr")&&sender!=null&&action.equals("recycle"))STATE.recycle(id).ifPresent(sender);
                 else if(id.equals("theurgist"))TheurgistClient.activate(action);
                 else if(id.equals("bogatyr"))BogatyrClient.activate(action);
             }
@@ -43,6 +40,7 @@ public final class ClassResourceClient {
     @SubscribeEvent public static void hud(RenderGuiEvent.Post event){
         var mc=Minecraft.getInstance();var snapshot=STATE.snapshot();
         if(mc.player==null||mc.screen!=null||mc.options.hideGui||mc.getDebugOverlay().showDebugScreen()
+                ||ClassData.getClassId(mc.player).equals("theurgist")
                 ||mc.player.isSpectator()||snapshot==null||!snapshot.active()||!snapshot.matches(ClassData.getClassId(mc.player)))return;
         var g=event.getGuiGraphics();g.nextStratum();
         var box=ClassResourceBar.world(g.guiWidth(),g.guiHeight(),Math.max(mc.gui.leftHeight,mc.gui.rightHeight));

@@ -22,6 +22,7 @@ public final class SharedCraftTransactions {
     private static void root(ServerPlayer p, CompoundTag value) { p.getPersistentData().put(ClassData.ROOT_TAG, value); }
     private static void hold(ServerPlayer p, Exception failure) {
         if (!HOLDS.add(p)) return;
+        PotionCursorCustody.freeze(p);
         com.mojang.logging.LogUtils.getLogger().error("Shared craft preserved for recovery: {}", p.getUUID(), failure);
         p.connection.disconnect(Component.literal("Your shared craft needs a save check. Its materials and output are reserved; reconnect to recover."));
     }
@@ -44,6 +45,12 @@ public final class SharedCraftTransactions {
         ItemStack output = outputImage.getFirst();
         if (output.isEmpty() || output.getCount() > output.getMaxStackSize()
                 || outputImage.stream().skip(1).anyMatch(s -> !s.isEmpty())) throw new IllegalArgumentException("Invalid crafting output");
+        if (plan.cursor()) {
+            var before = net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairCustody.decode(registryOwner, plan.cursor(false));
+            var expected = PotionOutputPlacement.cursor(before, output);
+            if (expected == null || !net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairCustody.encode(registryOwner, expected).equals(plan.cursor(true)))
+                throw new IllegalArgumentException("Crafting cursor changes unrelated items/components");
+        }
         if (plan.hasFuel()) {
             long powder = plan.owners().stream().flatMap(owner -> plan.debits(owner).stream())
                     .filter(debit -> debit.item().equals("minecraft:blaze_powder")).mapToLong(SharedCraftPlan.Debit::count).sum();
@@ -58,7 +65,7 @@ public final class SharedCraftTransactions {
                         || stack.getCount() < debit.count()) throw new IllegalArgumentException("Crafting debit differs from reserved item");
                 stack.shrink(debit.count());
             }
-            if (owner.equals(plan.recipient()) && !SharedCrafting.insert(before, output)) throw new IllegalArgumentException("Crafting output no longer fits image");
+            if (owner.equals(plan.recipient()) && !plan.cursor() && !SharedCrafting.insert(before, output)) throw new IllegalArgumentException("Crafting output no longer fits image");
             if (!ChopTravelRecovery.encode(registryOwner, before).equals(plan.inventory(owner, true)))
                 throw new IllegalArgumentException("Crafting image changes unrelated slots/components");
         }
@@ -67,13 +74,15 @@ public final class SharedCraftTransactions {
         var server = crafter.level().getServer(); var participants = new ArrayList<ServerPlayer>();
         for (UUID id : plan.owners()) {
             var p = server.getPlayerList().getPlayer(id);
-            if (!SharedCrafting.availableOwner(p, false)) return false;
+            if (!SharedCrafting.availableOwner(p, false, plan.cursor() && id.equals(plan.recipient()))) return false;
             participants.add(p);
         }
         try {
+            if (plan.cursor()) PotionCursorCustody.track(crafter);
             validateImages(crafter, plan);
-            if (!revalidate.getAsBoolean()) return false;
-            for (var p : participants) if (!ChopTravelRecovery.saveInventory(p).equals(plan.inventory(p.getUUID(), false))) return false;
+            if (!revalidate.getAsBoolean() || plan.cursor() && !PotionCursorCustody.image(crafter).equals(plan.cursor(false))) return false;
+            for (var p : participants) if (!ChopTravelRecovery.saveInventory(p).equals(plan.inventory(p.getUUID(), false))
+                            || plan.cursor() && p.getUUID().equals(plan.recipient()) && !PotionCursorCustody.image(p).equals(plan.cursor(false))) return false;
             try {
                 DungeonMetricsService.validateResources(server, new ResourceMetricsBatch(DungeonMetricsService.archive(server).worldId(),
                         plan.run(), plan.id(), plan.sequence(), plan.donationBefore(), plan.donationAfter(), plan.donated(), plan.events()));
@@ -87,6 +96,7 @@ public final class SharedCraftTransactions {
                 if (!PlayerSaveProof.save(p)) throw new IllegalStateException("Craft owner reservation not verified");
             }
             boolean valid = data.fuelMatches(plan) && revalidate.getAsBoolean()
+                    && (!plan.cursor() || PotionCursorCustody.image(crafter).equals(plan.cursor(false)))
                     && DungeonMetricsService.resourceSequence(server, plan.run()) + 1 == plan.sequence()
                     && DungeonMetricsService.donationCursor(server, plan.run()) == plan.donationBefore();
             for (var p : participants) valid &= ChopTravelRecovery.saveInventory(p).equals(plan.inventory(p.getUUID(), false));
@@ -105,6 +115,7 @@ public final class SharedCraftTransactions {
     public static boolean reconcile(ServerPlayer p) {
         if (HOLDS.contains(p)) return false;
         try {
+            PotionCursorCustody.restore(p);
             var server = p.level().getServer(); var data = SharedCraftData.get(server); var plan = data.pending(p.getUUID());
             if (plan == null) {
                 if (root(p).contains(CUSTODY)) throw new IllegalStateException("Craft reservation has no world decision");
@@ -118,11 +129,13 @@ public final class SharedCraftTransactions {
             boolean newlyApplied = !plan.receipt(p.getUUID()).equals(receipt);
             if (newlyApplied) {
                 if (plan.committed()) {
-                    if (!ChopTravelRecovery.saveInventory(p).equals(plan.inventory(p.getUUID(), false)))
+                    if (!ChopTravelRecovery.saveInventory(p).equals(plan.inventory(p.getUUID(), false))
+                            || plan.cursor() && p.getUUID().equals(plan.recipient()) && !PotionCursorCustody.image(p).equals(plan.cursor(false)))
                         throw new IllegalStateException("Craft inventory differs from reserved source");
                     var after = ChopTravelRecovery.decode(p, plan.inventory(p.getUUID(), true));
                     for (int slot = 0; slot < after.size(); slot++) p.getInventory().setItem(slot, after.get(slot).copy());
                     p.getInventory().setChanged();
+                    if (plan.cursor() && p.getUUID().equals(plan.recipient())) PotionCursorCustody.apply(p, plan.cursor(true));
                 }
                 var next = root(p).copy(); next.remove(CUSTODY); next.put(RECEIPT, plan.receipt(p.getUUID())); root(p, next);
             }

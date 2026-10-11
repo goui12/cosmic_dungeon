@@ -40,14 +40,15 @@ The scripts use WinSCP's installed .NET assembly with SecurePassword and a pinne
 `... -Action Launch -Apply` opens the verified CurseForge shortcut only after client-path confirmation. Cameron performs legitimate Microsoft login/Play as Goui12. It does not automate authentication or guarantee an instance has started.
 `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\capture-client.ps1 -Seconds 30 -IntervalSeconds 5` samples target-client CPU/RAM to CSV and stops automatically. Duration is capped at 300 seconds. It neither launches Minecraft nor attaches a profiler. CPU percentages are normalized to the whole machine, not one core.
 
-## CurseForge and TEST deployment (2026-10-07)
+## CurseForge and TEST deployment (2026-10-11)
 
 1. Validate/commit/push source and unique tag. CurseForge Actions builds/tests and publishes runtime plus companion.
-2. Download exact tagged runtime and curseforge-receipt.json from the GitHub release; no additional artifact/readback hashes.
-3. Use `scripts/deploy-mod.ps1 -Jar <runtime> -ReleaseReceipt <receipt>` for dry run. It validates source/version/receipt, pinned TEST identity and current shutdown logs.
-4. Add `-Apply` to update stopped TEST with fresh shutdown check, staging byte count and acknowledged transfer/rename journals. No client target is read/changed.
-5. Preserve server.properties, unrelated mods/config/worlds and legitimate authentication. No restart/client launch. Save compact receipt and finish; clients use CurseForge.
-6. Unknown state or deploy-pending.json blocks. Reconcile old/staged/backup/target paths before retrying uncertain operations. Retain recovery files as needed, not permanent rollback copies.
+2. For Alpha, retain the publication receipt and finish: server delivery is not required. Do not download the runtime for deployment, inspect server state, use sFTP or create pending server delivery. The following steps apply only to Beta and official/stable builds.
+3. Download exact tagged runtime and curseforge-receipt.json from the GitHub release; no additional artifact/readback hashes.
+4. Use `scripts/deploy-mod.ps1 -Jar <runtime> -ReleaseReceipt <receipt>` for dry run. It validates source/version/receipt, pinned TEST identity and current shutdown logs.
+5. Add `-Apply` to update stopped TEST with fresh shutdown check, staging byte count and acknowledged transfer/rename journals. No client target is read/changed.
+6. Preserve server.properties, unrelated mods/config/worlds and legitimate authentication. No restart/client launch. Save compact receipt and finish; clients use CurseForge.
+7. Unknown state or deploy-pending.json blocks. Reconcile old/staged/backup/target paths before retrying uncertain operations. Retain recovery files as needed, not permanent rollback copies.
 
 Latest-session "Stopping the server" without later startup/activity suffices; normal
 shutdown saves are accepted. Ask for shutdown only when observed running.
@@ -65,7 +66,7 @@ The cache soft budget is 512 MiB; log snapshots are capped at 16 MiB each. Prune
 ## Handoff and support
 
 Finish task/source notes before final build/commit where possible.
-After CurseForge and sFTP, only compact external completion is needed.
+After Alpha CurseForge publication, or Beta/official CurseForge plus acknowledged sFTP, only compact external completion is needed. Record skipped Alpha delivery truthfully as not required; do not claim server installation.
 Report automated results and short pending licensed GUI/multiplayer QA separately.
 Legacy test-builds/updater is optional, not a completion gate.
 See [CurseForge releases](CURSEFORGE_RELEASES.md) for publication/retry/moderation.

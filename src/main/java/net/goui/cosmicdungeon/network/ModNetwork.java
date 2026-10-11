@@ -32,7 +32,7 @@ public final class ModNetwork {
     private ModNetwork() {}
 
     public static void registerPayloadHandlers(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("27");
+        final PayloadRegistrar registrar = event.registrar("28");
         registrar.playToClient(BogatyrPayloads.View.TYPE,BogatyrPayloads.View.STREAM_CODEC,
                 (payload,ctx)->ctx.enqueueWork(()->ClientNetworkDispatch.dispatch("onBogatyrActions",payload)));
         registrar.playToServer(BogatyrPayloads.ModeAction.TYPE,BogatyrPayloads.ModeAction.STREAM_CODEC,
@@ -46,11 +46,14 @@ public final class ModNetwork {
         registrar.playToServer(TheurgistPayloads.Action.TYPE,TheurgistPayloads.Action.STREAM_CODEC,
                 (payload,ctx)->ctx.enqueueWork(()->{if(ctx.player() instanceof net.minecraft.server.level.ServerPlayer player)
                     net.goui.cosmicdungeon.playerclass.theurgist.TheurgistActions.action(player,payload);}));
-        registrar.playToClient(SupplyRequestPayloads.View.TYPE,SupplyRequestPayloads.View.STREAM_CODEC,
-                (payload,ctx)->ctx.enqueueWork(()->ClientNetworkDispatch.dispatch("onSupplyRequests",payload)));
-        registrar.playToServer(SupplyRequestPayloads.Action.TYPE,SupplyRequestPayloads.Action.STREAM_CODEC,
+        registrar.playToClient(PotionCraftPayloads.View.TYPE, PotionCraftPayloads.View.STREAM_CODEC,
+                (payload,ctx)->ctx.enqueueWork(()->ClientNetworkDispatch.dispatch("onPotionCraft",payload)));
+        registrar.playToServer(PotionCraftPayloads.Request.TYPE, PotionCraftPayloads.Request.STREAM_CODEC,
                 (payload,ctx)->ctx.enqueueWork(()->{if(ctx.player() instanceof ServerPlayer player)
-                    net.goui.cosmicdungeon.playerclass.resource.SupplyRequests.action(player,payload);}));
+                    net.goui.cosmicdungeon.crafting.PotionCraftActions.request(player,payload);}));
+        registrar.playToServer(PotionCraftPayloads.Action.TYPE, PotionCraftPayloads.Action.STREAM_CODEC,
+                (payload,ctx)->ctx.enqueueWork(()->{if(ctx.player() instanceof ServerPlayer player)
+                    net.goui.cosmicdungeon.crafting.PotionCraftActions.action(player,payload);}));
         registrar.playToClient(ClassResourcePayloads.View.TYPE,ClassResourcePayloads.View.STREAM_CODEC,
                 (payload,ctx)->ctx.enqueueWork(()->ClientNetworkDispatch.dispatch("onClassResource",payload)));
         registrar.playToServer(ClassResourcePayloads.Recycle.TYPE,ClassResourcePayloads.Recycle.STREAM_CODEC,

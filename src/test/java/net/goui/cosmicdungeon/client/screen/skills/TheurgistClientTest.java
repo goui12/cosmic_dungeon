@@ -14,19 +14,13 @@ final class TheurgistClientTest {
     }
     @BeforeEach void setup(){TheurgistClient.clear();TheurgistClient.actions(sent::add);}
     @AfterEach void cleanup(){TheurgistClient.clear();}
-    @Test void onlyAuthoritativeCapabilitiesEnableCraftingAndUnchangedAcknowledgementReleasesPending(){
-        assertFalse(row(TheurgistClient.CRAFT).enabled());
+    @Test void retiredRandomPotionActionsNeverAppearOrSendEvenFromLegacyViews(){
+        TheurgistClient.receive(new View(22,8,true,true,true,true,List.of(),null));
         assertFalse(TheurgistClient.activate(TheurgistClient.CRAFT));
-        var view=new View(22,8,true,true,true,false,List.of(),null);TheurgistClient.receive(view);
-        assertTrue(row(TheurgistClient.CRAFT).enabled());assertFalse(row(TheurgistClient.EPIC).enabled());
-        assertTrue(row(TheurgistClient.CRAFT).label().contains("[20]"));assertTrue(row(TheurgistClient.EPIC).label().contains("[40]"));
-        assertTrue(TheurgistClient.activate(TheurgistClient.CRAFT));
-        assertEquals(new TheurgistPayloads.Action(22,8,Kind.CRAFT,TheurgistPayloads.NONE,TheurgistPayloads.NONE),sent.getFirst());
-        assertTrue(TheurgistClient.pending());assertFalse(row(TheurgistClient.CRAFT).enabled());
-        assertFalse(TheurgistClient.activate(TheurgistClient.CRAFT));assertEquals(1,sent.size());
-        TheurgistClient.receive(view);assertFalse(TheurgistClient.pending());assertTrue(row(TheurgistClient.CRAFT).enabled());
-        TheurgistClient.receive(new View(22,9,true,true,true,true,List.of(),null));
-        assertTrue(TheurgistClient.activate(TheurgistClient.EPIC));assertEquals(Kind.EPIC,sent.getLast().kind());
+        assertFalse(TheurgistClient.activate(TheurgistClient.EPIC));
+        assertTrue(TheurgistClient.augment(base()).actions().stream().noneMatch(action ->
+                action.id().equals(TheurgistClient.CRAFT)||action.id().equals(TheurgistClient.EPIC)));
+        assertTrue(sent.isEmpty());
     }
     @Test void resurrectionUsesTheExactDisplayedDeathAndAuthoritativeAvailability(){
         var target=new Target(UUID.randomUUID(),"Teammate",UUID.randomUUID(),true);
@@ -60,24 +54,26 @@ final class TheurgistClientTest {
         TheurgistClient.receive(new View(22,22,false,true,false,false,List.of(),offer));
         assertNull(TheurgistClient.offer());assertFalse(TheurgistClient.acceptOffer(),"Living clients cannot accept a death offer");
     }
-    @Test void sameRunRevisionsNeverRegressAndRunChangesLogoutAndMissingEligibilityClearActions(){
-        TheurgistClient.receive(new View(22,50,true,true,true,true,List.of(),null));
-        TheurgistClient.activate(TheurgistClient.CRAFT);
+    @Test void sameRunRevisionsRunChangesLogoutAndMissingEligibilityPreserveResurrection(){
+        var target=new Target(UUID.randomUUID(),"Teammate",UUID.randomUUID(),true);
+        var id=TheurgistClient.actionId(target);
+        TheurgistClient.receive(new View(22,50,true,true,false,false,List.of(target),null));
+        assertTrue(TheurgistClient.activate(id));assertTrue(TheurgistClient.pending());
         TheurgistClient.receive(new View(22,49,true,true,false,false,List.of(),null));
-        assertFalse(TheurgistClient.pending());assertTrue(row(TheurgistClient.EPIC).enabled());
-        TheurgistClient.receive(new View(23,1,true,true,false,true,List.of(),null));
-        assertTrue(TheurgistClient.activate(TheurgistClient.EPIC));assertEquals(23,sent.getLast().run());assertEquals(1,sent.getLast().revision());
-        TheurgistClient.receive(View.empty(51));assertFalse(TheurgistClient.activate(TheurgistClient.EPIC));
-        assertFalse(row(TheurgistClient.CRAFT).enabled());assertFalse(row("theurgist_resurrect_none").enabled());
-        TheurgistClient.receive(new View(23,2,true,true,true,true,List.of(),null));TheurgistClient.clear();
-        assertFalse(TheurgistClient.activate(TheurgistClient.CRAFT));assertNull(TheurgistClient.offer());
+        assertFalse(TheurgistClient.pending());assertEquals(50,TheurgistClient.view().revision());
+        assertTrue(row(id).enabled());
+        TheurgistClient.receive(new View(23,1,true,true,false,false,List.of(target),null));
+        assertTrue(TheurgistClient.activate(id));assertEquals(23,sent.getLast().run());assertEquals(1,sent.getLast().revision());
+        TheurgistClient.receive(View.empty(51));assertFalse(TheurgistClient.activate(id));assertFalse(TheurgistClient.canOpenPicker());
+        TheurgistClient.receive(new View(23,2,true,true,false,false,List.of(target),null));TheurgistClient.clear();
+        assertFalse(TheurgistClient.activate(id));assertNull(TheurgistClient.offer());
         var other=SkillsPanelModel.initial("bogatyr");assertSame(other,TheurgistClient.augment(other));
     }
     @Test void allDeadTeammatesRemainReviewableThroughExistingPanelOverflow(){
         var targets=new ArrayList<Target>();
         for(int i=0;i<TheurgistPayloads.MAX_TARGETS;i++)targets.add(new Target(UUID.randomUUID(),"Teammate "+i,UUID.randomUUID(),i%2==0));
         TheurgistClient.receive(new View(22,1,true,true,true,true,targets,null));var model=TheurgistClient.augment(base());
-        assertEquals(67,model.actions().size());assertEquals(base().actions().getFirst(),model.actions().getFirst());
+        assertEquals(65,model.actions().size());assertEquals(base().actions().getFirst(),model.actions().getFirst());
         assertEquals(64,model.actions().stream().filter(a->a.id().startsWith(TheurgistClient.RESURRECT)).count());
         var panel=new SkillsPanelState(SharedInventoryLayout.of(320,240,72,37,176,166),null);panel.actions(model.actions().size());
         assertTrue(panel.scroll().max()>0);assertTrue(panel.scroll().thumbHeight()>0);

@@ -14,8 +14,12 @@ public final class SharedCraftEvents {
     @SubscribeEvent(priority = EventPriority.HIGHEST) public static void login(PlayerEvent.PlayerLoggedInEvent e) {
         if (e.getEntity() instanceof ServerPlayer p) { SharedCrafting.forget(p); SharedCraftTransactions.reconcile(p); }
     }
-    @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent e) {
-        if (e.getEntity() instanceof ServerPlayer p) SharedCrafting.forget(p);
+    @SubscribeEvent(priority = EventPriority.HIGHEST) public static void logout(PlayerEvent.PlayerLoggedOutEvent e) {
+        if (e.getEntity() instanceof ServerPlayer p) { PotionCursorCustody.freeze(p); SharedCrafting.forget(p); }
+    }
+    @SubscribeEvent(priority = EventPriority.HIGHEST) public static void clone(PlayerEvent.Clone e) {
+        // Native removal settles the old menu before ClassCloneEvents copies class-root fields.
+        if (e.getOriginal() instanceof ServerPlayer p) PotionCursorCustody.capture(p);
     }
     @SubscribeEvent public static void respawn(PlayerEvent.PlayerRespawnEvent e) {
         if (e.getEntity() instanceof ServerPlayer p) { SharedCrafting.forget(p); SharedCraftTransactions.reconcile(p); }
@@ -26,10 +30,10 @@ public final class SharedCraftEvents {
     @SubscribeEvent(priority = EventPriority.HIGHEST) public static void death(LivingDeathEvent e) {
         if (e.getEntity() instanceof ServerPlayer p && SharedCraftTransactions.blocked(p)) {
             e.setCanceled(true); p.setHealth(Math.max(1, p.getHealth()));
-        }
+        } else if (e.getEntity() instanceof ServerPlayer p) PotionCursorCustody.closeBeforeDeath(p);
     }
     @SubscribeEvent(priority = EventPriority.LOWEST) public static void pickup(ItemEntityPickupEvent.Pre e) {
         if (e.getPlayer() instanceof ServerPlayer p && SharedCraftTransactions.blocked(p)) e.setCanPickup(TriState.FALSE);
     }
-    @SubscribeEvent public static void stop(ServerStoppedEvent e) { SharedCrafting.stopped(); PotionCrafting.stopped(); SharedCraftTransactions.stopped(); }
+    @SubscribeEvent public static void stop(ServerStoppedEvent e) { SharedCrafting.stopped(); PotionCrafting.stopped(); SharedCraftTransactions.stopped(); PotionCursorCustody.stopped(); PotionCraftActions.stop(); }
 }

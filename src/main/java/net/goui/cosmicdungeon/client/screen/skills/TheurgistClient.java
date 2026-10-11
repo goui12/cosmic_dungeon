@@ -37,10 +37,6 @@ public final class TheurgistClient {
     public static Offer offer(){return view.run()>0&&!view.alive()?view.offer():null;}
     public static boolean canRespond(){return ready()&&offer()!=null;}
     public static String actionId(Target target){return RESURRECT+target.player()+":"+target.death();}
-    private static Component cost(String text,int amount){
-        return Component.literal(text+"\nCost: "+amount+" ").withStyle(ChatFormatting.YELLOW)
-                .append(Component.literal("Brewing Supplies").withStyle(ChatFormatting.BLUE,ChatFormatting.BOLD));
-    }
     private static Component availability(Component text,boolean enabled,String unavailable){
         if(enabled)return text;
         return text.copy().append(Component.literal("\n"+(pending?"Waiting for the server.":unavailable)).withStyle(ChatFormatting.GRAY));
@@ -49,13 +45,6 @@ public final class TheurgistClient {
         if(!base.classId().equals("theurgist"))return base;
         boolean available=ready()&&view.theurgist()&&view.alive();
         var actions=new ArrayList<SkillsPanelModel.Action>(base.actions());
-        boolean normal=available&&view.normal(),epic=available&&view.epic();
-        actions.add(new SkillsPanelModel.Action(CRAFT,"Craft a potion [20]",
-                availability(cost("Create one random positive tier I splash potion. No bottle, fuel or brewing stand is needed.",20),
-                        normal,"Requires a living Theurgist, 20 Brewing Supplies and inventory space."),normal));
-        actions.add(new SkillsPanelModel.Action(EPIC,"Craft an epic potion [40]",
-                availability(cost("Create one random tier II splash potion: swiftness, healing, regeneration or strength.",40),
-                        epic,"Requires a living Theurgist, 40 Brewing Supplies and inventory space."),epic));
         if(view.theurgist()&&view.alive()&&!view.targets().isEmpty()){
             for(var target:view.targets()){
                 boolean enabled=available&&target.available();
@@ -73,8 +62,7 @@ public final class TheurgistClient {
     }
     public static boolean activate(String actionId){
         if(!ready()||!view.theurgist()||!view.alive())return false;
-        if(CRAFT.equals(actionId))return view.normal()&&send(Kind.CRAFT,TheurgistPayloads.NONE,TheurgistPayloads.NONE);
-        if(EPIC.equals(actionId))return view.epic()&&send(Kind.EPIC,TheurgistPayloads.NONE,TheurgistPayloads.NONE);
+        if(CRAFT.equals(actionId)||EPIC.equals(actionId))return false; // Retired random crafting; use the inventory palette.
         for(var target:view.targets())if(actionId(target).equals(actionId))
             return target.available()&&send(Kind.OFFER,target.player(),target.death());
         return false;

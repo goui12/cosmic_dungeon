@@ -41,7 +41,7 @@ public final class ClassResourceService {
     }
     private static Context context(ServerPlayer p){
         if(blocked(p)||p.isSpectator()||AccessPolicy.isDeveloper(p))return null;
-        var kind=ClassResourceKind.forClass(ClassData.getClassId(p)).orElse(null);if(kind==null)return null;
+        var kind=ClassResourceKind.forClass(ClassData.getClassId(p)).orElse(null);if(kind==null||kind==ClassResourceKind.BREWING_SUPPLIES)return null;
         var run=activeRun(p).orElse(null);
         return run==null?null:new Context(run.runId(),kind);
     }

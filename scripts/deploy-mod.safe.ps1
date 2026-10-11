@@ -6,9 +6,10 @@
 )
 . "$PSScriptRoot\cd-common.ps1"
 . "$PSScriptRoot\deploy-server-core.ps1"
+$release=Get-Content -LiteralPath $ReleaseReceipt -Raw | ConvertFrom-Json
+Assert-CDServerReleaseChannel ([string]$release.version)
 $c=Get-CDConfig
 $source=Get-Item -LiteralPath $Jar
-$release=Get-Content -LiteralPath $ReleaseReceipt -Raw | ConvertFrom-Json
 $tag='v'+$release.version
 $commit=(& git -C $script:CDRepo rev-parse ($tag+'^{commit}')).Trim()
 if($LASTEXITCODE -ne 0){throw 'Release tag is not available locally.'}

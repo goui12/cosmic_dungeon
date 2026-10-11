@@ -1,13 +1,14 @@
-# Current plan, 2026-10-10
+# Current plan, 2026-10-11
 
 [1.7 Alpha / 1.8 Beta batch plan](tasks/ALPHA_1_7_BATCH_PLAN_20261010.md).
 
 **20 planned batches:19 Alphas (1.7.1 through1.7.19), then1.8.0 Beta.**
-Batches1-8 published; cumulative1.7.8-alpha.1 (PR253; CI38152269946; release38152513894; CurseForge9131131/helper9131130) was deployed to freshly stopped TEST via sFTP. TEST left stopped.
-Batch9 implements free player resurrection, persistent cooldowns, inventory picker and party/death status under Cameron's explicit "proceed to batch 9" instruction.
-[Batch9 report](tasks/BATCH_1_7_09_20261011.md); earlier reports remain in this directory.
-11 later cards (Batch10-20) remain PLANNED; stop after Batch9.
-Authoritative exact results: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json through batch-09.json.
+Batches1-9 completed. Batch9 source1fe268f, PR254, CI38165279851 and publisher38165598070 succeeded; CurseForge9133943/helper9133942. Its stopped TEST transfer completed2026-10-11T18:58:05Z.
+Batch10 implements the inventory Craft palette and legacy retirement as1.7.10-alpha.1.
+[Batch10 report](tasks/BATCH_1_7_10_20261011.md); exact source/CI/publication facts are recorded in the controller receipt, not pre-claimed here.
+10 later cards (Batch11-20): two-mode Bogatyr; Feed Pack; active-skill hotkeys; spawner editor; equipment/enchantments; drops/presets; integration/resource review; help art; H guide; final1.8.0 Beta audit. Stop after Batch10.
+From Cameron's2026-10-11 instruction, Alpha builds finish at CurseForge without server delivery or server-state checks. Only Beta and official builds receive stopped TEST sFTP. No local-client installs or extra post-publication hashes.
+Authoritative receipts: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json through batch-10.json after completion.
 The previous15–26 controller is COMPLETE; do not reset/reuse its receipts or infer autonomous execution.
 
 The plan covers inventory/class art/tooltips, ownership/trades, Tamsin sharing,
@@ -20,8 +21,7 @@ Batch20 audits every original request, per-batch recommendations, failed tests a
 Two native wolf failures from Integration Gate38101339624 are retained in the Batch1 report;
 fixture visibility/rain causes are addressed; fresh native CI evidence is retained in the exact-source completion receipt.
 The linked plan contains their exact IDs and current evidence.
-Delivery remains CurseForge then stopped TEST sFTP only; no local-client installs
-or additional post-publication hash checks. Historical rollout notes follow.
+Current channel policy above supersedes historical deployment instructions. Historical rollout notes follow.
 
 ---
 

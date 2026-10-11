@@ -110,7 +110,7 @@ public final class PotionCraftingGameTests {
             SharedCrafting.forget(p(index));
         }
         void clear() {
-            for(var player:current){player.getInventory().clearContent();SharedCrafting.forget(player);}
+            for(var player:current){player.getInventory().clearContent();player.inventoryMenu.setCarried(ItemStack.EMPTY);PotionCursorCustody.capture(player);SharedCrafting.forget(player);}
         }
         void classId(int index,String id) {
             var root=root(index).copy();root.putString(ClassData.KEY_CLASS_ID,id);p(index).getPersistentData().put(ClassData.ROOT_TAG,root);
@@ -180,7 +180,7 @@ public final class PotionCraftingGameTests {
             check(data.image().getCompoundOrEmpty("pending").equals(journalBefore.getCompoundOrEmpty("pending")),"Other pending decisions remain untouched");
             check(data.image().getCompoundOrEmpty(BrewingFuel.KEY).equals(journalBefore.getCompoundOrEmpty(BrewingFuel.KEY)),"Other owners' saved fuel remains untouched");
             check(data.flushVerified(),"Fixture journal cleanup saved");
-            for(var player:owned){SharedCrafting.forget(player);SupplyRequests.forget(player);ClassResourceService.forget(player);player.discard();}
+            for(var player:owned){PotionCraftActions.forget(player);SharedCrafting.forget(player);SupplyRequests.forget(player);ClassResourceService.forget(player);player.inventoryMenu.setCarried(ItemStack.EMPTY);player.discard();}
             for(var id:ids) {
                 players.remove(id);online.removeIf(player->player.getUUID().equals(id));
                 if(advancements.get(id) instanceof net.minecraft.server.PlayerAdvancements progress)progress.stopListening();
@@ -332,4 +332,180 @@ public final class PotionCraftingGameTests {
         }
         h.succeed();
     }
+
+    public static void paletteCursor(GameTestHelper h) {
+        try(var f=new Fixture(h,Long.MAX_VALUE-3203)) {
+            String healing="minecraft:healing_splash";f.clear();f.healing(0,2);f.healing(1,2);var donor=f.inventory(1);
+            var quotes=PotionCrafting.view(f.p(0),1);
+            f.check(quotes.classId().equals("theurgist")&&quotes.entries().stream().noneMatch(e->e.targetId().equals("minecraft:poison_splash")
+                    ||e.targetId().equals("minecraft:turtle_master_splash")),"Palette exposes only permitted positive/mixed-drinkable variants");
+            var raw=io.netty.buffer.Unpooled.buffer();
+            try {
+                var wire=new net.minecraft.network.RegistryFriendlyByteBuf(raw,f.level.registryAccess());
+                net.goui.cosmicdungeon.network.PotionCraftPayloads.View.STREAM_CODEC.encode(wire,quotes);
+                var decoded=net.goui.cosmicdungeon.network.PotionCraftPayloads.View.STREAM_CODEC.decode(wire);
+                f.check(decoded.entries().size()==quotes.entries().size()&&decoded.run()==f.run&&decoded.charges()==0,"Native registry quote wire round trip");
+                for(int i=0;i<quotes.entries().size();i++)f.check(ItemStack.matches(quotes.entries().get(i).output(),decoded.entries().get(i).output()),"Native potion effect/component tooltip payload preserved");
+            } finally {raw.release();}
+            f.check(PotionCrafting.craft(f.p(0),f.run,healing,false)&&PotionCrafting.craft(f.p(0),f.run,healing,false),
+                    "Repeated one-click cursor crafts succeed while holding the matching potion");
+            f.check(f.p(0).inventoryMenu.getCarried().getCount()==2&&f.products()==0&&f.charges(0)==14
+                    &&f.inventory(1).equals(donor),"Two cursor outputs, exact own debits/fuel, donors untouched");
+            f.reload(0);f.check(SharedCraftTransactions.reconcile(f.p(0)),"Actual owner reload restores cursor custody");
+            f.check(f.p(0).inventoryMenu.getCarried().getCount()==2&&f.products()==0,"Cursor is neither lost nor duplicated after reconnect");
+            f.p(0).inventoryMenu.clicked(36,0,net.minecraft.world.inventory.ClickType.PICKUP,f.p(0));
+            f.check(f.p(0).inventoryMenu.getCarried().isEmpty()&&f.products()==2,"Vanilla inventory placement accepts crafted stack");
+            f.saveAll();f.reload(0);f.check(SharedCraftTransactions.reconcile(f.p(0))&&f.p(0).inventoryMenu.getCarried().isEmpty()
+                    &&f.products()==2&&!f.root(0).contains(PotionCursorCustody.KEY),"Moving cursor into inventory clears saved custody in paired native save");
+
+            f.clear();f.healing(1,2);f.p(0).inventoryMenu.setCarried(new ItemStack(Items.DIAMOND));
+            var before=f.images();int charges=f.charges(0);
+            f.check(!PotionCrafting.craft(f.p(0),f.run,healing,false)&&f.charges(0)==charges,"Mismatched cursor cannot debit any owner");
+            f.unchanged(before,"Mismatched cursor is atomic");
+            var full=PotionStacks.crafted(PotionContents.createItemStack(Items.SPLASH_POTION,Potions.HEALING));full.setCount(64);
+            f.p(0).inventoryMenu.setCarried(full);
+            f.check(!PotionCrafting.craft(f.p(0),f.run,healing,false)&&f.charges(0)==charges,"Full cursor cannot debit ingredients/fuel");
+            f.unchanged(before,"Full cursor is atomic");
+            f.p(0).inventoryMenu.setCarried(ItemStack.EMPTY);
+            for(int slot=0;slot<36;slot++)f.item(0,slot,Items.DIAMOND,64);
+            f.check(PotionCrafting.craft(f.p(0),f.run,healing,false)&&f.p(0).inventoryMenu.getCarried().getCount()==1,
+                    "Cursor delivery works with full storage and consenting donor ingredients");
+            f.p(0).inventoryMenu.setCarried(ItemStack.EMPTY);before=f.images();charges=f.charges(0);
+            f.check(!PotionCrafting.craft(f.p(0),f.run,healing,true)&&f.charges(0)==charges,"Shift delivery rejects completely full storage");
+            f.unchanged(before,"Full Shift destination is atomic");
+            f.p(0).getInventory().setItem(4,ItemStack.EMPTY);
+            f.p(0).getInventory().setItem(9,PotionStacks.crafted(PotionContents.createItemStack(Items.SPLASH_POTION,Potions.HEALING)));
+            f.check(PotionCrafting.craft(f.p(0),f.run,healing,true)&&f.p(0).getInventory().getItem(4).getCount()==1
+                    &&f.p(0).getInventory().getItem(4).is(Items.SPLASH_POTION)&&f.p(0).getInventory().getItem(9).getCount()==1,
+                    "Shift makes exactly one and prefers an empty hotbar slot over a main-inventory merge");
+        }
+        h.succeed();
+    }
+    public static void paletteRecovery(GameTestHelper h) {
+        try(var f=new Fixture(h,Long.MAX_VALUE-3204)) {
+            var server=f.level.getServer();var data=SharedCraftData.get(server);String healing="minecraft:healing_splash";
+            f.clear();f.healing(1,2);f.saveAll();
+            var first=PotionCrafting.prepare(f.p(0),f.run,healing,false);
+            f.check(first!=null&&first.cursor()&&first.image().getIntOr("schema",0)==3,"New cursor schema leaves legacy schema1/2 separate");
+            f.reserve(first);for(var id:first.owners())f.custody(f.current.stream().map(ServerPlayer::getUUID).toList().indexOf(id),first);
+            for(int i=0;i<3;i++)f.reload(i);
+            for(int i=0;i<3;i++)f.check(SharedCraftTransactions.reconcile(f.p(i)),"Prepared cursor crash cancels without output");
+            f.check(f.p(0).inventoryMenu.getCarried().isEmpty()&&f.charges(0)==0&&f.count(1,Items.POTION)==2,"Prepared recipe preserves full materials/fuel");
+
+            var plan=PotionCrafting.prepare(f.p(0),f.run,healing,false);f.reserve(plan);
+            for(var id:plan.owners())f.custody(f.current.stream().map(ServerPlayer::getUUID).toList().indexOf(id),plan);
+            data.commit(plan.id());f.check(data.flushVerified(),"Cursor world decision saved");
+            for(int i=0;i<3;i++)f.reload(i);
+            for(int i=0;i<3;i++)f.check(SharedCraftTransactions.reconcile(f.p(i)),"Committed cursor crash projects exact owner images");
+            f.check(f.p(0).inventoryMenu.getCarried().getCount()==1&&f.charges(0)==17&&f.count(1,Items.POTION)==1,"One committed output and one debit after recovery");
+            f.reload(0);f.check(SharedCraftTransactions.reconcile(f.p(0))&&f.p(0).inventoryMenu.getCarried().getCount()==1,"Saved cursor receipt replay is idempotent");
+            f.check(!SharedCraftTransactions.execute(f.p(0),plan,()->true),"Replayed prior decision cannot duplicate cursor output");
+
+            var next=PotionCrafting.prepare(f.p(0),f.run,healing,false);PotionCursorCustody.track(f.p(0));f.reserve(next);
+            for(var id:next.owners())f.custody(f.current.stream().map(ServerPlayer::getUUID).toList().indexOf(id),next);
+            data.commit(next.id());f.check(data.flushVerified(),"Stack extension decision saved");
+            // Simulate disconnect after world commit: prevent native close from moving the reserved old cursor.
+            PotionCursorCustody.freeze(f.p(0));f.p(0).closeContainer();f.saveAll();f.reload(0);
+            // Owner receipt is saved, but another donor is still unacknowledged when the owner reconnects.
+            f.check(SharedCraftTransactions.reconcile(f.p(0)),"Recipient extension saved before final donor settlement");
+            f.reload(0);f.check(SharedCraftTransactions.reconcile(f.p(0))&&f.p(0).inventoryMenu.getCarried().getCount()==2,
+                    "Partial acknowledgement never applies cursor extension twice");
+            for(int i=1;i<3;i++)f.check(SharedCraftTransactions.reconcile(f.p(i)),"Remaining donor settles once");
+            f.check(f.charges(0)==14&&data.pendingRun(f.run)==null,"Two total crafts retain correct charges and retire journal");
+            f.p(0).closeContainer();f.saveAll();f.reload(0);
+            f.check(SharedCraftTransactions.reconcile(f.p(0))&&f.p(0).inventoryMenu.getCarried().isEmpty()&&f.products()==2,
+                    "Normal inventory close returns stack once and clears cursor recovery");
+        }
+        h.succeed();
+    }
+    private static net.goui.cosmicdungeon.network.PotionCraftPayloads.View sent(Fixture f,int owner) {
+        return f.packets.get(f.p(owner).getUUID()).stream()
+                .filter(packet->packet instanceof net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket)
+                .map(packet->((net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket)packet).payload())
+                .filter(payload->payload instanceof net.goui.cosmicdungeon.network.PotionCraftPayloads.View)
+                .map(payload->(net.goui.cosmicdungeon.network.PotionCraftPayloads.View)payload).reduce((a,b)->b).orElseThrow();
+    }
+    public static void paletteActions(GameTestHelper h) {
+        try(var f=new Fixture(h,Long.MAX_VALUE-3205)) {
+            String healing="minecraft:healing_splash";f.clear();f.healing(1,3);
+            var blind=new net.goui.cosmicdungeon.network.PotionCraftPayloads.Action(f.run,1,healing,false);
+            PotionCraftActions.action(f.p(0),blind);
+            f.check(f.p(0).inventoryMenu.getCarried().isEmpty()&&f.charges(0)==0,"Unopened action has no authority");
+            PotionCraftActions.request(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Request(true));
+            var quote=sent(f,0);
+            f.check(quote.entries().stream().filter(e->e.targetId().equals(healing)).anyMatch(e->e.own()==0&&e.shared()==3),"Shared count is authoritative");
+            f.consent(1,false);
+            PotionCraftActions.action(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Action(f.run,quote.revision(),healing,false));
+            f.check(f.count(1,Items.POTION)==3&&f.p(0).inventoryMenu.getCarried().isEmpty()&&sent(f,0).revision()>quote.revision(),
+                    "Consent change rejects formerly affordable click and acknowledges it");
+            // A new object models reconnect: request generation belongs to this connection, not saved class data.
+            f.saveAll();f.reload(0);f.consent(1,true);
+            PotionCraftActions.request(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Request(true));quote=sent(f,0);
+            var action=new net.goui.cosmicdungeon.network.PotionCraftPayloads.Action(f.run,quote.revision(),healing,false);
+            PotionCraftActions.action(f.p(0),action);PotionCraftActions.action(f.p(0),action);
+            f.check(f.p(0).inventoryMenu.getCarried().getCount()==1&&f.charges(0)==17&&f.count(1,Items.POTION)==2,
+                    "Exact generation permits one transaction; duplicate rapid packet spends nothing");
+            PotionCraftActions.request(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Request(false));
+            PotionCraftActions.request(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Request(true));
+            f.check(sent(f,0).revision()>action.revision(),"Close/reopen never reuses old action generation");
+            PotionCraftActions.action(f.p(0),action);
+            f.check(f.p(0).inventoryMenu.getCarried().getCount()==1,"Old closed-session click cannot replay");
+            var beforeDimension=sent(f,0);
+            PotionCraftActions.invalidate(f.p(0)); // Same connected player crossing a dimension boundary.
+            PotionCraftActions.request(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Request(true));
+            f.check(sent(f,0).revision()>beforeDimension.revision(),"Dimension change never resets a session generation");
+            var original=f.p(0);f.saveAll();f.reload(0);PotionCraftActions.transfer(original,f.p(0));
+            f.check(SharedCraftTransactions.reconcile(f.p(0)),"Replacement owner cursor restored before new palette");
+            PotionCraftActions.request(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Request(true));
+            f.check(sent(f,0).revision()>beforeDimension.revision(),"Player replacement inherits and invalidates the same connection's generation");
+            PotionCraftActions.action(f.p(0),action);
+            f.check(f.p(0).inventoryMenu.getCarried().getCount()==1,"Old pre-replacement packet cannot replay");
+            f.classId(0,"venefex");var view=PotionCrafting.view(f.p(0),100);
+            f.check(view.entries().stream().anyMatch(e->e.targetId().equals("minecraft:poison_splash"))
+                    &&view.entries().stream().noneMatch(e->e.targetId().equals(healing)),"Venefex palette is negative recipes");
+            f.classId(0,"judicator");f.check(PotionCrafting.view(f.p(0),101).run()==0,"Other class cannot keep an open brewer palette");
+        }
+        h.succeed();
+    }
+
+
+    public static void paletteLifecycle(GameTestHelper h) {
+        try(var f=new Fixture(h,Long.MAX_VALUE-3206)) {
+            String healing="minecraft:healing_splash";f.clear();f.healing(0,1);
+            f.check(PotionCrafting.craft(f.p(0),f.run,healing,false),"Lifecycle fixture has one paid cursor potion");
+            var area=new net.minecraft.world.phys.AABB(f.origin,f.origin).inflate(8);
+            var drops=f.level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,area).stream().map(net.minecraft.world.entity.Entity::getUUID).collect(java.util.stream.Collectors.toSet());
+            var original=f.p(0);
+            SharedCraftEvents.logout(new net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent(original));
+            f.check(PlayerSaveProof.save(original),"Logout persists paired cursor custody before native player removal");
+            original.remove(net.minecraft.world.entity.Entity.RemovalReason.UNLOADED_WITH_PLAYER);
+            f.check(f.level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,area).stream().allMatch(item->drops.contains(item.getUUID())),
+                    "Native logout/removal cannot drop an already saved cursor item");
+            f.reload(0);f.check(SharedCraftTransactions.reconcile(f.p(0))&&f.p(0).inventoryMenu.getCarried().getCount()==1,
+                    "One paid cursor item restored after real removal");
+            // openMenu does not close an already-current inventoryMenu: preserve that otherwise-hidden cursor.
+            f.p(0).containerMenu=net.minecraft.world.inventory.ChestMenu.threeRows(42,f.p(0).getInventory());
+            f.check(PlayerSaveProof.save(f.p(0)),"Owner save with another native container open");
+            f.reload(0);f.check(SharedCraftTransactions.reconcile(f.p(0))&&f.p(0).inventoryMenu.getCarried().getCount()==1,
+                    "Opening another container cannot erase the hidden inventory cursor record");
+            f.p(0).containerMenu=net.minecraft.world.inventory.ChestMenu.threeRows(43,f.p(0).getInventory());
+            PotionCursorCustody.closeBeforeDeath(f.p(0));
+            f.check(f.p(0).inventoryMenu.getCarried().isEmpty()&&f.products()==1&&!f.root(0).contains(PotionCursorCustody.KEY),
+                    "Death settles hidden inventory cursor once before existing loot rules");
+            // Move the one existing potion to cursor, save, then follow native keep-inventory removal/clone ordering.
+            f.p(0).inventoryMenu.clicked(36,0,net.minecraft.world.inventory.ClickType.PICKUP,f.p(0));
+            f.check(f.p(0).inventoryMenu.getCarried().getCount()==1,"Native menu lifts the same potion");
+            f.check(PlayerSaveProof.save(f.p(0)),"Cursor image saved before non-death replacement");
+            original=f.p(0);original.remove(net.minecraft.world.entity.Entity.RemovalReason.CHANGED_DIMENSION);
+            f.check(original.inventoryMenu.getCarried().isEmpty(),"Native changed-dimension removal settles old cursor");
+            var replacement=f.create(original.getGameProfile());
+            var clone=new net.neoforged.neoforge.event.entity.player.PlayerEvent.Clone(replacement,original,false);
+            SharedCraftEvents.clone(clone);
+            net.goui.cosmicdungeon.playerclass.api.ClassCloneEvents.onPlayerClone(clone);
+            f.check(!replacement.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).contains(PotionCursorCustody.KEY)
+                    &&f.products()==1,"Clone cannot copy the stale saved cursor after native settlement");
+        }
+        h.succeed();
+    }
+
 }

@@ -19,7 +19,7 @@ public final class InventoryResurrectButton extends Button {
     private final AbstractContainerScreen<?> parent;
     private Component description = Component.empty();
     private InventoryResurrectButton(AbstractContainerScreen<?> parent) {
-        super(parent.getGuiLeft() + 98, parent.getGuiTop() + 25, 73, 20,
+        super(parent.getGuiLeft() + 98, parent.getGuiTop() + 49, 73, 20,
                 Component.literal("Resurrect..."), button -> ((InventoryResurrectButton)button).openPicker(), DEFAULT_NARRATION);
         this.parent = parent; active = false;
     }
