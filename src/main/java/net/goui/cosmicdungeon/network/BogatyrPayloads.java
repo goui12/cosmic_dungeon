@@ -10,25 +10,26 @@ import net.minecraft.resources.ResourceLocation;
 
 /** Retired care quote slots and append-only mode IDs; clients can only request the captured generation. */
 public final class BogatyrPayloads {
-    public enum Kind { BREED,SUMMON,REGROUP,HEAL }
+    public enum Kind { BREED,SUMMON,REGROUP,HEAL,FEED_PACK }
     public record Quote(int count,int cost,boolean enabled){
         public Quote{if(count<0||cost<0||cost>600||enabled!=(count>0&&cost>0))throw new IllegalArgumentException("Invalid wolf quote");}
         public static Quote empty(){return new Quote(0,0,false);}
     }
     private BogatyrPayloads(){}
     private static ResourceLocation id(String name){return ResourceLocation.fromNamespaceAndPath("cosmicdungeon",name);}
-    public record View(long run,long revision,int loaded,List<Quote> quotes,WolfMode mode,boolean modesEnabled) implements CustomPacketPayload {
+    public record View(long run,long revision,int loaded,List<Quote> quotes,WolfMode mode,boolean modesEnabled,int feedInputs) implements CustomPacketPayload {
         public View(long run,long revision,int loaded,List<Quote> quotes){this(run,revision,loaded,quotes,WolfMode.PATROL,false);}
-        public View{quotes=List.copyOf(quotes);if(mode==null||run==0&&modesEnabled||run<0||revision<0||loaded<0||quotes.size()!=4
+        public View(long run,long revision,int loaded,List<Quote> quotes,WolfMode mode,boolean modesEnabled){this(run,revision,loaded,quotes,mode,modesEnabled,0);}
+        public View{quotes=List.copyOf(quotes);if(feedInputs<0||feedInputs>10||feedInputs>0&&!modesEnabled||mode==null||run==0&&modesEnabled||run<0||revision<0||loaded<0||quotes.size()!=4
                 ||run==0&&(loaded!=0||quotes.stream().anyMatch(Quote::enabled)))throw new IllegalArgumentException("Invalid Wolfpack view");}
         public static View empty(long revision){return new View(0,revision,0,Collections.nCopies(4,Quote.empty()));}
         public static final Type<View> TYPE=new Type<>(id("bogatyr_actions"));
         public static final StreamCodec<ByteBuf,View> STREAM_CODEC=new StreamCodec<>(){
             public void encode(ByteBuf raw,View v){var b=new FriendlyByteBuf(raw);b.writeVarLong(v.run);b.writeVarLong(v.revision);b.writeVarInt(v.loaded);
-                for(var q:v.quotes){b.writeVarInt(q.count);b.writeVarInt(q.cost);b.writeBoolean(q.enabled);}b.writeVarInt(v.mode.ordinal());b.writeBoolean(v.modesEnabled);}
+                for(var q:v.quotes){b.writeVarInt(q.count);b.writeVarInt(q.cost);b.writeBoolean(q.enabled);}b.writeVarInt(v.mode.ordinal());b.writeBoolean(v.modesEnabled);b.writeVarInt(v.feedInputs);}
             public View decode(ByteBuf raw){var b=new FriendlyByteBuf(raw);long run=b.readVarLong(),revision=b.readVarLong();int loaded=b.readVarInt();
                 var quotes=new ArrayList<Quote>(4);for(int i=0;i<4;i++)quotes.add(new Quote(b.readVarInt(),b.readVarInt(),b.readBoolean()));
-                return new View(run,revision,loaded,quotes,readMode(b),b.readBoolean());}
+                return new View(run,revision,loaded,quotes,readMode(b),b.readBoolean(),b.readVarInt());}
         };
         public Type<View> type(){return TYPE;}
     }

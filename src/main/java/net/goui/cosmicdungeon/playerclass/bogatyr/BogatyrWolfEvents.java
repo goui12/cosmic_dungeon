@@ -100,7 +100,7 @@ public final class BogatyrWolfEvents {
     @SubscribeEvent public static void interact(PlayerInteractEvent.EntityInteract event){
         if(!(event.getEntity() instanceof ServerPlayer player)||!(event.getTarget() instanceof Wolf wolf)
                 ||net.goui.cosmicdungeon.mercenary.MercenaryWolves.managed(wolf))return;
-        if(managed(wolf)&&BogatyrRecovery.held(wolf)){
+        if(managed(wolf)&&!BogatyrModes.careAllowed(wolf)){
             event.setCanceled(true);event.setCancellationResult(InteractionResult.SUCCESS);return;
         }
         var run=currentRun(player.level()).orElse(null);

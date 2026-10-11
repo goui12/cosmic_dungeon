@@ -115,6 +115,13 @@ public final class DungeonInstanceGameTests {
         suite.add(id("bogatyr_unknown_anchor"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrPatrolGameTests::unknownAnchor);
         suite.add(id("bogatyr_owner_threat_memory"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrPatrolGameTests::ownerThreatMemory);
         suite.add(id("bogatyr_native_work_scaling"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrPatrolGameTests::workScaling);
+        suite.add(id("bogatyr_feed_priority_cap"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrFeedGameTests::priorityCap);
+        suite.add(id("bogatyr_feed_noop_stock"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrFeedGameTests::noOpAndLimited);
+        suite.add(id("bogatyr_feed_paired"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrFeedGameTests::pairedFeeding);
+        suite.add(id("bogatyr_feed_canceled_heal"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrFeedGameTests::canceledHeal);
+        suite.add(id("bogatyr_feed_authority"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrFeedGameTests::actionAuthority);
+        suite.add(id("bogatyr_stay_birth"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrFeedGameTests::stayBirth);
+        suite.add(id("bogatyr_stay_timeout_reload"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrFeedGameTests::allyTimeoutReload);
         suite.add(id("set_c_supply_crafting_cap"),net.goui.cosmicdungeon.playerclass.resource.SupplyRequestGameTests::craftingAndCapIntegration);
         suite.add(id("set_c_resurrection_resource_death"),net.goui.cosmicdungeon.playerclass.theurgist.TheurgistActionGameTests::resourceDeathIntegration);
         return suite;

@@ -18,12 +18,12 @@ public final class BogatyrModes {
     private record Applied(WolfMode mode,long epoch,UUID owner,long run){}
     private static final Map<Wolf,Applied> APPLIED=new WeakHashMap<>();
     private BogatyrModes(){}
-    public static void clear(){APPLIED.clear();}
+    public static void clear(){APPLIED.clear();BogatyrBreeding.clear();}
     private static WolfModeData.State state(Wolf wolf){
         return BogatyrCompanionData.get(((ServerLevel)wolf.level()).getServer())
                 .mode(BogatyrCompanions.owner(wolf),BogatyrThreats.run(wolf));
     }
-    private static long epoch(Wolf wolf){
+    static long epoch(Wolf wolf){
         return BogatyrCompanionData.get(((ServerLevel)wolf.level()).getServer())
                 .modeEpoch(BogatyrCompanions.owner(wolf),BogatyrThreats.run(wolf));
     }
@@ -50,6 +50,10 @@ public final class BogatyrModes {
         for(var wolf:BogatyrCommands.loaded(player,run))apply(wolf,true);
         return true;
     }
+    static boolean careAllowed(Wolf wolf){
+        return wolf.level() instanceof ServerLevel&&BogatyrWolfEvents.managed(wolf)
+                &&!unsupportedAnchor(wolf)&&state(wolf).writable()&&!BogatyrRecovery.held(wolf);
+    }
     private static void forget(Wolf wolf){
         wolf.setTarget(null);wolf.stopBeingAngry();wolf.setLastHurtByMob(null);wolf.setLastHurtMob(null);
         wolf.targetSelector.getAvailableGoals().forEach(g->{
@@ -59,9 +63,10 @@ public final class BogatyrModes {
     }
     static void apply(Wolf wolf,boolean command){
         if(!(wolf.level() instanceof ServerLevel)||!BogatyrWolfEvents.managed(wolf))return;
-        if(unsupportedAnchor(wolf)){forget(wolf);hold(wolf);return;}
+        if(unsupportedAnchor(wolf)){BogatyrBreeding.cancel(wolf);forget(wolf);hold(wolf);return;}
         var state=state(wolf);var next=new Applied(state.mode(),epoch(wolf),BogatyrCompanions.owner(wolf),BogatyrThreats.run(wolf));var old=APPLIED.put(wolf,next);
         if(!next.equals(old)){
+            BogatyrBreeding.cancel(wolf);
             wolf.goalSelector.getAvailableGoals().stream().filter(g->g.isRunning()
                     &&(g.getFlags().contains(Goal.Flag.MOVE)||g.getFlags().contains(Goal.Flag.JUMP)))
                     .forEach(net.minecraft.world.entity.ai.goal.WrappedGoal::stop);
@@ -78,6 +83,7 @@ public final class BogatyrModes {
                 wolf.setOrderedToSit(false);wolf.setInSittingPose(false);
             }
         }
+        BogatyrBreeding.tick(wolf);
         if(next.mode()==WolfMode.STAY){
             forget(wolf);
             if(!state.writable()||BogatyrRecovery.held(wolf)||seated(wolf))hold(wolf);
@@ -106,7 +112,7 @@ public final class BogatyrModes {
         return Double.isFinite(x)&&Double.isFinite(y)&&Double.isFinite(z)?new Vec3(x,y,z):null;
     }
     public static boolean seated(Wolf wolf){
-        if(!standing(wolf))return false;
+        if(!standing(wolf)||BogatyrBreeding.active(wolf))return false;
         if(unsupportedAnchor(wolf)||!state(wolf).writable())return true;
         var anchor=anchor(wolf);return anchor!=null&&wolf.position().distanceToSqr(anchor)<.25;
     }
@@ -127,8 +133,8 @@ public final class BogatyrModes {
     static final class StandGround extends Goal {
         private final Wolf wolf;private long nextPath;
         StandGround(Wolf wolf){this.wolf=wolf;setFlags(EnumSet.of(Flag.MOVE,Flag.JUMP));}
-        @Override public boolean canUse(){return standing(wolf);}
-        @Override public boolean canContinueToUse(){return standing(wolf);}
+        @Override public boolean canUse(){return standing(wolf)&&!BogatyrBreeding.active(wolf);}
+        @Override public boolean canContinueToUse(){return standing(wolf)&&!BogatyrBreeding.active(wolf);}
         @Override public boolean requiresUpdateEveryTick(){return true;}
         @Override public void start(){nextPath=0;tick();}
         @Override public void tick(){

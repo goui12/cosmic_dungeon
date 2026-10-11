@@ -273,6 +273,9 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Patrol is the default: wolves follow normally and defend themselves and their master against new attacks."),
             HelpBlock.bullet("Stay calls wolves back to sit within 5 blocks. Each holds its settled place even when you move away and ignores threats."),
             HelpBlock.tip("Choose Patrol to stand the pack up. Stay clears earlier fights; repeated Stay clicks do not move settled wolves."),
+            HelpBlock.bullet("Feed Pack spends up to 10 actual items from your inventory: bones/rotten flesh first, then raw meat, then other meat by player food value. Injured wolves are healed first; remaining food goes to healthy adult pairs within 8 blocks of each other."),
+            HelpBlock.bullet("Bones only act as food through Feed Pack. Ordinary bones, taming, and meat feeding are unchanged. Pups, breeding cooldowns, individually seated Patrol dogs, and adults without a nearby mate do not spend breeding food."),
+            HelpBlock.bullet("In Stay, feeding allows temporary mating movement. Wolves return to their original held places after birth or a failed attempt (30 seconds at default settings). Saves/reloads cancel unfinished attempts safely."),
             HelpBlock.bullet("Allies cannot hurt or sit your wolves, but can feed and breed them. Mercenary Bogatyr packs keep their separate five-wolf rules."),
             HelpBlock.tip("Active packs survive saves and reconnects. Completion, forfeit or reset ends the pack; old archives cannot be recalled.")));
 

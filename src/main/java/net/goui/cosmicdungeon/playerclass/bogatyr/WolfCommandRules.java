@@ -5,7 +5,7 @@ import net.goui.cosmicdungeon.network.BogatyrPayloads.Kind;
 /** Paid care policy is independent of native entity side effects. No admission cap is imposed. */
 public final class WolfCommandRules {
     private WolfCommandRules(){}
-    public static int unitCost(Kind kind){return switch(kind){case BREED,HEAL->5;case SUMMON->30;case REGROUP->1;};}
+    public static int unitCost(Kind kind){return switch(kind){case BREED,HEAL->5;case SUMMON->30;case REGROUP->1;case FEED_PACK->throw new IllegalArgumentException("Feed Pack uses actual items");};}
     public static int count(Kind kind,int eligible,int kibble){
         if(eligible<0||kibble<0||kibble>600)throw new IllegalArgumentException("Invalid command budget");
         if(kind==Kind.REGROUP)return eligible<=kibble?eligible:0;

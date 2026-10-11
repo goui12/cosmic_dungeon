@@ -78,6 +78,6 @@ final class BogatyrModesPayloadTest {
         var raw=Unpooled.buffer();var b=new FriendlyByteBuf(raw);
         b.writeVarLong(run);b.writeVarLong(revision);b.writeVarInt(0);
         for(int i=0;i<4;i++){b.writeVarInt(0);b.writeVarInt(0);b.writeBoolean(false);}
-        b.writeVarInt(mode);b.writeBoolean(enabled);return raw;
+        b.writeVarInt(mode);b.writeBoolean(enabled);b.writeVarInt(0);return raw;
     }
 }

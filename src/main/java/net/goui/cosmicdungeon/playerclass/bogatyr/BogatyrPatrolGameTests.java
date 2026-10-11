@@ -26,7 +26,7 @@ public final class BogatyrPatrolGameTests {
     public static void retiredCommands(GameTestHelper helper){
         try(var f=new BogatyrCommandGameTests.Fixture(helper,Long.MAX_VALUE-2701)){
             var wolf=f.wolf(0,0,2,0);wolf.setHealth(5);f.amount(600);var before=f.root().copy();var image=BogatyrRecovery.image(wolf);
-            for(var kind:BogatyrPayloads.Kind.values()){
+            for(var kind:java.util.List.of(BogatyrPayloads.Kind.BREED,BogatyrPayloads.Kind.SUMMON,BogatyrPayloads.Kind.REGROUP,BogatyrPayloads.Kind.HEAL)){
                 f.check(!f.execute(kind),"Retired direct command denied: "+kind);
                 BogatyrActions.sync(f.p(),true);var view=f.view();
                 f.check(view.quotes().stream().noneMatch(BogatyrPayloads.Quote::enabled),"No old skill quote");

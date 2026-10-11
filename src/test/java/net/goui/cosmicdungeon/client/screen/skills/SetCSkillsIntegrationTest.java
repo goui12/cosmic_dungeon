@@ -23,13 +23,13 @@ final class SetCSkillsIntegrationTest {
     @BeforeEach void prepare() {
         BogatyrClient.clear();
         TheurgistClient.clear();
-        BogatyrClient.actions(action -> fail("Geometry must not send care actions"));
+        BogatyrClient.actions(action -> fail("Geometry must not send Feed Pack actions"));
         BogatyrClient.modeActions(action -> fail("Geometry must not send mode actions"));
         TheurgistClient.actions(action -> fail("Geometry must not send crafting or resurrection actions"));
         BogatyrClient.accept(new BogatyrPayloads.View(26,1,4,List.of(
                 new BogatyrPayloads.Quote(2,10,true),new BogatyrPayloads.Quote(1,30,true),
                 new BogatyrPayloads.Quote(4,4,true),new BogatyrPayloads.Quote(1,5,true)),
-                WolfMode.PATROL,true));
+                WolfMode.PATROL,true,10));
         var targets=new ArrayList<TheurgistPayloads.Target>();
         for(int i=0;i<TheurgistPayloads.MAX_TARGETS;i++)
             targets.add(new TheurgistPayloads.Target(new UUID(26,i+1),"Teammate "+i,new UUID(27,i+1),i%2==0));
@@ -52,7 +52,7 @@ final class SetCSkillsIntegrationTest {
         var combined=id.equals("bogatyr")?BogatyrClient.augment(base):TheurgistClient.augment(base);
         assertNull(combined.resourceSnapshot(),"Retired resource packets must not restore the resource bar");
         assertEquals("Loaded wolves: 4",combined.resource());
-        assertEquals(List.of("Patrol","Stay"),combined.actions().stream().map(SkillsPanelModel.Action::label).toList());
+        assertEquals(List.of("Patrol","Stay","Feed Pack"),combined.actions().stream().map(SkillsPanelModel.Action::label).toList());
         assertTrue(combined.actions().stream().noneMatch(a->a.id().equals("recycle")));
         assertTrue(combined.actions().stream().noneMatch(a->a.id().equals("request_supplies")));
         return combined;
@@ -82,7 +82,7 @@ final class SetCSkillsIntegrationTest {
     @Test void fullyComposedPanelsKeepEveryActionReachableAtSupportedSurvivalAndCreativeScales() {
         for(var id:List.of("bogatyr")) {
             var combined=model(id);
-            assertEquals(2,combined.actions().size());
+            assertEquals(3,combined.actions().size());
             for(int[] size:new int[][]{{320,240},{426,240},{640,360},{854,480}})
                 for(int image:new int[]{176,195}) {
                     var shared=layout(size[0],size[1],image);
@@ -191,10 +191,12 @@ final class SetCSkillsIntegrationTest {
             assertFalse(panel.minimized());
             assertEquals(0,panel.scroll().offset());
             var body=panel.geometry().body();
-            for(int i=0;i<2;i++){
-                var row=panel.geometry().row(i,0);
+            for(int i=0;i<model(id).actions().size();i++){
+                panel.scroll().reset();
+                assertTrue(panel.wheel(body.x()+2,body.y()+2,-i,false));
+                var row=panel.geometry().row(i,panel.scroll().offset());
                 assertTrue(body.contains(row.x(),row.y())&&body.contains(row.right()-1,row.bottom()-1),
-                        "Each complete radio button remains visible after restore and resize");
+                        "Each complete mode and Feed Pack button remains reachable after restore and resize");
                 assertEquals(i,panel.press(row.x()+row.width()/2.0,row.y()+row.height()/2.0,0,false).action());
                 assertTrue(panel.release());
             }

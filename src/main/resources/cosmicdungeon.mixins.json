@@ -94,6 +94,7 @@
     "SkillDrinkPotionMixin",
     "StatsCounterAccess",
     "NaturalArmorDropsMixin",
-    "ResurrectionReceiptMixin"
+    "ResurrectionReceiptMixin",
+    "BogatyrLoveMixin"
   ]
 }
