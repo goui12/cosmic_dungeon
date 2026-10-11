@@ -114,7 +114,8 @@ public final class BogatyrPatrolGameTests {
     public static void modePersistence(GameTestHelper helper){
         try(var f=new BogatyrCommandGameTests.Fixture(helper,Long.MAX_VALUE-2705)){
             var wolf=f.wolf(0,0,2,0);BogatyrModes.select(f.p(),f.run,WolfMode.STAY);stay(wolf).start();
-            var anchor=BogatyrModes.anchor(wolf);wolf.getPersistentData().getCompoundOrEmpty(BogatyrModes.STAY).putString("future","keep");
+            var anchor=BogatyrModes.anchor(wolf);f.check(anchor!=null&&wolf.isOrderedToSit(),"Stay settles before persistence snapshot");
+            wolf.getPersistentData().getCompoundOrEmpty(BogatyrModes.STAY).putString("future","keep");
             var image=f.savedWolf(wolf);wolf.discard();
             f.check(PlayerSaveProof.save(f.p()),"Owner native save");f.reloadOwner();f.p().setPos(f.origin.add(-6,0,0));
             var loaded=f.readWolf(image);f.check(f.level.addFreshEntity(loaded),"Native same-run wolf reload");BogatyrModes.apply(loaded,false);stay(loaded).start();

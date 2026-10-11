@@ -47,8 +47,11 @@ public final class BogatyrCommandGameTests {
         Fixture(GameTestHelper helper,long run){this(helper,run,"dungeon_2");}
         @SuppressWarnings("unchecked") Fixture(GameTestHelper helper,long run,String dungeon){
             this.helper=helper;this.level=helper.getLevel();this.run=run;var server=level.getServer();
-            var anchor=helper.absoluteVec(new Vec3(1.5,10.5,1.5));var chunk=new ChunkPos(BlockPos.containing(anchor));
-            origin=new Vec3(chunk.getMinBlockX()+8.5,Math.floor(anchor.y),chunk.getMinBlockZ()+8.5);
+            // Choose the structure's guaranteed ticking chunk BEFORE adding offsets.
+            // Empty structures near an edge otherwise move fixtures into a merely loaded neighbor.
+            var anchor=helper.absolutePos(BlockPos.ZERO);var chunk=new ChunkPos(anchor);
+            check(level.areEntitiesActuallyLoadedAndTicking(chunk),"Wolf fixture starts in the native test structure's ticking chunk");
+            origin=new Vec3(chunk.getMinBlockX()+8.5,anchor.getY()+10,chunk.getMinBlockZ()+8.5);
             try{
                 runs=(Map<Long,DungeonRunRegistryData.RunRecord>)field(DungeonRunRegistryData.class,"runsById",DungeonRunRegistryData.get(server));
                 players=(Map<UUID,ServerPlayer>)field(PlayerList.class,"playersByUUID",server.getPlayerList());
@@ -123,6 +126,7 @@ public final class BogatyrCommandGameTests {
             wolf.snapTo(origin.x+dx,origin.y,origin.z+dz,0,0);wolf.setNoAi(true);wolf.setOnGround(true);
             wolf.setOrderedToSit(false);wolf.setInSittingPose(false);wolf.setAge(age);
             check(level.addFreshEntity(wolf)&&wolf.isAddedToLevel()&&!wolf.isRemoved(),"Native wolf accepted in loaded fixture chunk");
+            check(level.getEntity(wolf.getUUID())==wolf,"Fixture wolf is visible through native UUID lookup");
             BogatyrWolfEvents.register(wolf,current.get(owner).getUUID(),run);wolf.setHealth(wolf.getMaxHealth());
             remember(wolf);return wolf;
         }
