@@ -28,12 +28,8 @@ public final class BogatyrActions {
             if(run!=null&&"bogatyr".equals(ClassData.getClassId(p))&&BogatyrRunLifecycle.migrate(p.level().getServer())){
                 var pack=BogatyrCommands.loaded(p,run.runId());
                 var quotes=new ArrayList<BogatyrPayloads.Quote>();
-                int amount=ClassResourceLedger.forRun(BogatyrCommands.root(p),run.runId()).amount(ClassResourceKind.KIBBLE);
                 boolean able=p.isAlive()&&!p.isDeadOrDying()&&InventoryTransactionGuard.beforeCurrentInventoryAction(p);
-                for(var kind:BogatyrPayloads.Kind.values()){
-                    var plan=able?BogatyrCommands.plan(p,run.runId(),kind,pack,amount):new BogatyrCommands.Plan(run.runId(),kind,List.of());
-                    plans.add(plan);quotes.add(new BogatyrPayloads.Quote(plan.count(),plan.cost(),plan.count()>0));
-                }
+                for(var kind:BogatyrPayloads.Kind.values())quotes.add(BogatyrPayloads.Quote.empty());
                 var mode=BogatyrCompanionData.get(p.level().getServer()).mode(p.getUUID(),run.runId());
                 next=new BogatyrPayloads.View(run.runId(),0,pack.size(),quotes,mode.mode(),able&&mode.writable());
             }
@@ -55,15 +51,5 @@ public final class BogatyrActions {
             BogatyrModes.select(p,request.run(),request.mode());
         }finally{sync(p,true);}
     }
-    public static void action(ServerPlayer p,BogatyrPayloads.Action request){
-        var s=SESSIONS.get(p);
-        try{
-            if(s==null||s.sent==null||s.sent.run()!=request.run()||s.sent.revision()!=request.revision()||s.plans.size()!=4)return;
-            long now=p.level().getServer().getTickCount();
-            if(s.lastAction!=Long.MIN_VALUE&&now>=s.lastAction&&now-s.lastAction<20)return;
-            s.lastAction=now;
-            // execute computes current eligibility and placement again; changed previews are harmless no-ops.
-            BogatyrCommands.execute(p,s.plans.get(request.kind().ordinal()));
-        }finally{sync(p,true);}
-    }
+    public static void action(ServerPlayer p,BogatyrPayloads.Action request){sync(p,true);}
 }

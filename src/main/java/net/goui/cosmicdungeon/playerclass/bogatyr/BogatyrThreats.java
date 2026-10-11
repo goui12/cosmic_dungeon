@@ -29,9 +29,8 @@ public final class BogatyrThreats {
     public static void clear(){INSTALLED.clear();CACHE.clear();ATTACKS.clear();BogatyrModes.clear();BogatyrRescue.clear();budgetTick=Long.MIN_VALUE;scans=0;}
     public static void install(Wolf wolf){
         if(wolf.level() instanceof ServerLevel&&!INSTALLED.containsKey(wolf)){
-            var goal=new ProtectOwner(wolf);INSTALLED.put(wolf,new java.lang.ref.WeakReference<>(goal));
-            wolf.targetSelector.addGoal(0,goal);wolf.goalSelector.addGoal(0,new BogatyrModes.StandGround(wolf));
-            wolf.goalSelector.addGoal(0,new BogatyrBoundary.Return(wolf));wolf.goalSelector.addGoal(2,new BogatyrRescue.Escort(wolf));
+            INSTALLED.put(wolf,new java.lang.ref.WeakReference<>(null));
+            wolf.goalSelector.addGoal(0,new BogatyrModes.StandGround(wolf));
             BogatyrModes.apply(wolf,false);
         }
     }
@@ -86,7 +85,7 @@ public final class BogatyrThreats {
             case AGGRESSIVE,STRATEGIC,DANGER_CLOSE -> target instanceof Enemy;
             case SEARCH_AND_RESCUE -> {var p=patient(wolf);yield p!=null&&attacks(target,p,run(wolf),owner.level().getGameTime());}
             case DEFENSIVE -> recent(wolf,target)||threatens(target,owner,run(wolf),owner.level().getGameTime());
-            case STAND_GROUND -> false;
+            case STAND_GROUND,STAY,PATROL -> false;
         };
     }
     private static Targets candidates(ServerPlayer owner,long run,WolfMode mode,long now){
@@ -108,7 +107,7 @@ public final class BogatyrThreats {
                 boolean include=switch(mode){
                     case DEFENSIVE -> threatens(mob,owner,run,now);
                     case SEARCH_AND_RESCUE -> patients.stream().anyMatch(p->attacks(mob,p,run,now));
-                    case STAND_GROUND -> false;
+                    case STAND_GROUND,STAY,PATROL -> false;
                     default -> mob instanceof Enemy;
                 };
                 return include?mob:null;
@@ -136,9 +135,10 @@ public final class BogatyrThreats {
         var requested=event.getNewAboutToBeSetTarget();
         if(CompanionAllies.friendly(requested)){event.setNewAboutToBeSetTarget(null);return;}
         if(!BogatyrWolfEvents.managed(wolf)||requested==null)return;
-        var goal=goal(wolf);
-        if(!(requested instanceof Mob mob)||!eligible(wolf,owner(wolf),mob)
-                ||BogatyrModes.mode(wolf)!=WolfMode.DEFENSIVE&&(goal==null||goal.choice!=requested))
+        var owner=BogatyrCompanions.owner(wolf);var history=owner==null?null:ATTACKS.get(owner);
+        boolean defended=requested instanceof Mob mob&&(requested==wolf.getTarget()||recent(wolf,mob)
+                ||history!=null&&history.run()==run(wolf)&&history.until().getOrDefault(mob.getUUID(),Long.MIN_VALUE)>=wolf.level().getGameTime());
+        if(BogatyrModes.standing(wolf)||BogatyrRecovery.held(wolf)||!defended)
             event.setNewAboutToBeSetTarget(null);
     }
     @SubscribeEvent(priority=EventPriority.HIGHEST)
@@ -162,12 +162,16 @@ public final class BogatyrThreats {
                 ||!(event.getSource().getEntity() instanceof Mob attacker)||CompanionAllies.friendly(attacker))return;
         UUID owner;long run;
         if(event.getEntity() instanceof Wolf wolf&&BogatyrWolfEvents.managed(wolf)){
-            if(BogatyrModes.standing(wolf)){BogatyrModes.hold(wolf);return;}
+            if(BogatyrModes.standing(wolf)){
+                if(BogatyrModes.seated(wolf))BogatyrModes.hold(wolf);
+                return;
+            }
             owner=BogatyrCompanions.owner(wolf);run=run(wolf);
         }else if(event.getEntity() instanceof ServerPlayer player){
-            var active=ClassResourceService.activeRun(player).orElse(null);if(active==null)return;owner=player.getUUID();run=active.runId();
+            var active=ClassResourceService.activeRun(player).orElse(null);if(active==null)return;
+            owner=player.getUUID();run=active.runId();
         }else return;
-        if(owner==null||BogatyrCompanionData.get(level.getServer()).mode(owner,run).mode()==WolfMode.STAND_GROUND)return;
+        if(owner==null||BogatyrCompanionData.get(level.getServer()).mode(owner,run).mode()!=WolfMode.PATROL)return;
         remember(owner,run,attacker,level.getGameTime());
     }
     static final class ProtectOwner extends Goal {

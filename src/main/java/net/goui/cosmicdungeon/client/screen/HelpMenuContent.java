@@ -267,13 +267,13 @@ public final class HelpMenuContent {
             HelpBlock.paragraph("A survivalist, cold-weather endurance racer, and hardened wolf-handler from the frozen Russian Federation reaches, the Bogatyr favors traditional weaponry and grit."),
             HelpBlock.bullet("Damage identity: fights alongside loyal wolf companions as a class role theme."),
             HelpBlock.bullet("Can use Bogatyr-attuned gear and class chests."),
-            HelpBlock.bullet("Tame wolves with bones or use Wolfpack Skills. Packs are uncapped and belong to the current dungeon run."),
+            HelpBlock.bullet("Acquire companions through wolf eggs, ordinary bone taming and breeding. Player packs are uncapped and belong to the current dungeon run."),
             HelpBlock.command("Living loaded Wolfpack count in this dungeon", "/d1 wolves"),
-            HelpBlock.bullet("Open inventory Skills for Breed, Summon, Regroup and Heal, with exact Kibble costs and affected counts."),
-            HelpBlock.bullet("Free modes: Defensive protects the master and pack; Stand Ground sits and holds even under attack; Aggressive attacks nearby hostiles nearest the master first."),
-            HelpBlock.bullet("Strategic prioritizes ranged enemies, then maximum health. Search and Rescue protects nearby party players at 3 hearts or less; Companionship restores 1 heart every 5 seconds per guarded player."),
-            HelpBlock.bullet("Danger Close stays within 16 blocks of the moving master, finishes an eligible current target, then prioritizes threats to the master."),
-            HelpBlock.tip("Select another mode to stand up. Breed is unavailable during Stand Ground. Your mode is saved with the current run."),
+            HelpBlock.bullet("Open inventory Skills to choose Patrol or Stay. Both are free; Kibble and the old skills are retired."),
+            HelpBlock.bullet("Patrol is the default: wolves follow normally and defend themselves and their master against new attacks."),
+            HelpBlock.bullet("Stay calls wolves back to sit within 5 blocks. Each holds its settled place even when you move away and ignores threats."),
+            HelpBlock.tip("Choose Patrol to stand the pack up. Stay clears earlier fights; repeated Stay clicks do not move settled wolves."),
+            HelpBlock.bullet("Allies cannot hurt or sit your wolves, but can feed and breed them. Mercenary Bogatyr packs keep their separate five-wolf rules."),
             HelpBlock.tip("Active packs survive saves and reconnects. Completion, forfeit or reset ends the pack; old archives cannot be recalled.")));
 
 

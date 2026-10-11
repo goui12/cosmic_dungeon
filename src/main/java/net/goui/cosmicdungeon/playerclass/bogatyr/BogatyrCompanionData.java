@@ -80,6 +80,7 @@ public final class BogatyrCompanionData extends SavedData {
         next.put("retired_runs",retired);return next;
     }
     WolfModeData.State mode(UUID owner,long run){return WolfModeData.read(original,owner,run);}
+    long modeEpoch(UUID owner,long run){return WolfModeData.epoch(original,owner,run);}
     boolean setMode(UUID owner,long run,WolfMode mode){
         if(!WolfModeData.write(original,owner,run,mode))return false;
         setDirty();return true;

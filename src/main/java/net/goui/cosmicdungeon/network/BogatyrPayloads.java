@@ -8,7 +8,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
-/** Four bounded care quotes and six mode IDs; clients can only request the captured generation. */
+/** Retired care quote slots and append-only mode IDs; clients can only request the captured generation. */
 public final class BogatyrPayloads {
     public enum Kind { BREED,SUMMON,REGROUP,HEAL }
     public record Quote(int count,int cost,boolean enabled){
@@ -18,7 +18,7 @@ public final class BogatyrPayloads {
     private BogatyrPayloads(){}
     private static ResourceLocation id(String name){return ResourceLocation.fromNamespaceAndPath("cosmicdungeon",name);}
     public record View(long run,long revision,int loaded,List<Quote> quotes,WolfMode mode,boolean modesEnabled) implements CustomPacketPayload {
-        public View(long run,long revision,int loaded,List<Quote> quotes){this(run,revision,loaded,quotes,WolfMode.DEFENSIVE,false);}
+        public View(long run,long revision,int loaded,List<Quote> quotes){this(run,revision,loaded,quotes,WolfMode.PATROL,false);}
         public View{quotes=List.copyOf(quotes);if(mode==null||run==0&&modesEnabled||run<0||revision<0||loaded<0||quotes.size()!=4
                 ||run==0&&(loaded!=0||quotes.stream().anyMatch(Quote::enabled)))throw new IllegalArgumentException("Invalid Wolfpack view");}
         public static View empty(long revision){return new View(0,revision,0,Collections.nCopies(4,Quote.empty()));}

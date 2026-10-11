@@ -34,6 +34,7 @@
     "RepairFuelMixin",
     "BogatyrTeleportMixin",
     "BogatyrSitMixin",
+    "BogatyrOwnerTargetMixin",
     "BogatyrDamageMixin",
     "BogatyrMeleeMixin",
     "BogatyrNavigationMixin",

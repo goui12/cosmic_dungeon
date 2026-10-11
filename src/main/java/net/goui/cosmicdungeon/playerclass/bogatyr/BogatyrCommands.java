@@ -85,75 +85,8 @@ public final class BogatyrCommands {
         }
         return new Plan(run,kind,kind==Kind.REGROUP&&targets.size()>amount?List.of():targets);
     }
-    static boolean execute(ServerPlayer p,Plan plan){
-        if(p.level().getServer().getPlayerList().getPlayer(p.getUUID())!=p||plan.count()==0||!InventoryTransactionGuard.beforeCurrentInventoryAction(p))return false;
-        var run=ClassResourceService.activeRun(p).orElse(null);
-        if(run==null||run.runId()!=plan.run()||!"bogatyr".equals(ClassData.getClassId(p))||!p.isAlive()||p.isDeadOrDying())return false;
-        var before=ClassResourceLedger.forRun(root(p),plan.run());
-        if(!plan.equals(plan(p,plan.run(),plan.kind(),loaded(p,plan.run()),before.amount(ClassResourceKind.KIBBLE))))return false;
-        var journal=BogatyrCommandData.get(p.level().getServer());var pending=new CompoundTag();var id=UUID.randomUUID();
-        pending.putString("id",id.toString());pending.putLong("run",plan.run());pending.putString("kind",plan.kind().name());
-        pending.putString("phase","prepared");pending.put("ledger",before.image());pending.putInt("cost",0);
-        var originals=new ListTag();
-        for(var target:plan.targets())if(p.level().getEntity(target.entity()) instanceof Wolf wolf)originals.add(BogatyrRecovery.image(wolf));
-        pending.put("wolves",originals);
-        try{
-            PlayerSaveProof.snapshot(p);
-            if(!PlayerSaveProof.save(p))throw new IllegalStateException("Original wolf-command owner balance save needs review");
-            journal.put(p.getUUID(),pending);
-            if(!journal.flushVerified())throw new IllegalStateException("Wolf command preparation save needs review");
-            var changed=new ArrayList<Wolf>();
-            for(var target:plan.targets()){
-                Wolf wolf=plan.kind()==Kind.SUMMON?EntityType.WOLF.create(p.level(),EntitySpawnReason.MOB_SUMMONED)
-                        :p.level().getEntity(target.entity()) instanceof Wolf found?found:null;
-                if(wolf==null)continue;
-                boolean success=false;
-                switch(plan.kind()){
-                    case BREED->{if(WolfCommandRules.breed(wolf.getAge(),wolf.isInLove(),wolf.getHealth(),wolf.getMaxHealth())){
-                        wolf.setOrderedToSit(false);wolf.setInSittingPose(false);wolf.setInLove(p);success=wolf.isInLove();}}
-                    case HEAL->{if(WolfCommandRules.injured(wolf.getHealth(),wolf.getMaxHealth())){
-                        float old=wolf.getHealth();wolf.setHealth(wolf.getMaxHealth());success=wolf.getHealth()>old;}}
-                    case REGROUP->{
-                        var pos=target.destination();
-                        if(p.level().hasChunkAt(pos)&&net.goui.cosmicdungeon.rift.SafeTeleportUtil.isStandable(p.level(),pos)){
-                            success=wolf.teleportTo(p.level(),pos.getX()+.5,pos.getY(),pos.getZ()+.5,Set.of(),wolf.getYRot(),wolf.getXRot(),false);
-                            if(success){wolf.getNavigation().stop();wolf.setDeltaMovement(Vec3.ZERO);wolf.fallDistance=0;BogatyrCompanions.track(wolf,true);}
-                        }
-                    }
-                    case SUMMON->{
-                        var pos=target.destination();wolf.tame(p);wolf.setOrderedToSit(false);wolf.setInSittingPose(false);
-                        BogatyrIdentity.fresh(wolf);wolf.getPersistentData().putLong(BogatyrWolfEvents.RUN,plan.run());
-                        wolf.getPersistentData().putString(BogatyrWolfEvents.OWNER,p.getUUID().toString());
-                        wolf.snapTo(pos.getX()+.5,pos.getY(),pos.getZ()+.5,p.getYRot(),0);
-                        if(p.level().hasChunkAt(pos)&&net.goui.cosmicdungeon.rift.SafeTeleportUtil.isStandable(p.level(),pos)&&p.level().noCollision(wolf)){
-                            boolean accepted=p.level().addFreshEntity(wolf);
-                            if(accepted&&wolf.isAddedToLevel()&&!wolf.isRemoved()){
-                                BogatyrWolfEvents.register(wolf,p.getUUID(),plan.run());wolf.setHealth(wolf.getMaxHealth());success=true;
-                            }else if(wolf.isAddedToLevel()||p.level().getEntity(wolf.getUUID())!=null)
-                                throw new IllegalStateException("Summon admission outcome needs review");
-                        }
-                    }
-                }
-                if(success){wolf.getPersistentData().putString(RECEIPT,id.toString());changed.add(wolf);}
-            }
-            int cost=changed.size()*WolfCommandRules.unitCost(plan.kind());pending.putInt("cost",cost);
-            var expected=new LinkedHashMap<UUID,CompoundTag>();for(var wolf:changed)expected.put(wolf.getUUID(),BogatyrRecovery.image(wolf));
-            if(!changed.isEmpty()){
-                p.level().save(null,true,false);
-                var regions=new HashMap<Long,CompoundTag>();
-                for(var wolf:changed){
-                    var chunk=new ChunkPos(wolf.blockPosition());var region=regions.get(chunk.toLong());
-                    if(region==null){region=ReadOnlyEntityRegion.read(BogatyrRecovery.entityFolder(p.level()),chunk.x,chunk.z);regions.put(chunk.toLong(),region);}
-                    if(ReadOnlyEntityRegion.find(region,wolf.getUUID()).filter(expected.get(wolf.getUUID())::equals).isEmpty())
-                        throw new IllegalStateException("Wolf effect save needs review; original images retained");
-                }
-            }
-            var outcomes=new ListTag();expected.values().forEach(outcomes::add);pending.put("outcomes",outcomes);
-            pending.putString("phase","entities_saved");journal.put(p.getUUID(),pending);
-            if(!journal.flushVerified())throw new IllegalStateException("Wolf outcome receipt needs review");
-            return reconcile(p);
-        }catch(Exception failure){ClassResourceService.hold(p,failure);return false;}
-    }
+    /** Legacy command journals still reconcile, but new Kibble effects are retired. */
+    static boolean execute(ServerPlayer p,Plan plan){return false;}
     /** Only an acknowledged entity-save outcome can be settled after reconnect; prepared ambiguity stays held. */
     public static boolean reconcile(ServerPlayer p){
         if(p.level().getServer().getPlayerList().getPlayer(p.getUUID())!=p)return false;

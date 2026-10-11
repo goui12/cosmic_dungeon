@@ -31,8 +31,8 @@ final class BogatyrModesPayloadTest {
             }finally{raw.release();}
         }
         var legacy=new View(24,0,0,EMPTY);
-        assertEquals(WolfMode.DEFENSIVE,legacy.mode());assertFalse(legacy.modesEnabled());
-        assertEquals(legacy,new View(24,0,0,EMPTY,WolfMode.DEFENSIVE,false));
+        assertEquals(WolfMode.PATROL,legacy.mode());assertFalse(legacy.modesEnabled());
+        assertEquals(legacy,new View(24,0,0,EMPTY,WolfMode.PATROL,false));
     }
     @Test void invalidCapabilitiesCannotBecomeModeCommands(){
         for(long run:new long[]{0,-1,Long.MIN_VALUE})
@@ -41,7 +41,7 @@ final class BogatyrModesPayloadTest {
         assertThrows(IllegalArgumentException.class,()->new ModeAction(24,1,null));
         assertThrows(IllegalArgumentException.class,()->new View(24,1,0,EMPTY,null,true));
         assertThrows(IllegalArgumentException.class,()->new View(0,1,0,EMPTY,WolfMode.DEFENSIVE,true));
-        assertThrows(IllegalArgumentException.class,()->new View(-1,1,0,EMPTY,WolfMode.DEFENSIVE,false));
+        assertThrows(IllegalArgumentException.class,()->new View(-1,1,0,EMPTY,WolfMode.PATROL,false));
         assertThrows(IllegalArgumentException.class,()->new View(24,-1,0,EMPTY,WolfMode.DEFENSIVE,true));
         assertFalse(View.empty(1).modesEnabled());
     }

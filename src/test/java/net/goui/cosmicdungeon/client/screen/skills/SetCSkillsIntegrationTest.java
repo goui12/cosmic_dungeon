@@ -29,7 +29,7 @@ final class SetCSkillsIntegrationTest {
         BogatyrClient.accept(new BogatyrPayloads.View(26,1,4,List.of(
                 new BogatyrPayloads.Quote(2,10,true),new BogatyrPayloads.Quote(1,30,true),
                 new BogatyrPayloads.Quote(4,4,true),new BogatyrPayloads.Quote(1,5,true)),
-                WolfMode.DANGER_CLOSE,true));
+                WolfMode.PATROL,true));
         var targets=new ArrayList<TheurgistPayloads.Target>();
         for(int i=0;i<TheurgistPayloads.MAX_TARGETS;i++)
             targets.add(new TheurgistPayloads.Target(new UUID(26,i+1),"Teammate "+i,new UUID(27,i+1),i%2==0));
@@ -50,9 +50,10 @@ final class SetCSkillsIntegrationTest {
                 177,600,true,true,true,7);
         var base=ClassResourcePresentation.panel(id,resource,false,true);
         var combined=id.equals("bogatyr")?BogatyrClient.augment(base):TheurgistClient.augment(base);
-        assertSame(resource,combined.resourceSnapshot(),"Class actions must retain the authoritative shared resource");
-        assertEquals(base.resourceTooltip(),combined.resourceTooltip());
-        assertEquals("recycle",combined.actions().getFirst().id());
+        assertNull(combined.resourceSnapshot(),"Retired resource packets must not restore the resource bar");
+        assertEquals("Loaded wolves: 4",combined.resource());
+        assertEquals(List.of("Patrol","Stay"),combined.actions().stream().map(SkillsPanelModel.Action::label).toList());
+        assertTrue(combined.actions().stream().noneMatch(a->a.id().equals("recycle")));
         assertTrue(combined.actions().stream().noneMatch(a->a.id().equals("request_supplies")));
         return combined;
     }
@@ -81,7 +82,7 @@ final class SetCSkillsIntegrationTest {
     @Test void fullyComposedPanelsKeepEveryActionReachableAtSupportedSurvivalAndCreativeScales() {
         for(var id:List.of("bogatyr")) {
             var combined=model(id);
-            assertEquals(11,combined.actions().size());
+            assertEquals(2,combined.actions().size());
             for(int[] size:new int[][]{{320,240},{426,240},{640,360},{854,480}})
                 for(int image:new int[]{176,195}) {
                     var shared=layout(size[0],size[1],image);
@@ -172,7 +173,8 @@ final class SetCSkillsIntegrationTest {
             assertTrue(panel.minimized());
             assertEquals(0,panel.geometry().body().height());
             assertTrue(preferences.put(id,panel.placement()));
-            assertEquals(177,combined.resourceSnapshot().amount(),"Moving or minimizing is presentation only");
+            assertEquals("Loaded wolves: 4",combined.resource(),"Moving or minimizing is presentation only");
+            assertNull(combined.resourceSnapshot());
         }
         var loaded=new SkillsPanelPreferences(path);
         assertTrue(loaded.get("bogatyr").isPresent());
@@ -187,7 +189,15 @@ final class SetCSkillsIntegrationTest {
             panel.press(toggle.x()+2,toggle.y()+2,0,false);
             panel.release();
             assertFalse(panel.minimized());
-            assertTrue(panel.scroll().max()>0);
+            assertEquals(0,panel.scroll().offset());
+            var body=panel.geometry().body();
+            for(int i=0;i<2;i++){
+                var row=panel.geometry().row(i,0);
+                assertTrue(body.contains(row.x(),row.y())&&body.contains(row.right()-1,row.bottom()-1),
+                        "Each complete radio button remains visible after restore and resize");
+                assertEquals(i,panel.press(row.x()+row.width()/2.0,row.y()+row.height()/2.0,0,false).action());
+                assertTrue(panel.release());
+            }
             bounded(panel,smaller);
         }
         assertTrue(loaded.reset());

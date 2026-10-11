@@ -1,102 +1,85 @@
 package net.goui.cosmicdungeon.playerclass.bogatyr;
-
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import net.minecraft.nbt.*;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-
 final class BogatyrModeDataTest {
     private static final UUID OWNER=UUID.fromString("00000000-0000-0000-0000-000000002401");
     private static final UUID OTHER=UUID.fromString("00000000-0000-0000-0000-000000002402");
-    private static BogatyrCompanionData data(CompoundTag tag){
-        return BogatyrCompanionData.CODEC.parse(NbtOps.INSTANCE,tag).getOrThrow();
+    private static BogatyrCompanionData data(CompoundTag tag){return BogatyrCompanionData.CODEC.parse(NbtOps.INSTANCE,tag).getOrThrow();}
+    @Test void legacyModesBecomePatrolWithoutRewritingOldRecords(){
+        for(var mode:WolfMode.values()){
+            if(mode.active())continue;
+            var root=legacy(mode.name());var before=root.copy();
+            assertEquals(new WolfModeData.State(WolfMode.PATROL,true),WolfModeData.read(root,OWNER,24));
+            assertEquals(before,root);
+            assertTrue(WolfModeData.write(root,OWNER,24,WolfMode.STAY));
+            assertEquals(before.get(WolfModeData.LEGACY),root.get(WolfModeData.LEGACY));
+            assertEquals(WolfMode.STAY,data(root).mode(OWNER,24).mode());
+            assertEquals(1,WolfModeData.epoch(root,OWNER,24));
+        }
     }
-    @Test void oldSavesDefaultToDefensiveWithoutBeingRewritten(){
-        var root=new CompoundTag();root.putString("future_root","keep");
-        var before=root.copy();
-        assertEquals(new WolfModeData.State(WolfMode.DEFENSIVE,true),WolfModeData.read(root,OWNER,24));
-        assertEquals(before,root);
-        var loaded=data(root);var image=loaded.image();
-        assertEquals(new WolfModeData.State(WolfMode.DEFENSIVE,true),loaded.mode(OWNER,24));
-        assertEquals(image,loaded.image());assertFalse(loaded.image().contains(WolfModeData.KEY));
-        assertTrue(loaded.setMode(OWNER,24,WolfMode.AGGRESSIVE));
-        assertEquals(WolfMode.AGGRESSIVE,data(loaded.image()).mode(OWNER,24).mode());
-    }
-    @Test void selectionsAreIndependentPerOwnerAndRunAcrossSaveReload(){
+    @Test void radioSelectionsAndEpochsSurviveReloadIndependently(){
         var directory=data(new CompoundTag());
-        assertTrue(directory.setMode(OWNER,24,WolfMode.AGGRESSIVE));
-        assertTrue(directory.setMode(OTHER,24,WolfMode.STAND_GROUND));
-        assertTrue(directory.setMode(OWNER,25,WolfMode.STAND_GROUND));
-        var loaded=data(directory.image());
-        assertEquals(WolfMode.AGGRESSIVE,loaded.mode(OWNER,24).mode());
-        assertEquals(WolfMode.STAND_GROUND,loaded.mode(OTHER,24).mode());
-        assertEquals(WolfMode.STAND_GROUND,loaded.mode(OWNER,25).mode());
-        assertEquals(WolfMode.DEFENSIVE,loaded.mode(OTHER,25).mode());
-        assertTrue(loaded.setMode(OWNER,24,WolfMode.DEFENSIVE));
-        var finalSave=data(loaded.image());
-        assertEquals(WolfMode.DEFENSIVE,finalSave.mode(OWNER,24).mode());
-        assertEquals(WolfMode.STAND_GROUND,finalSave.mode(OTHER,24).mode());
-        assertEquals(WolfMode.STAND_GROUND,finalSave.mode(OWNER,25).mode());
+        assertEquals(WolfMode.PATROL,directory.mode(OWNER,24).mode());
+        assertTrue(directory.setMode(OWNER,24,WolfMode.STAY));
+        assertEquals(1,directory.modeEpoch(OWNER,24));
+        var image=directory.image();assertTrue(directory.setMode(OWNER,24,WolfMode.STAY));
+        assertEquals(image,directory.image());
+        assertTrue(directory.setMode(OTHER,24,WolfMode.STAY));
+        assertTrue(directory.setMode(OWNER,25,WolfMode.STAY));
+        directory=data(directory.image());
+        assertTrue(directory.setMode(OWNER,24,WolfMode.PATROL));
+        assertTrue(directory.setMode(OWNER,24,WolfMode.STAY));
+        assertEquals(3,directory.modeEpoch(OWNER,24));
+        assertEquals(1,directory.modeEpoch(OTHER,24));assertEquals(1,directory.modeEpoch(OWNER,25));
+        assertEquals(WolfMode.PATROL,directory.mode(OTHER,25).mode());
     }
-    @Test void changingAKnownModePreservesUnknownRootContainerAndEntryFields(){
-        var root=validRoot();root.putString("future_root","keep");
-        var modes=root.getCompoundOrEmpty(WolfModeData.KEY);
-        modes.putString("future_container","keep");
-        var entry=modes.getCompoundOrEmpty(OWNER+"/24");entry.putLong("future_entry",Long.MAX_VALUE);
-        var foreign=new CompoundTag();foreign.putString("mode","FUTURE_MODE");foreign.putString("future","keep");
-        modes.put(OTHER+"/24",foreign);
-        var directory=data(root);
-        assertTrue(directory.setMode(OWNER,24,WolfMode.AGGRESSIVE));
-        var image=data(directory.image()).image();var savedModes=image.getCompoundOrEmpty(WolfModeData.KEY);
-        assertEquals("keep",image.getStringOr("future_root",""));
-        assertEquals("keep",savedModes.getStringOr("future_container",""));
-        assertEquals(Long.MAX_VALUE,savedModes.getCompoundOrEmpty(OWNER+"/24").getLongOr("future_entry",0));
-        assertEquals(foreign,savedModes.getCompoundOrEmpty(OTHER+"/24"));
-        assertEquals(WolfMode.AGGRESSIVE,WolfModeData.read(image,OWNER,24).mode());
-        assertEquals(new WolfModeData.State(WolfMode.STAND_GROUND,false),WolfModeData.read(image,OTHER,24));
+    @Test void unknownFieldsSurviveOverlay(){
+        var root=legacy("STAND_GROUND");root.putString("future_root","keep");
+        assertTrue(WolfModeData.write(root,OWNER,24,WolfMode.STAY));
+        var modes=root.getCompoundOrEmpty(WolfModeData.KEY);modes.putString("future_container","keep");
+        modes.getCompoundOrEmpty(OWNER+"/24").putLong("future_entry",Long.MAX_VALUE);
+        var unknown=new CompoundTag();unknown.putString("mode","FUTURE");unknown.putLong("epoch",1);
+        modes.put(OTHER+"/24",unknown);
+        var legacy=root.get(WolfModeData.LEGACY).copy();
+        assertTrue(WolfModeData.write(root,OWNER,24,WolfMode.PATROL));
+        var image=data(data(root).image()).image();var saved=image.getCompoundOrEmpty(WolfModeData.KEY);
+        assertEquals("keep",image.getStringOr("future_root",""));assertEquals(legacy,image.get(WolfModeData.LEGACY));
+        assertEquals("keep",saved.getStringOr("future_container",""));
+        assertEquals(Long.MAX_VALUE,saved.getCompoundOrEmpty(OWNER+"/24").getLongOr("future_entry",0));
+        assertEquals(unknown,saved.get(OTHER+"/24"));
+        assertFalse(WolfModeData.read(image,OTHER,24).writable());
     }
-    @Test void unknownOrMalformedModeDataIsHeldAndBytePreserved() throws IOException {
-        var wrongRoot=new CompoundTag();wrongRoot.putString(WolfModeData.KEY,"not a compound");
-        var futureSchema=validRoot();futureSchema.getCompoundOrEmpty(WolfModeData.KEY).putInt("schema",2);
-        var absentSchema=validRoot();absentSchema.getCompoundOrEmpty(WolfModeData.KEY).remove("schema");
-        var badSchema=validRoot();badSchema.getCompoundOrEmpty(WolfModeData.KEY).putString("schema","1");
-        var wrongEntry=validRoot();wrongEntry.getCompoundOrEmpty(WolfModeData.KEY).putInt(OWNER+"/24",7);
-        var missingMode=validRoot();missingMode.getCompoundOrEmpty(WolfModeData.KEY).getCompoundOrEmpty(OWNER+"/24").remove("mode");
-        var wrongMode=validRoot();wrongMode.getCompoundOrEmpty(WolfModeData.KEY).getCompoundOrEmpty(OWNER+"/24").putInt("mode",0);
-        var futureMode=validRoot();futureMode.getCompoundOrEmpty(WolfModeData.KEY).getCompoundOrEmpty(OWNER+"/24").putString("mode","FUTURE_MODE_26");
-        for(var root:List.of(wrongRoot,futureSchema,absentSchema,badSchema,wrongEntry,missingMode,wrongMode,futureMode)){
-            var bytes=bytes(root);
-            assertEquals(new WolfModeData.State(WolfMode.STAND_GROUND,false),WolfModeData.read(root,OWNER,24));
-            for(var mode:WolfMode.values())assertFalse(WolfModeData.write(root,OWNER,24,mode));
-            assertArrayEquals(bytes,bytes(root),"An unsupported save must not be silently repaired or downgraded");
-            var directory=data(root);var before=bytes(directory.image());
-            assertFalse(directory.setMode(OWNER,24,WolfMode.DEFENSIVE));
-            assertEquals(new WolfModeData.State(WolfMode.STAND_GROUND,false),directory.mode(OWNER,24));
-            assertArrayEquals(before,bytes(directory.image()));
+    @Test void unknownMalformedAndOverflowStatesRemainUnchanged(){
+        var invalid=new ArrayList<CompoundTag>();
+        var wrong=new CompoundTag();wrong.putString(WolfModeData.KEY,"invalid");invalid.add(wrong);
+        var future=valid();future.getCompoundOrEmpty(WolfModeData.KEY).putInt("schema",3);invalid.add(future);
+        var missing=valid();missing.getCompoundOrEmpty(WolfModeData.KEY).remove("schema");invalid.add(missing);
+        var entry=valid();entry.getCompoundOrEmpty(WolfModeData.KEY).putInt(OWNER+"/24",7);invalid.add(entry);
+        var mode=valid();mode.getCompoundOrEmpty(WolfModeData.KEY).getCompoundOrEmpty(OWNER+"/24").putString("mode","FUTURE");invalid.add(mode);
+        var epoch=valid();epoch.getCompoundOrEmpty(WolfModeData.KEY).getCompoundOrEmpty(OWNER+"/24").putString("epoch","1");invalid.add(epoch);
+        invalid.add(legacy("FUTURE"));
+        var badLegacy=legacy("DEFENSIVE");badLegacy.getCompoundOrEmpty(WolfModeData.LEGACY).putInt("schema",2);invalid.add(badLegacy);
+        for(var root:invalid){
+            var before=root.copy();assertEquals(new WolfModeData.State(WolfMode.STAY,false),WolfModeData.read(root,OWNER,24));
+            for(var value:WolfMode.values())assertFalse(WolfModeData.write(root,OWNER,24,value));
+            assertEquals(before,root);assertEquals(before.get(WolfModeData.KEY),data(root).image().get(WolfModeData.KEY));
         }
+        var max=valid();max.getCompoundOrEmpty(WolfModeData.KEY).getCompoundOrEmpty(OWNER+"/24").putLong("epoch",Long.MAX_VALUE);
+        var before=max.copy();assertFalse(WolfModeData.write(max,OWNER,24,WolfMode.PATROL));assertEquals(before,max);
     }
-    @Test void invalidIdentityRunOrNullModeCannotCreatePersistentSelections() throws IOException {
-        var root=new CompoundTag();var before=bytes(root);
-        for(long run:new long[]{0,-1,Long.MIN_VALUE}){
-            assertEquals(new WolfModeData.State(WolfMode.STAND_GROUND,false),WolfModeData.read(root,OWNER,run));
-            assertFalse(WolfModeData.write(root,OWNER,run,WolfMode.AGGRESSIVE));
-        }
-        assertEquals(new WolfModeData.State(WolfMode.STAND_GROUND,false),WolfModeData.read(root,null,24));
-        assertFalse(WolfModeData.write(root,null,24,WolfMode.AGGRESSIVE));
-        assertFalse(WolfModeData.write(root,OWNER,24,null));
-        assertArrayEquals(before,bytes(root));
+    @Test void invalidIdentityAndRetiredSelectionsCannotWrite(){
+        var root=new CompoundTag();var before=root.copy();
+        for(long run:new long[]{0,-1,Long.MIN_VALUE})assertFalse(WolfModeData.write(root,OWNER,run,WolfMode.STAY));
+        assertFalse(WolfModeData.write(root,null,24,WolfMode.STAY));assertFalse(WolfModeData.write(root,OWNER,24,null));
+        for(var mode:WolfMode.values())if(!mode.active())assertFalse(WolfModeData.write(root,OWNER,24,mode));
+        assertEquals(before,root);
     }
-    private static CompoundTag validRoot(){
+    private static CompoundTag valid(){var root=new CompoundTag();assertTrue(WolfModeData.write(root,OWNER,24,WolfMode.STAY));return root;}
+    private static CompoundTag legacy(String mode){
         var root=new CompoundTag();var modes=new CompoundTag();var entry=new CompoundTag();
-        entry.putString("mode","DEFENSIVE");modes.putInt("schema",1);modes.put(OWNER+"/24",entry);
-        root.put(WolfModeData.KEY,modes);return root;
-    }
-    private static byte[] bytes(CompoundTag tag) throws IOException {
-        var out=new ByteArrayOutputStream();try(var data=new DataOutputStream(out)){NbtIo.write(tag,data);}
-        return out.toByteArray();
+        entry.putString("mode",mode);entry.putString("unknown","preserve");modes.putInt("schema",1);modes.put(OWNER+"/24",entry);
+        root.put(WolfModeData.LEGACY,modes);return root;
     }
 }

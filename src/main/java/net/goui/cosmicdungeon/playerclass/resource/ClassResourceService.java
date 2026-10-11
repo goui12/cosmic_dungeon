@@ -39,12 +39,8 @@ public final class ClassResourceService {
                 .filter(r->r.stateEnum()==DungeonRunState.ACTIVE&&r.containsPlayer(p.getUUID())&&!r.isCompletionExited(p.getUUID()))
                 .filter(r->!r.dungeonId().equals("dungeon_1")||!D1RunData.get(p.level().getServer()).sealed(r.runId()));
     }
-    private static Context context(ServerPlayer p){
-        if(blocked(p)||p.isSpectator()||AccessPolicy.isDeveloper(p))return null;
-        var kind=ClassResourceKind.forClass(ClassData.getClassId(p)).orElse(null);if(kind==null||kind==ClassResourceKind.BREWING_SUPPLIES)return null;
-        var run=activeRun(p).orElse(null);
-        return run==null?null:new Context(run.runId(),kind);
-    }
+    /** Both mana resources are retired; keep ledger/journal codecs for interrupted save recovery. */
+    private static Context context(ServerPlayer p){return null;}
     private static void invalid(ServerPlayer p,RuntimeException error){
         if(WARNED.add(p))com.mojang.logging.LogUtils.getLogger().error("Class resource data preserved without changes for {}",p.getUUID(),error);
         send(p,ClassResourcePayloads.View.empty());session(p).clock.clear();
