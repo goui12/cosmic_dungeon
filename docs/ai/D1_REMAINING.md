@@ -1,3 +1,27 @@
+# Current plan, 2026-10-10
+
+[1.7 Alpha / 1.8 Beta batch plan](tasks/ALPHA_1_7_BATCH_PLAN_20261010.md).
+
+**20 planned batches:19 Alphas (1.7.1 through1.7.19), then1.8.0 Beta.**
+Zero batches in this new series have started. Cameron authorized the plan/design;
+implementation awaits a start instruction. The previous15-26 controller is COMPLETE;
+do not reset/reuse its receipts or infer autonomous execution from this document.
+
+The plan covers inventory/class art/tooltips, ownership/trades, Tamsin sharing,
+run XML metrics, real potion recipes/fuel/stacking, resurrection, Bogatyr rework,
+hotkeys, the full spawner GUI, category artwork and the responsive H guide.
+Fuel retains20-operation charges with a graphic left of recipes. Both potion classes
+may craft mixed-effect drinkables, neither mixed splash; all potions are tradable.
+Batch20 audits every original request, per-batch recommendations, failed tests and TODOs.
+
+Two native wolf failures from Integration Gate38101339624 remain recorded OPEN;
+Batch1 must establish their cause and repair the baseline without weakening tests.
+The linked plan contains their exact IDs and current evidence.
+Delivery remains CurseForge then stopped TEST sFTP only; no local-client installs
+or additional post-publication hash checks. Historical rollout notes follow.
+
+---
+
 # Current rollout, 2026-10-07
 
 Batch26: final Set C integration, target **1.6.16-beta.1**, on
