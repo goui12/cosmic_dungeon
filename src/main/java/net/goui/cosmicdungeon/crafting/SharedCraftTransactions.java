@@ -44,6 +44,11 @@ public final class SharedCraftTransactions {
         ItemStack output = outputImage.getFirst();
         if (output.isEmpty() || output.getCount() > output.getMaxStackSize()
                 || outputImage.stream().skip(1).anyMatch(s -> !s.isEmpty())) throw new IllegalArgumentException("Invalid crafting output");
+        if (plan.hasFuel()) {
+            long powder = plan.owners().stream().flatMap(owner -> plan.debits(owner).stream())
+                    .filter(debit -> debit.item().equals("minecraft:blaze_powder")).mapToLong(SharedCraftPlan.Debit::count).sum();
+            if (powder < plan.fuel().getIntOr("powders", -1)) throw new IllegalArgumentException("Fuel has no physical powder debit");
+        }
         for (UUID owner : plan.owners()) {
             var before = ChopTravelRecovery.decode(registryOwner, plan.inventory(owner, false));
             for (var debit : plan.debits(owner)) {
@@ -73,13 +78,15 @@ public final class SharedCraftTransactions {
                 DungeonMetricsService.validateResources(server, new ResourceMetricsBatch(DungeonMetricsService.archive(server).worldId(),
                         plan.run(), plan.id(), plan.sequence(), plan.donationBefore(), plan.donationAfter(), plan.donated(), plan.events()));
             } catch (java.io.IOException ex) { throw new java.io.UncheckedIOException(ex); }
-            var data = SharedCraftData.get(server); data.reserve(plan);
+            var data = SharedCraftData.get(server);
+            if (!data.fuelMatches(plan)) return false;
+            data.reserve(plan);
             if (!data.flushVerified()) throw new IllegalStateException("Craft reservation not verified");
             for (var p : participants) {
                 var next = root(p).copy(); next.put(CUSTODY, plan.reservation(p.getUUID())); root(p, next);
                 if (!PlayerSaveProof.save(p)) throw new IllegalStateException("Craft owner reservation not verified");
             }
-            boolean valid = revalidate.getAsBoolean()
+            boolean valid = data.fuelMatches(plan) && revalidate.getAsBoolean()
                     && DungeonMetricsService.resourceSequence(server, plan.run()) + 1 == plan.sequence()
                     && DungeonMetricsService.donationCursor(server, plan.run()) == plan.donationBefore();
             for (var p : participants) valid &= ChopTravelRecovery.saveInventory(p).equals(plan.inventory(p.getUUID(), false));

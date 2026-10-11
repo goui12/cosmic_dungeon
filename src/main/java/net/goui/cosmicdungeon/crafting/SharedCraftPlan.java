@@ -12,9 +12,13 @@ public final class SharedCraftPlan {
     public SharedCraftPlan(CompoundTag source) {
         if (source.sizeInBytes() > 4 * 1024 * 1024) throw new IllegalArgumentException("Crafting image exceeds4MiB");
         image = source.copy();
-        if (!(image.get("schema") instanceof IntTag) || image.getIntOr("schema", 0) != 1)
+        if (!(image.get("schema") instanceof IntTag) || !Set.of(1, 2).contains(image.getIntOr("schema", 0)))
             throw new IllegalArgumentException("Unsupported shared crafting schema");
         id(); recipient();
+        if (hasFuel()) {
+            if (!(image.get("fuel") instanceof CompoundTag)) throw new IllegalArgumentException("Missing brewing fuel transition");
+            BrewingFuel.validatePlan(fuel());
+        }
         if (!(image.get("run") instanceof LongTag) || run() <= 0 || !(image.get("sequence") instanceof LongTag)
                 || sequence() <= 0 || !(image.get("at") instanceof LongTag) || at() < 0
                 || !(image.get("donation_before") instanceof LongTag) || donationBefore() < 0
@@ -57,6 +61,8 @@ public final class SharedCraftPlan {
         if (value.isBlank() || value.length() > max || value.chars().anyMatch(c -> c < 32))
             throw new IllegalArgumentException("Crafting text");
     }
+    public boolean hasFuel() { return image.getIntOr("schema", 0) == 2; }
+    public CompoundTag fuel() { return tag("fuel"); }
     public UUID id() { return UUID.fromString(image.getStringOr("id", "")); }
     public UUID recipient() { return UUID.fromString(image.getStringOr("recipient", "")); }
     public long run() { return image.getLongOr("run", 0); }
@@ -115,7 +121,7 @@ public final class SharedCraftPlan {
         result.put("owners", owners); result.putString("owner", owner.toString()); return result;
     }
     public CompoundTag receipt(UUID owner) {
-        owner(owner); var result = new CompoundTag(); result.putInt("schema", 1);
+        owner(owner); var result = new CompoundTag(); result.putInt("schema", image.getIntOr("schema", 1));
         result.putString("id", id().toString()); result.putString("owner", owner.toString()); result.putLong("run", run());
         result.putLong("sequence", sequence()); result.putBoolean("committed", committed()); return result;
     }

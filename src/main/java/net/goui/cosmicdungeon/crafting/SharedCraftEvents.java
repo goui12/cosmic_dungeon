@@ -31,5 +31,5 @@ public final class SharedCraftEvents {
     @SubscribeEvent(priority = EventPriority.LOWEST) public static void pickup(ItemEntityPickupEvent.Pre e) {
         if (e.getPlayer() instanceof ServerPlayer p && SharedCraftTransactions.blocked(p)) e.setCanPickup(TriState.FALSE);
     }
-    @SubscribeEvent public static void stop(ServerStoppedEvent e) { SharedCrafting.stopped(); SharedCraftTransactions.stopped(); }
+    @SubscribeEvent public static void stop(ServerStoppedEvent e) { SharedCrafting.stopped(); PotionCrafting.stopped(); SharedCraftTransactions.stopped(); }
 }

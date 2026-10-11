@@ -23,10 +23,12 @@ public final class SharedCrafting {
                 throw new IllegalArgumentException("Crafting requirement");
         }
     }
-    public record Recipe(String id, String skill, Set<String> classes, List<Requirement> requirements, ItemStack output) {
+    public record Recipe(String id, String skill, Set<String> classes, List<Requirement> requirements, ItemStack output, CompoundTag fuel) {
         public Recipe {
             if (id == null || id.isBlank() || id.length() > 128 || skill == null || skill.isBlank() || skill.length() > 128)
                 throw new IllegalArgumentException("Crafting recipe identity");
+            fuel = fuel == null ? null : fuel.copy();
+            if (fuel != null) BrewingFuel.validatePlan(fuel);
             classes = Set.copyOf(classes); requirements = List.copyOf(requirements); output = output.copy();
             if (classes.isEmpty() || classes.size() > 16 || requirements.isEmpty() || requirements.size() > 16
                     || requirements.stream().map(Requirement::key).distinct().count() != requirements.size()
@@ -34,6 +36,10 @@ public final class SharedCrafting {
                     || output.isEmpty() || output.getCount() > output.getMaxStackSize())
                 throw new IllegalArgumentException("Crafting recipe bounds");
         }
+        public Recipe(String id, String skill, Set<String> classes, List<Requirement> requirements, ItemStack output) {
+            this(id, skill, classes, requirements, output, null);
+        }
+        @Override public CompoundTag fuel() { return fuel == null ? null : fuel.copy(); }
         @Override public ItemStack output() { return output.copy(); }
     }
     public record Availability(int own, int shared) {}
@@ -42,7 +48,7 @@ public final class SharedCrafting {
     private SharedCrafting() {}
     public static void forget(ServerPlayer player) { CACHE.remove(player); }
     public static void stopped() { CACHE.clear(); }
-    private static NonNullList<ItemStack> inventory(ServerPlayer player, boolean fresh) {
+    static NonNullList<ItemStack> inventory(ServerPlayer player, boolean fresh) {
         int tick = player.level().getServer().getTickCount(), dirty = player.getInventory().getTimesChanged();
         var cache = CACHE.get(player);
         if (fresh || cache == null || cache.dirty() != dirty || tick - cache.tick() >= 5 || tick < cache.tick()) {
@@ -61,13 +67,16 @@ public final class SharedCrafting {
                 && !(reserved ? InventoryTransactionGuard.blockedExceptCrafting(p) : InventoryTransactionGuard.blocked(p));
     }
     private static DungeonRunRegistryData.RunRecord run(ServerPlayer p, long expected, Recipe recipe) {
-        if (!online(p) || !recipe.classes().contains(ClassData.getClassId(p))) return null;
+        return run(p, expected, recipe.classes());
+    }
+    static DungeonRunRegistryData.RunRecord run(ServerPlayer p, long expected, Set<String> classes) {
+        if (!online(p) || !classes.contains(ClassData.getClassId(p))) return null;
         var run = DungeonRunRegistryData.get(p.level().getServer()).findRunForPlayer(p.getUUID()).orElse(null);
         return run != null && run.runId() == expected && run.stateEnum() == DungeonRunState.ACTIVE
                 && run.dungeonId().equals("dungeon_1") && run.containsDimension(p.level().dimension())
                 && !run.isCompletionExited(p.getUUID()) && !D1RunData.get(p.level().getServer()).sealed(expected) ? run : null;
     }
-    private static List<ServerPlayer> participants(ServerPlayer crafter, DungeonRunRegistryData.RunRecord run) {
+    static List<ServerPlayer> participants(ServerPlayer crafter, DungeonRunRegistryData.RunRecord run) {
         var players = new ArrayList<ServerPlayer>(); players.add(crafter);
         for (UUID id : run.orderedPlayers()) {
             var donor = crafter.level().getServer().getPlayerList().getPlayer(id);
@@ -160,6 +169,7 @@ public final class SharedCrafting {
         allocation.donatedAfter().forEach((owner, rank) -> donorRanks.putLong(owner.toString(), rank)); image.put("donated", donorRanks);
         var output = NonNullList.withSize(player.getInventory().getContainerSize(), ItemStack.EMPTY); output.set(0, recipe.output());
         image.put("output", ChopTravelRecovery.encode(player, output)); image.putBoolean("committed", false); image.putBoolean("metrics_ack", false);
+        if (recipe.fuel() != null) { image.putInt("schema", 2); image.put("fuel", recipe.fuel()); }
         var plan = new SharedCraftPlan(image); SharedCraftTransactions.validateImages(player, plan); return plan;
     }
     /** Ordinary native stack limits only; cursor and special potion stacks are Batch8. */
