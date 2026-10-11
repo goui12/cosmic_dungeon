@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 
 public final class CosmicSpawnerPreset {
     private static final Logger LOGGER = LogUtils.getLogger();
-    public static final int PRESET_VERSION = 4;
+    public static final int PRESET_VERSION = 5;
     public static final int LEGACY_1_5_0_PRESET_VERSION = 2;
     public static final String LEGACY_INTRINSIC_DROPS_KEY = "intrinsicDrops";
     public static final String INTRINSIC_DROP_RULES_KEY = "intrinsicDropRules";
@@ -35,7 +35,20 @@ public final class CosmicSpawnerPreset {
         public final EquipmentSlot equipmentSlot; public final String id; Slot(EquipmentSlot s,String id){this.equipmentSlot=s;this.id=id;} public static Slot fromId(String id){for(var s:values()) if(s.id.equals(id)) return s; return null;}}
     private ResourceLocation entityTypeId = ResourceLocation.withDefaultNamespace("pig");
     private Component customName; private boolean illagerCaptainVariant;
+    private int savedVersion = PRESET_VERSION, equipmentMask = 63, dropMask = 63;
+    private net.minecraft.nbt.CompoundTag unknown = new net.minecraft.nbt.CompoundTag();
+    private net.minecraft.nbt.CompoundTag entityFlags = new net.minecraft.nbt.CompoundTag();
+    private final Map<String,net.minecraft.nbt.CompoundTag> unknownRules = new HashMap<>();
+    private static java.util.Set<String> knownKeys() {
+        var keys = new java.util.HashSet<>(java.util.Set.of("presetVersion","entityType","customName",
+                "illagerCaptainVariant","equipmentMask","dropMask","entityFlags","nameOverride","captainOverride","intrinsicDropsOverride",LEGACY_INTRINSIC_DROPS_KEY,INTRINSIC_DROP_RULES_KEY));
+        for (var slot : Slot.values()) { keys.add("eq_"+slot.id); keys.add("drop_"+slot.id); }
+        return keys;
+    }
+    public boolean entityFlag(String key, boolean fallback) { return entityFlags.getBooleanOr(key,fallback); }
+
     private final EnumMap<Slot, ItemStack> equipment = new EnumMap<>(Slot.class); private final EnumMap<Slot, Float> dropChances = new EnumMap<>(Slot.class);
+    private boolean nameOverride, captainOverride, intrinsicDropsOverride=true;
     private final Map<String, IntrinsicDropRule> intrinsicDropRules = new LinkedHashMap<>();
 
     /**
@@ -69,7 +82,7 @@ public final class CosmicSpawnerPreset {
     public ResourceLocation getDisplayEntityTypeId(){return illagerCaptainVariant ? ILLAGER_CAPTAIN_ID : entityTypeId;}
     public void setIllagerCaptainVariant(){this.entityTypeId=ResourceLocation.withDefaultNamespace("pillager"); this.illagerCaptainVariant=true;}
     public void setCustomName(Component n){this.customName=n;} public Component getCustomName(){return customName;}
-    public ItemStack getEquipment(Slot s){return equipment.get(s);} public void setEquipment(Slot s, ItemStack st){equipment.put(s,st.copy());} public float getDropChance(Slot s){return dropChances.get(s);} public void setDropChance(Slot s,float f){dropChances.put(s,Math.max(0f,Math.min(1f,f)));}
+    public ItemStack getEquipment(Slot s){return equipment.get(s);} public void setEquipment(Slot s, ItemStack st){equipment.put(s,st.copy());equipmentMask |= 1 << s.ordinal();dropMask |= 1 << s.ordinal();} public float getDropChance(Slot s){return dropChances.get(s);} public void setDropChance(Slot s,float f){dropChances.put(s,Math.max(0f,Math.min(1f,f)));dropMask |= 1 << s.ordinal();}
     public Map<ResourceLocation, Float> getIntrinsicDropChances(){
         Map<ResourceLocation, Float> chances = new HashMap<>();
         intrinsicDropRules.values().forEach(rule -> chances.putIfAbsent(rule.itemId(), rule.chance()));
@@ -82,6 +95,7 @@ public final class CosmicSpawnerPreset {
     public void setIntrinsicDropChance(ResourceLocation itemId, float chance){ upsertConfiguredIntrinsicDropRule(itemId, chance, 1, IntrinsicDropRule.Kind.UNKNOWN_CONFIGURED); }
     public IntrinsicDropRule upsertConfiguredIntrinsicDropRule(ResourceLocation itemId, float chance, int count, IntrinsicDropRule.Kind kind){
         if (itemId == null) return null;
+        intrinsicDropsOverride=true;
         int safeCount = clampCount(count);
         for (IntrinsicDropRule rule : intrinsicDropRules.values()) {
             if (rule.itemId().equals(itemId) && rule.count() == safeCount) {
@@ -94,24 +108,29 @@ public final class CosmicSpawnerPreset {
     }
     public IntrinsicDropRule addConfiguredIntrinsicDropRule(ResourceLocation itemId, float chance, int count, IntrinsicDropRule.Kind kind){
         if (itemId == null) return null;
+        intrinsicDropsOverride=true;
         String id = nextRuleId();
         IntrinsicDropRule rule = new IntrinsicDropRule(id, itemId, chance, count, kind);
         intrinsicDropRules.put(id, rule);
         return rule;
     }
     public void setConfiguredIntrinsicDropRule(ResourceLocation itemId, float chance, IntrinsicDropRule.Kind kind){ upsertConfiguredIntrinsicDropRule(itemId, chance, 1, kind); }
-    public boolean removeConfiguredIntrinsicDropRule(String ruleId){ return intrinsicDropRules.remove(ruleId) != null; }
-    public boolean adjustIntrinsicDropRuleChance(String ruleId, float delta){ IntrinsicDropRule r=intrinsicDropRules.get(ruleId); if(r==null)return false; intrinsicDropRules.put(ruleId, r.withChance(r.chance()+delta)); return true; }
-    public boolean adjustIntrinsicDropRuleCount(String ruleId, int delta){ IntrinsicDropRule r=intrinsicDropRules.get(ruleId); if(r==null)return false; intrinsicDropRules.put(ruleId, r.withCount(r.count()+delta)); return true; }
+    public boolean removeConfiguredIntrinsicDropRule(String ruleId){ boolean removed=intrinsicDropRules.remove(ruleId)!=null; if(removed)intrinsicDropsOverride=true; return removed; }
+    public boolean adjustIntrinsicDropRuleChance(String ruleId, float delta){ IntrinsicDropRule r=intrinsicDropRules.get(ruleId); if(r==null)return false; intrinsicDropsOverride=true; intrinsicDropRules.put(ruleId, r.withChance(r.chance()+delta)); return true; }
+    public boolean adjustIntrinsicDropRuleCount(String ruleId, int delta){ IntrinsicDropRule r=intrinsicDropRules.get(ruleId); if(r==null)return false; intrinsicDropsOverride=true; intrinsicDropRules.put(ruleId, r.withCount(r.count()+delta)); return true; }
     public void resetIntrinsicDropRuleToDefault(ResourceLocation itemId){ clearIntrinsicDropChance(itemId); }
-    public void clearIntrinsicDropChance(ResourceLocation itemId){ intrinsicDropRules.values().removeIf(rule -> rule.itemId().equals(itemId)); }
+    public void clearIntrinsicDropChance(ResourceLocation itemId){ intrinsicDropsOverride=true; intrinsicDropRules.values().removeIf(rule -> rule.itemId().equals(itemId)); }
     public static int clampCount(int count) { return Math.max(IntrinsicDropRule.MIN_COUNT, Math.min(IntrinsicDropRule.MAX_COUNT, count)); }
     private String nextRuleId(){ int i=1; while(intrinsicDropRules.containsKey("r"+i)) i++; return "r"+i; }
     private static String sanitizeRuleId(String id) { return id == null || id.isBlank() ? "r" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8) : id.replaceAll("[^A-Za-z0-9_-]", "_"); }
     private static float clampChance(float chance) { return Math.max(0f, Math.min(1f, chance)); }
 
     public void save(ValueOutput out){
-        out.putInt("presetVersion", PRESET_VERSION); out.putString("entityType", entityTypeId.toString());
+        SpawnerTagFields.write(unknown,out);
+        out.putBoolean("nameOverride",nameOverride);out.putBoolean("captainOverride",captainOverride);out.putBoolean("intrinsicDropsOverride",intrinsicDropsOverride);
+        out.putInt("equipmentMask",equipmentMask);out.putInt("dropMask",dropMask);
+        if (!entityFlags.isEmpty()) out.store("entityFlags",net.minecraft.nbt.CompoundTag.CODEC,entityFlags);
+        out.putInt("presetVersion", Math.max(savedVersion,PRESET_VERSION)); out.putString("entityType", entityTypeId.toString());
         if(customName!=null) out.store("customName", ComponentSerialization.flatRestrictedCodec(8192), customName);
         out.putBoolean("illagerCaptainVariant", illagerCaptainVariant);
         for (var s: Slot.values()) {
@@ -123,6 +142,7 @@ public final class CosmicSpawnerPreset {
         for (var e : intrinsicDropRules.entrySet()) {
             IntrinsicDropRule rule = e.getValue();
             var ruleOut = rules.child(e.getKey());
+            SpawnerTagFields.write(unknownRules.getOrDefault(e.getKey(),new net.minecraft.nbt.CompoundTag()),ruleOut);
             ruleOut.putString("id", rule.id());
             ruleOut.putString("item", rule.itemId().toString());
             ruleOut.putFloat("chance", rule.chance());
@@ -138,6 +158,11 @@ public final class CosmicSpawnerPreset {
         if (presetVersion < PRESET_VERSION) {
             LOGGER.info("Upgrading Cosmic Spawner preset data from version {} to {}", presetVersion, PRESET_VERSION);
         }
+        p.nameOverride=in.getBooleanOr("nameOverride",false);p.captainOverride=in.getBooleanOr("captainOverride",false);
+        p.intrinsicDropsOverride=in.getBooleanOr("intrinsicDropsOverride",true);
+        p.savedVersion=presetVersion; p.equipmentMask=in.getIntOr("equipmentMask",63)&63;p.dropMask=in.getIntOr("dropMask",63)&63;
+        p.unknown=SpawnerTagFields.unknown(in,knownKeys());
+        p.entityFlags=in.read("entityFlags",net.minecraft.nbt.CompoundTag.CODEC).orElseGet(net.minecraft.nbt.CompoundTag::new);
         ResourceLocation rl=ResourceLocation.tryParse(in.getStringOr("entityType","minecraft:pig")); if(rl!=null) p.entityTypeId=rl;
         p.customName=in.read("customName", ComponentSerialization.flatRestrictedCodec(8192)).orElse(null);
         p.illagerCaptainVariant=in.getBooleanOr("illagerCaptainVariant",false);
@@ -161,6 +186,7 @@ public final class CosmicSpawnerPreset {
                     IntrinsicDropRule.Kind kind = parseRuleKind(ruleIn.getStringOr("kind", IntrinsicDropRule.Kind.UNKNOWN_CONFIGURED.name()));
                     IntrinsicDropRule rule = new IntrinsicDropRule(ruleId, itemId, chance, count, kind);
                     preset.intrinsicDropRules.put(rule.id(), rule);
+                    preset.unknownRules.put(rule.id(),SpawnerTagFields.unknown(ruleIn,java.util.Set.of("id","item","chance","count","kind")));
                 });
             }
         } catch (NoSuchElementException ignored) {
@@ -191,16 +217,21 @@ public final class CosmicSpawnerPreset {
     }
 
     public void applyToEntity(Entity entity) {
-        CosmicSpawnerEntityIntrinsicDropData.write(entity, intrinsicDropRules);
-        if (customName != null) entity.setCustomName(customName);
+        if(intrinsicDropsOverride) CosmicSpawnerEntityIntrinsicDropData.write(entity, intrinsicDropRules);
+        if (customName != null || nameOverride) entity.setCustomName(customName);
 
         if (entity instanceof Mob mob) {
+            if(captainOverride && !illagerCaptainVariant && mob instanceof PatrollingMonster patrol) patrol.setPatrolLeader(false);
             if (illagerCaptainVariant) {
                 applyIllagerCaptainVariant(mob);
             }
 
             boolean handEquipmentChanged = false;
             for (var s : Slot.values()) {
+                if ((equipmentMask & (1 << s.ordinal())) == 0) {
+                    if ((dropMask & (1 << s.ordinal())) != 0) mob.setDropChance(s.equipmentSlot,getDropChance(s));
+                    continue;
+                }
                 ItemStack desired = equipment.get(s);
                 if (illagerCaptainVariant && s == Slot.HEAD && desired.isEmpty()) {
                     continue;
@@ -211,12 +242,20 @@ public final class CosmicSpawnerPreset {
                         handEquipmentChanged = true;
                     }
                 }
-                mob.setDropChance(s.equipmentSlot, getDropChance(s));
+                if ((dropMask & (1 << s.ordinal())) != 0) mob.setDropChance(s.equipmentSlot, getDropChance(s));
             }
 
             if (handEquipmentChanged) {
                 reassessWeaponGoalIfPresent(mob);
             }
+        }
+        if (entityFlags.contains("Silent")) entity.setSilent(entityFlags.getBooleanOr("Silent",false));
+        if (entityFlags.contains("Invulnerable")) entity.setInvulnerable(entityFlags.getBooleanOr("Invulnerable",false));
+        if (entityFlags.contains("CustomNameVisible")) entity.setCustomNameVisible(entityFlags.getBooleanOr("CustomNameVisible",false));
+        if (entity instanceof Mob mob) {
+            if (entityFlags.contains("NoAI")) mob.setNoAi(entityFlags.getBooleanOr("NoAI",false));
+            if (entityFlags.contains("PersistenceRequired"))
+                ((net.goui.cosmicdungeon.mixin.MobPersistenceAccess)mob).cosmicdungeon$persistence(entityFlags.getBooleanOr("PersistenceRequired",false));
         }
     }
 

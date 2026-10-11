@@ -95,6 +95,8 @@
     "StatsCounterAccess",
     "NaturalArmorDropsMixin",
     "ResurrectionReceiptMixin",
-    "BogatyrLoveMixin"
+    "BogatyrLoveMixin",
+    "MobPersistenceAccess",
+    "SpawnerBreakAccess"
   ]
 }

@@ -97,12 +97,6 @@ public class CosmicMobSpawnerBlock extends Block implements EntityBlock {
     }
 
     @Override
-    protected void attack(BlockState state, Level level, BlockPos pos, Player player) {
-        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)
-            net.goui.cosmicdungeon.block.entity.CosmicSpawnerFeedback.warn(serverPlayer);
-    }
-
-    @Override
     public boolean triggerEvent(BlockState state, Level level, BlockPos pos, int id, int param) {
         BlockEntity be = level.getBlockEntity(pos);
         if (be instanceof CosmicSpawnerBlockEntity cosmic) {

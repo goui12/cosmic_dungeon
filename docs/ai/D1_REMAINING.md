@@ -3,12 +3,12 @@
 [1.7 Alpha / 1.8 Beta batch plan](tasks/ALPHA_1_7_BATCH_PLAN_20261010.md).
 
 **20 planned batches:19 Alphas (1.7.1 through1.7.19), then1.8.0 Beta.**
-Batches1-11 completed. Batch11 sourcee3deffab4d718ce85d4f4b413e92310dca319262, PR256, CI38172939618 and publisher38173178048 succeeded; CurseForge9138251/helper9138231. Alpha server delivery was not required.
-Batch12 implements Feed Pack and temporary Stay breeding as1.7.12-alpha.1.
-[Batch12 report](tasks/BATCH_1_7_12_20261011.md); exact source/CI/publication facts are recorded in the controller receipt after completion.
-8 later cards (Batch13-20): active-skill hotkeys; spawner editor; equipment/enchantments; drops/presets; integration/resource review; help art; H guide; final1.8.0 Beta audit. Stop after Batch12.
+Batches1-13 completed. Batch13 source7040a9cc3d17450077a9d211a7862fa2a9bcec84, PR258, CI38180643258 and publisher38180863488 succeeded; CurseForge9140146/helper9140145.
+Batch14 implements the spawner editor foundation as1.7.14-alpha.1.
+[Batch14 report](tasks/BATCH_1_7_14_20261011.md); exact source/CI/publication facts are recorded in its controller receipt after completion.
+6 later cards (Batch15-20): equipment/enchantments; drops/presets; integration/resource review; help art; H guide; final1.8.0 Beta audit. Stop after Batch14.
 Alpha builds finish at CurseForge without server delivery or server-state checks. Only Beta and official builds receive stopped TEST sFTP. No local-client installs or extra post-publication hashes.
-Authoritative receipts: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json through batch-12.json after completion.
+Authoritative receipts: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json through batch-14.json after completion.
 The previous15–26 controller is COMPLETE; do not reset/reuse its receipts or infer autonomous execution.
 
 The plan covers inventory/class art/tooltips, ownership/trades, Tamsin sharing,

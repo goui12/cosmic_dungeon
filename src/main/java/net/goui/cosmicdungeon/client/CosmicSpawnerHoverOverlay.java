@@ -38,7 +38,7 @@ public final class CosmicSpawnerHoverOverlay {
     private CosmicSpawnerHoverOverlay() {}
 
     /**
-     * Client-only toggle for whether the developer spawner summary HUD is rendered.
+     * Server-authorized Developer spawner summary HUD.
      * Default: HIDE. Server controls this via SpawnerLabelPayload after developer checks.
      */
     public static boolean isEnabled() {
@@ -59,7 +59,9 @@ public final class CosmicSpawnerHoverOverlay {
 
         HitResult hit = mc.hitResult;
         if (!(hit instanceof BlockHitResult bhr)) return;
-        if (!(mc.level.getBlockEntity(bhr.getBlockPos()) instanceof CosmicSpawnerBlockEntity be)) return;
+        if (!(mc.level.getBlockEntity(bhr.getBlockPos()) instanceof CosmicSpawnerBlockEntity)) return;
+        CosmicSpawnerBlockEntity be = SpawnerHoverClient.view(bhr.getBlockPos());
+        if (be == null) return;
 
         Font font = mc.font;
         int maxWidth = SpawnerHudClientConfig.MAX_WIDTH.get();

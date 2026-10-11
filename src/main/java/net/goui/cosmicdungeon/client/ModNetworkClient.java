@@ -38,6 +38,12 @@ public final class ModNetworkClient {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private ModNetworkClient() {}
+    public static void onSpawnerEditor(net.goui.cosmicdungeon.network.SpawnerEditorPayloads.View payload){
+        net.goui.cosmicdungeon.client.screen.spawner.SpawnerEditorClient.receive(payload);
+    }
+    public static void onSpawnerHover(net.goui.cosmicdungeon.network.SpawnerEditorPayloads.HoverView payload){
+        SpawnerHoverClient.receive(payload);
+    }
     public static void onBogatyrActions(net.goui.cosmicdungeon.network.BogatyrPayloads.View payload){
         net.goui.cosmicdungeon.client.screen.skills.BogatyrClient.accept(payload);
     }

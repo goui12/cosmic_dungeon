@@ -50,10 +50,8 @@ public final class SpawnerCommand {
         d.register(Commands.literal("spawner").requires(Authority::isDeveloperOrConsole)
                 .executes(c -> help(c.getSource()))
                 .then(Commands.literal("help").executes(c -> help(c.getSource())))
-                .then(Commands.literal("showlabels")
-                        .executes(c -> toggleShowLabels(c.getSource()))
-                        .then(Commands.argument("enabled", BoolArgumentType.bool())
-                                .executes(c -> setShowLabels(c.getSource(), BoolArgumentType.getBool(c, "enabled")))))
+                .then(Commands.literal("edit").executes(c ->
+                        net.goui.cosmicdungeon.spawner.editor.SpawnerEditorService.open(c.getSource().getPlayerOrException())))
                 .then(Commands.literal("set").executes(c -> helpSet(c.getSource()))
                         .then(Commands.argument("entity_type", ResourceLocationArgument.id()).suggests(SpawnerCommand::suggestEntities)
                                 .executes(c -> withPreset(c.getSource(), p -> {
@@ -136,44 +134,9 @@ public final class SpawnerCommand {
 
     private static int help(CommandSourceStack src) { return syntax(src, "Spawner command guide", new String[]{
             "/spawner set <namespace:entity>", "/spawner boss [true|false]", "/spawner equip <slot> <namespace:item>", "/spawner drop <slot> <0.0-1.0>",
-            "/spawner drops", "/spawner showlabels [true|false]", "/spawner preset save <preset_name>", "/spawner preset load <preset_name>", "/spawner preset delete <preset_name>", "/spawner preset reload", "/spawner keybind <1-5> <preset_name>", "/spawner info", "/spawner reset", "/spawner help"
+            "/spawner drops", "/spawner edit", "/spawner preset save <preset_name>", "/spawner preset load <preset_name>", "/spawner preset delete <preset_name>", "/spawner preset reload", "/spawner keybind <1-5> <preset_name>", "/spawner info", "/spawner reset", "/spawner help"
     }); }
 
-    private static int toggleShowLabels(CommandSourceStack src) {
-        try {
-            var player = src.getPlayerOrException();
-            if (!Authority.isDeveloper(player)) {
-                SpawnerLabelServerState.revoke(player);
-                src.sendFailure(Component.literal("Only developers can toggle spawner labels."));
-                return 0;
-            }
-            boolean enabled = SpawnerLabelServerState.toggle(player);
-            SpawnerLabelServerState.sync(player);
-            src.sendSuccess(() -> Component.literal("Your spawner labels are now " + (enabled ? "enabled" : "disabled") + "."), false);
-            return 1;
-        } catch (Exception e) {
-            src.sendFailure(Component.literal("Failed: " + e.getMessage()));
-            return 0;
-        }
-    }
-
-    private static int setShowLabels(CommandSourceStack src, boolean enabled) {
-        try {
-            var player = src.getPlayerOrException();
-            if (!Authority.isDeveloper(player)) {
-                SpawnerLabelServerState.revoke(player);
-                src.sendFailure(Component.literal("Only developers can toggle spawner labels."));
-                return 0;
-            }
-            boolean effective = SpawnerLabelServerState.setRequested(player, enabled);
-            SpawnerLabelServerState.sync(player);
-            src.sendSuccess(() -> Component.literal("Your spawner labels are now " + (effective ? "enabled" : "disabled") + "."), false);
-            return 1;
-        } catch (Exception e) {
-            src.sendFailure(Component.literal("Failed: " + e.getMessage()));
-            return 0;
-        }
-    }
     private static int helpSet(CommandSourceStack src){ return syntax(src, "Set syntax", new String[]{"/spawner set <namespace:entity>","Tip: Use TAB to browse entities."}); }
     private static int helpName(CommandSourceStack src){ return syntax(src, "Name syntax", new String[]{"/spawner name set <display name>","/spawner name clear"}); }
     private static int helpEquip(CommandSourceStack src){ return syntax(src, "Equip syntax", new String[]{"/spawner equip <slot> <namespace:item>","/spawner equip <slot> fromhand","/spawner equip clear <slot>","/spawner equip clear all"}); }
@@ -399,7 +362,7 @@ public final class SpawnerCommand {
     private static CompletableFuture<Suggestions> suggestItems(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){return SharedSuggestionProvider.suggestResource(BuiltInRegistries.ITEM.keySet(),b);}
     private static CompletableFuture<Suggestions> suggestEnchantments(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){return SharedSuggestionProvider.suggestResource(srcRegistryEnchantments(c),b);}
     private static CompletableFuture<Suggestions> suggestSlots(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){return SharedSuggestionProvider.suggest(Arrays.stream(CosmicSpawnerPreset.Slot.values()).map(s->s.id),b);}
-    private static CompletableFuture<Suggestions> suggestRoot(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){ return SharedSuggestionProvider.suggest(Arrays.asList("help","set","name","boss","equip","enchant","drop","drops","showlabels","delay","preset","info","reset"), b); }
+    private static CompletableFuture<Suggestions> suggestRoot(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, SuggestionsBuilder b){ return SharedSuggestionProvider.suggest(Arrays.asList("help","set","name","boss","equip","enchant","drop","drops","edit","delay","preset","info","reset"), b); }
     private static void sendEquipmentInfo(CommandSourceStack src, CosmicSpawnerPreset p, CosmicSpawnerPreset.Slot slot, String title) {
         ItemStack st = p.getEquipment(slot);
         src.sendSuccess(() -> Component.literal(title + ":").withStyle(ChatFormatting.BLUE), false);

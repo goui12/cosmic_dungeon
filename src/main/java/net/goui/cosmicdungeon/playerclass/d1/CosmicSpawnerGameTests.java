@@ -33,7 +33,7 @@ import net.neoforged.neoforge.event.level.ExplosionEvent;
 /** Real shared detonation, native loot/removal and event vetoes in isolated synchronous CI fixtures. */
 public final class CosmicSpawnerGameTests {
     private CosmicSpawnerGameTests() {}
-    private static final class Fixture implements AutoCloseable {
+    static final class Fixture implements AutoCloseable {
         final GameTestHelper helper; final ServerLevel level; final Vec3 origin; final long id;
         final ServerPlayer player; final MercenaryEntity merc;
         final Map<Long,DungeonRunRegistryData.RunRecord> runs; final Map<UUID,ServerPlayer> players;
@@ -156,20 +156,38 @@ public final class CosmicSpawnerGameTests {
     }
     public static void warning(GameTestHelper helper){
         try(var f=new Fixture(helper,Long.MAX_VALUE-133)){
-            var pos=f.spawner(0,0,0);var state=f.level.getBlockState(pos);
+            var pos=f.spawner(0,1,2);var other=f.spawner(1,1,2);var state=f.level.getBlockState(pos);
             f.packets.clear();f.player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,ItemStack.EMPTY);
             state.attack(f.level,pos,f.player);state.attack(f.level,pos,f.player);
-            f.check(f.packets.stream().filter(p->p instanceof ClientboundSetTitleTextPacket).count()==1,
-                    "Repeated empty-hand attempts produce one throttled title");
+            f.check(titles(f)==0,"Single combat taps do not warn");
+            breakAction(f,pos,net.minecraft.network.protocol.game.ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK);
+            net.goui.cosmicdungeon.block.entity.CosmicSpawnerFeedback.tick(f.player);
+            f.player.tickCount+=19;net.goui.cosmicdungeon.block.entity.CosmicSpawnerFeedback.tick(f.player);
+            f.check(titles(f)==0,"No warning before 20 sustained breaking ticks");
+            breakAction(f,pos,net.minecraft.network.protocol.game.ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK);
+            breakAction(f,pos,net.minecraft.network.protocol.game.ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK);
+            net.goui.cosmicdungeon.block.entity.CosmicSpawnerFeedback.tick(f.player);
+            f.player.tickCount+=19;net.goui.cosmicdungeon.block.entity.CosmicSpawnerFeedback.tick(f.player);
+            f.check(titles(f)==0,"Release resets the full one-second window");
+            f.player.tickCount++;net.goui.cosmicdungeon.block.entity.CosmicSpawnerFeedback.tick(f.player);
+            f.check(titles(f)==1,"Sustained wrong-tool breaking warns at 20 ticks");
             var title=(ClientboundSetTitleTextPacket)f.packets.stream().filter(p->p instanceof ClientboundSetTitleTextPacket).findFirst().orElseThrow();
             f.check(title.text().getString().equals("You need a pickaxe to break that!"),"Exact requested warning");
-            f.player.tickCount+=40;f.player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,new ItemStack(Items.WOODEN_PICKAXE));
-            state.attack(f.level,pos,f.player);
-            f.check(f.packets.size()==2,"Any tagged pickaxe needs no warning");
-            f.player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,new ItemStack(Items.STICK));
-            state.attack(f.level,pos,f.player);f.check(f.packets.size()==4,"Wrong tool warns again after throttle expires");
-            f.check(f.remains(pos),"Feedback does not alter the authored spawner");
+            f.player.tickCount+=80;net.goui.cosmicdungeon.block.entity.CosmicSpawnerFeedback.tick(f.player);
+            f.check(titles(f)==1,"Holding after the title does not spam");
+            breakAction(f,other,net.minecraft.network.protocol.game.ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK);
+            net.goui.cosmicdungeon.block.entity.CosmicSpawnerFeedback.tick(f.player);
+            f.player.tickCount+=19;net.goui.cosmicdungeon.block.entity.CosmicSpawnerFeedback.tick(f.player);
+            f.check(titles(f)==1,"Retargeting restarts the window");
+            f.player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,new ItemStack(Items.WOODEN_PICKAXE));
+            f.player.tickCount+=20;net.goui.cosmicdungeon.block.entity.CosmicSpawnerFeedback.tick(f.player);
+            f.check(titles(f)==1,"Any tagged pickaxe needs no warning");
+            f.check(f.remains(pos)&&f.remains(other),"Feedback does not alter either authored spawner");
             helper.succeed();
         }
+    }
+    private static long titles(Fixture f){return f.packets.stream().filter(p->p instanceof ClientboundSetTitleTextPacket).count();}
+    private static void breakAction(Fixture f,BlockPos pos,net.minecraft.network.protocol.game.ServerboundPlayerActionPacket.Action action){
+        f.player.gameMode.handleBlockBreakAction(pos,action,net.minecraft.core.Direction.NORTH,f.level.getMaxY(),0);
     }
 }

@@ -32,7 +32,17 @@ public final class ModNetwork {
     private ModNetwork() {}
 
     public static void registerPayloadHandlers(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("30");
+        final PayloadRegistrar registrar = event.registrar("31");
+        registrar.playToServer(SpawnerEditorPayloads.Request.TYPE,SpawnerEditorPayloads.Request.STREAM_CODEC,
+                (payload,ctx)->ctx.enqueueWork(()->{if(ctx.player() instanceof ServerPlayer player)
+                    net.goui.cosmicdungeon.spawner.editor.SpawnerEditorService.request(player,payload);}));
+        registrar.playToClient(SpawnerEditorPayloads.View.TYPE,SpawnerEditorPayloads.View.STREAM_CODEC,
+                (payload,ctx)->ctx.enqueueWork(()->ClientNetworkDispatch.dispatch("onSpawnerEditor",payload)));
+        registrar.playToServer(SpawnerEditorPayloads.HoverRequest.TYPE,SpawnerEditorPayloads.HoverRequest.STREAM_CODEC,
+                (payload,ctx)->ctx.enqueueWork(()->{if(ctx.player() instanceof ServerPlayer player)
+                    net.goui.cosmicdungeon.spawner.editor.SpawnerEditorService.hover(player,payload.pos());}));
+        registrar.playToClient(SpawnerEditorPayloads.HoverView.TYPE,SpawnerEditorPayloads.HoverView.STREAM_CODEC,
+                (payload,ctx)->ctx.enqueueWork(()->ClientNetworkDispatch.dispatch("onSpawnerHover",payload)));
         registrar.playToClient(BogatyrPayloads.View.TYPE,BogatyrPayloads.View.STREAM_CODEC,
                 (payload,ctx)->ctx.enqueueWork(()->ClientNetworkDispatch.dispatch("onBogatyrActions",payload)));
         registrar.playToServer(BogatyrPayloads.ModeAction.TYPE,BogatyrPayloads.ModeAction.STREAM_CODEC,
