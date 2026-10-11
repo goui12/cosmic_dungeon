@@ -41,6 +41,14 @@ public class CosmicMobSpawnerBlock extends Block implements EntityBlock {
     }
 
     @Override
+    public void playerDestroy(Level level, Player player, BlockPos pos, BlockState state,
+            @Nullable BlockEntity blockEntity, ItemStack tool) {
+        super.playerDestroy(level, player, pos, state, blockEntity, tool);
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)
+            net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.spawner(serverPlayer);
+    }
+
+    @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         if (DEBUG) {
             LOGGER.debug("Creating CosmicSpawnerBlockEntity at {}", pos);

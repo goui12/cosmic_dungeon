@@ -58,8 +58,11 @@ final class CosmicSpawnerFireworks {
                     || !state.canEntityDestroy(level,pos,owner)) continue;
             if (NeoForge.EVENT_BUS.post(new BlockEvent.BreakEvent(level,pos,state,actor)).isCanceled()) continue;
             // Native explosion loot/removal hooks keep XP bottles and normal block-entity cleanup.
-            if (level.getBlockState(pos).equals(state))
+            if (level.getBlockState(pos).equals(state)) {
                 state.onExplosionHit(level,pos,explosion,(stack,dropPos)->Block.popResource(level,dropPos,stack));
+                if (!level.getBlockState(pos).is(ModBlocks.COSMIC_MOB_SPAWNER.get()))
+                    net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.spawner(actor);
+            }
         }
     }
 }

@@ -20,6 +20,7 @@ public final class GroupResourceConsent {
         if(run==null||run.stateEnum()!=DungeonRunState.ACTIVE
                 ||!new HashSet<>(run.orderedPlayers()).equals(new HashSet<>(party.members())))return;
         var data=D1RunData.get(server);
+        net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.party(server,run,party.id());
         for(UUID id:party.members()) {
             String choice=party.resourceSharing(id);
             if(!choice.equals("UNKNOWN"))data.setValue(run.runId(),KEY+id,choice);

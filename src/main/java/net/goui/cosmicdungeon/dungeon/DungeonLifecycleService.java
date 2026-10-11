@@ -284,6 +284,7 @@ public final class DungeonLifecycleService {
         }
         PlantFlagService.initializeRun(server, runId);
         net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(server).clearRun(runId);
+        DungeonRunRegistryData.get(server).getRun(runId).ifPresent(run -> net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.begin(server, run, true));
         if (def == DungeonDefinitions.DUNGEON_1) party.forEach(net.goui.cosmicdungeon.dungeon.d1.D1Scoreboards::resetRun);
 
         notifyDevelopers(server, Component.literal(
@@ -563,7 +564,7 @@ public final class DungeonLifecycleService {
             if(!hireAccounts.flushVerified())return;
         }
         runs.setState(runId, DungeonRunState.RESETTING, reason);
-        if (run.dungeonId().equals("dungeon_1") && !runs.flushVerified()) {
+        if (!runs.flushVerified()) {
             notifyDevelopers(server, Component.literal("[DungeonLifecycle] Reset decision needs save recovery; run and inventories retained."));
             queueReset(server, run.dungeonId(), runId, reason, run.instanceSlot(), explicitSnapshotIdOrNull, RESET_RETRY_DELAY_TICKS);
             return;
@@ -620,6 +621,10 @@ public final class DungeonLifecycleService {
                                              DungeonRunRegistryData.RunRecord run,
                                              DungeonResetReason reason) {
         if (server == null || run == null) return;
+        if (run.dungeonId().equals("dungeon_1")
+                && !net.goui.cosmicdungeon.dungeon.d1.D1WatsonRecovery.permitsCleanup(server, run.runId(), reason.name())) return;
+        if (!net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.finish(server, run,
+                net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.outcome(server, run, reason))) return;
         if (!DungeonDeathRecovery.prepare(server, run, reason)) return;
         var d1=net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(server);
         if (run.dungeonId().equals("dungeon_1")) {
@@ -747,6 +752,11 @@ public final class DungeonLifecycleService {
                 ? DungeonRunRegistryData.get(server).getRun(runId).orElse(null)
                 : null;
 
+        if (run != null && !net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.finish(server, run,
+                net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.outcome(server, run, reason))) {
+            queueReset(server, run.dungeonId(), runId, reason, run.instanceSlot(), null, RESET_RETRY_DELAY_TICKS);
+            return;
+        }
         if(run!=null&&run.dungeonId().equals("dungeon_1")
                 &&!net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrRecovery.sourceCleared(server,runId)){
             queueReset(server,run.dungeonId(),runId,reason,run.instanceSlot(),null,RESET_RETRY_DELAY_TICKS);
@@ -1063,6 +1073,9 @@ public final class DungeonLifecycleService {
                         || (net.goui.cosmicdungeon.dungeon.d1.D1WatsonRecovery.permitsCleanup(server, companionRun.runId(), pr.reason().name())
                         && DungeonRunRegistryData.get(server).flushVerified()))
                         && net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.readyForCleanup(server,companionRun.orderedPlayers());
+                repairsReady = repairsReady && DungeonRunRegistryData.get(server).flushVerified()
+                        && net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.finish(server, companionRun,
+                                net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.outcome(server, companionRun, pr.reason()));
                 if(repairsReady&&companionRun.dungeonId().equals("dungeon_1"))performMemberCleanup(server,companionRun,pr.reason());
                 if(!repairsReady||(companionRun.dungeonId().equals("dungeon_1")
                         && (net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(server).values(companionRun.runId(),"cleanup_done").isEmpty()

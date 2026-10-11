@@ -19,6 +19,7 @@ public final class DungeonLifecycleEvents {
     private DungeonLifecycleEvents() {}
     @SubscribeEvent
     public static void stopped(net.neoforged.neoforge.event.server.ServerStoppedEvent event) {
+        net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.stopped(event.getServer());
         DungeonAfkService.clear();reevaluateSoon=false;
         DungeonForfeitService.stop(event.getServer());
         net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrRecovery.clear();
@@ -27,6 +28,7 @@ public final class DungeonLifecycleEvents {
 
     @SubscribeEvent
     public static void stopping(net.neoforged.neoforge.event.server.ServerStoppingEvent event) {
+        net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.stopping(event.getServer());
         DungeonInstanceWorlds.stop(event.getServer());
     }
 
@@ -34,6 +36,7 @@ public final class DungeonLifecycleEvents {
 
     @SubscribeEvent
     public static void onServerStarted(ServerStartedEvent event) {
+        net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.resume(event.getServer());
         net.goui.cosmicdungeon.mercenary.MercenaryEntry.recoverFees(event.getServer());
         DungeonLifecycleService.recoverInstancePoolOnServerStarted(event.getServer());
     }
@@ -87,6 +90,7 @@ public final class DungeonLifecycleEvents {
         PlantFlagService.completeIfReady(server);
         DungeonAfkService.tick(server);
         if (doPeriodic) {
+            net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.tick(server);
             net.goui.cosmicdungeon.mercenary.MercenaryEntry.retryFees(server);
             net.goui.cosmicdungeon.mercenary.MercenaryRespawns.tick(server);
             DungeonForfeitService.tick(server);

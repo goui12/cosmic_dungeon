@@ -79,6 +79,8 @@ public final class DungeonInstanceGameTests {
         suite.add(id("party_resource_persistence"),net.goui.cosmicdungeon.npc.tamsin.GroupResourceConsentGameTests::persistence);
         suite.add(id("party_inspection_access"),net.goui.cosmicdungeon.npc.tamsin.PartyInspectionGameTests::access);
         suite.add(id("party_inspection_counters"),net.goui.cosmicdungeon.npc.tamsin.PartyInspectionGameTests::counters);
+        suite.add(id("metrics_attribution"),net.goui.cosmicdungeon.dungeon.metrics.RunMetricsGameTests::attribution);
+        suite.add(id("metrics_lifecycle"),net.goui.cosmicdungeon.dungeon.metrics.RunMetricsGameTests::lifecycle);
         suite.add(id("death_inventory_lifecycle"),DeathInventoryGameTests::lifecycle);
         suite.add(id("death_inventory_pickup"),DeathInventoryGameTests::pickup);
         suite.add(id("class_resource_tag_recycling"),net.goui.cosmicdungeon.playerclass.resource.ClassResourceGameTests::generatedTagsAndRecycleGuards);

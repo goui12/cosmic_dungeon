@@ -535,6 +535,7 @@ public final class DungeonRunRegistryData extends SavedData {
         if (old == null) return false;
 
         if (starting(runId)) throw new IllegalStateException("Finish startup rollback before changing its roster");
+        if (server != null) net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.begin(server, old, false);
         RunRecord updated = old.withoutPlayer(playerId);
         if (updated == old) return false;
 

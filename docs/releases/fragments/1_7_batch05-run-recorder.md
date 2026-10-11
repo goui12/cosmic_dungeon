@@ -1,0 +1,2 @@
+# Batch5: Run recorder
+Adds versioned server-local per-instance XML, per-player/server totals and last10 history, accepted D1 combat/spawner statistics, original participant identity, explicit legacy coverage and resource-event fields. Atomic active checkpoints and replayable finalization afterimages preserve archived data through reset and prevent duplicate lifetime projections. Offline rebuild streams finalized records. No SQL/Discord/scoreboard or new client UI. Shared resource transactions remain Batch6; licensed acceptance remains TESTING.
