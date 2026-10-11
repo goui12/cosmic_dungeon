@@ -91,12 +91,12 @@ public final class MercenaryResurrectionGameTests {
             f.player.setHealth(0);MercenaryResurrection.died(f.player);
             f.level(44);f.data.setCount(f.id,MercenarySkills.key(f.contract.id(),MercenarySkill.NEGATIVE_POTIONS),1225);
             f.check(f.view().seconds()==-1&&!f.view().offered(),"Positive level 9 stays locked even with Negative level 50");
-            f.check(MercenaryResurrection.status(f.player,f.run,f.contract).state().equals("LOCKED"),"Roster retains positive-level10 unlock state");
+            f.check(MercenaryResurrection.status(f.player,f.runs.get(f.id),f.contract).state().equals("LOCKED"),"Roster retains positive-level10 unlock state");
             f.level(45);
-            f.check(MercenaryResurrection.status(f.player,f.run,f.contract).ready(),"Unlocked living mercenary status is ready");
+            f.check(MercenaryResurrection.status(f.player,f.runs.get(f.id),f.contract).ready(),"Unlocked living mercenary status is ready");
             f.check(f.view().offered()&&MercenaryBrain.hirer(f.merc)==null,"Positive level 10 offers resurrection to its own dead hirer without weakening combat gate");
             f.merc.die(f.merc.damageSources().generic());
-            f.check(!f.view().offered()&&MercenaryResurrection.status(f.player,f.run,f.contract).state().equals("UNAVAILABLE"),"Dormant Theurgist cannot resurrect or appear ready");
+            f.check(!f.view().offered()&&MercenaryResurrection.status(f.player,f.runs.get(f.id),f.contract).state().equals("UNAVAILABLE"),"Dormant Theurgist cannot resurrect or appear ready");
             f.merc.resumeAfterRest();f.check(f.view().offered(),"Living Theurgist regains offer");
             f.players.remove(f.player.getUUID());f.check(!f.view().offered(),"Offline hirer cannot offer");
             f.players.put(f.player.getUUID(),f.player);
