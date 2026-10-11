@@ -6,7 +6,7 @@ The earlier 15-26 controller remains COMPLETE. Initialize a separately identifie
 
 ## Release and completion contract
 
-- Batches 1-19 each produce one Alpha: 1.7.1-alpha.1 through 1.7.19-alpha.1. Batch 20 produces 1.8.0-beta.1.
+- Batches 1-19 each produce one published Alpha. Batch1 uses1.7.1-alpha.2 because candidate1 failed native fixture tests before upload; its old tag remains immutable. Batches2-19 use1.7.2-alpha.1 through1.7.19-alpha.1. Batch20 produces1.8.0-beta.1.
 - Each card includes implementation, its relevant tests, review, full clean/native CI, a unique source tag, CurseForge runtime plus matching companion, and stopped TEST sFTP delivery. No feature is considered implemented merely because its interface appears.
 - Fix failures before publishing a card. Never reuse a published version/tag for different bytes. Beta is an audit/release batch, not a place to conceal unfinished features.
 - Preserve Java21, server authority, authored chest stacks/loadouts/renamed rockets, existing worlds/spawner IDs and unknown save data. No automated local game/GameTest/client/server launch, restart, or server.properties edits.
@@ -88,7 +88,7 @@ All cards are PLANNED. Dependencies are cumulative in the listed order; the scop
 
 | Batch | Release | Deliverable |
 |---|---|---|
-|1|1.7.1-alpha.1|Baseline wolf-test repair, global tooltip layering and hover party inspection|
+|1|1.7.1-alpha.2|Baseline wolf-test repair, global tooltip layering and hover party inspection|
 |2|1.7.2-alpha.1|Shared inventory framework, class-emblem artwork and Skills transparency|
 |3|1.7.3-alpha.1|Gear drop/pickup rules, unrestricted ordinary-item/potion trades and available balance|
 |4|1.7.4-alpha.1|Tamsin forward progression and resource-sharing consent|

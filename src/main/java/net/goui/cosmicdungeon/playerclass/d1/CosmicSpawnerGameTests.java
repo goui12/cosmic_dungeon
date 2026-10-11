@@ -44,11 +44,14 @@ public final class CosmicSpawnerGameTests {
         final io.netty.channel.embedded.EmbeddedChannel channel = new io.netty.channel.embedded.EmbeddedChannel();
         @SuppressWarnings("unchecked") Fixture(GameTestHelper helper,long id) {
             this.helper=helper;this.id=id;level=helper.getLevel();var server=level.getServer();
-            var anchor=helper.absoluteVec(new Vec3(1.5,14.5,1.5));
-            // Keep all +/-6 block offsets and native drops in the already accessible helper chunk.
-            // Block presence alone does not make a neighboring chunk's entity sections queryable.
-            var chunk=new net.minecraft.world.level.ChunkPos(BlockPos.containing(anchor));
-            origin=new Vec3(chunk.getMinBlockX()+8.5,anchor.y,chunk.getMinBlockZ()+8.5);
+            var anchor=helper.absolutePos(BlockPos.ZERO);
+            // Native GameTestInfo awaits the structure's chunks. Adding +1.5 before choosing
+            // the chunk can cross its edge, even if the fixture is then centered in that neighbor.
+            var chunk=new net.minecraft.world.level.ChunkPos(anchor);
+            check(level.areEntitiesActuallyLoadedAndTicking(chunk),
+                    "Spawner fixture starts in the native test structure's ticking chunk");
+            // All +/-6 block offsets and native drops stay inside that guaranteed-accessible chunk.
+            origin=new Vec3(chunk.getMinBlockX()+8.5,anchor.getY()+14.5,chunk.getMinBlockZ()+8.5);
             level.getEntitiesOfClass(ItemEntity.class,new net.minecraft.world.phys.AABB(origin,origin).inflate(8))
                     .forEach(item->preexistingItems.add(item.getUUID()));
             var profile=new GameProfile(UUID.randomUUID(),"SpawnerTest");
