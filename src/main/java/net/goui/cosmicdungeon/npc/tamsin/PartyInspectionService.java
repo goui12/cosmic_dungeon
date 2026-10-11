@@ -38,6 +38,13 @@ public final class PartyInspectionService {
         var readings=new ArrayList<PartyInspectionPayloads.Reading>();
         readings.add(new PartyInspectionPayloads.Reading("Group resources",GroupResourceConsent.choice(data,run.runId(),request.subject())));
         readings.add(new PartyInspectionPayloads.Reading("Run kills",Integer.toString(data.count(run.runId(),"kills:"+request.subject()))));
+        var resourceOwner=request.subject();
+        readings.add(new PartyInspectionPayloads.Reading("Shared resources used",Long.toString(
+                net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.resourceUnits(data,run.runId(),resourceOwner,"used"))));
+        readings.add(new PartyInspectionPayloads.Reading("Resources contributed",Long.toString(
+                net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.resourceUnits(data,run.runId(),resourceOwner,"contributed"))));
+        readings.add(new PartyInspectionPayloads.Reading("Own resources used",Long.toString(
+                net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.resourceUnits(data,run.runId(),resourceOwner,"own"))));
         for(String metric:List.of("damage","healing_received","deaths")) {
             String label=switch(metric){case "damage"->"Damage dealt to hostiles (HP)";case "healing_received"->"Healing received (HP)";default->"Run deaths";};
             readings.add(new PartyInspectionPayloads.Reading(label,String.format(Locale.ROOT,"%.1f",

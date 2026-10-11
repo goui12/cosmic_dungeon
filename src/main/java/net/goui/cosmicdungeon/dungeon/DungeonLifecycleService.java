@@ -623,6 +623,7 @@ public final class DungeonLifecycleService {
         if (server == null || run == null) return;
         if (run.dungeonId().equals("dungeon_1")
                 && !net.goui.cosmicdungeon.dungeon.d1.D1WatsonRecovery.permitsCleanup(server, run.runId(), reason.name())) return;
+        if (!net.goui.cosmicdungeon.crafting.SharedCraftTransactions.readyForCleanup(server, run.orderedPlayers())) return;
         if (!net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.finish(server, run,
                 net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.outcome(server, run, reason))) return;
         if (!DungeonDeathRecovery.prepare(server, run, reason)) return;
@@ -752,6 +753,10 @@ public final class DungeonLifecycleService {
                 ? DungeonRunRegistryData.get(server).getRun(runId).orElse(null)
                 : null;
 
+        if (run != null && !net.goui.cosmicdungeon.crafting.SharedCraftTransactions.readyForCleanup(server, run.orderedPlayers())) {
+            queueReset(server, run.dungeonId(), runId, reason, run.instanceSlot(), null, RESET_RETRY_DELAY_TICKS);
+            return;
+        }
         if (run != null && !net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.finish(server, run,
                 net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.outcome(server, run, reason))) {
             queueReset(server, run.dungeonId(), runId, reason, run.instanceSlot(), null, RESET_RETRY_DELAY_TICKS);

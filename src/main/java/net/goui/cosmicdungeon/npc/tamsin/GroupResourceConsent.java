@@ -54,8 +54,13 @@ public final class GroupResourceConsent {
     }
     /** Live execution guard, never a cached authorization; distance within the run is irrelevant. */
     public static boolean canContribute(ServerPlayer requester,ServerPlayer donor,long expectedRun) {
-        var run=active(requester);var donorRun=active(donor);
+        var run=active(requester);
+        var donorRun=online(donor)?DungeonRunRegistryData.get(donor.level().getServer()).findRunForPlayer(donor.getUUID()).orElse(null):null;
         return run!=null&&donorRun!=null&&run.runId()==expectedRun&&donorRun.runId()==expectedRun
+                &&donorRun.stateEnum()==DungeonRunState.ACTIVE&&!donorRun.isCompletionExited(donor.getUUID())
+                &&!D1RunData.get(donor.level().getServer()).sealed(expectedRun)
+                &&!net.goui.cosmicdungeon.auth.AccessPolicy.isDeveloper(requester)
+                &&!net.goui.cosmicdungeon.auth.AccessPolicy.isDeveloper(donor)
                 &&requester.level().getServer()==donor.level().getServer()
                 &&requester.isAlive()&&!requester.isSpectator()&&donor.isAlive()&&!donor.isSpectator()
                 &&!requester.getUUID().equals(donor.getUUID())

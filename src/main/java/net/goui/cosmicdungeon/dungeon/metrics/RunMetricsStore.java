@@ -159,7 +159,50 @@ public final class RunMetricsStore {
                 if (!name.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.xml")) continue;
                 var run = decodeRun(readBytes(entry, MAX_XML_BYTES)); identity(run);
                 if (!name.equals(run.instanceId() + ".xml")) throw new IOException("Mismatched canonical instance filename");
-                if (run.finalized()) output.finish(run);
+                if (run.finalized()) { output.finish(run); copyResourceHistory(run, output); }
+            }
+        }
+    }
+    /** Idempotent immutable transaction segments, independent of active/final aggregate snapshots. */
+    public synchronized void writeResources(ResourceMetricsBatch batch) throws IOException {
+        recover();
+        if (!worldId.equals(batch.worldId())) throw new IOException("Foreign resource world");
+        String relative = "resources/" + RunMetrics.instanceId(worldId, batch.runId()) + "/" + batch.transaction() + ".xml";
+        Path file = directory.resolve(relative); byte[] encoded = ResourceMetricsXml.encode(batch);
+        if (Files.exists(file)) {
+            if (!ResourceMetricsXml.decode(readBytes(file, ResourceMetricsXml.MAX_BYTES)).equals(batch))
+                throw new IOException("Conflicting resource segment; original retained");
+        } else atomic(relative, encoded);
+    }
+    public synchronized ResourceMetricsState readResourceState(long run) throws IOException {
+        recover();
+        Path path = directory.resolve("resource-state/" + RunMetrics.instanceId(worldId, run) + ".xml");
+        if (!Files.exists(path)) return ResourceMetricsState.empty(worldId, run);
+        var state = ResourceMetricsStateXml.decode(readBytes(path, ResourceMetricsStateXml.MAX_BYTES));
+        if (!worldId.equals(state.worldId()) || state.runId() != run) throw new IOException("Resource state identity differs");
+        return state;
+    }
+    /** Forced atomic afterimage is authoritative before any in-memory/SavedData counters change. */
+    public synchronized ResourceMetricsState commitResources(ResourceMetricsBatch batch) throws IOException {
+        var previous = readResourceState(batch.runId()); var next = previous.apply(batch);
+        writeResources(batch);
+        if (!next.equals(previous))
+            atomic("resource-state/" + RunMetrics.instanceId(worldId, batch.runId()) + ".xml", ResourceMetricsStateXml.encode(next));
+        return next;
+    }
+    private void copyResourceHistory(RunMetrics run, RunMetricsStore output) throws IOException {
+        var state = readResourceState(run.runId());
+        if (state.sequence() > 0)
+            output.atomic("resource-state/" + run.instanceId() + ".xml", ResourceMetricsStateXml.encode(state));
+        Path resources = directory.resolve("resources/" + run.instanceId());
+        if (!Files.exists(resources)) return;
+        try (var files = Files.newDirectoryStream(resources, "*.xml")) {
+            for (var file : files) {
+                var batch = ResourceMetricsXml.decode(readBytes(file, ResourceMetricsXml.MAX_BYTES));
+                if (!batch.worldId().equals(worldId) || batch.runId() != run.runId()
+                        || !file.getFileName().toString().equals(batch.transaction() + ".xml"))
+                    throw new IOException("Resource segment archive identity differs");
+                output.writeResources(batch);
             }
         }
     }

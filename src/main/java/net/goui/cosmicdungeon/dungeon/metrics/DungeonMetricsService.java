@@ -16,6 +16,7 @@ public final class DungeonMetricsService {
     private static final Map<MinecraftServer, Context> CONTEXTS = new WeakHashMap<>();
     private static final class Context {
         RunMetricsStore store; long lastWarning; int cursor;
+        final Map<Long, ResourceMetricsState> resources = new HashMap<>();
     }
     private DungeonMetricsService() {}
     private static Context context(MinecraftServer server) { return CONTEXTS.computeIfAbsent(server, ignored -> new Context()); }
@@ -27,13 +28,72 @@ public final class DungeonMetricsService {
     private static String value(D1RunData d, long run, String key, String fallback) {
         var list = d.values(run, KEY + key); return list.isEmpty() ? fallback : list.getFirst();
     }
+    private static long scalar(D1RunData data, long run, String key) {
+        var values = data.values(run, KEY + key);
+        if (values.isEmpty()) return 0;
+        if (values.size() != 1) throw new IllegalStateException("Resource scalar shape");
+        long result = Long.parseLong(values.getFirst());
+        if (result < 0) throw new IllegalStateException("Negative resource scalar"); return result;
+    }
+    private static ResourceMetricsState resourceState(MinecraftServer server, long run) throws IOException {
+        var c = context(server); var state = c.resources.get(run);
+        if (state == null) {
+            state = archive(server).readResourceState(run);
+            var data = D1RunData.get(server);
+            if (scalar(data, run, "resource_sequence") > state.sequence())
+                throw new IOException("Resource afterimage behind SavedData; retained for repair");
+            if (state.sequence() == 0 && (!data.metricCounts(run, KEY + "used:").isEmpty()
+                    || !data.metricCounts(run, KEY + "contributed:").isEmpty()
+                    || !data.metricCounts(run, KEY + "own:").isEmpty()))
+                throw new IOException("Missing resource afterimage; retained for repair");
+            projectResources(data, state); c.resources.put(run, state);
+        }
+        return state;
+    }
+    private static ResourceMetricsState resources(MinecraftServer server, long run) {
+        try { return resourceState(server, run); } catch (IOException ex) { throw new UncheckedIOException(ex); }
+    }
+    public static long resourceSequence(MinecraftServer server, long run) { return resources(server, run).sequence(); }
+    public static long donationCursor(MinecraftServer server, long run) { return resources(server, run).cursor(); }
+    public static long donationRank(MinecraftServer server, long run, UUID owner) {
+        return resources(server, run).donated().getOrDefault(owner, 0L);
+    }
+    public static long resourceUnits(D1RunData data, long run, UUID owner, String kind) {
+        if (!Set.of("own", "used", "contributed").contains(kind)) throw new IllegalArgumentException("Resource metric kind");
+        return data.metricCounts(run, KEY + kind + ":" + owner + ":").values().stream().mapToLong(Long::longValue).sum();
+    }
+    /** Validate counter/schema capacity before committing any owner inventory. */
+    public static void validateResources(MinecraftServer server, ResourceMetricsBatch batch) throws IOException {
+        var finalRun = archive(server).read(batch.runId());
+        if (finalRun != null && finalRun.finalized()) throw new IOException("Finalized run cannot receive a craft");
+        resourceState(server, batch.runId()).apply(batch);
+    }
+    public static void recordResources(MinecraftServer server, ResourceMetricsBatch batch) throws IOException {
+        var store = archive(server); var next = store.commitResources(batch);
+        var data = D1RunData.get(server); projectResources(data, next);
+        context(server).resources.put(batch.runId(), next);
+        if (!data.flushVerified()) throw new IOException("Resource SavedData projection not verified");
+    }
+    private static void projectResources(D1RunData data, ResourceMetricsState state) {
+        long run = state.runId();
+        state.members().forEach((owner, member) -> {
+            data.setCount(run, KEY + "resources:" + owner, Math.toIntExact(member.events()));
+            member.own().forEach((item, count) -> data.setCount(run, KEY + "own:" + owner + ":" + item, Math.toIntExact(count)));
+            member.used().forEach((item, count) -> data.setCount(run, KEY + "used:" + owner + ":" + item, Math.toIntExact(count)));
+            member.contributed().forEach((item, count) -> data.setCount(run, KEY + "contributed:" + owner + ":" + item, Math.toIntExact(count)));
+        });
+        data.setValue(run, KEY + "resource_sequence", Long.toString(state.sequence()));
+        data.setValue(run, KEY + "resource_transaction", state.transaction() == null ? "" : state.transaction().toString());
+        data.setValue(run, KEY + "donation_cursor", Long.toString(state.cursor()));
+        state.donated().forEach((owner, rank) -> data.setValue(run, KEY + "donated:" + owner, Long.toString(rank)));
+    }
     private static String className(ServerPlayer player) {
         String name = ClassData.getClassId(player);
         return name == null || name.isBlank() || name.length() > 64 || name.chars().anyMatch(c -> c < 32)
                 ? "unknown" : name;
     }
     public static void begin(MinecraftServer server, DungeonRunRegistryData.RunRecord run, boolean fresh) {
-        var d = D1RunData.get(server); long id = run.runId();
+        var d = D1RunData.get(server); long id = run.runId(); resources(server, id);
         if (d.values(id, KEY + "coverage").isEmpty())
             d.setValue(id, KEY + "coverage", fresh && run.dungeonId().equals("dungeon_1") ? "COMPLETE" : "PARTIAL_LEGACY");
         for (UUID owner : run.orderedPlayers()) {
@@ -96,7 +156,7 @@ public final class DungeonMetricsService {
                     UUID.nameUUIDFromBytes(("party:" + store.worldId() + ":" + id).getBytes(StandardCharsets.UTF_8)).toString()));
             return new RunMetrics(store.worldId(), id, party, run.dungeonId(), run.difficulty().tier(),
                     run.startedAtEpochMillis(), now, outcome.equals("ACTIVE") ? 0 : now, outcome,
-                    value(d, id, "coverage", "PARTIAL_LEGACY"), members);
+                    value(d, id, "coverage", "PARTIAL_LEGACY"), members, resourceState(server, id).recent());
         } catch (IOException ex) { throw new UncheckedIOException(ex); }
     }
     public static void checkpoint(MinecraftServer server, DungeonRunRegistryData.RunRecord run) {
@@ -124,6 +184,7 @@ public final class DungeonMetricsService {
                 var saved = archive(server).read(run.runId());
                 if (saved != null && saved.finalized()) continue;
                 var d = D1RunData.get(server);
+                resourceState(server, run.runId());
                 if (saved != null) {
                     d.setValue(run.runId(), KEY + "coverage", saved.coverage());
                     d.setValue(run.runId(), KEY + "party", saved.partyId().toString());
@@ -133,10 +194,7 @@ public final class DungeonMetricsService {
                         d.setValue(run.runId(), KEY + "class:" + m.id(), m.classId());
                         floor(d, run.runId(), "kills:" + m.id(), m.stats().kills());
                         floor(d, run.runId(), KEY + "spawners:" + m.id(), m.stats().spawners());
-                        floor(d, run.runId(), KEY + "resources:" + m.id(), m.stats().resourceEvents());
                         restoreMap(d, run.runId(), KEY + "mob:" + m.id() + ":", m.stats().mobs());
-                        restoreMap(d, run.runId(), KEY + "used:" + m.id() + ":", m.stats().used());
-                        restoreMap(d, run.runId(), KEY + "contributed:" + m.id() + ":", m.stats().contributed());
                         restoreValue(d, run.runId(), m.id(), "damage", m.stats().damage());
                         restoreValue(d, run.runId(), m.id(), "healing_received", m.stats().healing());
                         restoreValue(d, run.runId(), m.id(), "deaths", m.stats().deaths());
@@ -160,6 +218,7 @@ public final class DungeonMetricsService {
         if (server.overworld().getGameTime() % 100 != 0) return;
         var active = DungeonRunRegistryData.get(server).listAllRuns().stream()
                 .filter(r -> r.stateEnum() == DungeonRunState.ACTIVE).toList();
+        context(server).resources.keySet().retainAll(DungeonRunRegistryData.get(server).listAllRuns().stream().map(DungeonRunRegistryData.RunRecord::runId).toList());
         if (!active.isEmpty()) checkpoint(server, active.get(Math.floorMod(context(server).cursor++, active.size())));
     }
     public static void stopping(MinecraftServer server) {

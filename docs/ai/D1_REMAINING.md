@@ -3,14 +3,11 @@
 [1.7 Alpha / 1.8 Beta batch plan](tasks/ALPHA_1_7_BATCH_PLAN_20261010.md).
 
 **20 planned batches:19 Alphas (1.7.1 through1.7.19), then1.8.0 Beta.**
-Batch1 published1.7.1-alpha.2 (PR246; CI38110117751; release38110321123; CurseForge9125456/helper9125454). TEST delivery is pending: current server startup followed by empty-server pause does not establish shutdown.
-Batch2 published1.7.2-alpha.1 (PR247; CI38111900746; release38112081876; CurseForge9125610/helper9125609); TEST remained running, delivery pending.
-Batch3 published1.7.3-alpha.1 (PR248; CI38113479812; release38113666453; CurseForge9125762/helper9125761); TEST remained running, delivery pending.
-Batch4 published1.7.4-alpha.1 (PR249; CI38115728233; release38115934621; CurseForge9125949/helper9125947); TEST remained running, delivery pending.
-Batch5 implements the run recorder under Cameron's explicit "proceed to batch5" instruction.
-[Batch1 report](tasks/BATCH_1_7_01_20261011.md) | [Batch2 report](tasks/BATCH_1_7_02_20261011.md) | [Batch3 report](tasks/BATCH_1_7_03_20261011.md) | [Batch4 report](tasks/BATCH_1_7_04_20261011.md) | [Batch5 report](tasks/BATCH_1_7_05_20261011.md).
-15 later cards (Batch6–20) remain PLANNED; stop after Batch5.
-Authoritative exact results: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json through batch-05.json.
+Batches1-5 published; cumulative1.7.5-alpha.1 (PR250; CI38117960446; release38118116879; CurseForge9126094/helper9126092) was deployed to freshly stopped TEST via sFTP. This supersedes earlier1-4 pending delivery; TEST left stopped.
+Batch6 implements shared-resource transaction infrastructure under Cameron's explicit "proceed with batch6" instruction.
+[Batch1 report](tasks/BATCH_1_7_01_20261011.md) | [Batch2 report](tasks/BATCH_1_7_02_20261011.md) | [Batch3 report](tasks/BATCH_1_7_03_20261011.md) | [Batch4 report](tasks/BATCH_1_7_04_20261011.md) | [Batch5 report](tasks/BATCH_1_7_05_20261011.md) | [Batch6 report](tasks/BATCH_1_7_06_20261011.md).
+14 later cards (Batch7-20) remain PLANNED; stop after Batch6.
+Authoritative exact results: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json through batch-06.json.
 The previous15–26 controller is COMPLETE; do not reset/reuse its receipts or infer autonomous execution.
 
 The plan covers inventory/class art/tooltips, ownership/trades, Tamsin sharing,
