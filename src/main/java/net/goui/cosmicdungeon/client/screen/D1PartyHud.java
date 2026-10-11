@@ -33,7 +33,7 @@ public final class D1PartyHud {
     public static PartyPayloads.Mercenary resurrectionOffer(){
         return view==null?null:view.mercenaries().stream().filter(row->row.resurrection().offered()).findFirst().orElse(null);
     }
-    private static void clear() { lobbyScroll.reset(); PartyHealthHud.reset(); view = null; inventory = null; ready = leave = join = revive = null; }
+    private static void clear() { PartyInspectionHover.clear(); lobbyScroll.reset(); PartyHealthHud.reset(); view = null; inventory = null; ready = leave = join = revive = null; }
     @SubscribeEvent public static void login(ClientPlayerNetworkEvent.LoggingIn event) { clear(); }
     @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { clear(); }
     private static boolean inventory(Screen screen) {
@@ -100,6 +100,7 @@ public final class D1PartyHud {
     @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
         if (inventory != Minecraft.getInstance().screen) { lobbyScroll.release(); PartyHealthHud.release(); inventory = null; ready = leave = join = revive = null; }
         else updateControls();
+        PartyInspectionHover.tick();
     }
     private static PartyPayloads.Mercenary ownRevival(){
         return view==null?null:view.mercenaries().stream().filter(h->h.recovery().own()&&h.status().equals("RESPAWNING")).findFirst().orElse(null);
@@ -145,9 +146,13 @@ public final class D1PartyHud {
         if (!visible() || mc.screen != null || mc.options.hideGui || mc.getDebugOverlay().showDebugScreen()) return;
         draw(event.getGuiGraphics(), -1, -1);
     }
+    public static boolean dragging() { return lobbyScroll.captured() || PartyHealthHud.dragging(); }
     @SubscribeEvent public static void beforeScreen(ScreenEvent.Render.Pre event) {
         if (!inventory(event.getScreen()) || ready==null) return;
         updateControls();
+        var member=activeHealth() && input(event.getScreen(),event.getMouseX(),event.getMouseY()) && !dragging()
+                ? PartyHealthHud.memberAt(view,healthLayout(),event.getMouseX(),event.getMouseY()) : null;
+        PartyInspectionHover.select(event.getScreen(),activeHealth()?view.state().revision():0,member);
         leave.setTooltip(Tooltip.create(Component.literal("Leave Group (leaders disband their group)")));
         join.setTooltip(Tooltip.create(Component.literal("Join the inviting group for Dungeon 1")));
         if (SkillsPanelClient.ownsInput(event.getScreen(),event.getMouseX(),event.getMouseY()))

@@ -84,6 +84,7 @@ public final class ModNetworkClient {
     }
     public static void onPartyInspection(net.goui.cosmicdungeon.network.PartyInspectionPayloads.View payload) {
         net.goui.cosmicdungeon.client.screen.PartyInspectionScreen.receive(payload);
+        net.goui.cosmicdungeon.client.screen.PartyInspectionHover.receive(payload);
     }
     public static void onD1PartyView(net.goui.cosmicdungeon.network.PartyPayloads.View payload) {
         if (payload.containerId() == -1) net.goui.cosmicdungeon.client.screen.D1PartyHud.receive(payload);

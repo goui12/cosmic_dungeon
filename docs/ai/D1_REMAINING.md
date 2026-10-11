@@ -3,8 +3,10 @@
 [1.7 Alpha / 1.8 Beta batch plan](tasks/ALPHA_1_7_BATCH_PLAN_20261010.md).
 
 **20 planned batches:19 Alphas (1.7.1 through1.7.19), then1.8.0 Beta.**
-Zero batches in this new series have started. Cameron authorized the plan/design;
-implementation awaits a start instruction. The previous15-26 controller is COMPLETE;
+Batch1 implementation is ready under Cameron's explicit single-batch start instruction.
+Implementation and evidence: [Batch1 report](tasks/BATCH_1_7_01_20261011.md).
+19 later cards (Batch2–20) remain PLANNED; this request does not authorize their execution.
+Authoritative build/release/TEST completion: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json. The previous15-26 controller is COMPLETE;
 do not reset/reuse its receipts or infer autonomous execution from this document.
 
 The plan covers inventory/class art/tooltips, ownership/trades, Tamsin sharing,
@@ -14,8 +16,8 @@ Fuel retains20-operation charges with a graphic left of recipes. Both potion cla
 may craft mixed-effect drinkables, neither mixed splash; all potions are tradable.
 Batch20 audits every original request, per-batch recommendations, failed tests and TODOs.
 
-Two native wolf failures from Integration Gate38101339624 remain recorded OPEN;
-Batch1 must establish their cause and repair the baseline without weakening tests.
+Two native wolf failures from Integration Gate38101339624 are retained in the Batch1 report;
+fixture visibility/rain causes are addressed; fresh native CI evidence is retained in the exact-source completion receipt.
 The linked plan contains their exact IDs and current evidence.
 Delivery remains CurseForge then stopped TEST sFTP only; no local-client installs
 or additional post-publication hash checks. Historical rollout notes follow.

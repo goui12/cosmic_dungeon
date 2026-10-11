@@ -1,7 +1,7 @@
 # Cosmic Dungeon 1.7 Alpha series and 1.8 Beta plan
 
 Approved design baseline: Cameron's October 10, 2026 requests and clarifications, through 20:09 PDT.
-Status: PLANNED; 0 of 20 batches implemented in this series. Creating this plan does not start execution.
+Status: Batch1 IN PROGRESS following Cameron's explicit start instruction; Batch2–20 remain PLANNED. See BATCH_1_7_01_20261011.md for implementation and evidence.
 The earlier 15-26 controller remains COMPLETE. Initialize a separately identified 1.7 series only after an implementation/start instruction; archive old receipts and never reuse their batch IDs as new evidence.
 
 ## Release and completion contract

@@ -2,6 +2,7 @@ package net.goui.cosmicdungeon.mercenary;
 
 import java.util.*;
 import net.goui.cosmicdungeon.entity.ModEntities;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
@@ -13,7 +14,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.*;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.alchemy.*;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.*;
 
 /** Real native damage/projectile/splash/cloud paths; no player connection or client launch. */
@@ -21,6 +25,28 @@ public final class AlliedWolfGameTests {
     private AlliedWolfGameTests() {}
     private static void check(GameTestHelper helper, boolean value, String message) {
         helper.assertTrue(value, Component.literal(message));
+    }
+    private static Vec3 fixturePosition(GameTestHelper helper) {
+        // Native GameTestInfo waits for the structure's chunks, not arbitrary relative offsets.
+        // The one-block empty template can end at a chunk edge; +1.5 can cross into a hidden section.
+        var origin=helper.absolutePos(BlockPos.ZERO);var chunk=new ChunkPos(origin);
+        check(helper,helper.getLevel().areEntitiesActuallyLoadedAndTicking(chunk),
+                "Fixture starts in the native test structure's ticking chunk");
+        return new Vec3(chunk.getMinBlockX()+8.5,origin.getY()+10,chunk.getMinBlockZ()+8.5);
+    }
+    private static void assertQueryable(GameTestHelper helper,Wolf wolf) {
+        check(helper,helper.getLevel().getEntitiesOfClass(Wolf.class,wolf.getBoundingBox()).contains(wolf),
+                "Owned wolf is discoverable by the native projectile/potion spatial query");
+    }
+    private static void shelterArrowPath(GameTestHelper helper,Vec3 target,Map<BlockPos,BlockState> previous) {
+        // AbstractArrow.tick extinguishes flaming arrows in rain. A local roof controls that
+        // unrelated variable without changing global weather or bypassing native arrow behavior.
+        var level=helper.getLevel();var center=BlockPos.containing(target).above(2);
+        for(int x=-3;x<=3;x++)for(int z=-1;z<=1;z++) {
+            var pos=center.offset(x,0,z);var state=level.getBlockState(pos);
+            check(helper,state.isAir(),"Temporary arrow shelter starts in empty fixture space");
+            previous.put(pos,state);level.setBlockAndUpdate(pos,Blocks.STONE.defaultBlockState());
+        }
     }
     private static Wolf playerWolf(ServerLevel level, Player owner) {
         var wolf = new Wolf(EntityType.WOLF, level);
@@ -81,21 +107,31 @@ public final class AlliedWolfGameTests {
     }
     public static void projectiles(GameTestHelper helper) {
         var level=helper.getLevel();var owner=helper.makeMockPlayer(GameType.SURVIVAL);
-        var wolf=playerWolf(level,owner);var pos=helper.absoluteVec(new Vec3(1.5,6,1.5));
+        var wolf=playerWolf(level,owner);var pos=fixturePosition(helper);
         wolf.setPos(pos);var hostile=EntityType.SKELETON.create(level,EntitySpawnReason.COMMAND);
         check(helper,hostile!=null,"Native ranged hostile exists");
         var friendly=arrow(level,owner,pos);var enemy=arrow(level,hostile,pos);
+        var roof=new LinkedHashMap<BlockPos,BlockState>();
         try {
+            shelterArrowPath(helper,pos,roof);
+            check(helper,!friendly.isInWaterOrRain()&&!enemy.isInWaterOrRain(),
+                    "Native flaming-arrow path is dry and sheltered");
             check(helper,level.addFreshEntity(wolf),"Owned wolf joined native test world");
+            assertQueryable(helper,wolf);
             check(helper,MercenaryBrain.friendlySource(friendly),"Arrow resolves its real allied owner");
             float hp=wolf.getHealth();friendly.tick();
-            check(helper,wolf.getHealth()==hp&&!wolf.isOnFire()&&!wolf.hasEffect(MobEffects.POISON),
-                    "Actual flaming tipped-arrow tick cannot wound, ignite or poison allied wolf");
+            check(helper,wolf.getHealth()==hp,"Actual allied flaming tipped-arrow tick cannot wound wolf");
+            check(helper,!wolf.isOnFire(),"Actual allied flaming tipped-arrow tick cannot ignite wolf");
+            check(helper,!wolf.hasEffect(MobEffects.POISON),"Actual allied tipped-arrow tick cannot poison wolf");
             check(helper,!friendly.isRemoved(),"Friendly impact does not delete recoverable ammunition");
             enemy.tick();
-            check(helper,wolf.getHealth()<hp&&wolf.isOnFire()&&wolf.hasEffect(MobEffects.POISON),
-                    "Hostile flaming tipped-arrow tick still wounds and applies side effects");
-        } finally { wolf.discard();friendly.discard();enemy.discard(); }
+            check(helper,wolf.getHealth()<hp,"Hostile native arrow collision still wounds wolf");
+            check(helper,wolf.isOnFire(),"Hostile flaming arrow still ignites wolf");
+            check(helper,wolf.hasEffect(MobEffects.POISON),"Hostile tipped arrow still applies poison");
+        } finally {
+            wolf.discard();friendly.discard();enemy.discard();
+            roof.forEach((block,state)->level.setBlockAndUpdate(block,state));
+        }
         helper.succeed();
     }
     private static void splash(ServerLevel level, LivingEntity caster, Wolf target,
@@ -116,11 +152,12 @@ public final class AlliedWolfGameTests {
     }
     public static void potions(GameTestHelper helper) {
         var level=helper.getLevel();var owner=helper.makeMockPlayer(GameType.SURVIVAL);
-        var wolf=playerWolf(level,owner);wolf.setPos(helper.absoluteVec(new Vec3(1.5,6,1.5)));
+        var wolf=playerWolf(level,owner);wolf.setPos(fixturePosition(helper));
         var hostile=EntityType.WITCH.create(level,EntitySpawnReason.COMMAND);
         check(helper,hostile!=null,"Native hostile potion caster exists");
         try {
             check(helper,level.addFreshEntity(wolf),"Potion target joined native world");
+            assertQueryable(helper,wolf);
             float hp=wolf.getHealth();
             splash(level,owner,wolf,Potions.HARMING);splash(level,owner,wolf,Potions.POISON);
             cloud(level,owner,wolf,Potions.HARMING);cloud(level,owner,wolf,Potions.POISON);
@@ -129,13 +166,15 @@ public final class AlliedWolfGameTests {
             check(helper,!wolf.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,200),owner),
                     "Direct allied harmful effects are rejected");
             wolf.setHealth(wolf.getMaxHealth()-8);hp=wolf.getHealth();
-            splash(level,owner,wolf,Potions.HEALING);cloud(level,owner,wolf,Potions.REGENERATION);
-            check(helper,wolf.getHealth()>hp&&wolf.hasEffect(MobEffects.REGENERATION),
-                    "Native allied healing and beneficial lingering effects still apply");
+            splash(level,owner,wolf,Potions.HEALING);
+            check(helper,wolf.getHealth()>hp,"Native allied healing splash still heals wolf");
+            cloud(level,owner,wolf,Potions.REGENERATION);
+            check(helper,wolf.hasEffect(MobEffects.REGENERATION),"Native allied beneficial cloud still applies regeneration");
             wolf.removeAllEffects();wolf.invulnerableTime=0;hp=wolf.getHealth();
-            splash(level,hostile,wolf,Potions.HARMING);cloud(level,hostile,wolf,Potions.POISON);
-            check(helper,wolf.getHealth()<hp&&wolf.hasEffect(MobEffects.POISON),
-                    "Hostile native splash harm and lingering poison remain effective");
+            splash(level,hostile,wolf,Potions.HARMING);
+            check(helper,wolf.getHealth()<hp,"Hostile native splash harm remains effective");
+            cloud(level,hostile,wolf,Potions.POISON);
+            check(helper,wolf.hasEffect(MobEffects.POISON),"Hostile native lingering poison remains effective");
         } finally { wolf.discard(); }
         helper.succeed();
     }

@@ -58,6 +58,10 @@ public final class SkillsPanelClient {
         if(!model.classId().equals(id))throw new IllegalStateException("Skills provider changed class identity");
         state.actions(model.actions().size());return true;
     }
+    public static boolean suppressesTooltips(Screen candidate){
+        return inventory(candidate) && (carrying() || screen==candidate && state!=null && state.captured()
+                || SupplyRequestsClient.captured());
+    }
     private static boolean carrying(){
         var player=Minecraft.getInstance().player;
         return player==null||!player.containerMenu.getCarried().isEmpty();
@@ -96,6 +100,8 @@ public final class SkillsPanelClient {
     public static void render(ScreenEvent.Render.Post event){
         if(!refresh(event.getScreen()))return;
         boolean held=carrying();
+        if(ownsInput(event.getScreen(),event.getMouseX(),event.getMouseY()))
+            ((net.goui.cosmicdungeon.client.screen.DeferredTooltipAccess)event.getGuiGraphics()).cosmicdungeon$clearTooltip();
         SupplyRequestsClient.draw(screen,event.getGuiGraphics(),event.getMouseX(),event.getMouseY(),held||state.captured());
         boolean suppress=held||SupplyRequestsClient.captured();
         SkillsPanelComponent.draw(event.getGuiGraphics(),Minecraft.getInstance().font,

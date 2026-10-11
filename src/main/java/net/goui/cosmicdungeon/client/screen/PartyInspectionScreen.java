@@ -36,7 +36,7 @@ public final class PartyInspectionScreen extends Screen {
     @Override public void onClose(){minecraft.setScreen(parent);}
     @Override public void tick() {
         if(minecraft.player==null||!D1PartyHud.inspectionCurrent(run,subject.toString())
-                ||minecraft.player.containerMenu!=minecraft.player.inventoryMenu) {
+                ||!PartyInspectionHover.currentMenu(parent,minecraft.player)) {
             minecraft.setScreen(null);return;
         }
         if(++age>40)view=null;

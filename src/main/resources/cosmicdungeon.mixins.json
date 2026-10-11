@@ -12,7 +12,9 @@
     "client.TamsinClothingMixin",
     "client.InventoryRecipeBookScreenMixin",
     "client.InventoryRecipeBookComponentMixin",
-    "client.LeaderboardPauseMixin"
+    "client.LeaderboardPauseMixin",
+    "client.GuiGraphicsTooltipMixin",
+    "client.ClientHooksTooltipMixin"
   ],
   "injectors": {
     "defaultRequire": 1
