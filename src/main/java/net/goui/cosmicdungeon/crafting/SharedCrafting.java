@@ -172,22 +172,11 @@ public final class SharedCrafting {
         if (recipe.fuel() != null) { image.putInt("schema", 2); image.put("fuel", recipe.fuel()); }
         var plan = new SharedCraftPlan(image); SharedCraftTransactions.validateImages(player, plan); return plan;
     }
-    /** Ordinary native stack limits only; cursor and special potion stacks are Batch8. */
+    /** Apply a detached plan only after full capacity is known; failed partial merges change nothing. */
     static boolean insert(NonNullList<ItemStack> inventory, ItemStack output) {
-        var stack = output.copy();
-        for (int start : new int[] {0, 9}) {
-            int end = Math.min(start == 0 ? 9 : 36, inventory.size());
-            for (int slot = start; slot < end; slot++) {
-                var current = inventory.get(slot);
-                if (!current.isEmpty() && ItemStack.isSameItemSameComponents(current, stack)) {
-                    int amount = Math.min(stack.getCount(), Math.max(0, current.getMaxStackSize() - current.getCount()));
-                    current.grow(amount); stack.shrink(amount); if (stack.isEmpty()) return true;
-                }
-            }
-            for (int slot = start; slot < end; slot++) if (inventory.get(slot).isEmpty()) {
-                inventory.set(slot, stack.copy()); return true;
-            }
-        }
-        return false;
+        var result = PotionOutputPlacement.inventoryStack(inventory, output);
+        if (result == null) return false;
+        for (int i = 0; i < inventory.size(); i++) inventory.set(i, result.get(i));
+        return true;
     }
 }

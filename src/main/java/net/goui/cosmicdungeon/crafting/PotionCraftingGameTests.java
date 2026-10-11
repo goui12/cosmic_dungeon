@@ -217,6 +217,9 @@ public final class PotionCraftingGameTests {
             f.check(PotionCrafting.craft(f.p(0),f.run,healing)&&f.charges(0)==14&&f.revision(0)==2&&f.products()==2,
                     "Second craft uses saved charges without requiring another powder");
             f.check(f.inventory(1).equals(donorBefore),"Own-first leaves consenting donors' identical materials untouched");
+            f.reload(0);
+            f.check(f.p(0).getInventory().getItem(0).getCount()==2&&f.p(0).getInventory().getItem(0).getMaxStackSize()==64,
+                    "Repeated crafted outputs merge into one bounded stack and survive the actual owner save/reload");
 
             f.clear();f.potion(0,0,Items.POTION,Potions.AWKWARD);f.item(0,1,Items.GLISTERING_MELON_SLICE,1);f.item(0,2,Items.GUNPOWDER,1);
             offer=PotionCrafting.quote(f.p(0),f.run,healing);
@@ -252,6 +255,14 @@ public final class PotionCraftingGameTests {
             f.check(PotionCrafting.prepare(f.p(0),f.run,healing)==null&&!PotionCrafting.craft(f.p(0),f.run,healing),
                     "Full crafter inventory rejects a shared recipe before material or fuel charge");
             f.unchanged(guarded,"Full output guard");f.check(f.charges(0)==12,"Full output does not debit remaining fuel");
+            var nearlyFull=PotionStacks.crafted(PotionContents.createItemStack(Items.SPLASH_POTION,Potions.HEALING));
+            nearlyFull.setCount(63);f.p(0).getInventory().setItem(0,nearlyFull);
+            f.check(PotionCrafting.craft(f.p(0),f.run,healing)&&f.p(0).getInventory().getItem(0).getCount()==64&&f.charges(0)==9,
+                    "One shared craft fills exactly the last compatible stack space");
+            f.healing(1,1);guarded=f.images();
+            f.check(!PotionCrafting.craft(f.p(0),f.run,healing)&&f.charges(0)==9,
+                    "A full crafted stack plus full inventory rejects the next click without fuel debit");
+            f.unchanged(guarded,"Full stack never consumes donor ingredients");
 
             f.clear();
             for(int owner=0;owner<2;owner++) {
@@ -263,7 +274,7 @@ public final class PotionCraftingGameTests {
                         "Mixed result is native drinkable Turtle Master");
                 f.check(!PotionCrafting.craft(f.p(owner),f.run,"minecraft:turtle_master_splash"),"Neither class can craft splash Turtle Master");
             }
-            f.check(f.charges(0)==10&&f.charges(1)==15,"Turtle Master charges water-to-Awkward and helmet steps only");
+            f.check(f.charges(0)==7&&f.charges(1)==15,"Turtle Master charges water-to-Awkward and helmet steps only");
         }
         h.succeed();
     }

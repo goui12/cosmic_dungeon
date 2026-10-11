@@ -207,9 +207,11 @@ public final class PartyTradeGameTests {
                     net.minecraft.world.inventory.ClickType.QUICK_MOVE),"Packet guard admits an owned ordinary sword to trade custody");
             ((TradeMenu)f.member.containerMenu).quickMoveStack(f.member,TradeMenu.HOTBAR_START);
             f.check(session.getContainerFor(f.member,true).getItem(0).is(Items.DIAMOND_SWORD),"Unpriced sword enters offer");
-            var potion=new ItemStack(Items.SPLASH_POTION);
+            var potion=net.goui.cosmicdungeon.crafting.PotionStacks.crafted(net.minecraft.world.item.alchemy.PotionContents.createItemStack(
+                    Items.SPLASH_POTION,net.minecraft.world.item.alchemy.Potions.HEALING));
+            potion.setCount(47);potion.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,Component.literal("Trade potion"));
             net.goui.cosmicdungeon.playerclass.api.ClassItemUtil.attune(potion,"theurgist",1,1,0);
-            f.outsider.getInventory().setItem(0,potion);
+            f.outsider.getInventory().setItem(0,potion.copy());
             f.check(!net.goui.cosmicdungeon.item.identity.ItemMovementGuard.denyClick(f.outsider,TradeMenu.HOTBAR_START,0,
                     net.minecraft.world.inventory.ClickType.QUICK_MOVE),"Attuned potion is permitted through actual click guard");
             ((TradeMenu)f.outsider.containerMenu).quickMoveStack(f.outsider,TradeMenu.HOTBAR_START);
@@ -225,8 +227,12 @@ public final class PartyTradeGameTests {
             for(int i=0;i<36;i++)if(f.outsider.getInventory().getItem(i).is(Items.DIAMOND_SWORD))received=f.outsider.getInventory().getItem(i);
             f.check(!received.isEmpty()&&f.outsider.getUUID().equals(net.goui.cosmicdungeon.item.identity.ClassItemOwnership.owner(received))
                     &&received.getDamageValue()==17,"Committed sword retains authored damage and acquires recipient custody");
-            f.check(f.member.getInventory().countItem(Items.SPLASH_POTION)==1&&f.member.getInventory().countItem(Items.GOLD_INGOT)==3,
-                    "Potion transfers while original cursor remains with its owner");
+            f.check(f.member.getInventory().countItem(Items.SPLASH_POTION)==47&&f.member.getInventory().countItem(Items.GOLD_INGOT)==3,
+                    "Potion stack transfers while original cursor remains with its owner");
+            var expectedPotion=TradeItemTransfer.forRecipient(potion,f.outsider.getUUID(),f.member.getUUID());
+            f.check(java.util.stream.IntStream.range(0,36).mapToObj(i->f.member.getInventory().getItem(i))
+                    .anyMatch(item->item.getCount()==47&&ItemStack.isSameItemSameComponents(expectedPotion,item)),
+                    "Native trade retains all potion components and only projects recipient ownership");
             session.cancel("stale");session.setConfirm(f.member,true);
             f.check(f.outsider.getInventory().countItem(Items.DIAMOND_SWORD)==1&&CurrencyService.getBalanceTrace(f.member)==200_005,
                     "Stale traffic cannot duplicate delivery/payment");
@@ -244,6 +250,10 @@ public final class PartyTradeGameTests {
                     t->t.putString(net.goui.cosmicdungeon.item.identity.ClassItemOwnership.KEY,f.member.getUUID().toString()));
             f.member.getInventory().setItem(0,armor);
             ((TradeMenu)f.member.containerMenu).quickMoveStack(f.member,TradeMenu.HOTBAR_START);
+            var potions=net.goui.cosmicdungeon.crafting.PotionStacks.crafted(net.minecraft.world.item.alchemy.PotionContents.createItemStack(
+                    Items.SPLASH_POTION,net.minecraft.world.item.alchemy.Potions.HEALING));potions.setCount(31);
+            f.member.getInventory().setItem(0,potions.copy());
+            ((TradeMenu)f.member.containerMenu).quickMoveStack(f.member,TradeMenu.HOTBAR_START);
             session.setCurrency(f.member,5);session.setCurrency(f.outsider,10);
             if(disconnect)TradeSessionData.handleLogout(f.member);else session.cancel("requested");
             f.check(CurrencyService.getAvailableTrace(f.member)==100&&CurrencyService.getAvailableTrace(f.outsider)==100,
@@ -252,6 +262,10 @@ public final class PartyTradeGameTests {
                     "Cancel/disconnect returns armor only to the original owner");
             session.cancel("duplicate");TradeCustody.claim(f.member);
             f.check(f.member.getInventory().countItem(Items.IRON_CHESTPLATE)==1,"Repeated recovery never duplicates");
+            f.check(f.member.getInventory().countItem(Items.SPLASH_POTION)==31&&f.outsider.getInventory().countItem(Items.SPLASH_POTION)==0
+                    &&java.util.stream.IntStream.range(0,36).mapToObj(i->f.member.getInventory().getItem(i))
+                    .anyMatch(item->item.getCount()==31&&ItemStack.isSameItemSameComponents(potions,item)),
+                    "Cancel/disconnect and repeated custody recovery return the exact crafted stack once");
         }
         helper.succeed();
     }

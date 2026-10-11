@@ -3,11 +3,11 @@
 [1.7 Alpha / 1.8 Beta batch plan](tasks/ALPHA_1_7_BATCH_PLAN_20261010.md).
 
 **20 planned batches:19 Alphas (1.7.1 through1.7.19), then1.8.0 Beta.**
-Batches1-6 published; cumulative1.7.6-alpha.1 (PR251; CI38119965040; release38120201419; CurseForge9126368/helper9126367) was deployed to freshly stopped TEST via sFTP. This supersedes earlier1-4 pending delivery; TEST left stopped.
-Batch7 implements vanilla potion recipes and saved brewing fuel under Cameron's explicit "proceed with batch 7" instruction.
-[Batch1 report](tasks/BATCH_1_7_01_20261011.md) | [Batch2 report](tasks/BATCH_1_7_02_20261011.md) | [Batch3 report](tasks/BATCH_1_7_03_20261011.md) | [Batch4 report](tasks/BATCH_1_7_04_20261011.md) | [Batch5 report](tasks/BATCH_1_7_05_20261011.md) | [Batch6 report](tasks/BATCH_1_7_06_20261011.md) | [Batch7 report](tasks/BATCH_1_7_07_20261011.md).
-13 later cards (Batch8-20) remain PLANNED; stop after Batch7.
-Authoritative exact results: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json through batch-07.json.
+Batches1-7 published; cumulative1.7.7-alpha.1 (PR252; CI38149578130; release38149788949; CurseForge9130777/helper9130775) was deployed to freshly stopped TEST via sFTP. This supersedes earlier1-4 pending delivery; TEST left stopped.
+Batch8 implements safe crafted-potion stacks and lifecycle under Cameron's explicit "proceed to batch 8" instruction.
+[Batch1 report](tasks/BATCH_1_7_01_20261011.md) | [Batch2 report](tasks/BATCH_1_7_02_20261011.md) | [Batch3 report](tasks/BATCH_1_7_03_20261011.md) | [Batch4 report](tasks/BATCH_1_7_04_20261011.md) | [Batch5 report](tasks/BATCH_1_7_05_20261011.md) | [Batch6 report](tasks/BATCH_1_7_06_20261011.md) | [Batch7 report](tasks/BATCH_1_7_07_20261011.md) | [Batch8 report](tasks/BATCH_1_7_08_20261011.md).
+12 later cards (Batch9-20) remain PLANNED; stop after Batch8.
+Authoritative exact results: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json through batch-08.json.
 The previous15–26 controller is COMPLETE; do not reset/reuse its receipts or infer autonomous execution.
 
 The plan covers inventory/class art/tooltips, ownership/trades, Tamsin sharing,
