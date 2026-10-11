@@ -14,7 +14,10 @@
     "client.InventoryRecipeBookComponentMixin",
     "client.LeaderboardPauseMixin",
     "client.GuiGraphicsTooltipMixin",
-    "client.ClientHooksTooltipMixin"
+    "client.ClientHooksTooltipMixin",
+    "client.InventoryCraftingSlotsMixin",
+    "client.ClassInventoryScreenMixin",
+    "client.InventoryDragAccess"
   ],
   "injectors": {
     "defaultRequire": 1

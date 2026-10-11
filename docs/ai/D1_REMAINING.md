@@ -3,11 +3,12 @@
 [1.7 Alpha / 1.8 Beta batch plan](tasks/ALPHA_1_7_BATCH_PLAN_20261010.md).
 
 **20 planned batches:19 Alphas (1.7.1 through1.7.19), then1.8.0 Beta.**
-Batch1 implementation is ready under Cameron's explicit single-batch start instruction.
-Implementation and evidence: [Batch1 report](tasks/BATCH_1_7_01_20261011.md).
-19 later cards (Batch2–20) remain PLANNED; this request does not authorize their execution.
-Authoritative build/release/TEST completion: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json. The previous15-26 controller is COMPLETE;
-do not reset/reuse its receipts or infer autonomous execution from this document.
+Batch1 published1.7.1-alpha.2 (PR246; CI38110117751; release38110321123; CurseForge9125456/helper9125454). TEST delivery is pending: current server startup followed by empty-server pause does not establish shutdown.
+Batch2 implementation is ready under Cameron's explicit 'proceed with batch2' instruction.
+[Batch1 report](tasks/BATCH_1_7_01_20261011.md) | [Batch2 report](tasks/BATCH_1_7_02_20261011.md).
+18 later cards (Batch3–20) remain PLANNED; stop after Batch2.
+Authoritative exact results: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json and batch-02.json.
+The previous15–26 controller is COMPLETE; do not reset/reuse its receipts or infer autonomous execution.
 
 The plan covers inventory/class art/tooltips, ownership/trades, Tamsin sharing,
 run XML metrics, real potion recipes/fuel/stacking, resurrection, Bogatyr rework,

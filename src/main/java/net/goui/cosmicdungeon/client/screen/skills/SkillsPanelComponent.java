@@ -41,7 +41,7 @@ public final class SkillsPanelComponent {
     }
     public static void draw(GuiGraphics g,Font font,SkillsPanelModel model,SkillsPanelState state,int mouseX,int mouseY){
         g.nextStratum();
-        var box=state.geometry();fill(g,box.panel(),0xEE17212D);fill(g,box.header(),0xFF244861);
+        var box=state.geometry();fill(g,box.panel(),0x3017212D);fill(g,box.header(),0xF0244861);
         var title=new Rect(box.header().x(),box.header().y(),Math.max(0,box.header().width()-38),box.header().height());
         text(g,font,model.title(),title,0xFFFFFFFF);
         fill(g,box.help(),0xFF267AC0);
@@ -72,6 +72,7 @@ public final class SkillsPanelComponent {
 
             }
         }
+        border(g,box.panel(),0x887E9AAD);
         tooltip(g,font,model,state,mouseX,mouseY);
     }
 }

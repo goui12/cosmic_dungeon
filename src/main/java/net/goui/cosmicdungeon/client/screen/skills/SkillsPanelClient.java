@@ -35,7 +35,7 @@ public final class SkillsPanelClient {
         if(!ClassKeys.isKnown(id)||ClassKeys.CLASS_ID_NONE.equals(id))throw new IllegalArgumentException("Unknown class");
         PROVIDERS.put(id,Objects.requireNonNull(provider));
     }
-    public static boolean inventory(Screen candidate){return candidate instanceof InventoryScreen||candidate instanceof CreativeModeInventoryScreen;}
+    public static boolean inventory(Screen candidate){return candidate instanceof InventoryScreen||candidate instanceof ExtraInventoryScreen||candidate instanceof CreativeModeInventoryScreen;}
     public static SharedInventoryLayout layout(Screen candidate){
         var inventory=(AbstractContainerScreen<?>)candidate;
         return SharedInventoryLayout.of(candidate.width,candidate.height,inventory.getGuiLeft(),inventory.getGuiTop(),
@@ -64,7 +64,9 @@ public final class SkillsPanelClient {
     }
     private static boolean carrying(){
         var player=Minecraft.getInstance().player;
-        return player==null||!player.containerMenu.getCarried().isEmpty();
+        return player==null||!player.containerMenu.getCarried().isEmpty()
+                ||Minecraft.getInstance().screen instanceof net.goui.cosmicdungeon.mixin.client.InventoryDragAccess drag
+                &&!drag.cosmicdungeon$draggingItem().isEmpty();
     }
     public static boolean ownsInput(Screen candidate,double x,double y){
         boolean held=carrying();
