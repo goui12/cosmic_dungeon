@@ -37,6 +37,7 @@ public final class HelpMenuScreen extends Screen {
     private List<NavRow> rows = List.of();
     private List<Focus> focusOrder = List.of();
     private int focused = -1;
+    private boolean keyboardTooltips;
 
     public HelpMenuScreen() { this(null); }
     private HelpMenuScreen(Screen parent) {
@@ -185,18 +186,21 @@ public final class HelpMenuScreen extends Screen {
         return document.hitInViewport(viewport, contentScroll().offset(), x, y);
     }
     private void tooltip(GuiGraphics g, int mx, int my, Target hovered, Target focusedTarget) {
+        // Keyboard focus owns its tooltip until pointer input resumes.
+        if (!keyboardTooltips || focusedTarget == null) {
         // A hovered control wins over the previous keyboard item's tooltip.
         if (geometry.footer().contains(mx, my)) { tip(g, USAGE, mx, my); return; }
         if (geometry.pageTitle().contains(mx, my)) { tip(g, navigation.page().title(), mx, my); return; }
         if (geometry.back().contains(mx, my)) { tip(g, Component.literal("Back · Alt+Left / Backspace"), mx, my); return; }
-        if (geometry.home().contains(mx, my)) { tip(g, Component.literal("Return to Getting Started"), mx, my); return; }
+        if (geometry.home().contains(mx, my)) { tip(g, Component.literal("Guide home"), mx, my); return; }
         if (geometry.close().contains(mx, my)) { tip(g, Component.literal("Close · Escape or your Help key"), mx, my); return; }
         if (geometry.navViewport().contains(mx, my)) {
             for (int i = 0; i < rows.size(); i++) if (navBounds(i).contains(mx, my)) { tip(g, rows.get(i).node().page().title(), mx, my); return; }
         }
-        Target target = hovered != null ? hovered : focusedTarget;
+        }
+        Target target = keyboardTooltips && focusedTarget != null ? focusedTarget : hovered;
         if (target != null) {
-            if (hovered == null) {
+            if (keyboardTooltips && target == focusedTarget) {
                 var v = geometry.contentViewport();
                 mx = Math.min(v.right() - 1, v.x() + target.bounds().x());
                 my = Math.max(v.y(), Math.min(v.bottom() - 1, v.y() + target.bounds().y() - contentScroll().offset()));
@@ -214,13 +218,15 @@ public final class HelpMenuScreen extends Screen {
     }
     private void tip(GuiGraphics g, Component text, int x, int y) { g.setTooltipForNextFrame(font, font.split(text, Math.max(80, Math.min(250, width - 24))), x, y); }
     private static void clip(GuiGraphics g, HelpMenuGeometry.Rect r) { g.enableScissor(r.x(), r.y(), r.right(), r.bottom()); }
+    @Override public void mouseMoved(double x, double y) { keyboardTooltips = false; super.mouseMoved(x, y); }
     @Override public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        keyboardTooltips = false;
         ensureLayout();
         focused = -1;
         if (event.button() == 0) {
             if (geometry.close().contains(event.x(), event.y())) { onClose(); return true; }
             if (geometry.back().contains(event.x(), event.y())) { back(); return true; }
-            if (geometry.home().contains(event.x(), event.y())) { open(HelpMenuContent.GET_STARTED.id()); return true; }
+            if (geometry.home().contains(event.x(), event.y())) { open(HelpMenuContent.ROOT.page().id()); return true; }
             if (clickTrack(event.x(), event.y(), geometry.navTrack(), navScroll()) || clickTrack(event.x(), event.y(), geometry.contentTrack(), contentScroll())) return true;
             if (geometry.navViewport().contains(event.x(), event.y())) {
                 for (int i = 0; i < rows.size(); i++) if (navBounds(i).contains(event.x(), event.y())) { open(rows.get(i).node().page().id()); return true; }
@@ -237,6 +243,7 @@ public final class HelpMenuScreen extends Screen {
         return true;
     }
     @Override public boolean mouseScrolled(double x, double y, double horizontal, double vertical) {
+        keyboardTooltips = false;
         if (vertical == 0 || !Double.isFinite(vertical)) return false;
         ensureLayout();
         int amount = (int) Math.copySign(Math.max(1, Math.min(Integer.MAX_VALUE, Math.round(Math.abs(vertical) * SCROLL_STEP))), -vertical);
@@ -249,6 +256,7 @@ public final class HelpMenuScreen extends Screen {
         ensureLayout();
         if (event.key() == GLFW.GLFW_KEY_BACKSPACE || event.hasAltDown() && event.isLeft()) { back(); return true; }
         if (event.isCycleFocus()) {
+            keyboardTooltips = true;
             focused = Math.floorMod(focused < 0 ? event.hasShiftDown() ? focusOrder.size() - 1 : 0 : focused + (event.hasShiftDown() ? -1 : 1), focusOrder.size());
             var focus = focus();
             if (focus.area() == Area.NAV) { var row = rows.get(focus.index()); navScroll().reveal(row.y(), row.y() + row.height()); }
@@ -260,7 +268,7 @@ public final class HelpMenuScreen extends Screen {
         if (event.isSelection() && focus != null) {
             switch (focus.area()) {
                 case BACK -> back();
-                case HOME -> open(HelpMenuContent.GET_STARTED.id());
+                case HOME -> open(HelpMenuContent.ROOT.page().id());
                 case CLOSE -> onClose();
                 case NAV -> open(rows.get(focus.index()).node().page().id());
                 case CONTENT -> { var target = document.targets().get(focus.index()); if (target.pageId() != null) open(target.pageId()); }
