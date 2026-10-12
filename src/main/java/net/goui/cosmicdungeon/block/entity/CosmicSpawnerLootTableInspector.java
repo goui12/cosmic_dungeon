@@ -76,7 +76,7 @@ public final class CosmicSpawnerLootTableInspector {
         for (JsonElement poolElement : pools) {
             if (!poolElement.isJsonObject()) continue;
             JsonObject pool = poolElement.getAsJsonObject();
-            CosmicSpawnerLootTableSummary.ChanceDisplay poolChance = poolChance(pool);
+            CosmicSpawnerLootTableSummary.ChanceDisplay poolChance = hasFunctions(root)?CosmicSpawnerLootTableSummary.ChanceDisplay.complex("table functions"):poolChance(pool);
             JsonArray entries = array(pool, "entries");
             if (entries != null) readEntries(entries, pool, poolChance, summary);
         }
@@ -99,48 +99,56 @@ public final class CosmicSpawnerLootTableInspector {
                 if (itemId == null) continue;
                 CosmicSpawnerLootTableSummary.ChanceDisplay chance = entryChance(parent, entry, parentChance, totalWeight);
                 summary.addDefaultDrop(itemId, chance);
-            } else if (type.endsWith(":alternatives") || type.endsWith(":sequence") || type.endsWith(":group")) {
+            } else if (type.equals("minecraft:alternatives") || type.equals("minecraft:sequence") || type.equals("minecraft:group")) {
                 JsonArray children = array(entry, "children");
-                if (children != null) readEntries(children, entry, parentChance, summary);
+                if (children != null) readEntries(children, entry, CosmicSpawnerLootTableSummary.ChanceDisplay.complex("conditional group"), summary);
             }
         }
     }
 
     private static CosmicSpawnerLootTableSummary.ChanceDisplay poolChance(JsonObject pool) {
-        if (hasCondition(pool, "killed_by_player") && hasCondition(pool, "random_chance_with")) {
-            return CosmicSpawnerLootTableSummary.ChanceDisplay.complex("rare/player/looting");
+        if(!constant(pool.get("rolls"),1)||!constantOrAbsent(pool.get("bonus_rolls"),0)||hasFunctions(pool))
+            return CosmicSpawnerLootTableSummary.ChanceDisplay.complex("context-dependent rolls/functions");
+        JsonArray conditions=array(pool,"conditions");
+        if(conditions==null||conditions.isEmpty())return CosmicSpawnerLootTableSummary.ChanceDisplay.percent(1);
+        if(conditions.size()==1){
+            Float chance=randomChance(pool);
+            if(chance!=null&&Float.isFinite(chance)&&chance>=0&&chance<=1)return CosmicSpawnerLootTableSummary.ChanceDisplay.percent(chance);
         }
-        Float conditionChance = randomChance(pool);
-        if (conditionChance != null) return CosmicSpawnerLootTableSummary.ChanceDisplay.percent(conditionChance);
-        if (hasConditions(pool)) return CosmicSpawnerLootTableSummary.ChanceDisplay.complex("conditional");
-        return CosmicSpawnerLootTableSummary.ChanceDisplay.percent(1f);
+        return CosmicSpawnerLootTableSummary.ChanceDisplay.complex("conditional/player/looting");
     }
-
-    private static CosmicSpawnerLootTableSummary.ChanceDisplay entryChance(JsonObject pool, JsonObject entry, CosmicSpawnerLootTableSummary.ChanceDisplay poolChance, int totalWeight) {
-        if (hasCondition(entry, "killed_by_player") || hasCondition(entry, "random_chance_with")) {
-            return CosmicSpawnerLootTableSummary.ChanceDisplay.complex("rare/player/looting");
-        }
-        if (poolChance != null && !poolChance.numeric()) return poolChance;
-        if (hasConditions(entry)) return CosmicSpawnerLootTableSummary.ChanceDisplay.complex("conditional");
-
-        float chance = poolChance != null && poolChance.chance() != null ? poolChance.chance() : 1f;
-        if (totalWeight > 0) chance *= Math.max(1, intOr(entry, "weight", 1)) / (float) totalWeight;
-
-        CosmicSpawnerLootTableSummary.ChanceDisplay countChance = countFunctionChance(entry);
-        if (countChance != null) {
-            if (!countChance.numeric()) return countChance;
-            chance *= countChance.chance();
-        }
+    private static boolean constant(JsonElement e,float value){
+        return e!=null&&e.isJsonPrimitive()&&e.getAsJsonPrimitive().isNumber()&&e.getAsFloat()==value;
+    }
+    private static boolean constantOrAbsent(JsonElement e,float value){return e==null||constant(e,value);}
+    private static boolean hasFunctions(JsonObject object){var functions=array(object,"functions");return functions!=null&&!functions.isEmpty();}
+    private static CosmicSpawnerLootTableSummary.ChanceDisplay entryChance(JsonObject pool,JsonObject entry,CosmicSpawnerLootTableSummary.ChanceDisplay poolChance,int totalWeight){
+        if(poolChance!=null&&!poolChance.numeric())return poolChance;
+        if(hasConditions(entry)||!constantOrAbsent(entry.get("quality"),0))return CosmicSpawnerLootTableSummary.ChanceDisplay.complex("conditional/luck");
+        var siblings=array(pool,"entries");
+        if(siblings==null)return CosmicSpawnerLootTableSummary.ChanceDisplay.complex("conditional group");
+        for(var sibling:siblings)if(!sibling.isJsonObject()||!isItemEntry(sibling.getAsJsonObject())||
+                hasConditions(sibling.getAsJsonObject())||(!constantOrAbsent(sibling.getAsJsonObject().get("quality"),0)||intOr(sibling.getAsJsonObject(),"weight",1)<=0))
+            return CosmicSpawnerLootTableSummary.ChanceDisplay.complex("conditional selection");
+        var functions=array(entry,"functions");
+        if(functions!=null)for(var function:functions)if(!function.isJsonObject()||
+                !stringOr(function.getAsJsonObject(),"function","").equals("minecraft:set_count")||hasConditions(function.getAsJsonObject()))
+            return CosmicSpawnerLootTableSummary.ChanceDisplay.complex("context-dependent functions");
+        if(functions!=null&&functions.size()>1)return CosmicSpawnerLootTableSummary.ChanceDisplay.complex("combined count functions");
+        float chance=poolChance!=null&&poolChance.chance()!=null?poolChance.chance():1;
+        if(totalWeight>0)chance*=Math.max(1,intOr(entry,"weight",1))/(float)totalWeight;
+        var count=countFunctionChance(entry);
+        if(count!=null){if(!count.numeric())return count;chance*=count.chance();}
         return CosmicSpawnerLootTableSummary.ChanceDisplay.percent(chance);
     }
-
     private static CosmicSpawnerLootTableSummary.ChanceDisplay countFunctionChance(JsonObject entry) {
         JsonArray functions = array(entry, "functions");
         if (functions == null) return null;
         for (JsonElement functionElement : functions) {
             if (!functionElement.isJsonObject()) continue;
             JsonObject function = functionElement.getAsJsonObject();
-            if (!stringOr(function, "function", "").endsWith(":set_count")) continue;
+            if (!stringOr(function, "function", "").equals("minecraft:set_count")) continue;
+            if(function.has("add")&&function.get("add").getAsBoolean())return CosmicSpawnerLootTableSummary.ChanceDisplay.complex("additive count");
             JsonElement count = function.get("count");
             if (count == null) return CosmicSpawnerLootTableSummary.ChanceDisplay.complex("complex count");
             if (count.isJsonPrimitive() && count.getAsJsonPrimitive().isNumber()) {
@@ -148,8 +156,14 @@ public final class CosmicSpawnerLootTableInspector {
             }
             if (!count.isJsonObject()) return CosmicSpawnerLootTableSummary.ChanceDisplay.complex("complex count");
             JsonObject countObject = count.getAsJsonObject();
-            float min = floatOr(countObject, "min", 0f);
-            float max = floatOr(countObject, "max", min);
+            if(!stringOr(countObject,"type","").equals("minecraft:uniform"))return CosmicSpawnerLootTableSummary.ChanceDisplay.complex("complex count");
+            JsonElement minimum=countObject.get("min"),maximum=countObject.get("max");
+            if(minimum==null||maximum==null||!minimum.isJsonPrimitive()||!maximum.isJsonPrimitive()
+                    ||!minimum.getAsJsonPrimitive().isNumber()||!maximum.getAsJsonPrimitive().isNumber())
+                return CosmicSpawnerLootTableSummary.ChanceDisplay.complex("context-dependent count providers");
+            float min=minimum.getAsFloat(),max=maximum.getAsFloat();
+            if(!Float.isFinite(min)||!Float.isFinite(max)||min>max||Math.floor(min)!=min||Math.floor(max)!=max)
+                return CosmicSpawnerLootTableSummary.ChanceDisplay.complex("complex count bounds");
             if (max <= 0f) return CosmicSpawnerLootTableSummary.ChanceDisplay.percent(0f);
             if (min >= 1f) return CosmicSpawnerLootTableSummary.ChanceDisplay.percent(1f);
             if (min == 0f && max > 0f && Math.floor(max) == max) {
@@ -161,7 +175,7 @@ public final class CosmicSpawnerLootTableInspector {
     }
 
     private static boolean isItemEntry(JsonObject entry) {
-        return stringOr(entry, "type", "").endsWith(":item") && entry.has("name");
+        return stringOr(entry, "type", "").equals("minecraft:item") && entry.has("name");
     }
 
     private static boolean hasConditions(JsonObject object) {
@@ -185,8 +199,9 @@ public final class CosmicSpawnerLootTableInspector {
         for (JsonElement conditionElement : conditions) {
             if (!conditionElement.isJsonObject()) continue;
             JsonObject condition = conditionElement.getAsJsonObject();
-            if (stringOr(condition, "condition", "").endsWith(":random_chance") && condition.has("chance")) {
-                return floatOr(condition, "chance", 1f);
+            if (stringOr(condition, "condition", "").equals("minecraft:random_chance") && condition.has("chance")) {
+                var chance=condition.get("chance");
+                return chance.isJsonPrimitive()&&chance.getAsJsonPrimitive().isNumber()?chance.getAsFloat():null;
             }
         }
         return null;

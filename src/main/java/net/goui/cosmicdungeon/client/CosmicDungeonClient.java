@@ -75,6 +75,7 @@ public final class CosmicDungeonClient {
         NeoForge.EVENT_BUS.register(SpawnerHoverClient.class);
         net.goui.cosmicdungeon.client.screen.spawner.SpawnerEditorClient.actions(
                 net.neoforged.neoforge.client.network.ClientPacketDistributor::sendToServer);
+        net.goui.cosmicdungeon.client.screen.spawner.SpawnerEditorClient.libraryActions(net.neoforged.neoforge.client.network.ClientPacketDistributor::sendToServer);
         NeoForge.EVENT_BUS.register(TradeLookPromptOverlay.class);
 
         // Dynamic tooltip line for vanilla/customized items attuned as class gear.

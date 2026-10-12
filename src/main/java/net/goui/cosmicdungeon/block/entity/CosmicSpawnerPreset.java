@@ -39,6 +39,8 @@ public final class CosmicSpawnerPreset {
     private net.minecraft.nbt.CompoundTag unknown = new net.minecraft.nbt.CompoundTag();
     private net.minecraft.nbt.CompoundTag entityFlags = new net.minecraft.nbt.CompoundTag();
     private final Map<String,net.minecraft.nbt.CompoundTag> unknownRules = new HashMap<>();
+    private final Map<String,net.minecraft.nbt.CompoundTag> rawRules = new HashMap<>();
+    private final Map<String,IntrinsicDropRule> originalRules = new HashMap<>();
     private static java.util.Set<String> knownKeys() {
         var keys = new java.util.HashSet<>(java.util.Set.of("presetVersion","entityType","customName",
                 "illagerCaptainVariant","equipmentMask","dropMask","entityFlags","nameOverride","captainOverride","intrinsicDropsOverride",LEGACY_INTRINSIC_DROPS_KEY,INTRINSIC_DROP_RULES_KEY));
@@ -142,6 +144,9 @@ public final class CosmicSpawnerPreset {
         for (var e : intrinsicDropRules.entrySet()) {
             IntrinsicDropRule rule = e.getValue();
             var ruleOut = rules.child(e.getKey());
+            if(rule.equals(originalRules.get(e.getKey()))&&rawRules.containsKey(e.getKey())){
+                SpawnerTagFields.write(rawRules.get(e.getKey()),ruleOut);legacyIntrinsic.putFloat(rule.itemId().toString(),rule.chance());continue;
+            }
             SpawnerTagFields.write(unknownRules.getOrDefault(e.getKey(),new net.minecraft.nbt.CompoundTag()),ruleOut);
             ruleOut.putString("id", rule.id());
             ruleOut.putString("item", rule.itemId().toString());
@@ -186,6 +191,8 @@ public final class CosmicSpawnerPreset {
                     IntrinsicDropRule.Kind kind = parseRuleKind(ruleIn.getStringOr("kind", IntrinsicDropRule.Kind.UNKNOWN_CONFIGURED.name()));
                     IntrinsicDropRule rule = new IntrinsicDropRule(ruleId, itemId, chance, count, kind);
                     preset.intrinsicDropRules.put(rule.id(), rule);
+                    preset.originalRules.put(rule.id(),rule);
+                    preset.rawRules.put(rule.id(),SpawnerTagFields.unknown(ruleIn,java.util.Set.of()));
                     preset.unknownRules.put(rule.id(),SpawnerTagFields.unknown(ruleIn,java.util.Set.of("id","item","chance","count","kind")));
                 });
             }

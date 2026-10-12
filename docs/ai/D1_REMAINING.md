@@ -3,12 +3,12 @@
 [1.7 Alpha / 1.8 Beta batch plan](tasks/ALPHA_1_7_BATCH_PLAN_20261010.md).
 
 **20 planned batches:19 Alphas (1.7.1 through1.7.19), then1.8.0 Beta.**
-Batches1-14 completed. Batch14 source888da67681104bc1af6428ee09c27bdbde227674, PR259, CI38183878943 and publisher38184158453 succeeded; CurseForge9140399/helper9140398.
-Batch15 implements equipment/enchantment editing as1.7.15-alpha.1.
-[Batch15 report](tasks/BATCH_1_7_15_20261011.md); exact source/CI/publication facts are recorded in its controller receipt after completion.
-5 later cards (Batch16-20): drops/presets; integration/resource review; help art; H guide; final1.8.0 Beta audit. Stop after Batch15.
+Batches1-15 completed. Batch15 sourceab5361f2cd7d3c1ca9a664220bfe91af4caaea4b, PR260, CI38188703557 and publisher38188913518 succeeded; CurseForge9140925/helper9140924.
+Batch16 implements drops and named presets as1.7.16-alpha.1.
+[Batch16 report](tasks/BATCH_1_7_16_20261011.md); exact source/CI/publication facts are recorded in its controller receipt after completion.
+4 later cards (Batch17-20): integration/resource review; help art; H guide; final1.8.0 Beta audit. Stop after Batch16.
 Alpha builds finish at CurseForge without server delivery or server-state checks. Only Beta and official builds receive stopped TEST sFTP. No local-client installs or extra post-publication hashes.
-Authoritative receipts: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json through batch-15.json after completion.
+Authoritative receipts: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json through batch-16.json after completion.
 The previous15–26 controller is COMPLETE; do not reset/reuse its receipts or infer autonomous execution.
 
 The plan covers inventory/class art/tooltips, ownership/trades, Tamsin sharing,

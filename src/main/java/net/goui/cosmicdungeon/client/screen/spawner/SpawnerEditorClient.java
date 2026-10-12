@@ -9,14 +9,26 @@ import net.minecraft.network.chat.Component;
 public final class SpawnerEditorClient {
     private static Consumer<SpawnerEditorPayloads.Request> sender;
     private static SpawnerEditorScreen screen;
+    private static Consumer<SpawnerEditorPayloads.LibraryRequest> librarySender;
     private SpawnerEditorClient() {}
     public static void actions(Consumer<SpawnerEditorPayloads.Request> value) { sender = value; }
+    public static void libraryActions(Consumer<SpawnerEditorPayloads.LibraryRequest> value) { librarySender = value; }
+    public static void receiveLibrary(SpawnerEditorPayloads.LibraryView view) {
+        if (screen != null && screen.session().equals(view.session())) screen.receiveLibrary(view);
+    }
+    static boolean sendLibrary(SpawnerEditorPayloads.LibraryRequest request) {
+        if (librarySender == null) return false;
+        librarySender.accept(request); return true;
+    }
     public static void receive(SpawnerEditorPayloads.View view) {
         Minecraft mc = Minecraft.getInstance();
         if (view.status() == SpawnerEditorPayloads.Status.OPEN) {
             if (mc.player == null || mc.level == null) return;
             if (screen != null && screen.session().equals(view.session())) return;
-            screen = new SpawnerEditorScreen(new SpawnerEditorState(view.session(), view.draft()), view.pos(), view.equipment(), view.held());
+            if (screen != null) screen.finished();
+            var state = new SpawnerEditorState(view.session(), view.draft());
+            state.presetLoaded(view.presetLoaded()); state.notice(view.message());
+            screen = new SpawnerEditorScreen(state, view.pos(), view.equipment(), view.held(), view.loot(), view.presetNames(), view.shortcuts());
             mc.setScreen(screen);
         } else if (screen != null && screen.session().equals(view.session())) {
             if (view.status() == SpawnerEditorPayloads.Status.INVALID) {

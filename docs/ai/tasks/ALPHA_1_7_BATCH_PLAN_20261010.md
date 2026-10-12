@@ -1,7 +1,7 @@
 # Cosmic Dungeon 1.7 Alpha series and 1.8 Beta plan
 
 Approved design baseline: Cameron's October 10, 2026 requests and clarifications, through 20:09 PDT.
-Status: Batches1-14 completed; Batch14 PR259, CI38183878943 and publisher38184158453 succeeded, CurseForge9140399/helper9140398. Batch15 equipment/enchantments targets1.7.15-alpha.1; exact completion gates live in its controller receipt. Batches16-20 PLANNED. Alpha finishes at CurseForge; Beta/official alone receive sFTP. Stop after15.
+Status: Batches1-15 completed; Batch15 PR260, CI38188703557 and publisher38188913518 succeeded, CurseForge9140925/helper9140924. Batch16 drops/presets targets1.7.16-alpha.1; exact completion gates live in its controller receipt. Batches17-20 PLANNED. Alpha finishes at CurseForge; Beta/official alone receive sFTP. Stop after16.
 The earlier 15-26 controller remains COMPLETE. Initialize a separately identified 1.7 series only after an implementation/start instruction; archive old receipts and never reuse their batch IDs as new evidence.
 
 ## Release and completion contract

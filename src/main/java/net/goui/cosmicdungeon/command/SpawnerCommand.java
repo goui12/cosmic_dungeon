@@ -415,7 +415,7 @@ public final class SpawnerCommand {
 
     private static final Pattern PRESET_NAME_PATTERN = Pattern.compile("^[A-Za-z0-9_-]+$");
     private static boolean validPresetName(CommandSourceStack src, String name, String commandHelp){
-        if (!PRESET_NAME_PATTERN.matcher(name).matches()) {
+        if (!SpawnerPresetFileStore.validName(name)) {
             src.sendFailure(Component.literal("Invalid preset name: '"+name+"'. Names may only use letters, numbers, '_' or '-'. No spaces."));
             syntax(src, "Preset command tutorial", new String[]{commandHelp, "Example: "+commandHelp.replace("<preset_name>", "Skeleton_Master")});
             return false;
@@ -423,7 +423,7 @@ public final class SpawnerCommand {
         return true;
     }
     private static int savePreset(CommandSourceStack src, String name){ try { if (!validPresetName(src, name, "/spawner preset save <preset_name>")) return 0; var be=getTargetSpawnerBE(src,src.getPlayerOrException(),src.getPlayerOrException().level()); if(be==null)return 0; SpawnerPresetFileStore.ensureExamplePresets(src.getServer()); SpawnerPresetFileStore.writePreset(src.getServer(), name, be); src.sendSuccess(()->Component.literal("Saved spawner preset '"+name+"' to " + SpawnerPresetFileStore.presetPath(src.getServer(), name)), false); return 1; } catch(Exception e){ src.sendFailure(Component.literal("Failed to save preset: "+e.getMessage())); return 0; } }
-    private static int loadPreset(CommandSourceStack src, String name){ try { if (!validPresetName(src, name, "/spawner preset load <preset_name>")) return 0; var be=getTargetSpawnerBE(src,src.getPlayerOrException(),src.getPlayerOrException().level()); if(be==null)return 0; var loaded=SpawnerPresetFileStore.readPreset(src.getServer(), name); ResourceLocation rl=ResourceLocation.tryParse(loaded.entityTypeId); if(rl!=null) be.setSpawnerEntityId(rl.toString()); if(loaded.preset!=null) be.setSpawnerPreset(loaded.preset); be.setBossOneShot(loaded.bossOneShot); be.setSpawnerMobCap(loaded.spawnerMobCap); be.setSpawnerDelayRange(loaded.minSpawnDelay, loaded.maxSpawnDelay); src.sendSuccess(()->Component.literal("Loaded spawner preset '"+name+"' from " + SpawnerPresetFileStore.presetPath(src.getServer(), name)), false); return 1; } catch(Exception e){ src.sendFailure(Component.literal("Failed to load preset: "+e.getMessage())); return 0; } }
+    private static int loadPreset(CommandSourceStack src, String name){ try { if (!validPresetName(src, name, "/spawner preset load <preset_name>")) return 0; var be=getTargetSpawnerBE(src,src.getPlayerOrException(),src.getPlayerOrException().level()); if(be==null)return 0; var loaded=SpawnerPresetFileStore.readPreset(src.getServer(), name); var updated=loaded.applyTo(be.saveWithoutMetadata(src.registryAccess())); net.goui.cosmicdungeon.spawner.editor.SpawnerEditorService.applyConfiguration(src.getPlayerOrException(),be,updated); src.sendSuccess(()->Component.literal("Loaded spawner preset '"+name+"' from " + SpawnerPresetFileStore.presetPath(src.getServer(), name)), false); return 1; } catch(Exception e){ src.sendFailure(Component.literal("Failed to load preset: "+e.getMessage())); return 0; } }
     private static int deletePreset(CommandSourceStack src, String name){ try { if (!validPresetName(src, name, "/spawner preset delete <preset_name>")) return 0; boolean deleted=SpawnerPresetFileStore.deletePreset(src.getServer(), name); if(!deleted){ src.sendFailure(Component.literal("Preset not found: "+name)); return 0; } src.sendSuccess(()->Component.literal("Deleted spawner preset '"+name+"'."), false); return 1; } catch(Exception e){ src.sendFailure(Component.literal("Failed to delete preset: "+e.getMessage())); return 0; } }
     private static int reloadPresets(CommandSourceStack src){ try { SpawnerPresetFileStore.ensureExamplePresets(src.getServer()); src.sendSuccess(()->Component.literal("Preset files are loaded on-demand; reload complete. Preset directory: " + SpawnerPresetFileStore.presetDirectory(src.getServer())), false); return 1; } catch(Exception e){ src.sendFailure(Component.literal("Failed to reload presets: "+e.getMessage())); return 0; } }
 
@@ -434,12 +434,7 @@ public final class SpawnerCommand {
         try {
             if (!validPresetName(src, presetName, "/spawner keybind <1-5> <preset_name>")) return 0;
             var player = src.getPlayerOrException();
-            SpawnerPresetFileStore.readPreset(src.getServer(), presetName);
-            var root = player.getPersistentData().getCompoundOrEmpty(PD_ROOT).copy();
-            var keybinds = root.getCompoundOrEmpty(PD_SPAWNER_KEYBINDS).copy();
-            keybinds.putString(Integer.toString(slot), presetName);
-            root.put(PD_SPAWNER_KEYBINDS, keybinds);
-            player.getPersistentData().put(PD_ROOT, root);
+            assignPresetShortcut(player,slot,presetName);
             src.sendSuccess(() -> Component.literal("Assigned spawner keybind slot " + slot + " to preset '" + presetName + "'."), false);
             return 1;
         } catch (Exception e) {
@@ -448,6 +443,17 @@ public final class SpawnerCommand {
         }
     }
 
+    public static java.util.List<String> presetShortcuts(ServerPlayer player){
+        var binds=player.getPersistentData().getCompoundOrEmpty(PD_ROOT).getCompoundOrEmpty(PD_SPAWNER_KEYBINDS);
+        var result=new java.util.ArrayList<String>();for(int i=1;i<=5;i++)result.add(binds.getStringOr(Integer.toString(i),""));return java.util.List.copyOf(result);
+    }
+    public static void assignPresetShortcut(ServerPlayer player,int slot,String name)throws java.io.IOException{
+        if(!Authority.isDeveloper(player)||slot<1||slot>5)throw new IllegalArgumentException("Developer shortcut slots1–5 only.");
+        if(!name.isEmpty())SpawnerPresetFileStore.readPreset(player.level().getServer(),name);
+        var root=player.getPersistentData().getCompoundOrEmpty(PD_ROOT).copy();var binds=root.getCompoundOrEmpty(PD_SPAWNER_KEYBINDS).copy();
+        if(name.isEmpty())binds.remove(Integer.toString(slot));else binds.putString(Integer.toString(slot),name);
+        root.put(PD_SPAWNER_KEYBINDS,binds);player.getPersistentData().put(PD_ROOT,root);
+    }
     public static int loadPresetFromKeybind(ServerPlayer player, int slot) {
         if (slot < 1 || slot > 5) {
             player.sendSystemMessage(Component.literal("Invalid spawner keybind slot."));

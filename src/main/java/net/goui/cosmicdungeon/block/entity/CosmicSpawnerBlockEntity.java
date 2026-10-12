@@ -39,7 +39,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     private static final boolean DEBUG = Boolean.getBoolean("cosmicdungeon.debugSpawner");
 
     public static final String DATA_VERSION_KEY = "CosmicSpawnerDataVersion";
-    public static final int CURRENT_DATA_VERSION = 153;
+    public static final int CURRENT_DATA_VERSION = 154;
     public static final int LEGACY_1_5_0_DATA_VERSION = 150;
 
     // Persisted: what this spawner is set to spawn (label + commands + client preview bootstrap)

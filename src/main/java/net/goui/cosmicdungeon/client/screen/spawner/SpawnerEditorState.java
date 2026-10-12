@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.UUID;
 import net.goui.cosmicdungeon.spawner.editor.SpawnerEditorDraft;
 import net.goui.cosmicdungeon.spawner.editor.SpawnerEquipmentDraft;
+import net.goui.cosmicdungeon.spawner.editor.SpawnerLootDraft;
 import net.goui.cosmicdungeon.block.entity.CosmicSpawnerPreset.Slot;
 
 /** Retains every edit, including incomplete number input, without coupling it to widget lifetime. */
@@ -14,7 +15,8 @@ public final class SpawnerEditorState {
     private final SpawnerEditorDraft original;
     private String entityId, name, cap, minDelay, maxDelay;
     private boolean captain, boss, silent, noAi, invulnerable, persistent, nameVisible;
-    private boolean pending, closed;
+    private boolean pending, closed, presetLoaded;
+    private SpawnerLootDraft loot = SpawnerLootDraft.unchanged();
     private String notice = "", search = "";
     private Tab tab = Tab.ENTITY;
     private int page;
@@ -43,8 +45,11 @@ public final class SpawnerEditorState {
     public void equipment(Slot slot, SpawnerEquipmentDraft.Edit edit) {
         equipment = equipment.with(slot, edit); notice = "";
     }
+    public SpawnerLootDraft loot() { return loot; }
+    public void loot(SpawnerLootDraft value) { loot = Objects.requireNonNull(value); notice = ""; }
+    public void presetLoaded(boolean value) { presetLoaded = value; }
     public boolean dirty() {
-        return equipment.dirty() || !draft().equals(original) || !cap.equals(Integer.toString(original.cap()))
+        return presetLoaded || loot.dirty() || equipment.dirty() || !draft().equals(original) || !cap.equals(Integer.toString(original.cap()))
                 || !minDelay.equals(Integer.toString(original.minDelay()))
                 || !maxDelay.equals(Integer.toString(original.maxDelay()));
     }

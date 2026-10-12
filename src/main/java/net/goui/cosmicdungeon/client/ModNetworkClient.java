@@ -41,6 +41,9 @@ public final class ModNetworkClient {
     public static void onSpawnerEditor(net.goui.cosmicdungeon.network.SpawnerEditorPayloads.View payload){
         net.goui.cosmicdungeon.client.screen.spawner.SpawnerEditorClient.receive(payload);
     }
+    public static void onSpawnerLibrary(net.goui.cosmicdungeon.network.SpawnerEditorPayloads.LibraryView payload){
+        net.goui.cosmicdungeon.client.screen.spawner.SpawnerEditorClient.receiveLibrary(payload);
+    }
     public static void onSpawnerHover(net.goui.cosmicdungeon.network.SpawnerEditorPayloads.HoverView payload){
         SpawnerHoverClient.receive(payload);
     }

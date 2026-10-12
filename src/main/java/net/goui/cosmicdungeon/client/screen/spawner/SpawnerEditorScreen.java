@@ -10,6 +10,7 @@ import net.goui.cosmicdungeon.network.SpawnerEditorPayloads;
 import net.goui.cosmicdungeon.block.entity.CosmicSpawnerPreset.Slot;
 import net.goui.cosmicdungeon.spawner.editor.SpawnerEquipmentDraft;
 import net.goui.cosmicdungeon.spawner.editor.SpawnerEquipmentRules;
+import net.goui.cosmicdungeon.spawner.editor.SpawnerLootDraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -58,9 +59,18 @@ public final class SpawnerEditorScreen extends Screen {
     private boolean previewCaptain;
     private String previewId = "", previewFailure = "";
     private int filteredCount;
+    private SpawnerLootDraft.Snapshot lootSnapshot;
+    private List<String> presetNames, shortcuts;
+    private UUID libraryOperation;
+    private Consumer<SpawnerEditorPayloads.LibraryView> libraryReply;
 
     public SpawnerEditorScreen(SpawnerEditorState state, BlockPos pos, List<ItemStack> equipment, ItemStack held) {
+        this(state, pos, equipment, held, SpawnerLootDraft.Snapshot.empty(), List.of(), List.of("", "", "", "", ""));
+    }
+    public SpawnerEditorScreen(SpawnerEditorState state, BlockPos pos, List<ItemStack> equipment, ItemStack held,
+            SpawnerLootDraft.Snapshot loot, List<String> presetNames, List<String> shortcuts) {
         super(Component.literal("Cosmic Spawner Editor"));
+        this.lootSnapshot = loot; this.presetNames = List.copyOf(presetNames); this.shortcuts = List.copyOf(shortcuts);
         this.state = state; this.pos = pos.immutable();
         this.equipment = equipment.stream().map(ItemStack::copy).toList(); this.held = held.copy();
         for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
@@ -72,6 +82,43 @@ public final class SpawnerEditorScreen extends Screen {
         catalog.sort(Comparator.comparing(Choice::label).thenComparing(Choice::id));
     }
     public UUID session() { return state.session(); }
+    public SpawnerLootDraft.Snapshot lootSnapshot() { return lootSnapshot; }
+    public SpawnerLootDraft lootDraft() { return state.loot(); }
+    public void saveLoot(SpawnerLootDraft value) { state.loot(value); }
+    public List<String> presetNames() { return presetNames; }
+    public List<String> shortcuts() { return shortcuts; }
+    public String entityId() { return state.entityId(); }
+    public boolean dirty() { return state.dirty(); }
+    public boolean libraryPending() { return libraryOperation != null; }
+    public boolean library(SpawnerEditorPayloads.LibraryKind kind, String name, int shortcut,
+            Consumer<SpawnerEditorPayloads.LibraryView> reply) {
+        if (state.closed() || state.pending() || libraryPending()) return false;
+        UUID operation = UUID.randomUUID();
+        libraryOperation = operation; libraryReply = reply;
+        try {
+            if (SpawnerEditorClient.sendLibrary(new SpawnerEditorPayloads.LibraryRequest(session(), operation, kind, name,
+                    shortcut, state.draft(), state.equipment(), state.loot()))) return true;
+        } catch (RuntimeException invalid) { state.notice("The preset request could not be sent."); }
+        libraryOperation = null; libraryReply = null; return false;
+    }
+    public void receiveLibrary(SpawnerEditorPayloads.LibraryView view) {
+        if (!session().equals(view.session()) || !view.operation().equals(libraryOperation) || state.closed()) return;
+        libraryOperation = null;
+        presetNames = List.copyOf(view.names()); shortcuts = List.copyOf(view.shortcuts());
+        if (view.success()) lootSnapshot = new SpawnerLootDraft.Snapshot(lootSnapshot.gear(), lootSnapshot.rules(),
+                view.loot().defaults(), view.loot().note(), view.loot().entityId());
+        var callback = libraryReply; libraryReply = null;
+        if (callback != null) callback.accept(view);
+        state.notice(view.message()); updateEnabled();
+    }
+    public void confirm(String title, String message, Runnable accepted, Screen returnTo) {
+        confirmation = new ConfirmScreen(yes -> {
+            if (state.closed()) return;
+            minecraft.setScreen(returnTo); if (yes) accepted.run();
+        }, Component.literal(title), Component.literal(message),
+                Component.literal("Confirm"), Component.literal("Keep editing"));
+        minecraft.setScreen(confirmation);
+    }
     @Override protected void init() {
         layout = SpawnerEditorLayout.fit(width, height);
         captions.clear(); navigation.clear(); entityButtons.clear(); equipmentButtons.clear(); previous = null; next = null;
@@ -94,6 +141,10 @@ public final class SpawnerEditorScreen extends Screen {
         addRenderableWidget(Button.builder(Component.literal("Cancel"), b -> onClose())
                 .bounds(layout.x() + layout.width() - buttonWidth - 10, layout.footerY(), buttonWidth, 20).build())
                 .setTooltip(Tooltip.create(Component.literal("Close without applying. Changed drafts require confirmation.")));
+        addRenderableWidget(Button.builder(Component.literal("Drops / files"),
+                b -> minecraft.setScreen(new SpawnerManagementScreen(this)))
+                .bounds(layout.x() + 8, layout.footerY(), 82, 20).build())
+                .setTooltip(Tooltip.create(Component.literal("Gear drop chances, default loot, configured rules and named preset files.")));
         updateEnabled();
     }
     private void nav(SpawnerEditorState.Tab tab, Item icon, String label, int index) {
@@ -236,10 +287,10 @@ public final class SpawnerEditorScreen extends Screen {
                 Math.max(24, (layout.contentWidth() - 10) / 2 - 8)));
     }
     private void apply() {
-        if (!state.beginApply()) return;
+        if (libraryPending() || !state.beginApply()) return;
         try {
             if (!SpawnerEditorClient.send(new SpawnerEditorPayloads.Request(session(),
-                    SpawnerEditorPayloads.Kind.APPLY, state.draft(), state.equipment())))
+                    SpawnerEditorPayloads.Kind.APPLY, state.draft(), state.equipment(), state.loot())))
                 state.reject(session(), "The server connection is unavailable.");
         } catch (RuntimeException failed) {
             state.reject(session(), "The edit request could not be sent.");
@@ -250,8 +301,9 @@ public final class SpawnerEditorScreen extends Screen {
         state.reject(session(), message); updateEnabled();
     }
     public void finished() {
-        state.close(session()); preview = null;
-        if (minecraft != null && (minecraft.screen == this || minecraft.screen == confirmation || minecraft.screen == equipmentEditor)) minecraft.setScreen(null);
+        state.close(session()); preview = null; libraryOperation = null; libraryReply = null;
+        if (minecraft != null && (minecraft.screen == this || minecraft.screen == confirmation || minecraft.screen == equipmentEditor
+                || (minecraft.screen instanceof SpawnerEditorChildScreen child && child.owner() == this))) minecraft.setScreen(null);
     }
     private void cancel() {
         if (state.pending() || state.closed()) return;
@@ -262,7 +314,7 @@ public final class SpawnerEditorScreen extends Screen {
         } finally { finished(); }
     }
     @Override public void onClose() {
-        if (state.pending()) { state.notice("Waiting for the server to finish applying."); return; }
+        if (state.pending() || libraryPending()) { state.notice("Waiting for the server operation to finish."); return; }
         if (!state.dirty()) { cancel(); return; }
         confirmation = new ConfirmScreen(discard -> {
             if (discard) cancel(); else if (!state.closed()) minecraft.setScreen(this);
@@ -273,10 +325,10 @@ public final class SpawnerEditorScreen extends Screen {
     }
     private void updateEnabled() {
         for (var child : children()) {
-            if (child instanceof AbstractWidget widget) widget.active = !state.pending() && !state.closed();
-            if (child instanceof EditBox field) field.setEditable(!state.pending() && !state.closed());
+            if (child instanceof AbstractWidget widget) widget.active = !state.pending() && !libraryPending() && !state.closed();
+            if (child instanceof EditBox field) field.setEditable(!state.pending() && !libraryPending() && !state.closed());
         }
-        if (apply != null) apply.active = !state.pending() && !state.closed() && state.error().isEmpty();
+        if (apply != null) apply.active = !state.pending() && !libraryPending() && !state.closed() && state.error().isEmpty();
         if (previous != null) previous.active &= state.page() > 0;
         if (next != null) next.active &= (state.page() + 1) * layout.entityRows() < filteredCount;
     }

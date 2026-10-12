@@ -47,7 +47,7 @@ public final class CosmicSpawnerIntrinsicDropEvents {
     }
 
     private static void removeOverriddenIntrinsicDrops(LivingDropsEvent event, Map<String, CosmicSpawnerPreset.IntrinsicDropRule> rules) {
-        Set<ResourceLocation> itemIds = rules.values().stream().map(CosmicSpawnerPreset.IntrinsicDropRule::itemId).collect(Collectors.toSet());
+        Set<ResourceLocation> itemIds = rules.values().stream().filter(rule -> rule.kind()!=CosmicSpawnerPreset.IntrinsicDropRule.Kind.CUSTOM_ADDITION).map(CosmicSpawnerPreset.IntrinsicDropRule::itemId).collect(Collectors.toSet());
         event.getDrops().removeIf(itemEntity -> {
             ItemStack stack = itemEntity.getItem();
             ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
