@@ -47,6 +47,35 @@ public final class BogatyrIntegrationGameTests {
             if(wolf.isOrderedToSit())result++;
         }return result;
     }
+    /** Equivalent pre-optimization settled-Stay cleanup, confined to the native fixture. */
+    private static void legacyForget(Wolf wolf){
+        wolf.setTarget(null);wolf.stopBeingAngry();wolf.setLastHurtByMob(null);wolf.setLastHurtMob(null);
+        var probe=BogatyrWork.probe;if(probe!=null)probe.targetTraversals++;
+        for(var goal:wolf.targetSelector.getAvailableGoals()){
+            if(probe!=null)probe.targetGoals++;
+            if(goal.isRunning())goal.stop();
+            if(goal.getGoal() instanceof BogatyrTargetMemory memory){
+                memory.cosmicdungeon$forgetOwnerThreat();
+                if(probe!=null)probe.memoryResets++;
+            }
+        }
+    }
+    private static long legacyStayWork(List<Wolf> wolves,List<BogatyrModes.StandGround> goals,int sweeps){
+        long result=0;for(int tick=0;tick<sweeps;tick++)for(int i=0;i<wolves.size();i++){
+            var wolf=wolves.get(i);legacyForget(wolf);BogatyrModes.apply(wolf,false);goals.get(i).tick();
+            if(wolf.isOrderedToSit())result++;
+        }return result;
+    }
+    private static long sampleStay(BogatyrCommandGameTests.Fixture f,List<Wolf> wolves,
+            List<BogatyrModes.StandGround> goals,boolean legacy,BogatyrWork.Probe totals){
+        var probe=BogatyrWork.begin();
+        try{
+            long elapsed=measure(()->legacy?legacyStayWork(wolves,goals,SWEEPS):stayWork(wolves,goals,SWEEPS));
+            quiet(f,probe,legacy?"Legacy settled Stay":"Optimized settled Stay");
+            totals.targetTraversals+=probe.targetTraversals;totals.targetGoals+=probe.targetGoals;
+            totals.memoryResets+=probe.memoryResets;return elapsed;
+        }finally{BogatyrWork.end();}
+    }
     private static void quiet(BogatyrCommandGameTests.Fixture f,BogatyrWork.Probe p,String phase){
         f.check(p.scans==0&&p.decisions==0&&p.paths==0&&p.nodes==0,
                 phase+" has no retired custom target search or path work");
@@ -70,7 +99,7 @@ public final class BogatyrIntegrationGameTests {
                         "Retired proactive scan is absent for every measured wolf");
                 f.check(nativeWork(nativeGoals,1)==0,"Quiet native-defense baseline has no remembered threat");
                 nativeWork(nativeGoals,20);patrolWork(wolves,nativeGoals,20);
-                long[] baseline=new long[SAMPLES],patrol=new long[SAMPLES],settled=new long[SAMPLES];
+                long[] baseline=new long[SAMPLES],patrol=new long[SAMPLES],settled=new long[SAMPLES],legacyStay=new long[SAMPLES];
                 var probe=BogatyrWork.begin();
                 try{
                     // Alternate order to reduce the bias of always sampling a colder baseline first.
@@ -84,6 +113,8 @@ public final class BogatyrIntegrationGameTests {
                         }
                     }
                     quiet(f,probe,"Patrol/"+size);
+                    f.check(probe.targetTraversals==0&&probe.targetGoals==0&&probe.memoryResets==0,
+                            "Unchanged Patrol never enumerates target selectors or resets goal memory");
                 }finally{BogatyrWork.end();}
                 f.check(wolves.stream().allMatch(w->!w.isOrderedToSit()&&w.getTarget()==null),
                         "Quiet Patrol preserves native standing state");
@@ -91,12 +122,32 @@ public final class BogatyrIntegrationGameTests {
                 for(var goal:stayGoals)goal.start();
                 var anchors=wolves.stream().map(BogatyrModes::anchor).toList();
                 f.check(anchors.stream().allMatch(Objects::nonNull),"Every real wolf settles before stationary sample");
-                stayWork(wolves,stayGoals,20);probe=BogatyrWork.begin();
-                try{
-                    for(int sample=0;sample<SAMPLES;sample++)
-                        settled[sample]=measure(()->stayWork(wolves,stayGoals,SWEEPS));
-                    quiet(f,probe,"Settled Stay/"+size);
-                }finally{BogatyrWork.end();}
+                stayWork(wolves,stayGoals,20);legacyStayWork(wolves,stayGoals,20);
+                long nativeGoalCount=wolves.stream().mapToLong(w->w.targetSelector.getAvailableGoals().size()).sum();
+                long nativeMemoryCount=wolves.stream().mapToLong(w->w.targetSelector.getAvailableGoals().stream()
+                        .filter(g->g.getGoal() instanceof BogatyrTargetMemory).count()).sum();
+                var before=new BogatyrWork.Probe();var after=new BogatyrWork.Probe();
+                // Alternate measured order on the same real pack; setup and warmup are untimed.
+                for(int sample=0;sample<SAMPLES;sample++){
+                    if(sample%2==0){
+                        legacyStay[sample]=sampleStay(f,wolves,stayGoals,true,before);
+                        settled[sample]=sampleStay(f,wolves,stayGoals,false,after);
+                    }else{
+                        settled[sample]=sampleStay(f,wolves,stayGoals,false,after);
+                        legacyStay[sample]=sampleStay(f,wolves,stayGoals,true,before);
+                    }
+                }
+                f.check(before.targetTraversals==(long)size*SWEEPS*SAMPLES
+                        &&before.targetGoals==nativeGoalCount*SWEEPS*SAMPLES
+                        &&before.memoryResets==nativeMemoryCount*SWEEPS*SAMPLES,
+                        "Legacy baseline counts actual native selector traversal and every visited goal");
+                f.check(after.targetTraversals==0&&after.targetGoals==0&&after.memoryResets==0,
+                        "Unchanged settled Stay never enumerates target selectors or resets goal memory");
+                com.mojang.logging.LogUtils.getLogger().info(
+                        "WOLF_STAY_TRAVERSAL_COST wolves={} samples={} sweeps={} legacy_us={} optimized_us={} legacy_traversals={} optimized_traversals={} legacy_goals={} optimized_goals={} legacy_memory_resets={} optimized_memory_resets={} legacy_ns={} optimized_ns={}",
+                        size,SAMPLES,SWEEPS,median(legacyStay)/1000.0/SWEEPS,median(settled)/1000.0/SWEEPS,
+                        before.targetTraversals,after.targetTraversals,before.targetGoals,after.targetGoals,
+                        before.memoryResets,after.memoryResets,Arrays.toString(legacyStay),Arrays.toString(settled));
                 for(int i=0;i<size;i++)f.check(wolves.get(i).isOrderedToSit()
                         &&wolves.get(i).getNavigation().isDone()
                         &&anchors.get(i).equals(BogatyrModes.anchor(wolves.get(i))),
