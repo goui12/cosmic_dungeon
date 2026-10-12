@@ -13,6 +13,27 @@ public final class PlayerSaveProof {
         player.saveWithoutId(output);
         if(!errors.isEmpty())throw new IllegalStateException(errors.getReport());return output.buildResult();
     }
+    /** Missing evidence permits partial preparation; malformed present evidence must remain held. */
+    public static CompoundTag ownerCompound(CompoundTag parent,String key){
+        var value=parent.get(key);
+        if(value==null)return new CompoundTag();
+        if(value instanceof CompoundTag compound)return compound;
+        throw new IllegalStateException("Unsupported owner proof field "+key+"; expected compound. Original save requires review.");
+    }
+    /** A supported previous receipt may be superseded; unsupported evidence requires review. */
+    public static CompoundTag ownerReceipt(CompoundTag parent,String key,java.util.UUID owner,int maxSchema,String transactionKey){
+        var proof=ownerCompound(parent,key);
+        if(proof.isEmpty())return proof;
+        try{
+            int schema=proof.getIntOr("schema",0);
+            if(schema<1||schema>maxSchema||!owner.equals(java.util.UUID.fromString(proof.getStringOr("owner",""))))
+                throw new IllegalArgumentException("Unsupported schema or owner");
+            java.util.UUID.fromString(proof.getStringOr(transactionKey,""));
+            return proof;
+        }catch(RuntimeException unsupported){
+            throw new IllegalStateException("Unsupported owner receipt field "+key+"; original save requires review.",unsupported);
+        }
+    }
     public static boolean matches(CompoundTag expected,CompoundTag actual){
         return Objects.equals(expected.get("Inventory"),actual.get("Inventory"))
                 &&Objects.equals(expected.get("equipment"),actual.get("equipment"))

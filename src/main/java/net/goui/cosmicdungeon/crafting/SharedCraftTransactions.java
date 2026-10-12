@@ -115,16 +115,26 @@ public final class SharedCraftTransactions {
     public static boolean reconcile(ServerPlayer p) {
         if (HOLDS.contains(p)) return false;
         try {
-            PotionCursorCustody.restore(p);
+            var owner = PlayerSaveProof.ownerCompound(p.getPersistentData(), ClassData.ROOT_TAG);
+            var custody = PlayerSaveProof.ownerCompound(owner, CUSTODY);
+            var receipt = PlayerSaveProof.ownerReceipt(owner, RECEIPT, p.getUUID(), 3, "id");
+            if (!receipt.isEmpty() && (receipt.getLongOr("run", 0) <= 0 || receipt.getLongOr("sequence", -1) <= 0
+                    || receipt.getBoolean("committed").isEmpty()))
+                throw new IllegalStateException("Unsupported owner receipt field " + RECEIPT + "; original save requires review.");
             var server = p.level().getServer(); var data = SharedCraftData.get(server); var plan = data.pending(p.getUUID());
             if (plan == null) {
-                if (root(p).contains(CUSTODY)) throw new IllegalStateException("Craft reservation has no world decision");
+                if (owner.contains(CUSTODY)) throw new IllegalStateException("Craft reservation has no world decision");
+                PotionCursorCustody.restore(p);
                 return true;
             }
             validateImages(p, plan);
-            var receipt = root(p).getCompoundOrEmpty(RECEIPT);
-            if (!plan.recoverable(p.getUUID(), root(p).getCompoundOrEmpty(CUSTODY), receipt))
+            if (!receipt.isEmpty() && UUID.fromString(receipt.getStringOr("id", "")).equals(plan.id())
+                    && !plan.receipt(p.getUUID()).equals(receipt))
+                throw new IllegalStateException("Craft current-operation receipt conflicts with journal; original save requires review");
+            if (!plan.recoverable(p.getUUID(), custody, receipt))
                 throw new IllegalStateException("Craft owner proof differs from journal");
+            // Exact journal proof must pass before restoring a saved cursor into live inventory.
+            PotionCursorCustody.restore(p);
             if (!data.flushVerified()) throw new IllegalStateException("Craft decision readback failed");
             boolean newlyApplied = !plan.receipt(p.getUUID()).equals(receipt);
             if (newlyApplied) {

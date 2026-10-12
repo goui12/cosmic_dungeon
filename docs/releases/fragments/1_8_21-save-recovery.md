@@ -1,0 +1,1 @@
+Recovery now holds malformed present owner proof before mutation while preserving valid absent partial preparation and old formats. CI fixtures cover native owner/world disk reload and repeated settlement; complete saves remain required.

@@ -23,6 +23,138 @@ public final class BogatyrPatrolGameTests {
         mob.snapTo(f.origin.x+2,f.origin.y,f.origin.z+1,0,0);mob.setNoAi(true);
         f.check(f.level.addFreshEntity(mob),"Native enemy admission");f.extras.add(mob);return mob;
     }
+    private static void singleReset(BogatyrCommandGameTests.Fixture f,Runnable action,String phase){
+        var probe=BogatyrWork.begin();try{
+            action.run();
+            f.check(probe.targetTraversals==1&&probe.targetGoals>0&&probe.memoryResets>0,
+                    phase+" performs one actual target-selector traversal and clears native goal memory");
+        }finally{BogatyrWork.end();}
+    }
+    private static void noReset(BogatyrCommandGameTests.Fixture f,Runnable action,String phase){
+        var probe=BogatyrWork.begin();try{
+            action.run();
+            f.check(probe.targetTraversals==0&&probe.targetGoals==0&&probe.memoryResets==0,
+                    phase+" preserves protection without repeating target-selector traversal");
+        }finally{BogatyrWork.end();}
+    }
+    /** An external TARGET goal added after Stay selection; native GoalSelector owns its lifecycle. */
+    private static final class InjectedTarget extends Goal implements BogatyrTargetMemory {
+        private final Wolf wolf;private final Mob hostile;
+        int starts,stops,ticks,forgets;
+        InjectedTarget(Wolf wolf,Mob hostile){this.wolf=wolf;this.hostile=hostile;setFlags(EnumSet.of(Flag.TARGET));}
+        @Override public boolean canUse(){return true;}
+        @Override public boolean canContinueToUse(){return true;}
+        @Override public void start(){starts++;wolf.setTarget(hostile);}
+        @Override public void tick(){ticks++;wolf.setTarget(hostile);}
+        @Override public void stop(){stops++;wolf.setTarget(null);}
+        @Override public void cosmicdungeon$forgetOwnerThreat(){forgets++;}
+    }
+    private static void selectorTransitions(BogatyrCommandGameTests.Fixture f,Wolf wolf,Mob hostile){
+        singleReset(f,()->f.check(BogatyrModes.select(f.p(),f.run,WolfMode.STAY),"Stay transition accepted"),"Patrol to Stay");
+        stay(wolf).start();var anchor=BogatyrModes.anchor(wolf);
+        f.check(anchor!=null&&wolf.isOrderedToSit(),"Transition fixture starts settled");
+        noReset(f,()->{
+            for(int i=0;i<40;i++){
+                // Both direct/native target proposals and external hurt/anger writes remain blocked.
+                wolf.tickCount=600+i;wolf.setLastHurtByMob(hostile);wolf.setLastHurtMob(hostile);
+                wolf.setRemainingPersistentAngerTime(100);wolf.setPersistentAngerTarget(hostile.getUUID());
+                wolf.setTarget(hostile);f.check(wolf.getTarget()==null,"Stay target-write guard is immediate");
+                BogatyrModes.apply(wolf,false);stay(wolf).tick();
+                f.check(wolf.getLastHurtByMob()==null&&wolf.getLastHurtMob()==null&&!wolf.isAngry(),
+                        "Constant Stay clearing rejects externally written retaliation state");
+            }
+            f.check(BogatyrModes.select(f.p(),f.run,WolfMode.STAY),"Redundant Stay selection accepted");
+        },"Settled Stay and redundant command");
+        f.check(anchor.equals(BogatyrModes.anchor(wolf))&&wolf.isOrderedToSit()
+                &&wolf.getNavigation().isDone(),"External writes preserve fixed anchor and seating");
+
+        var injected=new InjectedTarget(wolf,hostile);wolf.targetSelector.addGoal(-1,injected);
+        var wrapped=wolf.targetSelector.getAvailableGoals().stream().filter(g->g.getGoal()==injected).findFirst().orElseThrow();
+        wrapped.start();f.check(wrapped.isRunning()&&wolf.getTarget()==null,"Externally started target goal cannot install a Stay target");
+        noReset(f,()->{
+            BogatyrModes.apply(wolf,false);
+            for(int i=0;i<4;i++)wolf.targetSelector.tick();
+        },"New mid-Stay target goal");
+        f.check(!wrapped.isRunning()&&injected.starts==1&&injected.stops==1&&injected.ticks==0,
+                "Native selector stops a TARGET goal injected during Stay and never restarts it");
+        singleReset(f,()->f.check(BogatyrModes.select(f.p(),f.run,WolfMode.PATROL),"Patrol transition accepted"),"Stay to Patrol");
+        f.check(injected.forgets==1,"Patrol transition resets newly injected target memory exactly once");
+        for(int i=0;i<4;i++)wolf.targetSelector.tick();
+        f.check(wrapped.isRunning()&&injected.starts==2&&injected.ticks>0,
+                "Patrol restores native TARGET scheduling after Stay");
+
+        // A flag disabled by another system before Stay must stay disabled after returning to Patrol.
+        wolf.targetSelector.disableControlFlag(Goal.Flag.TARGET);
+        singleReset(f,()->f.check(BogatyrModes.select(f.p(),f.run,WolfMode.STAY),"Stay with prior target restriction"),"Prior-disabled Stay entry");
+        singleReset(f,()->f.check(BogatyrModes.select(f.p(),f.run,WolfMode.PATROL),"Patrol with prior target restriction"),"Prior-disabled Stay exit");
+        int starts=injected.starts;for(int i=0;i<4;i++)wolf.targetSelector.tick();
+        f.check(!wrapped.isRunning()&&injected.starts==starts,"Patrol preserves another system's preexisting TARGET disable");
+        wolf.targetSelector.enableControlFlag(Goal.Flag.TARGET);wolf.targetSelector.removeGoal(injected);
+
+        singleReset(f,()->f.check(BogatyrModes.select(f.p(),f.run,WolfMode.STAY),"Stay before identity checks"),"Identity fixture Stay entry");
+        stay(wolf).start();
+        singleReset(f,()->{
+            wolf.tame(f.current.get(1));wolf.getPersistentData().putString(BogatyrWolfEvents.OWNER,f.current.get(1).getStringUUID());
+            BogatyrModes.apply(wolf,false);
+        },"Changed native owner");
+        f.check(BogatyrModes.mode(wolf)==WolfMode.PATROL&&!wolf.isOrderedToSit(),"Changed owner does not inherit prior owner's Stay");
+        singleReset(f,()->{
+            wolf.tame(f.p());wolf.getPersistentData().putString(BogatyrWolfEvents.OWNER,f.p().getStringUUID());BogatyrModes.apply(wolf,false);
+        },"Restored native owner");
+        f.check(BogatyrModes.mode(wolf)==WolfMode.STAY,"Restored owner resolves its own selected mode");
+        singleReset(f,()->{
+            wolf.getPersistentData().putLong(BogatyrWolfEvents.RUN,f.run+1);BogatyrModes.apply(wolf,false);
+        },"Changed run");
+        f.check(BogatyrModes.mode(wolf)==WolfMode.PATROL&&!wolf.isOrderedToSit(),"New run does not inherit prior-run Stay");
+        singleReset(f,()->{
+            wolf.getPersistentData().putLong(BogatyrWolfEvents.RUN,f.run);BogatyrModes.apply(wolf,false);
+        },"Restored run");
+        f.check(BogatyrModes.mode(wolf)==WolfMode.STAY,"Restored run resolves its own selected mode");
+        noReset(f,()->{for(int i=0;i<40;i++)BogatyrModes.apply(wolf,false);},"Settled restored identity");
+        singleReset(f,()->f.check(BogatyrModes.select(f.p(),f.run,WolfMode.PATROL),"Identity fixture returns to Patrol"),"Final Patrol");
+    }
+    /** Exact native timed-release unenrollment boundary, without changing shared duration configuration. */
+    private static void nativeUnenroll(Wolf wolf,boolean releaseHook){
+        wolf.setTarget(null);wolf.getNavigation().stop();wolf.stopBeingAngry();
+        wolf.setOwnerReference(null);wolf.setTame(false,true);wolf.setOrderedToSit(false);
+        wolf.getPersistentData().remove(BogatyrWolfEvents.RUN);wolf.getPersistentData().remove(BogatyrWolfEvents.OWNER);
+        wolf.getPersistentData().remove(BogatyrDuration.ACTIVE_TICKS);
+        if(releaseHook)BogatyrModes.released(wolf);
+    }
+    private static void reenroll(BogatyrCommandGameTests.Fixture f,Wolf wolf){
+        wolf.tame(f.p());wolf.getPersistentData().putLong(BogatyrWolfEvents.RUN,f.run);
+        wolf.getPersistentData().putString(BogatyrWolfEvents.OWNER,f.p().getStringUUID());BogatyrModes.apply(wolf,false);
+    }
+    private static void timedReleaseTransitions(BogatyrCommandGameTests.Fixture f,Wolf wolf,Mob hostile){
+        var bond=BogatyrIdentity.id(wolf);var injected=new InjectedTarget(wolf,hostile);
+        wolf.targetSelector.addGoal(-1,injected);
+        var wrapped=wolf.targetSelector.getAvailableGoals().stream().filter(g->g.getGoal()==injected).findFirst().orElseThrow();
+        singleReset(f,()->f.check(BogatyrModes.select(f.p(),f.run,WolfMode.STAY),"Stay before timed release"),"Timed-release Stay entry");
+        stay(wolf).start();
+        noReset(f,()->nativeUnenroll(wolf,true),"Timed unenrollment hook");
+        f.check(!BogatyrWolfEvents.managed(wolf)&&!((TargetSelectorFlags)wolf.targetSelector).cosmicdungeon$targetDisabled(),
+                "Timed unenrollment immediately restores the live wild wolf's native TARGET flag");
+        for(int i=0;i<4;i++)wolf.targetSelector.tick();
+        f.check(wrapped.isRunning()&&injected.starts==1&&injected.ticks>0,
+                "Released wild wolf can again schedule native TARGET goals");
+        singleReset(f,()->reenroll(f,wolf),"Same-identity reenrollment");
+        f.check(BogatyrIdentity.id(wolf).equals(bond)&&BogatyrModes.standing(wolf)
+                &&wolf.isOrderedToSit()&&wolf.getTarget()==null&&!wrapped.isRunning(),
+                "Reenrollment invalidates prior cached application and reestablishes Stay without replacing the wolf");
+        singleReset(f,()->f.check(BogatyrModes.select(f.p(),f.run,WolfMode.PATROL),"Patrol before externally restricted release"),"Release restriction setup");
+        wolf.targetSelector.disableControlFlag(Goal.Flag.TARGET);
+        singleReset(f,()->f.check(BogatyrModes.select(f.p(),f.run,WolfMode.STAY),"Stay with external TARGET restriction"),"Restricted timed-release Stay entry");
+        // The per-tick unmanaged fallback also releases stale application state without erasing prior restrictions.
+        noReset(f,()->{nativeUnenroll(wolf,false);BogatyrModes.apply(wolf,false);},"Unmanaged fallback");
+        f.check(((TargetSelectorFlags)wolf.targetSelector).cosmicdungeon$targetDisabled(),
+                "Unmanaged fallback preserves a preexisting external TARGET disable");
+        int starts=injected.starts;for(int i=0;i<4;i++)wolf.targetSelector.tick();
+        f.check(!wrapped.isRunning()&&injected.starts==starts,"External restriction remains effective after release");
+        singleReset(f,()->reenroll(f,wolf),"Restricted same-identity reenrollment");
+        singleReset(f,()->f.check(BogatyrModes.select(f.p(),f.run,WolfMode.PATROL),"Release fixture returns to Patrol"),"Release fixture cleanup");
+        f.check(((TargetSelectorFlags)wolf.targetSelector).cosmicdungeon$targetDisabled(),"Reenrollment also retains the prior external restriction");
+        wolf.targetSelector.enableControlFlag(Goal.Flag.TARGET);wolf.targetSelector.removeGoal(injected);
+    }
     public static void retiredCommands(GameTestHelper helper){
         try(var f=new BogatyrCommandGameTests.Fixture(helper,Long.MAX_VALUE-2701)){
             var wolf=f.wolf(0,0,2,0);wolf.setHealth(5);f.amount(600);var before=f.root().copy();var image=BogatyrRecovery.image(wolf);
@@ -108,6 +240,8 @@ public final class BogatyrPatrolGameTests {
             wolf.tickCount=502;wolf.setLastHurtByMob(hostile);
             f.check(hurt.canUse(),"New hit restarts native retaliation");hurt.start();
             f.check(wolf.getTarget()==hostile,"Post-Stay fresh threat is defended");
+            selectorTransitions(f,wolf,hostile);
+            timedReleaseTransitions(f,wolf,hostile);
             helper.succeed();
         }
     }
@@ -118,7 +252,11 @@ public final class BogatyrPatrolGameTests {
             wolf.getPersistentData().getCompoundOrEmpty(BogatyrModes.STAY).putString("future","keep");
             var image=f.savedWolf(wolf);wolf.discard();
             f.check(PlayerSaveProof.save(f.p()),"Owner native save");f.reloadOwner();f.p().setPos(f.origin.add(-6,0,0));
-            var loaded=f.readWolf(image);f.check(f.level.addFreshEntity(loaded),"Native same-run wolf reload");BogatyrModes.apply(loaded,false);stay(loaded).start();
+            var loaded=f.readWolf(image);
+            singleReset(f,()->{
+                f.check(f.level.addFreshEntity(loaded),"Native same-run wolf reload");BogatyrModes.apply(loaded,false);stay(loaded).start();
+            },"Native entity reload");
+            noReset(f,()->{for(int i=0;i<40;i++){BogatyrModes.apply(loaded,false);stay(loaded).tick();}},"Reloaded fixed Stay");
             f.check(anchor.equals(BogatyrModes.anchor(loaded))&&loaded.isOrderedToSit(),"Relog/unload preserves fixed Stay anchor");
             f.check(loaded.getPersistentData().getCompoundOrEmpty(BogatyrModes.STAY).getStringOr("future","").equals("keep"),"Unknown anchor fields survive");
             var data=BogatyrCompanionData.get(f.level.getServer());f.check(data.flushVerified(f.level.getServer()),"Native mode directory save");
@@ -152,7 +290,11 @@ public final class BogatyrPatrolGameTests {
             var before=wolf.getPersistentData().getCompoundOrEmpty(BogatyrModes.STAY).copy();var image=f.savedWolf(wolf);wolf.discard();
             BogatyrModes.select(f.p(),f.run,WolfMode.PATROL);BogatyrModes.select(f.p(),f.run,WolfMode.STAY);
             f.p().setPos(f.origin.add(-6,0,0));
-            var loaded=f.readWolf(image);f.check(f.level.addFreshEntity(loaded),"Late unloaded wolf admitted");BogatyrModes.apply(loaded,false);
+            var loaded=f.readWolf(image);
+            singleReset(f,()->{
+                f.check(f.level.addFreshEntity(loaded),"Late unloaded wolf admitted");BogatyrModes.apply(loaded,false);
+            },"Late-load changed Stay epoch");
+            noReset(f,()->{for(int i=0;i<40;i++)BogatyrModes.apply(loaded,false);},"Unsettled same-epoch recall");
             f.check(BogatyrModes.anchor(loaded)==null&&!loaded.isOrderedToSit(),"Latest Stay recalls late-loaded wolf rather than old anchor");
             f.check(loaded.getPersistentData().getCompoundOrEmpty(BogatyrModes.STAY).getLongOr("epoch",0)>before.getLongOr("epoch",0),"Saved epoch distinguishes identical mode after intervening Patrol");
             f.p().setHealth(0);stay(loaded).tick();
@@ -182,8 +324,12 @@ public final class BogatyrPatrolGameTests {
             BogatyrWork.begin();try{
                 BogatyrModes.select(f.p(),f.run,WolfMode.STAY);
                 for(var wolf:wolves)stay(wolf).start();
+                long traversals=BogatyrWork.probe.targetTraversals,goals=BogatyrWork.probe.targetGoals,resets=BogatyrWork.probe.memoryResets;
+                f.check(traversals==wolves.size()&&goals>0&&resets>0,"Stay selection traverses each actual native target selector once");
                 for(int tick=0;tick<40;tick++)for(var wolf:wolves){BogatyrModes.apply(wolf,false);stay(wolf).tick();}
                 f.check(BogatyrWork.probe.scans==0&&BogatyrWork.probe.decisions==0,"Settled pack performs no custom target scans or decisions");
+                f.check(BogatyrWork.probe.targetTraversals==traversals&&BogatyrWork.probe.targetGoals==goals
+                        &&BogatyrWork.probe.memoryResets==resets,"Settled uncapped pack never repeats target-selector traversal");
                 f.check(wolves.stream().allMatch(Wolf::isOrderedToSit),"Entire uncapped player pack settles");
             }finally{BogatyrWork.end();}
             helper.succeed();

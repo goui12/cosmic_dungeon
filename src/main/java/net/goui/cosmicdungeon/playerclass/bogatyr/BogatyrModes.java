@@ -15,10 +15,38 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
 @EventBusSubscriber(modid="cosmicdungeon")
 public final class BogatyrModes {
     static final String STAY="cosmicdungeon.bogatyr_stay";
-    private record Applied(WolfMode mode,long epoch,UUID owner,long run){}
+    private static final class Applied {
+        private final WolfMode mode;private final long epoch,run;private final UUID owner;
+        private boolean targetHeld,targetWasDisabled;
+        Applied(WolfMode mode,long epoch,UUID owner,long run){this.mode=mode;this.epoch=epoch;this.owner=owner;this.run=run;}
+        WolfMode mode(){return mode;}
+        long epoch(){return epoch;}
+        boolean matches(WolfMode mode,long epoch,UUID owner,long run){
+            return this.mode==mode&&this.epoch==epoch&&this.run==run&&Objects.equals(this.owner,owner);
+        }
+    }
     private static final Map<Wolf,Applied> APPLIED=new WeakHashMap<>();
     private BogatyrModes(){}
-    public static void clear(){APPLIED.clear();BogatyrBreeding.clear();}
+    public static void clear(){
+        APPLIED.forEach(BogatyrModes::releaseTargets);APPLIED.clear();BogatyrBreeding.clear();
+    }
+    private static void suppressTargets(Wolf wolf,Applied applied){
+        if(!applied.targetHeld){
+            applied.targetWasDisabled=((TargetSelectorFlags)wolf.targetSelector).cosmicdungeon$targetDisabled();
+            applied.targetHeld=true;
+            if(BogatyrWork.probe!=null)BogatyrWork.probe.targetSuppressions++;
+        }
+        // Native selector cleanup/update honors this flag, including subsequently added TARGET goals.
+        wolf.targetSelector.disableControlFlag(Goal.Flag.TARGET);
+    }
+    private static void releaseTargets(Wolf wolf,Applied applied){
+        if(applied!=null&&applied.targetHeld){
+            if(!applied.targetWasDisabled)wolf.targetSelector.enableControlFlag(Goal.Flag.TARGET);
+            applied.targetHeld=false;
+        }
+    }
+    /** Restore native targeting when a live timed companion leaves managed enrollment. */
+    public static void released(Wolf wolf){releaseTargets(wolf,APPLIED.remove(wolf));}
     private static WolfModeData.State state(Wolf wolf){
         return BogatyrCompanionData.get(((ServerLevel)wolf.level()).getServer())
                 .mode(BogatyrCompanions.owner(wolf),BogatyrThreats.run(wolf));
@@ -54,18 +82,30 @@ public final class BogatyrModes {
         return wolf.level() instanceof ServerLevel&&BogatyrWolfEvents.managed(wolf)
                 &&!unsupportedAnchor(wolf)&&state(wolf).writable()&&!BogatyrRecovery.held(wolf);
     }
-    private static void forget(Wolf wolf){
+    private static void clearThreat(Wolf wolf){
         wolf.setTarget(null);wolf.stopBeingAngry();wolf.setLastHurtByMob(null);wolf.setLastHurtMob(null);
+    }
+    private static void forget(Wolf wolf){
+        clearThreat(wolf);
+        if(BogatyrWork.probe!=null)BogatyrWork.probe.targetTraversals++;
         wolf.targetSelector.getAvailableGoals().forEach(g->{
+            if(BogatyrWork.probe!=null)BogatyrWork.probe.targetGoals++;
             if(g.isRunning())g.stop();
-            if(g.getGoal() instanceof BogatyrTargetMemory memory)memory.cosmicdungeon$forgetOwnerThreat();
+            if(g.getGoal() instanceof BogatyrTargetMemory memory){
+                if(BogatyrWork.probe!=null)BogatyrWork.probe.memoryResets++;
+                memory.cosmicdungeon$forgetOwnerThreat();
+            }
         });
     }
     static void apply(Wolf wolf,boolean command){
-        if(!(wolf.level() instanceof ServerLevel)||!BogatyrWolfEvents.managed(wolf))return;
+        if(!(wolf.level() instanceof ServerLevel))return;
+        if(!BogatyrWolfEvents.managed(wolf)){released(wolf);return;}
         if(unsupportedAnchor(wolf)){BogatyrBreeding.cancel(wolf);forget(wolf);hold(wolf);return;}
-        var state=state(wolf);var next=new Applied(state.mode(),epoch(wolf),BogatyrCompanions.owner(wolf),BogatyrThreats.run(wolf));var old=APPLIED.put(wolf,next);
-        if(!next.equals(old)){
+        var state=state(wolf);long epoch=epoch(wolf);var owner=BogatyrCompanions.owner(wolf);long run=BogatyrThreats.run(wolf);
+        var next=APPLIED.get(wolf);
+        if(next==null||!next.matches(state.mode(),epoch,owner,run)){
+            releaseTargets(wolf,next);
+            next=new Applied(state.mode(),epoch,owner,run);APPLIED.put(wolf,next);
             BogatyrBreeding.cancel(wolf);
             wolf.goalSelector.getAvailableGoals().stream().filter(g->g.isRunning()
                     &&(g.getFlags().contains(Goal.Flag.MOVE)||g.getFlags().contains(Goal.Flag.JUMP)))
@@ -85,7 +125,7 @@ public final class BogatyrModes {
         }
         BogatyrBreeding.tick(wolf);
         if(next.mode()==WolfMode.STAY){
-            forget(wolf);
+            suppressTargets(wolf,next);clearThreat(wolf);
             if(!state.writable()||BogatyrRecovery.held(wolf)||seated(wolf))hold(wolf);
         }
     }
