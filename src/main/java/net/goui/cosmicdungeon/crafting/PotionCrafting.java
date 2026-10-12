@@ -90,16 +90,33 @@ public final class PotionCrafting {
             var catalog = data(player); var planner = catalog.selection();
             var entries = new ArrayList<net.goui.cosmicdungeon.network.PotionCraftPayloads.Entry>();
             for (var target : catalog.recipes().targets()) if (target.classes().contains(role)) {
-                var choice = planner.choose(target.id(), stock.own(), fuel.charges());
-                if (choice == null) choice = planner.choose(target.id(), stock.pooled(), fuel.charges());
-                entries.add(new net.goui.cosmicdungeon.network.PotionCraftPayloads.Entry(target.id(),
-                        PotionStacks.crafted(PotionContents.createItemStack(target.container(), target.potion())),
-                        planner.capacity(target.id(), stock.own(), fuel.charges()), planner.capacity(target.id(), stock.pooled(), fuel.charges()),
-                        choice == null ? 0 : choice.fuel().steps(), choice == null ? 0 : choice.fuel().powders()));
+                entries.add(entry(target, planner, stock.own(), stock.pooled(), fuel.charges()));
             }
             old = new QuoteCache(run.runId(), role, fuel.charges(), stock, List.copyOf(entries)); QUOTES.put(player, old);
         }
         return new net.goui.cosmicdungeon.network.PotionCraftPayloads.View(run.runId(), revision, role, fuel.charges(), fuel.capacity(), old.entries());
+    }
+    /** Exactly the route preference used by execution, built only when the bounded stock/fuel cache changes. */
+    public static net.goui.cosmicdungeon.network.PotionCraftPayloads.Entry entry(PotionRecipeCatalog.Target target,
+            PotionRecipeSelection planner, Map<String, Integer> ownStock, Map<String, Integer> pooledStock, int charges) {
+        var choice = planner.choose(target.id(), ownStock, charges);
+        if (choice == null) choice = planner.choose(target.id(), pooledStock, charges);
+        var materials = new ArrayList<net.goui.cosmicdungeon.network.PotionCraftPayloads.Material>();
+        if (choice != null) {
+            String input = PotionRecipeSelection.inputKey(choice.option().route());
+            materials.add(material(input, choice.requirements().get(input), ownStock, pooledStock));
+            for (var key : new TreeSet<>(choice.requirements().keySet())) if (!key.equals(input))
+                materials.add(material(key, choice.requirements().get(key), ownStock, pooledStock));
+        }
+        return new net.goui.cosmicdungeon.network.PotionCraftPayloads.Entry(target.id(),
+                PotionStacks.crafted(PotionContents.createItemStack(target.container(), target.potion())),
+                planner.capacity(target.id(), ownStock, charges), planner.capacity(target.id(), pooledStock, charges),
+                choice == null ? 0 : choice.fuel().steps(), choice == null ? 0 : choice.fuel().powders(), materials);
+    }
+    private static net.goui.cosmicdungeon.network.PotionCraftPayloads.Material material(String key, int needed,
+            Map<String, Integer> own, Map<String, Integer> pooled) {
+        return new net.goui.cosmicdungeon.network.PotionCraftPayloads.Material(key, needed,
+                own.getOrDefault(key, 0), pooled.getOrDefault(key, 0));
     }
     public static void forget(ServerPlayer player) { QUOTES.remove(player); }
     public static void stopped() { CATALOGS.clear(); QUOTES.clear(); }

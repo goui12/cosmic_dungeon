@@ -129,4 +129,106 @@ class PotionRecipeSelectionTest {
         assertNull(SELECT.choose("minecraft:luck_splash",waterRecipe(1,1),0));
         assertEquals(0,SELECT.capacity("minecraft:turtle_master_splash",waterRecipe(1,1),0));
     }
+
+    private static Map<String,Integer> required(net.goui.cosmicdungeon.network.PotionCraftPayloads.Entry entry) {
+        var result=new TreeMap<String,Integer>();
+        for(var material:entry.materials())assertNull(result.put(material.key(),material.needed()),"Unique selected debit keys");
+        return result;
+    }
+    private static net.goui.cosmicdungeon.network.PotionCraftPayloads.Entry quote(String id,Map<String,Integer> own,Map<String,Integer> pooled,int charges) {
+        return PotionCrafting.entry(CATALOG.target(id),SELECT,own,pooled,charges);
+    }
+    @Test void selectedBaseStrongExtendedAndMultistepQuotesListExactlyTheRemainingDebits() {
+        var healing=quote(HEALING,waterRecipe(1,1),waterRecipe(1,1),0);
+        assertEquals(3,healing.steps());assertEquals(1,healing.powders());
+        assertEquals(Map.of(bottle(Items.POTION,Potions.WATER),1,item(Items.NETHER_WART),1,
+                item(Items.GLISTERING_MELON_SLICE),1,item(Items.GUNPOWDER),1,item(Items.BLAZE_POWDER),1),required(healing));
+        var strongStock=new HashMap<>(waterRecipe(1,1));strongStock.put(item(Items.GLOWSTONE_DUST),1);
+        var strong=quote("minecraft:strong_healing_splash",strongStock,strongStock,0);
+        assertEquals(4,strong.steps());assertEquals(1,strong.powders());
+        var strongNeeded=new TreeMap<>(required(healing));strongNeeded.put(item(Items.GLOWSTONE_DUST),1);
+        assertEquals(strongNeeded,required(strong));
+        var extended=stock(potion(Items.POTION,Potions.WATER),new ItemStack(Items.NETHER_WART),
+                new ItemStack(Items.BLAZE_POWDER,2),new ItemStack(Items.REDSTONE),new ItemStack(Items.GUNPOWDER));
+        var strength=quote("minecraft:long_strength_splash",extended,extended,0);
+        assertEquals(4,strength.steps());assertEquals(1,strength.powders());
+        assertEquals(Map.of(bottle(Items.POTION,Potions.WATER),1,item(Items.NETHER_WART),1,
+                item(Items.BLAZE_POWDER),2,item(Items.REDSTONE),1,item(Items.GUNPOWDER),1),required(strength));
+        var multi=stock(potion(Items.POTION,Potions.WATER),new ItemStack(Items.NETHER_WART),new ItemStack(Items.GOLDEN_CARROT),
+                new ItemStack(Items.FERMENTED_SPIDER_EYE),new ItemStack(Items.REDSTONE),new ItemStack(Items.GUNPOWDER),new ItemStack(Items.BLAZE_POWDER));
+        var invisible=quote("minecraft:long_invisibility_splash",multi,multi,0);
+        assertEquals(5,invisible.steps());assertEquals(1,invisible.powders());
+        assertEquals(Map.of(bottle(Items.POTION,Potions.WATER),1,item(Items.NETHER_WART),1,item(Items.GOLDEN_CARROT),1,
+                item(Items.FERMENTED_SPIDER_EYE),1,item(Items.REDSTONE),1,item(Items.GUNPOWDER),1,item(Items.BLAZE_POWDER),1),required(invisible));
+        for(var entry:List.of(healing,strong,strength,invisible)) {
+            assertTrue(entry.materials().getFirst().key().startsWith("potion/"));assertEquals(1,entry.materials().getFirst().needed());
+            assertEquals(entry.steps()+entry.powders(),entry.materials().stream().skip(1).mapToInt(m->m.needed()).sum());
+            assertTrue(entry.materials().stream().allMatch(m->m.own()>=m.needed()&&m.shared()>=m.needed()));
+        }
+    }
+    @Test void existingIntermediateAndStoredFuelOmitConsumedStagesAndUnusedRefill() {
+        var base=stock(potion(Items.POTION,Potions.HEALING),new ItemStack(Items.GUNPOWDER));
+        var one=quote(HEALING,base,base,1);
+        assertEquals(1,one.steps());assertEquals(0,one.powders());
+        assertEquals(Map.of(bottle(Items.POTION,Potions.HEALING),1,item(Items.GUNPOWDER),1),required(one));
+        assertFalse(required(one).containsKey(bottle(Items.POTION,Potions.WATER)));
+        assertFalse(required(one).containsKey(bottle(Items.POTION,Potions.AWKWARD)));
+        var upgraded=stock(PotionStacks.crafted(potion(Items.SPLASH_POTION,Potions.HEALING)),new ItemStack(Items.GLOWSTONE_DUST));
+        var strong=quote("minecraft:strong_healing_splash",upgraded,upgraded,1);
+        assertEquals(Map.of(bottle(Items.SPLASH_POTION,Potions.HEALING),1,item(Items.GLOWSTONE_DUST),1),required(strong));
+        assertEquals(1,strong.steps());assertEquals(0,strong.powders());
+        var strength=stock(potion(Items.POTION,Potions.WATER),new ItemStack(Items.NETHER_WART),new ItemStack(Items.GUNPOWDER),new ItemStack(Items.BLAZE_POWDER));
+        var carried=quote(STRENGTH,strength,strength,3);
+        assertEquals(1,required(carried).get(item(Items.BLAZE_POWDER)),"Reagent powder is still consumed with stored fuel");
+        assertEquals(0,carried.powders());assertEquals(3,carried.steps());
+    }
+    @Test void ownRouteTakesPriorityOverShorterSharedRouteAndRowsNeverReserveStock() {
+        var own=waterRecipe(1,1);var pooled=new HashMap<>(own);pooled.put(bottle(Items.POTION,Potions.HEALING),1);pooled.put(item(Items.GUNPOWDER),2);
+        var ownBefore=Map.copyOf(own);var pooledBefore=Map.copyOf(pooled);
+        var selected=quote(HEALING,own,pooled,0);
+        assertEquals(1,selected.own());assertEquals(2,selected.shared());assertEquals(3,selected.steps());
+        assertEquals(bottle(Items.POTION,Potions.WATER),selected.materials().getFirst().key(),"Execution prefers an affordable own route");
+        assertEquals(ownBefore,own);assertEquals(pooledBefore,pooled);
+        var justPowderAndGunpowder=stock(new ItemStack(Items.GUNPOWDER),new ItemStack(Items.BLAZE_POWDER));
+        var donated=new HashMap<>(justPowderAndGunpowder);donated.put(bottle(Items.POTION,Potions.HEALING),1);
+        var shared=quote(HEALING,justPowderAndGunpowder,donated,0);
+        assertEquals(0,shared.own());assertEquals(1,shared.shared());assertEquals(1,shared.steps());
+        var input=shared.materials().getFirst();assertEquals(0,input.own());assertEquals(1,input.shared());
+        for(var row:shared.materials()) {
+            assertEquals(justPowderAndGunpowder.getOrDefault(row.key(),0),row.own());
+            assertEquals(donated.getOrDefault(row.key(),0),row.shared());
+        }
+        assertEquals(0,SELECT.capacity(HEALING,justPowderAndGunpowder,0),"Displaying the shared route cannot add or reserve input stock");
+    }
+    @Test void unavailableQuotesExplainNoSelectedRouteWithoutInventedRequirements() {
+        var noFuel=waterRecipe(1,0);var missing=quote(HEALING,noFuel,noFuel,0);
+        assertEquals(0,missing.own());assertEquals(0,missing.shared());assertEquals(0,missing.steps());assertEquals(0,missing.powders());
+        assertTrue(missing.materials().isEmpty());
+        var mixed=stock(potion(Items.SPLASH_POTION,Potions.AWKWARD),new ItemStack(Items.TURTLE_HELMET),new ItemStack(Items.BLAZE_POWDER));
+        var denied=quote("minecraft:turtle_master_drinkable",mixed,mixed,0);
+        assertEquals(0,denied.shared());assertTrue(denied.materials().isEmpty());
+        assertNull(CATALOG.target("minecraft:luck_splash"));assertNull(CATALOG.target("minecraft:turtle_master_splash"));
+        var lingering=stock(potion(Items.LINGERING_POTION,Potions.HEALING),new ItemStack(Items.GLOWSTONE_DUST),new ItemStack(Items.BLAZE_POWDER));
+        assertTrue(quote("minecraft:strong_healing_splash",lingering,lingering,0).materials().isEmpty());
+    }
+
+    @Test void everyVanillaTargetAndSavedChargeProducesAConsistentBoundedSelectedQuote() {
+        var all=new HashMap<String,Integer>();
+        for(var target:CATALOG.targets())for(var route:CATALOG.routes(target)) {
+            all.put(PotionRecipeSelection.inputKey(route),4096);
+            route.ingredients().forEach(ingredient->all.put(item(ingredient),4096));
+        }
+        all.put(item(Items.BLAZE_POWDER),4096);var before=Map.copyOf(all);int checked=0;
+        for(var target:CATALOG.targets())for(int charges=0;charges<20;charges++) {
+            var choice=SELECT.choose(target.id(),all,charges);assertNotNull(choice,target.id());
+            var entry=PotionCrafting.entry(target,SELECT,all,all,charges);
+            assertEquals(choice.requirements(),required(entry));assertEquals(choice.fuel().steps(),entry.steps());
+            assertEquals(choice.fuel().powders(),entry.powders());assertEquals(64,entry.own());assertEquals(64,entry.shared());
+            assertTrue(entry.materials().size()<=net.goui.cosmicdungeon.network.PotionCraftPayloads.MAX_MATERIALS);
+            assertEquals(PotionRecipeSelection.inputKey(choice.option().route()),entry.materials().getFirst().key());
+            for(var row:entry.materials())assertEquals(4096,row.shared());
+            checked++;
+        }
+        assertEquals(820,checked);assertEquals(before,all,"Exhaustive quote generation must not spend or reserve stock");
+    }
 }

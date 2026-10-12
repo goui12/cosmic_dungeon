@@ -10,7 +10,16 @@ import static org.junit.jupiter.api.Assertions.*;
 final class PotionPaletteTest {
     private Entry entry(String id, int own, int shared) {
         var potion = id.contains("strong_") ? Potions.STRONG_HEALING : Potions.HEALING;
-        return new Entry("minecraft:" + id + "_splash", PotionContents.createItemStack(Items.SPLASH_POTION, potion), own, shared, 3, 1);
+        int steps=id.contains("strong_")?4:3;
+        var materials=new ArrayList<Material>();
+        if(shared>0) {
+            materials.add(new Material("potion/minecraft:potion/minecraft:water",1,own,shared));
+            for(var key:List.of("nether_wart","glistering_melon_slice","gunpowder"))
+                materials.add(new Material("item/minecraft:"+key,1,own,shared));
+            if(steps==4)materials.add(new Material("item/minecraft:glowstone_dust",1,own,shared));
+        }
+        return new Entry("minecraft:" + id + "_splash", PotionContents.createItemStack(Items.SPLASH_POTION, potion),
+                own, shared, shared>0?steps:0, 0, materials);
     }
     private View view(long run, long revision, Entry... entries) { return new View(run, revision, "theurgist", 17, 20, List.of(entries)); }
     @Test void variantsKeepAllFamiliesAndOnlySelectRealServerEntries() {
@@ -85,5 +94,34 @@ final class PotionPaletteTest {
         state.receive(view(8, 2, normal, strong));
         assertFalse(state.craft(normal.targetId(), false), "Only the displayed variant is actionable");
         assertTrue(state.craft(strong.targetId(), false)); assertEquals(2, sent.size());
+    }
+
+    @Test void quoteWrappingKeepsAllWordsAndCodepointsWithinAvailableWidth() {
+        var text="Consumed existing input: 1 Splash Potion of Long Night Vision. Need: 1 fermented spider eye, own 0, with group 2.";
+        for(int width:new int[]{12,18,28,48}) {
+            var wrapped=PotionPaletteModel.wrap(text,width,String::length);
+            assertFalse(wrapped.isEmpty());assertEquals(text,String.join(" ",wrapped));
+            assertTrue(wrapped.stream().allMatch(line->line.length()<=width),"Every normal word fits the modeled font width");
+            assertThrows(UnsupportedOperationException.class,()->wrapped.clear());
+        }
+        String token="abcdefghijklmnopqrstuvwxyz";
+        assertEquals(token,String.join("",PotionPaletteModel.wrap(token,7,String::length)));
+        assertTrue(PotionPaletteModel.wrap(token,7,String::length).stream().allMatch(line->line.length()<=7));
+        String unicode="🧪".repeat(9);
+        var parts=PotionPaletteModel.wrap(unicode,3,t->t.codePointCount(0,t.length()));
+        assertEquals(unicode,String.join("",parts));
+        for(var line:parts) {
+            assertTrue(line.codePointCount(0,line.length())<=3);
+            assertFalse(Character.isLowSurrogate(line.charAt(0)));assertFalse(Character.isHighSurrogate(line.charAt(line.length()-1)));
+        }
+        assertEquals(List.of(""),PotionPaletteModel.wrap("",12,String::length));
+        assertThrows(IllegalArgumentException.class,()->PotionPaletteModel.wrap("fuel",0,String::length));
+    }
+    @Test void pendingAndReadySnapshotDescriptionsNeverPromiseAReservation() {
+        String ready=PotionPaletteModel.snapshotStatus(false),pending=PotionPaletteModel.snapshotStatus(true);
+        assertTrue(ready.toLowerCase(Locale.ROOT).contains("reserv"));
+        assertTrue(ready.toLowerCase(Locale.ROOT).contains("server"));
+        assertTrue(pending.toLowerCase(Locale.ROOT).contains("wait")||pending.toLowerCase(Locale.ROOT).contains("pending"));
+        assertNotEquals(ready,pending);
     }
 }

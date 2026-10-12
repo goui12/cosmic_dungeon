@@ -45,4 +45,33 @@ public final class PotionPaletteModel {
                 : entry.shared() > 0 ? "This item can be crafted using group shared materials in other players' inventories."
                 : "Missing materials or brewing fuel. A red 0 cannot be crafted.";
     }
+    public static String snapshotStatus(boolean pending) {
+        return pending ? "Quote updating: these are previous snapshot quantities. Waiting for the server."
+                : "Availability is a snapshot, not a reservation. The server rechecks the route and all debits when you click.";
+    }
+    /** Word wrap with code-point-safe fallback for long translated names, using the actual font's width. */
+    public static List<String> wrap(String text, int width, java.util.function.ToIntFunction<String> measure) {
+        Objects.requireNonNull(text); Objects.requireNonNull(measure);
+        if (width < 1) throw new IllegalArgumentException("Tooltip width");
+        var lines = new ArrayList<String>();
+        for (String paragraph : text.split("\n", -1)) {
+            String remaining = paragraph.strip();
+            if (remaining.isEmpty()) { lines.add(""); continue; }
+            while (!remaining.isEmpty()) {
+                int end = 0, space = -1;
+                while (end < remaining.length()) {
+                    int next = end + Character.charCount(remaining.codePointAt(end));
+                    if (measure.applyAsInt(remaining.substring(0, next)) > width && end > 0) break;
+                    if (Character.isWhitespace(remaining.codePointAt(end))) space = end;
+                    end = next;
+                    if (measure.applyAsInt(remaining.substring(0, end)) > width) break;
+                }
+                if (end < remaining.length() && space > 0) end = space;
+                lines.add(remaining.substring(0, end).stripTrailing());
+                remaining = remaining.substring(end).stripLeading();
+            }
+        }
+        return List.copyOf(lines);
+    }
+
 }

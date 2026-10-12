@@ -13,14 +13,41 @@ import net.minecraft.network.chat.Component;
 public final class PotionPaletteComponent {
     private PotionPaletteComponent() {}
     private static void fill(GuiGraphics g, Rect box, int color) { g.fill(box.x(), box.y(), box.right(), box.bottom(), color); }
+    private static void add(List<Component> lines, String text, ChatFormatting color) {
+        var minecraft = Minecraft.getInstance();
+        int width = Math.max(1, Math.min(300, minecraft.getWindow().getGuiScaledWidth() - 16));
+        for (String line : PotionPaletteModel.wrap(text, width, minecraft.font::width))
+            lines.add(Component.literal(line).withStyle(color));
+    }
+    private static String name(String key) {
+        var parts = key.split("/");
+        var item = net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(net.minecraft.resources.ResourceLocation.parse(parts[1]));
+        if (item == null) return key;
+        if (parts[0].equals("item")) return new net.minecraft.world.item.ItemStack(item).getHoverName().getString();
+        var potion = net.minecraft.core.registries.BuiltInRegistries.POTION.get(net.minecraft.resources.ResourceLocation.parse(parts[2]));
+        return potion.isEmpty() ? key : net.minecraft.world.item.alchemy.PotionContents.createItemStack(item, potion.orElseThrow()).getHoverName().getString();
+    }
     public static List<Component> details(Entry entry, PotionPaletteModel.Variant selected, boolean pending) {
         var lines = new ArrayList<>(Screen.getTooltipFromItem(Minecraft.getInstance(), entry.output()));
-        lines.add(Component.literal(PotionPaletteModel.source(entry)).withStyle(ChatFormatting.GRAY));
-        lines.add(Component.literal("Own materials: " + entry.own() + " | With group: " + entry.shared()).withStyle(ChatFormatting.GRAY));
+        add(lines, PotionPaletteModel.source(entry), ChatFormatting.GRAY);
+        add(lines, "Craftable: own " + entry.own() + " | with eligible group " + entry.shared(), ChatFormatting.GRAY);
         if (PotionPaletteModel.variant(entry.targetId()) != selected)
-            lines.add(Component.literal("This effect has no " + selected.description.toLowerCase(Locale.ROOT) + " variant; showing its normal recipe.").withStyle(ChatFormatting.GRAY));
-        lines.add(Component.literal("Fuel: " + entry.steps() + " steps; " + entry.powders() + " new blaze powder.").withStyle(ChatFormatting.GRAY));
-        lines.add(Component.literal(pending ? "Waiting for the server." : "Click: craft one onto the cursor. Shift-click: one into inventory, hotbar first.").withStyle(ChatFormatting.YELLOW));
+            add(lines, "This effect has no " + selected.description.toLowerCase(Locale.ROOT) + " variant; showing its normal recipe.", ChatFormatting.GRAY);
+        if (entry.materials().isEmpty()) {
+            add(lines, "No affordable route: missing input, ingredients or fuel. Costs are unavailable.", ChatFormatting.GRAY);
+        } else {
+            add(lines, entry.own() > 0 ? "Selected route: your inventory." : "Selected route: your inventory plus eligible shared stock.", ChatFormatting.GRAY);
+            for (int i = 0; i < entry.materials().size(); i++) {
+                var material = entry.materials().get(i);
+                add(lines, (i == 0 ? "Consumes input: " : "Requires: ") + material.needed() + " x " + name(material.key())
+                        + " | own " + material.own() + ", with group " + material.shared(), ChatFormatting.GRAY);
+            }
+            add(lines, "Intermediate stages are made within this route; they are not extra inputs.", ChatFormatting.GRAY);
+            add(lines, "Fuel: " + entry.steps() + " steps; " + entry.powders()
+                    + " new fuel powder (included above). Saved charges are used first.", ChatFormatting.GRAY);
+        }
+        add(lines, PotionPaletteModel.snapshotStatus(pending), ChatFormatting.GRAY);
+        add(lines, pending ? "Waiting for the server." : "Click: craft one onto the cursor. Shift-click: one into inventory, hotbar first.", ChatFormatting.YELLOW);
         return lines;
     }
     public static void draw(GuiGraphics g, PotionPaletteLayout layout, PotionPaletteState state, int mouseX, int mouseY) {
@@ -50,6 +77,6 @@ public final class PotionPaletteComponent {
                 g.setTooltipForNextFrame(font, details(entry, state.variant(), state.pending()), entry.output().getTooltipImage(), entry.output(), mouseX, mouseY);
         }
         if (entries.isEmpty() && panel.contains(mouseX, mouseY))
-            g.setTooltipForNextFrame(font, Component.literal("Crafting is available to living Theurgists and Venefex in an active dungeon. Waiting for eligible recipes."), mouseX, mouseY);
+            g.setTooltipForNextFrame(font, Component.literal("No eligible quote. Crafting requires a living Theurgist or Venefex in an active dungeon with available custody. Waiting for the server; nothing is reserved."), mouseX, mouseY);
     }
 }

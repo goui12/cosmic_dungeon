@@ -32,7 +32,7 @@ public final class ModNetwork {
     private ModNetwork() {}
 
     public static void registerPayloadHandlers(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("33");
+        final PayloadRegistrar registrar = event.registrar("34");
         registrar.playToServer(SpawnerEditorPayloads.Request.TYPE,SpawnerEditorPayloads.Request.STREAM_CODEC,
                 (payload,ctx)->ctx.enqueueWork(()->{if(ctx.player() instanceof ServerPlayer player)
                     net.goui.cosmicdungeon.spawner.editor.SpawnerEditorService.request(player,payload);}));

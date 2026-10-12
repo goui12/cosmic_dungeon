@@ -296,6 +296,8 @@ public final class HelpMenuContent {
             HelpBlock.heading("Real Ingredients and Fuel"),
             HelpBlock.bullet("Use a water bottle or supported intermediate potion plus every remaining vanilla-chain ingredient, including gunpowder for splash. Some recipes do not need nether wart."),
             HelpBlock.examples("brewing_fuel"),
+            HelpBlock.bullet("Hover a tile for its selected one-output route: one consumed potion input, remaining ingredients and own/eligible-group quantities. Intermediate stages are made within the route, not charged again."),
+            HelpBlock.bullet("The required powder total includes reagent and new fuel; the fuel line identifies the refill part. Saved charges reduce new fuel. Own affordable routes are preferred; unavailable tiles quote no affordable route. Quantities reserve nothing and pending clicks show the previous snapshot until the server replies."),
             HelpBlock.bullet("The gauge left of the palette shows remaining fuel. One blaze powder supplies 20 brewing steps; each remaining recipe step uses one charge. Intermediate potions skip completed steps."),
             HelpBlock.bullet("Strength may need separate blaze powder for its ingredient and fuel. Unused charges survive ordinary saves, reconnects and death. Failed/full destinations spend no fuel or ingredients."),
             HelpBlock.paragraph(Component.literal("Your ingredients take priority; eligible consenting teammates can supply missing materials. Read ").append(link("Party sharing", "party")).append(".")),
@@ -376,6 +378,8 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Click crafts one onto the cursor, stacking only identical components up to 64. Shift-click crafts one into inventory, hotbar first. Full/incompatible destinations spend nothing."),
             HelpBlock.bullet("Green counts use own materials, blue counts need eligible shared materials, red 0 is unavailable. Counts reserve nothing. The left fuel gauge spends one charge per recipe step; one blaze powder supplies 20."),
             HelpBlock.paragraph(Component.literal("Read the ").append(link("Theurgist crafting reference", "class.theurgist")).append(" for full ingredient, fuel, sharing and stack rules.")),
+            HelpBlock.bullet("Hover a tile for its selected one-output route: one consumed potion input, remaining ingredients and own/eligible-group quantities. Intermediate stages are made within the route, not charged again."),
+            HelpBlock.bullet("The required powder total includes reagent and new fuel; the fuel line identifies the refill part. Saved charges reduce new fuel. Own affordable routes are preferred; unavailable tiles quote no affordable route. Quantities reserve nothing and pending clicks show the previous snapshot until the server replies."),
             HelpBlock.tip("Brewing-stand interaction remains Theurgist-only. Venefex uses Craft... in inventory, with no potion hotkey or old separate Skills window.")));
 
     public static final Page JUDICATOR = page("class.judicator", "Judicator", true, List.of(

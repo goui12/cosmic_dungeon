@@ -352,18 +352,26 @@ public final class PotionCraftingGameTests {
     }
 
     public static void paletteCursor(GameTestHelper h) {
+        ingredientQuotes(h);
         try(var f=new Fixture(h,Long.MAX_VALUE-3203)) {
             String healing="minecraft:healing_splash";f.clear();f.healing(0,2);f.healing(1,2);var donor=f.inventory(1);
             var quotes=PotionCrafting.view(f.p(0),1);
             f.check(quotes.classId().equals("theurgist")&&quotes.entries().stream().noneMatch(e->e.targetId().equals("minecraft:poison_splash")
-                    ||e.targetId().equals("minecraft:turtle_master_splash")),"Palette exposes only permitted positive/mixed-drinkable variants");
+                    ||e.targetId().equals("minecraft:turtle_master_splash")||e.targetId().equals("minecraft:luck_splash")),"Palette exposes only permitted positive/mixed-drinkable variants");
             var raw=io.netty.buffer.Unpooled.buffer();
             try {
                 var wire=new net.minecraft.network.RegistryFriendlyByteBuf(raw,f.level.registryAccess());
                 net.goui.cosmicdungeon.network.PotionCraftPayloads.View.STREAM_CODEC.encode(wire,quotes);
                 var decoded=net.goui.cosmicdungeon.network.PotionCraftPayloads.View.STREAM_CODEC.decode(wire);
                 f.check(decoded.entries().size()==quotes.entries().size()&&decoded.run()==f.run&&decoded.charges()==0,"Native registry quote wire round trip");
-                for(int i=0;i<quotes.entries().size();i++)f.check(ItemStack.matches(quotes.entries().get(i).output(),decoded.entries().get(i).output()),"Native potion effect/component tooltip payload preserved");
+                f.check(wire.readableBytes()==0,"Native quote decoder consumes exactly the bounded payload");
+                for(int i=0;i<quotes.entries().size();i++) {
+                    var expected=quotes.entries().get(i);var actual=decoded.entries().get(i);
+                    f.check(ItemStack.matches(expected.output(),actual.output())&&expected.targetId().equals(actual.targetId())
+                            &&expected.own()==actual.own()&&expected.shared()==actual.shared()&&expected.steps()==actual.steps()
+                            &&expected.powders()==actual.powders()&&expected.materials().equals(actual.materials()),
+                            "Native potion components and exact selected ingredient/fuel rows survive the wire");
+                }
             } finally {raw.release();}
             f.check(PotionCrafting.craft(f.p(0),f.run,healing,false)&&PotionCrafting.craft(f.p(0),f.run,healing,false),
                     "Repeated one-click cursor crafts succeed while holding the matching potion");
@@ -399,6 +407,110 @@ public final class PotionCraftingGameTests {
         }
         h.succeed();
     }
+
+    private static String material(Item item){return PotionRecipeSelection.itemKey(item);}
+    private static String input(Item container,net.minecraft.core.Holder<Potion> potion) {
+        return PotionRecipeSelection.stock(List.of(PotionContents.createItemStack(container,potion))).keySet().iterator().next();
+    }
+    private static net.goui.cosmicdungeon.network.PotionCraftPayloads.Entry selected(Fixture f,String id,int own,int shared,int steps,int powders,Map<String,Integer> needed) {
+        var entry=PotionCrafting.view(f.p(0),1).entries().stream().filter(e->e.targetId().equals(id)).findFirst().orElseThrow();
+        f.check(entry.own()==own&&entry.shared()==shared&&entry.steps()==steps&&entry.powders()==powders,"Native selected route capacity and fuel for "+id);
+        var quoted=new TreeMap<String,Integer>();
+        entry.materials().forEach(row->quoted.put(row.key(),row.needed()));
+        f.check(quoted.equals(needed),"Native selected input/reagent quantities for "+id);
+        var ownStock=PotionRecipeSelection.stock(SharedCrafting.inventory(f.p(0),true));var stocks=new ArrayList<Map<String,Integer>>();
+        for(var owner:SharedCrafting.participants(f.p(0),f.record))stocks.add(PotionRecipeSelection.stock(SharedCrafting.inventory(owner,true)));
+        var pooled=PotionRecipeSelection.combine(stocks);
+        for(var row:entry.materials())f.check(row.own()==ownStock.getOrDefault(row.key(),0)&&row.shared()==pooled.getOrDefault(row.key(),0),
+                "Native tooltip availability matches eligible snapshot stock");
+        var plan=PotionCrafting.prepare(f.p(0),f.run,id,true);
+        f.check(plan!=null,"Displayed affordable selected route has a real execution plan");
+        var debits=new TreeMap<String,Integer>();
+        for(var owner:plan.owners())for(var debit:plan.debits(owner))debits.merge(debit.ingredient(),debit.count(),Integer::sum);
+        f.check(debits.equals(quoted),"Every displayed quantity equals one actual native transaction debit");
+        return entry;
+    }
+    private static void ingredientQuotes(GameTestHelper h) {
+        try(var f=new Fixture(h,Long.MAX_VALUE-3213)) {
+            String healing="minecraft:healing_splash";f.clear();f.healing(0,1);
+            var base=Map.of(input(Items.POTION,Potions.WATER),1,material(Items.NETHER_WART),1,material(Items.GLISTERING_MELON_SLICE),1,
+                    material(Items.GUNPOWDER),1,material(Items.BLAZE_POWDER),1);
+            selected(f,healing,1,1,3,1,base);f.item(0,7,Items.GLOWSTONE_DUST,1);
+            var strong=new TreeMap<>(base);strong.put(material(Items.GLOWSTONE_DUST),1);
+            selected(f,"minecraft:strong_healing_splash",1,1,4,1,strong);
+            f.clear();f.potion(0,0,Items.POTION,Potions.WATER);f.item(0,1,Items.NETHER_WART,1);
+            f.item(0,2,Items.BLAZE_POWDER,2);f.item(0,3,Items.REDSTONE,1);f.item(0,4,Items.GUNPOWDER,1);
+            selected(f,"minecraft:long_strength_splash",1,1,4,1,Map.of(input(Items.POTION,Potions.WATER),1,
+                    material(Items.NETHER_WART),1,material(Items.BLAZE_POWDER),2,material(Items.REDSTONE),1,material(Items.GUNPOWDER),1));
+            f.clear();f.potion(0,0,Items.POTION,Potions.WATER);f.item(0,1,Items.NETHER_WART,1);f.item(0,2,Items.GOLDEN_CARROT,1);
+            f.item(0,3,Items.FERMENTED_SPIDER_EYE,1);f.item(0,4,Items.REDSTONE,1);f.item(0,5,Items.GUNPOWDER,1);f.item(0,6,Items.BLAZE_POWDER,1);
+            selected(f,"minecraft:long_invisibility_splash",1,1,5,1,Map.of(input(Items.POTION,Potions.WATER),1,material(Items.NETHER_WART),1,
+                    material(Items.GOLDEN_CARROT),1,material(Items.FERMENTED_SPIDER_EYE),1,material(Items.REDSTONE),1,material(Items.GUNPOWDER),1,material(Items.BLAZE_POWDER),1));
+            f.clear();f.healing(0,1);f.potion(1,0,Items.POTION,Potions.HEALING);f.item(1,1,Items.GUNPOWDER,1);
+            selected(f,healing,1,2,3,1,base);
+            f.check(PotionCrafting.prepare(f.p(0),f.run,healing,true).owners().size()==1,"Own route is preferred over the shorter donor input");
+            f.clear();f.item(0,0,Items.GUNPOWDER,1);f.item(0,1,Items.BLAZE_POWDER,1);f.potion(1,0,Items.POTION,Potions.HEALING);
+            selected(f,healing,0,1,1,1,Map.of(input(Items.POTION,Potions.HEALING),1,material(Items.GUNPOWDER),1,material(Items.BLAZE_POWDER),1));
+            f.clear();var crafted=PotionStacks.crafted(PotionContents.createItemStack(Items.SPLASH_POTION,Potions.HEALING));
+            f.p(0).getInventory().setItem(0,crafted);SharedCrafting.forget(f.p(0));f.item(0,1,Items.GLOWSTONE_DUST,1);f.item(0,2,Items.BLAZE_POWDER,1);
+            selected(f,"minecraft:strong_healing_splash",1,1,1,1,Map.of(input(Items.SPLASH_POTION,Potions.HEALING),1,
+                    material(Items.GLOWSTONE_DUST),1,material(Items.BLAZE_POWDER),1));
+            f.clear();f.healing(0,1);f.p(0).getInventory().setItem(6,ItemStack.EMPTY);SharedCrafting.forget(f.p(0));
+            var missing=PotionCrafting.view(f.p(0),1).entries().stream().filter(e->e.targetId().equals(healing)).findFirst().orElseThrow();
+            f.check(missing.shared()==0&&missing.steps()==0&&missing.powders()==0&&missing.materials().isEmpty(),"Missing fuel does not invent an affordable ingredient route");
+            f.item(0,6,Items.BLAZE_POWDER,1);
+            f.check(PotionCrafting.craft(f.p(0),f.run,healing)&&f.charges(0)==17,"Actual native craft preserves seventeen fuel charges");
+            f.clear();f.potion(0,0,Items.POTION,Potions.AWKWARD);f.item(0,1,Items.GLISTERING_MELON_SLICE,1);f.item(0,2,Items.GUNPOWDER,1);
+            selected(f,healing,1,1,2,0,Map.of(input(Items.POTION,Potions.AWKWARD),1,material(Items.GLISTERING_MELON_SLICE),1,material(Items.GUNPOWDER),1));
+            f.check(PotionCrafting.craft(f.p(0),f.run,healing)&&f.charges(0)==15,"Displayed intermediate route debits two stored charges without a new powder");
+            quoteWireBounds(f);
+        }
+    }
+    private static int quoteBytes(Fixture f,net.goui.cosmicdungeon.network.PotionCraftPayloads.View view,boolean legacy) {
+        var raw=io.netty.buffer.Unpooled.buffer();
+        try {
+            var b=new net.minecraft.network.RegistryFriendlyByteBuf(raw,f.level.registryAccess());
+            if(!legacy)net.goui.cosmicdungeon.network.PotionCraftPayloads.View.STREAM_CODEC.encode(b,view);
+            else {
+                b.writeVarLong(view.run());b.writeVarLong(view.revision());b.writeUtf(view.classId(),16);
+                b.writeVarInt(view.charges());b.writeVarInt(view.perPowder());b.writeVarInt(view.entries().size());
+                for(var e:view.entries()) {
+                    b.writeUtf(e.targetId(),128);ItemStack.STREAM_CODEC.encode(b,e.output());
+                    b.writeVarInt(e.own());b.writeVarInt(e.shared());b.writeVarInt(e.steps());b.writeVarInt(e.powders());
+                }
+            }
+            return b.readableBytes();
+        }finally{raw.release();}
+    }
+    private static void quoteWireBounds(Fixture f) {
+        var catalog=PotionCrafting.catalog(f.p(0));var planner=new PotionRecipeSelection(catalog);var water=new HashMap<String,Integer>();
+        water.put(input(Items.POTION,Potions.WATER),4096);water.put(material(Items.BLAZE_POWDER),4096);
+        for(var target:catalog.targets())for(var route:catalog.routes(target))
+            route.ingredients().forEach(item->water.put(material(item),4096));
+        for(var role:List.of("theurgist","venefex")) {
+            var entries=catalog.targets().stream().filter(target->target.classes().contains(role))
+                    .map(target->PotionCrafting.entry(target,planner,water,water,0)).toList();
+            var view=new net.goui.cosmicdungeon.network.PotionCraftPayloads.View(f.run,1,role,0,20,entries);
+            int before=quoteBytes(f,view,true),after=quoteBytes(f,view,false);
+            int maximum=entries.stream().mapToInt(e->e.materials().size()).max().orElse(0);
+            f.check(maximum<=net.goui.cosmicdungeon.network.PotionCraftPayloads.MAX_MATERIALS&&after<32768,"Vanilla selected route payload stays well within its row and byte bounds");
+            System.out.println("BATCH23_ROUTE_QUOTE_BYTES role="+role+" entries="+entries.size()+" legacy="+before+" ingredients="+after+" max_materials="+maximum);
+        }
+        for(int oversized:new int[]{-1,Integer.MAX_VALUE}) {
+            var raw=io.netty.buffer.Unpooled.buffer();
+            try {
+                var b=new net.minecraft.network.RegistryFriendlyByteBuf(raw,f.level.registryAccess());
+                b.writeVarLong(f.run);b.writeVarLong(1);b.writeUtf("theurgist",16);b.writeVarInt(0);b.writeVarInt(20);b.writeVarInt(1);
+                b.writeUtf("minecraft:healing_splash",128);ItemStack.STREAM_CODEC.encode(b,PotionContents.createItemStack(Items.SPLASH_POTION,Potions.HEALING));
+                b.writeVarInt(1);b.writeVarInt(1);b.writeVarInt(1);b.writeVarInt(0);b.writeVarInt(oversized);
+                boolean rejected=false;
+                try{net.goui.cosmicdungeon.network.PotionCraftPayloads.View.STREAM_CODEC.decode(b);}
+                catch(IllegalArgumentException ex){rejected=true;}
+                f.check(rejected,"Malformed material count rejected before row allocation");
+            }finally{raw.release();}
+        }
+    }
+
     private static void cursorReservationOrdering(GameTestHelper h){
         for(int scenario=0;scenario<3;scenario++)try(var f=new Fixture(h,Long.MAX_VALUE-3240-scenario)){
             f.clear();f.healing(0,2);
