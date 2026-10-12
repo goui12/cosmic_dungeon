@@ -11,6 +11,7 @@ import net.goui.cosmicdungeon.npc.tamsin.GroupResourceConsent;
 import net.goui.cosmicdungeon.playerclass.api.ClassData;
 import net.goui.cosmicdungeon.playerclass.resource.*;
 import net.goui.cosmicdungeon.transaction.PlayerSaveProof;
+import net.goui.cosmicdungeon.gametest.DurableRecoveryGameTestSupport;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -141,7 +142,10 @@ public final class PotionCraftingGameTests {
             var previous=p(index);var image=disk(index);SharedCrafting.forget(previous);SupplyRequests.forget(previous);ClassResourceService.forget(previous);
             var next=create(previous.getGameProfile());next.load(TagValueInput.create(ProblemReporter.DISCARDING,level.registryAccess(),image));
             online.remove(previous);online.add(next);players.put(next.getUUID(),next);current.set(index,next);next.connection.player=next;next.setPos(origin);
+            check(next!=previous&&players.get(next.getUUID())==next&&PlayerSaveProof.matches(image,PlayerSaveProof.snapshot(next)),
+                    "Native disk owner replaces the prior object with the exact saved inventory and proof");
         }
+        SharedCraftData reloadJournal(){return DurableRecoveryGameTestSupport.reload(level.getServer(),SharedCraftData.class,SharedCraftData.ID);}
         void custody(int index,SharedCraftPlan plan) {
             var next=root(index).copy();next.put(SharedCraftTransactions.CUSTODY,plan.reservation(p(index).getUUID()));
             p(index).getPersistentData().put(ClassData.ROOT_TAG,next);check(PlayerSaveProof.save(p(index)),"Native custody persisted");
@@ -307,20 +311,20 @@ public final class PotionCraftingGameTests {
             f.check(checks[0]==2&&f.charges(0)==0&&f.revision(0)==0&&data.pendingRun(f.run)==null,"Canceled decision leaves no charge or pending craft");
             f.unchanged(before,"Consent cancellation is atomic");f.consent(1,true);
             f.saveAll();plan=PotionCrafting.prepare(f.p(0),f.run,healing);f.reserve(plan);f.custody(1,plan);
-            for(int owner=0;owner<3;owner++)f.reload(owner);
-            for(int owner=0;owner<3;owner++)f.check(SharedCraftTransactions.reconcile(f.p(owner)),"Partial prepared crash cancels after real owner reload");
+            data=f.reloadJournal();for(int owner=0;owner<3;owner++)f.reload(owner);
+            for(int owner:new int[]{2,1,0})f.check(SharedCraftTransactions.reconcile(f.p(owner)),"Partial prepared crash cancels after real owner reload");
             f.unchanged(before,"Prepared restart cannot consume ingredients");f.check(f.charges(0)==0&&f.revision(0)==0,"Prepared restart cannot consume fuel");
 
             plan=PotionCrafting.prepare(f.p(0),f.run,healing);f.reserve(plan);for(int owner=0;owner<3;owner++)f.custody(owner,plan);
             data.commit(plan.id());f.check(data.flushVerified(),"Committed world decision and fuel are durably saved together");
             f.check(f.charges(0)==17&&f.revision(0)==1,"Fuel afterimage commits before owner inventory projection");
-            var decoded=SharedCraftData.CODEC.parse(NbtOps.INSTANCE,data.image()).getOrThrow();
+            var decoded=f.reloadJournal();data=decoded;
             f.check(decoded.pendingRun(f.run).committed()&&BrewingFuel.charges(decoded.fuel(f.p(0).getUUID()))==17,
                     "Reloaded native journal preserves the same committed decision and fuel revision");
             f.unchanged(before,"World commit alone does not partly rewrite an owner inventory");
             f.check(SharedCraftTransactions.reconcile(f.p(1))&&f.count(1,Items.GLISTERING_MELON_SLICE)==0,"First donor has one saved debit");
-            for(int owner=0;owner<3;owner++)f.reload(owner);
-            for(int owner=0;owner<3;owner++)f.check(SharedCraftTransactions.reconcile(f.p(owner)),"Committed potion completes after native owner reload");
+            data=f.reloadJournal();for(int owner=0;owner<3;owner++)f.reload(owner);
+            for(int owner:new int[]{2,0,1})f.check(SharedCraftTransactions.reconcile(f.p(owner)),"Committed potion completes after native owner reload");
             f.check(f.products()==1&&f.count(0,Items.POTION)==0&&f.count(0,Items.NETHER_WART)==0
                     &&f.count(2,Items.GUNPOWDER)==0&&f.count(2,Items.BLAZE_POWDER)==0,"Exactly one potion consumes the complete split recipe");
             f.check(f.charges(0)==17&&f.revision(0)==1&&data.pendingRun(f.run)==null,"Owner recovery and retirement do not charge brewing fuel again");
@@ -328,7 +332,7 @@ public final class PotionCraftingGameTests {
                     "Fuel powder is counted once as an actual donated material");
             var settled=f.images();var stale=plan;
             f.check(!SharedCraftTransactions.execute(f.p(0),stale,()->true),"Replaying settled potion decision cannot mint another potion");
-            for(int owner=0;owner<3;owner++){f.reload(owner);f.check(SharedCraftTransactions.reconcile(f.p(owner)),"Settled native owner reload is idempotent");}
+            data=f.reloadJournal();for(int owner:new int[]{2,1,0}){f.reload(owner);f.check(SharedCraftTransactions.reconcile(f.p(owner)),"Settled native owner reload is idempotent");}
             f.unchanged(settled,"Settled replay preserves exact owner inventories");
             f.check(f.charges(0)==17&&f.revision(0)==1&&f.notices(1)==1&&f.notices(2)==2,"No duplicate fuel charge or donor notices on replay");
             for(int owner=0;owner<3;owner++)f.check(PlayerSaveProof.matches(PlayerSaveProof.snapshot(f.p(owner)),f.disk(owner))
@@ -391,22 +395,47 @@ public final class PotionCraftingGameTests {
         }
         h.succeed();
     }
+    private static void cursorReservationOrdering(GameTestHelper h){
+        for(int scenario=0;scenario<3;scenario++)try(var f=new Fixture(h,Long.MAX_VALUE-3240-scenario)){
+            f.clear();f.healing(0,2);
+            f.check(PotionCrafting.craft(f.p(0),f.run,"minecraft:healing_splash",false),"Ordering fixture has one paid saved cursor before the next craft");
+            var plan=PotionCrafting.prepare(f.p(0),f.run,"minecraft:healing_splash",false);f.reserve(plan);f.custody(0,plan);
+            f.reload(0);
+            var root=f.root(0).copy();var bad=root.getCompoundOrEmpty(SharedCraftTransactions.CUSTODY).copy();
+            if(scenario==0)bad.putInt("schema",99);
+            else if(scenario==1)bad.putString("owner",UUID.randomUUID().toString());
+            else bad.putString("id",UUID.randomUUID().toString());
+            root.put(SharedCraftTransactions.CUSTODY,bad);
+            // The supported cursor reader accepts numeric widths. Recapture would canonicalize this Short.
+            // Preserving it proves recovery rejected the reservation before transient restore/freeze too.
+            root.getCompoundOrEmpty(PotionCursorCustody.KEY).putShort("schema",(short)1);
+            f.p(0).getPersistentData().put(ClassData.ROOT_TAG,root);f.check(PlayerSaveProof.save(f.p(0)),"Valid cursor and unsupported reservation are saved together");
+            var disk=f.disk(0);var inventory=f.inventory(0);var journal=f.reloadJournal().image();f.reload(0);
+            f.check(f.p(0).inventoryMenu.getCarried().isEmpty(),"Unrestored native cursor begins empty after owner reload");
+            f.check(!SharedCraftTransactions.reconcile(f.p(0))&&SharedCraftTransactions.blocked(f.p(0)),
+                    "Future/foreign compound reservation holds before restoring its otherwise valid saved cursor");
+            f.check(f.p(0).inventoryMenu.getCarried().isEmpty()&&f.root(0).equals(root)&&f.disk(0).equals(disk)
+                    &&f.inventory(0).equals(inventory)&&SharedCraftData.get(f.level.getServer()).image().equals(journal),
+                    "Ordering rejection preserves exact cursor proof widths, native owner and world before any restore or outcome mutation");
+        }
+    }
     public static void paletteRecovery(GameTestHelper h) {
+        cursorReservationOrdering(h);
         try(var f=new Fixture(h,Long.MAX_VALUE-3204)) {
             var server=f.level.getServer();var data=SharedCraftData.get(server);String healing="minecraft:healing_splash";
             f.clear();f.healing(1,2);f.saveAll();
             var first=PotionCrafting.prepare(f.p(0),f.run,healing,false);
             f.check(first!=null&&first.cursor()&&first.image().getIntOr("schema",0)==3,"New cursor schema leaves legacy schema1/2 separate");
             f.reserve(first);for(var id:first.owners())f.custody(f.current.stream().map(ServerPlayer::getUUID).toList().indexOf(id),first);
-            for(int i=0;i<3;i++)f.reload(i);
-            for(int i=0;i<3;i++)f.check(SharedCraftTransactions.reconcile(f.p(i)),"Prepared cursor crash cancels without output");
+            data=f.reloadJournal();for(int i=0;i<3;i++)f.reload(i);
+            for(int i:new int[]{2,1,0})f.check(SharedCraftTransactions.reconcile(f.p(i)),"Prepared cursor crash cancels without output");
             f.check(f.p(0).inventoryMenu.getCarried().isEmpty()&&f.charges(0)==0&&f.count(1,Items.POTION)==2,"Prepared recipe preserves full materials/fuel");
 
             var plan=PotionCrafting.prepare(f.p(0),f.run,healing,false);f.reserve(plan);
             for(var id:plan.owners())f.custody(f.current.stream().map(ServerPlayer::getUUID).toList().indexOf(id),plan);
             data.commit(plan.id());f.check(data.flushVerified(),"Cursor world decision saved");
-            for(int i=0;i<3;i++)f.reload(i);
-            for(int i=0;i<3;i++)f.check(SharedCraftTransactions.reconcile(f.p(i)),"Committed cursor crash projects exact owner images");
+            data=f.reloadJournal();for(int i=0;i<3;i++)f.reload(i);
+            for(int i:new int[]{2,1,0})f.check(SharedCraftTransactions.reconcile(f.p(i)),"Committed cursor crash projects exact owner images");
             f.check(f.p(0).inventoryMenu.getCarried().getCount()==1&&f.charges(0)==17&&f.count(1,Items.POTION)==1,"One committed output and one debit after recovery");
             f.reload(0);f.check(SharedCraftTransactions.reconcile(f.p(0))&&f.p(0).inventoryMenu.getCarried().getCount()==1,"Saved cursor receipt replay is idempotent");
             f.check(!SharedCraftTransactions.execute(f.p(0),plan,()->true),"Replayed prior decision cannot duplicate cursor output");
@@ -416,11 +445,14 @@ public final class PotionCraftingGameTests {
             data.commit(next.id());f.check(data.flushVerified(),"Stack extension decision saved");
             // Simulate disconnect after world commit: prevent native close from moving the reserved old cursor.
             PotionCursorCustody.freeze(f.p(0));f.p(0).closeContainer();f.saveAll();f.reload(0);
+            data=f.reloadJournal();
+            var beforeRecipientAck=DurableRecoveryGameTestSupport.disk(server,SharedCraftData.class,SharedCraftData.ID);
             // Owner receipt is saved, but another donor is still unacknowledged when the owner reconnects.
             f.check(SharedCraftTransactions.reconcile(f.p(0)),"Recipient extension saved before final donor settlement");
+            data=DurableRecoveryGameTestSupport.restoreCut(server,SharedCraftData.class,SharedCraftData.ID,beforeRecipientAck);
             f.reload(0);f.check(SharedCraftTransactions.reconcile(f.p(0))&&f.p(0).inventoryMenu.getCarried().getCount()==2,
                     "Partial acknowledgement never applies cursor extension twice");
-            for(int i=1;i<3;i++)f.check(SharedCraftTransactions.reconcile(f.p(i)),"Remaining donor settles once");
+            data=f.reloadJournal();for(int i:new int[]{2,1}){f.reload(i);f.check(SharedCraftTransactions.reconcile(f.p(i)),"Remaining donor settles once");}
             f.check(f.charges(0)==14&&data.pendingRun(f.run)==null,"Two total crafts retain correct charges and retire journal");
             f.p(0).closeContainer();f.saveAll();f.reload(0);
             f.check(SharedCraftTransactions.reconcile(f.p(0))&&f.p(0).inventoryMenu.getCarried().isEmpty()&&f.products()==2,
@@ -479,7 +511,27 @@ public final class PotionCraftingGameTests {
     }
 
 
+    private static void unsupportedCursorProofs(GameTestHelper h){
+        for(int scenario=0;scenario<3;scenario++)try(var f=new Fixture(h,Long.MAX_VALUE-3230-scenario)){
+            f.clear();f.healing(0,1);
+            f.check(PotionCrafting.craft(f.p(0),f.run,"minecraft:healing_splash",false),"Cursor guard fixture has one legitimate paid output");
+            f.reload(0); // Do not track/capture the new object's corrupt record before the recovery entry point.
+            var root=f.root(0).copy();var saved=root.getCompoundOrEmpty(PotionCursorCustody.KEY).copy();
+            if(scenario==0)saved.putInt("schema",99);
+            else if(scenario==1)saved.putString("owner",UUID.randomUUID().toString());
+            if(scenario==2)root.putString(PotionCursorCustody.KEY,"preserve unsupported cursor");
+            else root.put(PotionCursorCustody.KEY,saved);
+            f.p(0).getPersistentData().put(ClassData.ROOT_TAG,root);f.check(PlayerSaveProof.save(f.p(0)),"Unsupported cursor image is preserved in native owner file");
+            var disk=f.disk(0);var inventory=f.inventory(0);var journal=f.reloadJournal().image();f.reload(0);
+            f.check(!SharedCraftTransactions.reconcile(f.p(0))&&SharedCraftTransactions.blocked(f.p(0)),
+                    "Future, foreign or non-compound potion cursor proof holds without guessing an output");
+            f.check(f.root(0).equals(root)&&f.inventory(0).equals(inventory)&&f.p(0).inventoryMenu.getCarried().isEmpty()
+                    &&f.disk(0).equals(disk)&&SharedCraftData.get(f.level.getServer()).image().equals(journal),
+                    "Unsupported cursor leaves original disk proof, inventory, cursor and fuel unchanged");
+        }
+    }
     public static void paletteLifecycle(GameTestHelper h) {
+        unsupportedCursorProofs(h);
         try(var f=new Fixture(h,Long.MAX_VALUE-3206)) {
             String healing="minecraft:healing_splash";f.clear();f.healing(0,1);
             f.check(PotionCrafting.craft(f.p(0),f.run,healing,false),"Lifecycle fixture has one paid cursor potion");

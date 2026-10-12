@@ -19,6 +19,24 @@ public final class TheurgistRevival {
     private TheurgistRevival(){}
     private static CompoundTag root(ServerPlayer p){return p.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG);}
     private static void root(ServerPlayer p,CompoundTag value){p.getPersistentData().put(ClassData.ROOT_TAG,value);}
+    private static void validateReceipt(ServerPlayer player,CompoundTag receipt){
+        if(receipt.isEmpty())return;
+        try{
+            var caster=UUID.fromString(receipt.getStringOr("caster",""));var target=UUID.fromString(receipt.getStringOr("target",""));
+            UUID.fromString(receipt.getStringOr("death",""));
+            if(caster.equals(target)||!player.getUUID().equals(caster)&&!player.getUUID().equals(target)
+                    ||receipt.getLongOr("run",0)<=0||receipt.getBoolean("success").isEmpty())
+                throw new IllegalArgumentException("Unsupported revival receipt shape");
+        }catch(RuntimeException unsupported){
+            throw new IllegalStateException("Unsupported owner receipt field "+RECEIPT+"; original save requires review.",unsupported);
+        }
+    }
+    private static CompoundTag casterSource(CompoundTag owner,RevivalPlan plan){
+        if(plan.schema()==2)return ResurrectionCooldown.read(owner);
+        var source=PlayerSaveProof.ownerCompound(owner,ClassResourceLedger.KEY);
+        ClassResourceLedger.forRun(owner,plan.run()); // Validate legacy shape without normalizing the saved image.
+        return source;
+    }
     private static boolean internal(ServerPlayer p){var a=ACTIVE.get();return a!=null&&(a.caster().equals(p.getUUID())||a.target().equals(p.getUUID()));}
     public static void hold(ServerPlayer p,Exception failure){
         if(p==null||!HOLDS.add(p))return;
@@ -78,11 +96,20 @@ public final class TheurgistRevival {
     public static boolean reconcile(ServerPlayer p){
         if(internal(p))return true;if(HOLDS.contains(p))return false;
         try{
+            var owner=PlayerSaveProof.ownerCompound(p.getPersistentData(),ClassData.ROOT_TAG);
+            var custody=PlayerSaveProof.ownerCompound(owner,CUSTODY);
+            var receipt=PlayerSaveProof.ownerReceipt(owner,RECEIPT,p.getUUID(),2,"id");validateReceipt(p,receipt);
             var server=p.level().getServer();var data=RevivalData.get(server);var plan=data.pending(p.getUUID());
             if(plan==null){if(root(p).contains(CUSTODY))throw new IllegalStateException("Orphan revival reservation");return true;}
-            var custody=root(p).getCompoundOrEmpty(CUSTODY);var receipt=root(p).getCompoundOrEmpty(RECEIPT);
+            // Reject this owner's unsupported reservation before recursively settling the peer.
+            if(!custody.isEmpty()&&!custody.equals(plan.reservation(p.getUUID())))
+                throw new IllegalStateException("Unsupported owner proof field "+CUSTODY+"; differs from the world plan. Original save requires review.");
             if(plan.decision()==0){
                 if(p.getUUID().equals(plan.caster())){
+                    boolean alreadySucceeded=plan.receipt(p.getUUID(),true).equals(receipt);
+                    if(!casterSource(owner,plan).equals(plan.tag(alreadySucceeded?"after":"before"))
+                            ||alreadySucceeded&&!custody.isEmpty())
+                        throw new IllegalStateException("Revival caster source differs from plan before peer settlement");
                     var target=server.getPlayerList().getPlayer(plan.target());
                     if(target==null||target.hasDisconnected())return false;
                     if(!reconcile(target))return false;plan=data.pending(p.getUUID());
@@ -100,7 +127,7 @@ public final class TheurgistRevival {
                 if(plan.acknowledged(p.getUUID()))throw new IllegalStateException("Acknowledged revival receipt missing");
                 if(success){
                     if(p.getUUID().equals(plan.target()))throw new IllegalStateException("Successful target receipt missing");
-                    if(!custody.equals(plan.reservation(p.getUUID()))||!(plan.schema()==2?ResurrectionCooldown.read(root(p)):root(p).getCompoundOrEmpty(ClassResourceLedger.KEY)).equals(plan.tag("before")))
+                    if(!custody.equals(plan.reservation(p.getUUID()))||!casterSource(root(p),plan).equals(plan.tag("before")))
                         throw new IllegalStateException("Revival caster proof differs from plan");
                     var n=root(p).copy();n.put(plan.stateKey(),plan.tag("after"));root(p,n);
                 }else if(!custody.isEmpty()&&!custody.equals(plan.reservation(p.getUUID())))throw new IllegalStateException("Cancelled revival custody differs");

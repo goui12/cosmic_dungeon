@@ -36,21 +36,37 @@ public final class TradeTransactions {
             data.reportTransfer(id,receipt);return receipt.status().equals(AccountTransfer.COMMITTED);
         }catch(RuntimeException failure){TradeCustody.hold(a,failure.getMessage());TradeCustody.hold(b,failure.getMessage());return false;}
     }
-    private static CompoundTag receipt(ServerPlayer p){return p.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).getCompoundOrEmpty(RECEIPT);}
+    private static CompoundTag receipt(ServerPlayer p){
+        var owner=PlayerSaveProof.ownerCompound(p.getPersistentData(),ClassData.ROOT_TAG);
+        var receipt=PlayerSaveProof.ownerReceipt(owner,RECEIPT,p.getUUID(),1,"transaction");
+        if(!receipt.isEmpty()&&!Set.of(AccountTransfer.COMMITTED,AccountTransfer.CANCELLED).contains(receipt.getStringOr("outcome","")))
+            throw new IllegalStateException("Unsupported owner receipt field "+RECEIPT+"; original save requires review.");
+        return receipt;
+    }
     public static boolean reconcile(ServerPlayer p){
         if(TradeCustody.held(p)||TradeSessionData.get(p)!=null)return false;
         try{
+            var savedReceipt=receipt(p); // Fail closed before cancelling/committing any world outcome.
+            var owner=PlayerSaveProof.ownerCompound(p.getPersistentData(),ClassData.ROOT_TAG);
+            var custody=PlayerSaveProof.ownerCompound(owner,TradeCustody.KEY);
+            if(owner.contains(TradeCustody.KEY))TradeCustodyImages.validate(custody,p.getUUID());
             var data=data(p);UUID id=data.pendingTrade(p.getUUID()).orElse(null);
             if(id!=null){
                 var plan=data.tradePlan(id).orElseThrow();var transfer=data.transfer(id).orElseThrow();
-                if(transfer.reserved())transfer=data.cancelTransfer(id,transfer.terms(),System.currentTimeMillis(),"trade interface ended before commit");
-                if(!data.flushVerified())throw new IllegalStateException("trade outcome save not verified");
-                String outcome=transfer.status();if(!Set.of(AccountTransfer.COMMITTED,AccountTransfer.CANCELLED).contains(outcome))throw new IllegalStateException("Invalid trade outcome");
-                if(RepairTransactions.receiptMatches(receipt(p),p.getUUID(),id,outcome)){
-                    if(TradeCustody.pending(p))throw new IllegalStateException("Applied trade still has custody");
+                String outcome=transfer.reserved()?AccountTransfer.CANCELLED:transfer.status();
+                if(!Set.of(AccountTransfer.COMMITTED,AccountTransfer.CANCELLED).contains(outcome))throw new IllegalStateException("Invalid trade outcome");
+                boolean applied=RepairTransactions.receiptMatches(savedReceipt,p.getUUID(),id,outcome);
+                CompoundTag projected=null;
+                if(applied){
+                    if(owner.contains(TradeCustody.KEY))throw new IllegalStateException("Applied trade still has custody");
                 }else{
-                    if(!TradeCustody.pending(p))throw new IllegalStateException("Verified owner custody is missing; restore review required");
-                    var projected=plan.project(p.getUUID(),TradeCustody.read(p),outcome.equals(AccountTransfer.COMMITTED));
+                    if(!owner.contains(TradeCustody.KEY))throw new IllegalStateException("Verified owner custody is missing; restore review required");
+                    // Pure projection verifies the exact reservation before changing any account outcome.
+                    projected=plan.project(p.getUUID(),custody,outcome.equals(AccountTransfer.COMMITTED));
+                }
+                if(transfer.reserved())data.cancelTransfer(id,transfer.terms(),System.currentTimeMillis(),"trade interface ended before commit");
+                if(!data.flushVerified())throw new IllegalStateException("trade outcome save not verified");
+                if(!applied){
                     // Only a durable COMMITTED decision may change offered item owners.
                     // The saved before-images and this owner's cursor remain untouched.
                     if(outcome.equals(AccountTransfer.COMMITTED)) {

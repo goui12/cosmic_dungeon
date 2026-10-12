@@ -11,6 +11,7 @@ import net.goui.cosmicdungeon.npc.tamsin.GroupResourceConsent;
 import net.goui.cosmicdungeon.playerclass.api.ClassData;
 import net.goui.cosmicdungeon.playerclass.resource.*;
 import net.goui.cosmicdungeon.transaction.PlayerSaveProof;
+import net.goui.cosmicdungeon.gametest.DurableRecoveryGameTestSupport;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -135,7 +136,10 @@ public final class SharedResourceGameTests {
             var previous=p(index);var image=disk(index);SharedCrafting.forget(previous);SupplyRequests.forget(previous);ClassResourceService.forget(previous);
             var next=create(previous.getGameProfile());next.load(TagValueInput.create(ProblemReporter.DISCARDING,level.registryAccess(),image));
             online.remove(previous);online.add(next);players.put(next.getUUID(),next);current.set(index,next);next.connection.player=next;next.setPos(origin);
+            check(next!=previous&&players.get(next.getUUID())==next&&PlayerSaveProof.matches(image,PlayerSaveProof.snapshot(next)),
+                    "Native disk owner replaces the prior object with the exact saved inventory and proof");
         }
+        SharedCraftData reloadJournal(){return DurableRecoveryGameTestSupport.reload(level.getServer(),SharedCraftData.class,SharedCraftData.ID);}
         void custody(int index,SharedCraftPlan plan) {
             var next=root(index).copy();next.put(SharedCraftTransactions.CUSTODY,plan.reservation(p(index).getUUID()));
             p(index).getPersistentData().put(ClassData.ROOT_TAG,next);check(PlayerSaveProof.save(p(index)),"Native custody persisted");
@@ -199,11 +203,27 @@ public final class SharedResourceGameTests {
             f.check(rejected,"A native plan cannot grant unrelated items or change authored components");
             f.reserve(plan);for(int i=0;i<3;i++)f.custody(i,plan);
             var data=SharedCraftData.get(server);data.commit(plan.id());f.check(data.flushVerified(),"Commit persisted before any inventory projection");
+            data=f.reloadJournal();for(int i=0;i<3;i++)f.reload(i);
+            var beforeOwnerAck=DurableRecoveryGameTestSupport.disk(server,SharedCraftData.class,SharedCraftData.ID);
             f.check(SharedCraftTransactions.reconcile(f.p(1))&&f.p(1).getInventory().getItem(0).getCount()==3,"First donor saves exactly one debit");
+            // Retain the actual newer owner file with the earlier durable world image: receipt-before-ack cut.
+            data=DurableRecoveryGameTestSupport.restoreCut(server,SharedCraftData.class,SharedCraftData.ID,beforeOwnerAck);
+            f.reload(1);
+            f.check(SharedCraftTransactions.reconcile(f.p(1)),"Native owner receipt survives a journal acknowledgement cut without another debit");
             f.check(data.pending(f.p(1).getUUID()).acknowledged(f.p(1).getUUID()),"Saved donor receipt precedes its journal acknowledgement");
-            for(int i=0;i<3;i++)f.reload(i);
+            data=f.reloadJournal();for(int i=0;i<3;i++)f.reload(i);
             f.check(SharedCraftTransactions.reconcile(f.p(1))&&f.p(1).getInventory().getItem(0).getCount()==3,"Relogged donor receipt cannot debit twice");
-            f.check(SharedCraftTransactions.reconcile(f.p(2))&&SharedCraftTransactions.reconcile(f.p(0)),"Remaining committed owners recover after relog");
+            f.check(SharedCraftTransactions.reconcile(f.p(2)),"Last donor recovers from the actual disk decision");
+            var beforeMetrics=DurableRecoveryGameTestSupport.disk(server,SharedCraftData.class,SharedCraftData.ID);
+            f.check(SharedCraftTransactions.reconcile(f.p(0)),"Remaining committed owners recover after relog");
+            // All owner files now contain real production receipts. Reinstall the valid all-acked pre-metrics cut.
+            beforeMetrics.acknowledge(plan.id(),f.p(0).getUUID());
+            data=DurableRecoveryGameTestSupport.restoreCut(server,SharedCraftData.class,SharedCraftData.ID,beforeMetrics);
+            f.reload(0);
+            f.check(data.pendingRun(f.run).ownersAcknowledged()&&!data.pendingRun(f.run).metricsAcknowledged(),
+                    "Native journal reload retains the owner-acknowledged metrics boundary");
+            f.check(SharedCraftTransactions.reconcile(f.p(0))&&data.pendingRun(f.run)==null,
+                    "Production replay retires the remaining metrics boundary exactly once");
             f.check(f.products()==1&&f.p(0).getInventory().getItem(0).getCount()==1&&f.p(2).getInventory().getItem(0).getCount()==3,
                     "One output and precisely one item from each of the three owners");
             f.check(f.p(0).getInventory().getItem(8).getCount()==4&&f.p(0).getInventory().getItem(8).getHoverName().getString().equals("Unrelated treasure")
@@ -224,7 +244,7 @@ public final class SharedResourceGameTests {
             DungeonMetricsService.stopped(server);
             f.check(DungeonMetricsService.resourceSequence(server,f.run)==1&&f.metrics(0).used().getOrDefault("minecraft:sugar",0L)==1,
                     "Restart loads the exact durable afterimage over stale SavedData without replaying a debit");
-            var settled=f.images();for(int i=0;i<3;i++){f.reload(i);f.check(SharedCraftTransactions.reconcile(f.p(i)),"Settled replay succeeds");}
+            data=f.reloadJournal();var settled=f.images();for(int i:new int[]{2,1,0}){f.reload(i);f.check(SharedCraftTransactions.reconcile(f.p(i)),"Settled replay succeeds");}
             f.unchanged(settled,"Repeated native reload preserves the settled images");
             f.check(!SharedCraftTransactions.execute(f.p(0),plan,()->true)&&f.products()==1
                     &&DungeonMetricsService.resourceSequence(server,f.run)==1,"Stale first plan cannot duplicate output or metrics");
@@ -236,7 +256,27 @@ public final class SharedResourceGameTests {
         h.succeed();
     }
 
+    private static void malformedProofs(GameTestHelper h){
+        int scenario=0;
+        for(String key:List.of(SharedCraftTransactions.CUSTODY,SharedCraftTransactions.RECEIPT))
+            for(int shape=0;shape<3;shape++)try(var f=new Fixture(h,Long.MAX_VALUE-3120-scenario++)){
+                f.seed();f.saveAll();var plan=SharedCrafting.prepare(f.p(0),f.run,f.recipe());f.reserve(plan);
+                var root=f.root(0).copy();
+                if(shape==0)root.putString(key,"preserve malformed proof");
+                else if(shape==1)root.put(key,new ListTag());
+                else{var future=key.equals(SharedCraftTransactions.CUSTODY)?plan.reservation(f.p(0).getUUID()):plan.receipt(f.p(0).getUUID());
+                    future.putInt("schema",99);future.putString("unknown","preserve");root.put(key,future);}
+                f.p(0).getPersistentData().put(ClassData.ROOT_TAG,root);f.saveAll();
+                var owner=f.disk(0);var inventory=f.inventory(0);var journal=f.reloadJournal().image();f.reload(0);
+                f.check(!SharedCraftTransactions.reconcile(f.p(0))&&SharedCraftTransactions.blocked(f.p(0)),
+                        "Present malformed crafting custody/receipt holds instead of becoming missing partial preparation");
+                f.check(f.root(0).equals(root)&&f.inventory(0).equals(inventory)&&f.disk(0).equals(owner)
+                        &&SharedCraftData.get(f.level.getServer()).image().equals(journal),
+                        "Malformed crafting recovery preserves the original native owner file and world decision");
+            }
+    }
     public static void guards(GameTestHelper h) {
+        malformedProofs(h);
         try(var f=new Fixture(h,Long.MAX_VALUE-3102)) {
             f.seed();var server=f.level.getServer();var recipe=f.recipe();var data=SharedCraftData.get(server);
             for(int slot=0;slot<36;slot++)f.p(0).getInventory().setItem(slot,new ItemStack(Items.DIAMOND,64));
@@ -262,8 +302,8 @@ public final class SharedResourceGameTests {
             f.unchanged(before,"Disconnect guard consumes nothing");
             f.check(!SharedCrafting.craft(f.p(0),f.run-1,recipe),"Wrong instance revision cannot craft");
             f.saveAll();var canceled=SharedCrafting.prepare(f.p(0),f.run,recipe);f.reserve(canceled);f.custody(1,canceled);
-            for(int i=0;i<3;i++)f.reload(i);
-            for(int i=0;i<3;i++)f.check(SharedCraftTransactions.reconcile(f.p(i)),"Partially prepared crash cancels for reserved and unreserved owners");
+            data=f.reloadJournal();for(int i=0;i<3;i++)f.reload(i);
+            for(int i:new int[]{2,1,0})f.check(SharedCraftTransactions.reconcile(f.p(i)),"Partially prepared crash cancels for reserved and unreserved owners");
             f.unchanged(before,"Uncommitted crash restores no output and removes no materials");
             f.check(f.products()==0&&DungeonMetricsService.resourceSequence(server,f.run)==0&&f.notices(1)==0&&f.notices(2)==0,
                     "Canceled and rejected attempts produce no metrics or contribution notifications");

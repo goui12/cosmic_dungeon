@@ -332,3 +332,11 @@ Cause: the synchronous potion fixture chooses its chunk from helper.absoluteVec(
 The failed1.7.20-alpha.1 tag is preserved. Changed source uses unique1.7.21-alpha.1 before retrying exact merged-main1.8.0-beta.1. Subsequent exact-source local/CI/publisher evidence must pass before completion.
 
 The assertion-preserving fixture correction was pushed as b5a30a4b72c40a67ad668aae5fe86f9f2951a66a. Local Java21 build741/741,2004JSON/link/diff checks passed; exact Integration Gate38264907418 succeeded, including113 native GameTests. No new Codex inline finding appeared at the latest resumption check; that is not a claim of a completed fresh Codex review. All20 recommendations and both genuine unimplemented topics remain as explicitly classified above.
+
+## Batch21 current-source disposition
+
+Batch20 completed at ef3c18f8: full CI38266158401, Beta publisher38266655070, accepted runtime9146786/helper9146785 and acknowledged stopped TEST1.8.0-beta.1 delivery. No local-client/helper install, restart or additional artifact/readback hash was performed.
+
+[Batch21 report](BATCH_1_8_21_20261012.md) records the now implemented candidate saved-state recovery hardening and supported/unsupported proof boundaries. Actual native results and final source/publication remain separate receipts. Original recommendations above remain historical evidence; latest disposition is candidate implementation/validation in21 for deterministic owner+journal reload gaps. No actual process-crash or licensed combined gameplay is claimed.
+
+Carry forward every other recommendation: P2 ingredient route23, six-palette measurement24 and retain-all history25; manual UI/layering/GUI/Creative/Extra/drag/guide/font/link, two-player custody/consent/potion/death/resurrection, real keyboard/Controls and actual authored/modded spawner/editor/terrain acceptance remain TESTING. Optional recall/breeding-return/key-conflict hints and terrain profiling remain conditional. P2 Stay PR258 r4243537947 remains unimplemented for22; disputed P1 Patrol PR262 r4244287961 remains unimplemented outside this set. The PR265 omitted-preset claim remains an evidenced rejected false positive. All20 recorded recommendations and their original sources/dispositions remain above; no new pending Codex review is called no-findings.
