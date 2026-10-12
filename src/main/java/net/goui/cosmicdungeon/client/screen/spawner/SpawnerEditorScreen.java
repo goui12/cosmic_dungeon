@@ -7,6 +7,9 @@ import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import net.goui.cosmicdungeon.network.SpawnerEditorPayloads;
+import net.goui.cosmicdungeon.block.entity.CosmicSpawnerPreset.Slot;
+import net.goui.cosmicdungeon.spawner.editor.SpawnerEquipmentDraft;
+import net.goui.cosmicdungeon.spawner.editor.SpawnerEquipmentRules;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -45,13 +48,21 @@ public final class SpawnerEditorScreen extends Screen {
     private Button apply, previous, next;
     private ConfirmScreen confirmation;
     private Mob preview;
+    private final List<ItemStack> equipment;
+    private final ItemStack held;
+    private final List<EquipmentButton> equipmentButtons = new ArrayList<>();
+    private record EquipmentButton(Button button, Slot slot) {}
+    private SpawnerEquipmentScreen equipmentEditor;
+    private SpawnerEquipmentDraft previewEquipment, cachedEquipmentDraft;
+    private List<ItemStack> cachedEquipment = List.of();
     private boolean previewCaptain;
     private String previewId = "", previewFailure = "";
     private int filteredCount;
 
-    public SpawnerEditorScreen(SpawnerEditorState state, BlockPos pos) {
+    public SpawnerEditorScreen(SpawnerEditorState state, BlockPos pos, List<ItemStack> equipment, ItemStack held) {
         super(Component.literal("Cosmic Spawner Editor"));
         this.state = state; this.pos = pos.immutable();
+        this.equipment = equipment.stream().map(ItemStack::copy).toList(); this.held = held.copy();
         for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
             String id = BuiltInRegistries.ENTITY_TYPE.getKey(type).toString();
             if (type.canSummon() && (type.getCategory() != MobCategory.MISC
@@ -63,13 +74,15 @@ public final class SpawnerEditorScreen extends Screen {
     public UUID session() { return state.session(); }
     @Override protected void init() {
         layout = SpawnerEditorLayout.fit(width, height);
-        captions.clear(); navigation.clear(); entityButtons.clear(); previous = null; next = null;
+        captions.clear(); navigation.clear(); entityButtons.clear(); equipmentButtons.clear(); previous = null; next = null;
         nav(SpawnerEditorState.Tab.ENTITY, Items.ZOMBIE_SPAWN_EGG, "Entity and name", 0);
-        nav(SpawnerEditorState.Tab.SPAWNING, Items.SPAWNER, "Spawning and limits", 1);
-        nav(SpawnerEditorState.Tab.FLAGS, Items.LEVER, "Entity flags", 2);
-        nav(SpawnerEditorState.Tab.PREVIEW, Items.SPYGLASS, "Visual preview", 3);
+        nav(SpawnerEditorState.Tab.EQUIPMENT, Items.DIAMOND_CHESTPLATE, "Equipment and enchantments", 1);
+        nav(SpawnerEditorState.Tab.SPAWNING, Items.SPAWNER, "Spawning and limits", 2);
+        nav(SpawnerEditorState.Tab.FLAGS, Items.LEVER, "Entity flags", 3);
+        nav(SpawnerEditorState.Tab.PREVIEW, Items.SPYGLASS, "Visual preview", 4);
         switch (state.tab()) {
             case ENTITY -> entityPage();
+            case EQUIPMENT -> equipmentPage();
             case SPAWNING -> spawningPage();
             case FLAGS -> flagsPage();
             case PREVIEW -> { }
@@ -84,9 +97,10 @@ public final class SpawnerEditorScreen extends Screen {
         updateEnabled();
     }
     private void nav(SpawnerEditorState.Tab tab, Item icon, String label, int index) {
+        int step = Math.min(27, Math.max(18, (layout.footerY() - layout.contentY() - 8) / 5));
         Button button = addRenderableWidget(Button.builder(Component.empty(), b -> {
             state.tab(tab); rebuildWidgets();
-        }).createNarration(supplier -> Component.literal(label)).bounds(layout.x() + 8, layout.y() + 32 + index * 27, 26, 24).build());
+        }).createNarration(supplier -> Component.literal(label)).bounds(layout.x() + 8, layout.y() + 32 + index * step, 26, Math.min(24, step - 1)).build());
         button.setTooltip(Tooltip.create(Component.literal(label)));
         navigation.add(new Nav(button, new ItemStack(icon), tab));
     }
@@ -143,6 +157,43 @@ public final class SpawnerEditorScreen extends Screen {
         if (previous != null) previous.active = !state.pending() && state.page() > 0;
         if (next != null) next.active = !state.pending() && (state.page() + 1) * layout.entityRows() < filteredCount;
     }
+    public boolean closed() { return state.closed(); }
+    public void saveEquipment(Slot slot, SpawnerEquipmentDraft.Edit edit) { state.equipment(slot, edit); }
+    public static String slotName(Slot slot) {
+        return switch (slot) {
+            case MAINHAND -> "Main hand"; case OFFHAND -> "Off hand"; case HEAD -> "Head";
+            case CHEST -> "Chest"; case LEGS -> "Legs"; case FEET -> "Feet";
+        };
+    }
+    private ItemStack originalEquipment(Slot slot) {
+        return equipment.size() == Slot.values().length ? equipment.get(slot.ordinal()).copy() : ItemStack.EMPTY;
+    }
+    public boolean captainHeadFallback(Slot slot) { return slot == Slot.HEAD && state.captain(); }
+    private ItemStack draftEquipment(Slot slot) {
+        if (!state.equipment().equals(cachedEquipmentDraft)) {
+            var resolved = new ArrayList<ItemStack>();
+            for (Slot current : Slot.values()) {
+                try {
+                    resolved.add(SpawnerEquipmentRules.resolve(originalEquipment(current), held,
+                            state.equipment().get(current), minecraft.level.registryAccess()));
+                } catch (IllegalArgumentException invalid) { resolved.add(originalEquipment(current)); }
+            }
+            cachedEquipment = List.copyOf(resolved); cachedEquipmentDraft = state.equipment();
+        }
+        return cachedEquipment.get(slot.ordinal());
+    }
+    private void equipmentPage() {
+        int x = layout.contentX(), y = layout.contentY(), w = (layout.contentWidth() - 8) / 2;
+        for (Slot slot : Slot.values()) {
+            int column = slot.ordinal() % 2, row = slot.ordinal() / 2;
+            String label = "     " + slotName(slot);
+            Button button = addRenderableWidget(Button.builder(Component.literal(label), b -> {
+                equipmentEditor = new SpawnerEquipmentScreen(this, slot, originalEquipment(slot), held, state.equipment().get(slot));
+                minecraft.setScreen(equipmentEditor);
+            }).bounds(x + column * (w + 8), y + row * 24, w, 20).build());
+            equipmentButtons.add(new EquipmentButton(button, slot));
+        }
+    }
     private void spawningPage() {
         int x = layout.contentX(), y = layout.contentY(), w = (layout.contentWidth() - 10) / 2;
         toggle("Boss one-shot", x, y, w, state::boss, state::boss,
@@ -188,7 +239,7 @@ public final class SpawnerEditorScreen extends Screen {
         if (!state.beginApply()) return;
         try {
             if (!SpawnerEditorClient.send(new SpawnerEditorPayloads.Request(session(),
-                    SpawnerEditorPayloads.Kind.APPLY, state.draft())))
+                    SpawnerEditorPayloads.Kind.APPLY, state.draft(), state.equipment())))
                 state.reject(session(), "The server connection is unavailable.");
         } catch (RuntimeException failed) {
             state.reject(session(), "The edit request could not be sent.");
@@ -200,7 +251,7 @@ public final class SpawnerEditorScreen extends Screen {
     }
     public void finished() {
         state.close(session()); preview = null;
-        if (minecraft != null && (minecraft.screen == this || minecraft.screen == confirmation)) minecraft.setScreen(null);
+        if (minecraft != null && (minecraft.screen == this || minecraft.screen == confirmation || minecraft.screen == equipmentEditor)) minecraft.setScreen(null);
     }
     private void cancel() {
         if (state.pending() || state.closed()) return;
@@ -235,7 +286,7 @@ public final class SpawnerEditorScreen extends Screen {
     }
     private String section() {
         return switch (state.tab()) {
-            case ENTITY -> "Entity and name"; case SPAWNING -> "Spawning and limits";
+            case ENTITY -> "Entity and name"; case EQUIPMENT -> "Equipment and enchantments"; case SPAWNING -> "Spawning and limits";
             case FLAGS -> "Entity flags"; case PREVIEW -> "Visual preview";
         };
     }
@@ -264,16 +315,30 @@ public final class SpawnerEditorScreen extends Screen {
         } else g.drawString(font, "Draft" + (state.dirty() ? " *" : "") + " / " + pos.toShortString(),
                 layout.contentX(), layout.footerY() - 15, 0xFF9CA9B6, false);
         super.render(g, mouseX, mouseY, partialTick);
+        for (EquipmentButton entry : equipmentButtons) {
+            ItemStack stack = draftEquipment(entry.slot());
+            if (!stack.isEmpty()) g.renderItem(stack, entry.button().getX() + 3, entry.button().getY() + 2);
+            if (entry.button().isMouseOver(mouseX, mouseY)
+                    || (entry.button().isFocused() && minecraft.getLastInputType().isKeyboard())) {
+                var lines = stack.isEmpty() ? new ArrayList<Component>() : new ArrayList<>(getTooltipFromItem(minecraft, stack));
+                lines.add(Component.literal("Edit " + slotName(entry.slot()) + (stack.isEmpty() ? " (empty)." : ".")));
+                lines.add(Component.literal("Select items, copy held components and edit enchantments."));
+                lines.add(Component.literal("Save item returns here; Apply commits the spawner draft."));
+                if (captainHeadFallback(entry.slot()))
+                    lines.add(Component.literal("A Captain with an empty Head slot uses its ominous banner. Disable Captain on the Entity page to remove that fallback."));
+                g.setTooltipForNextFrame(font, lines, stack.getTooltipImage(), stack, mouseX, mouseY);
+            }
+        }
         for (Nav nav : navigation) {
             // Icons retain explicit native narration, focus and foreground tooltip behavior.
-            g.fill(nav.button().getX() + 3, nav.button().getY() + 3, nav.button().getX() + 23, nav.button().getY() + 21,
+            g.fill(nav.button().getX() + 3, nav.button().getY() + 1, nav.button().getX() + 23, nav.button().getY() + nav.button().getHeight() - 1,
                     nav.tab() == state.tab() ? 0xFF667F8E : 0xFF303C48);
-            g.renderItem(nav.stack(), nav.button().getX() + 5, nav.button().getY() + 4);
+            g.renderItem(nav.stack(), nav.button().getX() + 5, nav.button().getY() + Math.max(0, (nav.button().getHeight() - 16) / 2));
         }
     }
     private void renderPreview(GuiGraphics g) {
         if (!previewId.equals(state.entityId())) {
-            previewId = state.entityId(); preview = null; previewCaptain = false; previewFailure = "";
+            previewId = state.entityId(); preview = null; previewCaptain = false; previewEquipment = null; previewFailure = "";
             try {
                 var entity = EntityType.byString(previewId)
                         .map(type -> type.create(minecraft.level, EntitySpawnReason.COMMAND)).orElse(null);
@@ -287,12 +352,14 @@ public final class SpawnerEditorScreen extends Screen {
             preview.setCustomName(state.name().isEmpty() ? null : Component.literal(state.name()));
             preview.setCustomNameVisible(state.nameVisible());
             preview.setSilent(true); preview.setNoAi(true);
-            if (preview instanceof net.minecraft.world.entity.monster.Pillager && previewCaptain != state.captain()) {
-                previewCaptain = state.captain();
-                preview.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD, state.captain()
-                        ? net.minecraft.world.entity.raid.Raid.getOminousBannerInstance(
-                                minecraft.level.registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.BANNER_PATTERN))
-                        : ItemStack.EMPTY);
+            if (!state.equipment().equals(previewEquipment) || previewCaptain != state.captain()) {
+                previewEquipment = state.equipment(); previewCaptain = state.captain();
+                for (Slot slot : Slot.values()) preview.setItemSlot(slot.equipmentSlot, draftEquipment(slot).copy());
+                if (preview instanceof net.minecraft.world.entity.monster.Pillager && state.captain()
+                        && draftEquipment(Slot.HEAD).isEmpty())
+                    preview.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD,
+                            net.minecraft.world.entity.raid.Raid.getOminousBannerInstance(
+                                    minecraft.level.registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.BANNER_PATTERN)));
             }
             float scale = Math.max(1, Math.min((w - 12) / Math.max(1, preview.getBbWidth() * 2),
                     (h - 24) / Math.max(1, preview.getBbHeight())));

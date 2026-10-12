@@ -76,6 +76,8 @@ public final class DungeonInstanceGameTests {
         suite.add(id("spawner_editor_sessions"),net.goui.cosmicdungeon.playerclass.d1.SpawnerEditorGameTests::sessions);
         suite.add(id("spawner_editor_access"),net.goui.cosmicdungeon.playerclass.d1.SpawnerEditorGameTests::access);
         suite.add(id("spawner_editor_flags"),net.goui.cosmicdungeon.playerclass.d1.SpawnerEditorGameTests::flags);
+        suite.add(id("spawner_equipment_apply"),net.goui.cosmicdungeon.playerclass.d1.SpawnerEquipmentGameTests::applyAndPreserve);
+        suite.add(id("spawner_equipment_validation"),net.goui.cosmicdungeon.playerclass.d1.SpawnerEquipmentGameTests::validation);
         suite.add(id("party_health_player"),net.goui.cosmicdungeon.npc.tamsin.PartyHealthGameTests::player);
         suite.add(id("party_health_mercenary"),net.goui.cosmicdungeon.npc.tamsin.PartyHealthGameTests::mercenary);
         suite.add(id("party_resource_eligibility"),net.goui.cosmicdungeon.npc.tamsin.GroupResourceConsentGameTests::eligibility);

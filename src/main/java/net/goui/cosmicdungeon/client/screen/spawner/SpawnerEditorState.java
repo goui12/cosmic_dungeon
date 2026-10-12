@@ -4,10 +4,12 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 import net.goui.cosmicdungeon.spawner.editor.SpawnerEditorDraft;
+import net.goui.cosmicdungeon.spawner.editor.SpawnerEquipmentDraft;
+import net.goui.cosmicdungeon.block.entity.CosmicSpawnerPreset.Slot;
 
 /** Retains every edit, including incomplete number input, without coupling it to widget lifetime. */
 public final class SpawnerEditorState {
-    public enum Tab { ENTITY, SPAWNING, FLAGS, PREVIEW }
+    public enum Tab { ENTITY, EQUIPMENT, SPAWNING, FLAGS, PREVIEW }
     private final UUID session;
     private final SpawnerEditorDraft original;
     private String entityId, name, cap, minDelay, maxDelay;
@@ -16,6 +18,7 @@ public final class SpawnerEditorState {
     private String notice = "", search = "";
     private Tab tab = Tab.ENTITY;
     private int page;
+    private SpawnerEquipmentDraft equipment = SpawnerEquipmentDraft.unchanged();
 
     public SpawnerEditorState(UUID session, SpawnerEditorDraft draft) {
         this.session = Objects.requireNonNull(session);
@@ -36,8 +39,12 @@ public final class SpawnerEditorState {
     public boolean closed() { return closed; }
     public String notice() { return notice; }
     public void notice(String value) { notice = value == null ? "" : value; }
+    public SpawnerEquipmentDraft equipment() { return equipment; }
+    public void equipment(Slot slot, SpawnerEquipmentDraft.Edit edit) {
+        equipment = equipment.with(slot, edit); notice = "";
+    }
     public boolean dirty() {
-        return !draft().equals(original) || !cap.equals(Integer.toString(original.cap()))
+        return equipment.dirty() || !draft().equals(original) || !cap.equals(Integer.toString(original.cap()))
                 || !minDelay.equals(Integer.toString(original.minDelay()))
                 || !maxDelay.equals(Integer.toString(original.maxDelay()));
     }

@@ -16,7 +16,7 @@ public final class SpawnerEditorClient {
         if (view.status() == SpawnerEditorPayloads.Status.OPEN) {
             if (mc.player == null || mc.level == null) return;
             if (screen != null && screen.session().equals(view.session())) return;
-            screen = new SpawnerEditorScreen(new SpawnerEditorState(view.session(), view.draft()), view.pos());
+            screen = new SpawnerEditorScreen(new SpawnerEditorState(view.session(), view.draft()), view.pos(), view.equipment(), view.held());
             mc.setScreen(screen);
         } else if (screen != null && screen.session().equals(view.session())) {
             if (view.status() == SpawnerEditorPayloads.Status.INVALID) {

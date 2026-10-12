@@ -13,6 +13,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.*;
+import net.minecraft.world.item.ItemStack;
+import net.goui.cosmicdungeon.block.entity.CosmicSpawnerPreset.Slot;
+import net.goui.cosmicdungeon.spawner.editor.SpawnerEquipmentDraft.Origin;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.phys.*;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -25,7 +28,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 public final class SpawnerEditorService {
     private static final Map<ServerPlayer,Session> SESSIONS=new WeakHashMap<>();
     private static final Map<ServerPlayer,Integer> HOVER_TICKS=new WeakHashMap<>();
-    private record Session(UUID id,CosmicSpawnerBlockEntity be,SpawnerEditorDraft draft,CompoundTag baseline,int expires){}
+    private record Session(UUID id,CosmicSpawnerBlockEntity be,SpawnerEditorDraft draft,CompoundTag baseline,int expires,List<ItemStack> equipment,ItemStack held){}
     private SpawnerEditorService(){}
     public static CosmicSpawnerBlockEntity target(ServerPlayer player){
         if(!Authority.isDeveloper(player)||!player.isAlive()||player.isSpectator())return null;
@@ -45,10 +48,12 @@ public final class SpawnerEditorService {
         }
         try{
             var draft=SpawnerEditorConfig.read(be,saved);
-            var session=new Session(UUID.randomUUID(),be,draft,SpawnerEditorConfig.comparable(saved),player.tickCount+12000);
+            var session=new Session(UUID.randomUUID(),be,draft,SpawnerEditorConfig.comparable(saved),player.tickCount+12000,SpawnerEquipmentConfig.snapshot(saved,player.registryAccess()),player.getMainHandItem().copy());
+            if(!session.held.isEmpty()&&ItemStack.CODEC.encodeStart(player.registryAccess().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE),session.held).getOrThrow().toString().length()>32768)
+                throw new IllegalArgumentException("Held item snapshot too large.");
             SESSIONS.put(player,session);send(player,session,Status.OPEN,"");return 1;
         }catch(IllegalArgumentException ex){
-            player.displayClientMessage(Component.literal("This authored name exceeds the editor limit; use existing commands to edit it."),false);return 0;
+            player.displayClientMessage(Component.literal("This authored name or held-item data exceeds the editor limit; use existing commands to edit it."),false);return 0;
         }
     }
     public static void request(ServerPlayer player,Request request){
@@ -70,8 +75,23 @@ public final class SpawnerEditorService {
         if(!session.baseline.equals(SpawnerEditorConfig.comparable(current))){
             close(player,session,"Spawner changed during editing. Reopen to review the current configuration.");return;
         }
-        if(!session.draft.equals(request.draft())){
-            var updated=SpawnerEditorConfig.patch(current,session.draft,request.draft());
+        CompoundTag updated;
+        try{
+            var resolved=new ArrayList<ItemStack>();
+            for(var slot:Slot.values()){
+                var edit=request.equipment().get(slot);
+                if(edit.origin()==Origin.HELD&&!ItemStack.matches(session.held,player.getMainHandItem()))
+                    throw new IllegalArgumentException("Held item changed. Reopen the editor to copy the current item.");
+                var stack=SpawnerEquipmentRules.resolve(session.equipment.get(slot.ordinal()),session.held,edit,player.registryAccess());
+                if(edit.changed()&&!edit.advanced()&&!SpawnerEquipmentRules.fits(slot,stack))
+                    throw new IllegalArgumentException("Item does not fit "+slot.id+" in Normal mode.");
+                resolved.add(stack);
+            }
+            updated=SpawnerEditorConfig.patch(current,session.draft,request.draft());
+            updated=SpawnerEquipmentConfig.patch(updated,request.draft().entityId(),request.equipment(),resolved,player.registryAccess());
+            if(updated.toString().length()>65536)throw new IllegalArgumentException("Result exceeds the editor's bounded snapshot size.");
+        }catch(IllegalArgumentException ex){send(player,session,Status.INVALID,ex.getMessage().length()>256?"Invalid equipment components.":ex.getMessage());return;}
+        if(!updated.equals(current)){
             session.be.loadWithComponents(TagValueInput.create(ProblemReporter.DISCARDING,player.registryAccess(),updated));
             session.be.setChanged();player.level().sendBlockUpdated(session.be.getBlockPos(),session.be.getBlockState(),session.be.getBlockState(),3);
         }
@@ -84,7 +104,8 @@ public final class SpawnerEditorService {
                 p.getEyePosition().distanceToSqr(Vec3.atCenterOf(s.be.getBlockPos()))<=36;
     }
     private static void send(ServerPlayer p,Session s,Status status,String message){
-        ModNetwork.sendTo(p,new View(s.id,s.be.getBlockPos(),status==Status.CLOSED?SpawnerEditorDraft.empty():s.draft,status,message));
+        ModNetwork.sendTo(p,new View(s.id,s.be.getBlockPos(),status==Status.CLOSED?SpawnerEditorDraft.empty():s.draft,status,message,
+                status==Status.CLOSED?Collections.nCopies(6,ItemStack.EMPTY):s.equipment,status==Status.CLOSED?ItemStack.EMPTY:s.held));
     }
     private static void close(ServerPlayer p,Session s,String message){SESSIONS.remove(p);send(p,s,Status.CLOSED,message);}
     public static void hover(ServerPlayer player,BlockPos pos){

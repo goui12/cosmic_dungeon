@@ -42,12 +42,7 @@ public final class SpawnerEditorConfig {
                 before.invulnerable()!=after.invulnerable()||before.persistent()!=after.persistent()||
                 before.nameVisible()!=after.nameVisible();
         if(!traits)return out;
-        var preset=child(out,"SpawnerPreset");
-        if(!out.contains("SpawnerPreset")){
-            preset.putInt("presetVersion",5);preset.putInt("equipmentMask",0);preset.putInt("dropMask",0);
-            preset.putBoolean("intrinsicDropsOverride",false);
-            preset.putString("entityType",after.entityId());
-        }
+        var preset=preset(out,after.entityId());
         var spawn=child(out,"SpawnData");var entity=child(spawn,"entity");
         if(entityChanged){
             out.putString("SpawnerEntityId",after.entityId());preset.putString("entityType",after.entityId());
@@ -75,6 +70,14 @@ public final class SpawnerEditorConfig {
         if(!flags.isEmpty())preset.put("entityFlags",flags);
         if(entityChanged||nameChanged){spawn.put("entity",entity);out.put("SpawnData",spawn);}
         out.put("SpawnerPreset",preset);return out;
+    }
+    static CompoundTag preset(CompoundTag out,String entityId){
+        var preset=child(out,"SpawnerPreset");
+        if(!out.contains("SpawnerPreset")){
+            preset.putInt("presetVersion",5);preset.putInt("equipmentMask",0);preset.putInt("dropMask",0);
+            preset.putBoolean("intrinsicDropsOverride",false);preset.putString("entityType",entityId);
+        }
+        return preset;
     }
     private static void put(CompoundTag flags,CompoundTag entity,String key,boolean old,boolean value){
         if(old!=value){flags.putBoolean(key,value);entity.putBoolean(key,value);}
