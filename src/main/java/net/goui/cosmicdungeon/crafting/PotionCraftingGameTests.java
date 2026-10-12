@@ -764,6 +764,7 @@ public final class PotionCraftingGameTests {
     }
 
     public static void integrationSync(GameTestHelper h) {
+        nativeMemo(h);
         sixPlayerCosts(h);
         sixPlayerQueue(h);
         sixPlayerFairness(h);
@@ -863,7 +864,9 @@ public final class PotionCraftingGameTests {
                 sorted[0]/1000.0,sorted[sorted.length/2]/1000.0,sorted[(int)Math.ceil(sorted.length*.95)-1]/1000.0,sorted[sorted.length-1]/1000.0);
     }
     private static void sixPlayerCosts(GameTestHelper h) {
-        for(int viewers:new int[]{1,6})try(var f=new Fixture(h,Long.MAX_VALUE-3260-viewers,6,true)) {
+        var matched=new HashMap<String,List<Long>>();
+        for(boolean legacy:new boolean[]{true,false})for(int viewers:new int[]{1,6})
+                try(var f=new Fixture(h,Long.MAX_VALUE-3390-viewers-(legacy?0:10),6,true)) {
             f.clear();for(int i=0;i<6;i++) {
                 f.healing(i,3);f.item(i,7,Items.GLOWSTONE_DUST,3);f.item(i,8,Items.REDSTONE,3);
                 f.potion(i,9,Items.POTION,Potions.AWKWARD);f.potion(i,10,Items.POTION,Potions.HEALING);
@@ -871,9 +874,11 @@ public final class PotionCraftingGameTests {
             for(int i=0;i<viewers;i++)PotionCraftActions.request(f.p(i),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Request(true));
             var poller=new PalettePoller();var opened=wireTotals(f);
             f.check(opened.packets()==viewers&&opened.materialRows()>0,"All actual brewer subscriptions include final23 route details");
-            for(int warm=0;warm<10;warm++){boundary(f);poller.poll(f,viewers);poller.poll(f,viewers);}
+            CraftingWork.begin(legacy);
+            try {for(int warm=0;warm<10;warm++){boundary(f);poller.poll(f,viewers);poller.poll(f,viewers);}}
+            finally {CraftingWork.end();}
             for(int round=0;round<3;round++) {
-                var before=wireTotals(f);long[] timings=new long[200];CraftingWork.begin(false);var probe=CraftingWork.probe;
+                var before=wireTotals(f);long[] timings=new long[200];CraftingWork.begin(legacy);var probe=CraftingWork.probe;
                 try {
                     for(int sweep=0;sweep<100;sweep++) {
                         boundary(f);long start=System.nanoTime();poller.poll(f,viewers);timings[sweep*2]=System.nanoTime()-start;
@@ -884,10 +889,19 @@ public final class PotionCraftingGameTests {
                 f.check(after.packets()==before.packets()&&probe.palettePackets==0,"One hundred controlled5tick boundaries plus warm sweeps send zero unchanged deltas");
                 f.check(probe.viewCalls==200L*viewers&&probe.inventoryScans==100L*6&&probe.quoteBuilds==0,
                         "Every actual viewer evaluated, each owner scanned once per injected boundary, unchanged recipe entries reused");
-                costsLog("baseline_unchanged",6,viewers,round,100,timings,probe,before,after);
+                long stockBuilds=legacy?200L*viewers*6:100L*6, copies=legacy?200L*viewers*6:0;
+                f.check(probe.stockBuilds==stockBuilds&&probe.inventoryCopies==copies
+                        &&probe.copiedSlots==copies*f.p(0).getInventory().getContainerSize()
+                        &&probe.stockSlots==stockBuilds*f.p(0).getInventory().getContainerSize(),
+                        "Unchanged cold/warm sweeps remove only redundant detached copies/projections; six native boundary scans stay required");
+                var same=List.of(probe.viewCalls,probe.quoteBuilds,probe.entryBuilds,probe.plannerChoices,probe.inventoryScans,
+                        after.packets()-before.packets(),after.bytes()-before.bytes(),after.materialRows()-before.materialRows());
+                String key=viewers+":unchanged:"+round;
+                if(legacy)matched.put(key,same);else f.check(matched.get(key).equals(same),"Same-workload legacy/optimized unchanged quote/scans/packets/bytes remain exact");
+                costsLog((legacy?"legacy_":"optimized_")+"unchanged",6,viewers,round,100,timings,probe,before,after);
             }
             for(int round=0;round<3;round++) {
-                var before=wireTotals(f);long[] timings=new long[20];CraftingWork.begin(false);var probe=CraftingWork.probe;
+                var before=wireTotals(f);long[] timings=new long[20];CraftingWork.begin(legacy);var probe=CraftingWork.probe;
                 try {
                     for(int sweep=0;sweep<20;sweep++) {
                         f.p(0).getInventory().getItem(5).setCount(sweep%2==0?2:3);
@@ -900,7 +914,16 @@ public final class PotionCraftingGameTests {
                         "Changed own/pooled ingredient rows update every real subscribed party member once");
                 f.check(probe.inventoryScans==20L*6&&probe.quoteBuilds==20L*viewers,
                         "Changing stock invalidates bounded owner/quote snapshots at every represented refresh boundary");
-                costsLog("baseline_changing",6,viewers,round,20,timings,probe,before,after);
+                long stockBuilds=legacy?20L*viewers*6:20L*6, copies=legacy?20L*viewers*6:0;
+                f.check(probe.stockBuilds==stockBuilds&&probe.inventoryCopies==copies
+                        &&probe.copiedSlots==copies*f.p(0).getInventory().getContainerSize()
+                        &&probe.stockSlots==stockBuilds*f.p(0).getInventory().getContainerSize(),
+                        "Changing stock still refreshes every owner and quote while eliminating only repeated per-viewer stock copies");
+                var same=List.of(probe.viewCalls,probe.quoteBuilds,probe.entryBuilds,probe.plannerChoices,probe.inventoryScans,
+                        after.packets()-before.packets(),after.bytes()-before.bytes(),after.materialRows()-before.materialRows());
+                String key=viewers+":changing:"+round;
+                if(legacy)matched.put(key,same);else f.check(matched.get(key).equals(same),"Same-workload legacy/optimized changing quote/scans/packets/bytes remain exact");
+                costsLog((legacy?"legacy_":"optimized_")+"changing",6,viewers,round,20,timings,probe,before,after);
             }
             var before=wireTotals(f);f.p(0).getInventory().getItem(5).shrink(1);f.p(0).getInventory().setChanged();
             poller.poll(f,viewers);f.check(wireTotals(f).packets()-before.packets()==viewers,"Native inventory dirty notification invalidates all pooled subscriber quotes without a forced boundary");
@@ -1080,6 +1103,38 @@ public final class PotionCraftingGameTests {
                     &&sent(f,0).entries().stream().noneMatch(e->e.targetId().equals(healing)&&e.shared()>0),
                     "Rejected execution keeps every remaining reagent/powder and acknowledges the fresh unavailable quote");
             com.mojang.logging.LogUtils.getLogger().info("BATCH24_CRAFT_FRESH_GUARD members=6 subscribers=6 dirty_notified=false cached_affordable=true physical_input_removed=true committed=0 outputs=0 fuel_used=0 metrics_sequence=0 fresh_debit_authority=true");
+        }
+    }
+
+    private static void nativeMemo(GameTestHelper h) {
+        try(var f=new Fixture(h,Long.MAX_VALUE-3280,1,true)) {
+            f.clear();f.healing(0,2);String gunpowder=PotionRecipeSelection.itemKey(Items.GUNPOWDER);
+            String water="potion/minecraft:potion/minecraft:water";
+            var first=SharedCrafting.potionStock(f.p(0));
+            f.check(SharedCrafting.potionStock(f.p(0))==first&&first.get(water)==2&&first.get(gunpowder)==2,
+                    "Native owner stock projection reuses the same immutable identity within its inventory snapshot");
+            boolean immutable=false;try{first.put(gunpowder,99);}catch(UnsupportedOperationException expected){immutable=true;}
+            f.check(immutable&&first.get(gunpowder)==2,"A viewer cannot mutate another viewer's memoized resource counts");
+            var detached=SharedCrafting.inventory(f.p(0),false);detached.get(0).setCount(0);
+            f.check(SharedCrafting.potionStock(f.p(0))==first&&first.get(water)==2&&f.count(0,Items.POTION)==2,
+                    "Detached transaction inventory edits cannot change live items or the shared memo");
+            f.p(0).getInventory().getItem(5).shrink(1);f.p(0).getInventory().setChanged();
+            var dirty=SharedCrafting.potionStock(f.p(0));
+            f.check(dirty!=first&&dirty.get(gunpowder)==1&&first.get(gunpowder)==2,"Native dirty notification rebuilds the projection and preserves prior immutable snapshots");
+            SharedCrafting.forget(f.p(0));var forgotten=SharedCrafting.potionStock(f.p(0));
+            f.check(forgotten!=dirty&&forgotten.equals(dirty),"Existing lifecycle forget invalidates the inventory projection without changing counts");
+            detached=SharedCrafting.inventory(f.p(0),true);var fresh=SharedCrafting.potionStock(f.p(0));
+            f.check(fresh!=forgotten&&fresh.equals(forgotten),"Fresh transaction snapshot invalidates the attached memo on the same existing lifecycle");
+            detached.get(5).setCount(0);
+            f.check(SharedCrafting.potionStock(f.p(0))==fresh&&fresh.get(gunpowder)==1&&f.count(0,Items.GUNPOWDER)==1,
+                    "Fresh detached plan mutation also cannot alias the retained memo or live inventory");
+            int changes=f.p(0).getInventory().getTimesChanged();f.p(0).getInventory().getItem(5).grow(1);
+            f.check(f.p(0).getInventory().getTimesChanged()==changes&&SharedCrafting.potionStock(f.p(0))==fresh&&fresh.get(gunpowder)==1,
+                    "Unannounced live changes may retain a bounded preview until its existing invalidation window");
+            var freshRead=SharedCrafting.inventory(f.p(0),true);var rebuilt=SharedCrafting.potionStock(f.p(0));
+            f.check(freshRead.get(5).getCount()==2&&rebuilt.get(gunpowder)==2&&rebuilt!=fresh&&fresh.get(gunpowder)==1,
+                    "Fresh authoritative inventory rereads the real stock and rebuilds the memo without rewriting old snapshots");
+            com.mojang.logging.LogUtils.getLogger().info("BATCH24_CRAFT_MEMO immutable=true same_snapshot_identity=true dirty_rebuild=true forget_rebuild=true fresh_detached_no_alias=true quiet_preview_bounded=true fresh_read_authoritative=true");
         }
     }
 

@@ -31,11 +31,16 @@ public final class PotionCrafting {
     private static Stock stock(ServerPlayer player, net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData.RunRecord run, boolean fresh) {
         var stocks = new ArrayList<Map<String, Integer>>();
         for (var owner : SharedCrafting.participants(player, run)) {
-            var inventory = SharedCrafting.inventory(owner, fresh);
-            if (CraftingWork.probe != null) {
-                CraftingWork.probe.stockBuilds++; CraftingWork.probe.stockSlots += inventory.size();
+            if (!fresh && !(CraftingWork.probe != null && CraftingWork.probe.legacy)) {
+                stocks.add(SharedCrafting.potionStock(owner));
+            } else {
+                // Execution keeps fresh detached images. Tests may reintroduce the measured old preview path.
+                var inventory = SharedCrafting.inventory(owner, fresh);
+                if (CraftingWork.probe != null) {
+                    CraftingWork.probe.stockBuilds++; CraftingWork.probe.stockSlots += inventory.size();
+                }
+                stocks.add(PotionRecipeSelection.stock(inventory));
             }
-            stocks.add(PotionRecipeSelection.stock(inventory));
         }
         return new Stock(stocks.getFirst(), PotionRecipeSelection.combine(stocks));
     }

@@ -52,23 +52,43 @@ public final class SharedCrafting {
         @Override public ItemStack output() { return output.copy(); }
     }
     public record Availability(int own, int shared) {}
-    private record Cache(int tick, int dirty, NonNullList<ItemStack> items) {}
+    private static final class Cache {
+        final int tick, dirty;
+        final NonNullList<ItemStack> items;
+        Map<String, Integer> potions;
+        Cache(int tick, int dirty, NonNullList<ItemStack> items) { this.tick = tick; this.dirty = dirty; this.items = items; }
+    }
     private static final Map<ServerPlayer, Cache> CACHE = new WeakHashMap<>();
     private SharedCrafting() {}
     public static void forget(ServerPlayer player) { CACHE.remove(player); }
     public static void stopped() { CACHE.clear(); }
-    static NonNullList<ItemStack> inventory(ServerPlayer player, boolean fresh) {
+    private static Cache snapshot(ServerPlayer player, boolean fresh) {
         int tick = player.level().getServer().getTickCount(), dirty = player.getInventory().getTimesChanged();
         var cache = CACHE.get(player);
-        if (fresh || cache == null || cache.dirty() != dirty || tick - cache.tick() >= 5 || tick < cache.tick()) {
+        if (fresh || cache == null || cache.dirty != dirty || tick - cache.tick >= 5 || tick < cache.tick) {
             if (CraftingWork.probe != null) CraftingWork.probe.inventoryScans++;
             cache = new Cache(tick, dirty, ChopTravelRecovery.inventory(player)); CACHE.put(player, cache);
         }
-        if (CraftingWork.probe != null) {
-            CraftingWork.probe.inventoryCopies++; CraftingWork.probe.copiedSlots += cache.items().size();
+        return cache;
+    }
+    /** Immutable projection shares the existing snapshot's dirty/expiry/lifecycle; eligibility remains live per viewer. */
+    static Map<String, Integer> potionStock(ServerPlayer player) {
+        var cache = snapshot(player, false);
+        if (cache.potions == null) {
+            if (CraftingWork.probe != null) {
+                CraftingWork.probe.stockBuilds++; CraftingWork.probe.stockSlots += cache.items.size();
+            }
+            cache.potions = PotionRecipeSelection.stock(cache.items);
         }
-        var copy = NonNullList.withSize(cache.items().size(), ItemStack.EMPTY);
-        for (int i = 0; i < copy.size(); i++) copy.set(i, cache.items().get(i).copy()); return copy;
+        return cache.potions;
+    }
+    static NonNullList<ItemStack> inventory(ServerPlayer player, boolean fresh) {
+        var cache = snapshot(player, fresh);
+        if (CraftingWork.probe != null) {
+            CraftingWork.probe.inventoryCopies++; CraftingWork.probe.copiedSlots += cache.items.size();
+        }
+        var copy = NonNullList.withSize(cache.items.size(), ItemStack.EMPTY);
+        for (int i = 0; i < copy.size(); i++) copy.set(i, cache.items.get(i).copy()); return copy;
     }
     private static boolean online(ServerPlayer p) {
         return p != null && p.connection != null && !p.hasDisconnected() && p.connection.isAcceptingMessages()
