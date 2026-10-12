@@ -61,7 +61,11 @@ public final class SharedCrafting {
         int tick = player.level().getServer().getTickCount(), dirty = player.getInventory().getTimesChanged();
         var cache = CACHE.get(player);
         if (fresh || cache == null || cache.dirty() != dirty || tick - cache.tick() >= 5 || tick < cache.tick()) {
+            if (CraftingWork.probe != null) CraftingWork.probe.inventoryScans++;
             cache = new Cache(tick, dirty, ChopTravelRecovery.inventory(player)); CACHE.put(player, cache);
+        }
+        if (CraftingWork.probe != null) {
+            CraftingWork.probe.inventoryCopies++; CraftingWork.probe.copiedSlots += cache.items().size();
         }
         var copy = NonNullList.withSize(cache.items().size(), ItemStack.EMPTY);
         for (int i = 0; i < copy.size(); i++) copy.set(i, cache.items().get(i).copy()); return copy;

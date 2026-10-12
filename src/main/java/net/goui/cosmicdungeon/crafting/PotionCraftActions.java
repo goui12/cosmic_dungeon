@@ -39,6 +39,7 @@ public final class PotionCraftActions {
         if (!acknowledge && next.equals(session.sent)) return;
         session.revision = Math.incrementExact(session.revision);
         session.sent = new PotionCraftPayloads.View(next.run(), session.revision, next.classId(), next.charges(), next.perPowder(), next.entries());
+        if (CraftingWork.probe != null) CraftingWork.probe.palettePackets++;
         ModNetwork.sendTo(p, session.sent);
         if (next.run() == 0) session.open = false;
     }

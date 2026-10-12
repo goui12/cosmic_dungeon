@@ -56,6 +56,7 @@ public final class PotionRecipeSelection {
         return result;
     }
     public Choice choose(String target, Map<String, Integer> stock, int charges) {
+        if (CraftingWork.probe != null) CraftingWork.probe.plannerChoices++;
         for (var option : options.getOrDefault(target, List.of())) {
             var cost = BrewingFuel.cost(charges, option.route().steps()); boolean fits = true;
             for (var entry : option.materials().entrySet()) {

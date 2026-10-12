@@ -42,8 +42,10 @@ public final class PotionCraftingGameTests {
         final List<io.netty.channel.embedded.EmbeddedChannel> channels=new ArrayList<>();
         final Map<UUID,List<Packet<?>>> packets=new HashMap<>();
         final CompoundTag journalBefore; final Path resourceFolder;
-        @SuppressWarnings("unchecked") Fixture(GameTestHelper h,long run) {
+        Fixture(GameTestHelper h,long run) { this(h,run,3,false); }
+        @SuppressWarnings("unchecked") Fixture(GameTestHelper h,long run,int members,boolean allBrewers) {
             this.h=h;this.run=run;level=h.getLevel();var server=level.getServer();
+            check(members>=1&&members<=6,"Native fixture is bounded to six owners");
             var anchor=h.absolutePos(BlockPos.ZERO);var chunk=new ChunkPos(anchor);
             origin=new Vec3(chunk.getMinBlockX()+8.5,anchor.getY()+10.5,chunk.getMinBlockZ()+8.5);
             try {
@@ -54,7 +56,7 @@ public final class PotionCraftingGameTests {
                 advancements=(Map<UUID,?>)field(PlayerList.class,"advancements",server.getPlayerList());
             } catch(ReflectiveOperationException ex) {throw new IllegalStateException(ex);}
             journalBefore=SharedCraftData.get(server).image();check(!runs.containsKey(run),"Unique shared crafting run");
-            for(int i=0;i<3;i++) {
+            for(int i=0;i<members;i++) {
                 var profile=new GameProfile(UUID.randomUUID(),"PotionTest"+i);String id=profile.id().toString();
                 check(!players.containsKey(profile.id())&&!stats.containsKey(profile.id())&&!advancements.containsKey(profile.id()),"Unique native owner");
                 var ownerFiles=List.of(server.getWorldPath(LevelResource.PLAYER_DATA_DIR).resolve(id+".dat"),
@@ -63,7 +65,7 @@ public final class PotionCraftingGameTests {
                         server.getWorldPath(LevelResource.PLAYER_ADVANCEMENTS_DIR).resolve(id+".json"));
                 check(ownerFiles.stream().noneMatch(Files::exists),"Fixture owner files must be new");files.addAll(ownerFiles);
                 var player=create(profile);var root=new CompoundTag();
-                root.putString(ClassData.KEY_CLASS_ID,i==0?"theurgist":"judicator");root.putString("future_marker","preserved");
+                root.putString(ClassData.KEY_CLASS_ID,allBrewers||i==0?"theurgist":"judicator");root.putString("future_marker","preserved");
                 player.getPersistentData().put(ClassData.ROOT_TAG,ClassResourceLedger.forRun(root,run).applyTo(root));
                 current.add(player);players.put(profile.id(),player);online.add(player);
             }
@@ -79,7 +81,7 @@ public final class PotionCraftingGameTests {
                 files.addAll(metricFiles);
             } catch(IOException ex){throw new IllegalStateException(ex);}
             runs.put(run,record);DungeonMetricsService.begin(server,record,true);
-            for(int i=0;i<3;i++) consent(i,true);
+            for(int i=0;i<members;i++) consent(i,true);
         }
         static Object field(Class<?> type,String name,Object owner)throws ReflectiveOperationException {
             var field=type.getDeclaredField(name);field.setAccessible(true);return field.get(owner);
@@ -167,9 +169,10 @@ public final class PotionCraftingGameTests {
                     &&chat.content().getString().startsWith("You have contributed a(n) ")).count();
         }
         void unchanged(List<CompoundTag> before,String message) {
-            for(int i=0;i<3;i++)check(inventory(i).equals(before.get(i)),message+" owner "+i);
+            check(before.size()==current.size(),"Every fixture owner has a before image");
+            for(int i=0;i<current.size();i++)check(inventory(i).equals(before.get(i)),message+" owner "+i);
         }
-        List<CompoundTag> images(){return List.of(inventory(0),inventory(1),inventory(2));}
+        List<CompoundTag> images(){var result=new ArrayList<CompoundTag>();for(int i=0;i<current.size();i++)result.add(inventory(i));return List.copyOf(result);}
         void check(boolean condition,String message){h.assertTrue(condition,Component.literal(message));}
         @Override public void close() {
             var data=SharedCraftData.get(level.getServer());var ids=current.stream().map(ServerPlayer::getUUID).toList();
@@ -761,6 +764,11 @@ public final class PotionCraftingGameTests {
     }
 
     public static void integrationSync(GameTestHelper h) {
+        sixPlayerCosts(h);
+        sixPlayerQueue(h);
+        sixPlayerFairness(h);
+        sixPlayerContention(h);
+        freshStockGuard(h);
         try(var f=new Fixture(h,Long.MAX_VALUE-3220)) {
             f.clear();f.healing(1,3);var player=f.p(0);
             PotionCraftActions.request(player,new net.goui.cosmicdungeon.network.PotionCraftPayloads.Request(true));
@@ -797,6 +805,282 @@ public final class PotionCraftingGameTests {
                     quote.entries().size(),bytes,unchangedNanos/1000.0);
         } catch(ReflectiveOperationException ex){throw new IllegalStateException(ex);}
         h.succeed();
+    }
+
+    /** Controlled palette refresh/action kernels; these fixtures do not model a rendered client or world TPS. */
+    private static final class PalettePoller {
+        final java.lang.reflect.Method sync;
+        final Map<ServerPlayer,?> sessions;
+        @SuppressWarnings("unchecked") PalettePoller() throws ReflectiveOperationException {
+            sessions=(Map<ServerPlayer,?>)Fixture.field(PotionCraftActions.class,"SESSIONS",null);
+            sync=Arrays.stream(PotionCraftActions.class.getDeclaredMethods()).filter(m->m.getName().equals("sync")).findFirst().orElseThrow();
+            sync.setAccessible(true);
+        }
+        void poll(Fixture f) throws ReflectiveOperationException {poll(f,f.current.size());}
+        void poll(Fixture f,int viewers) throws ReflectiveOperationException {
+            for(var player:f.current.subList(0,viewers)) {
+                var session=sessions.get(player);f.check(session!=null,"Every measured native viewer has a real palette subscription");
+                sync.invoke(null,player,session,false);
+            }
+        }
+        void nextWindow(ServerPlayer player) throws ReflectiveOperationException {
+            var session=sessions.get(player);var field=session.getClass().getDeclaredField("lastAction");field.setAccessible(true);
+            field.setLong(session,Long.MIN_VALUE); // Deterministic next action window, without altering the shared server's tick counter.
+        }
+    }
+    private record WireTotals(long packets,long bytes,long materialRows) {}
+    private static WireTotals wireTotals(Fixture f) {
+        long packets=0,bytes=0,rows=0;
+        for(var player:f.current)for(var packet:f.packets.get(player.getUUID()))
+            if(packet instanceof net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket custom
+                    &&custom.payload() instanceof net.goui.cosmicdungeon.network.PotionCraftPayloads.View view) {
+                var buffer=io.netty.buffer.Unpooled.buffer();
+                try {
+                    var wire=new net.minecraft.network.RegistryFriendlyByteBuf(buffer,f.level.registryAccess());
+                    net.goui.cosmicdungeon.network.PotionCraftPayloads.View.STREAM_CODEC.encode(wire,view);
+                    int encoded=buffer.readableBytes();f.check(encoded>0&&encoded<65536,"Actual final23 recipe route payload remains bounded");
+                    var decoded=net.goui.cosmicdungeon.network.PotionCraftPayloads.View.STREAM_CODEC.decode(wire);
+                    f.check(buffer.readableBytes()==0&&decoded.run()==view.run()&&decoded.revision()==view.revision()
+                            &&decoded.entries().size()==view.entries().size(),"Each actual subscription packet round trips its exact generation");
+                    for(int i=0;i<view.entries().size();i++)
+                        f.check(view.entries().get(i).materials().equals(decoded.entries().get(i).materials()),"Final23 selected-input/reagent details survive the actual wire");
+                    packets++;bytes+=encoded;rows+=view.entries().stream().mapToLong(e->e.materials().size()).sum();
+                } finally {buffer.release();}
+            }
+        return new WireTotals(packets,bytes,rows);
+    }
+    private static void openAll(Fixture f) {
+        for(var player:f.current)PotionCraftActions.request(player,new net.goui.cosmicdungeon.network.PotionCraftPayloads.Request(true));
+    }
+    private static void boundary(Fixture f) {for(var player:f.current)SharedCrafting.forget(player);}
+    private static void costsLog(String phase,int members,int viewers,int round,int sweeps,long[] nanos,CraftingWork.Probe probe,WireTotals before,WireTotals after) {
+        long[] sorted=nanos.clone();Arrays.sort(sorted);
+        com.mojang.logging.LogUtils.getLogger().info(
+                "BATCH24_CRAFT_WORK phase={} members={} subscribers={} round={} sweeps={} samples={} view_calls={} quote_builds={} entry_builds={} planner_choices={} inventory_scans={} inventory_copies={} copied_slots={} stock_builds={} stock_slots={} palette_packets={} wire_packets={} wire_bytes={} material_rows={} min_us={} median_us={} p95_us={} max_us={}",
+                phase,members,viewers,round,sweeps,nanos.length,probe.viewCalls,probe.quoteBuilds,probe.entryBuilds,probe.plannerChoices,
+                probe.inventoryScans,probe.inventoryCopies,probe.copiedSlots,probe.stockBuilds,probe.stockSlots,probe.palettePackets,
+                after.packets()-before.packets(),after.bytes()-before.bytes(),after.materialRows()-before.materialRows(),
+                sorted[0]/1000.0,sorted[sorted.length/2]/1000.0,sorted[(int)Math.ceil(sorted.length*.95)-1]/1000.0,sorted[sorted.length-1]/1000.0);
+    }
+    private static void sixPlayerCosts(GameTestHelper h) {
+        for(int viewers:new int[]{1,6})try(var f=new Fixture(h,Long.MAX_VALUE-3260-viewers,6,true)) {
+            f.clear();for(int i=0;i<6;i++) {
+                f.healing(i,3);f.item(i,7,Items.GLOWSTONE_DUST,3);f.item(i,8,Items.REDSTONE,3);
+                f.potion(i,9,Items.POTION,Potions.AWKWARD);f.potion(i,10,Items.POTION,Potions.HEALING);
+            }
+            for(int i=0;i<viewers;i++)PotionCraftActions.request(f.p(i),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Request(true));
+            var poller=new PalettePoller();var opened=wireTotals(f);
+            f.check(opened.packets()==viewers&&opened.materialRows()>0,"All actual brewer subscriptions include final23 route details");
+            for(int warm=0;warm<10;warm++){boundary(f);poller.poll(f,viewers);poller.poll(f,viewers);}
+            for(int round=0;round<3;round++) {
+                var before=wireTotals(f);long[] timings=new long[200];CraftingWork.begin(false);var probe=CraftingWork.probe;
+                try {
+                    for(int sweep=0;sweep<100;sweep++) {
+                        boundary(f);long start=System.nanoTime();poller.poll(f,viewers);timings[sweep*2]=System.nanoTime()-start;
+                        start=System.nanoTime();poller.poll(f,viewers);timings[sweep*2+1]=System.nanoTime()-start;
+                    }
+                } finally {CraftingWork.end();}
+                var after=wireTotals(f);
+                f.check(after.packets()==before.packets()&&probe.palettePackets==0,"One hundred controlled5tick boundaries plus warm sweeps send zero unchanged deltas");
+                f.check(probe.viewCalls==200L*viewers&&probe.inventoryScans==100L*6&&probe.quoteBuilds==0,
+                        "Every actual viewer evaluated, each owner scanned once per injected boundary, unchanged recipe entries reused");
+                costsLog("baseline_unchanged",6,viewers,round,100,timings,probe,before,after);
+            }
+            for(int round=0;round<3;round++) {
+                var before=wireTotals(f);long[] timings=new long[20];CraftingWork.begin(false);var probe=CraftingWork.probe;
+                try {
+                    for(int sweep=0;sweep<20;sweep++) {
+                        f.p(0).getInventory().getItem(5).setCount(sweep%2==0?2:3);
+                        f.p(0).getInventory().setChanged();boundary(f);
+                        long start=System.nanoTime();poller.poll(f,viewers);timings[sweep]=System.nanoTime()-start;
+                    }
+                } finally {CraftingWork.end();}
+                var after=wireTotals(f);
+                f.check(after.packets()-before.packets()==20L*viewers&&probe.palettePackets==20L*viewers,
+                        "Changed own/pooled ingredient rows update every real subscribed party member once");
+                f.check(probe.inventoryScans==20L*6&&probe.quoteBuilds==20L*viewers,
+                        "Changing stock invalidates bounded owner/quote snapshots at every represented refresh boundary");
+                costsLog("baseline_changing",6,viewers,round,20,timings,probe,before,after);
+            }
+            var before=wireTotals(f);f.p(0).getInventory().getItem(5).shrink(1);f.p(0).getInventory().setChanged();
+            poller.poll(f,viewers);f.check(wireTotals(f).packets()-before.packets()==viewers,"Native inventory dirty notification invalidates all pooled subscriber quotes without a forced boundary");
+            for(var player:f.current)f.check(GroupResourceConsent.choice(D1RunData.get(f.level.getServer()),f.run,player.getUUID()).equals("YES"),
+                    "Every measured member explicitly consents in the eligible native run");
+        } catch(ReflectiveOperationException ex){throw new IllegalStateException(ex);}
+    }
+    private static List<Integer> fuelImages(Fixture f) {return f.current.stream().map(p->BrewingFuel.charges(SharedCraftData.get(f.level.getServer()).fuel(p.getUUID()))).toList();}
+    private static long total(Fixture f,Item item) {long result=0;for(int i=0;i<f.current.size();i++)result+=f.count(i,item);return result;}
+    private static void noSpend(Fixture f,List<CompoundTag> inventories,List<Integer> fuel,long sequence,String why) {
+        f.unchanged(inventories,why);f.check(fuelImages(f).equals(fuel)&&DungeonMetricsService.resourceSequence(f.level.getServer(),f.run)==sequence
+                &&SharedCraftData.get(f.level.getServer()).pendingRun(f.run)==null,why+" preserves exact fuel, metrics and journal");
+    }
+    private static void sixPlayerQueue(GameTestHelper h) {
+        try(var f=new Fixture(h,Long.MAX_VALUE-3270,6,true)) {
+            String healing="minecraft:healing_splash";f.clear();for(int i=0;i<6;i++)f.healing(i,2);
+            openAll(f);var poller=new PalettePoller();var queued=new ArrayList<net.goui.cosmicdungeon.network.PotionCraftPayloads.Action>();
+            for(int i=0;i<6;i++){var view=sent(f,i);queued.add(new net.goui.cosmicdungeon.network.PotionCraftPayloads.Action(f.run,view.revision(),healing,false));}
+            long start=System.nanoTime();
+            for(int i=0;i<6;i++)PotionCraftActions.action(f.p(i),queued.get(i));
+            long elapsed=System.nanoTime()-start;
+            for(int i=0;i<6;i++)f.check(f.p(i).inventoryMenu.getCarried().getCount()==1&&f.charges(i)==17&&f.revision(i)==1
+                    &&f.count(i,Items.POTION)==1&&f.count(i,Items.NETHER_WART)==1&&f.count(i,Items.GLISTERING_MELON_SLICE)==1
+                    &&f.count(i,Items.GUNPOWDER)==1&&f.count(i,Items.BLAZE_POWDER)==0,"Six prequeued subscriber actions serialize to one exact own three-step craft each");
+            var inventories=f.images();var fuel=fuelImages(f);long sequence=DungeonMetricsService.resourceSequence(f.level.getServer(),f.run);
+            var paidCursors=f.current.stream().map(player->player.inventoryMenu.getCarried().copy()).toList();
+            f.check(sequence==6&&DungeonMetricsService.donationCursor(f.level.getServer(),f.run)==0&&total(f,Items.BLAZE_POWDER)==0,
+                    "Six committed sequences, six fuel powders and no fictitious shared donations");
+            for(int duplicate=0;duplicate<20;duplicate++)for(int i=0;i<6;i++)PotionCraftActions.action(f.p(i),queued.get(i));
+            noSpend(f,inventories,fuel,sequence,"One hundred twenty overlapping duplicate actions");
+            for(int i=0;i<6;i++)f.check(ItemStack.matches(paidCursors.get(i),f.p(i).inventoryMenu.getCarried()),
+                    "Duplicate actions preserve every exact single paid cursor output");
+            for(int i=0;i<6;i++) {
+                PotionCraftActions.request(f.p(i),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Request(false));
+                PotionCraftActions.request(f.p(i),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Request(true));
+                f.check(sent(f,i).revision()>queued.get(i).revision(),"Every close/reopen advances its individual subscriber generation");
+                poller.nextWindow(f.p(i));PotionCraftActions.action(f.p(i),queued.get(i));
+            }
+            noSpend(f,inventories,fuel,sequence,"Old subscriber generations after reopen");
+            for(int i=0;i<6;i++)f.check(ItemStack.matches(paidCursors.get(i),f.p(i).inventoryMenu.getCarried()),
+                    "Old subscriber generations preserve every exact single paid cursor output");
+            // New controlled donor stock for the guard matrix; the six preceding paid outcomes were asserted before this fixture reseed.
+            f.clear();for(int i=1;i<6;i++)f.healing(i,1);poller.poll(f);
+            f.p(0).inventoryMenu.setCarried(new ItemStack(Items.DIAMOND));PotionCursorCustody.capture(f.p(0));poller.poll(f);
+            inventories=f.images();fuel=fuelImages(f);var cursor=f.p(0).inventoryMenu.getCarried().copy();
+            poller.nextWindow(f.p(0));var view=sent(f,0);
+            PotionCraftActions.action(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Action(f.run,view.revision(),healing,false));
+            noSpend(f,inventories,fuel,sequence,"Mismatched full cursor");
+            f.check(ItemStack.isSameItemSameComponents(cursor,f.p(0).inventoryMenu.getCarried())&&f.p(0).inventoryMenu.getCarried().getCount()==1,
+                    "Rejected cursor craft retains the actual carried item");
+            f.p(0).inventoryMenu.setCarried(ItemStack.EMPTY);PotionCursorCustody.capture(f.p(0));
+            for(int slot=0;slot<36;slot++)f.p(0).getInventory().setItem(slot,new ItemStack(Items.DIAMOND,64));
+            boundary(f);poller.poll(f);view=sent(f,0);inventories=f.images();fuel=fuelImages(f);
+            f.check(view.entries().stream().anyMatch(e->e.targetId().equals(healing)&&e.shared()>0),"Full Shift destination still has genuinely affordable donor resources");
+            poller.nextWindow(f.p(0));PotionCraftActions.action(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Action(f.run,view.revision(),healing,true));
+            noSpend(f,inventories,fuel,sequence,"Full Shift inventory destination");
+            f.p(0).getInventory().clearContent();boundary(f);poller.poll(f);view=sent(f,0);
+            for(int i=1;i<6;i++)f.consent(i,false);
+            inventories=f.images();fuel=fuelImages(f);poller.nextWindow(f.p(0));
+            PotionCraftActions.action(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Action(f.run,view.revision(),healing,false));
+            noSpend(f,inventories,fuel,sequence,"All donor consent withdrawn after queued quote");
+            for(int i=1;i<6;i++)f.consent(i,true);poller.poll(f);view=sent(f,0);inventories=f.images();fuel=fuelImages(f);
+            f.runs.put(f.run,new DungeonRunRegistryData.RunRecord(f.run,"dungeon_1","minecraft:overworld",0,List.of("cosmicdungeon:outside_batch24_fixture"),
+                    1,"ACTIVE","",System.currentTimeMillis(),f.record.orderedPlayers(),List.of(),List.of()));
+            try {
+                poller.nextWindow(f.p(0));PotionCraftActions.action(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Action(f.run,view.revision(),healing,false));
+                noSpend(f,inventories,fuel,sequence,"Current native dimension excluded from eligible run");
+            } finally {f.runs.put(f.run,f.record);}
+            PotionCraftActions.invalidate(f.p(0));openAll(f);poller.poll(f);view=sent(f,0);inventories=f.images();fuel=fuelImages(f);
+            for(int i=1;i<6;i++){f.players.remove(f.p(i).getUUID());f.online.remove(f.p(i));}
+            try {
+                poller.nextWindow(f.p(0));PotionCraftActions.action(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Action(f.run,view.revision(),healing,false));
+                noSpend(f,inventories,fuel,sequence,"All queued donors disconnected before server execution");
+            } finally {for(int i=1;i<6;i++){f.players.put(f.p(i).getUUID(),f.p(i));f.online.add(f.p(i));}}
+            poller.poll(f);view=sent(f,0);inventories=f.images();fuel=fuelImages(f);
+            PotionCraftActions.logout(new net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent(f.p(0)));
+            f.players.remove(f.p(0).getUUID());f.online.remove(f.p(0));
+            try {
+                PotionCraftActions.action(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Action(f.run,view.revision(),healing,false));
+                noSpend(f,inventories,fuel,sequence,"Requester logout cancels its palette subscription and old queued action");
+            } finally {f.players.put(f.p(0).getUUID(),f.p(0));f.online.add(f.p(0));}
+            try(var other=new Fixture(h,Long.MAX_VALUE-3271,2,true)) {
+                other.clear();openAll(other);
+                other.check(sent(other,0).entries().stream().allMatch(e->e.own()==0&&e.shared()==0),"Second simultaneous party cannot quote the six-member party's physical stock");
+                other.check(!PotionCrafting.craft(other.p(0),f.run,healing,false),"Foreign run cannot spend six-member party resources");
+                other.healing(1,1);
+                other.check(PotionCrafting.craft(other.p(0),other.run,healing,false)&&other.charges(0)==17
+                        &&DungeonMetricsService.resourceSequence(other.level.getServer(),other.run)==1,"Second party independently commits one consenting shared craft");
+                noSpend(f,inventories,fuel,sequence,"Second party craft isolates all six owners, fuel and metrics");
+            }
+            com.mojang.logging.LogUtils.getLogger().info(
+                    "BATCH24_CRAFT_QUEUE members=6 queued=6 committed=6 outputs=6 steps=18 fuel_powders=6 remaining_charges=102 duplicates=120 rejected_sequence_full_cursor_full_shift_consent_dimension_donor_disconnect_requester_logout=true second_party_isolated=true transaction_total_us={}",
+                    elapsed/1000.0);
+        } catch(ReflectiveOperationException ex){throw new IllegalStateException(ex);}
+    }
+    private static void sixPlayerFairness(GameTestHelper h) {
+        try(var f=new Fixture(h,Long.MAX_VALUE-3272,6,true)) {
+            f.clear();for(int i=1;i<6;i++)f.healing(i,2);
+            var ranks=new HashMap<Integer,Long>();var expected=new HashMap<Integer,Map<Item,Long>>();
+            for(int i=1;i<6;i++){ranks.put(i,0L);var counts=new HashMap<Item,Long>();for(var item:List.of(Items.POTION,Items.NETHER_WART,Items.GLISTERING_MELON_SLICE,Items.GUNPOWDER,Items.BLAZE_POWDER))counts.put(item,f.count(i,item));expected.put(i,counts);}
+            long donationSequence=0;
+            for(int craft=0;craft<5;craft++) {
+                // Independent one-unit LRU oracle over known physical ingredients, including fuel only on the first craft.
+                var ingredients=new ArrayList<Item>();if(craft==0)ingredients.add(Items.BLAZE_POWDER);
+                ingredients.addAll(List.of(Items.GLISTERING_MELON_SLICE,Items.GUNPOWDER,Items.NETHER_WART,Items.POTION));
+                for(var ingredient:ingredients) {
+                    int chosen=-1;
+                    for(int owner=1;owner<6;owner++)if(expected.get(owner).get(ingredient)>0
+                            &&(chosen<0||ranks.get(owner)<ranks.get(chosen)||ranks.get(owner).equals(ranks.get(chosen))
+                            &&f.p(owner).getStringUUID().compareTo(f.p(chosen).getStringUUID())<0))chosen=owner;
+                    f.check(chosen>0,"Independent donor oracle has enough eligible physical material");
+                    expected.get(chosen).put(ingredient,expected.get(chosen).get(ingredient)-1);ranks.put(chosen,++donationSequence);
+                }
+                f.check(PotionCrafting.craft(f.p(0),f.run,"minecraft:healing_splash",true),"Repeated shared native craft succeeds");
+                for(int owner=1;owner<6;owner++) {
+                    for(var ingredient:expected.get(owner).keySet())f.check(f.count(owner,ingredient)==expected.get(owner).get(ingredient),"Actual donor units follow the independent LRU decision");
+                    f.check(DungeonMetricsService.donationRank(f.level.getServer(),f.run,f.p(owner).getUUID())==ranks.get(owner),"Only actual donor ranks advance after successful commit");
+                }
+                f.check(DungeonMetricsService.resourceSequence(f.level.getServer(),f.run)==craft+1
+                        &&DungeonMetricsService.donationCursor(f.level.getServer(),f.run)==donationSequence,"Shared sequence and individual donated units settle once per serialized craft");
+            }
+            f.check(f.products()==5&&f.charges(0)==5&&total(f,Items.POTION)==5&&total(f,Items.NETHER_WART)==5
+                    &&total(f,Items.GLISTERING_MELON_SLICE)==5&&total(f,Items.GUNPOWDER)==5&&total(f,Items.BLAZE_POWDER)==4
+                    &&donationSequence==21,"Five shared outputs consume five bottles/reagents and one powder with fifteen exact fuel steps");
+            var donated=new ArrayList<Long>();
+            for(int owner=1;owner<6;owner++) {
+                long used=0;for(var item:expected.get(owner).keySet())used+=(item==Items.BLAZE_POWDER?1:2)-expected.get(owner).get(item);
+                donated.add(used);f.check(f.metrics(owner).contributed().values().stream().mapToLong(Long::longValue).sum()==used,
+                        "Every donor's durable metric records exactly its physical donated units");
+            }
+            f.check(Collections.max(donated)-Collections.min(donated)<=1,"Five equally stocked native donors rotate fairly within one donated unit");
+            com.mojang.logging.LogUtils.getLogger().info("BATCH24_CRAFT_FAIRNESS members=6 donors=5 crafts=5 outputs=5 steps=15 fuel_powders=1 remaining_charges=5 resource_sequence=5 donated_units=21 donor_units={} exact_lru_ranks=true",donated);
+        }
+    }
+
+    private static void sixPlayerContention(GameTestHelper h) {
+        try(var f=new Fixture(h,Long.MAX_VALUE-3273,6,true)) {
+            String healing="minecraft:healing_splash";f.clear();f.healing(5,1);openAll(f);
+            var queue=new ArrayList<net.goui.cosmicdungeon.network.PotionCraftPayloads.Action>();
+            for(int i=0;i<6;i++) {
+                var view=sent(f,i);
+                f.check(view.entries().stream().anyMatch(e->e.targetId().equals(healing)&&e.shared()==1),
+                        "All six actual subscriber quotes see the same single physical route without reserving it");
+                queue.add(new net.goui.cosmicdungeon.network.PotionCraftPayloads.Action(f.run,view.revision(),healing,false));
+            }
+            for(int i=0;i<6;i++)PotionCraftActions.action(f.p(i),queue.get(i));
+            f.check(f.p(0).inventoryMenu.getCarried().is(Items.SPLASH_POTION)&&f.p(0).inventoryMenu.getCarried().getCount()==1
+                    &&f.charges(0)==17&&f.revision(0)==1,"First queued action commits the only actual recipe");
+            for(int i=1;i<6;i++)f.check(f.p(i).inventoryMenu.getCarried().isEmpty()&&f.charges(i)==0&&f.revision(i)==0,
+                    "Later serialized stale-affordable actions cannot consume already spent resources or fuel");
+            f.check(total(f,Items.POTION)==0&&total(f,Items.NETHER_WART)==0&&total(f,Items.GLISTERING_MELON_SLICE)==0
+                    &&total(f,Items.GUNPOWDER)==0&&total(f,Items.BLAZE_POWDER)==0
+                    &&DungeonMetricsService.resourceSequence(f.level.getServer(),f.run)==1
+                    &&DungeonMetricsService.donationCursor(f.level.getServer(),f.run)==5
+                    &&f.metrics(5).contributed().values().stream().mapToLong(Long::longValue).sum()==5
+                    &&SharedCraftData.get(f.level.getServer()).pendingRun(f.run)==null,
+                    "Six competing palette requests produce one output, one powder debit, three fuel steps and one metrics sequence");
+            com.mojang.logging.LogUtils.getLogger().info("BATCH24_CRAFT_CONTENTION members=6 subscribers=6 prequeued_affordable=6 physical_routes=1 committed=1 outputs=1 fuel_powders=1 steps=3 remaining_charges=17 resource_sequence=1 shared_units=5 stale_actions=5 no_reservations=true");
+        }
+    }
+    private static void freshStockGuard(GameTestHelper h) {
+        try(var f=new Fixture(h,Long.MAX_VALUE-3274,6,true)) {
+            String healing="minecraft:healing_splash";f.clear();f.healing(5,1);openAll(f);
+            var view=sent(f,0);var input=f.p(5).getInventory().getItem(0);int dirty=f.p(5).getInventory().getTimesChanged();
+            f.check(input.is(Items.POTION)&&view.entries().stream().anyMatch(e->e.targetId().equals(healing)&&e.shared()==1),
+                    "Stale-stock fixture begins with one authoritative affordable shared route");
+            input.setCount(0); // An unannounced component/count mutation within the existing five-tick inventory snapshot window.
+            f.check(f.p(5).getInventory().getTimesChanged()==dirty,"Adversarial raw stack mutation intentionally sends no inventory dirty notification");
+            f.check(PotionCrafting.view(f.p(0),view.revision()).entries().stream().anyMatch(e->e.targetId().equals(healing)&&e.shared()==1),
+                    "Bounded availability may retain the former count until invalidation, and promises no reservation");
+            var before=f.images();var fuel=fuelImages(f);
+            PotionCraftActions.action(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Action(f.run,view.revision(),healing,false));
+            noSpend(f,before,fuel,0,"Fresh server debit rejects an unannounced missing donor input despite stale cached quote");
+            for(var player:f.current)f.check(player.inventoryMenu.getCarried().isEmpty(),"Stale affordable preview cannot produce any unpaid cursor output");
+            f.check(total(f,Items.POTION)==0&&total(f,Items.NETHER_WART)==1&&total(f,Items.GLISTERING_MELON_SLICE)==1
+                    &&total(f,Items.GUNPOWDER)==1&&total(f,Items.BLAZE_POWDER)==1
+                    &&sent(f,0).entries().stream().noneMatch(e->e.targetId().equals(healing)&&e.shared()>0),
+                    "Rejected execution keeps every remaining reagent/powder and acknowledges the fresh unavailable quote");
+            com.mojang.logging.LogUtils.getLogger().info("BATCH24_CRAFT_FRESH_GUARD members=6 subscribers=6 dirty_notified=false cached_affordable=true physical_input_removed=true committed=0 outputs=0 fuel_used=0 metrics_sequence=0 fresh_debit_authority=true");
+        }
     }
 
 }
