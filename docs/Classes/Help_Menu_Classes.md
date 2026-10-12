@@ -1,25 +1,16 @@
-# Help Menu Class Index
+# Help menu class index
 
-The H-key help menu now displays classes as entries in the scrollable left navigation index instead of the old four-at-a-time cycling page.
+The responsive H guide contains six enabled class pages. Click the class name in your inventory to open its guide directly; Back preserves guide history and Escape returns to the inventory.
 
-Enabled visible class pages:
+| Class | Current guide |
+|---|---|
+| Bogatyr | [Wolfpack, Patrol, Stay and Feed Pack](Bogatyr_Help_Guide.md) |
+| Dragoon | [Tridents, chain lightning and Repair Affinity](Dragoon_Help_Guide.md) |
+| Judicator | [Sword and shield support](Judicator_Help_Guide.md) |
+| Pyroclast | [Gunpowder and explosive utility](Pyroclast_Help_Guide.md) |
+| Theurgist | [Potion crafting and resurrection](Theurgist_Help_Guide.md) |
+| Venefex | [Harmful potions and toxic arrows](Venefex_Help_Guide.md) |
 
-- Theurgist
-- Pyroclast
-- Bogatyr
-- Dragoon
-- Venefex
-- Judicator
+Metalmancer and Deadeye are deferred. They are absent from the current player navigation; retained source IDs and artwork fallbacks do not enable them.
 
-Disabled visible class pages:
-
-- Metalmancer — Coming in Dungeon 2
-- Deadeye — Coming in Dungeon 2
-
-Metalmancer and Deadeye stay visible in the index so future Dungeon 2 content has a stable destination, but they are not enabled in the current player-facing help menu.
-
-See also: [Cosmic Dungeon Help Menu](../Help_Menu.md).
-
-## Dragoon Repair Affinity player help
-
-The in-game class help now presents Repair Affinity as live Dragoon support: `/repair <player>`, `/repair accept <player>`, `/repair deny <player>`, and `/repair cancel`; customer item ownership; optional labor fee; Elias repair materials; and the requirement that both players stay nearby with the UI open.
+See the [player guide](../PLAYER_GUIDE.md), [H interface](../Help_Menu.md), and [Dragoon Repair Affinity](Dragoon_Repair_Affinity.md).

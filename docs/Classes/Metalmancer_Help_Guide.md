@@ -6,12 +6,12 @@
 
 ## Availability
 
-- Selectable class ID exists.
-- Currently documented as visible in the class selector but temporarily disabled.
+- The `metalmancer` registry ID remains for compatibility, but this class is unavailable in the current Dungeon 1 selector and player H directory.
+- The notes below describe retained or incomplete code, not playable abilities or an unlock promise. Choose an [enabled class](../PLAYER_GUIDE.md#getting-started-and-finding-help).
 
-## Overview
+## Archived implementation notes - unavailable class
 
-Metalmancer is the only class with a currently documented class-specific inventory/resource loop and action set. Its implemented systems include extra inventory behavior, ore storage, stationary ore gain, and golem-related actions. Some Metalmancer action and tier handling details are documented as incomplete.
+The retained Metalmancer code includes extra inventory behavior, ore storage, stationary ore gain, and golem-related actions. Some Metalmancer action and tier handling details are documented as incomplete.
 
 ## Abilities
 

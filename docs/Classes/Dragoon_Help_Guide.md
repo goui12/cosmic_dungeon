@@ -1,60 +1,11 @@
 # Dragoon Help Guide
 
-## Class ID
+Class ID: `dragoon`. Enabled for Dungeon 1.
 
-- `dragoon`
+A trident specialist and repair supporter. Successful melee or thrown **trident** hits can trigger short-range chain lightning against nearby enemies; it is passive and does not chain recursively. Trident progression improves the relevant damage/chain benefits. Sword hits are not a replacement trigger.
 
-## Availability
+Dragoons may use anvils. For **Repair Affinity**, invite a customer with `/repair <player>`; accept with `/repair accept <player>`, decline with `/repair deny <player>`, or cancel with `/repair cancel`. The customer supplies damaged supported gear and may offer an optional account-currency labor fee. The Dragoon supplies compatible repair components, including approved ordinary unmarked materials where accepted. The customer retains ownership. Both participants must remain nearby with the interface open and review the quote/readiness controls. Items, materials, and fees move only after successful validation; not every special item is supported. See [Repair Affinity](Dragoon_Repair_Affinity.md).
 
-- Selectable class ID exists.
-- Current selector availability: not separately documented as disabled.
+## Shared rules and controls
 
-## Overview
-
-Dragoon is a melee-forward class with an innate chain-lightning passive that occasionally turns a weapon hit into a short-range mob-clearing burst.
-
-## Abilities
-
-### Innate passive: Chain Lightning
-
-- Every Dragoon hit against an enemy mob has a **3% chance** to trigger chain lightning.
-- When triggered, the lightning uses the same final on-hit damage that the Dragoon was already going to deliver. For example, a 3-damage sword hit chains for 3 damage per chained mob.
-- The chain can hit up to **7 mobs total** in a full **360-degree** search around the Dragoon.
-- Eligible chained mobs must be within **3 blocks** of the Dragoon.
-- The lightning bounces through the available mobs in a randomized nearby order and plays the `dragoon_lightning_particle` visual between each bounce.
-- Chain-lightning damage does not recursively trigger additional chain lightning.
-
-## Benefits
-
-- Access to Dragoon-attuned equipment, when such equipment is authored.
-- Access to Dragoon class-locked chests.
-- Server-authoritative anvil access for vanilla repair/support interactions.
-
-## Incentives
-
-- Occasional burst cleave while staying focused on melee combat.
-
-## Team roles
-
-- TBD.
-
-## Class restrictions and access
-
-- Can use/wear equipment attuned to `dragoon`.
-- Can open Dragoon class-locked chests.
-- Can use anvils; non-Dragoons are denied unless they have developer bypass.
-- Future custom repair-affinity UI is design-only and is not implemented yet. See [Dragoon Repair System](Dragoon_Repair_System.md).
-
-## Known gaps / TBD
-
-- Define intended party role.
-- Define player-facing incentives.
-- Define any class-specific commands, resource systems, or progression hooks.
-
-## Repair Affinity (live)
-
-Dragoons can repair supported damaged equipment for another player through Repair Affinity. Use `/repair <player>` to invite a customer, while the customer can run `/repair accept <player>`, `/repair deny <player>`, or either player can run `/repair cancel`.
-
-The customer places the damaged item into the interface, keeps ownership of that item slot, may offer an optional account-currency labor fee (not a physical payment slot), confirms readiness, and must stay nearby with the interface open. The Dragoon supplies the matching Elias repair material from inventory and confirms the repair. Materials and account currency move only after successful server validation. Supported groups are leather armor, gold gear, chainmail armor, iron gear, diamond gear, and netherite gear; unsupported special items remain unrepaired.
-
-See [Dragoon Repair Affinity](Dragoon_Repair_Affinity.md).
+See the [current player guide](../PLAYER_GUIDE.md) for party sharing, crafting/fuel/stacks, gear ownership, trading, progression and travel. [Controls](../PLAYER_GUIDE.md#controls-and-passive-progression) lists defaults and rebinding. The inventory class-name link opens this class in the H guide.

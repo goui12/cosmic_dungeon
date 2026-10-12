@@ -1,20 +1,23 @@
 # Bogatyr Help Guide
 
-The Bogatyr is a northern survivalist who fights beside a pack of tamed wolves.
-Class ID: bogatyr. Use Bogatyr-attuned gear and class chests.
+Class ID: `bogatyr`. Enabled for Dungeon 1.
 
-Open inventory Skills to choose one free mode:
-- **Patrol** (default): wolves follow normally and defend themselves and their master against new attacks.
-- **Stay**: wolves return to within five blocks of the master and sit. Each holds its settled position when the master moves. They ignore threats until Patrol is selected again.
+A northern survivalist who fights with sword, bow, shield, and a loyal wolfpack. Acquire companions through existing wolf eggs, ordinary bone taming, and breeding. Player packs are uncapped, survive ordinary saves/reconnects within the run, and end on completion, forfeit, or reset. Old archives cannot summon a previous run's pack. Mercenary packs use separate progression and limits.
 
-Selecting Stay again does not recall settled wolves. Returning to Patrol clears old fights.
-Acquire wolves with existing wolf eggs, normal bone taming and breeding. Allies cannot harm or sit another player's wolves; they can feed and breed them. Player packs are uncapped, survive ordinary saves/reconnects within their run, and end on completion, forfeit or reset.
-Mercenary Bogatyr packs retain their independent progression and five-wolf limit.
+Open inventory **Skills** for three actions:
 
-Kibble, paid Breed/Summon/Regroup/Heal and the six former combat modes are retired.
-**Feed Pack:** open inventory Skills and click Feed Pack. It spends at most ten real items from your own inventory. Bones and rotten flesh come first, then raw meat, then remaining wolf food by the amount it feeds a player. Raw items/bones heal two hearts; cooked meat heals four at default settings.
-Injured wolves receive care first. Remaining food starts breeding for healthy eligible adult pairs within eight blocks of one another. An already-fed mate needs no second item. No mate, insufficient pair food, breeding cooldown, or an individually seated Patrol adult causes no breeding cost. Healthy pups are not fed by the ability.
-Bones work as food only through this skill; ordinary bones and taming stay unchanged.
-Feeding in Stay temporarily releases wolves for native mating. On birth or a failed attempt (30 seconds at default settings), they return to their original held positions and sit; moving the master does not move those positions. Changing modes cancels the temporary attempt. Save/reload cancels unfinished attempts without inventing offspring or refunds.
-The displayed count is the server's current projection; inventory and eligibility are rechecked on every click. Skill hotkeys are scheduled for Batch13.
-Use the underlined class-name inventory link or H guide to reopen these instructions.
+| Action | Default | Behavior |
+|---|---|---|
+| Patrol | Alt+1 | Free default mode. Wolves follow and defend themselves and their master against new attacks. |
+| Stay | Alt+2 | Free mode. Wolves return within five blocks, sit, and hold their individual settled positions even when you move. They ignore threats. |
+| Feed Pack | Alt+3 | Uses up to ten actual food items from your own inventory, healing before breeding. |
+
+Patrol and Stay are mutually exclusive. Selecting Stay again does not move settled wolves. Selecting Patrol stands them up without resuming old fights.
+
+Feed Pack prefers bones/rotten flesh, then raw meat, then remaining meat by player food value. At default settings raw food/bones heal two hearts and cooked meat heals four. Injured wolves receive care first; remaining food goes to healthy eligible adult pairs within eight blocks. No mate, breeding cooldown, insufficient pair food, or an individually seated Patrol adult creates no breeding charge. Healthy pups do not consume breeding food. Bones act as food only through Feed Pack; normal bones and taming are unchanged.
+
+In Stay, eligible pairs move temporarily for native mating, then return to their original held spots after birth or a failed attempt (30 seconds by default). Changing modes cancels the attempt. Reloads end unfinished attempts without invented offspring or refunds. Allies cannot harm your wolves, apply hostile effects, or sit them; they can feed and breed them. Kibble, paid Summon/Breed/Regroup/Heal, and the former combat modes are retired.
+
+## Shared rules and controls
+
+See the [current player guide](../PLAYER_GUIDE.md) for party sharing, crafting/fuel/stacks, gear ownership, trading, progression and travel. [Controls](../PLAYER_GUIDE.md#controls-and-passive-progression) lists defaults and rebinding. The inventory class-name link opens this class in the H guide.

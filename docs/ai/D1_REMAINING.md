@@ -2,22 +2,19 @@
 
 [1.7 Alpha / 1.8 Beta batch plan](tasks/ALPHA_1_7_BATCH_PLAN_20261010.md).
 **20 planned batches: 19 Alphas, then1.8.0 Beta.**
-Batches1-17 completed. Batch17 source59b87afcdc13aaf836d01ed6c47c5c38e256d48c,
-PR262, CI38196349286 and publisher38196572384 succeeded; CurseForge9141487/helper9141486.
-Batch18 prepares23 help-art themes and explicit33-page mapping as1.7.18-alpha.1.
-[Batch18 report](tasks/BATCH_1_7_18_20261012.md); exact source/CI/publication facts
-are recorded in its controller receipt after completion.
-Two later cards remain:19 responsive H interface/player guide;20 final1.8.0 Beta audit.
-Stop after Batch18. Licensed native UI/co-op acceptance remains TESTING.
+Batches1-18 completed. Batch18 source6a417bcb690b151b395c2eef89c17a215aedf163,
+PR263, full CI38198723421 and publisher38198993561 succeeded; CurseForge9141731/helper9141730.
+Batch19 integrates the responsive H interface and current player guide as1.7.19-alpha.1.
+[Batch19 report](tasks/BATCH_1_7_19_20261012.md); its controller receipt records exact final source, CI and publication evidence after completion.
+One later card remains:20 final1.8.0 Beta audit, requirement/evidence reconciliation, and licensed acceptance follow-up.
+Stop after Batch19. Licensed native UI/co-op acceptance remains TESTING.
 
 Alpha finishes at CurseForge without server delivery or server-state checks.
 Only Beta/official builds receive stopped TEST sFTP. No local-client installs
 or additional postpublication hashes.
 Authoritative receipts: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json
-through batch-18.json after completion. The previous15-26 controller is COMPLETE.
-
-Earlier immutable batch reports/receipts preserve every failed test and correction,
-including the two native wolf fixtures from Integration Gate38101339624.
+through batch-19.json after completion. The previous15-26 controller is COMPLETE.
+Earlier immutable batch reports/receipts preserve every failed test and correction.
 Batch20 consolidates original requirements, evidence, recommendations, failures and TODOs.
 Current channel policy supersedes the historical rollout notes below.
 

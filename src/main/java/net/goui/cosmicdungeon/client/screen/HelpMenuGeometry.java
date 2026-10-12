@@ -1,48 +1,34 @@
 package net.goui.cosmicdungeon.client.screen;
 
-record HelpMenuGeometry(int left, int top) {
-    static final int NAV_X = 16;
-    static final int NAV_Y = 56;
-    static final int NAV_W = 134;
-    static final int NAV_H = 148;
-    static final int CONTENT_X = 162;
-    static final int CONTENT_Y = 58;
-    static final int CONTENT_W = 190;
-    static final int CONTENT_H = 146;
-    static final int TITLE_X = 18;
-    static final int TITLE_Y = 12;
-    static final int PAGE_TITLE_X = CONTENT_X;
-    static final int PAGE_TITLE_Y = 28;
-    static final int BUTTON_GAP = 4;
-    static final int NAV_ARROW_X = 6;
-    static final int CONTENT_ARROW_X = 356;
-    static final int UP_Y = 24;
-    static final int DOWN_Y = 206;
-    static final int PANE_PADDING = 4;
-
+/** Logical GUI pixels: resizing and GUI scale use the same bounded, centered 80% layout. */
+record HelpMenuGeometry(int left, int top, int width, int height) {
     static HelpMenuGeometry centered(int screenWidth, int screenHeight) {
-        return new HelpMenuGeometry(Math.max(0, (screenWidth - HelpMenuAssets.MENU_W) / 2), Math.max(0, (screenHeight - HelpMenuAssets.MENU_H) / 2));
+        int sw = Math.max(0, screenWidth), sh = Math.max(0, screenHeight);
+        int w = (int) (sw * .8), h = (int) (sh * .8);
+        return new HelpMenuGeometry((sw - w) / 2, (sh - h) / 2, w, h);
     }
-
-    int x(int offset) { return left + offset; }
-    int y(int offset) { return top + offset; }
-
-    Rect navViewport() { return new Rect(x(NAV_X), y(NAV_Y), NAV_W, NAV_H); }
-    Rect contentViewport() { return new Rect(x(CONTENT_X), y(CONTENT_Y), CONTENT_W, CONTENT_H); }
-    Rect navBackground() { return padded(navViewport(), PANE_PADDING); }
-    Rect contentBackground() { return padded(contentViewport(), PANE_PADDING); }
-    Rect navUpButton() { return new Rect(x(NAV_ARROW_X), y(UP_Y), HelpMenuAssets.ARROW_W, HelpMenuAssets.ARROW_H); }
-    Rect navDownButton() { return new Rect(x(NAV_ARROW_X), y(DOWN_Y), HelpMenuAssets.ARROW_W, HelpMenuAssets.ARROW_H); }
-    Rect contentUpButton() { return new Rect(x(CONTENT_ARROW_X), y(UP_Y), HelpMenuAssets.ARROW_W, HelpMenuAssets.ARROW_H); }
-    Rect contentDownButton() { return new Rect(x(CONTENT_ARROW_X), y(DOWN_Y), HelpMenuAssets.ARROW_W, HelpMenuAssets.ARROW_H); }
-
-    private static Rect padded(Rect rect, int padding) {
-        return new Rect(rect.x() - padding, rect.y() - padding, rect.w() + padding * 2, rect.h() + padding * 2);
-    }
+    Rect window() { return new Rect(left, top, width, height); }
+    private int pad() { return Math.min(6, Math.min(width, height) / 10); }
+    private int gap() { return Math.min(10, width / 20); }
+    private int navWidth() { return Math.min(180, Math.max(0, (width - 2 * pad() - gap()) * 29 / 100)); }
+    private int headerHeight() { return Math.min(58, height / 3); }
+    private int footerHeight() { return Math.min(18, height / 6); }
+    Rect header() { return new Rect(left + pad(), top + pad(), Math.max(0, width - 2 * pad() - 24), 18); }
+    Rect close() { return new Rect(left + Math.max(0, width - pad() - 18), top + pad(), Math.min(18, width), Math.min(18, height)); }
+    Rect navViewport() { return new Rect(left + pad(), top + headerHeight(), Math.max(0, navWidth() - 6), Math.max(0, height - headerHeight() - footerHeight())); }
+    Rect contentViewport() { return new Rect(left + pad() + navWidth() + gap(), top + headerHeight(), Math.max(0, width - 2 * pad() - navWidth() - gap() - 6), Math.max(0, height - headerHeight() - footerHeight())); }
+    Rect pageTitle() { var r = contentViewport(); return new Rect(r.x(), top + Math.min(31, height / 6), r.w(), Math.max(0, r.y() - top - Math.min(31, height / 6) - 3)); }
+    Rect back() { var r = navViewport(); return new Rect(r.x(), top + Math.min(31, height / 6), r.w() / 2, 18); }
+    Rect home() { var r = back(); return new Rect(r.right() + 1, r.y(), Math.max(0, navViewport().w() - r.w() - 1), r.h()); }
+    Rect footer() { return new Rect(left + pad(), top + height - footerHeight() + 4, Math.max(0, width - 2 * pad()), Math.max(0, footerHeight() - 4)); }
+    Rect navTrack() { var r = navViewport(); return new Rect(r.right() + 2, r.y(), 3, r.h()); }
+    Rect contentTrack() { var r = contentViewport(); return new Rect(r.right() + 2, r.y(), 3, r.h()); }
 
     record Rect(int x, int y, int w, int h) {
-        boolean contains(double mouseX, double mouseY) {
-            return mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
-        }
+        int right() { return x + w; }
+        int bottom() { return y + h; }
+        boolean contains(double px, double py) { return w > 0 && h > 0 && px >= x && px < right() && py >= y && py < bottom(); }
+        boolean intersects(Rect other) { return w > 0 && h > 0 && other.w > 0 && other.h > 0 && x < other.right() && right() > other.x && y < other.bottom() && bottom() > other.y; }
+        Rect move(int dx, int dy) { return new Rect(x + dx, y + dy, w, h); }
     }
 }

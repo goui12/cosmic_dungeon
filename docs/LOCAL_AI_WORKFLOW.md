@@ -8,6 +8,10 @@
 - Encrypted credential: `%LOCALAPPDATA%\CosmicDungeon\secrets\test-sftp.credential.xml`; never copy it into the cache, repository, logs or chat.
 - Read the root [AGENTS.md](../AGENTS.md) before changing anything. Contradictory design choices and increased client resource requirements need Cameron's approval.
 
+## Current player guidance
+
+For changes to character or gameplay behavior, update [PLAYER_GUIDE.md](PLAYER_GUIDE.md), [Help_Menu.md](Help_Menu.md), affected [class guides](Classes/Help_Menu_Classes.md), and the in-game HelpMenuContent/ClassResourceHelp sources together. Check actual shipped services and the approved local canon; preserve NPC lore, reachable page IDs, and deferred-class boundaries. The H guide is read-only: inline links navigate only, item examples never transfer items, and hotkey hints read native Controls. Keep instructions here focused on maintenance; the linked guide owns the manual.
+
 ## Frequent Gradle commands (Java 21)
 
 | Command | Purpose |
