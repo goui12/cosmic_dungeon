@@ -1,0 +1,72 @@
+{
+  "worker": "class_help_art",
+  "generator": "built-in image_gen__imagegen",
+  "originalDimensions": [
+    1672,
+    941
+  ],
+  "targetAspectRatio": "16:9; coordinator deterministic exact-aspect center crop/downsample",
+  "governingSources": [
+    "docs/ai/tasks/ALPHA_1_7_BATCH_PLAN_20261010.md",
+    "docs/ai/tasks/BATCH_1_7_02_20261011.md"
+  ],
+  "canonEvidence": "CosmicDungeon_AI/BatchRunner/series-1.7/evidence/batch18/class-art-lore.json",
+  "visualInspection": "Each native result inspected after generation. All have quiet dark left/bottom areas and class palette, no writing/UI/logos. Offline composition review only; final cropped runtime/representative text overlays and licensed UI acceptance are coordinator gates.",
+  "availabilityCaution": "Illustrations are explicit approved class-lore scenes, not promised encounters, harvest recipes, craft stations or later-dungeon access. Only six enabled classes illustrated. Existing exact emblems must be reused separately; none regenerated.",
+  "assets": [
+    {
+      "id": "bogatyr",
+      "original": "generated_images/exec-b93ab937-f92b-4fed-8ab1-77a5f73b9d57.png",
+      "master": "help-art/masters/bogatyr.png",
+      "sourceId": "1JeaYFihitgr-A6TxWD151R9Ma9SMUVjyVVx--sNK4Ow",
+      "sourceUrl": "https://docs.google.com/document/d/1JeaYFihitgr-A6TxWD151R9Ma9SMUVjyVVx--sNK4Ow/edit",
+      "prompt": "Use case: stylized-concept. Asset type: Cosmic Dungeon fantasy RPG help-guide background, a wide 16:9 illustration master. Hand-painted with broad pixel-friendly shapes, restrained detail, matte low contrast. Subject: Bogatyr, a bear-pelt-cloaked northern Russian mountain hunter walking beside three loyal tame wolves amid snowy pines and distant peaks. Calm endurance and pack unity. Dominant antique golden ochre chest palette with dark brown leather, muted pale snow, very subtle gold highlights. Composition: place the small hunter and wolves together around normalized x0.70,y0.35, within middle 75% width, so center-cropped 4:3 and 21:9 views retain the motif. Left half, central text region, and bottom half should remain very dark and quiet charcoal-ochre atmospheric wash, no detailed branches or bright snow there. The illustration must serve as a subtle background under white paragraph text, not a poster. No text, letters, logos, emblems, UI, borders, slot boxes, labels, stats, banners, unavailable fantasy abilities or glowing wolves. Landscape 16:9 framing.",
+      "visualFindings": "Warm gold hunter with three calm wolves in snowy mountains; dark left and bottom field. No text or new abilities."
+    },
+    {
+      "id": "dragoon",
+      "original": "generated_images/exec-99653b82-fa8a-4285-8a95-87b3a6281f5a.png",
+      "master": "help-art/masters/dragoon.png",
+      "sourceId": "1uG80jIWpLKZvTGCmbHStqJs565iqEvqhr6N5oYBIHOE",
+      "sourceUrl": "https://docs.google.com/document/d/1uG80jIWpLKZvTGCmbHStqJs565iqEvqhr6N5oYBIHOE/edit",
+      "prompt": "Use case: stylized-concept. Asset type: Cosmic Dungeon fantasy RPG help-guide background illustration master, exactly16:9 landscape. Hand-painted with broad pixel-friendly shapes, matte restrained contrast and sparse detail. Dragoon: armored guardian spearing a shadowy water monster with a three-pronged trident emitting one small branching lightning bolt amid dark waves. Dominant lapis and navy blue class-chest palette, restrained icy blue highlights. Composition: small guardian/trident/monster motif concentrated around normalized x0.70,y0.35 and within middle75% width. Make focal group small enough that center crops to4:3 or21:9 retain it. Left half, center and bottom half very quiet dark navy atmospheric wash for white help paragraphs. Strong small silhouette; only tiny local lightning, no huge bright sky or bright water. Allegorical class-lore vignette, not an illustrated promise of a new boss encounter. No text, emblems, logos, UI, frame, slots, banners or lettering. Desired1536x864 exact16:9 aspect ratio.",
+      "visualFindings": "Lapis/navy guardian and three-prong trident with localized lightning confronting an unnamed shadow water creature; dark left/bottom."
+    },
+    {
+      "id": "judicator",
+      "original": "generated_images/exec-14965942-d484-4b7a-9206-5162c26ab50b.png",
+      "master": "help-art/masters/judicator.png",
+      "sourceId": "1cY_czWEYbUEg_EQmaSANhOFe326gTDVKfL9XaEFGmQo",
+      "sourceUrl": "https://docs.google.com/document/d/1cY_czWEYbUEg_EQmaSANhOFe326gTDVKfL9XaEFGmQo/edit",
+      "prompt": "Use case: stylized-concept. Asset type: Cosmic Dungeon fantasy RPG help-guide background illustration master, 16:9 landscape. Hand-painted broad pixel-friendly shapes, sparse restrained details, matte low contrast. Judicator: a solemn oathbound armored judge bearing a heavy mace and shield, standing at an ancient stone tribunal with one closed book of judgments. Convey purpose, truth and steadfast protection. Dominant very dark amethyst-violet chest palette, muted silver accents. Scene is an allegorical class-lore vignette, no new encounter or specific later-dungeon landmark. Composition: small focal scene centered near x0.70,y0.35, within middle75% width so4:3 and21:9 center crops retain it; keep figure head below top20% line. Left half, central writing area and bottom half are quiet near-black violet atmospheric stone wash, suitable behind white paragraph text. No text or writing on book, no emblems, logos, UI, slot boxes, frames, glowing runes, banners or modern courtroom wig. Landscape1536x864 requested.",
+      "visualFindings": "Amethyst armored judge with mace, shield and closed unlettered book in an ancient stone tribunal; dark left/bottom."
+    },
+    {
+      "id": "pyroclast",
+      "original": "generated_images/exec-0def7ef5-b4d6-44c3-a020-fe474a06991e.png",
+      "master": "help-art/masters/pyroclast.png",
+      "sourceId": "16FD3wxi-Uen_DRzItDHdSrSZvkGNwa_r-ZeUYiswxoE",
+      "sourceUrl": "https://docs.google.com/document/d/16FD3wxi-Uen_DRzItDHdSrSZvkGNwa_r-ZeUYiswxoE/edit",
+      "prompt": "Use case: stylized-concept. Asset type: Cosmic Dungeon fantasy RPG help-guide background illustration master,16:9 landscape. Hand-painted broad pixel-friendly shapes with sparse detail and matte low contrast. Pyroclast: ember-cloaked volcanic fighter tending one small forge crucible beside a rugged crossbow and a few simple medieval firework projectiles, distant dark volcanic rock and only tiny cinders. Controlled quiet heat. Dominant deep brick-red class-chest palette, charcoal, very restrained orange embers. Composition: small forge/fighter motif centered around x0.70,y0.35 with meaningful details inside middle75% width, suitable center-cropped4:3 and21:9. Keep the left half, center and bottom half as quiet dark burgundy-charcoal atmospheric wash for white help-guide paragraphs. Allegorical class scene, no new craft station or named later dungeon. No big explosion, bright lava river, magic abilities, text, letters, emblems, logos, UI, slots, frame or border. Desired1536x864.",
+      "visualFindings": "Brick-red fighter tends small crucible beside crossbow/projectiles; dark left/bottom and small localized ember highlights."
+    },
+    {
+      "id": "theurgist",
+      "original": "generated_images/exec-e28e5416-7d93-481d-9c10-2a9fc3793cab.png",
+      "master": "help-art/masters/theurgist.png",
+      "sourceId": "1NLiq_L2_CQub_0hdCqAxeN5D5dL7bwP7FlqlQf9rqg4",
+      "sourceUrl": "https://docs.google.com/document/d/1NLiq_L2_CQub_0hdCqAxeN5D5dL7bwP7FlqlQf9rqg4/edit",
+      "prompt": "Use case: stylized-concept. Asset type: Cosmic Dungeon fantasy RPG help-guide background illustration master,16:9 landscape. Hand-painted broad pixel-friendly shapes, sparse restrained detail, matte low contrast. Theurgist: a careful healer-alchemist quietly brewing a softly luminous potion in Circe's small timber hut, one cauldron, a few herbs and glass bottles. Calm measured restoration and balance through chemistry. Ivory-white class-chest accents on warm charcoal, muted sage and silver; keep most of the entire scene dark. Composition: small healer and cauldron vignette centered near normalized x0.70,y0.35 inside middle75% width, small enough to survive4:3 and21:9 center crops. Left half, center writing region and bottom half very quiet charcoal/umber wash for white help paragraphs. Only a small local ivory glow, no bright broad window, no huge magic circles, no spell beams or new abilities. Allegorical class lore. No text, letters, labels on bottles, emblems, logos, UI, slots, borders or frame. Desired1536x864.",
+      "visualFindings": "Ivory/sage healer prepares herbs over a cauldron in a timber hut; dark charcoal left/bottom, small local glow."
+    },
+    {
+      "id": "venefex",
+      "original": "generated_images/exec-3b78fb48-2721-4edc-b332-dc388c7e61d9.png",
+      "master": "help-art/masters/venefex.png",
+      "sourceId": "1JXqPdwWxateRMGpAuoV1ub8asNL7iMeyrBtzqTuUwm8",
+      "sourceUrl": "https://docs.google.com/document/d/1JXqPdwWxateRMGpAuoV1ub8asNL7iMeyrBtzqTuUwm8/edit",
+      "prompt": "Use case: stylized-concept. Asset type: Cosmic Dungeon fantasy RPG help-guide background illustration master,16:9 landscape. Hand-painted broad pixel-friendly shapes, sparse matte low-contrast detail. Venefex: hooded jungle alchemist carefully extracting one droplet of venom from a snake fang into a tiny glass vial, a few broad jungle leaves and roots. The intact snake is handled carefully and unharmed, no gore. Deep moss and olive green class-chest palette, subdued emerald highlights. Composition: small hooded figure, hands, snake and vial grouped around normalized x0.70,y0.35; all essential motif within middle75% width and away from top/bottom edges so center-cropped4:3 and21:9 retain it. Left half, central writing area and bottom half quiet near-black forest-green atmospheric wash, suitable under white help paragraphs. This is class-lore atmosphere, not a tutorial or promise of a new harvesting mechanic. No text, vial lettering, emblems, logos, UI, slot boxes, borders, frame, new magical powers, giant snake monster or bright green explosion. Desired1536x864.",
+      "visualFindings": "Olive hooded alchemist holds a snake above a vial with a visible droplet; no gore, dark left/bottom."
+    }
+  ]
+}

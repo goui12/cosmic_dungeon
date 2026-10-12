@@ -1,27 +1,25 @@
-# Current plan, 2026-10-11
+# Current plan, 2026-10-12
 
 [1.7 Alpha / 1.8 Beta batch plan](tasks/ALPHA_1_7_BATCH_PLAN_20261010.md).
+**20 planned batches: 19 Alphas, then1.8.0 Beta.**
+Batches1-17 completed. Batch17 source59b87afcdc13aaf836d01ed6c47c5c38e256d48c,
+PR262, CI38196349286 and publisher38196572384 succeeded; CurseForge9141487/helper9141486.
+Batch18 prepares23 help-art themes and explicit33-page mapping as1.7.18-alpha.1.
+[Batch18 report](tasks/BATCH_1_7_18_20261012.md); exact source/CI/publication facts
+are recorded in its controller receipt after completion.
+Two later cards remain:19 responsive H interface/player guide;20 final1.8.0 Beta audit.
+Stop after Batch18. Licensed native UI/co-op acceptance remains TESTING.
 
-**20 planned batches:19 Alphas (1.7.1 through1.7.19), then1.8.0 Beta.**
-Batches1-16 completed. Batch16 sourcefaa6f17144e9fb423bf50a03645b23fb743c1a5e, PR261, CI38194692291 and publisher38194940427 succeeded; CurseForge9141388/helper9141386.
-Batch17 integrates recovery/party/sync/resource checks as1.7.17-alpha.1.
-[Batch17 report](tasks/BATCH_1_7_17_20261012.md); exact source/CI/publication facts are recorded in its controller receipt after completion.
-3 later cards (Batch18-20): help art; H guide; final1.8.0 Beta audit. Stop after Batch17.
-Alpha builds finish at CurseForge without server delivery or server-state checks. Only Beta and official builds receive stopped TEST sFTP. No local-client installs or extra post-publication hashes.
-Authoritative receipts: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json through batch-17.json after completion.
-The previous15–26 controller is COMPLETE; do not reset/reuse its receipts or infer autonomous execution.
+Alpha finishes at CurseForge without server delivery or server-state checks.
+Only Beta/official builds receive stopped TEST sFTP. No local-client installs
+or additional postpublication hashes.
+Authoritative receipts: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json
+through batch-18.json after completion. The previous15-26 controller is COMPLETE.
 
-The plan covers inventory/class art/tooltips, ownership/trades, Tamsin sharing,
-run XML metrics, real potion recipes/fuel/stacking, resurrection, Bogatyr rework,
-hotkeys, the full spawner GUI, category artwork and the responsive H guide.
-Fuel retains20-operation charges with a graphic left of recipes. Both potion classes
-may craft mixed-effect drinkables, neither mixed splash; all potions are tradable.
-Batch20 audits every original request, per-batch recommendations, failed tests and TODOs.
-
-Two native wolf failures from Integration Gate38101339624 are retained in the Batch1 report;
-fixture visibility/rain causes are addressed; fresh native CI evidence is retained in the exact-source completion receipt.
-The linked plan contains their exact IDs and current evidence.
-Current channel policy above supersedes historical deployment instructions. Historical rollout notes follow.
+Earlier immutable batch reports/receipts preserve every failed test and correction,
+including the two native wolf fixtures from Integration Gate38101339624.
+Batch20 consolidates original requirements, evidence, recommendations, failures and TODOs.
+Current channel policy supersedes the historical rollout notes below.
 
 ---
 

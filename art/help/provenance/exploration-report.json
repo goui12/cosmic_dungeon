@@ -1,0 +1,371 @@
+{
+  "schema_version": 1,
+  "batch": 18,
+  "worker": "exploration_help_art",
+  "ownership": "Eight navigation/world new art masters and this report only; no shared asset mapping, Java, git, controller or gameplay edits.",
+  "generation": {
+    "mode": "built-in image_gen__imagegen",
+    "call_per_distinct_asset": true,
+    "transparent_background": false,
+    "style": "Dark painterly broad forms, quiet left/central text field",
+    "requested_ratio": "16:9",
+    "packaging": "Coordinator crops slight generated aspect deviation to exact16:9 masters and downsamples to512x288 runtime PNGs; masters remain outside JAR."
+  },
+  "source_review": {
+    "baseline": "Current source HelpMenuContent.java at Batch17 HEAD59b87afcdc13aaf836d01ed6c47c5c38e256d48c; Batch18 Metrics/help plan.",
+    "local_only": true,
+    "online_freshness_claim": false,
+    "readme_and_index_read": true,
+    "status_review": "Audit/STATUS confirms historical2026-09-16 local mirror completion and later implementation reports; latest explicit user instructions and current repo override historical gameplay notes.",
+    "native_review": "Reviewed all-tab source JSON structure/text runs plus original metadata for five directly relevant sources; each has one native tab, no inline images and no red/struck/suggested runs; recorded native/Markdown hashes match.",
+    "future_exclusions": "Notes Teleport is explicitly For future expansion ideas7/7/26. No waypoint crystals/waystones/future service artwork derived from it. Current Travel and Tamsin implemented themes govern.",
+    "private_backup_copied": false,
+    "records": [
+      {
+        "id": "1Gy_bpO58V9cZ6GHGN1SnRHxzzQ7csTj-LE0LqRwCO9o",
+        "metadata": {
+          "id": "1Gy_bpO58V9cZ6GHGN1SnRHxzzQ7csTj-LE0LqRwCO9o",
+          "mimeType": "application/vnd.google-apps.document",
+          "modifiedTime": "2026-05-23T20:23:57.014Z",
+          "name": "Faction General",
+          "trashed": false,
+          "version": "49",
+          "webViewLink": "https://docs.google.com/document/d/1Gy_bpO58V9cZ6GHGN1SnRHxzzQ7csTj-LE0LqRwCO9o/edit?usp=drivesdk"
+        },
+        "checked_utc": "2026-09-16T00:18:17.897643+00:00",
+        "source_revision": "ANLCKQlnLokqbp6XKKfGeou3QozkFh8hKmEqGzinNZy0JIYm69U2OwlxU94LFSMp3BhVPeTsaMk5UvCHOpqtwMDlPJ5_R3HpA_hb-7ElpOk",
+        "tabs": [
+          {
+            "path": "Tab 1",
+            "tab_id": "t.0"
+          }
+        ],
+        "fidelity_warnings": [],
+        "recorded_hashes": {
+          "Docs/1Gy_bpO58V9cZ6GHGN1SnRHxzzQ7csTj-LE0LqRwCO9o.md": "670379de941d214b29352cac1e987b7cba634422fb1b6a2cbd7871d80e072b26",
+          "Docs/1Gy_bpO58V9cZ6GHGN1SnRHxzzQ7csTj-LE0LqRwCO9o.source.json": "23602ae54ca3f96a116467d716facc79fa499bb2f303eec0f153a8c1b97c5d90"
+        },
+        "native_text_characters": 3400,
+        "images": [],
+        "flagged_runs": [],
+        "hashes_match": true
+      },
+      {
+        "id": "1e1po-TpjWQpTJ6ueIfnpTDNRZ1za3J7434Y4nFXvSmo",
+        "metadata": {
+          "id": "1e1po-TpjWQpTJ6ueIfnpTDNRZ1za3J7434Y4nFXvSmo",
+          "mimeType": "application/vnd.google-apps.document",
+          "modifiedTime": "2026-07-10T20:39:40.976Z",
+          "name": "John Hamish Watson (Internal)",
+          "trashed": false,
+          "version": "21",
+          "webViewLink": "https://docs.google.com/document/d/1e1po-TpjWQpTJ6ueIfnpTDNRZ1za3J7434Y4nFXvSmo/edit?usp=drivesdk"
+        },
+        "checked_utc": "2026-09-16T00:20:48.000994+00:00",
+        "source_revision": "ANLCKQm8ZYomY0B3e4OP_arOTtHlvDSkpVhXae5apnZGt4fK-7VoWCSBTnzeQm4BOdHNI3hxowr55LBBMAgmJqLL_vXJCBeg-mpm_NINO1g",
+        "tabs": [
+          {
+            "path": "Tab 1",
+            "tab_id": "t.0"
+          }
+        ],
+        "fidelity_warnings": [],
+        "recorded_hashes": {
+          "Docs/1e1po-TpjWQpTJ6ueIfnpTDNRZ1za3J7434Y4nFXvSmo.md": "5cb54694f3e0f17317ef4b6045199df7a16514b117182ceb9c0deeb1ed4d9311",
+          "Docs/1e1po-TpjWQpTJ6ueIfnpTDNRZ1za3J7434Y4nFXvSmo.source.json": "0f55de00678bbdb1cb66781b2f070635809c4ab4739d531603713430e926f943"
+        },
+        "native_text_characters": 6806,
+        "images": [],
+        "flagged_runs": [],
+        "hashes_match": true
+      },
+      {
+        "id": "1FIcIf82rCAEAhbEE2gbR7jdoFA0BWSIcnzeOcKlUG4M",
+        "metadata": {
+          "id": "1FIcIf82rCAEAhbEE2gbR7jdoFA0BWSIcnzeOcKlUG4M",
+          "mimeType": "application/vnd.google-apps.document",
+          "modifiedTime": "2026-07-07T18:38:29.922Z",
+          "name": "Notes Teleport",
+          "trashed": false,
+          "version": "38",
+          "webViewLink": "https://docs.google.com/document/d/1FIcIf82rCAEAhbEE2gbR7jdoFA0BWSIcnzeOcKlUG4M/edit?usp=drivesdk"
+        },
+        "checked_utc": "2026-09-16T00:18:05.104040+00:00",
+        "source_revision": "ANLCKQlvVfULa5Oi4CWjRU_5JaML1uZk124PV_N7rqjMm-YSphE3ITvgKIYAG3RE4k2VwdcJGPnurmwncAvk2U-ML9O8Q5EmZeezMjt_zEc",
+        "tabs": [
+          {
+            "path": "Tab 1",
+            "tab_id": "t.0"
+          }
+        ],
+        "fidelity_warnings": [],
+        "recorded_hashes": {
+          "Docs/1FIcIf82rCAEAhbEE2gbR7jdoFA0BWSIcnzeOcKlUG4M.md": "7b3da4d44477cc6a408611c6f57c89d4763b8c326f1a8890254adc7ef147a68c",
+          "Docs/1FIcIf82rCAEAhbEE2gbR7jdoFA0BWSIcnzeOcKlUG4M.source.json": "38b5697e7d6933ebd578cbe7f49314828af1d62322da136d4d3fff4d9ae205cc"
+        },
+        "native_text_characters": 1370,
+        "images": [],
+        "flagged_runs": [],
+        "hashes_match": true
+      },
+      {
+        "id": "15r_3mHAj4hbIrcS9vUQ5BL57V88u6SX9JSgI-qzOA9c",
+        "metadata": {
+          "id": "15r_3mHAj4hbIrcS9vUQ5BL57V88u6SX9JSgI-qzOA9c",
+          "mimeType": "application/vnd.google-apps.document",
+          "modifiedTime": "2026-07-10T04:50:54.046Z",
+          "name": "Achievement: First Trace",
+          "trashed": false,
+          "version": "37",
+          "webViewLink": "https://docs.google.com/document/d/15r_3mHAj4hbIrcS9vUQ5BL57V88u6SX9JSgI-qzOA9c/edit?usp=drivesdk"
+        },
+        "checked_utc": "2026-09-16T00:17:00.979780+00:00",
+        "source_revision": "ANLCKQmiwuuk2YRPjgYZMBrUbmXtrQwSGLhaIe1AEsNshSBYtemDB_RSXyWbDUJ6WdTeacnCk9gZ3AmLyAfxOpKTTp0cUE46VUhZV0LYrms",
+        "tabs": [
+          {
+            "path": "Tab 1",
+            "tab_id": "t.0"
+          }
+        ],
+        "fidelity_warnings": [],
+        "recorded_hashes": {
+          "Docs/15r_3mHAj4hbIrcS9vUQ5BL57V88u6SX9JSgI-qzOA9c.md": "3cd589bf9270f66497b5157cb37e0a3c6a032e2a187669cda4d34202d3423538",
+          "Docs/15r_3mHAj4hbIrcS9vUQ5BL57V88u6SX9JSgI-qzOA9c.source.json": "4f27ac4a06e78af081b3a0f0f1ed36e27ea6a178be80c30fb3c0c32d78800929"
+        },
+        "native_text_characters": 898,
+        "images": [],
+        "flagged_runs": [],
+        "hashes_match": true
+      },
+      {
+        "id": "1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4",
+        "metadata": {
+          "id": "1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4",
+          "mimeType": "application/vnd.google-apps.document",
+          "modifiedTime": "2026-08-19T22:35:48.808Z",
+          "name": "Tamsin Vane (Internal)",
+          "trashed": false,
+          "version": "46",
+          "webViewLink": "https://docs.google.com/document/d/1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4/edit?usp=drivesdk"
+        },
+        "checked_utc": "2026-09-16T00:16:10.543032+00:00",
+        "source_revision": "ANLCKQnSS4QwWogY-mOat_ccwkgP51eVznCu39UNB8JXVUT9Dq9eA0F8ScZle_LGIX12BHRbGMMfPNalewnhKFQFYTvL1DtaNM9cwmoiKhg",
+        "tabs": [
+          {
+            "path": "Tab 1",
+            "tab_id": "t.0"
+          }
+        ],
+        "fidelity_warnings": [],
+        "recorded_hashes": {
+          "Docs/1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4.md": "5df441ebb452776e44a07e94159ad1af13a4e28c98223a5f38db89931ba7d49f",
+          "Docs/1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4.source.json": "7aac26ab3fcdb15cf0cac895bf176a692d7714f4f6df57a2b780020cbd62684e"
+        },
+        "native_text_characters": 9664,
+        "images": [],
+        "flagged_runs": [],
+        "hashes_match": true
+      }
+    ]
+  },
+  "assets": [
+    {
+      "id": "guide",
+      "file": "masters/guide.png",
+      "source_document_ids": [
+        "1e1po-TpjWQpTJ6ueIfnpTDNRZ1za3J7434Y4nFXvSmo"
+      ],
+      "source_code_sections": [
+        "HelpMenuContent.GET_STARTED/REFERENCES/root/general"
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: Cosmic Dungeon in-game help background master, 16:9 landscape 1536x864. Create a dark painterly fantasy illustration of a worn closed travel guide tome with unlettered leather covers and a small extinguished lantern on a stone ledge beside a distant dim ruined subterranean threshold. Broad block-like, pixel-friendly shapes, charcoal stone and subdued parchment bronze, faint cool blue ambient mist, hand-painted gouache texture. Composition: ALL recognizable subjects clustered in rightmost third, focal center at 72% width and 35% height. Leftmost 65% and central lower area are very dark quiet flat low-detail stone and shadow, reserved for white text overlay later. Atmospheric vignette, restrained highlights, no bright light behind copy zone. This is mood-setting reference art, not a game screenshot. Avoid characters, readable words, letters, symbols, logos, watermarks, UI frames, borders, invented emblems, portals, magic abilities or promised loot. No text of any kind. Keep a broad quiet central crop and content safe inside 10% edge margins.",
+      "visual_review": {
+        "focal": [
+          0.78,
+          0.65
+        ],
+        "observed": "Unlettered closed tome and extinguished lantern; quiet left65%; no characters, emblem or mechanics. Guide theme is decorative, not an inventory item."
+      },
+      "no_gameplay_or_availability_change": true,
+      "generated_size": [
+        1672,
+        941
+      ],
+      "master_png_bytes": 1917596
+    },
+    {
+      "id": "dungeons",
+      "file": "masters/dungeons.png",
+      "source_document_ids": [
+        "1e1po-TpjWQpTJ6ueIfnpTDNRZ1za3J7434Y4nFXvSmo"
+      ],
+      "source_code_sections": [
+        "HelpMenuContent.DUNGEONS"
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: Cosmic Dungeon in-game help category background, 16:9 landscape master. Painterly dark fantasy gouache, broad pixel-friendly block-like forms, charcoal shadows, cool slate-blue ambient fog, restrained aged bronze accents. No text, letters, labels, numerals, logos, emblems, watermarks, UI, border, or game screenshot. Keep leftmost65% and central lower area dark, low-detail and quiet for later white text. Focal group lies near72% width35% height, safe within10% edge margins; right-third-only subjects, generous negative space. Scene: a deserted modest expedition Base Camp within ruined subterranean stone corridors beneath an old city. At upper right an extinguished lantern on a bent iron hook, one split wooden supply crate and rolled dark bedcloth, weathered blank paper scraps with no lettering. A few small pale spectral flowers grow beside the right-hand cracked masonry, soft faint ivory-blue glow, no huge magical effect. Crumbling archway recedes in the distance. Evoke a scholar's abandoned camp and perilous descent. No characters, monster, boss, treasure piles, new weapons, giant temples, or future dungeon themes.",
+      "visual_review": {
+        "focal": [
+          0.8,
+          0.51
+        ],
+        "observed": "Abandoned crate, bedroll, extinguished hanging lantern and pale subterranean blooms. No creature or future dungeon theme; decorative flowers do not specify collectible count or state."
+      },
+      "no_gameplay_or_availability_change": true,
+      "generated_size": [
+        1672,
+        941
+      ],
+      "master_png_bytes": 1983291
+    },
+    {
+      "id": "party",
+      "file": "masters/party.png",
+      "source_document_ids": [
+        "1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4"
+      ],
+      "source_code_sections": [
+        "HelpMenuContent.PARTY"
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: Cosmic Dungeon in-game help category background, 16:9 landscape master. Painterly dark fantasy gouache, broad pixel-friendly block-like forms, charcoal shadows, cool slate-blue ambient fog, restrained aged bronze accents. No text, letters, labels, numerals, logos, emblems, watermarks, UI, border, or game screenshot. Keep leftmost65% and central lower area dark, low-detail and quiet for later white text. Focal group lies near72% width35% height, safe within10% edge margins; right-third-only subjects, generous negative space. Scene: exactly THREE anonymous adult adventurer silhouettes gathered beside a very small warm campfire on a sheltered stone ledge near a dark dungeon entrance. Travelers wear plain practical cloaks and travel packs, faces hidden by distance; no special weapons or class insignia. They quietly face each other in a united group, planning the shared descent. Warm ember glow only lights the small right-hand group. No spellcasting, no winged characters, no supernatural race, no apparent new class or special gear, no attack or violence.",
+      "visual_review": {
+        "focal": [
+          0.81,
+          0.42
+        ],
+        "observed": "Exactly three anonymous cloaked adult travelers with ordinary packs beside small campfire. No class emblems, new powers or unsupported class."
+      },
+      "no_gameplay_or_availability_change": true,
+      "generated_size": [
+        1672,
+        941
+      ],
+      "master_png_bytes": 1855329
+    },
+    {
+      "id": "classes",
+      "file": "masters/classes.png",
+      "source_document_ids": [],
+      "source_code_sections": [
+        "HelpMenuContent.CLASSES",
+        "THEURGIST",
+        "PYROCLAST",
+        "BOGATYR",
+        "DRAGOON",
+        "VENEFEX",
+        "JUDICATOR"
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: Cosmic Dungeon in-game help category background, 16:9 landscape master. Dark fantasy hand-painted gouache, broad pixel-friendly block-like forms, charcoal stone, slate blue shadows, subtle aged bronze accents, restrained warm light. No text, letters, numerals, logo, class emblems, watermark, interface or border. Keep LEFT65% and center-lower area very dark, quiet and low detail for later white paragraph overlay. Subject focal center at72% width35% height, confined to right third with safe10% edge margins. Not a gameplay screenshot. Scene: a modest dungeon expedition armory alcove with six plain shallow niches on the upper-right stone wall, each represented by an understated everyday material: folded healer's cloth and small plain glass bottle; pieces of dark flint beside a clay powder bowl; worn leather travel straps; an old iron trident head; a sealed green glass vial; a simple worn iron shield. These six broad still-life shapes are quiet symbols of existing roles, with NO markings or invented class symbols. No characters, no magical glow, no new exotic weapons, guns, firearms, machines, or future classes. Do not make a labeled chart or grids across the screen: six compact niches are one right-hand artistic grouping.",
+      "visual_review": {
+        "focal": [
+          0.77,
+          0.36
+        ],
+        "observed": "Six mundane role niches: cloth/bottle, flint/powder, straps, trident head, green vial, iron shield. No invented logos, readable text, inactive class or specific stats; original emblems are coordinator-owned overlays."
+      },
+      "no_gameplay_or_availability_change": true,
+      "generated_size": [
+        1672,
+        941
+      ],
+      "master_png_bytes": 1978122
+    },
+    {
+      "id": "progression",
+      "file": "masters/progression.png",
+      "source_document_ids": [
+        "1e1po-TpjWQpTJ6ueIfnpTDNRZ1za3J7434Y4nFXvSmo"
+      ],
+      "source_code_sections": [
+        "HelpMenuContent.PROGRESSION"
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: Cosmic Dungeon in-game help category background, 16:9 landscape master. Dark fantasy hand-painted gouache, broad pixel-friendly block-like forms, charcoal stone, slate blue shadows, subtle aged bronze accents, restrained warm light. No text, letters, numerals, logo, class emblems, watermark, interface or border. Keep LEFT65% and center-lower area very dark, quiet and low detail for later white paragraph overlay. Subject focal center at72% width35% height, confined to right third with safe10% edge margins. Not a gameplay screenshot. Scene: a worn ascending stone stair-path on the right, leading from shadow toward a restrained warm distant doorway high in the ruin. A small pale flower and ordinary empty lantern at one completed step suggest remembrance and effort. Broad clear silhouette of worn steps, quiet fog beyond, no branching menus or chart. Humble earned advancement and patient restoration, no levitating stairs, god rays, spell effects, treasures, crowns, trophies, characters, bosses, new powers, future worlds or portals.",
+      "visual_review": {
+        "focal": [
+          0.84,
+          0.48
+        ],
+        "observed": "Ascending worn steps and warm doorway, ordinary lantern and flower. Metaphoric advancement with no new mechanic, literal unlock, future world or reward."
+      },
+      "no_gameplay_or_availability_change": true,
+      "generated_size": [
+        1672,
+        941
+      ],
+      "master_png_bytes": 1927632
+    },
+    {
+      "id": "factions",
+      "file": "masters/factions.png",
+      "source_document_ids": [
+        "1Gy_bpO58V9cZ6GHGN1SnRHxzzQ7csTj-LE0LqRwCO9o"
+      ],
+      "source_code_sections": [
+        "HelpMenuContent.FACTIONS"
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: Cosmic Dungeon in-game help category background, 16:9 landscape master. Dark fantasy hand-painted gouache, broad pixel-friendly block-like forms, charcoal stone, slate blue shadows, subtle aged bronze accents, restrained warm light. No text, letters, numerals, logo, emblems, watermark, interface or border. Keep LEFT65% and center-lower area very dark, quiet and low detail for later white paragraph overlay. Subject focal center at72% width35% height, confined to right third with safe10% edge margins. Not a gameplay screenshot. Scene: two modest plain weathered cloth banners, one muted ochre and one muted blue-grey, hanging side by side on the right in a sheltered stone meeting alcove. Between their supports a simple stone bench and small warm lantern suggest trust, conversation and restoration. Both banners are entirely blank unmarked fabric, with no insignia or invented faction symbol. No armies, battle scene, characters, crowns, throne, exotic architecture, magical powers, quest UI or future worlds.",
+      "visual_review": {
+        "focal": [
+          0.78,
+          0.42
+        ],
+        "observed": "Two plain ochre and blue-grey cloth banners, bench and lantern. No invented insignia, faction name, army, throne or implied allegiance."
+      },
+      "no_gameplay_or_availability_change": true,
+      "generated_size": [
+        1672,
+        941
+      ],
+      "master_png_bytes": 1866320
+    },
+    {
+      "id": "travel",
+      "file": "masters/travel.png",
+      "source_document_ids": [
+        "1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4",
+        "1FIcIf82rCAEAhbEE2gbR7jdoFA0BWSIcnzeOcKlUG4M"
+      ],
+      "source_code_sections": [
+        "HelpMenuContent.TELEPORTATION"
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: Cosmic Dungeon in-game help category background, 16:9 landscape master. Dark fantasy hand-painted gouache, broad pixel-friendly block-like forms, charcoal stone, slate blue shadows, subtle aged bronze accents, restrained warm light. No text, letters, numerals, logo, emblems, watermark, interface or border. Keep LEFT65% and center-lower area very dark, quiet and low detail for later white paragraph overlay. Subject focal center at72% width35% height, confined to right third with safe10% edge margins. Not a gameplay screenshot. Scene: on the right, a folded old hand-drawn route map with simple winding lines but absolutely NO lettering, symbols, labels or text lies on a rough stone ledge, beside an old plain compass and an ordinary packed travel bag. A small ordinary campfire glimmers far behind near a stone tunnel. The map is atmospheric art suggesting a winding subterranean journey; no exact game map, no transport menu. No portal, waystone, waypoint crystal, teleportation beam, levitation, magical travel technology, future expansion items, characters, or new mechanics.",
+      "visual_review": {
+        "focal": [
+          0.78,
+          0.59
+        ],
+        "observed": "Decorative folded winding-route map, unlettered compass face, travel pack and ordinary distant fire. No portal, waypoint crystal, waystone or future teleport technology. Map is nonfunctional atmosphere, not the canonical JHW map UI."
+      },
+      "no_gameplay_or_availability_change": true,
+      "generated_size": [
+        1672,
+        941
+      ],
+      "master_png_bytes": 2108050
+    },
+    {
+      "id": "achievements",
+      "file": "masters/achievements.png",
+      "source_document_ids": [
+        "15r_3mHAj4hbIrcS9vUQ5BL57V88u6SX9JSgI-qzOA9c"
+      ],
+      "source_code_sections": [
+        "HelpMenuContent.ACHIEVEMENTS"
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: Cosmic Dungeon in-game help category background, 16:9 landscape master. Dark fantasy hand-painted gouache, broad pixel-friendly block-like forms, charcoal stone, slate blue shadows, subtle aged bronze accents, restrained warm light. No text, letters, numerals, logo, emblems, watermark, interface or border. Keep LEFT65% and center-lower area very dark, quiet and low detail for later white paragraph overlay. Subject focal center at72% width35% height, confined to right third with safe10% edge margins. Not a gameplay screenshot. Scene: a quiet memento still life on a right-hand stone ledge, an unlettered worn expedition journal tied with a plain ribbon, a modest dried laurel sprig laid beside it, and a small pale pressed flower. A narrow warm shaft of lantern light catches worn edges while everything around stays dim. Suggest remembered effort and modest milestones, no literal rewarded game item, medal, trophy cup, crown, coins, gemstones, treasure chest, glowing magical object, bright confetti, characters, future boss or quest. No stamps, seals or lettering.",
+      "visual_review": {
+        "focal": [
+          0.8,
+          0.44
+        ],
+        "observed": "Plain closed journal, ribbon, dried sprig and flower. No trophy, reward item, currency, boss or lettering; commemorative still life only."
+      },
+      "no_gameplay_or_availability_change": true,
+      "generated_size": [
+        1672,
+        941
+      ],
+      "master_png_bytes": 1996893
+    }
+  ],
+  "acceptance_boundary": "Eight masters visually inspected in returned tool images. Coordinator owns exact ratios, supported-scale text overlay/crop QA, runtime manifest coverage, texture/JAR budgets and release gates. No Minecraft client/server launched; licensed in-game appearance remains TESTING."
+}
