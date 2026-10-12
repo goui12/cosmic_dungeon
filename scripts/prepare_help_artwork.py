@@ -16,6 +16,9 @@ root = Path(__file__).resolve().parents[1]
 assets = root / 'src/main/resources/assets/cosmicdungeon'
 manifest = json.loads((assets / 'help_artwork.json').read_text(encoding='utf-8'))
 size = manifest['width'], manifest['height']
+expected_paths = {assets / theme['texture'] for theme in manifest['themes'].values()}
+actual_paths = set((assets / 'textures/gui/help').iterdir())
+assert actual_paths == expected_paths, 'Unexpected or missing help asset files: ' + str(actual_paths ^ expected_paths)
 total = 0
 for name, theme in manifest['themes'].items():
     path = assets / theme['texture']
