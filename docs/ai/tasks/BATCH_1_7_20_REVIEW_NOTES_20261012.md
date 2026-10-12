@@ -310,3 +310,23 @@ The recommended cooked/replay coverage is now **IMPLEMENTED AS TEST SOURCE; EXEC
 - The recipient then legitimately consumes the Raw Chop and saves its own outcome before the donor reconciles. Delayed donor/repeated recovery must neither restore the obsolete registry pair nor recreate the consumed item, and both owner acknowledgements retire only this transaction.
 
 This deterministic boundary/recovery test does not pretend to kill/restart an actual process. Full forced-exit save-boundary testing and licensed client journeys remain TESTING. The worker ran only a scoped whitespace diff check, not a build or native server. Coordinator owns compilation and exact-head CI/native results.
+
+## Resumed Batch20 source/review evidence (2026-10-12)
+
+Corrective source fb889f0c40c4a0bd813fb515e1156b377b917807 passed Integration Gate38205362117: Java21, JSON, Clean build and Run GameTests. Previously pending native custody tests in this ledger therefore executed successfully. Existing local741 tests,34 release-tool tests and2004JSON checks remain recorded in operational evidence; no local clean/game launch was performed.
+
+New Codex P2 [PR265 r4244788805](https://github.com/goui12/cosmic_dungeon/pull/265#discussion_r4244788805), reviewed at fb889f0c, claims SpawnerPreset is omitted from Developer hover. Disposition: **REJECTED FALSE POSITIVE**. Exact source already includes SpawnerPreset in the whitelist; block save/load use that child, its name/equipment survive preset decoding, and the detached hover client loads it before the overlay. GitHub/local blob0b4382c662e6b5b232bf5bc0ab671cd7d20adf60 match. No gameplay edit is warranted solely for that allegation.
+
+The existing20 recommendation entries and every original finding remain above. Current pending priorities/dispositions: P1 complete-save interruption and unsupported legacy custody coverage -> Batch21; P2 Stay target-goal traversal -> Batch22; P2 selected ingredient-route tooltip -> Batch23; P2 six-inventory/concurrent-palette measurement -> Batch24; P2 retain-all history preservation/growth policy -> Batch25. These cards do not claim completed implementation yet.
+
+Manual P2 follow-ups remain TESTING: all class GUI scales/layering/modal/drag and Creative/Extra contexts; combined two-player trade/drop/pickup/full-inventory/consent/potion/death/resurrection journeys; stairs/doors/crowds and obstructed mating/return; real keyboard/modifier/unbound/conflict/Controls usability; representative authored weighted spawners/concurrent editor and component-heavy/modded enchantment/conditional-loot/narrow layouts; native guide font/link/resource-pack/resize acceptance. Stalled-recall, return and extra key-conflict hints remain conditional/deferred. Preserve measured bounds and profile actual terrain only after evidence of a problem. Stable remains a separate user decision.
+
+Exactly two genuine Codex topics remain unimplemented: P2 PR258 r4243537947 at7040a9cc3d17450077a9d211a7862fa2a9bcec84 (Batch22), and P1 PR262 r4244287961 at59b87afcdc13aaf836d01ed6c47c5c38e256d48c (disputed outgoing owner-attack assistance; preserve incoming defense). No finding is dropped because a new review was pending. Final publication/deployment facts are supplied by immutable operational receipts, not preclaimed in candidate notes.
+
+## First corrective publisher failure
+
+CurseForge Release38264001954 at exact fb889f0c failed before packaged-artifact verification or publication. Clean build/native unit tests passed;113 native GameTests ran, with2 failures: theurgist_potion_splash_safety (beneficial recipient effects) and theurgist_potion_cloud_attribution (accessible native lingering cloud). No runtime/helper upload or GitHub release exists for this attempt; no TEST delivery occurred.
+
+Cause: the synchronous potion fixture chooses its chunk from helper.absoluteVec(1.5,10.5,1.5). A one-block empty test structure at a chunk edge can therefore choose a neighboring non-ticking chunk. Native admission may succeed while native spatial queries cannot find its entities. The established AlliedWolfGameTests fixture already uses helper.absolutePos(BlockPos.ZERO), asserts that actual structure chunk is ticking, then positions its query recipients centrally. The potion fixture adopts that rule and explicitly checks newly admitted recipients before native potion loops. All existing effect/attribution/serialization assertions remain. This is a fixture correction, with no production potion change.
+
+The failed1.7.20-alpha.1 tag is preserved. Changed source uses unique1.7.21-alpha.1 before retrying exact merged-main1.8.0-beta.1. Subsequent exact-source local/CI/publisher evidence must pass before completion.

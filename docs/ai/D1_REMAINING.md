@@ -3,10 +3,10 @@
 [1.7 Alpha / 1.8 Beta batch plan](tasks/ALPHA_1_7_BATCH_PLAN_20261010.md).
 Batches1-19 completed. Exact Batch19 source b8c9aa48d9f4c489097d84470aa9bea10bb05ef5,
 CI38201815436, publisher38202005228, CurseForge9141993/helper9141991.
-**Batch20 active; no later implementation cards are authorized.**
+**Batch20 active; Cameron authorized the focused follow-up cards21–25 on2026-10-12.**
 
 The final actual-code/review audit found required corrections. Card20 therefore returns through
-unique corrective1.7.20-alpha.1 before merged-main1.8.0-beta.1.
+unique corrective1.7.21-alpha.1 (first1.7.20 publisher failed before upload) before merged-main1.8.0-beta.1.
 [Full audit/report](tasks/BATCH_1_7_20_20261012.md),
 [all recommendations and Codex notes](tasks/BATCH_1_7_20_REVIEW_NOTES_20261012.md),
 [requirements/evidence/manual matrix](tasks/BATCH_1_7_20_REQUIREMENTS_20261012.md).
@@ -17,7 +17,7 @@ Alpha ends at runtime/companion publication without TEST I/O.
 Beta requires stopped TEST sFTP runtime delivery. No local-client installs, restarts,
 server.properties writes or extra postpublication hashes. Licensed native GUI/co-op/world acceptance
 remains TESTING; stable requires a separate decision after Beta acceptance.
-One active card remains until the controller completes20; then0. Stop at20.
+Six implementation cards remain including active20. Finish20 first, then21 save/recovery,22 Stay traversal,23 ingredient-route tooltips,24 six-player crafting measurements,25 retain-all history preservation. Stop after25. The five-card source is Cameron's saved Cosmic_Dungeon_Batches_21-25.md plan; install the exact follow-up scope into the active controller after Batch20 completion. No stable or manual-testing batch is authorized.
 The previous15-26 controller remains COMPLETE; historical notes below are preserved.
 
 ---
