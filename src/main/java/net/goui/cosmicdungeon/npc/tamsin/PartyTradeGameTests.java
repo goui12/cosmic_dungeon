@@ -230,6 +230,7 @@ public final class PartyTradeGameTests {
         ordinaryTradeRecovery(helper);
         partialPreparationIdentity(helper);
         malformedTradeProofs(helper);
+        terminalTradeReceiptOrdering(helper);
         chopTrades(helper);
         cookedChopTrades(helper);
         chopRegistryReplay(helper);
@@ -595,6 +596,53 @@ public final class PartyTradeGameTests {
                     accounts.acknowledgeTrade(session.id(),f.member.getUUID());accounts.acknowledgeTrade(session.id(),f.outsider.getUUID());
                 }
                 f.check(accounts.flushVerified(),"Only isolated held fixture account rows cleaned after preservation assertions");
+            }
+        }
+    }
+    private static void terminalTradeReceiptOrdering(GameTestHelper helper){
+        for(boolean committed:new boolean[]{false,true})for(boolean firstOwner:new boolean[]{false,true})try(var f=new Fixture(helper)){
+            var session=f.open();f.offer(session,f.member,Items.APPLE,3);f.offer(session,f.outsider,Items.BREAD,2);
+            var accounts=PlayerCurrencyData.get(f.level.getServer());
+            var terms=new net.goui.cosmicdungeon.economy.AccountTransfer.Terms(f.member.getUUID(),f.outsider.getUUID(),25,0,
+                    "player_trade",TradeCustody.read(f.member).getLongOr("run",0),session.id().toString());
+            accounts.reserve(session.id(),terms,System.currentTimeMillis());
+            f.check(accounts.flushVerified(),"Conflicting terminal trade fixture has a durable account reservation");
+            for(var owner:List.of(f.member,f.outsider)){
+                TradeCustody.write(owner,TradeCustodyImages.bind(TradeCustody.read(owner),session.id()));
+                f.check(PlayerSaveProof.save(owner),"Both exact terminal trade reservation images are natively saved");
+            }
+            accounts.prepareTrade(session.id(),new TradeCommitPlan(f.member.getUUID(),f.outsider.getUUID(),
+                    TradeCustody.read(f.member),TradeCustody.read(f.outsider),false,false));
+            if(committed)accounts.commitTrade(session.id(),System.currentTimeMillis());
+            f.check(accounts.flushVerified(),"World trade outcome is durable before conflicting current-id receipt");
+            f.end(session);
+            try{
+                var owner=firstOwner?f.member:f.outsider;var root=owner.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).copy();
+                root.put(TradeTransactions.RECEIPT,net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairTransactions.receiptImage(
+                        owner.getUUID(),session.id(),committed?net.goui.cosmicdungeon.economy.AccountTransfer.CANCELLED:net.goui.cosmicdungeon.economy.AccountTransfer.COMMITTED));
+                owner.getPersistentData().put(ClassData.ROOT_TAG,root);
+                f.check(PlayerSaveProof.save(owner),"Conflicting same-operation terminal receipt retains valid custody in its native save");
+                var memberRoot=f.member.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).copy();
+                var outsiderRoot=f.outsider.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).copy();
+                var memberDisk=f.disk(f.member);var outsiderDisk=f.disk(f.outsider);
+                var memberInventory=ChopTravelRecovery.saveInventory(f.member);var outsiderInventory=ChopTravelRecovery.saveInventory(f.outsider);
+                accounts=f.reloadAccounts();var journal=DurableRecoveryGameTestSupport.image(PlayerCurrencyData.class,accounts);
+                f.reload(f.member);f.reload(f.outsider);owner=firstOwner?f.member:f.outsider;f.disconnects.expect(owner);
+                f.check(!TradeTransactions.reconcile(owner)&&TradeCustody.held(owner)&&f.disconnects.recoveryHold(owner),
+                        "Either owner holds an opposite current-id terminal receipt before projection or account cancellation");
+                f.check(f.member.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).equals(memberRoot)
+                        &&f.outsider.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).equals(outsiderRoot)
+                        &&f.disk(f.member).equals(memberDisk)&&f.disk(f.outsider).equals(outsiderDisk)
+                        &&ChopTravelRecovery.saveInventory(f.member).equals(memberInventory)&&ChopTravelRecovery.saveInventory(f.outsider).equals(outsiderInventory)
+                        &&DurableRecoveryGameTestSupport.image(PlayerCurrencyData.class,accounts).equals(journal),
+                        "Conflicting terminal trade proof preserves both exact native owners, offers and immutable world account image");
+            }finally{
+                accounts=PlayerCurrencyData.get(f.level.getServer());
+                if(accounts.transfer(session.id()).orElseThrow().reserved())accounts.cancelTransfer(session.id(),terms,System.currentTimeMillis(),"isolated terminal receipt fixture cleanup");
+                if(accounts.tradePlan(session.id()).isPresent()){
+                    accounts.acknowledgeTrade(session.id(),f.member.getUUID());accounts.acknowledgeTrade(session.id(),f.outsider.getUUID());
+                }
+                f.check(accounts.flushVerified(),"Only isolated terminal trade rows cleaned after preservation assertions");
             }
         }
     }

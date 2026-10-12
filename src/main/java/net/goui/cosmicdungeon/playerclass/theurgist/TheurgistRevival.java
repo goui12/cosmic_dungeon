@@ -39,6 +39,42 @@ public final class TheurgistRevival {
             throw new IllegalStateException("Revival current-operation receipt conflicts with journal for "+owner.getUUID()+"; original save requires review");
         return outcome;
     }
+    private record OwnerProof(CompoundTag owner,CompoundTag custody,int outcome){}
+    /** Read only: an online peer's conflicting proof must not be hidden by this owner's settlement. */
+    private static OwnerProof preflightOwner(ServerPlayer owner,RevivalPlan plan){
+        var saved=PlayerSaveProof.ownerCompound(owner.getPersistentData(),ClassData.ROOT_TAG);
+        var custody=PlayerSaveProof.ownerCompound(saved,CUSTODY);
+        var receipt=PlayerSaveProof.ownerReceipt(saved,RECEIPT,owner.getUUID(),2,"id");
+        validateReceipt(owner,receipt);
+        if(!custody.isEmpty()&&!custody.equals(plan.reservation(owner.getUUID())))
+            throw new IllegalStateException("Revival owner reservation conflicts before peer settlement; original saves require review");
+        int outcome=currentReceipt(owner,plan,custody,receipt);
+        if(outcome==0&&plan.acknowledged(owner.getUUID()))
+            throw new IllegalStateException("Acknowledged revival peer receipt missing; original saves require review");
+        if(plan.decision()==1&&outcome==0){
+            if(owner.getUUID().equals(plan.target()))
+                throw new IllegalStateException("Successful target peer receipt missing; original saves require review");
+            if(!custody.equals(plan.reservation(owner.getUUID()))||!casterSource(saved,plan).equals(plan.tag("before")))
+                throw new IllegalStateException("Successful revival caster peer proof differs from plan; original saves require review");
+        }
+        return new OwnerProof(saved,custody,outcome);
+    }
+    /** Inspect available peers in either arrival order before any decision, flush or acknowledgement. */
+    private static void preflightAvailableOwners(MinecraftServer server,RevivalPlan plan){
+        var caster=server.getPlayerList().getPlayer(plan.caster());
+        var target=server.getPlayerList().getPlayer(plan.target());
+        var casterProof=caster==null||caster.hasDisconnected()?null:preflightOwner(caster,plan);
+        var targetProof=target==null||target.hasDisconnected()?null:preflightOwner(target,plan);
+        if(plan.decision()!=0||casterProof==null)return; // Valid target proof may settle while its caster is offline.
+        boolean alreadySucceeded=casterProof.outcome()==1;
+        if(!casterSource(casterProof.owner(),plan).equals(plan.tag(alreadySucceeded?"after":"before")))
+            throw new IllegalStateException("Revival caster source differs from plan before peer settlement");
+        if(targetProof==null)return;
+        int targetOutcome=targetProof.outcome()==1?1:2;
+        if(casterProof.outcome()!=0&&casterProof.outcome()!=targetOutcome
+                ||targetOutcome==1&&!alreadySucceeded&&!casterProof.custody().equals(plan.reservation(caster.getUUID())))
+            throw new IllegalStateException("Revival owner outcomes conflict before peer settlement; original saves require review");
+    }
     private static CompoundTag casterSource(CompoundTag owner,RevivalPlan plan){
         if(plan.schema()==2)return ResurrectionCooldown.read(owner);
         var source=PlayerSaveProof.ownerCompound(owner,ClassResourceLedger.KEY);
@@ -112,26 +148,12 @@ public final class TheurgistRevival {
             // Reject this owner's unsupported reservation before recursively settling the peer.
             if(!custody.isEmpty()&&!custody.equals(plan.reservation(p.getUUID())))
                 throw new IllegalStateException("Unsupported owner proof field "+CUSTODY+"; differs from the world plan. Original save requires review.");
-            int recordedOutcome=currentReceipt(p,plan,custody,receipt);
+            currentReceipt(p,plan,custody,receipt);
+            preflightAvailableOwners(server,plan);
             if(plan.decision()==0){
                 if(p.getUUID().equals(plan.caster())){
-                    boolean alreadySucceeded=recordedOutcome==1;
-                    if(!casterSource(owner,plan).equals(plan.tag(alreadySucceeded?"after":"before"))
-                            ||alreadySucceeded&&!custody.isEmpty())
-                        throw new IllegalStateException("Revival caster source differs from plan before peer settlement");
                     var target=server.getPlayerList().getPlayer(plan.target());
                     if(target==null||target.hasDisconnected())return false;
-                    // Inspect both owner proofs without changing the peer or the undecided world journal.
-                    var targetOwner=PlayerSaveProof.ownerCompound(target.getPersistentData(),ClassData.ROOT_TAG);
-                    var targetCustody=PlayerSaveProof.ownerCompound(targetOwner,CUSTODY);
-                    var targetReceipt=PlayerSaveProof.ownerReceipt(targetOwner,RECEIPT,target.getUUID(),2,"id");
-                    validateReceipt(target,targetReceipt);
-                    if(!targetCustody.isEmpty()&&!targetCustody.equals(plan.reservation(target.getUUID())))
-                        throw new IllegalStateException("Revival target reservation conflicts before peer settlement");
-                    int targetOutcome=currentReceipt(target,plan,targetCustody,targetReceipt)==1?1:2;
-                    if(recordedOutcome!=0&&recordedOutcome!=targetOutcome
-                            ||targetOutcome==1&&!alreadySucceeded&&!custody.equals(plan.reservation(p.getUUID())))
-                        throw new IllegalStateException("Revival owner outcomes conflict before peer settlement; original saves require review");
                     if(!reconcile(target))return false;plan=data.pending(p.getUUID());
                     if(plan==null)return true;
                 }else{

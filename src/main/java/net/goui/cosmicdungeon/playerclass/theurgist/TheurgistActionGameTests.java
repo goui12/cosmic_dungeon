@@ -267,7 +267,8 @@ public final class TheurgistActionGameTests {
             }
     }
     private static void casterStateOrdering(GameTestHelper helper){
-        for(int scenario=0;scenario<2;scenario++)try(var f=new Fixture(helper,Long.MAX_VALUE-2240-scenario,"theurgist","judicator")){
+        for(int owner=0;owner<2;owner++)for(int scenario=0;scenario<2;scenario++)
+                try(var f=new Fixture(helper,Long.MAX_VALUE-2240-owner*2-scenario,"theurgist","judicator")){
             long now=f.level.getServer().overworld().getGameTime();
             var plan=RevivalPlan.free(f.p(0).getUUID(),f.p(1).getUUID(),UUID.randomUUID(),f.run,new CompoundTag(),now);
             var data=RevivalData.get(f.level.getServer());data.reserve(plan);f.check(data.flushVerified(),"Undecided revival journal is durable");
@@ -276,17 +277,21 @@ public final class TheurgistActionGameTests {
             if(scenario==0)cooldown.putInt("schema",99);
             root.put(ResurrectionCooldown.KEY,cooldown);f.p(0).getPersistentData().put(ClassData.ROOT_TAG,root);
             f.check(PlayerSaveProof.save(f.p(0)),"Malformed or changed caster state is saved without a current success receipt");
-            var casterDisk=f.disk(0);var targetDisk=f.disk(1);var targetRoot=f.root(1).copy();var journal=f.reloadJournal().image();f.reload(0);f.reload(1);
-            f.disconnects.expect(f.p(0));
-            f.check(!TheurgistRevival.reconcile(f.p(0))&&TheurgistRevival.blocked(f.p(0))&&f.disconnects.recoveryHold(f.p(0)),
-                    "Undecided caster source-state mismatch holds before recursively settling the successful target");
+            var casterDisk=f.disk(0);var targetDisk=f.disk(1);var targetRoot=f.root(1).copy();
+            var casterInventory=ChopTravelRecovery.saveInventory(f.p(0));var targetInventory=ChopTravelRecovery.saveInventory(f.p(1));
+            var journal=f.reloadJournal().image();f.reload(0);f.reload(1);
+            f.disconnects.expect(f.p(owner));
+            f.check(!TheurgistRevival.reconcile(f.p(owner))&&TheurgistRevival.blocked(f.p(owner))&&f.disconnects.recoveryHold(f.p(owner)),
+                    "Either return order holds undecided caster source-state mismatch before successful target settlement");
             f.check(f.root(0).equals(root)&&f.disk(0).equals(casterDisk)&&f.root(1).equals(targetRoot)&&f.disk(1).equals(targetDisk)
+                    &&ChopTravelRecovery.saveInventory(f.p(0)).equals(casterInventory)&&ChopTravelRecovery.saveInventory(f.p(1)).equals(targetInventory)
                     &&RevivalData.get(f.level.getServer()).image().equals(journal),
-                    "Caster preflight preserves both exact native owner files and the undecided world outcome before peer recursion");
+                    "Both return orders preserve exact native owner files, inventory, cooldown and undecided world outcome");
         }
     }
     private static void terminalReceiptOrdering(GameTestHelper helper){
-        for(int scenario=0;scenario<4;scenario++)try(var f=new Fixture(helper,Long.MAX_VALUE-2260-scenario,"theurgist","judicator")){
+        for(int owner=0;owner<2;owner++)for(int scenario=0;scenario<4;scenario++)
+                try(var f=new Fixture(helper,Long.MAX_VALUE-2260-owner*4-scenario,"theurgist","judicator")){
             long now=f.level.getServer().overworld().getGameTime();
             var plan=RevivalPlan.free(f.p(0).getUUID(),f.p(1).getUUID(),UUID.randomUUID(),f.run,new CompoundTag(),now);
             var data=RevivalData.get(f.level.getServer());data.reserve(plan);
@@ -305,9 +310,9 @@ public final class TheurgistActionGameTests {
             var casterDisk=f.disk(0);var targetDisk=f.disk(1);
             var casterInventory=ChopTravelRecovery.saveInventory(f.p(0));var targetInventory=ChopTravelRecovery.saveInventory(f.p(1));
             var journal=f.reloadJournal().image();f.reload(0);f.reload(1);
-            f.disconnects.expect(f.p(0));
-            f.check(!TheurgistRevival.reconcile(f.p(0))&&TheurgistRevival.blocked(f.p(0))
-                    &&f.disconnects.recoveryHold(f.p(0)),"Conflicting current outcome or missing successful caster custody holds before peer settlement");
+            f.disconnects.expect(f.p(owner));
+            f.check(!TheurgistRevival.reconcile(f.p(owner))&&TheurgistRevival.blocked(f.p(owner))
+                    &&f.disconnects.recoveryHold(f.p(owner)),"Either return order holds conflicting current outcome or missing successful caster custody before peer settlement");
             f.check(f.root(0).equals(caster)&&f.root(1).equals(target)&&f.disk(0).equals(casterDisk)&&f.disk(1).equals(targetDisk)
                     &&ChopTravelRecovery.saveInventory(f.p(0)).equals(casterInventory)
                     &&ChopTravelRecovery.saveInventory(f.p(1)).equals(targetInventory)
@@ -315,9 +320,68 @@ public final class TheurgistActionGameTests {
                     "Pure revival preflight preserves both native owners and world without deciding, charging, acknowledging or replacing a receipt");
         }
     }
+    private static void malformedCasterProofOrdering(GameTestHelper helper){
+        int scenario=0;
+        for(int owner=0;owner<2;owner++)for(String key:List.of(TheurgistRevival.CUSTODY,TheurgistRevival.RECEIPT))
+            for(int shape=0;shape<3;shape++)try(var f=new Fixture(helper,Long.MAX_VALUE-2280-scenario++,"theurgist","judicator")){
+                var plan=RevivalPlan.free(f.p(0).getUUID(),f.p(1).getUUID(),UUID.randomUUID(),f.run,new CompoundTag(),
+                        f.level.getServer().overworld().getGameTime());
+                var data=RevivalData.get(f.level.getServer());data.reserve(plan);f.check(data.flushVerified(),"Malformed caster journal is durable");
+                f.custody(0,plan);f.custody(1,plan);f.receipt(1,plan);
+                var caster=f.root(0).copy();var target=f.root(1).copy();
+                if(shape==0)caster.putString(key,"preserve malformed caster proof");
+                else if(shape==1)caster.put(key,new ListTag());
+                else{
+                    var future=key.equals(TheurgistRevival.CUSTODY)?plan.reservation(f.p(0).getUUID()):plan.receipt(f.p(0).getUUID(),false);
+                    future.putInt("schema",99);future.putString("unknown","preserve");caster.put(key,future);
+                }
+                f.p(0).getPersistentData().put(ClassData.ROOT_TAG,caster);
+                f.check(PlayerSaveProof.save(f.p(0)),"Malformed caster proof retains its complete native owner file");
+                var casterDisk=f.disk(0);var targetDisk=f.disk(1);
+                var casterInventory=ChopTravelRecovery.saveInventory(f.p(0));var targetInventory=ChopTravelRecovery.saveInventory(f.p(1));
+                var journal=f.reloadJournal().image();f.reload(0);f.reload(1);
+                f.disconnects.expect(f.p(owner));
+                f.check(!TheurgistRevival.reconcile(f.p(owner))&&TheurgistRevival.blocked(f.p(owner))&&f.disconnects.recoveryHold(f.p(owner)),
+                        "Either return order holds unsupported caster custody/receipt before target success decides the journal");
+                f.check(f.root(0).equals(caster)&&f.root(1).equals(target)&&f.disk(0).equals(casterDisk)&&f.disk(1).equals(targetDisk)
+                        &&ChopTravelRecovery.saveInventory(f.p(0)).equals(casterInventory)&&ChopTravelRecovery.saveInventory(f.p(1)).equals(targetInventory)
+                        &&RevivalData.get(f.level.getServer()).image().equals(journal)&&ResurrectionCooldown.read(f.root(0)).isEmpty(),
+                        "Unsupported caster proof preserves both exact owner files, inventories, cooldown and undecided world journal");
+            }
+    }
+    private static void offlineCasterRecovery(GameTestHelper helper){
+        for(boolean legacy:new boolean[]{false,true})try(var f=new Fixture(helper,Long.MAX_VALUE-2300-(legacy?1:0),"theurgist","judicator")){
+            f.amount(0,240);long now=f.level.getServer().overworld().getGameTime();
+            var plan=legacy?RevivalPlan.create(f.p(0).getUUID(),f.p(1).getUUID(),UUID.randomUUID(),f.run,f.ledger(0))
+                    :RevivalPlan.free(f.p(0).getUUID(),f.p(1).getUUID(),UUID.randomUUID(),f.run,new CompoundTag(),now);
+            var data=RevivalData.get(f.level.getServer());data.reserve(plan);
+            f.check(data.flushVerified(),"Offline-caster recovery plan is durable before native owner saves");
+            f.custody(0,plan);f.custody(1,plan);f.receipt(1,plan);
+            var casterDisk=f.disk(0);var casterRoot=f.root(0).copy();var casterInventory=ChopTravelRecovery.saveInventory(f.p(0));
+            data=f.reloadJournal();f.reload(1);f.players.remove(f.p(0).getUUID());f.online.remove(f.p(0));
+            f.check(f.level.getServer().getPlayerList().getPlayer(plan.caster())==null,"Caster is unavailable without touching its saved proof");
+            f.check(TheurgistRevival.reconcile(f.p(1)),"Target success can settle its exact receipt while caster is offline");
+            var pending=RevivalData.get(f.level.getServer()).pending(plan.caster());
+            f.check(pending!=null&&pending.decision()==1&&pending.acknowledged(plan.target())&&!pending.acknowledged(plan.caster())
+                    &&f.root(0).equals(casterRoot)&&f.disk(0).equals(casterDisk)&&ChopTravelRecovery.saveInventory(f.p(0)).equals(casterInventory),
+                    "Offline target settlement retains the complete uncharged caster save and a durable pending caster acknowledgement");
+            data=f.reloadJournal();f.reload(0);
+            f.check(TheurgistRevival.reconcile(f.p(0))&&TheurgistRevival.reconcile(f.p(1))
+                    &&f.amount(0)==(legacy?120:240)&&ChopTravelRecovery.saveInventory(f.p(0)).equals(casterInventory)
+                    &&(legacy?!f.root(0).contains(ResurrectionCooldown.KEY):ResurrectionCooldown.read(f.root(0)).equals(plan.tag("after")))
+                    &&data.image().equals(f.journalBefore),"Later native caster reload applies exactly one legacy debit or original free cooldown");
+            data=f.reloadJournal();f.reload(1);f.reload(0);
+            f.check(TheurgistRevival.reconcile(f.p(1))&&TheurgistRevival.reconcile(f.p(0))
+                    &&f.amount(0)==(legacy?120:240)&&data.image().equals(f.journalBefore)
+                    &&(legacy?!f.root(0).contains(ResurrectionCooldown.KEY):ResurrectionCooldown.read(f.root(0)).equals(plan.tag("after"))),
+                    "Repeated reversed owner reload after offline settlement does not repeat its debit or restart cooldown");
+        }
+    }
     public static void recovery(GameTestHelper helper){
+        offlineCasterRecovery(helper);
         terminalReceiptOrdering(helper);
         casterStateOrdering(helper);
+        malformedCasterProofOrdering(helper);
         malformedRevivalProofs(helper);
         try(var f=new Fixture(helper,Long.MAX_VALUE-2212,"theurgist","judicator")){
             f.amount(0,240);var data=RevivalData.get(f.level.getServer());

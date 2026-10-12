@@ -56,6 +56,8 @@ public final class TradeTransactions {
                 String outcome=transfer.reserved()?AccountTransfer.CANCELLED:transfer.status();
                 if(!Set.of(AccountTransfer.COMMITTED,AccountTransfer.CANCELLED).contains(outcome))throw new IllegalStateException("Invalid trade outcome");
                 boolean applied=RepairTransactions.receiptMatches(savedReceipt,p.getUUID(),id,outcome);
+                if(!savedReceipt.isEmpty()&&id.equals(UUID.fromString(savedReceipt.getStringOr("transaction","")))&&!applied)
+                    throw new IllegalStateException("Trade current-operation receipt conflicts with account outcome; original save requires review");
                 CompoundTag projected=null;
                 if(applied){
                     if(owner.contains(TradeCustody.KEY))throw new IllegalStateException("Applied trade still has custody");
