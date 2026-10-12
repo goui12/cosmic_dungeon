@@ -12,19 +12,21 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 @EventBusSubscriber(modid = "cosmicdungeon")
 public final class PotionCraftActions {
     private static final class Session {
-        boolean open, warned; long revision, lastAction = Long.MIN_VALUE;
+        boolean open, warned, acknowledgePending; long revision, lastAction = Long.MIN_VALUE;
         PotionCraftPayloads.View sent;
     }
     private static final Map<ServerPlayer, Session> SESSIONS = new WeakHashMap<>();
     private PotionCraftActions() {}
     public static void request(ServerPlayer p, PotionCraftPayloads.Request request) {
         var session = SESSIONS.computeIfAbsent(p, ignored -> new Session());
-        if (!request.open()) { session.open = false; session.sent = null; session.revision++; PotionCrafting.forget(p); return; }
+        if (!request.open()) { session.open = false; session.sent = null; session.acknowledgePending = false; session.revision++; PotionCrafting.forget(p); return; }
         if (session.open) return;
         session.open = true; sync(p, session, true);
     }
     private static void sync(ServerPlayer p, Session session, boolean acknowledge) {
         if (!session.open) return;
+        acknowledge |= session.acknowledgePending;
+        session.acknowledgePending = false;
         PotionCraftPayloads.View next;
         try { next = PotionCrafting.view(p, session.revision); }
         catch (RuntimeException ex) {
@@ -42,10 +44,17 @@ public final class PotionCraftActions {
     }
     public static void action(ServerPlayer p, PotionCraftPayloads.Action request) {
         var session = SESSIONS.get(p); if (session == null || !session.open) return;
+        // Reject repeated input before the acknowledgement finally block: rejected duplicates
+        // must not rebuild and resend the entire palette once per packet.
+        long tick = p.level().getServer().getTickCount();
+        if (tick == session.lastAction) {
+            // A second legitimate click may arrive after the first reply in the same tick.
+            // Coalesce its acknowledgement into the next bounded periodic sync so the UI unlocks.
+            session.acknowledgePending = true;
+            return;
+        }
+        session.lastAction = tick;
         try {
-            long tick = p.level().getServer().getTickCount();
-            if (tick == session.lastAction) return;
-            session.lastAction = tick;
             var sent = session.sent;
             if (sent == null || sent.run() != request.run() || sent.revision() != request.revision()) return;
             var entry = sent.entries().stream().filter(e -> e.targetId().equals(request.targetId())).findFirst().orElse(null);
@@ -68,7 +77,7 @@ public final class PotionCraftActions {
     }
     public static void invalidate(ServerPlayer p) {
         var session = SESSIONS.get(p);
-        if (session != null) { session.open = false; session.sent = null; session.revision = Math.incrementExact(session.revision); }
+        if (session != null) { session.open = false; session.sent = null; session.acknowledgePending = false; session.revision = Math.incrementExact(session.revision); }
         PotionCrafting.forget(p);
     }
     public static void transfer(ServerPlayer original, ServerPlayer replacement) {

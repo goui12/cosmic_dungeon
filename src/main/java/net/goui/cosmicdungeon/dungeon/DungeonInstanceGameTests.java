@@ -97,6 +97,10 @@ public final class DungeonInstanceGameTests {
         suite.add(id("potion_palette_recovery"),net.goui.cosmicdungeon.crafting.PotionCraftingGameTests::paletteRecovery);
         suite.add(id("potion_palette_actions"),net.goui.cosmicdungeon.crafting.PotionCraftingGameTests::paletteActions);
         suite.add(id("potion_palette_lifecycle"),net.goui.cosmicdungeon.crafting.PotionCraftingGameTests::paletteLifecycle);
+        suite.add(id("integration_parties"),net.goui.cosmicdungeon.crafting.PotionCraftingGameTests::integrationParties);
+        suite.add(id("integration_finalization"),net.goui.cosmicdungeon.crafting.PotionCraftingGameTests::integrationFinalization);
+        suite.add(id("integration_palette_sync"),net.goui.cosmicdungeon.crafting.PotionCraftingGameTests::integrationSync);
+        suite.add(id("bogatyr_integration_cost"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrIntegrationGameTests::packWorkloads);
         suite.add(id("stack_menu_lifecycle"),net.goui.cosmicdungeon.crafting.PotionStackGameTests::menu);
         suite.add(id("stack_consumption_lifecycle"),net.goui.cosmicdungeon.crafting.PotionStackGameTests::consumption);
         suite.add(id("stack_custody_lifecycle"),net.goui.cosmicdungeon.crafting.PotionStackGameTests::custody);

@@ -508,4 +508,115 @@ public final class PotionCraftingGameTests {
         h.succeed();
     }
 
+    public static void integrationParties(GameTestHelper h) {
+        try(var first=new Fixture(h,Long.MAX_VALUE-3217)) {
+            first.clear();first.healing(1,2);
+            String healing="minecraft:healing_splash";
+            first.check(PotionCrafting.craft(first.p(0),first.run,healing,false),"First party commits its own shared cursor craft");
+            var inventory=first.images();int charges=first.charges(0);
+            long sequence=DungeonMetricsService.resourceSequence(first.level.getServer(),first.run);
+            try(var other=new Fixture(h,Long.MAX_VALUE-3218)) {
+                other.clear();
+                other.check(PotionCrafting.quote(other.p(0),other.run,healing).shared()==0,
+                        "Simultaneous party cannot quote another party's available donor ingredients");
+                other.check(!PotionCrafting.craft(other.p(0),first.run,healing),"Foreign run ID cannot spend another party's stock");
+                other.healing(1,1);other.consent(1,false);var before=other.images();
+                other.check(!PotionCrafting.craft(other.p(0),other.run,healing),"Own party's withdrawn donor consent remains authoritative");
+                other.unchanged(before,"Rejected foreign/withdrawn donation leaves every owner unchanged");
+                other.consent(1,true);other.classId(0,"venefex");
+                other.check(!PotionCrafting.craft(other.p(0),other.run,healing),"Class change rejects an old positive recipe");
+                other.classId(0,"theurgist");
+                other.check(PotionCrafting.craft(other.p(0),other.run,healing),"Second party commits only its own consenting donor recipe");
+                other.check(other.products()==1&&other.charges(0)==17
+                        &&DungeonMetricsService.resourceSequence(other.level.getServer(),other.run)==1,
+                        "Second run has independent output, fuel and transaction sequence");
+                first.unchanged(inventory,"Parallel party cannot mutate first party inventory");
+                first.check(first.charges(0)==charges&&first.p(0).inventoryMenu.getCarried().getCount()==1
+                        &&DungeonMetricsService.resourceSequence(first.level.getServer(),first.run)==sequence,
+                        "Parallel party cannot alter first cursor, fuel or metrics");
+            }
+            first.p(0).closeContainer();first.saveAll();first.reload(0);
+            first.check(SharedCraftTransactions.reconcile(first.p(0))&&first.products()==1
+                    &&first.p(0).inventoryMenu.getCarried().isEmpty(),"First party's cursor survives settlement/reload once");
+        }
+        h.succeed();
+    }
+
+    public static void integrationFinalization(GameTestHelper h) {
+        try(var f=new Fixture(h,Long.MAX_VALUE-3219)) {
+            var server=f.level.getServer();String healing="minecraft:healing_splash";
+            f.clear();f.healing(1,1);f.saveAll();
+            var plan=PotionCrafting.prepare(f.p(0),f.run,healing,false);f.check(plan!=null,"Integration decision prepared");
+            PotionCursorCustody.track(f.p(0));f.reserve(plan);
+            for(var id:plan.owners())f.custody(f.current.stream().map(ServerPlayer::getUUID).toList().indexOf(id),plan);
+            var data=SharedCraftData.get(server);data.commit(plan.id());f.check(data.flushVerified(),"Decision and fuel durable before disconnect");
+            var donor=f.p(1);f.players.remove(donor.getUUID());f.online.remove(donor);
+            try {
+                f.check(!SharedCraftTransactions.readyForCleanup(server,f.record.orderedPlayers()),
+                        "Run cleanup waits for committed offline donor instead of dropping custody");
+                f.check(data.pendingRun(f.run)!=null&&DungeonMetricsService.resourceSequence(server,f.run)==0,
+                        "Unsettled donor cannot prematurely finalize resource metrics");
+            } finally {f.players.put(donor.getUUID(),donor);f.online.add(donor);}
+            f.reload(1);
+            f.check(SharedCraftTransactions.readyForCleanup(server,f.record.orderedPlayers()),"Reconnect settles remaining donor before run cleanup");
+            f.check(data.pendingRun(f.run)==null&&f.charges(0)==17&&f.p(0).inventoryMenu.getCarried().getCount()==1
+                    &&DungeonMetricsService.resourceSequence(server,f.run)==1,"Exactly one output/fuel/metrics result crosses disconnect boundary");
+            f.runs.put(f.run,f.record.withState(DungeonRunState.RESETTING,DungeonResetReason.COMPLETED));
+            var settled=f.images();
+            f.check(!PotionCrafting.craft(f.p(0),f.run,healing,false),"Resetting run denies new craft before finalization");
+            f.unchanged(settled,"Denied post-run craft retains all settled inventory");
+            // Archive real runtime counters in an isolated store; do not modify shared test-world lifetime totals.
+            var completed=DungeonMetricsService.snapshot(server,f.record,"COMPLETED");
+            var directory=Files.createTempDirectory("cosmic-batch17-finalization-");
+            try {
+                var archive=new RunMetricsStore(directory,completed.worldId());archive.finish(completed);
+                var totals=archive.totals(f.p(0).getUUID());
+                var resumed=new RunMetricsStore(directory);resumed.finish(completed);
+                f.check(resumed.read(f.run).equals(completed)&&resumed.totals(f.p(0).getUUID()).equals(totals)
+                        &&totals.runs()==1&&totals.stats().used().getOrDefault("minecraft:blaze_powder",0L)==1,
+                        "Real resource counters finalize and restart without duplicate totals");
+            } finally {try(var paths=Files.walk(directory)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
+        } catch(IOException ex){throw new IllegalStateException(ex);}
+        h.succeed();
+    }
+
+    public static void integrationSync(GameTestHelper h) {
+        try(var f=new Fixture(h,Long.MAX_VALUE-3220)) {
+            f.clear();f.healing(1,3);var player=f.p(0);
+            PotionCraftActions.request(player,new net.goui.cosmicdungeon.network.PotionCraftPayloads.Request(true));
+            var quote=sent(f,0);var buffer=io.netty.buffer.Unpooled.buffer();int bytes;
+            try {var wire=new net.minecraft.network.RegistryFriendlyByteBuf(buffer,f.level.registryAccess());
+                net.goui.cosmicdungeon.network.PotionCraftPayloads.View.STREAM_CODEC.encode(wire,quote);bytes=buffer.readableBytes();
+            } finally {buffer.release();}
+            @SuppressWarnings("unchecked") var sessions=(Map<ServerPlayer,?>)Fixture.field(PotionCraftActions.class,"SESSIONS",null);
+            var session=sessions.get(player);var sync=Arrays.stream(PotionCraftActions.class.getDeclaredMethods())
+                    .filter(m->m.getName().equals("sync")).findFirst().orElseThrow();sync.setAccessible(true);
+            int packets=f.packets.get(player.getUUID()).size();long begin=System.nanoTime();
+            for(int i=0;i<200;i++)sync.invoke(null,player,session,false);
+            long unchangedNanos=System.nanoTime()-begin;
+            f.check(f.packets.get(player.getUUID()).size()==packets,"Two hundred unchanged periodic quotes send no redundant packets");
+            var action=new net.goui.cosmicdungeon.network.PotionCraftPayloads.Action(f.run,quote.revision(),"minecraft:healing_splash",false);
+            PotionCraftActions.action(player,action);int acknowledged=f.packets.get(player.getUUID()).size();
+            for(int i=0;i<200;i++)PotionCraftActions.action(player,action);
+            f.check(f.packets.get(player.getUUID()).size()==acknowledged,
+                    "Two hundred same-tick duplicates do not resend/rebuild a full acknowledgement palette");
+            var acknowledgedQuote=sent(f,0);
+            // Also model a legitimate follow-up sent after the first response but within this server tick.
+            PotionCraftActions.action(player,new net.goui.cosmicdungeon.network.PotionCraftPayloads.Action(
+                    f.run,acknowledgedQuote.revision(),"minecraft:healing_splash",false));
+            sync.invoke(null,player,session,false);
+            f.check(sent(f,0).revision()>acknowledgedQuote.revision(),
+                    "Next periodic sync acknowledges even an unchanged rate-limited legitimate follow-up");
+            int coalesced=f.packets.get(player.getUUID()).size();sync.invoke(null,player,session,false);
+            f.check(coalesced==acknowledged+1&&f.packets.get(player.getUUID()).size()==coalesced,
+                    "All deferred input coalesces to one reply then returns to zero unchanged packets");
+            f.check(player.inventoryMenu.getCarried().getCount()==1&&f.charges(0)==17&&f.count(1,Items.POTION)==2,
+                    "Packet pressure still commits exactly one output and donor debit");
+            f.check(bytes>0&&bytes<65536,"Representative full recipe palette remains below64KiB");
+            com.mojang.logging.LogUtils.getLogger().info("PALETTE_INTEGRATION_COST entries={} bytes={} unchanged_evaluations=200 unchanged_packets=0 duplicate_actions=200 duplicate_packets=0 deferred_ack_packets=1 prior_source_expected_duplicate_ack_packets=200 unchanged_total_us={}",
+                    quote.entries().size(),bytes,unchangedNanos/1000.0);
+        } catch(ReflectiveOperationException ex){throw new IllegalStateException(ex);}
+        h.succeed();
+    }
+
 }

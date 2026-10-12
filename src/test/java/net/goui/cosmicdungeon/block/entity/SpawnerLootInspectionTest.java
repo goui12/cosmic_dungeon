@@ -43,4 +43,13 @@ class SpawnerLootInspectionTest {
         entry(root).remove("functions");root.add("functions",functions);assertFalse(inspect(root).defaultDrops().getFirst().chance().numeric());
         root.remove("functions");entry(root).addProperty("weight",0);assertFalse(inspect(root).defaultDrops().getFirst().chance().numeric());
     }
+    @Test void moddedConditionsAndFunctionsNeverClaimFixedProbabilities()throws Exception{
+        var root=table();var conditions=JsonParser.parseString("[{\"condition\":\"example:season\",\"season\":\"winter\"}]").getAsJsonArray();
+        pool(root).add("conditions",conditions);
+        assertFalse(inspect(root).defaultDrops().getFirst().chance().numeric());
+        pool(root).remove("conditions");
+        entry(root).add("functions",JsonParser.parseString("[{\"function\":\"example:scale_by_difficulty\"}]").getAsJsonArray());
+        assertFalse(inspect(root).defaultDrops().getFirst().chance().numeric());
+    }
+
 }
