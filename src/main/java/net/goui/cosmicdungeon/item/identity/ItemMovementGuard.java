@@ -26,6 +26,10 @@ public final class ItemMovementGuard {
         var clickedFlags = ItemMovementRules.flags(clicked);
         if ((!clicked.isEmpty() && !ClassItemOwnership.mayAcquire(player, clicked))
                 || (!carried.isEmpty() && !ClassItemOwnership.mayAcquire(player, carried))) return true;
+        // The authorized trade escrow does not authorize hiding protected items in portable storage.
+        if (type == ClickType.PICKUP && slot != null
+                && (!ItemMovementPolicy.mayNest(cursor.privateStorage(), ItemMovementRules.portable(clicked))
+                || !ItemMovementPolicy.mayNest(clickedFlags.privateStorage(), ItemMovementRules.portable(carried)))) return true;
         // TradeMenu owns read-only peer slots, acceptance locks and server-side item eligibility.
         // Its escrow is an authorized custody route, not a public storage container.
         if (menu instanceof net.goui.cosmicdungeon.trade.TradeMenu) {

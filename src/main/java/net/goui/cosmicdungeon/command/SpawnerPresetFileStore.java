@@ -111,9 +111,13 @@ public final class SpawnerPresetFileStore {
         }catch(IllegalArgumentException ex){throw ex;}
         catch(Exception ex){throw new IllegalArgumentException("Malformed preset: "+ex.getMessage(),ex);}
     }
-    public static void validate(CompoundTag config){
+    public static void validate(CompoundTag config){ validate(config,false); }
+    /** Only an opening snapshot may contain the unconfigured block sentinel; files and Apply stay strict. */
+    public static void validateEditorSnapshot(CompoundTag config){ validate(config,true); }
+    private static void validate(CompoundTag config,boolean opening){
         String id=config.getStringOr("SpawnerEntityId","");var entity=ResourceLocation.tryParse(id);
-        if(entity==null||net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getOptional(entity).isEmpty())throw new IllegalArgumentException("Unknown preset entity.");
+        if(!(opening&&id.equals("none"))&&(entity==null||net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getOptional(entity).isEmpty()))
+            throw new IllegalArgumentException("Unknown preset entity.");
         int min=config.getIntOr("MinSpawnDelay",200),max=config.getIntOr("MaxSpawnDelay",800),cap=config.getIntOr("SpawnerMobCap",0);
         if(min<1||max<min||max>32767||cap<0||cap>32767)throw new IllegalArgumentException("Invalid preset spawn limits.");
         if(config.getIntOr("CosmicSpawnerDataVersion",0)>CosmicSpawnerBlockEntity.CURRENT_DATA_VERSION||

@@ -23,7 +23,7 @@ public final class SharedCrafting {
                 throw new IllegalArgumentException("Crafting requirement");
         }
     }
-    public record Recipe(String id, String skill, Set<String> classes, List<Requirement> requirements, ItemStack output, CompoundTag fuel, boolean cursor) {
+    public record Recipe(String id, String skill, Set<String> classes, List<Requirement> requirements, ItemStack output, CompoundTag fuel, boolean cursor, String potionSource) {
         public Recipe {
             if (id == null || id.isBlank() || id.length() > 128 || skill == null || skill.isBlank() || skill.length() > 128)
                 throw new IllegalArgumentException("Crafting recipe identity");
@@ -31,11 +31,16 @@ public final class SharedCrafting {
             if (fuel != null) BrewingFuel.validatePlan(fuel);
             if (cursor && (fuel == null || output.getCount() != 1)) throw new IllegalArgumentException("Cursor crafts require one fueled potion");
             classes = Set.copyOf(classes); requirements = List.copyOf(requirements); output = output.copy();
+            if (potionSource != null && (fuel == null || requirements.stream().noneMatch(r -> r.key().equals(potionSource) && r.count() == 1)))
+                throw new IllegalArgumentException("Potion source must identify one fueled input bottle");
             if (classes.isEmpty() || classes.size() > 16 || requirements.isEmpty() || requirements.size() > 16
                     || requirements.stream().map(Requirement::key).distinct().count() != requirements.size()
                     || requirements.stream().mapToInt(Requirement::count).sum() > 64
                     || output.isEmpty() || output.getCount() > output.getMaxStackSize())
                 throw new IllegalArgumentException("Crafting recipe bounds");
+        }
+        public Recipe(String id, String skill, Set<String> classes, List<Requirement> requirements, ItemStack output, CompoundTag fuel, boolean cursor) {
+            this(id, skill, classes, requirements, output, fuel, cursor, null);
         }
         public Recipe(String id, String skill, Set<String> classes, List<Requirement> requirements, ItemStack output, CompoundTag fuel) {
             this(id, skill, classes, requirements, output, fuel, false);
@@ -143,6 +148,15 @@ public final class SharedCrafting {
         long cursor = DungeonMetricsService.donationCursor(server, expected);
         var allocation = SharedResourcePlanner.plan(player.getUUID(), requirements(recipe), stocks, cursor);
         if (allocation == null) return null;
+        ItemStack produced = recipe.output();
+        if (recipe.potionSource() != null) {
+            var debit = allocation.debits().stream().filter(d -> d.ingredient().equals(recipe.potionSource())).findFirst().orElseThrow();
+            var requirement = recipe.requirements().stream().filter(r -> r.key().equals(recipe.potionSource())).findFirst().orElseThrow();
+            var source = inventories.get(debit.owner()).stream().filter(s -> !s.isEmpty() && requirement.matches().test(s)).findFirst().orElseThrow();
+            if (!net.goui.cosmicdungeon.trade.TradeItemTransfer.mayOffer(source, debit.owner())) return null;
+            var owned = net.goui.cosmicdungeon.trade.TradeItemTransfer.forRecipient(source, debit.owner(), player.getUUID());
+            produced = PotionStacks.brewed(owned, produced);
+        }
         var owners = new CompoundTag(); var donorRanks = new CompoundTag();
         var selected = new TreeSet<UUID>(); selected.add(player.getUUID()); allocation.debits().forEach(d -> selected.add(d.owner()));
         for (UUID id : selected) {
@@ -161,7 +175,7 @@ public final class SharedCrafting {
                 }
                 if (remaining != 0) throw new IllegalStateException("Live ingredient allocation differs");
             }
-            if (id.equals(player.getUUID()) && !recipe.cursor() && !insert(after, recipe.output())) return null;
+            if (id.equals(player.getUUID()) && !recipe.cursor() && !insert(after, produced)) return null;
             var owner = new CompoundTag(); owner.put("before", ChopTravelRecovery.encode(player, before));
             owner.put("after", ChopTravelRecovery.encode(player, after)); owner.put("debits", debits); owner.putBoolean("ack", false);
             owners.put(id.toString(), owner);
@@ -172,11 +186,11 @@ public final class SharedCrafting {
         image.putLong("at", System.currentTimeMillis()); image.putLong("donation_before", cursor); image.putLong("donation_after", allocation.sequence());
         image.putString("recipe", recipe.id()); image.putString("skill", recipe.skill()); image.put("owners", owners);
         allocation.donatedAfter().forEach((owner, rank) -> donorRanks.putLong(owner.toString(), rank)); image.put("donated", donorRanks);
-        var output = NonNullList.withSize(player.getInventory().getContainerSize(), ItemStack.EMPTY); output.set(0, recipe.output());
+        var output = NonNullList.withSize(player.getInventory().getContainerSize(), ItemStack.EMPTY); output.set(0, produced);
         image.put("output", ChopTravelRecovery.encode(player, output)); image.putBoolean("committed", false); image.putBoolean("metrics_ack", false);
         if (recipe.fuel() != null) { image.putInt("schema", 2); image.put("fuel", recipe.fuel()); }
         if (recipe.cursor()) {
-            var result = PotionOutputPlacement.cursor(player.inventoryMenu.getCarried(), recipe.output());
+            var result = PotionOutputPlacement.cursor(player.inventoryMenu.getCarried(), produced);
             if (result == null) return null;
             image.putInt("schema", 3);
             image.put("cursor_before", net.goui.cosmicdungeon.playerclass.dragoon.repair.RepairCustody.encode(player, player.inventoryMenu.getCarried()));

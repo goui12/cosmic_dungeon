@@ -38,16 +38,16 @@ final class GroupResourceConsentScreen extends Screen {
     }
     @Override public void tick() {
         var view = D1PartyHud.currentView();
-        if (minecraft.player == null || minecraft.player.containerMenu != minecraft.player.inventoryMenu
+        if (!InventoryModalContext.current(parent, minecraft.player)
                 || view == null || !context.equals(view.sharing().context())) {
-            minecraft.setScreen(null); return;
+            InventoryModalContext.dismiss(parent); return;
         }
         if (requested != null && requested.equals(view.sharing().choice())) { onClose(); return; }
         if (requested != null && ++waitingTicks >= 60) {
             requested = null; yes.active = no.active = true;
         }
     }
-    @Override public void onClose() { minecraft.setScreen(parent); }
+    @Override public void onClose() { InventoryModalContext.restore(parent); }
     @Override public boolean isPauseScreen() { return false; }
     @Override public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         renderBackground(g, mouseX, mouseY, partialTick);

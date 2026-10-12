@@ -77,3 +77,7 @@ See [CurseForge releases](CURSEFORGE_RELEASES.md) for publication/retry/moderati
 No automatic local dedicated/GameTest/development client/CurseForge/TEST launch.
 If Remote Desktop fails, report incomplete step and provide:
 `npx.cmd -y @wonderwhy-er/desktop-commander@latest remote`.
+
+## Git push reporting (Cameron, Batch20)
+
+Every push reports all recommendations and all unimplemented genuine Codex review notes, including priority, original review/source commit and current disposition. Preserve rejected false positives with source evidence and distinguish missing review coverage from no findings. Link the full per-batch ledger; do not reduce it to one suggestion. See [Batch20 review ledger](ai/tasks/BATCH_1_7_20_REVIEW_NOTES_20261012.md).

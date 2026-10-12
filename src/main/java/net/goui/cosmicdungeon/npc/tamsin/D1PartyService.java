@@ -184,7 +184,7 @@ public final class D1PartyService {
     }
     private static void sharingAction(ServerPlayer player,PartyPayloads.Action request) {
         if(request.containerId()==-1) {
-            if(player.containerMenu!=player.inventoryMenu)return;
+            if(!GroupResourceConsent.inventoryContext(player))return;
         } else if(!(player.containerMenu instanceof ClassSelectorMenu menu)||menu.containerId!=request.containerId()
                 ||menu.tamsinNpc()==null||!menu.stillValid(player)||menu.stage()!=TamsinFlow.Stage.READY||!onboarded(player))return;
         var server=player.level().getServer();

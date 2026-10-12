@@ -79,7 +79,7 @@ public final class ResurrectPickerScreen extends Screen {
         previous.active = page > 0; next.active = page + 1 < currentPage.pages();
     }
     @Override public void tick() {
-        if (!current()) { minecraft.setScreen(null); return; }
+        if (!current()) { InventoryModalContext.dismiss(parent); return; }
         // Rebuild only when the target list changes, preserving keyboard focus during countdown updates.
         if (!sameIdentities(displayed, TheurgistClient.view().targets())) rebuildWidgets();
         updateButtons();
@@ -103,5 +103,7 @@ public final class ResurrectPickerScreen extends Screen {
         super.render(g, mx, my, partialTick);
     }
     @Override public boolean isPauseScreen() { return false; }
-    @Override public void onClose() { minecraft.setScreen(current() ? parent : null); }
+    @Override public void onClose() {
+        if(current())InventoryModalContext.restore(parent);else InventoryModalContext.dismiss(parent);
+    }
 }

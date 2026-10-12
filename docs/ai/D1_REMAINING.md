@@ -1,22 +1,24 @@
 # Current plan, 2026-10-12
 
 [1.7 Alpha / 1.8 Beta batch plan](tasks/ALPHA_1_7_BATCH_PLAN_20261010.md).
-**20 planned batches: 19 Alphas, then1.8.0 Beta.**
-Batches1-18 completed. Batch18 source6a417bcb690b151b395c2eef89c17a215aedf163,
-PR263, full CI38198723421 and publisher38198993561 succeeded; CurseForge9141731/helper9141730.
-Batch19 integrates the responsive H interface and current player guide as1.7.19-alpha.1.
-[Batch19 report](tasks/BATCH_1_7_19_20261012.md); its controller receipt records exact final source, CI and publication evidence after completion.
-One later card remains:20 final1.8.0 Beta audit, requirement/evidence reconciliation, and licensed acceptance follow-up.
-Stop after Batch19. Licensed native UI/co-op acceptance remains TESTING.
+Batches1-19 completed. Exact Batch19 source b8c9aa48d9f4c489097d84470aa9bea10bb05ef5,
+CI38201815436, publisher38202005228, CurseForge9141993/helper9141991.
+**Batch20 active; no later implementation cards are authorized.**
 
-Alpha finishes at CurseForge without server delivery or server-state checks.
-Only Beta/official builds receive stopped TEST sFTP. No local-client installs
-or additional postpublication hashes.
-Authoritative receipts: CosmicDungeon_AI/BatchRunner/series-1.7/receipts/batch-01.json
-through batch-19.json after completion. The previous15-26 controller is COMPLETE.
-Earlier immutable batch reports/receipts preserve every failed test and correction.
-Batch20 consolidates original requirements, evidence, recommendations, failures and TODOs.
-Current channel policy supersedes the historical rollout notes below.
+The final actual-code/review audit found required corrections. Card20 therefore returns through
+unique corrective1.7.20-alpha.1 before merged-main1.8.0-beta.1.
+[Full audit/report](tasks/BATCH_1_7_20_20261012.md),
+[all recommendations and Codex notes](tasks/BATCH_1_7_20_REVIEW_NOTES_20261012.md),
+[requirements/evidence/manual matrix](tasks/BATCH_1_7_20_REQUIREMENTS_20261012.md).
+Blocking defects or failed required tests block Beta. Final exact release/delivery evidence is recorded
+in series-1.7/receipts/batch-20.json only after completion.
+
+Alpha ends at runtime/companion publication without TEST I/O.
+Beta requires stopped TEST sFTP runtime delivery. No local-client installs, restarts,
+server.properties writes or extra postpublication hashes. Licensed native GUI/co-op/world acceptance
+remains TESTING; stable requires a separate decision after Beta acceptance.
+One active card remains until the controller completes20; then0. Stop at20.
+The previous15-26 controller remains COMPLETE; historical notes below are preserved.
 
 ---
 

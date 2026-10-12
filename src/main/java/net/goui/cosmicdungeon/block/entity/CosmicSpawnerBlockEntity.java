@@ -216,10 +216,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         @Override
         protected void setNextSpawnData(@Nullable Level level, BlockPos pos, SpawnData nextSpawnData) {
             // Decorate each selected potential without discarding authored NBT or equipment.
-            var tagged = CosmicSpawnDataRules.tagged(nextSpawnData.getEntityToSpawn(),
-                    oneShotSpawnTag(), configuredSpawnEntity());
-            currentSpawnData = forceFullBrightRules(new SpawnData(tagged,
-                    nextSpawnData.getCustomSpawnRules(), nextSpawnData.getEquipment()));
+            currentSpawnData = selectedSpawnData(nextSpawnData);
             super.setNextSpawnData(level, pos, currentSpawnData);
             boolean malformed = !CosmicSpawnDataRules.canTag(currentSpawnData.getEntityToSpawn());
             if (malformed && !warnedMalformedTags)
@@ -235,6 +232,12 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         super(ModBlockEntities.COSMIC_SPAWNER.get(), pos, state);
     }
 
+    /** Exact detached representation used for each native weighted selection and editor conflict comparison. */
+    public SpawnData selectedSpawnData(SpawnData source) {
+        var tagged = CosmicSpawnDataRules.tagged(source.getEntityToSpawn(), oneShotSpawnTag(), configuredSpawnEntity());
+        return forceFullBrightRules(new SpawnData(tagged, source.getCustomSpawnRules(), source.getEquipment()));
+    }
+
     public BaseSpawner getSpawner() {
         return this.spawner;
     }
@@ -248,7 +251,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     }
 
     public String getSpawnerDisplayEntityId() {
-        return this.spawnerPreset != null ? this.spawnerPreset.getDisplayEntityTypeId().toString() : spawnerEntityId;
+        return this.spawnerPreset != null && !this.spawnerPreset.isFutureVersion() ? this.spawnerPreset.getDisplayEntityTypeId().toString() : spawnerEntityId;
     }
 
     public String getSpawnerDisplayMobName() {
@@ -629,7 +632,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     }
 
     private String configuredSpawnEntity() {
-        ResourceLocation id = this.spawnerPreset != null
+        ResourceLocation id = this.spawnerPreset != null && !this.spawnerPreset.isFutureVersion()
                 ? this.spawnerPreset.getEntityTypeId() : ResourceLocation.tryParse(this.spawnerEntityId);
         return id == null || "none".equals(this.spawnerEntityId) ? null : id.toString();
     }
@@ -778,9 +781,12 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
 
     private void setSpawnerPresetInternal(CosmicSpawnerPreset preset) {
         this.spawnerPreset = preset;
-        this.spawnerEntityId = preset.getEntityTypeId().toString();
-        if (this.level != null) {
-            BuiltInRegistries.ENTITY_TYPE.getOptional(preset.getEntityTypeId()).ifPresent(type -> this.spawner.setEntityId(type, this.level, this.level.getRandom(), this.worldPosition));
+        // A future preset may encode entity identity differently; keep the separately saved native identity.
+        if (!preset.isFutureVersion()) {
+            this.spawnerEntityId = preset.getEntityTypeId().toString();
+            if (this.level != null) {
+                BuiltInRegistries.ENTITY_TYPE.getOptional(preset.getEntityTypeId()).ifPresent(type -> this.spawner.setEntityId(type, this.level, this.level.getRandom(), this.worldPosition));
+            }
         }
         this.clientSpawnerDirty = true;
         invalidatePreviewEntityCache();

@@ -17,7 +17,7 @@ Java 21 · Minecraft 1.21.10 · NeoForge. Follow Cameron's latest instructions; 
 - Fetch before pushing; verify ancestry and exact remote branch SHA afterward. No direct-main/force push or overwriting divergent work. Same-task fixes stay on the task branch.
 - Standing authorization covers validated completed-set PR merges and configured CurseForge publication. Unfinished sets remain on chained task branches. Never merge artifact-only test-builds.
 - Consolidate source, task notes and release notes before the final build/commit where possible. Keep exact changed-file list, evidence and manual steps in one task report/receipt; summarize in chat with commit/PR, validation, deployment and real blockers. Report unsynced/uncommitted work honestly.
-- Keep docs/ai/D1_REMAINING.md current. At final handoff give remaining batch count and short remaining-card summaries. Pending licensed QA is TESTING, not a question. Distinguish built, reviewed, published, deployed and actually played; propose at most one useful future improvement.
+- Keep docs/ai/D1_REMAINING.md current. At final handoff give remaining batch count and short remaining-card summaries. Pending licensed QA is TESTING, not a question. Distinguish built, reviewed, published, deployed and actually played. For every Git push, report all recommendations and every unimplemented Codex review note, with priority, source/commit and disposition; explicitly state when none remain. Do not truncate the ledger to one recommendation.
 
 ## Gameplay, authored content and compatibility
 

@@ -224,6 +224,7 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Hold Raw Farrow's Chop at a lit campfire; the default cooking time is four seconds."),
             HelpBlock.bullet("Cook Raw Farrow's Chop inside your active dungeon to remember your exact location and travel to Main Village; eat the bound chop to return."),
             HelpBlock.bullet("You may own one Chop at a time. Its return campfire must still exist."),
+            HelpBlock.bullet("A Chop trade must respect the one-Chop limit. To trade a bound return Chop, the recipient needs their own stored inventory in that same active dungeon; a trade never transfers another player's inventory."),
             HelpBlock.examples("food"),
             HelpBlock.tip("Only use teleport options offered by the dungeon, a potion, visible in-world travel structures, or Farrow's Chop.")));
 

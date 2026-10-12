@@ -203,6 +203,13 @@ public final class PotionCraftingGameTests {
         try(var f=new Fixture(h,Long.MAX_VALUE-3201)) {
             var server=f.level.getServer();String healing="minecraft:healing_splash";
             f.clear();f.healing(0,2);f.healing(1,2);var donorBefore=f.inventory(1);
+            var bottle=f.p(0).getInventory().getItem(0);
+            f.check(bottle.is(Items.POTION),"Metadata fixture selects the exact water bottle slot");
+            bottle.set(DataComponents.CUSTOM_NAME,Component.literal("Keep this bottle's name"));
+            net.minecraft.world.item.component.CustomData.update(DataComponents.CUSTOM_DATA,bottle,t->t.putString("future_bottle","preserved"));
+            var bottleData=bottle.get(DataComponents.CUSTOM_DATA);
+            f.p(0).getInventory().getItem(1).set(DataComponents.CUSTOM_NAME,bottle.get(DataComponents.CUSTOM_NAME));
+            f.p(0).getInventory().getItem(1).set(DataComponents.CUSTOM_DATA,bottleData);
             var offer=PotionCrafting.quote(f.p(0),f.run,healing);
             f.check(offer.own()==2&&offer.fuel().charges()==0&&offer.fuel().capacity()==20&&offer.steps()==3&&offer.powders()==1,
                     "Two complete own water recipes expose exact three-step fuel cost");
@@ -210,6 +217,9 @@ public final class PotionCraftingGameTests {
             f.check(own!=null&&own.owners().equals(List.of(f.p(0).getUUID()))&&own.hasFuel(),
                     "A complete own route is selected before any group material");
             f.check(PotionCrafting.craft(f.p(0),f.run,healing),"First native instant Healing craft succeeds");
+            var crafted=ChopTravelRecovery.inventory(f.p(0)).stream().filter(s->s.is(Items.SPLASH_POTION)).findFirst().orElseThrow();
+            f.check(crafted.getHoverName().getString().equals("Keep this bottle's name")&&bottleData.equals(crafted.get(DataComponents.CUSTOM_DATA)),
+                    "Durable craft projects selected input bottle metadata into actual output");
             f.check(f.charges(0)==17&&f.revision(0)==1&&f.count(0,Items.BLAZE_POWDER)==0&&f.products()==1,
                     "One powder supplies twenty steps and first full route preserves seventeen charges");
             f.check(f.count(0,Items.NETHER_WART)==1&&f.count(0,Items.GLISTERING_MELON_SLICE)==1&&f.count(0,Items.GUNPOWDER)==1

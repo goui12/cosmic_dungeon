@@ -48,6 +48,10 @@ public final class TradeItemTransfer {
             CustomData.update(DataComponents.CUSTOM_DATA, stack,
                     tag -> tag.putString(ClassItemOwnership.KEY, recipient.toString()));
         if (stack.has(ModDataComponents.CHOP_OWNER.get())) stack.set(ModDataComponents.CHOP_OWNER.get(), recipient);
+        var target=stack.get(ModDataComponents.DUNGEON_RETURN_TARGET.get());
+        if (stack.has(ModDataComponents.CHOP_OWNER.get()) && target!=null)
+            stack.set(ModDataComponents.DUNGEON_RETURN_TARGET.get(),new net.goui.cosmicdungeon.dungeon.DungeonReturnTarget(
+                    recipient,target.runId(),target.dimensionId(),target.x(),target.y(),target.z(),target.yaw(),target.pitch()));
         var bundle = stack.get(DataComponents.BUNDLE_CONTENTS);
         if (bundle != null) {
             var items = bundle.itemCopyStream().map(item -> copy(item, recipient, depth + 1, budget)).toList();

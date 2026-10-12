@@ -25,3 +25,5 @@ Beatrix's Campfire uses the vanilla campfire block entity through NeoForge block
 ## Beatrix vendor availability
 
 Beatrix Farrow now has the live D1 vendor profile `cosmicdungeon:d1/food_vendor`. It sells Raw Farrow's Chop and Farrow's Chop for 2 Crowns each with a one-purchase-per-player cap, plus Beatrix's Campfire for 5 Trace and ordinary raw foods for camp preparation.
+
+Chop trades transfer the personal ownership record with the item. Each recipient must still satisfy the one-Chop limit; offer an existing Chop in the same exchange if necessary. A bound return Chop requires the recipient's own stored inventory in that active run. Trades never transfer another player's stored inventory, grant run membership, or bypass the return destination checks. If these conditions fail, the trade cancels and returns its original offers.

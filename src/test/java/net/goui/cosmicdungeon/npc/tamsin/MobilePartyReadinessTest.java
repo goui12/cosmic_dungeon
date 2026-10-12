@@ -16,6 +16,7 @@ final class MobilePartyReadinessTest {
         return lobby;
     }
     private void readyBoth(D1PartyLobby lobby) {
+        D1PartyTestSupport.consentAll(lobby,leader);
         assertNull(lobby.begin(leader, lobby.revision(leader), Map.of(leader, "bogatyr", member, "pyroclast")));
         long revision = lobby.revision(leader);
         assertNull(lobby.ready(leader, revision));
@@ -101,6 +102,7 @@ final class MobilePartyReadinessTest {
 
     @Test void leaderReadyKeepsMenuAndStillRequiresAnExplicitAuthorizedStart() {
         var lobby = pair(); var party = lobby.party(leader);
+        D1PartyTestSupport.consentAll(lobby,leader);
         assertNull(lobby.begin(leader, party.revision(), Map.of(leader, "bogatyr", member, "theurgist")));
         String error = lobby.ready(leader, party.revision());
         assertNull(error);

@@ -44,7 +44,7 @@ public final class SpawnerEditorService {
         return level.getBlockEntity(pos) instanceof CosmicSpawnerBlockEntity be?be:null;
     }
     private static Session create(ServerPlayer p,CosmicSpawnerBlockEntity be,CompoundTag data,CompoundTag baseline,boolean loaded){
-        SpawnerPresetFileStore.validate(data);
+        if(loaded)SpawnerPresetFileStore.validate(data);else SpawnerPresetFileStore.validateEditorSnapshot(data);
         var detached=new CosmicSpawnerBlockEntity(be.getBlockPos(),be.getBlockState());
         detached.loadWithComponents(TagValueInput.create(ProblemReporter.DISCARDING,p.registryAccess(),data));
         var s=new Session();s.be=be;s.draft=SpawnerEditorConfig.read(detached,data);s.baseline=baseline;s.working=data.copy();s.loaded=loaded;
@@ -58,7 +58,7 @@ public final class SpawnerEditorService {
         var be=target(player);
         if(be==null){player.displayClientMessage(Component.literal("Look at a Cosmic Spawner within5 blocks as a Developer."),false);return 0;}
         try{
-            var saved=be.saveWithoutMetadata(player.registryAccess());var s=create(player,be,saved,SpawnerEditorConfig.comparable(saved),false);
+            var saved=be.saveWithoutMetadata(player.registryAccess());var s=create(player,be,saved,SpawnerEditorConfig.comparable(saved,be),false);
             String note="";try{s.names=SpawnerPresetFileStore.listPresetNames(player.level().getServer());}catch(Exception ex){note="Preset library: "+message(ex);}
             SESSIONS.put(player,s);send(player,s,Status.OPEN,note);return 1;
         }catch(Exception ex){player.displayClientMessage(Component.literal("Editor read-only: "+message(ex)),false);return 0;}
@@ -71,7 +71,7 @@ public final class SpawnerEditorService {
     private static CompoundTag current(ServerPlayer player,Session s){
         if(!valid(player,s)||target(player)!=s.be)throw new IllegalStateException("Target or Developer access changed. Reopen /spawner edit.");
         var current=s.be.saveWithoutMetadata(player.registryAccess());
-        if(!s.baseline.equals(SpawnerEditorConfig.comparable(current)))throw new IllegalStateException("Spawner changed during editing. Reopen to review its current configuration.");
+        if(!s.baseline.equals(SpawnerEditorConfig.comparable(current,s.be)))throw new IllegalStateException("Spawner changed during editing. Reopen to review its current configuration.");
         return current;
     }
     private static CompoundTag build(ServerPlayer player,Session s,SpawnerEditorDraft draft,SpawnerEquipmentDraft equipment,SpawnerLootDraft loot){

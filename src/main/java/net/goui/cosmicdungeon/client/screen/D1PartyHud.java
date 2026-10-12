@@ -35,7 +35,7 @@ public final class D1PartyHud {
     private static void promptConsent() {
         var mc = Minecraft.getInstance();
         if (!D1PartyPresentation.needsConsent(view) || mc.player == null
-                || mc.player.containerMenu != mc.player.inventoryMenu || !mc.player.isAlive()
+                || !InventoryModalContext.current(mc.screen, mc.player) || !mc.player.isAlive()
                 || !(mc.screen == null || inventory(mc.screen))
                 || promptedContext.equals(view.sharing().context())) return;
         promptedContext = view.sharing().context();

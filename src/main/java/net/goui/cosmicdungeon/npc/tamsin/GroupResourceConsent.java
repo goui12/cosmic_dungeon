@@ -11,6 +11,11 @@ import net.minecraft.server.level.ServerPlayer;
 public final class GroupResourceConsent {
     private static final String KEY="resource_sharing_v1:";
     private GroupResourceConsent() {}
+    public static boolean inventoryContext(ServerPlayer player) {
+        return player.containerMenu == player.inventoryMenu
+                || player.containerMenu instanceof net.goui.cosmicdungeon.playerclass.api.ExtraInventoryMenu
+                && player.containerMenu.stillValid(player);
+    }
     public static String choice(D1RunData data,long run,UUID member) {
         var values=data.values(run,KEY+member);
         return values.size()==1 && Set.of("YES","NO").contains(values.getFirst()) ? values.getFirst() : "UNKNOWN";
@@ -55,7 +60,7 @@ public final class GroupResourceConsent {
     /** Live execution guard, never a cached authorization; distance within the run is irrelevant. */
     public static boolean canContribute(ServerPlayer requester,ServerPlayer donor,long expectedRun) {
         var run=active(requester);
-        var donorRun=online(donor)?DungeonRunRegistryData.get(donor.level().getServer()).findRunForPlayer(donor.getUUID()).orElse(null):null;
+        var donorRun=active(donor);
         return run!=null&&donorRun!=null&&run.runId()==expectedRun&&donorRun.runId()==expectedRun
                 &&donorRun.stateEnum()==DungeonRunState.ACTIVE&&!donorRun.isCompletionExited(donor.getUUID())
                 &&!D1RunData.get(donor.level().getServer()).sealed(expectedRun)

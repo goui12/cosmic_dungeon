@@ -90,4 +90,19 @@ class SpawnerPresetFileStoreTest {
 """);var before=Files.readAllBytes(path);
         assertThrows(IllegalArgumentException.class,()->SpawnerPresetFileStore.writeFile(path,config(),true));assertArrayEquals(before,Files.readAllBytes(path));
     }
+
+    @Test void onlyEditorOpeningAcceptsExactUnconfiguredSentinel(){
+        var t=config();t.putString("SpawnerEntityId","none");var before=t.copy();
+        assertDoesNotThrow(()->SpawnerPresetFileStore.validateEditorSnapshot(t));
+        assertEquals(before,t,"Opening validation must not fabricate an entity or mutate data");
+        assertThrows(IllegalArgumentException.class,()->SpawnerPresetFileStore.validate(t));
+        assertThrows(IllegalArgumentException.class,()->SpawnerPresetFileStore.decode(SpawnerPresetFileStore.encode(t,new JsonObject())));
+        t.putString("SpawnerEntityId","missing:mob");
+        assertThrows(IllegalArgumentException.class,()->SpawnerPresetFileStore.validateEditorSnapshot(t));
+        t.putString("SpawnerEntityId","none");t.putInt("MinSpawnDelay",0);
+        assertThrows(IllegalArgumentException.class,()->SpawnerPresetFileStore.validateEditorSnapshot(t));
+        t.putInt("MinSpawnDelay",80);var future=new CompoundTag();future.putInt("presetVersion",999);t.put("SpawnerPreset",future);
+        assertThrows(IllegalArgumentException.class,()->SpawnerPresetFileStore.validateEditorSnapshot(t));
+    }
+
 }

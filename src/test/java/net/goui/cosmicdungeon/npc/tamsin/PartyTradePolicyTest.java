@@ -9,6 +9,7 @@ final class PartyTradePolicyTest {
         assertTrue(D1PartyTrades.allowed(null));
         assertNull(lobby.create(leader,anchor,0,"Test",1));var party=lobby.party(leader);
         assertTrue(D1PartyTrades.allowed(party));
+        D1PartyTestSupport.consentAll(lobby,leader);
         assertNull(lobby.begin(leader,party.revision(),Map.of(leader,"bogatyr")));
         assertTrue(D1PartyTrades.allowed(party));
         long revision=party.revision();

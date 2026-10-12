@@ -26,12 +26,24 @@ final class GroupResourceConsentTest {
     @Test void staleRevisionWrongPartyAndOutsiderCannotChangeChoices() {
         var p=create();long old=p.revision();
         assertNull(lobby.resourceSharing(leader,old,p.id().toString(),true));
+        join(); // A roster change, unlike an independent personal answer, invalidates old snapshots.
         assertNotNull(lobby.resourceSharing(leader,old,p.id().toString(),false));
         assertNotNull(lobby.resourceSharing(leader,p.revision(),UUID.randomUUID().toString(),false));
-        assertNotNull(lobby.resourceSharing(member,p.revision(),p.id().toString(),true));
+        assertNotNull(lobby.resourceSharing(UUID.randomUUID(),p.revision(),p.id().toString(),true));
         assertEquals("YES",p.resourceSharing(leader));
         assertNull(lobby.resourceSharing(leader,p.revision(),p.id().toString(),false));
         assertEquals("NO",p.resourceSharing(leader));
+    }
+    @Test void unknownBlocksProgressionAndConcurrentPersonalChoicesShareRosterRevision() {
+        var p=create();join();var classes=Map.of(leader,"bogatyr",member,"theurgist");
+        assertNotNull(lobby.begin(leader,p.revision(),classes));
+        long revision=p.revision();
+        assertNull(lobby.resourceSharing(leader,revision,p.id().toString(),false));
+        assertNotNull(lobby.begin(leader,revision,classes));
+        assertNull(lobby.resourceSharing(member,revision,p.id().toString(),true));
+        assertEquals(revision,p.revision());
+        assertEquals("NO",p.resourceSharing(leader));assertEquals("YES",p.resourceSharing(member));
+        assertNull(lobby.begin(leader,revision,classes));
     }
     @Test void readinessReconfigurationKeepsExplicitChoiceButPreparationLocksIt() {
         var p=create();assertNull(lobby.resourceSharing(leader,p.revision(),p.id().toString(),false));

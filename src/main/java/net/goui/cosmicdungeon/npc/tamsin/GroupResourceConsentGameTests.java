@@ -78,6 +78,12 @@ public final class GroupResourceConsentGameTests {
             f.check(GroupResourceConsent.choose(f.subject,f.id,Long.toString(f.id),true)==null,"Personal YES accepted");
             f.subject.setPos(f.viewer.position().add(500,0,0));
             f.check(GroupResourceConsent.canContribute(f.viewer,f.subject,f.id),"Same-run consenting donor works at any distance");
+            var outside=f.level.getServer().getLevel(net.minecraft.world.level.Level.NETHER);
+            f.check(outside!=null&&!f.run.containsDimension(outside.dimension()),"Outside dimension fixture is distinct");
+            f.subject.setServerLevel(outside);
+            f.check(!GroupResourceConsent.canContribute(f.viewer,f.subject,f.id),"Roster membership does not authorize outside-run inventory");
+            f.subject.setServerLevel(f.level);
+            f.check(GroupResourceConsent.canContribute(f.viewer,f.subject,f.id),"Reentering authorized run restores live eligibility");
             f.check(!GroupResourceConsent.canContribute(f.viewer,f.subject,f.id-1),"Stale run cannot authorize a debit");
             f.check(GroupResourceConsent.choose(f.subject,f.id,"stale-group",false)!=null,"Wrong context cannot mutate choice");
             f.check(GroupResourceConsent.choose(f.subject,f.id-1,Long.toString(f.id),false)!=null,"Wrong revision cannot mutate choice");
@@ -98,7 +104,9 @@ public final class GroupResourceConsentGameTests {
             f.check(GroupResourceConsent.choose(f.subject,f.id,Long.toString(f.id),false)==null,"Personal NO accepted");
             f.check(!GroupResourceConsent.canContribute(f.viewer,f.subject,f.id),"Opt-out revokes authorization immediately");
             f.check(f.data.values(f.id,key).equals(List.of("NO")),"Only subject choice was written");
+            f.viewer.containerMenu=new net.goui.cosmicdungeon.playerclass.api.ExtraInventoryMenu(51,f.viewer.getInventory());
             D1PartyService.action(f.viewer,new PartyPayloads.Action(-1,f.id,"resources_yes",Long.toString(f.id)));
+            f.viewer.containerMenu=f.viewer.inventoryMenu;
             f.check(GroupResourceConsent.choice(f.data,f.id,f.viewer.getUUID()).equals("YES"),"HUD packet route updates only sender");
             f.check(GroupResourceConsent.choice(f.data,f.id,f.subject.getUUID()).equals("NO"),"Sender cannot toggle another member");
         }

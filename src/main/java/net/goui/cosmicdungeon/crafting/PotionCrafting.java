@@ -61,7 +61,7 @@ public final class PotionCrafting {
         if (choice.fuel().powders() > 0) ingredients.merge(Items.BLAZE_POWDER, choice.fuel().powders(), Integer::sum);
         ingredients.forEach((item, count) -> requirements.add(new SharedCrafting.Requirement(PotionRecipeSelection.itemKey(item), count, stack -> stack.is(item))));
         var output = PotionStacks.crafted(PotionContents.createItemStack(target.container(), target.potion()));
-        return new SharedCrafting.Recipe(target.id(), output.getHoverName().getString(), target.classes(), requirements, output, BrewingFuel.plan(fuel, route.steps()), cursor);
+        return new SharedCrafting.Recipe(target.id(), output.getHoverName().getString(), target.classes(), requirements, output, BrewingFuel.plan(fuel, route.steps()), cursor, PotionRecipeSelection.inputKey(route));
     }
     static SharedCraftPlan prepare(ServerPlayer player, long expected, String targetId) {
         var recipe = recipe(player, expected, targetId, false); return recipe == null ? null : SharedCrafting.prepare(player, expected, recipe);

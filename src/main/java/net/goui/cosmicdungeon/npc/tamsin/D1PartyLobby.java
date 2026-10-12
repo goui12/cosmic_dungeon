@@ -163,13 +163,16 @@ public final class D1PartyLobby {
         if(p==null||!current(member,expected)||!p.id.toString().equals(context)||p.phase==Phase.PREPARING)
             return "Group changed; review your resource choice.";
         String choice=enabled?"YES":"NO";
-        if(!choice.equals(p.resourceSharing.put(member,choice)))changed(p);
+        // Personal choices do not invalidate another member's same-roster choice packet.
+        p.resourceSharing.put(member,choice);
         return null;
     }
     public String begin(UUID leader, long expected, Map<UUID, String> classes) {
         var p = party(leader);
         if (p == null || !p.leader.equals(leader)) return "Only the group leader can begin readiness.";
         if (!current(leader, expected) || p.phase != Phase.ASSEMBLY) return "Group changed; refresh before readying.";
+        if (p.members.stream().anyMatch(id -> p.resourceSharing(id).equals("UNKNOWN")))
+            return "Every member must choose YES or NO for group resources first.";
         if (!D1PartyRules.fits(p.occupied(), p.capacity))
             return "The group must fit this selector's party limits.";
         if (!classes.keySet().equals(p.members) || classes.values().stream().anyMatch(c -> c == null || c.isBlank() || c.equals("none")))
@@ -220,12 +223,15 @@ public final class D1PartyLobby {
     public String ready(UUID player, long expected) {
         var p = party(player);
         if (p == null || !current(player, expected) || p.phase != Phase.READY_CHECK) return "Wait for your leader's ready check.";
+        if (p.resourceSharing(player).equals("UNKNOWN")) return "Choose YES or NO for group resources first.";
         p.ready.add(player); // Same ready-check revision permits simultaneous confirmations; duplicates are idempotent.
         return null;
     }
     public String queueProblem(UUID leader, long expected) {
         var p = party(leader);
         if (p == null || !p.leader.equals(leader)) return "Only the group leader can submit the queue.";
+        if (p.members.stream().anyMatch(id -> p.resourceSharing(id).equals("UNKNOWN")))
+            return "Every member must choose YES or NO for group resources first.";
         if (!current(leader, expected) || p.phase != Phase.READY_CHECK || !p.ready.equals(p.members))
             return "Every member must confirm ready first.";
         return null;

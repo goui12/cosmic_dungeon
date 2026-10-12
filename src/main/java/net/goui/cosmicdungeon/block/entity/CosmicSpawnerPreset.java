@@ -37,6 +37,9 @@ public final class CosmicSpawnerPreset {
     private Component customName; private boolean illagerCaptainVariant;
     private int savedVersion = PRESET_VERSION, equipmentMask = 63, dropMask = 63;
     private net.minecraft.nbt.CompoundTag unknown = new net.minecraft.nbt.CompoundTag();
+    // Unsupported schemas are opaque: no v5 field coercion may change their next chunk save.
+    private net.minecraft.nbt.CompoundTag futurePayload;
+    public boolean isFutureVersion() { return futurePayload != null; }
     private net.minecraft.nbt.CompoundTag entityFlags = new net.minecraft.nbt.CompoundTag();
     private final Map<String,net.minecraft.nbt.CompoundTag> unknownRules = new HashMap<>();
     private final Map<String,net.minecraft.nbt.CompoundTag> rawRules = new HashMap<>();
@@ -128,6 +131,7 @@ public final class CosmicSpawnerPreset {
     private static float clampChance(float chance) { return Math.max(0f, Math.min(1f, chance)); }
 
     public void save(ValueOutput out){
+        if (futurePayload != null) { SpawnerTagFields.write(futurePayload, out); return; }
         SpawnerTagFields.write(unknown,out);
         out.putBoolean("nameOverride",nameOverride);out.putBoolean("captainOverride",captainOverride);out.putBoolean("intrinsicDropsOverride",intrinsicDropsOverride);
         out.putInt("equipmentMask",equipmentMask);out.putInt("dropMask",dropMask);
@@ -160,6 +164,11 @@ public final class CosmicSpawnerPreset {
     public static CosmicSpawnerPreset load(ValueInput in){
         CosmicSpawnerPreset p=new CosmicSpawnerPreset();
         int presetVersion = in.getIntOr("presetVersion", LEGACY_1_5_0_PRESET_VERSION);
+        if (presetVersion > PRESET_VERSION) {
+            p.savedVersion = presetVersion;
+            p.futurePayload = SpawnerTagFields.unknown(in, java.util.Set.of());
+            return p;
+        }
         if (presetVersion < PRESET_VERSION) {
             LOGGER.info("Upgrading Cosmic Spawner preset data from version {} to {}", presetVersion, PRESET_VERSION);
         }
@@ -224,6 +233,7 @@ public final class CosmicSpawnerPreset {
     }
 
     public void applyToEntity(Entity entity) {
+        if (futurePayload != null) return; // Unknown semantics must not clear or replace authored mob data.
         if(intrinsicDropsOverride) CosmicSpawnerEntityIntrinsicDropData.write(entity, intrinsicDropRules);
         if (customName != null || nameOverride) entity.setCustomName(customName);
 

@@ -14,6 +14,20 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /** New outputs are stackable; authored inventory inputs remain immutable. */
 class PotionStacksTest {
+    @Test void brewingPreservesChosenBottleMetadataOnDetachedOutput() {
+        var source=PotionContents.createItemStack(Items.POTION,Potions.AWKWARD);
+        source.set(DataComponents.CUSTOM_NAME,Component.literal("Authored bottle"));
+        CustomData.update(DataComponents.CUSTOM_DATA,source,t->t.putString("future","retain"));
+        var before=source.copy();
+        var output=PotionStacks.brewed(source,healing());
+        assertTrue(ItemStack.matches(source,before));
+        assertTrue(output.is(Items.SPLASH_POTION));
+        assertEquals(new PotionContents(Potions.HEALING),output.get(DataComponents.POTION_CONTENTS));
+        assertEquals(source.get(DataComponents.CUSTOM_NAME),output.get(DataComponents.CUSTOM_NAME));
+        assertEquals(source.get(DataComponents.CUSTOM_DATA),output.get(DataComponents.CUSTOM_DATA));
+        assertEquals(64,output.getMaxStackSize());
+        assertNull(PotionOutputPlacement.cursor(healing(),output));
+    }
     private static ItemStack healing() {
         return PotionStacks.crafted(PotionContents.createItemStack(Items.SPLASH_POTION,Potions.HEALING));
     }

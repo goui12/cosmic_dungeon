@@ -107,4 +107,45 @@ class SpawnerEditorPreservationTest {
         assertFalse(new SpawnerEditorDraft("minecraft:zombie","",true,false,0,200,800,false,false,false,false,false).error().isEmpty());
         assertFalse(new SpawnerEditorDraft("minecraft:zombie","",false,false,0,801,800,false,false,false,false,false).error().isEmpty());
     }
+
+    @Test void futurePresetIsOpaqueIncludingKnownFieldsWithNewShapes(){
+        var b=be();var tag=b.saveWithoutMetadata(lookup());tag.putString("SpawnerEntityId","minecraft:skeleton");
+        var future=new CompoundTag();future.putInt("presetVersion",CosmicSpawnerPreset.PRESET_VERSION+1);
+        future.putInt("equipmentMask",511);future.putInt("dropMask",65535);
+        var futureIdentity=new CompoundTag();futureIdentity.putLong("futureId",912L);future.put("entityType",futureIdentity);
+        future.putString("eq_mainhand","future component reference");future.putLongArray("customName",new long[]{8L,Long.MAX_VALUE});
+        future.putByteArray("futureOpaque",new byte[]{-1,0,9});future.putString("intrinsicDropRules","future rule format");
+        tag.put("SpawnerPreset",future.copy());load(b,tag);
+        assertTrue(b.getSpawnerPreset().isFutureVersion());
+        var round=b.saveWithoutMetadata(lookup());
+        assertEquals(future,round.getCompoundOrEmpty("SpawnerPreset"),"Future known fields and their exact NBT types must not be normalized");
+        assertEquals("minecraft:skeleton",round.getStringOr("SpawnerEntityId",""),"Future identity shape cannot overwrite independently saved identity");
+        load(b,round);assertEquals(future,b.saveWithoutMetadata(lookup()).getCompoundOrEmpty("SpawnerPreset"));
+        assertThrows(IllegalArgumentException.class,()->net.goui.cosmicdungeon.command.SpawnerPresetFileStore.validateEditorSnapshot(round));
+    }
+    private static CompoundTag spawnChoice(String marker){
+        var entity=new CompoundTag();entity.putString("id","minecraft:zombie");entity.putString("AuthoredVariant",marker);
+        var spawn=new CompoundTag();spawn.put("entity",entity);return spawn;
+    }
+    @Test void weightedRotationIsIgnoredButAuthoredPotentialAndSelectedEditsConflict(){
+        var b=be();b.setSpawnerEntityId("minecraft:zombie");var source=b.saveWithoutMetadata(lookup());
+        var first=spawnChoice("first");var second=spawnChoice("second");var choices=new ListTag();
+        for(var spawn:java.util.List.of(first,second)){
+            var row=new CompoundTag();row.putInt("weight",3);row.put("data",spawn.copy());choices.add(row);
+        }
+        source.put("SpawnPotentials",choices);source.put("SpawnData",first);load(b,source);
+        var original=b.saveWithoutMetadata(lookup());var baseline=SpawnerEditorConfig.comparable(original,b);
+        var next=original.copy();next.put("SpawnData",second);load(b,next);var rotated=b.saveWithoutMetadata(lookup());
+        assertEquals(baseline,SpawnerEditorConfig.comparable(rotated,b),"Native decorated weighted selection is runtime state");
+        assertNotEquals(original.get("SpawnData"),rotated.get("SpawnData"));
+        assertEquals(original.get("SpawnPotentials"),rotated.get("SpawnPotentials"));
+        var weight=rotated.copy();((CompoundTag)((ListTag)weight.get("SpawnPotentials")).get(0)).putInt("weight",4);
+        assertNotEquals(baseline,SpawnerEditorConfig.comparable(weight,b),"Authored weights remain a conflict");
+        var authored=rotated.copy();authored.getCompoundOrEmpty("SpawnData").getCompoundOrEmpty("entity").putString("AuthoredVariant","external edit");
+        assertNotEquals(baseline,SpawnerEditorConfig.comparable(authored,b),"A non-potential selected edit cannot be hidden");
+        var unknown=rotated.copy();unknown.putLong("FutureRoot",15);
+        assertNotEquals(baseline,SpawnerEditorConfig.comparable(unknown,b),"Unknown root authoring is also a conflict");
+        assertEquals(original.get("SpawnPotentials"),choices,"Comparison must not mutate authored alternatives");
+    }
+
 }

@@ -26,7 +26,24 @@ public final class SpawnerEditorConfig {
         return f.getBoolean(k).orElseGet(()->e.getBooleanOr(k,fallback));
     }
     public static CompoundTag comparable(CompoundTag source){
-        var result=source.copy();result.remove("Delay");result.remove("CosmicSpawnBlocked");return result;
+        return comparable(source, null);
+    }
+    public static CompoundTag comparable(CompoundTag source,CosmicSpawnerBlockEntity owner){
+        var result=source.copy();result.remove("Delay");result.remove("CosmicSpawnBlocked");
+        // Ignore only a current value provably produced by selecting an unchanged authored potential.
+        // Arbitrary SpawnData edits, all potentials/weights, presets, unknown fields and limits remain conflicts.
+        if(owner!=null&&source.get("SpawnData") instanceof CompoundTag selected
+                &&source.get("SpawnPotentials") instanceof net.minecraft.nbt.ListTag choices){
+            for(var value:choices){
+                if(!(value instanceof CompoundTag row)||!(row.get("data") instanceof CompoundTag data))continue;
+                var decoded=net.minecraft.world.level.SpawnData.CODEC.parse(net.minecraft.nbt.NbtOps.INSTANCE,data).result();
+                if(decoded.isEmpty())continue;
+                var encoded=net.minecraft.world.level.SpawnData.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE,
+                        owner.selectedSpawnData(decoded.get())).result();
+                if(encoded.isPresent()&&selected.equals(encoded.get())){result.remove("SpawnData");break;}
+            }
+        }
+        return result;
     }
     public static CompoundTag patch(CompoundTag source,SpawnerEditorDraft before,SpawnerEditorDraft after){
         if(!after.error().isEmpty())throw new IllegalArgumentException(after.error());

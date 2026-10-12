@@ -52,6 +52,7 @@ final class MercenaryEntryTest {
     @Test void changingHireClearsReadinessAndDepartureReleasesOnlyOwnHire(){
         var l=lobby(6);join(l,b);var p=l.party(a);
         assertNull(l.hire(a,p.revision(),"bogatyr"));assertNull(l.hire(b,p.revision(),"theurgist"));
+        for(var id:p.members())assertNull(l.resourceSharing(id,p.revision(),p.id().toString(),false));
         assertNull(l.begin(a,p.revision(),Map.of(a,"bogatyr",b,"theurgist")));assertNull(l.ready(a,p.revision()));
         assertNull(l.hire(b,p.revision(),""));assertTrue(p.ready().isEmpty());
         assertNull(l.hire(b,p.revision(),"theurgist"));l.remove(b);
@@ -59,6 +60,7 @@ final class MercenaryEntryTest {
     }
     @Test void queuedAndPreparingHiresAreImmutable(){
         var l=lobby(2);var p=l.party(a);assertNull(l.hire(a,p.revision(),"theurgist"));
+        for(var id:p.members())assertNull(l.resourceSharing(id,p.revision(),p.id().toString(),false));
         assertNull(l.begin(a,p.revision(),Map.of(a,"bogatyr")));assertNull(l.ready(a,p.revision()));
         assertNull(l.queue(a,p.revision()));assertNotNull(l.hire(a,p.revision(),""));
         l.startCountdown(p,0,1);assertTrue(l.prepare(p,1));assertNotNull(l.hire(a,p.revision(),""));
@@ -181,6 +183,7 @@ final class MercenaryEntryTest {
         var shifted=p.contracts().getFirst();
         assertEquals(original.id(),shifted.id()); assertEquals(original.name(),shifted.name());
         assertEquals(3,shifted.slot()); assertEquals(777,shifted.fee());
+        for(var id:p.members())assertNull(l.resourceSharing(id,p.revision(),p.id().toString(),false));
         assertNull(l.begin(a,p.revision(),Map.of(a,"bogatyr",b,"dragoon")));
         assertNull(l.ready(a,p.revision())); assertNull(l.ready(b,p.revision()));
         assertNull(l.queue(a,p.revision())); assertEquals(shifted,p.contracts().getFirst());

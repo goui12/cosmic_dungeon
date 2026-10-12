@@ -63,9 +63,52 @@ public final class SpawnerEditorGameTests {
                 SpawnerEditorService.request(second.player,new Request(other.session(),Kind.APPLY,cap(other.draft(),12)));
                 f.check(view(second).status()==Status.CLOSED&&be.getSpawnerMobCap()==9,"Concurrent stale editor cannot overwrite first change");
                 SpawnerEditorService.request(f.player,new Request(first.session(),Kind.APPLY,cap(first.draft(),15)));
-                f.check(be.getSpawnerMobCap()==9,"Replayed Apply cannot mutate completed session");helper.succeed();
+                f.check(be.getSpawnerMobCap()==9,"Replayed Apply cannot mutate completed session");
+                var freshPos=f.spawner(1,1,3);var fresh=(CosmicSpawnerBlockEntity)f.level.getBlockEntity(freshPos);look(f,freshPos);
+                f.check(fresh.getSpawnerEntityId().equals("none"),"New block starts unconfigured");
+                var freshBefore=fresh.saveWithoutMetadata(f.level.registryAccess());
+                f.check(SpawnerEditorService.open(f.player)==1,"Developer can open a newly placed unconfigured spawner");
+                var blank=view(f);
+                SpawnerEditorService.request(f.player,new Request(blank.session(),Kind.APPLY,blank.draft()));
+                f.check(view(f).status()==Status.INVALID&&freshBefore.equals(fresh.saveWithoutMetadata(f.level.registryAccess())),
+                        "Unconfigured Apply remains invalid and cannot silently choose a mob");
+                var d=blank.draft();var configured=new SpawnerEditorDraft("minecraft:zombie",d.name(),false,d.boss(),d.cap(),
+                        d.minDelay(),d.maxDelay(),d.silent(),d.noAi(),d.invulnerable(),d.persistent(),d.nameVisible());
+                SpawnerEditorService.request(f.player,new Request(blank.session(),Kind.APPLY,configured));
+                f.check(view(f).status()==Status.APPLIED&&fresh.getSpawnerEntityId().equals("minecraft:zombie"),
+                        "Choosing a valid mob applies to the original fresh block");
+
+                var weighted=fresh.saveWithoutMetadata(f.level.registryAccess());var choices=new ListTag();
+                var a=spawn("first");var b=spawn("second");
+                for(var choice:List.of(a,b)){var row=new CompoundTag();row.putInt("weight",2);row.put("data",choice.copy());choices.add(row);}
+                weighted.put("SpawnPotentials",choices);weighted.put("SpawnData",a);
+                fresh.loadWithComponents(TagValueInput.create(ProblemReporter.DISCARDING,f.level.registryAccess(),weighted));
+                SpawnerEditorService.open(f.player);var weightedView=view(f);
+                select(fresh,b);var rotated=fresh.saveWithoutMetadata(f.level.registryAccess());
+                SpawnerEditorService.request(f.player,new Request(weightedView.session(),Kind.APPLY,cap(weightedView.draft(),4)));
+                f.check(view(f).status()==Status.APPLIED&&fresh.getSpawnerMobCap()==4,"Native weighted selection rotation does not invalidate Apply");
+                var applied=fresh.saveWithoutMetadata(f.level.registryAccess());
+                f.check(rotated.get("SpawnData").equals(applied.get("SpawnData"))&&rotated.get("SpawnPotentials").equals(applied.get("SpawnPotentials")),
+                        "Unrelated edit preserves current weighted selection and all authored alternatives");
+                SpawnerEditorService.open(f.player);weightedView=view(f);select(fresh,spawn("external authored change"));
+                SpawnerEditorService.request(f.player,new Request(weightedView.session(),Kind.APPLY,cap(weightedView.draft(),5)));
+                f.check(view(f).status()==Status.CLOSED&&fresh.getSpawnerMobCap()==4,"Actual selected-data edit outside alternatives still rejects stale Apply");
+                helper.succeed();
             }finally{clear(f);clear(second);}
         }
+    }
+    private static CompoundTag spawn(String marker){
+        var entity=new CompoundTag();entity.putString("id","minecraft:zombie");entity.putString("AuthoredVariant",marker);
+        var spawn=new CompoundTag();spawn.put("entity",entity);return spawn;
+    }
+    /** Invoke the same native setter that BaseSpawner.delay uses after choosing an authored potential. */
+    private static void select(CosmicSpawnerBlockEntity be,CompoundTag choice){
+        try{
+            var method=net.minecraft.world.level.BaseSpawner.class.getDeclaredMethod("setNextSpawnData",
+                    net.minecraft.world.level.Level.class,BlockPos.class,net.minecraft.world.level.SpawnData.class);
+            method.setAccessible(true);var data=net.minecraft.world.level.SpawnData.CODEC.parse(NbtOps.INSTANCE,choice).getOrThrow();
+            method.invoke(be.getSpawner(),be.getLevel(),be.getBlockPos(),data);
+        }catch(ReflectiveOperationException ex){throw new IllegalStateException(ex);}
     }
     public static void access(GameTestHelper helper){
         try(var f=new CosmicSpawnerGameTests.Fixture(helper,Long.MAX_VALUE-143)){
@@ -120,6 +163,14 @@ public final class SpawnerEditorGameTests {
             var pillager=new Pillager(EntityType.PILLAGER,f.level);
             CosmicSpawnerPreset.load(TagValueInput.create(ProblemReporter.DISCARDING,f.level.registryAccess(),captainTag)).applyToEntity(pillager);
             f.check(pillager.isPatrolLeader()&&!pillager.isPersistenceRequired(),"Captain does not override an unchecked Persistent flag");
+            var future=new CompoundTag();future.putInt("presetVersion",CosmicSpawnerPreset.PRESET_VERSION+1);
+            future.putInt("equipmentMask",511);future.putBoolean("intrinsicDropsOverride",true);
+            future.putBoolean("nameOverride",true);future.putBoolean("illagerCaptainVariant",true);
+            var futurePreset=CosmicSpawnerPreset.load(TagValueInput.create(ProblemReporter.DISCARDING,f.level.registryAccess(),future));
+            var existingSword=zombie.getMainHandItem().copy();var existingName=zombie.getCustomName();
+            futurePreset.applyToEntity(zombie);
+            f.check(ItemStack.matches(existingSword,zombie.getMainHandItem())&&Objects.equals(existingName,zombie.getCustomName())
+                    &&zombie.isSilent()&&zombie.isNoAi(),"Unknown future preset does not interpret masks or erase native mob state");
             zombie.discard();pillager.discard();helper.succeed();
         }
     }
