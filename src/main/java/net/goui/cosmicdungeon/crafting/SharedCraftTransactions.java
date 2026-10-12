@@ -128,6 +128,9 @@ public final class SharedCraftTransactions {
                 return true;
             }
             validateImages(p, plan);
+            if (!receipt.isEmpty() && UUID.fromString(receipt.getStringOr("id", "")).equals(plan.id())
+                    && !plan.receipt(p.getUUID()).equals(receipt))
+                throw new IllegalStateException("Craft current-operation receipt conflicts with journal; original save requires review");
             if (!plan.recoverable(p.getUUID(), custody, receipt))
                 throw new IllegalStateException("Craft owner proof differs from journal");
             // Exact journal proof must pass before restoring a saved cursor into live inventory.

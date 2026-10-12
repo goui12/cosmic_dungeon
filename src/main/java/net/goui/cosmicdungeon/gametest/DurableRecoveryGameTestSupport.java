@@ -2,6 +2,9 @@ package net.goui.cosmicdungeon.gametest;
 
 import com.mojang.serialization.Codec;
 import java.io.IOException;
+import java.util.*;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
 import net.goui.cosmicdungeon.transaction.SavedDataProof;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.nbt.NbtOps;
@@ -12,6 +15,23 @@ import net.minecraft.world.level.saveddata.SavedDataType;
 /** CI fixture support: replace only a named journal with its actual native disk-decoded instance. */
 public final class DurableRecoveryGameTestSupport {
     private DurableRecoveryGameTestSupport() {}
+
+    /** Model only the fixture transport; the real production hold must still request disconnection. */
+    public static final class Disconnects {
+        private final Set<ServerPlayer> expected = Collections.newSetFromMap(new IdentityHashMap<>());
+        private final Map<ServerPlayer,Component> reasons = new IdentityHashMap<>();
+        public void expect(ServerPlayer owner) { expected.add(owner); }
+        public void record(ServerPlayer owner, Component reason) {
+            reasons.put(owner, reason.copy()); owner.disconnect();
+            if (!expected.contains(owner))
+                throw new IllegalStateException("Unexpected native fixture disconnect for " + owner.getUUID() + ": " + reason.getString());
+        }
+        public boolean recoveryHold(ServerPlayer owner) {
+            var reason = reasons.get(owner);
+            return owner.hasDisconnected() && reason != null && reason.getString().contains("save check")
+                    && reason.getString().contains("recover");
+        }
+    }
 
     @SuppressWarnings("unchecked")
     private static <T extends SavedData> SavedDataType<T> type(Class<T> owner) {

@@ -31,6 +31,7 @@ import net.minecraft.world.phys.Vec3;
 public final class SharedResourceGameTests {
     private SharedResourceGameTests() {}
     private static final class Fixture implements AutoCloseable {
+        final DurableRecoveryGameTestSupport.Disconnects disconnects=new DurableRecoveryGameTestSupport.Disconnects();
         final GameTestHelper h; final ServerLevel level; final long run; final Vec3 origin;
         final DungeonRunRegistryData.RunRecord record;
         final List<ServerPlayer> current=new ArrayList<>(), owned=new ArrayList<>(), online;
@@ -85,9 +86,10 @@ public final class SharedResourceGameTests {
             var server=level.getServer();var channel=new io.netty.channel.embedded.EmbeddedChannel();channels.add(channel);
             var player=new ServerPlayer(server,level,profile,ClientInformation.createDefault());
             packets.computeIfAbsent(profile.id(),ignored->new ArrayList<>());
+            var disconnected=new boolean[]{false};
             var connection=new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND) {
                 @Override public io.netty.channel.Channel channel(){return channel;}
-                @Override public boolean isConnected(){return true;}
+                @Override public boolean isConnected(){return !disconnected[0];}
             };
             net.neoforged.neoforge.network.registration.ChannelAttributes.setConnectionType(connection,
                     net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
@@ -95,6 +97,8 @@ public final class SharedResourceGameTests {
                     net.neoforged.neoforge.network.registration.NetworkPayloadSetup.empty());
             player.connection=new net.minecraft.server.network.ServerGamePacketListenerImpl(server,connection,player,
                     net.minecraft.server.network.CommonListenerCookie.createInitial(profile,false)) {
+                @Override public void disconnect(Component reason){disconnected[0]=true;disconnects.record(this.player,reason);}
+                @Override public void disconnect(net.minecraft.network.DisconnectionDetails details){disconnect(details.reason());}
                 @Override public void send(Packet<?> packet){packets.get(profile.id()).add(packet);}
                 @Override public void send(Packet<?> packet,io.netty.channel.ChannelFutureListener listener){send(packet);}
                 @Override public void resetPosition(){}
@@ -268,14 +272,52 @@ public final class SharedResourceGameTests {
                     future.putInt("schema",99);future.putString("unknown","preserve");root.put(key,future);}
                 f.p(0).getPersistentData().put(ClassData.ROOT_TAG,root);f.saveAll();
                 var owner=f.disk(0);var inventory=f.inventory(0);var journal=f.reloadJournal().image();f.reload(0);
-                f.check(!SharedCraftTransactions.reconcile(f.p(0))&&SharedCraftTransactions.blocked(f.p(0)),
+                f.disconnects.expect(f.p(0));
+                f.check(!SharedCraftTransactions.reconcile(f.p(0))&&SharedCraftTransactions.blocked(f.p(0))&&f.disconnects.recoveryHold(f.p(0)),
                         "Present malformed crafting custody/receipt holds instead of becoming missing partial preparation");
                 f.check(f.root(0).equals(root)&&f.inventory(0).equals(inventory)&&f.disk(0).equals(owner)
                         &&SharedCraftData.get(f.level.getServer()).image().equals(journal),
                         "Malformed crafting recovery preserves the original native owner file and world decision");
             }
     }
+    private static void terminalReceiptConflicts(GameTestHelper h) {
+        for(int scenario=0;scenario<2;scenario++)try(var f=new Fixture(h,Long.MAX_VALUE-3140-scenario)){
+            f.seed();f.saveAll();var plan=SharedCrafting.prepare(f.p(0),f.run,f.recipe());f.reserve(plan);
+            if(scenario==1){
+                f.custody(0,plan);var data=SharedCraftData.get(f.level.getServer());data.commit(plan.id());
+                f.check(data.flushVerified(),"Committed conflicting-receipt world plan is durable");
+            }
+            var root=f.root(0).copy();root.put(SharedCraftTransactions.RECEIPT,
+                    (scenario==0?plan.commit():plan).receipt(f.p(0).getUUID()));
+            f.p(0).getPersistentData().put(ClassData.ROOT_TAG,root);f.saveAll();
+            var owner=f.disk(0);var inventory=f.inventory(0);var journal=f.reloadJournal().image();f.reload(0);
+            f.disconnects.expect(f.p(0));
+            f.check(!SharedCraftTransactions.reconcile(f.p(0))&&SharedCraftTransactions.blocked(f.p(0))
+                    &&f.disconnects.recoveryHold(f.p(0)),"Same-operation opposite crafting receipt holds before terminal outcome replacement");
+            f.check(f.root(0).equals(root)&&f.disk(0).equals(owner)&&f.inventory(0).equals(inventory)
+                    &&SharedCraftData.get(f.level.getServer()).image().equals(journal)
+                    &&DungeonMetricsService.resourceSequence(f.level.getServer(),f.run)==0&&f.notices(1)==0&&f.notices(2)==0,
+                    "Conflicting terminal crafting proof preserves exact native evidence and world without settlement effects");
+        }
+        try(var f=new Fixture(h,Long.MAX_VALUE-3142)){
+            f.seed();f.saveAll();var previous=SharedCrafting.prepare(f.p(0),f.run,f.recipe());
+            f.check(SharedCraftTransactions.execute(f.p(0),previous,()->true),"Actual first craft saves supported previous receipts");
+            var older=f.root(0).getCompoundOrEmpty(SharedCraftTransactions.RECEIPT).copy();
+            f.check(previous.commit().receipt(f.p(0).getUUID()).equals(older),"Previous receipt comes from actual production settlement");
+            f.seed();f.saveAll();var plan=SharedCrafting.prepare(f.p(0),f.run,f.recipe());f.reserve(plan);
+            for(int i=0;i<3;i++)f.custody(i,plan);
+            var data=SharedCraftData.get(f.level.getServer());data.commit(plan.id());f.check(data.flushVerified(),"Second distinct craft committed");
+            data=f.reloadJournal();for(int i=0;i<3;i++)f.reload(i);
+            f.check(!plan.id().equals(previous.id())&&f.root(0).getCompoundOrEmpty(SharedCraftTransactions.RECEIPT).equals(older),
+                    "Native owner reload retains legitimate older receipt beside current custody");
+            for(int i:new int[]{2,1,0})f.check(SharedCraftTransactions.reconcile(f.p(i)),"Different-operation supported receipt is supersedable");
+            data=f.reloadJournal();for(int i:new int[]{0,1,2}){f.reload(i);f.check(SharedCraftTransactions.reconcile(f.p(i)),"Second craft repeat replay succeeds");}
+            f.check(f.products()==1&&DungeonMetricsService.resourceSequence(f.level.getServer(),f.run)==2
+                    &&data.image().equals(f.journalBefore),"Both distinct production crafts settle once without holding previous IDs");
+        }
+    }
     public static void guards(GameTestHelper h) {
+        terminalReceiptConflicts(h);
         malformedProofs(h);
         try(var f=new Fixture(h,Long.MAX_VALUE-3102)) {
             f.seed();var server=f.level.getServer();var recipe=f.recipe();var data=SharedCraftData.get(server);

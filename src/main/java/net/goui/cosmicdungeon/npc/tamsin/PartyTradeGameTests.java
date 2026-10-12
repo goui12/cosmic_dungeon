@@ -25,6 +25,7 @@ import net.minecraft.world.item.*;
 public final class PartyTradeGameTests {
     private PartyTradeGameTests() {}
     private static final class Fixture implements AutoCloseable {
+        final DurableRecoveryGameTestSupport.Disconnects disconnects=new DurableRecoveryGameTestSupport.Disconnects();
         final GameTestHelper helper; final ServerLevel level; final D1PartyLobby lobby;
         final List<ServerPlayer> actors = new ArrayList<>();
         final List<io.netty.channel.embedded.EmbeddedChannel> channels = new ArrayList<>();
@@ -61,14 +62,17 @@ public final class PartyTradeGameTests {
             var server=level.getServer();
             var p=new ServerPlayer(server,level,profile,ClientInformation.createDefault());
             var channel=new io.netty.channel.embedded.EmbeddedChannel();channels.add(channel);
+            var disconnected=new boolean[]{false};
             var connection=new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND) {
                 @Override public io.netty.channel.Channel channel(){return channel;}
-                @Override public boolean isConnected(){return true;}
+                @Override public boolean isConnected(){return !disconnected[0];}
             };
             net.neoforged.neoforge.network.registration.ChannelAttributes.setConnectionType(connection,net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
             net.neoforged.neoforge.network.registration.ChannelAttributes.setPayloadSetup(connection,net.neoforged.neoforge.network.registration.NetworkPayloadSetup.empty());
             p.connection=new net.minecraft.server.network.ServerGamePacketListenerImpl(server,connection,p,
                     net.minecraft.server.network.CommonListenerCookie.createInitial(profile,false)) {
+                @Override public void disconnect(Component reason){disconnected[0]=true;disconnects.record(this.player,reason);}
+                @Override public void disconnect(net.minecraft.network.DisconnectionDetails details){disconnect(details.reason());}
                 @Override public void send(net.minecraft.network.protocol.Packet<?> packet){}
                 @Override public void send(net.minecraft.network.protocol.Packet<?> packet,io.netty.channel.ChannelFutureListener listener){}
             };
@@ -224,6 +228,7 @@ public final class PartyTradeGameTests {
 
     public static void ownershipAndBalance(GameTestHelper helper) {
         ordinaryTradeRecovery(helper);
+        partialPreparationIdentity(helper);
         malformedTradeProofs(helper);
         chopTrades(helper);
         cookedChopTrades(helper);
@@ -507,6 +512,48 @@ public final class PartyTradeGameTests {
                     "Startup-equivalent cancellation retires only isolated unfinished payment and restores all available balances");
         }
     }
+    private static void partialPreparationIdentity(GameTestHelper helper){
+        for(boolean wrongPeer:new boolean[]{true,false})try(var f=new Fixture(helper)){
+            var session=f.open();f.offer(session,f.member,Items.APPLE,3);f.offer(session,f.outsider,Items.BREAD,2);
+            var accounts=PlayerCurrencyData.get(f.level.getServer());var state=TradeCustody.read(f.member);
+            var terms=new net.goui.cosmicdungeon.economy.AccountTransfer.Terms(f.member.getUUID(),f.outsider.getUUID(),25,0,
+                    "player_trade",state.getLongOr("run",0),session.id().toString());
+            accounts.reserve(session.id(),terms,System.currentTimeMillis());
+            f.check(accounts.flushVerified(),"Partial preparation has durable immutable payment terms without an owner plan");
+            TradeCustody.write(f.member,TradeCustodyImages.bind(state,session.id()));
+            f.check(PlayerSaveProof.save(f.member)&&PlayerSaveProof.save(f.outsider),"Only first owner's partial binding is natively saved");
+            f.end(session);
+            try{
+                state=TradeCustody.read(f.member);
+                if(wrongPeer)state.putString("peer",f.leader.getStringUUID());
+                else state.putLong("run",Math.addExact(terms.run(),1));
+                TradeCustodyImages.validate(state,f.member.getUUID()); // Supported shape, wrong immutable account identity.
+                TradeCustody.write(f.member,state);f.check(PlayerSaveProof.save(f.member),"Conflicting partial custody saved without changing payment terms");
+                var root=f.member.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).copy();
+                var peerRoot=f.outsider.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).copy();
+                var ownerDisk=f.disk(f.member);var peerDisk=f.disk(f.outsider);
+                var inventory=ChopTravelRecovery.saveInventory(f.member);var peerInventory=ChopTravelRecovery.saveInventory(f.outsider);
+                accounts=f.reloadAccounts();var journal=DurableRecoveryGameTestSupport.image(PlayerCurrencyData.class,accounts);
+                f.reload(f.member);f.reload(f.outsider);
+                f.disconnects.expect(f.member);
+                f.check(accounts.tradePlan(session.id()).isEmpty()&&!TradeTransactions.reconcile(f.member)
+                        &&TradeCustody.held(f.member)&&f.disconnects.recoveryHold(f.member),
+                        "Wrong peer/run partial binding holds before cancelling the unrelated immutable payment reservation");
+                f.check(f.member.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).equals(root)
+                        &&f.outsider.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).equals(peerRoot)
+                        &&f.disk(f.member).equals(ownerDisk)&&f.disk(f.outsider).equals(peerDisk)
+                        &&ChopTravelRecovery.saveInventory(f.member).equals(inventory)&&ChopTravelRecovery.saveInventory(f.outsider).equals(peerInventory)
+                        &&DurableRecoveryGameTestSupport.image(PlayerCurrencyData.class,accounts).equals(journal)
+                        &&accounts.transfer(session.id()).orElseThrow().reserved(),
+                        "Partial identity rejection preserves both original native owner files, offers and undecided account journal");
+            }finally{
+                accounts=PlayerCurrencyData.get(f.level.getServer());
+                if(accounts.transfer(session.id()).orElseThrow().reserved())
+                    accounts.cancelTransfer(session.id(),terms,System.currentTimeMillis(),"isolated partial identity fixture cleanup");
+                f.check(accounts.flushVerified(),"Only isolated held partial-payment row cleaned after evidence assertions");
+            }
+        }
+    }
     private static void malformedTradeProofs(GameTestHelper helper){
         for(String key:List.of(TradeCustody.KEY,TradeTransactions.RECEIPT))for(int shape=0;shape<(key.equals(TradeCustody.KEY)?4:3);shape++)try(var f=new Fixture(helper)){
             var session=f.open();f.offer(session,f.member,Items.APPLE,3);f.offer(session,f.outsider,Items.BREAD,2);
@@ -536,7 +583,8 @@ public final class PartyTradeGameTests {
                 f.member.getPersistentData().put(ClassData.ROOT_TAG,root);f.check(PlayerSaveProof.save(f.member),"Unsupported trade proof retains native file");
                 var disk=f.disk(f.member);var inventory=ChopTravelRecovery.saveInventory(f.member);accounts=f.reloadAccounts();
                 var journal=DurableRecoveryGameTestSupport.image(PlayerCurrencyData.class,accounts);f.reload(f.member);f.reload(f.outsider);
-                f.check(!TradeTransactions.reconcile(f.member)&&TradeCustody.held(f.member),"Malformed/future RESERVED owner proof holds before account cancellation");
+                f.disconnects.expect(f.member);
+                f.check(!TradeTransactions.reconcile(f.member)&&TradeCustody.held(f.member)&&f.disconnects.recoveryHold(f.member),"Malformed/future RESERVED owner proof holds before account cancellation");
                 f.check(f.member.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).equals(root)&&f.disk(f.member).equals(disk)
                         &&ChopTravelRecovery.saveInventory(f.member).equals(inventory)&&journal.equals(DurableRecoveryGameTestSupport.image(PlayerCurrencyData.class,accounts))
                         &&accounts.transfer(session.id()).orElseThrow().reserved(),"Held trade preserves original owner image and undecided account journal");

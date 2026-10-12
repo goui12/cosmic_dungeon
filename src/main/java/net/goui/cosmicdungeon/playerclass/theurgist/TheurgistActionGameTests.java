@@ -37,6 +37,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 public final class TheurgistActionGameTests {
     private TheurgistActionGameTests(){}
     private static final class Fixture implements AutoCloseable {
+        final DurableRecoveryGameTestSupport.Disconnects disconnects=new DurableRecoveryGameTestSupport.Disconnects();
         final GameTestHelper helper;final ServerLevel level;final Vec3 origin;final long run;
         final List<ServerPlayer> current=new ArrayList<>(),owned=new ArrayList<>(),online;
         final Map<Long,DungeonRunRegistryData.RunRecord> runs;final Map<UUID,ServerPlayer> players;
@@ -78,9 +79,10 @@ public final class TheurgistActionGameTests {
             var channel=new io.netty.channel.embedded.EmbeddedChannel();channels.add(channel);
             var server=level.getServer();var player=new ServerPlayer(server,level,profile,ClientInformation.createDefault());
             packets.computeIfAbsent(profile.id(),id->new ArrayList<>());
+            var disconnected=new boolean[]{false};
             var connection=new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND){
                 @Override public io.netty.channel.Channel channel(){return channel;}
-                @Override public boolean isConnected(){return true;}
+                @Override public boolean isConnected(){return !disconnected[0];}
             };
             net.neoforged.neoforge.network.registration.ChannelAttributes.setConnectionType(connection,
                     net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
@@ -88,6 +90,8 @@ public final class TheurgistActionGameTests {
                     net.neoforged.neoforge.network.registration.NetworkPayloadSetup.empty());
             player.connection=new net.minecraft.server.network.ServerGamePacketListenerImpl(server,connection,player,
                     net.minecraft.server.network.CommonListenerCookie.createInitial(profile,false)){
+                @Override public void disconnect(Component reason){disconnected[0]=true;disconnects.record(this.player,reason);}
+                @Override public void disconnect(net.minecraft.network.DisconnectionDetails details){disconnect(details.reason());}
                 @Override public void send(Packet<?> packet){packets.get(profile.id()).add(packet);}
                 @Override public void send(Packet<?> packet,io.netty.channel.ChannelFutureListener listener){send(packet);}
                 @Override public void resetPosition(){}
@@ -254,7 +258,8 @@ public final class TheurgistActionGameTests {
                     future.putInt("schema",99);future.putString("unknown","preserve");root.put(key,future);}
                 f.p(1).getPersistentData().put(ClassData.ROOT_TAG,root);f.check(PlayerSaveProof.save(f.p(1)),"Malformed target proof is preserved natively");
                 var disk=f.disk(1);var inventory=ChopTravelRecovery.saveInventory(f.p(1));var journal=f.reloadJournal().image();f.reload(0);f.reload(1);
-                f.check(!TheurgistRevival.reconcile(f.p(1))&&TheurgistRevival.blocked(f.p(1)),
+                f.disconnects.expect(f.p(1));
+                f.check(!TheurgistRevival.reconcile(f.p(1))&&TheurgistRevival.blocked(f.p(1))&&f.disconnects.recoveryHold(f.p(1)),
                         "Malformed present revival custody/receipt is held instead of proving unsuccessful preparation");
                 f.check(f.root(1).equals(root)&&f.disk(1).equals(disk)&&ChopTravelRecovery.saveInventory(f.p(1)).equals(inventory)
                         &&RevivalData.get(f.level.getServer()).image().equals(journal)&&ResurrectionCooldown.read(f.root(0)).isEmpty(),
@@ -272,14 +277,46 @@ public final class TheurgistActionGameTests {
             root.put(ResurrectionCooldown.KEY,cooldown);f.p(0).getPersistentData().put(ClassData.ROOT_TAG,root);
             f.check(PlayerSaveProof.save(f.p(0)),"Malformed or changed caster state is saved without a current success receipt");
             var casterDisk=f.disk(0);var targetDisk=f.disk(1);var targetRoot=f.root(1).copy();var journal=f.reloadJournal().image();f.reload(0);f.reload(1);
-            f.check(!TheurgistRevival.reconcile(f.p(0))&&TheurgistRevival.blocked(f.p(0)),
+            f.disconnects.expect(f.p(0));
+            f.check(!TheurgistRevival.reconcile(f.p(0))&&TheurgistRevival.blocked(f.p(0))&&f.disconnects.recoveryHold(f.p(0)),
                     "Undecided caster source-state mismatch holds before recursively settling the successful target");
             f.check(f.root(0).equals(root)&&f.disk(0).equals(casterDisk)&&f.root(1).equals(targetRoot)&&f.disk(1).equals(targetDisk)
                     &&RevivalData.get(f.level.getServer()).image().equals(journal),
                     "Caster preflight preserves both exact native owner files and the undecided world outcome before peer recursion");
         }
     }
+    private static void terminalReceiptOrdering(GameTestHelper helper){
+        for(int scenario=0;scenario<4;scenario++)try(var f=new Fixture(helper,Long.MAX_VALUE-2260-scenario,"theurgist","judicator")){
+            long now=f.level.getServer().overworld().getGameTime();
+            var plan=RevivalPlan.free(f.p(0).getUUID(),f.p(1).getUUID(),UUID.randomUUID(),f.run,new CompoundTag(),now);
+            var data=RevivalData.get(f.level.getServer());data.reserve(plan);
+            if(scenario==2)data.decide(plan.id(),false);
+            f.check(data.flushVerified(),"Conflicting revival outcome fixture is durable");
+            var caster=f.root(0).copy();var target=f.root(1).copy();
+            if(scenario!=1){
+                boolean success=scenario!=3;
+                caster.put(TheurgistRevival.RECEIPT,plan.receipt(f.p(0).getUUID(),success));
+                if(success)caster.put(plan.stateKey(),plan.tag("after"));
+            }
+            target.put(TheurgistRevival.RECEIPT,plan.receipt(f.p(1).getUUID(),scenario==1||scenario==3));
+            f.p(0).getPersistentData().put(ClassData.ROOT_TAG,caster);
+            f.p(1).getPersistentData().put(ClassData.ROOT_TAG,target);
+            f.check(PlayerSaveProof.save(f.p(0))&&PlayerSaveProof.save(f.p(1)),"Both conflicting native owner proofs are saved");
+            var casterDisk=f.disk(0);var targetDisk=f.disk(1);
+            var casterInventory=ChopTravelRecovery.saveInventory(f.p(0));var targetInventory=ChopTravelRecovery.saveInventory(f.p(1));
+            var journal=f.reloadJournal().image();f.reload(0);f.reload(1);
+            f.disconnects.expect(f.p(0));
+            f.check(!TheurgistRevival.reconcile(f.p(0))&&TheurgistRevival.blocked(f.p(0))
+                    &&f.disconnects.recoveryHold(f.p(0)),"Conflicting current outcome or missing successful caster custody holds before peer settlement");
+            f.check(f.root(0).equals(caster)&&f.root(1).equals(target)&&f.disk(0).equals(casterDisk)&&f.disk(1).equals(targetDisk)
+                    &&ChopTravelRecovery.saveInventory(f.p(0)).equals(casterInventory)
+                    &&ChopTravelRecovery.saveInventory(f.p(1)).equals(targetInventory)
+                    &&RevivalData.get(f.level.getServer()).image().equals(journal),
+                    "Pure revival preflight preserves both native owners and world without deciding, charging, acknowledging or replacing a receipt");
+        }
+    }
     public static void recovery(GameTestHelper helper){
+        terminalReceiptOrdering(helper);
         casterStateOrdering(helper);
         malformedRevivalProofs(helper);
         try(var f=new Fixture(helper,Long.MAX_VALUE-2212,"theurgist","judicator")){

@@ -33,6 +33,7 @@ import net.minecraft.world.phys.Vec3;
 public final class PotionCraftingGameTests {
     private PotionCraftingGameTests() {}
     private static final class Fixture implements AutoCloseable {
+        final DurableRecoveryGameTestSupport.Disconnects disconnects=new DurableRecoveryGameTestSupport.Disconnects();
         final GameTestHelper h; final ServerLevel level; final long run; final Vec3 origin;
         final DungeonRunRegistryData.RunRecord record;
         final List<ServerPlayer> current=new ArrayList<>(), owned=new ArrayList<>(), online;
@@ -87,9 +88,10 @@ public final class PotionCraftingGameTests {
             var server=level.getServer();var channel=new io.netty.channel.embedded.EmbeddedChannel();channels.add(channel);
             var player=new ServerPlayer(server,level,profile,ClientInformation.createDefault());
             packets.computeIfAbsent(profile.id(),ignored->new ArrayList<>());
+            var disconnected=new boolean[]{false};
             var connection=new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND) {
                 @Override public io.netty.channel.Channel channel(){return channel;}
-                @Override public boolean isConnected(){return true;}
+                @Override public boolean isConnected(){return !disconnected[0];}
             };
             net.neoforged.neoforge.network.registration.ChannelAttributes.setConnectionType(connection,
                     net.neoforged.neoforge.network.connection.ConnectionType.NEOFORGE);
@@ -97,6 +99,8 @@ public final class PotionCraftingGameTests {
                     net.neoforged.neoforge.network.registration.NetworkPayloadSetup.empty());
             player.connection=new net.minecraft.server.network.ServerGamePacketListenerImpl(server,connection,player,
                     net.minecraft.server.network.CommonListenerCookie.createInitial(profile,false)) {
+                @Override public void disconnect(Component reason){disconnected[0]=true;disconnects.record(this.player,reason);}
+                @Override public void disconnect(net.minecraft.network.DisconnectionDetails details){disconnect(details.reason());}
                 @Override public void send(Packet<?> packet){packets.get(profile.id()).add(packet);}
                 @Override public void send(Packet<?> packet,io.netty.channel.ChannelFutureListener listener){send(packet);}
                 @Override public void resetPosition(){}
@@ -412,7 +416,8 @@ public final class PotionCraftingGameTests {
             f.p(0).getPersistentData().put(ClassData.ROOT_TAG,root);f.check(PlayerSaveProof.save(f.p(0)),"Valid cursor and unsupported reservation are saved together");
             var disk=f.disk(0);var inventory=f.inventory(0);var journal=f.reloadJournal().image();f.reload(0);
             f.check(f.p(0).inventoryMenu.getCarried().isEmpty(),"Unrestored native cursor begins empty after owner reload");
-            f.check(!SharedCraftTransactions.reconcile(f.p(0))&&SharedCraftTransactions.blocked(f.p(0)),
+            f.disconnects.expect(f.p(0));
+            f.check(!SharedCraftTransactions.reconcile(f.p(0))&&SharedCraftTransactions.blocked(f.p(0))&&f.disconnects.recoveryHold(f.p(0)),
                     "Future/foreign compound reservation holds before restoring its otherwise valid saved cursor");
             f.check(f.p(0).inventoryMenu.getCarried().isEmpty()&&f.root(0).equals(root)&&f.disk(0).equals(disk)
                     &&f.inventory(0).equals(inventory)&&SharedCraftData.get(f.level.getServer()).image().equals(journal),
@@ -523,7 +528,8 @@ public final class PotionCraftingGameTests {
             else root.put(PotionCursorCustody.KEY,saved);
             f.p(0).getPersistentData().put(ClassData.ROOT_TAG,root);f.check(PlayerSaveProof.save(f.p(0)),"Unsupported cursor image is preserved in native owner file");
             var disk=f.disk(0);var inventory=f.inventory(0);var journal=f.reloadJournal().image();f.reload(0);
-            f.check(!SharedCraftTransactions.reconcile(f.p(0))&&SharedCraftTransactions.blocked(f.p(0)),
+            f.disconnects.expect(f.p(0));
+            f.check(!SharedCraftTransactions.reconcile(f.p(0))&&SharedCraftTransactions.blocked(f.p(0))&&f.disconnects.recoveryHold(f.p(0)),
                     "Future, foreign or non-compound potion cursor proof holds without guessing an output");
             f.check(f.root(0).equals(root)&&f.inventory(0).equals(inventory)&&f.p(0).inventoryMenu.getCarried().isEmpty()
                     &&f.disk(0).equals(disk)&&SharedCraftData.get(f.level.getServer()).image().equals(journal),

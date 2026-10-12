@@ -88,6 +88,9 @@ public final class TradeTransactions {
                 if(!tx.isEmpty()){
                     UUID pending=UUID.fromString(tx);var transfer=data.transfer(pending).orElseThrow();
                     if(!transfer.terms().type().equals("player_trade")||(!transfer.terms().first().equals(p.getUUID())&&!transfer.terms().second().equals(p.getUUID())))throw new IllegalStateException("Foreign trade reservation");
+                    var terms=transfer.terms();var peer=terms.first().equals(p.getUUID())?terms.second():terms.first();
+                    if(!peer.equals(UUID.fromString(state.getStringOr("peer","")))||state.getLongOr("run",-1)!=terms.run())
+                        throw new IllegalStateException("Trade preparation custody differs from account peer/run; original save requires review");
                     if(transfer.status().equals(AccountTransfer.COMMITTED))throw new IllegalStateException("Committed trade lacks owner decision");
                     if(transfer.reserved())data.cancelTransfer(pending,transfer.terms(),System.currentTimeMillis(),"incomplete trade preparation");
                     if(!data.flushVerified())throw new IllegalStateException("trade cancellation save not verified");
