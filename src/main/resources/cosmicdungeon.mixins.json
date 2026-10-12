@@ -12,7 +12,12 @@
     "client.TamsinClothingMixin",
     "client.InventoryRecipeBookScreenMixin",
     "client.InventoryRecipeBookComponentMixin",
-    "client.LeaderboardPauseMixin"
+    "client.LeaderboardPauseMixin",
+    "client.GuiGraphicsTooltipMixin",
+    "client.ClientHooksTooltipMixin",
+    "client.InventoryCraftingSlotsMixin",
+    "client.ClassInventoryScreenMixin",
+    "client.InventoryDragAccess"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -29,6 +34,8 @@
     "RepairFuelMixin",
     "BogatyrTeleportMixin",
     "BogatyrSitMixin",
+    "BogatyrOwnerTargetMixin",
+    "BogatyrOwnerAttackMixin",
     "BogatyrDamageMixin",
     "BogatyrMeleeMixin",
     "BogatyrNavigationMixin",
@@ -87,6 +94,9 @@
     "SkillDrinkPotionMixin",
     "StatsCounterAccess",
     "NaturalArmorDropsMixin",
-    "ResurrectionReceiptMixin"
+    "ResurrectionReceiptMixin",
+    "BogatyrLoveMixin",
+    "MobPersistenceAccess",
+    "SpawnerBreakAccess"
   ]
 }

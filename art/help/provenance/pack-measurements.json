@@ -1,0 +1,324 @@
+[
+  {
+    "id": "achievements",
+    "master": "art/help/masters/achievements.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1996893,
+    "source_sha256": "c0059b1e94d7fa26812b9634fc0d7020a1aa5f86e6c02b374545d5e40c18a461",
+    "master_bytes": 475580,
+    "runtime_bytes": 181413,
+    "master_sha256": "79248cb859b9d5212f15562e336f1ee904a9ba4c2fd95ac028967b021105ff08",
+    "runtime_sha256": "eb3eaa69ca1828a8bfbbe227d8afbf34ba11caccdd48b927b32a8d47208ef52f"
+  },
+  {
+    "id": "apothecary",
+    "master": "art/help/masters/apothecary.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1790214,
+    "source_sha256": "742aec64d7499e40bf6cb337bc81fdb58b3c47a5e266431ac80573a6eb6e2451",
+    "master_bytes": 380163,
+    "runtime_bytes": 166279,
+    "master_sha256": "85968f6b21c44f44908c35aac727188a2f37fb641d07de17477227dbc2463ddc",
+    "runtime_sha256": "11eebeeedd3edfcd7739af85c8d8c08c77365dbc546b16a4974a1b35eec66eb7"
+  },
+  {
+    "id": "bogatyr",
+    "master": "art/help/masters/bogatyr.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1924948,
+    "source_sha256": "3b54533c53c9c372a5d1bfc9fec57f647838c22a0ce8b1538c9ee835f3083864",
+    "master_bytes": 396229,
+    "runtime_bytes": 165106,
+    "master_sha256": "75b147a795735ff954a84778f5b25bd11c1aaacc122caaef111805ca5cefa655",
+    "runtime_sha256": "1cda7b506c57359cb46858470e8435f50f4d8d6f5bfab22fd13dd33e79858de0"
+  },
+  {
+    "id": "classes",
+    "master": "art/help/masters/classes.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1978122,
+    "source_sha256": "e85e28a3cb8c550e5344d2c99430594abb89ac205f286c68f2eaad4c9b1d4134",
+    "master_bytes": 480705,
+    "runtime_bytes": 180936,
+    "master_sha256": "85cb90daf441e97e570a8c7bdc18df0885abe79ca123b489c24512826618d2d6",
+    "runtime_sha256": "7150d1370e1c747a2688bba68ddf949e77a83392a053b93ea30b4fdb34f020a7"
+  },
+  {
+    "id": "dragoon",
+    "master": "art/help/masters/dragoon.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1956027,
+    "source_sha256": "eb176caf5222dd4ad099f25cdaab5e1d032a09606851a789f8a5d67219316499",
+    "master_bytes": 421222,
+    "runtime_bytes": 166985,
+    "master_sha256": "598f2c943e737863eb0b6b727bf49f40cfa0d1e34e9dd8a5c422fad355fe1781",
+    "runtime_sha256": "729b2ab10c2173df24708d8e5368fc1e4b3bfe1c8632690285f7b3b256065449"
+  },
+  {
+    "id": "dungeons",
+    "master": "art/help/masters/dungeons.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1983291,
+    "source_sha256": "00e62b90f1192a2224e1771b251a4812edf7c23cd25732245447ecc9b09e1a74",
+    "master_bytes": 409981,
+    "runtime_bytes": 173402,
+    "master_sha256": "7ff0b9fa2567a7d4e15e4f2fe4f046f1e8ddeacf77deb1ac2035d4af029d2ab5",
+    "runtime_sha256": "30d3decf2cfeed954b1e6e02c4d5908d9b3cab2508b52ee2d5f01a6fa00d0281"
+  },
+  {
+    "id": "exchange",
+    "master": "art/help/masters/exchange.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1643964,
+    "source_sha256": "549809edaed21ae043eb7bbd68f73f006fe5a82f69bdceacad853cd15ca8ee4d",
+    "master_bytes": 299434,
+    "runtime_bytes": 137715,
+    "master_sha256": "7cf6bb49882b9f1328117932fda698990eef295d37f34fc64cf2759fbb23a13d",
+    "runtime_sha256": "6a8dce3da0e6a4f90e71b0c4ec2f5297de626389741ff12e55ab679ef91db14a"
+  },
+  {
+    "id": "expedition",
+    "master": "art/help/masters/expedition.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 2029381,
+    "source_sha256": "0eb37924357aa78b3d89d5a1ab71a82a4ded8ebe7b718a510bf6b6a7f128610e",
+    "master_bytes": 486751,
+    "runtime_bytes": 188774,
+    "master_sha256": "6e39ad161c8bf7dbfcc898f0517019a1f73fd2606863019650cd59846189db0d",
+    "runtime_sha256": "cadb2f735e87c63024a43b765d20641535844807e4c71ed965a9dfd947c5906c"
+  },
+  {
+    "id": "factions",
+    "master": "art/help/masters/factions.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1866320,
+    "source_sha256": "16d69d28c921775c750ed8847408a5b60fb43ad6ff9d5165e4c8dd0440f55363",
+    "master_bytes": 403814,
+    "runtime_bytes": 159925,
+    "master_sha256": "fbdcb0138cea2a8879b998790883ab11a276ddce915b291975803818c7649d47",
+    "runtime_sha256": "a1c2ad05aa3dc40ce88d06a320d6b7ffb0fe90971d4d62a34fbc720626cb7066"
+  },
+  {
+    "id": "first_heart",
+    "master": "art/help/masters/first_heart.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1810154,
+    "source_sha256": "3d7fdacc5272b27af521f60e122ed7158fd1e20e691edb53312d48e60c0ca75f",
+    "master_bytes": 370904,
+    "runtime_bytes": 158961,
+    "master_sha256": "77594d7661178241200870a31b8237bb205c43dece75f92f7f0bd755fafbf909",
+    "runtime_sha256": "84555f42d3f08344d109ae4c384bf5f49c138deccb128baca91d6096a3b8a542"
+  },
+  {
+    "id": "forge",
+    "master": "art/help/masters/forge.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1817744,
+    "source_sha256": "d1f6c7d6b13e926efe00751612f1e62fa9056cdb295eddff37eff8b5859fa2c7",
+    "master_bytes": 400762,
+    "runtime_bytes": 166674,
+    "master_sha256": "87e0968e2e86b1fa263652f703088d74c2af4b74b70b91258d7b772d132a08db",
+    "runtime_sha256": "b1fa91a42085202668ea78c4f36f92dce18db164f111599275047e5e56b9b1c1"
+  },
+  {
+    "id": "guide",
+    "master": "art/help/masters/guide.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1917596,
+    "source_sha256": "ce601e6bce5a02f1374eeba5a9757eaffb6b92c830a6e68576346b4312adb7eb",
+    "master_bytes": 401342,
+    "runtime_bytes": 167629,
+    "master_sha256": "528fa2fcb7789c5b0b4cbf2f4a592315782efd60a51825a5c6f25d9a19117d69",
+    "runtime_sha256": "5923746a9852044a81e33887c0a963b5768b780ec354bd171b496c67e7bcafd8"
+  },
+  {
+    "id": "hearth",
+    "master": "art/help/masters/hearth.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 2037031,
+    "source_sha256": "f8f5a20533a1a334a3347b58c5c6324a71f5add98ad41052f414600fb40d681c",
+    "master_bytes": 518044,
+    "runtime_bytes": 188982,
+    "master_sha256": "79f7bcd1fbfeb6b186626415b49057b18ca8aa5b7194e09b2b18c7966cb4afcd",
+    "runtime_sha256": "47d8cd960f31e977a5e83c7e23abc0b930393bde2e7673e13bb6841cdd568f5b"
+  },
+  {
+    "id": "judicator",
+    "master": "art/help/masters/judicator.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1784872,
+    "source_sha256": "e1fdf5360977b7033bcd285e537d3c958f334e83fd34c569f9388c517f40e49d",
+    "master_bytes": 342856,
+    "runtime_bytes": 155402,
+    "master_sha256": "54780e7fc2464a2cd54a8d9cba75cf3be77193234ee2bc5f26772da8e6236357",
+    "runtime_sha256": "3504a21dd86057f573a414a3a45e01730e7a53994b6a625b5ee375e85b64b92d"
+  },
+  {
+    "id": "party",
+    "master": "art/help/masters/party.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1855329,
+    "source_sha256": "7f7c8e26ccdc02d52b425a427e44b569ea1fbf9eb8e7c978543c3372d0dba2f2",
+    "master_bytes": 384706,
+    "runtime_bytes": 162762,
+    "master_sha256": "8f2ac98f3b20d01447deeadace8f71a553af2d332c58985bb416202e1d22bef0",
+    "runtime_sha256": "c13e0b89e6eb5113fa0f0246ba113344fbc89a78f0e4f9d15d3c9e45d3502ab9"
+  },
+  {
+    "id": "progression",
+    "master": "art/help/masters/progression.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1927632,
+    "source_sha256": "991e103f4279d2a55f0f0979fcbecdbea224b0f66a88c475bc90675ea1e2e5af",
+    "master_bytes": 433407,
+    "runtime_bytes": 174486,
+    "master_sha256": "edc33b6c806e2702888878366f8005688a63de9f7bd79def1236b78a9672be5c",
+    "runtime_sha256": "8d3d3cf85b967c1b80dc3b08203b1108d018a2432b025e0557bbb6c3fd068dee"
+  },
+  {
+    "id": "pyroclast",
+    "master": "art/help/masters/pyroclast.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1867370,
+    "source_sha256": "cc550a83756d4e0c268cf370c02ca52e0a9f9e9ee36bd4de954439c786ee8aaf",
+    "master_bytes": 433008,
+    "runtime_bytes": 169916,
+    "master_sha256": "b206acca23422416f78263b08ae6d98ba1706acaee1d22dd43c21a078bf2ab49",
+    "runtime_sha256": "aba6422d47a128dfc56865ffc85822afab545922f2827c96ec2677a749e69a6d"
+  },
+  {
+    "id": "scholar",
+    "master": "art/help/masters/scholar.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 2034078,
+    "source_sha256": "aec9b1f67bfe0ad1d54a8ab8d59c838e6744b9dcfda9a43dab3db41024743233",
+    "master_bytes": 463667,
+    "runtime_bytes": 194438,
+    "master_sha256": "fc92cb42a49e0edbbe5c30c22a32998e6184be08e8ac5d59521253182b4c1639",
+    "runtime_sha256": "2c77a762150604ecbc16507633ebef9408bc2049d8c3cf66335027ba1c3955dd"
+  },
+  {
+    "id": "supplies",
+    "master": "art/help/masters/supplies.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1990214,
+    "source_sha256": "ec6f24180cc24cf87ceb177a1cdc31bb35f9337dc76c7317ddc2c7b30e166f09",
+    "master_bytes": 466779,
+    "runtime_bytes": 175601,
+    "master_sha256": "8cb1e2041ab58c6bce0784e7d2960639ecd030990c96a260b4d80bc7f09c289b",
+    "runtime_sha256": "8a944f4c18460776fc89ae7e78a1aace6d49d73583de772bf445b22fa5b9ff17"
+  },
+  {
+    "id": "theurgist",
+    "master": "art/help/masters/theurgist.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1932838,
+    "source_sha256": "09e3ad52998855d1a34edfc3bb030e4e92a8dfe9e5613fc55303c55cb94cac86",
+    "master_bytes": 407386,
+    "runtime_bytes": 162111,
+    "master_sha256": "e96bd3944f4454d05529502f07d74f6e368153bef075a0f63a588a7a7a5c1255",
+    "runtime_sha256": "e771a4b36523e650a029eeb8f094b5ceb1028a94fd2ae9df4732eb518dc64e29"
+  },
+  {
+    "id": "travel",
+    "master": "art/help/masters/travel.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 2108050,
+    "source_sha256": "a5ace85274091e65598e04dfc4a26181e52be9b88c0df538581b86e3847ac094",
+    "master_bytes": 509348,
+    "runtime_bytes": 189378,
+    "master_sha256": "223d1fb2c51e279ec71c826b58367b5481230c8da5fc31e593fc5e8cd3696c62",
+    "runtime_sha256": "907df7999c27ac1ec653bc34f9bec796c3e91a07c62f0c086bc4ae031b018abe"
+  },
+  {
+    "id": "venefex",
+    "master": "art/help/masters/venefex.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1779183,
+    "source_sha256": "e694ca86482c1308b70ac6da66e10f3e5d13dc0b87a0053db1dc6f5e66779cad",
+    "master_bytes": 372825,
+    "runtime_bytes": 169874,
+    "master_sha256": "23846ad9c067e5cb87671c811dd1b75a67950c9c91ccc37d12cdeca79adcd998",
+    "runtime_sha256": "d929761a698b00fcb5ce8bc9220664b112358f54fcc1cd544bb5bee2efef49d3"
+  },
+  {
+    "id": "village",
+    "master": "art/help/masters/village.jpg",
+    "dimensions": [
+      1664,
+      936
+    ],
+    "source_bytes": 1814122,
+    "source_sha256": "e2e9ad255600629bcf87297fc96f4f0bf209455317c0e2a07173635aaa73d5c8",
+    "master_bytes": 377899,
+    "runtime_bytes": 153392,
+    "master_sha256": "7aee2f2ab1095d2fba54d2d42ed01f3deb5fec87ec07f4e3a6f6d39158619098",
+    "runtime_sha256": "a1e6e7715015af7c8d545f134367856e6d5789d05f37cfd9b2979309d0cba02c"
+  }
+]

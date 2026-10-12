@@ -1,18 +1,13 @@
 package net.goui.cosmicdungeon.playerclass.api;
 
-import net.goui.cosmicdungeon.CosmicDungeonMod;
+import net.goui.cosmicdungeon.client.screen.ClassInventoryPresentation;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 public class ExtraInventoryScreen extends AbstractContainerScreen<ExtraInventoryMenu> {
-    private static final ResourceLocation TEX = ResourceLocation.fromNamespaceAndPath(
-            CosmicDungeonMod.MOD_ID, "textures/gui/container/metalmancer_inventory.png");
-
     // store mouse like vanilla; renderBg will read these
     private float xMouse;
     private float yMouse;
@@ -27,7 +22,7 @@ public class ExtraInventoryScreen extends AbstractContainerScreen<ExtraInventory
     @Override
     protected void renderBg(GuiGraphics g, float pt, int mx, int my) {
         // backdrop
-        g.blit(RenderPipelines.GUI_TEXTURED, TEX, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, 256, 256);
+        ClassInventoryPresentation.background(g, this);
 
         // ---- Player preview (use the 10-arg rectangle API) ----
         // Pick a rectangle inside your black box (tweak if needed to fit your PNG)
@@ -45,7 +40,7 @@ public class ExtraInventoryScreen extends AbstractContainerScreen<ExtraInventory
     @Override
     protected void renderLabels(GuiGraphics g, int mouseX, int mouseY) {
         // Suppress vanilla labels and draw your own
-        g.drawString(this.font, Component.literal("Metalmancer"), 8, 6, 0x404040, false);
+        ClassInventoryPresentation.labels(g);
     }
 
     @Override

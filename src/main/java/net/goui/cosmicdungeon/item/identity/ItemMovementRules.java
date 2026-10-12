@@ -6,9 +6,9 @@ import net.goui.cosmicdungeon.util.ModTags;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
 
-/** Trading doc 1byHfuC0G_lb0IRrgO3kblLYP06AY8gJWm9bJOMlrFIc (2026-08-18).
- * Attuned gear may drop; its persistent owner controls collection. Other explicit bindings require owner-safe storage.
- * Ordinary named loot remains droppable; do not conflate sale eligibility with no-drop. */
+/** Player belongings may drop; world ownership controls collection. Legacy class/no-drop
+ * markers still require owner-safe storage, but no longer trap gear or ammunition in inventory.
+ * Currency recovery tokens and uninspectable nested contents retain their separate safeguards. */
 public final class ItemMovementRules {
     public record Flags(boolean noDrop, boolean privateStorage) {
         Flags merge(Flags other) { return new Flags(noDrop || other.noDrop, privateStorage || other.privateStorage); }
@@ -32,18 +32,16 @@ public final class ItemMovementRules {
                 || stack.is(ModTags.Items.CLASS_RESTRICTED_DRAGOON) || stack.is(ModTags.Items.CLASS_RESTRICTED_PYROCLAST)
                 || stack.is(ModTags.Items.CLASS_RESTRICTED_THEURGIST) || stack.is(ModTags.Items.CLASS_RESTRICTED_VENEFEX)
                 || stack.is(ModTags.Items.CLASS_RESTRICTED_METALMANCER) || stack.is(ModTags.Items.CLASS_RESTRICTED_DEADEYE);
-        boolean droppableAttuned = ClassItemOwnership.attuned(stack);
-        boolean noDrop = issued && !droppableAttuned;
         boolean privateStorage = issued || ClassItemOwnership.present(stack) || stack.has(ModDataComponents.CHOP_OWNER.get())
                 || stack.has(ModDataComponents.DUNGEON_RETURN_TARGET.get());
         var custom = stack.get(DataComponents.CUSTOM_DATA);
         if (custom != null) {
             var tag = custom.copyTag();
-            noDrop |= !droppableAttuned && (tag.contains("no_drop") || tag.contains("class_issued"));
-            privateStorage |= noDrop || tag.contains("owner") || tag.contains("owner_uuid")
+            privateStorage |= tag.contains("no_drop") || tag.contains("class_issued")
+                    || tag.contains("owner") || tag.contains("owner_uuid")
                     || tag.contains("bound") || tag.contains("quest_bound") || tag.contains("no_trade");
         }
-        var result = new Flags(noDrop, privateStorage);
+        var result = new Flags(false, privateStorage);
         var bundle = stack.get(DataComponents.BUNDLE_CONTENTS);
         if (bundle != null) for (var child : bundle.items()) {
             result = result.merge(inspect(child, depth + 1, budget));

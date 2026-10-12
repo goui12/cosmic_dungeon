@@ -19,3 +19,5 @@ Bound chops are owner- and run-specific. Transferred, stale, cross-run, unsafe, 
 If the lifecycle ends while its owner is outside, cleanup keeps the outside inventory and discards the isolated dungeon inventory according to the normal run boundary.
 
 For lower-level implementation and operator travel-service notes, see [Travel Services Design Notes](./Travel_Services_Design_Notes.md) and [Farrow's Chop and Beatrix's Campfire](../Travel/Farrows_Chop_and_Beatrixs_Campfire.md).
+
+Chop trades transfer the personal ownership record with the item. Each recipient must still satisfy the one-Chop limit; offer an existing Chop in the same exchange if necessary. A bound return Chop requires the recipient's own stored inventory in that active run. Trades never transfer another player's stored inventory, grant run membership, or bypass the return destination checks. If these conditions fail, the trade cancels and returns its original offers.

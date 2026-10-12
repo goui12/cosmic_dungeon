@@ -1,49 +1,11 @@
 # Pyroclast Help Guide
 
-## Class ID
+Class ID: `pyroclast`. Enabled for Dungeon 1.
 
-- `pyroclast`
+A sword, bow, and crossbow fighter with explosive utility. **Right-click flint** while carrying gravel to make gunpowder. Default cost is one flint plus one gravel for one gunpowder; keep output space free. The old shapeless inventory-grid instructions no longer apply.
 
-## Availability
+Use the authored D1 Cinderbite and Cindermaul rockets with their supported crossbow behavior. Their enhanced explosions affect eligible enemies, respect obstruction, and do not damage terrain. Actual damage follows the server configuration. Sword, bow, and crossbow skills progress passively. Renaming an ordinary item does not grant a class ability.
 
-- Selectable class ID exists.
-- Current selector availability: not separately documented as disabled.
+## Shared rules and controls
 
-## Overview
-
-Pyroclasts specialize in volatile dungeon utility and improvised explosive components. Their first innate crafting perk turns common mineral drops into gunpowder without requiring a fixed recipe shape.
-
-## Abilities
-
-### Innate craft: Gravel + Flint = Gunpowder
-
-- Pyroclasts can craft **1 gravel** and **1 flint** into **1 gunpowder**.
-- The recipe is shapeless, so the gravel and flint may be placed in any order or position in a normal crafting grid or the class inventory crafting grid.
-- When a Pyroclast picks up gravel while carrying flint, or picks up flint while carrying gravel, the player receives the reminder: `Craft: Gravel + Flint = Gunpowder`.
-- Crafting gunpowder with this recipe grants the Pyroclast achievement **Boom!** under the **Pyroclast** achievement category.
-
-
-## Benefits
-
-- Access to Pyroclast-attuned equipment, when such equipment is authored.
-- Access to Pyroclast class-locked chests.
-- Pyroclast-specific item assets exist in the current content set.
-
-## Incentives
-
-- TBD.
-
-## Team roles
-
-- TBD.
-
-## Class restrictions and access
-
-- Can use/wear equipment attuned to `pyroclast`.
-- Can open Pyroclast class-locked chests.
-- Other class-specific restrictions: TBD.
-
-## Known gaps / TBD
-
-- Define intended party role.
-- Define player-facing incentives.
+See the [current player guide](../PLAYER_GUIDE.md) for party sharing, crafting/fuel/stacks, gear ownership, trading, progression and travel. [Controls](../PLAYER_GUIDE.md#controls-and-passive-progression) lists defaults and rebinding. The inventory class-name link opens this class in the H guide.

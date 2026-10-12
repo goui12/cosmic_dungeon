@@ -11,6 +11,7 @@ public abstract class RepairCustodySaveMixin {
     @Inject(method="saveWithoutId",at=@At("HEAD"))
     private void cosmicdungeon$captureOwnedRepair(ValueOutput output,CallbackInfo ci){
         if((Object)this instanceof ServerPlayer player){
+            net.goui.cosmicdungeon.crafting.PotionCursorCustody.capture(player);
             RepairCustody.capture(player);
             net.goui.cosmicdungeon.trade.TradeCustody.capture(player);
         }

@@ -38,8 +38,20 @@ public final class ModNetworkClient {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private ModNetworkClient() {}
+    public static void onSpawnerEditor(net.goui.cosmicdungeon.network.SpawnerEditorPayloads.View payload){
+        net.goui.cosmicdungeon.client.screen.spawner.SpawnerEditorClient.receive(payload);
+    }
+    public static void onSpawnerLibrary(net.goui.cosmicdungeon.network.SpawnerEditorPayloads.LibraryView payload){
+        net.goui.cosmicdungeon.client.screen.spawner.SpawnerEditorClient.receiveLibrary(payload);
+    }
+    public static void onSpawnerHover(net.goui.cosmicdungeon.network.SpawnerEditorPayloads.HoverView payload){
+        SpawnerHoverClient.receive(payload);
+    }
     public static void onBogatyrActions(net.goui.cosmicdungeon.network.BogatyrPayloads.View payload){
         net.goui.cosmicdungeon.client.screen.skills.BogatyrClient.accept(payload);
+    }
+    public static void onPotionCraft(net.goui.cosmicdungeon.network.PotionCraftPayloads.View payload) {
+        net.goui.cosmicdungeon.client.screen.crafting.PotionCraftClient.receive(payload);
     }
     public static void onTheurgistActions(net.goui.cosmicdungeon.network.TheurgistPayloads.View payload){
         net.goui.cosmicdungeon.client.screen.skills.TheurgistClient.receive(payload);
@@ -84,6 +96,7 @@ public final class ModNetworkClient {
     }
     public static void onPartyInspection(net.goui.cosmicdungeon.network.PartyInspectionPayloads.View payload) {
         net.goui.cosmicdungeon.client.screen.PartyInspectionScreen.receive(payload);
+        net.goui.cosmicdungeon.client.screen.PartyInspectionHover.receive(payload);
     }
     public static void onD1PartyView(net.goui.cosmicdungeon.network.PartyPayloads.View payload) {
         if (payload.containerId() == -1) net.goui.cosmicdungeon.client.screen.D1PartyHud.receive(payload);

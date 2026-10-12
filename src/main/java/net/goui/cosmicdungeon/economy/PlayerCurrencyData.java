@@ -447,6 +447,12 @@ public final class PlayerCurrencyData extends SavedData {
         }
     }
     public Optional<TradeCommitPlan> tradePlan(UUID id){return Optional.ofNullable(tradePlans.get(id));}
+    public void markTradeChopsApplied(UUID id){
+        var plan=tradePlans.get(id);var transfer=transfers.get(id);
+        if(plan==null||transfer==null||!transfer.status().equals(AccountTransfer.COMMITTED))
+            throw new IllegalStateException("Chop transfer lacks committed trade decision");
+        tradePlans.put(id,plan.chopsApplied());setDirty();
+    }
     public Optional<UUID> pendingTrade(UUID owner){return Optional.ofNullable(tradeByOwner.get(owner));}
     public void prepareTrade(UUID id,TradeCommitPlan plan){
         validateTradePlan(id,plan);var old=tradePlans.get(id);

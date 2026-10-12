@@ -6,10 +6,10 @@
 
 ## Availability
 
-- Selectable class ID exists.
-- Currently documented as visible in the class selector but temporarily disabled.
+- The `deadeye` registry ID remains for compatibility, but this class is unavailable in the current Dungeon 1 selector and player H directory.
+- The notes below describe retained or incomplete code, not playable abilities or an unlock promise. Choose an [enabled class](../PLAYER_GUIDE.md#getting-started-and-finding-help).
 
-## Overview
+## Archived implementation notes - unavailable class
 
 TBD.
 

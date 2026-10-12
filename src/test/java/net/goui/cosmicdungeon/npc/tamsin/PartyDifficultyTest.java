@@ -30,6 +30,7 @@ final class PartyDifficultyTest {
     }
     @Test void difficultyChangeClearsReadinessAndRejectsOldConfirmations() {
         var l = lobby(); var p = l.party(leader);
+        D1PartyTestSupport.consentAll(l,leader);
         assertNull(l.begin(leader, p.revision(), Map.of(leader, "bogatyr", member, "pyroclast")));
         assertNull(l.ready(member, p.revision())); long previous = p.revision();
         assertNull(l.difficulty(leader, previous, "RIDICULOUS"));
@@ -38,6 +39,7 @@ final class PartyDifficultyTest {
     }
     @Test void queueAndPreparationFreezeDifficulty() {
         var l = lobby(); var p = l.party(leader);
+        D1PartyTestSupport.consentAll(l,leader);
         assertNull(l.begin(leader, p.revision(), Map.of(leader, "bogatyr", member, "pyroclast")));
         assertNull(l.ready(leader, p.revision())); assertNull(l.ready(member, p.revision()));
         assertNull(l.queue(leader, p.revision()));

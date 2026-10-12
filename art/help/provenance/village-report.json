@@ -1,0 +1,456 @@
+{
+  "batch": 18,
+  "owner": "village_help_art",
+  "generation_mode": "built-in image_gen",
+  "scope": "Nine category themes only; root owns shared mapping, package generation, UI code, final QA and release.",
+  "source_review": {
+    "local_only": true,
+    "live_refresh": false,
+    "source_content_committed": false,
+    "manifest_finished_utc": "2026-09-16T00:33:41.810223+00:00",
+    "reviewed": "Read LIVE AGENTS.md, README-FIRST.md, relevant DOCUMENT_INDEX rows, STATUS opening, manifest records, all eight Markdown lore documents and corresponding native all-tab JSON text/style/object metadata. Relevant sources each have one Tab 1; native scan found no inline images, red or strikethrough text or fidelity warnings. All linked Master Sheet reference hidden flags are retained below; no gameplay-table interpretation required for atmospheric art.",
+    "current_implementation": "Read HelpMenuContent.java category/page definitions and NPC lore. Existing current behavior prevails over older Beatrix mechanics in backup. No current online freshness claim.",
+    "sources": [
+      {
+        "source_id": "1SjIUILpITN8k1NiwWZxPVmJV8FMNTboYA6bz09w8zMs",
+        "title": "NPC Naton Whitlock",
+        "url": "https://docs.google.com/document/d/1SjIUILpITN8k1NiwWZxPVmJV8FMNTboYA6bz09w8zMs/edit?usp=drivesdk",
+        "version": "61",
+        "modified_utc": "2026-08-17T23:08:52.568Z",
+        "last_checked_utc": "2026-09-16T00:31:52.260497+00:00",
+        "artifacts": {
+          "Docs/1SjIUILpITN8k1NiwWZxPVmJV8FMNTboYA6bz09w8zMs.md": "3cc0088f5e308d66e54608f14551418a2d7b6f86271194e86298e69643a39ffe",
+          "Docs/1SjIUILpITN8k1NiwWZxPVmJV8FMNTboYA6bz09w8zMs.source.json": "3ba8068f13d66d96d0098268842af842e95e5234d1147068d75f8986b53c8472"
+        },
+        "native_revision": "ANLCKQmveOmWy0t-OJhkc4WFKT6vbAsBKwP-K-vqSQ0s08_WPs9mzqkkINRkeRVyq3Hjb_RDs_wdYH12GfTVE-5bL6bD7dVJ0HYq9JvAC-M",
+        "tabs": [
+          {
+            "path": "Tab 1",
+            "tab_id": "t.0"
+          }
+        ],
+        "sheet_references": [
+          {
+            "cell": "NPC!A5",
+            "hidden": false,
+            "label": "NPC Naton Whitlock"
+          }
+        ],
+        "fidelity_warnings": [],
+        "metadata_snapshot_checked_utc": "2026-09-16T00:19:39.946632+00:00",
+        "metadata_snapshot_status": "DOWNLOADED"
+      },
+      {
+        "source_id": "1FT6k2MFKgQf_tQ5UcBn0wmqJ9-yY_Wdpjna4USdVOZA",
+        "title": "NPC Beluzon (Internal)",
+        "url": "https://docs.google.com/document/d/1FT6k2MFKgQf_tQ5UcBn0wmqJ9-yY_Wdpjna4USdVOZA/edit?usp=drivesdk",
+        "version": "44",
+        "modified_utc": "2026-08-29T14:49:42.290Z",
+        "last_checked_utc": "2026-09-16T00:31:02.001400+00:00",
+        "artifacts": {
+          "Docs/1FT6k2MFKgQf_tQ5UcBn0wmqJ9-yY_Wdpjna4USdVOZA.md": "526360d9b47c1e95d3c68352a8e77886700bfa43f60697af0019226caaf26e0a",
+          "Docs/1FT6k2MFKgQf_tQ5UcBn0wmqJ9-yY_Wdpjna4USdVOZA.source.json": "e2e8539e46dc4b387a5b04d2d2626eaa0a4d4b332fb58cb7016200a19eb3a738"
+        },
+        "native_revision": "ANLCKQk2SbrDh_JXzB-ekgsNkhwf67fhS_5i_52UBCTlotg7YiYVBBkpax03BBvXU7FXkwT7Qk7brqdbqHsTqd0K6-Gx4uV_OZ-vbwBmaqw",
+        "tabs": [
+          {
+            "path": "Tab 1",
+            "tab_id": "t.0"
+          }
+        ],
+        "sheet_references": [
+          {
+            "cell": "Lore in Game!B6",
+            "hidden": false,
+            "label": "NPC Beluzon (Internal)"
+          },
+          {
+            "cell": "NPC!A14",
+            "hidden": false,
+            "label": "NPC Beluzon (Internal)"
+          }
+        ],
+        "fidelity_warnings": [],
+        "metadata_snapshot_checked_utc": "2026-09-16T00:18:06.156981+00:00",
+        "metadata_snapshot_status": "DOWNLOADED"
+      },
+      {
+        "source_id": "1NPLkgsaZH2Nyb0ujDV5s9Ttq4iAezFf_4X1xpasEdJ4",
+        "title": "Fragment/Currency Lore",
+        "url": "https://docs.google.com/document/d/1NPLkgsaZH2Nyb0ujDV5s9Ttq4iAezFf_4X1xpasEdJ4/edit?usp=drivesdk",
+        "version": "14",
+        "modified_utc": "2026-07-08T14:57:11.140Z",
+        "last_checked_utc": "2026-09-16T00:31:31.508233+00:00",
+        "artifacts": {
+          "Docs/1NPLkgsaZH2Nyb0ujDV5s9Ttq4iAezFf_4X1xpasEdJ4.md": "9b752d35720038322cf7273d006ea44e08be8d0e091f802142c07a0ea519d8a2",
+          "Docs/1NPLkgsaZH2Nyb0ujDV5s9Ttq4iAezFf_4X1xpasEdJ4.source.json": "8581fa0985ccb927a5c40cba3d8da0a943cc8d87c55e2d1627d4c92f3eb459aa"
+        },
+        "native_revision": "ANLCKQm4mz_hxtCIWWhS9GEZseORQ7v-mFRpkqt6HpSbx5-vwkuB_L3Z9Oc0HgZ0nI3McZF1U06XOtKUI1feYLn7Q1OcshjCUBvmWnvx-Zc",
+        "tabs": [
+          {
+            "path": "Tab 1",
+            "tab_id": "t.0"
+          }
+        ],
+        "sheet_references": [
+          {
+            "cell": "Lore in Game!A15",
+            "hidden": false,
+            "label": "Fragment/Currency Lore"
+          }
+        ],
+        "fidelity_warnings": [],
+        "metadata_snapshot_checked_utc": "2026-09-16T00:19:07.317327+00:00",
+        "metadata_snapshot_status": "DOWNLOADED"
+      },
+      {
+        "source_id": "1r-XtjgWAMHpYamn4_D2vmNTmHH0-23JP62Bac0tyq8E",
+        "title": "NPC Elias Centvin",
+        "url": "https://docs.google.com/document/d/1r-XtjgWAMHpYamn4_D2vmNTmHH0-23JP62Bac0tyq8E/edit?usp=drivesdk",
+        "version": "12",
+        "modified_utc": "2026-08-28T22:19:34.289Z",
+        "last_checked_utc": "2026-09-16T00:33:10.128556+00:00",
+        "artifacts": {
+          "Docs/1r-XtjgWAMHpYamn4_D2vmNTmHH0-23JP62Bac0tyq8E.md": "88cc838a18255e106fdc14945d51f2f0f0efccf3552bd44a13b129f7caff27fd",
+          "Docs/1r-XtjgWAMHpYamn4_D2vmNTmHH0-23JP62Bac0tyq8E.source.json": "24743a516709bfb030d61d91383536b756435bb7e2800ff9c0b993bf192324c9"
+        },
+        "native_revision": "ANLCKQnQFEBK2HEQjz4SvJkUMEcI-NcpgToWDK3dyUPtKniT4wBBxzYMYnTLoHJSJh1jAbGD4MC3Id_-6ZfU23UWnIWXPeJtt1MnEO7MJ_E",
+        "tabs": [
+          {
+            "path": "Tab 1",
+            "tab_id": "t.0"
+          }
+        ],
+        "sheet_references": [
+          {
+            "cell": "NPC!A6",
+            "hidden": false,
+            "label": "NPC Elias Centvin"
+          }
+        ],
+        "fidelity_warnings": [],
+        "metadata_snapshot_checked_utc": "2026-09-16T00:22:11.256839+00:00",
+        "metadata_snapshot_status": "DOWNLOADED"
+      },
+      {
+        "source_id": "1LwIctAvogSULFfP79QTMhOZtBBQj-mKqaxA-t7jksTc",
+        "title": "NPC Eon Penrose",
+        "url": "https://docs.google.com/document/d/1LwIctAvogSULFfP79QTMhOZtBBQj-mKqaxA-t7jksTc/edit?usp=drivesdk",
+        "version": "95",
+        "modified_utc": "2026-08-19T20:44:48.175Z",
+        "last_checked_utc": "2026-09-16T00:31:26.768790+00:00",
+        "artifacts": {
+          "Docs/1LwIctAvogSULFfP79QTMhOZtBBQj-mKqaxA-t7jksTc.md": "eb33480c0567565c6c6399331c2cffda1c11c2f76e576fdf3d5e561ca9cf81a4",
+          "Docs/1LwIctAvogSULFfP79QTMhOZtBBQj-mKqaxA-t7jksTc.source.json": "63c305a6d6af43f255b83b02092c938e82b0bfc74075ec5ec7fd13ab7482db03"
+        },
+        "native_revision": "ANLCKQljEjbPNif2autAjzFkkxSUqA1ASeBjEv-RTR6S8RrKvd57cjtLc37gwykusU4GDQ2-K0J-e0DP9CVVudt73OGCTGfDIoy1Wi5mwz8",
+        "tabs": [
+          {
+            "path": "Tab 1",
+            "tab_id": "t.0"
+          }
+        ],
+        "sheet_references": [
+          {
+            "cell": "Finance!A14",
+            "hidden": false,
+            "label": "NPC Eon Penrose"
+          },
+          {
+            "cell": "NPC!A7",
+            "hidden": false,
+            "label": "NPC Eon Penrose"
+          }
+        ],
+        "fidelity_warnings": [],
+        "metadata_snapshot_checked_utc": "2026-09-16T00:18:55.765604+00:00",
+        "metadata_snapshot_status": "DOWNLOADED"
+      },
+      {
+        "source_id": "1b0X-DFkmqheomsfC2ubajo4_iDQ9UlO9-YGPbwRryCE",
+        "title": "NPC Beatrix Farrow",
+        "url": "https://docs.google.com/document/d/1b0X-DFkmqheomsfC2ubajo4_iDQ9UlO9-YGPbwRryCE/edit?usp=drivesdk",
+        "version": "154",
+        "modified_utc": "2026-08-19T22:12:52.000Z",
+        "last_checked_utc": "2026-09-16T00:32:17.130624+00:00",
+        "artifacts": {
+          "Docs/1b0X-DFkmqheomsfC2ubajo4_iDQ9UlO9-YGPbwRryCE.md": "ad197c63be01e0517ae6a9f367b56d41cef2da48daca027df48969dbb99f5cd8",
+          "Docs/1b0X-DFkmqheomsfC2ubajo4_iDQ9UlO9-YGPbwRryCE.source.json": "648d18958072ecd8c36accb1843907129a540e43345e91b3355bded00a9c47b4"
+        },
+        "native_revision": "ANLCKQnEHodp58yFAXuwI8IyS2w84qCOlTQU04bIU48sLIYGGnCpqlEYIDZqTqoXr52KgFEDUClQnCTtHqVaaEY9mgcWMRlvw_enwy1I1YU",
+        "tabs": [
+          {
+            "path": "Tab 1",
+            "tab_id": "t.0"
+          }
+        ],
+        "sheet_references": [
+          {
+            "cell": "Finance!A16",
+            "hidden": false,
+            "label": "NPC Beatrix Farrow"
+          },
+          {
+            "cell": "NPC!A8",
+            "hidden": false,
+            "label": "NPC Beatrix Farrow"
+          }
+        ],
+        "fidelity_warnings": [],
+        "metadata_snapshot_checked_utc": "2026-09-16T00:20:29.571311+00:00",
+        "metadata_snapshot_status": "DOWNLOADED"
+      },
+      {
+        "source_id": "1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4",
+        "title": "Tamsin Vane (Internal)",
+        "url": "https://docs.google.com/document/d/1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4/edit?usp=drivesdk",
+        "version": "46",
+        "modified_utc": "2026-08-19T22:35:48.808Z",
+        "last_checked_utc": "2026-09-16T00:30:08.617345+00:00",
+        "artifacts": {
+          "Docs/1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4.md": "5df441ebb452776e44a07e94159ad1af13a4e28c98223a5f38db89931ba7d49f",
+          "Docs/1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4.source.json": "7aac26ab3fcdb15cf0cac895bf176a692d7714f4f6df57a2b780020cbd62684e"
+        },
+        "native_revision": "ANLCKQnSS4QwWogY-mOat_ccwkgP51eVznCu39UNB8JXVUT9Dq9eA0F8ScZle_LGIX12BHRbGMMfPNalewnhKFQFYTvL1DtaNM9cwmoiKhg",
+        "tabs": [
+          {
+            "path": "Tab 1",
+            "tab_id": "t.0"
+          }
+        ],
+        "sheet_references": [
+          {
+            "cell": "NPC!A13",
+            "hidden": false,
+            "label": "Tamsin Vane (Internal)"
+          }
+        ],
+        "fidelity_warnings": [],
+        "metadata_snapshot_checked_utc": "2026-09-16T00:16:10.543032+00:00",
+        "metadata_snapshot_status": "DOWNLOADED"
+      },
+      {
+        "source_id": "1e1po-TpjWQpTJ6ueIfnpTDNRZ1za3J7434Y4nFXvSmo",
+        "title": "John Hamish Watson (Internal)",
+        "url": "https://docs.google.com/document/d/1e1po-TpjWQpTJ6ueIfnpTDNRZ1za3J7434Y4nFXvSmo/edit?usp=drivesdk",
+        "version": "21",
+        "modified_utc": "2026-07-10T20:39:40.976Z",
+        "last_checked_utc": "2026-09-16T00:32:23.632109+00:00",
+        "artifacts": {
+          "Docs/1e1po-TpjWQpTJ6ueIfnpTDNRZ1za3J7434Y4nFXvSmo.md": "5cb54694f3e0f17317ef4b6045199df7a16514b117182ceb9c0deeb1ed4d9311",
+          "Docs/1e1po-TpjWQpTJ6ueIfnpTDNRZ1za3J7434Y4nFXvSmo.source.json": "0f55de00678bbdb1cb66781b2f070635809c4ab4739d531603713430e926f943"
+        },
+        "native_revision": "ANLCKQm8ZYomY0B3e4OP_arOTtHlvDSkpVhXae5apnZGt4fK-7VoWCSBTnzeQm4BOdHNI3hxowr55LBBMAgmJqLL_vXJCBeg-mpm_NINO1g",
+        "tabs": [
+          {
+            "path": "Tab 1",
+            "tab_id": "t.0"
+          }
+        ],
+        "sheet_references": [
+          {
+            "cell": "NPC!A15",
+            "hidden": false,
+            "label": "John Hamish Watson (Internal)"
+          }
+        ],
+        "fidelity_warnings": [],
+        "metadata_snapshot_checked_utc": "2026-09-16T00:20:48.000994+00:00",
+        "metadata_snapshot_status": "DOWNLOADED"
+      }
+    ]
+  },
+  "masters": [
+    {
+      "theme": "village",
+      "path": "/workspace/scratch/bf10caee512a/help-art/masters/village.png",
+      "intended_aspect": "16:9; tool emitted near16:9 raw canvas, coordinator applies deterministic center crop",
+      "source_ids": [
+        "1SjIUILpITN8k1NiwWZxPVmJV8FMNTboYA6bz09w8zMs",
+        "1FT6k2MFKgQf_tQ5UcBn0wmqJ9-yY_Wdpjna4USdVOZA"
+      ],
+      "prompt": "Use case: stylized-concept. Asset: one 16:9 landscape master background for the Cosmic Dungeon in-game help guide, requested size 1536x864. Theme: village. Depict the restored village's modest timber supply stalls remembered by rescued souls, small warm lantern-lit counter and distant pale oak timber at night, a refuge with a faint haunted atmosphere. No people. Dark charcoal, muted moss, desaturated warm brown and tiny soft amber accents. Dark painterly broad pixel-friendly shapes, restrained brush texture, soft atmospheric edges, consistent handcrafted fantasy game background. Composition is essential: left 65% and central lower area almost empty very dark low-contrast shadow for dense light help text; only a compact recognizable motif of a timber stall and lantern centered around normalized x .72 y .35, no important objects in the outer 13% margins. Subject should survive center crops to 4:3 and 21:9. Keep the motif subtle, not a bright hero image; full artwork without any frame. No text, letters, signs, logos, watermark, UI, emblems, coins, portals, bosses, large creatures or promises of further unavailable content.",
+      "edits": [],
+      "inspection": {
+        "inspected": true,
+        "no_text_logo_ui": true,
+        "quiet_text_zone": true,
+        "unavailable_content_implied": false,
+        "notes": "Modest timber supply stall and muted lantern in village refuge; quiet dark left field. No identifiable NPC, unavailable buildings or gameplay promise. Background architectural details are atmospheric, not a world-layout map."
+      },
+      "width": 1672,
+      "height": 941,
+      "bytes": 1814122
+    },
+    {
+      "theme": "supplies",
+      "path": "/workspace/scratch/bf10caee512a/help-art/masters/supplies.png",
+      "intended_aspect": "16:9; tool emitted near16:9 raw canvas, coordinator applies deterministic center crop",
+      "source_ids": [
+        "1SjIUILpITN8k1NiwWZxPVmJV8FMNTboYA6bz09w8zMs"
+      ],
+      "prompt": "Use case: stylized-concept. Asset: one 16:9 landscape master background for Cosmic Dungeon in-game help; request 1536x864. Dark painterly broad pixel-friendly shapes and quiet restrained brush texture, atmospheric fantasy. Charcoal, desaturated moss and brown, small warm amber highlights. Composition: left 65% and central lower area nearly empty, very dark low-contrast shadows behind dense light text. Place only a compact recognizable main motif at normalized .72,.35, safely inside outer13% margins; focal point must survive center cropping to 4:3 and 21:9. No high-contrast hero object, decorative frame, text, letters, signs, logos, watermark, UI, emblems, characters, portals or unavailable content. Theme supplies: Naton Whitlock's humble crowded wooden travel-supply stall at night. The compact motif shows an ordinary bucket hung slightly crooked, tied torch bundle, small loaf of bread and a couple of apples in a box, with a flint and steel on counter. Everything ordinary, used and useful, not rare treasure. No coins or drawn labels. Tools and produce are loosely mixed. Tiny muted lantern light softly warms the cluster against deep shadow.",
+      "edits": [],
+      "inspection": {
+        "inspected": true,
+        "no_text_logo_ui": true,
+        "quiet_text_zone": true,
+        "unavailable_content_implied": false,
+        "notes": "Ordinary bucket, torch bundle, bread/apples and tools at a crowded stall; no rare treasure or readable signs. Bucket and torch motif survive central crop; secondary right-edge goods may be decorative crop loss."
+      },
+      "width": 1672,
+      "height": 941,
+      "bytes": 1990214
+    },
+    {
+      "theme": "forge",
+      "path": "/workspace/scratch/bf10caee512a/help-art/masters/forge.png",
+      "intended_aspect": "16:9; tool emitted near16:9 raw canvas, coordinator applies deterministic center crop",
+      "source_ids": [
+        "1r-XtjgWAMHpYamn4_D2vmNTmHH0-23JP62Bac0tyq8E"
+      ],
+      "prompt": "Use case: stylized-concept. Asset: one 16:9 landscape master background for Cosmic Dungeon in-game help; request 1536x864. Dark painterly broad pixel-friendly shapes and quiet restrained brush texture, atmospheric fantasy. Charcoal, desaturated moss and brown, small warm amber highlights. Composition: left 65% and central lower area nearly empty, very dark low-contrast shadows behind dense light text. Place only a compact recognizable main motif at normalized .72,.35, safely inside outer13% margins; focal point must survive center cropping to 4:3 and 21:9. No high-contrast hero object, decorative frame, text, letters, signs, logos, watermark, UI, emblems, characters, portals or unavailable content. Theme forge: Elias Centvin's disciplined armorer workshop remembered by a restored soul. Compact motif: an old plain anvil, smithing hammer and neatly arranged tongs beneath a straight tool rail; a worn small breastplate leaned nearby. Muted forge ember glow and cold steel. No person, skull, gore, spectral fighter, exotic weapon or magical equipment. Convey care and order in mending armor. All elements stay small and subtle in the right third.",
+      "edits": [],
+      "inspection": {
+        "inspected": true,
+        "no_text_logo_ui": true,
+        "quiet_text_zone": true,
+        "unavailable_content_implied": false,
+        "notes": "Old anvil, straight tool rail and worn breastplate communicate ordered repair workshop. No figure, combat scene or special new gear; anvil stays visible in central crops."
+      },
+      "width": 1672,
+      "height": 941,
+      "bytes": 1817744
+    },
+    {
+      "theme": "apothecary",
+      "path": "/workspace/scratch/bf10caee512a/help-art/masters/apothecary.png",
+      "intended_aspect": "16:9; tool emitted near16:9 raw canvas, coordinator applies deterministic center crop",
+      "source_ids": [
+        "1LwIctAvogSULFfP79QTMhOZtBBQj-mKqaxA-t7jksTc"
+      ],
+      "prompt": "Use case: stylized-concept. Asset: one 16:9 landscape master background for Cosmic Dungeon in-game help; request 1536x864. Dark painterly broad pixel-friendly shapes and quiet restrained brush texture, atmospheric fantasy. Charcoal, desaturated moss and brown, small warm amber highlights. Composition: left 65% and central lower area nearly empty, very dark low-contrast shadows behind dense light text. Place only a compact recognizable main motif at normalized .72,.35, safely inside outer13% margins; focal point must survive center cropping to 4:3 and 21:9. No high-contrast hero object, decorative frame, text, letters, signs, logos, watermark, UI, emblems, characters, portals or unavailable content. Theme apothecary: Eon Penrose's modest busy workbench with three small glass potion vials, herbs and plain sheets pinned beneath a paperweight, no visible writing. Small careful flames beneath narrow-neck glass bottles, simmering amber and desaturated teal liquids, a restrained trace of vapor. The bottles and herbs should form one compact motif in the right third with soft shadows; no laboratory technology, labels, extravagant magic, new potion power or character. Background shelves dissolve into darkness.",
+      "edits": [],
+      "inspection": {
+        "inspected": true,
+        "no_text_logo_ui": true,
+        "quiet_text_zone": true,
+        "unavailable_content_implied": false,
+        "notes": "Glass bottles above small flames, herbs and plain note sheets. No readable potion names, promised effect or stock interface; main bottle group in right-center."
+      },
+      "width": 1672,
+      "height": 940,
+      "bytes": 1790214
+    },
+    {
+      "theme": "hearth",
+      "path": "/workspace/scratch/bf10caee512a/help-art/masters/hearth.png",
+      "intended_aspect": "16:9; tool emitted near16:9 raw canvas, coordinator applies deterministic center crop",
+      "source_ids": [
+        "1b0X-DFkmqheomsfC2ubajo4_iDQ9UlO9-YGPbwRryCE"
+      ],
+      "prompt": "Use case: stylized-concept. Asset: one 16:9 landscape master background for Cosmic Dungeon in-game help; request 1536x864. Dark painterly broad pixel-friendly shapes and quiet restrained brush texture, atmospheric fantasy. Charcoal, desaturated moss and brown, small warm amber highlights. Composition: left 65% and central lower area nearly empty, very dark low-contrast shadows behind dense light text. Place only a compact recognizable main motif at normalized .72,.35, safely inside outer13% margins; focal point must survive center cropping to 4:3 and 21:9. No high-contrast hero object, decorative frame, text, letters, signs, logos, watermark, UI, emblems, characters, portals or unavailable content. Theme hearth: the memory of home carried by Beatrix Farrow's ordinary warm food. A small campfire by a modest village wooden fence, with one plain cooked pork chop and loaf on a wooden board nearby; a feed bucket hinted in the shadows. Compact motif in the right third. Gentle ember glow, sheltered restful feeling, no person, child, butcher, slaughter, blood, meat carcasses, teleport portal, supernatural food effects or proprietary magic campfire. No display of mechanics, only the lived-in warmth of food for travelers.",
+      "edits": [],
+      "inspection": {
+        "inspected": true,
+        "no_text_logo_ui": true,
+        "quiet_text_zone": true,
+        "unavailable_content_implied": false,
+        "notes": "Ordinary campfire, cooked pork chop, bread and modest fence/feed bucket. No gore, child depiction, travel portal or obsolete special-campfire mechanics. Warmest of nine assets; final overlay contrast must be checked by coordinator."
+      },
+      "width": 1672,
+      "height": 941,
+      "bytes": 2037031
+    },
+    {
+      "theme": "first_heart",
+      "path": "/workspace/scratch/bf10caee512a/help-art/masters/first_heart.png",
+      "intended_aspect": "16:9; tool emitted near16:9 raw canvas, coordinator applies deterministic center crop",
+      "source_ids": [
+        "1FT6k2MFKgQf_tQ5UcBn0wmqJ9-yY_Wdpjna4USdVOZA"
+      ],
+      "prompt": "Use case: stylized-concept. Asset: one 16:9 landscape master background for Cosmic Dungeon in-game help; request 1536x864. Dark painterly broad pixel-friendly shapes and quiet restrained brush texture, atmospheric fantasy. Charcoal, desaturated moss and brown, small warm amber highlights. Composition: left 65% and central lower area nearly empty, very dark low-contrast shadows behind dense light text. Place only a compact recognizable main motif at normalized .72,.35, safely inside outer13% margins; focal point must survive center cropping to 4:3 and 21:9. No high-contrast hero object, decorative frame, text, letters, signs, logos, watermark, UI, emblems, characters, portals or unavailable content. Theme First Heart: a quiet large wooden village inn sleeping hall at night. The sole compact motif at right is a protected pale-oak supporting pillar, silver-gray bark, with a subtle warm orange creaking heart deep within its wood, a few dark root curves. Hint of an ordinary empty bed and newer timber framing behind it. Inn shelter and old woodland memory; not a heart-shaped object, human heart, rune, portal or glowing gem. No people, no villager, no creature. Keep the pillar's visible old wood muted and the heart's illumination very small and warm. The First Heart belongs to the native Creaking Beluzon, but do not depict Beluzon himself. Left two thirds unlit quiet hall.",
+      "edits": [],
+      "inspection": {
+        "inspected": true,
+        "no_text_logo_ui": true,
+        "quiet_text_zone": true,
+        "unavailable_content_implied": false,
+        "notes": "Pale oak pillar supporting inn with subtle orange heart and background beds. Correct native Creaking association, no restored villager or retail vendor implication. Heart is safely inside right center."
+      },
+      "width": 1672,
+      "height": 941,
+      "bytes": 1810154
+    },
+    {
+      "theme": "expedition",
+      "path": "/workspace/scratch/bf10caee512a/help-art/masters/expedition.png",
+      "intended_aspect": "16:9; tool emitted near16:9 raw canvas, coordinator applies deterministic center crop",
+      "source_ids": [
+        "1-FcHP73pFytPfoM2KhUPa6tt_2licsgWmWokto4YzE4"
+      ],
+      "prompt": "Use case: stylized-concept. Asset: one 16:9 landscape master background for Cosmic Dungeon in-game help; request 1536x864. Dark painterly broad pixel-friendly shapes and quiet restrained brush texture, atmospheric fantasy. Charcoal, desaturated moss and brown, small warm amber highlights. Composition: left 65% and central lower area nearly empty, very dark low-contrast shadows behind dense light text. Place only a compact recognizable main motif at normalized .72,.35, safely inside outer13% margins; focal point must survive center cropping to 4:3 and 21:9. No high-contrast hero object, decorative frame, text, letters, signs, logos, watermark, UI, emblems, characters, portals or unavailable content. Theme expedition: a treasure hunter's modest worn leather field pack and a rolled parchment map tied with string on a shadowed stone ledge, a small brass compass and an old unlit lantern beside them; a narrow cave mouth hinted beyond. No writing or symbols on the map, keep it rolled and its visible paper blank. Compact right-third motif, weathered material and tiny reflected amber light. Suggest Tamsin Vane's cautious discovery of the route to an abandoned underground Base Camp. No coins, treasure chest, promised rewards, portal, person or route interface. Background is only dim cave shadow and weathered root.",
+      "edits": [],
+      "inspection": {
+        "inspected": true,
+        "no_text_logo_ui": true,
+        "quiet_text_zone": true,
+        "unavailable_content_implied": false,
+        "notes": "Worn pack, rolled blank map, compass and lantern in cave. No readable map route, actual inventory reward, coins or guaranteed treasure. Some lantern detail at far right may crop while pack/map remain."
+      },
+      "width": 1672,
+      "height": 941,
+      "bytes": 2029381
+    },
+    {
+      "theme": "scholar",
+      "path": "/workspace/scratch/bf10caee512a/help-art/masters/scholar.png",
+      "intended_aspect": "16:9; tool emitted near16:9 raw canvas, coordinator applies deterministic center crop",
+      "source_ids": [
+        "1e1po-TpjWQpTJ6ueIfnpTDNRZ1za3J7434Y4nFXvSmo"
+      ],
+      "prompt": "Use case: stylized-concept. Asset: one 16:9 landscape master background for Cosmic Dungeon in-game help; request 1536x864. Dark painterly broad pixel-friendly shapes and quiet restrained brush texture, atmospheric fantasy. Charcoal, desaturated moss and brown, small warm amber highlights. Composition: left 65% and central lower area nearly empty, very dark low-contrast shadows behind dense light text. Place only a compact recognizable main motif at normalized .72,.35, safely inside outer13% margins; focal point must survive center cropping to 4:3 and 21:9. No high-contrast hero object, decorative frame, text, letters, signs, logos, watermark, UI, emblems, characters, portals or unavailable content. Theme scholar: John Hamish Watson's abandoned makeshift underground Base Camp. A closed weathered journal with loose blank paper beneath it, extinguished lantern, frayed dark bedroll and six separate spectral flower blossoms arranged in a small subdued cluster on a stone ledge. Precisely six blossoms total, individually countable, faint desaturated cool blue-white spectral petals, no other flowers anywhere. They are an illustrative symbolic grouping, not a scene of all flowers located together in the actual game. Main motif small in the right third and all six flowers within x .65 to .80 so all survive a central4:3 crop. Ruined masonry fades into dark left negative space. No ghost, living scholar, new quest, second dungeon, boss, route or readable journal text. Restrained sorrowful archaeological memory rather than horror spectacle.",
+      "edits": [
+        {
+          "accepted": false,
+          "prompt": "Edit the attached Cosmic Dungeon scholar help background. Preserve the dark painterly abandoned camp, closed journal, unlit lantern, frayed bedroll, ruined masonry, color palette and entire left 60% quiet shadow composition. Change only the six spectral blossoms: move and scale their entire cluster so ALL SIX clearly separate blossoms fit inside the rectangle x=64% to80% of image width and y=45% to65% of image height. Keep precisely SIX flowers, no others. Make them smaller and their white glow softly muted blue-gray so they are a restrained background motif. This ensures every blossom survives center4:3 and21:9 cropping. The clustered blossoms may sit on the stone immediately below the journal; don't move the whole scene. No text, labels, logo, watermark, UI or new objects. Preserve16:9 landscape ratio."
+        },
+        {
+          "accepted": true,
+          "prompt": "Edit only the flower arrangement in this landscape background. Remove EVERY flower currently sitting on the bare stone. Instead put exactly SIX tiny spectral blossoms lying ON THE CLOSED LEATHER JOURNAL COVER, arranged like a simple two-row by three-column array: three blossoms across the back row, three across the front row. All six must be entirely contained on the journal's cover. No flower anywhere outside the journal. The flowers are very small, translucent muted blue-gray, low glow. Keep exactly six, individually separated and countable. Preserve every other part: dark left two thirds, abandoned camp, journal itself, unlit lantern, rolled bedroll, ruins, painterly style,16:9aspect. Do not add text, symbols, logos, UI or extra objects."
+        }
+      ],
+      "inspection": {
+        "inspected": true,
+        "no_text_logo_ui": true,
+        "quiet_text_zone": true,
+        "unavailable_content_implied": false,
+        "notes": "Closed journal, extinguished lantern, frayed bedroll and precisely six small spectral blossoms on journal cover. Six are symbolic grouped imagery, not actual in-world spawn placement. Initial image six blossoms extended beyond safe crop. First edit rejected: seven blooms and placement failure. Final edit accepted: six countable blossoms, all on journal inside x~.66\u2013.80/y~.44\u2013.56; no D2 imagery or written text."
+      },
+      "width": 1672,
+      "height": 941,
+      "bytes": 2034078
+    },
+    {
+      "theme": "exchange",
+      "path": "/workspace/scratch/bf10caee512a/help-art/masters/exchange.png",
+      "intended_aspect": "16:9; tool emitted near16:9 raw canvas, coordinator applies deterministic center crop",
+      "source_ids": [
+        "1NPLkgsaZH2Nyb0ujDV5s9Ttq4iAezFf_4X1xpasEdJ4"
+      ],
+      "prompt": "Use case: stylized-concept. Asset: one 16:9 landscape master background for Cosmic Dungeon in-game help; request 1536x864. Dark painterly broad pixel-friendly shapes and quiet restrained brush texture, atmospheric fantasy. Charcoal, desaturated moss and brown, small warm amber highlights. Composition: left 65% and central lower area nearly empty, very dark low-contrast shadows behind dense light text. Place only a compact recognizable main motif at normalized .72,.35, safely inside outer13% margins; focal point must survive center cropping to 4:3 and 21:9. No high-contrast hero object, decorative frame, text, letters, signs, logos, watermark, UI, emblems, characters, portals or unavailable content. Theme exchange: a small old empty merchant balance on a plain timber counter in shadow. Above the pans float a few wispy translucent blue-gray flecks of severed attunement, like delicate broken strands of light, symbolic of Trace that freed souls value as protection. This is metaphorical residue, not coins, currency inventory items or physical gems. Compact balance and wisps near normalized .72,.35, the rest nearly black empty merchant interior. Very restrained spectral glint and a tiny warm ambient reflection. No coins, diamonds, precious treasure, wallets, bags of money, denomination marks, numbers, bars, scales with text, or graphical UI. Simple fair exchange of protective remnants, nothing flashy.",
+      "edits": [],
+      "inspection": {
+        "inspected": true,
+        "no_text_logo_ui": true,
+        "quiet_text_zone": true,
+        "unavailable_content_implied": false,
+        "notes": "Merchant balance with wisps of severed attunement; protective-residue metaphor. No coins, denominations or physical redeemable currency claim. Main scale and wisps within center-crop safe area."
+      },
+      "width": 1672,
+      "height": 941,
+      "bytes": 1643964
+    }
+  ],
+  "validation_boundary": "Master images visually inspected in tool output. Representative rendered text overlays, exact16:9 crop/downsample and 4:3/16:9/21:9 supported-scale checks are coordinator-owned. No licensed in-game visual QA performed."
+}

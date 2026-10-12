@@ -9,7 +9,9 @@ import java.util.UUID;
 /** Shared gate for inventory replacement; recovery precedes dungeon/Chop escrow transitions. */
 public final class InventoryTransactionGuard {
     private InventoryTransactionGuard(){}
-    public static boolean blocked(ServerPlayer p){return net.goui.cosmicdungeon.playerclass.resource.ClassResourceService.blocked(p)||D1WatsonRecovery.blocked(p)||net.goui.cosmicdungeon.dungeon.DungeonInventoryHandoffs.blocked(p)||net.goui.cosmicdungeon.dungeon.ChopTravelRecovery.blocked(p)||net.goui.cosmicdungeon.economy.DeathCurrencyService.blocked(p)||net.goui.cosmicdungeon.vendor.CommerceTransactions.blocked(p)||RepairTransactions.blocked(p)||net.goui.cosmicdungeon.trade.TradeTransactions.blocked(p);}
+    public static boolean blocked(ServerPlayer p){return net.goui.cosmicdungeon.crafting.SharedCraftTransactions.blocked(p)||blockedExceptCrafting(p);}
+    /** The current craft reservation may revalidate other guards without recursively rejecting itself. */
+    public static boolean blockedExceptCrafting(ServerPlayer p){return net.goui.cosmicdungeon.playerclass.resource.ClassResourceService.blocked(p)||D1WatsonRecovery.blocked(p)||net.goui.cosmicdungeon.dungeon.DungeonInventoryHandoffs.blocked(p)||net.goui.cosmicdungeon.dungeon.ChopTravelRecovery.blocked(p)||net.goui.cosmicdungeon.economy.DeathCurrencyService.blocked(p)||net.goui.cosmicdungeon.vendor.CommerceTransactions.blocked(p)||RepairTransactions.blocked(p)||net.goui.cosmicdungeon.trade.TradeTransactions.blocked(p);}
     /** Inventory UI actions only: already-clean state needs no close-window/recovery side effects. */
     public static boolean beforeCurrentInventoryAction(ServerPlayer p){
         return p.containerMenu==p.inventoryMenu&&p.inventoryMenu.getCarried().isEmpty()&&!blocked(p);
@@ -20,8 +22,9 @@ public final class InventoryTransactionGuard {
                 &&D1WatsonRecovery.readyForCleanup(p.level().getServer(),List.of(p.getUUID()))
                 &&!net.goui.cosmicdungeon.dungeon.DungeonInventoryHandoffs.blocked(p)&&otherTransactionsReady(p);
     }
-    public static boolean otherTransactionsReady(ServerPlayer p){return net.goui.cosmicdungeon.playerclass.theurgist.TheurgistRevival.beforeInventoryChange(p)&&net.goui.cosmicdungeon.playerclass.resource.SupplyTransfers.beforeInventoryChange(p)&&!net.goui.cosmicdungeon.playerclass.resource.ClassResourceService.blocked(p)&&!net.goui.cosmicdungeon.dungeon.ChopTravelRecovery.blocked(p)&&!net.goui.cosmicdungeon.economy.DeathCurrencyService.blocked(p)&&net.goui.cosmicdungeon.vendor.CommerceTransactions.beforeInventoryChange(p)&&RepairTransactions.beforeInventoryChange(p)&&TradeCustody.beforeInventoryChange(p);}
+    public static boolean otherTransactionsReady(ServerPlayer p){return net.goui.cosmicdungeon.crafting.SharedCraftTransactions.beforeInventoryChange(p)&&net.goui.cosmicdungeon.playerclass.theurgist.TheurgistRevival.beforeInventoryChange(p)&&net.goui.cosmicdungeon.playerclass.resource.SupplyTransfers.beforeInventoryChange(p)&&!net.goui.cosmicdungeon.playerclass.resource.ClassResourceService.blocked(p)&&!net.goui.cosmicdungeon.dungeon.ChopTravelRecovery.blocked(p)&&!net.goui.cosmicdungeon.economy.DeathCurrencyService.blocked(p)&&net.goui.cosmicdungeon.vendor.CommerceTransactions.beforeInventoryChange(p)&&RepairTransactions.beforeInventoryChange(p)&&TradeCustody.beforeInventoryChange(p);}
     public static boolean readyForCleanup(MinecraftServer server,List<UUID> owners){
+        if(!net.goui.cosmicdungeon.crafting.SharedCraftTransactions.readyForCleanup(server,owners))return false;
         if(!net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommands.readyForCleanup(server,owners))return false;
         if(!net.goui.cosmicdungeon.playerclass.theurgist.TheurgistRevival.readyForCleanup(server,owners))return false;
         if(!net.goui.cosmicdungeon.playerclass.resource.SupplyTransfers.readyForCleanup(server,owners))return false;

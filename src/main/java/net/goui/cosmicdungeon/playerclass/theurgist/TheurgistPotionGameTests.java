@@ -40,13 +40,17 @@ public final class TheurgistPotionGameTests {
         final net.minecraft.world.scores.PlayerTeam team;
         @SuppressWarnings("unchecked") Fixture(GameTestHelper helper,long run){
             this.helper=helper;this.level=helper.getLevel();this.run=run;
-            var anchor=helper.absoluteVec(new Vec3(1.5,10.5,1.5));var chunk=new ChunkPos(BlockPos.containing(anchor));
-            origin=new Vec3(chunk.getMinBlockX()+8.5,anchor.y,chunk.getMinBlockZ()+8.5);
+            // Choose the structure's guaranteed ticking chunk before applying relative offsets.
+            // A one-block template at an edge can place +1.5 in an inaccessible neighbor.
+            var anchor=helper.absolutePos(BlockPos.ZERO);var chunk=new ChunkPos(anchor);
+            check(level.areEntitiesActuallyLoadedAndTicking(chunk),"Potion fixture starts in the native test structure's ticking chunk");
+            origin=new Vec3(chunk.getMinBlockX()+8.5,anchor.getY()+10,chunk.getMinBlockZ()+8.5);
             caster=FakePlayerFactory.get(level,new GameProfile(UUID.randomUUID(),"PotionCaster"));
             teammate=FakePlayerFactory.get(level,new GameProfile(UUID.randomUUID(),"PotionAlly"));
             caster.setPos(origin.add(0,0,5));teammate.setPos(origin.add(1,0,0));
             caster.setHealth(20);teammate.setHealth(20);classId("theurgist");
             level.addNewPlayer(caster);level.addNewPlayer(teammate);
+            assertQueryable(caster);assertQueryable(teammate);
             var contract=new MercenaryContract(UUID.randomUUID(),caster.getUUID(),"theurgist",2,50);
             try{
                 var field=DungeonRunRegistryData.class.getDeclaredField("runsById");field.setAccessible(true);
@@ -70,7 +74,11 @@ public final class TheurgistPotionGameTests {
         }
         <T extends Mob> T add(T entity,double x){
             check(entity!=null,"Native potion target exists");entity.setNoAi(true);entity.setPos(origin.add(x,0,0));
-            owned.add(entity);check(level.addFreshEntity(entity),"Native potion target admitted");return entity;
+            owned.add(entity);check(level.addFreshEntity(entity),"Native potion target admitted");assertQueryable(entity);return entity;
+        }
+        void assertQueryable(LivingEntity entity){
+            check(level.getEntitiesOfClass(LivingEntity.class,entity.getBoundingBox()).contains(entity),
+                    "Native potion recipient is discoverable by the actual spatial effect query: "+entity.getType());
         }
         void classId(String value){
             var root=caster.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).copy();root.putString(ClassData.KEY_CLASS_ID,value);

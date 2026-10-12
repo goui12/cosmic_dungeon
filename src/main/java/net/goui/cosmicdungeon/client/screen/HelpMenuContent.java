@@ -8,47 +8,59 @@ import java.util.List;
 public final class HelpMenuContent {
     public static final Page GET_STARTED = page("get_started", "Get Started", true, List.of(
             HelpBlock.heading("Welcome, Dungeoneer"),
-            HelpBlock.paragraph("Cosmic Dungeon is a dungeon-focused adventure pack with classes, party flow, currency, trading, vendors, achievements, and progression."),
-            HelpBlock.bullet("Press H to reopen this help menu at any time."),
-            HelpBlock.bullet("Pick an enabled class at the class selector before entering class-locked content."),
-            HelpBlock.bullet("Stay with your party and watch chat, UI prompts, and in-world objectives."),
-            HelpBlock.bullet("Trace rewards enter one persistent account shared by your classes, runs, shops, and trades."),
-            HelpBlock.bullet("Use dungeon rewards, vendors, and player trading to build toward the next unlock."),
-            HelpBlock.tip("Esc closes this screen without pausing the game.")));
+            HelpBlock.paragraph("Meet Tamsin Vane, choose an enabled class, and prepare with your party at the class selector. Dungeon 1 entry is free."),
+            HelpBlock.paragraph(Component.literal("Start with ").append(link("Classes", "classes")).append(", then use the Party guide for readiness and resource sharing.")),
+            HelpBlock.bullet("H or Esc closes this guide without pausing the world. Alt+Left or Back returns to the previous guide page."),
+            HelpBlock.bullet("Use the left directory or underlined text links. Wheel scrolling affects the pane under your pointer; Page Up and Page Down scroll the focused pane (information pane by default). Tab / Shift+Tab moves focus; Enter opens the focused link."),
+            HelpBlock.bullet("Hover example item tiles for their real tooltips. These are read-only illustrations: they cannot grant, craft, equip, or move items."),
+            HelpBlock.bullet("Your inventory keeps armor, offhand, storage and hotbar controls. The old 2x2 crafting grid and recipe book are absent."),
+            HelpBlock.paragraph(Component.literal("The class name in your inventory opens your class guide. See ").append(link("Quick Reference", "references")).append(" for controls and commands.")),
+            HelpBlock.tip("Artwork illustrates the lore. It does not unlock a class, recipe, location, or encounter.")));
 
     public static final Page DUNGEONS = page("dungeons", "Dungeons", true, List.of(
             HelpBlock.heading("Dungeon Runs"),
-            HelpBlock.bullet("Dungeon runs begin through the class selector flow."),
-            HelpBlock.bullet("The inviting group leader remains leader; every member confirms their own readiness."),
-            HelpBlock.bullet("The active run party is used for rewards, teleportation, AFK handling, and completion checks."),
-            HelpBlock.bullet("Follow objectives, collect key progression items, and avoid leaving party members behind."),
-            HelpBlock.bullet("Hostile mobs spawned by Cosmic Mob Spawners can feed Group Split Trace rewards."),
-            HelpBlock.tip("If a route, door, or objective gives feedback in chat, treat that message as the current dungeon instruction.")));
+            HelpBlock.bullet("Follow Tamsin's class and party flow. The leader starts readiness; each player confirms Ready before Start Adventure!"),
+            HelpBlock.bullet("Watch route clues, doors, keys and objective messages. Keep the correct key available for its matching lock; renaming an ordinary item does not make it a key."),
+            HelpBlock.examples("key"),
+            HelpBlock.tip("The key above is an unbound example, not a key to any door."),
+            HelpBlock.paragraph(Component.literal("Collect the six spectral Blooms, plant the group's banners and gather near Watson. Read ").append(link("Progression", "progression")).append(" for the completion and Lesser Bloom distinction.")),
+            HelpBlock.bullet("Qualifying Cosmic Spawner enemies can award Group Split Trace. Stay together for rewards and survival."),
+            HelpBlock.bullet("Death drops your gear for owner-only recovery. Resurrection uses the latest death and existing recoverable drops; missing items are not recreated."),
+            HelpBlock.paragraph(Component.literal("A Theurgist can offer ").append(link("Resurrection", "class.theurgist")).append(". Review the warning before using Forfeit: it ends the run and its player wolfpack.")),
+            HelpBlock.paragraph(Component.literal("Use ").append(link("Travel", "teleportation")).append(" for Companionship, Farrow's Chop and Inn homes."))));
 
     public static final Page CLASSES = page("classes", "Classes", true, List.of(
-            HelpBlock.heading("Class Index"),
-            HelpBlock.paragraph("Your class controls class-locked chests and class-attuned weapons, tools, armor, and special gear."),
-            HelpBlock.bullet("Class-attuned weapons, tools, and armor are restricted by the server to the matching class."),
-            HelpBlock.bullet("Dungeon, tier, and Trace details on gear do not change which class can use it."),
-            HelpBlock.bullet("Plant Flags and class-attuned banners are special dungeon items and should remain placeable where the dungeon expects them."),
-            HelpBlock.spacer(),
-            HelpBlock.heading("Enabled Classes"),
-            HelpBlock.bullet("Theurgist, Pyroclast, Bogatyr, Dragoon, Venefex, and Judicator."),
-            HelpBlock.tip("Select a class name in the left index for a quick role page.")));
+            HelpBlock.heading("Choose Your Class"),
+            HelpBlock.paragraph("Your class controls access to class chests and class-attuned weapons, tools, armor and special gear."),
+            HelpBlock.bullet("Enabled: Theurgist, Pyroclast, Bogatyr, Dragoon, Venefex and Judicator. Metalmancer and Deadeye remain unavailable."),
+            HelpBlock.bullet("The first eligible acquisition binds attuned gear to its owner. Dungeon, tier and Trace labels do not change its class."),
+            HelpBlock.bullet("Gear, including class ammunition, can be manually dropped and drops on death. Only its owner can recover player drops; dropping does not transfer ownership."),
+            HelpBlock.paragraph(Component.literal("Use authorized ").append(link("Trading", "trading")).append(" to exchange eligible items. All potions trade; explicitly class-attuned non-potions do not.")),
+            HelpBlock.bullet("Class flags remain placeable where the dungeon expects them. Authored items keep their actual components and restrictions."),
+            HelpBlock.heading("Actions and Passive Skills"),
+            HelpBlock.bullet("Bogatyr uses inventory Skills for Patrol, Stay and Feed Pack. Theurgist uses Craft... and Resurrect...; Venefex uses Craft...."),
+            HelpBlock.bullet("Theurgist and Venefex do not use the old separate Skills window. Requests, Brewing Supplies and Kibble are retired."),
+            HelpBlock.bullet("Eligible combat and useful support earn passive class skills. Progression is not an active button or a new class unlock."),
+            HelpBlock.paragraph(Component.literal("Read the class pages in the left directory and ").append(link("Quick Reference", "references")).append(" for saved bindings."))));
 
     public static final Page PARTY = page("party", "Party", true, List.of(
-            HelpBlock.heading("Party Flow"),
-            HelpBlock.bullet("Choose your class and assemble a group of three to six. The leader starts readiness; everyone confirms."),
-            HelpBlock.bullet("Changing group membership clears everyone's readiness. The leader queues the fully ready group."),
-            HelpBlock.bullet("Group Leader can remove another active run member when needed."),
-            HelpBlock.command("Group Leader", "/dungeoneer kick <player>"),
-            HelpBlock.heading("AFK"),
-            HelpBlock.bullet("After 15 minutes without observed activity, a run member is marked AFK."),
-            HelpBlock.bullet("Disconnected players do not receive mob reward shares."),
-            HelpBlock.bullet("The Group Leader receives a clickable kick prompt for AFK members."),
-            HelpBlock.heading("Group Split"),
-            HelpBlock.bullet("Eligible nearby active party members share Trace from qualifying dungeon mobs."),
-            HelpBlock.bullet("Stay within 60 blocks in the same active instance. Before respawning, your death position is used.")));
+            HelpBlock.heading("Ready and Start"),
+            HelpBlock.bullet("The default group size is three to six. The leader begins readiness; each player controls Ready / Not Ready."),
+            HelpBlock.bullet("Membership changes clear readiness. The leader chooses Start Adventure! when the group is ready. Mercenaries have no Ready toggle; ready controls disappear after entry."),
+            HelpBlock.bullet("Starting an adventure safely cancels the party's open trades. Recruitment and mercenary pages keep forward progression available."),
+            HelpBlock.heading("Share Ingredients"),
+            HelpBlock.bullet("The creator chooses YES or NO at group creation; joiners choose in Tamsin's flow. You can change the choice there later."),
+            HelpBlock.bullet("YES lets eligible recipe ingredients help party crafting. The crafter uses their own stock first, then missing materials from eligible consenting online, living teammates."),
+            HelpBlock.bullet("Distance does not block ingredient sharing. Another container, held cursor stack, death, or pending transaction can make an inventory unavailable."),
+            HelpBlock.bullet("Several teammates may supply different ingredients. Least-recent donors are preferred and receive item-and-recipient notifications. Consent, membership and materials are checked again at the click."),
+            HelpBlock.paragraph(Component.literal("See the ").append(link("Theurgist guide", "class.theurgist")).append(" for recipe counts, fuel and shared potion crafting.")),
+            HelpBlock.heading("Party Hover and Mercenaries"),
+            HelpBlock.bullet("Hover a party member for class, health, skills, sharing YES/NO, shared resources used/contributed and relevant resurrection cooldowns."),
+            HelpBlock.bullet("Mercenaries follow their hirer, use class-specific combat skills and separate run progression, and may catch up when stuck. They drop no equipment on death."),
+            HelpBlock.heading("Group Split and AFK"),
+            HelpBlock.bullet("Qualifying mob Trace is shared with eligible active members within 60 blocks in the same instance. Before respawn, a dead member's death position is used; disconnected players receive no share."),
+            HelpBlock.bullet("After 15 minutes without observed activity, a member is marked AFK and the leader receives a kick prompt."),
+            HelpBlock.command("Group Leader", "/dungeoneer kick <player>")));
 
     public static final Page TRADING = page("trading", "Trading", true, List.of(
             HelpBlock.heading("Player Trading"),
@@ -56,12 +68,14 @@ public final class HelpMenuContent {
             HelpBlock.command("Accept", "/trade accept <player>"),
             HelpBlock.command("Deny", "/trade deny <player>"),
             HelpBlock.command("Cancel", "/trade cancel"),
-            HelpBlock.bullet("The Trade Request keybind defaults to CAPS LOCK."),
-            HelpBlock.bullet("Looking at a nearby player can show the trade prompt and send an invite."),
-            HelpBlock.bullet("Trade invites expire after 30 seconds."),
-            HelpBlock.bullet("Both players must Ready and Confirm the final offers; changing an offer clears confirmations."),
-            HelpBlock.bullet("Denying or canceling returns items and cancels currency offers."),
-            HelpBlock.tip("The server validates items, balances, inventory capacity, and trade state before anything changes hands.")));
+            HelpBlock.bullet("CAPS LOCK is the default Trade Request key. Look at an eligible nearby player to use the prompt. Invites expire after 30 seconds."),
+            HelpBlock.bullet("All potions are tradable, even when your class cannot craft them. Other inventory items may trade except explicitly class-attuned non-potions."),
+            HelpBlock.bullet("Ordinary price, quest and ability labels are not blanket bans. Ownership and transaction checks still apply."),
+            HelpBlock.bullet("Offer items and whole currency denominations. Offered currency immediately reduces the available displayed balance."),
+            HelpBlock.bullet("Both players Ready, then Confirm the final offers. Offer changes clear confirmations; there is no countdown."),
+            HelpBlock.bullet("Cancel, closing, disconnect or a failed trade returns items and reserved currency. Starting an adventure cancels party trades. Successful trades transfer custody."),
+            HelpBlock.tip("Dropping gear on the ground is not a transfer: player drops remain owner-only."),
+            HelpBlock.paragraph(Component.literal("Read ").append(link("Currency", "currency")).append(" for the Trace account and denominations."))));
 
     public static final Page VENDORS = page("vendors", "Vendors", true, List.of(
             HelpBlock.heading("Vendor Shops"),
@@ -94,7 +108,7 @@ public final class HelpMenuContent {
             HelpBlock.heading("Village NPC Lore"),
             HelpBlock.paragraph("These pages collect the dungeoneer-facing backstories of the Village NPCs and story figures tied to Dungeon 1."),
             HelpBlock.bullet("Naton Whitlock: general supplies, food, fire, light, and container basics."),
-            HelpBlock.bullet("Elias Centvin: weapons, tools, marked Dragoon repair components, and direct shop repair."),
+            HelpBlock.bullet("Elias Centvin: weapons, tools, compatible Dragoon repair components, and direct shop repair."),
             HelpBlock.bullet("Eon Penrose: brewing ingredients, equipment, and potion work."),
             HelpBlock.bullet("Beatrix Farrow: food, campfire cooking, Farrow's Chop, and the memory of home."),
             HelpBlock.bullet("Beluzon: the First Heart bond, an Inn home, and fallback respawn."),
@@ -148,8 +162,9 @@ public final class HelpMenuContent {
 
     public static final Page TELEPORT_VENDOR = page("vendor.teleport", "Dungeon Entry", true, List.of(
             HelpBlock.heading("Tamsin Vane"),
-            HelpBlock.paragraph("Tamsin Vane found a map pointing toward Base Camp and the initials JHW."),
+            HelpBlock.paragraph("Tamsin Vane found a map pointing toward Base Camp and the initials JHW. Use her introduction, party and class flow; the information icon reopens the map/lore."),
             HelpBlock.bullet("Dungeon 1 entry is free. Meet your party at the class selector."),
+            HelpBlock.bullet("A later eligible Tamsin Tax offer lets you review and confirm one recovered item. It is not a Trace entry fee."),
             HelpBlock.tip("For live travel behavior, use Travel and the prompts shown by the dungeon.")));
 
     public static final Page CURRENCY = page("currency", "Currency", true, List.of(
@@ -209,6 +224,8 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Hold Raw Farrow's Chop at a lit campfire; the default cooking time is four seconds."),
             HelpBlock.bullet("Cook Raw Farrow's Chop inside your active dungeon to remember your exact location and travel to Main Village; eat the bound chop to return."),
             HelpBlock.bullet("You may own one Chop at a time. Its return campfire must still exist."),
+            HelpBlock.bullet("A Chop trade must respect the one-Chop limit. To trade a bound return Chop, the recipient needs their own stored inventory in that same active dungeon; a trade never transfers another player's inventory."),
+            HelpBlock.examples("food"),
             HelpBlock.tip("Only use teleport options offered by the dungeon, a potion, visible in-world travel structures, or Farrow's Chop.")));
 
     public static final Page ACHIEVEMENTS = page("achievements", "Achievements", true, List.of(
@@ -227,78 +244,148 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Tired, Not Broken"),
             HelpBlock.bullet("Wolves in Piglin Clothing"),
             HelpBlock.bullet("Boom!"),
-            HelpBlock.bullet("The Tamsin Tax")));
+            HelpBlock.bullet("The Tamsin Tax"),
+            HelpBlock.tip("Read the advancement description for its objective and locked requirements. A visible title or illustration is not an unlock.")));
 
     public static final Page REFERENCES = page("references", "References", true, List.of(
-            HelpBlock.heading("Quick Reference"),
-            HelpBlock.command("Help", "H - Open Cosmic Dungeon Help"),
-            HelpBlock.command("Trade Key", "CAPS LOCK - Trade Request keybind"),
-            HelpBlock.command("Trade", "/trade <player>"),
-            HelpBlock.command("Accept", "/trade accept <player>"),
-            HelpBlock.command("Deny", "/trade deny <player>"),
-            HelpBlock.command("Cancel", "/trade cancel"),
+            HelpBlock.heading("Controls"),
+            HelpBlock.paragraph(Component.literal("Hover for your saved bindings: ")
+                    .append(key("Patrol", "bogatyr_patrol")).append(", ")
+                    .append(key("Stay", "bogatyr_stay")).append(", ")
+                    .append(key("Feed Pack", "bogatyr_feed_pack")).append(", ")
+                    .append(key("Resurrect...", "theurgist_resurrect")).append(".")),
+            HelpBlock.command("Guide", "H / Esc - close; H - open"),
+            HelpBlock.command("Back", "Alt+Left or Back - previous guide page"),
+            HelpBlock.command("Scroll", "Wheel - pane under cursor; Page Up / Page Down - focused pane (information by default)"),
+            HelpBlock.command("Trade", "CAPS LOCK - default Trade Request"),
+            HelpBlock.bullet("Active defaults: Bogatyr Alt+1 Patrol, Alt+2 Stay, Alt+3 Feed Pack; Theurgist Alt+4 opens Resurrect...."),
+            HelpBlock.bullet("Rebind or unbind in Options > Controls > Key Binds > Cosmic Dungeon. Gray skill hints show your actual saved chord."),
+            HelpBlock.bullet("Shortcuts act once per press in the world or inventory. Chat, other menus, dragging, carried items and modal controls block them. Resolve conflicting chords in Controls."),
+            HelpBlock.bullet("Potion crafting requires the inventory and has no hotkey. Passive skills are not action buttons. Reset the movable Skills panel in Cosmic Dungeon settings if needed."),
+            HelpBlock.heading("Player Commands"),
+            HelpBlock.command("Trade", "/trade <player>; /trade accept <player>"),
+            HelpBlock.command("End trade", "/trade deny <player>; /trade cancel"),
+            HelpBlock.command("Repair", "/repair <player>; /repair accept <player>"),
+            HelpBlock.command("End repair", "/repair deny <player>; /repair cancel"),
             HelpBlock.command("Balance", "/currency balance"),
-            HelpBlock.command("Held Value", "/currency value"),
-            HelpBlock.command("Inventory Value", "/currency value inventory"),
+            HelpBlock.command("Value", "/currency value; /currency value inventory"),
+            HelpBlock.command("Run history / claims", "/d1 stats; /d1 claim"),
+            HelpBlock.command("Wolf count", "/d1 wolves"),
+            HelpBlock.command("Home", "/home"),
             HelpBlock.command("Progress", "/progression get <your_name>"),
             HelpBlock.command("Factions", "/faction list <your_name>"),
             HelpBlock.command("Faction", "/faction get <your_name> <faction_id>"),
             HelpBlock.command("Group Leader", "/dungeoneer kick <player>"),
-            HelpBlock.tip("Developer, operator, debug, and world-authoring commands are intentionally not listed here.")));
+            HelpBlock.tip("These are reference commands, not executable links. Developer, operator, debug and world-authoring commands do not belong in the player guide.")));
 
     public static final Page THEURGIST = page("class.theurgist", "Theurgist", true, List.of(
-            HelpBlock.heading("Theurgist"),
-            HelpBlock.paragraph("Once a battlefield medic turned biochemist, the Theurgist draws on care, chemistry, and the otherworldly to mend what others consider beyond saving."),
-            HelpBlock.bullet("Role theme: healing and potion-brewing support."),
-            HelpBlock.bullet("Only Theurgists can use brewing stands."),
-            HelpBlock.bullet("Keep the brewing stand open until brewing finishes; brew timing follows the server's rules."),
-            HelpBlock.bullet("Eon Penrose sells Theurgist-only brewing equipment and advanced healing/regeneration potions."),
-            HelpBlock.bullet("Can use Theurgist-attuned gear and class chests.")));
+            HelpBlock.heading("Healer and Alchemist"),
+            HelpBlock.paragraph("Once a battlefield medic, the Theurgist combines chemistry and measured restoration to sustain the living and recall the fallen."),
+            HelpBlock.bullet("Use Theurgist-attuned gear and class chests. Mace, bow and potion progression is passive; useful healing and support can earn the appropriate skill."),
+            HelpBlock.bullet("Mending Sting and Verdant Jolt give regenerative aid. Scintilla Vitalis and Lux Vitalis heal living targets and harm undead."),
+            HelpBlock.heading("Craft..."),
+            HelpBlock.paragraph("Inside an active Dungeon 1 run, open inventory and select Craft... for beneficial vanilla-brewable splash recipes. Choose legal Normal, Strong or Extended variants."),
+            HelpBlock.examples("healing_potions"),
+            HelpBlock.bullet("Your positive thrown potions aid allies and their companions, and do not affect hostile mobs, including healing damage against undead. Restorative class arrows have their own rules."),
+            HelpBlock.bullet("Both Theurgist and Venefex can craft mixed-effect drinkable Turtle Master. Its splash/lingering variants are not offered. Luck has no vanilla brewing recipe."),
+            HelpBlock.examples("turtle_master"),
+            HelpBlock.bullet("Green tiles show crafts from your own inventory. A blue count uses eligible shared materials; light-red tiles with red 0 are unavailable."),
+            HelpBlock.bullet("Counts are alternative recipe capacities, not reservations. Hover for effects and the own/shared-material explanation."),
+            HelpBlock.bullet("Click creates exactly one potion on the cursor. Repeat to stack identical crafted potions, with all components matching, up to 64. A different/full cursor spends nothing."),
+            HelpBlock.bullet("Shift-click crafts exactly one into inventory, hotbar first. Drinking or throwing uses one potion at a time; drinks return a bottle. Crafting has no hotkey."),
+            HelpBlock.heading("Real Ingredients and Fuel"),
+            HelpBlock.bullet("Use a water bottle or supported intermediate potion plus every remaining vanilla-chain ingredient, including gunpowder for splash. Some recipes do not need nether wart."),
+            HelpBlock.examples("brewing_fuel"),
+            HelpBlock.bullet("The gauge left of the palette shows remaining fuel. One blaze powder supplies 20 brewing steps; each remaining recipe step uses one charge. Intermediate potions skip completed steps."),
+            HelpBlock.bullet("Strength may need separate blaze powder for its ingredient and fuel. Unused charges survive ordinary saves, reconnects and death. Failed/full destinations spend no fuel or ingredients."),
+            HelpBlock.paragraph(Component.literal("Your ingredients take priority; eligible consenting teammates can supply missing materials. Read ").append(link("Party sharing", "party")).append(".")),
+            HelpBlock.bullet("Requests, random-potion skills and Brewing Supplies are retired. Old virtual balances do not become physical item refunds."),
+            HelpBlock.heading("Resurrect..."),
+            HelpBlock.paragraph(Component.literal("Hover ").append(key("Resurrect...", "theurgist_resurrect"))
+                    .append(" for your current binding. This guide does not cast the skill.")),
+            HelpBlock.bullet("Available immediately and free. Open the inventory picker or its shortcut, default Alt+4; opening does not cast."),
+            HelpBlock.bullet("Choose a dead teammate in the same active run. They have 60 seconds to accept or decline. Success returns them to their latest death location with five seconds of protection and recoverable inventory handling."),
+            HelpBlock.bullet("Only success starts the caster's 180-second cooldown. Declined, expired, stale and failed attempts cost nothing. Death, reconnect and run cleanup do not reset it; server downtime pauses it."),
+            HelpBlock.bullet("Resurrection cannot recreate missing physical drops. Party hover and the death screen show player/mercenary Theurgist readiness and cooldowns. Mercenary resurrection retains its separate level-10 Positive Potions unlock."),
+            HelpBlock.heading("Brewing Stands"),
+            HelpBlock.bullet("Only Theurgists can use brewing stands. With valid ingredients and fuel, the server's instant-brewing setting shortens valid brews while the stand remains open."),
+            HelpBlock.paragraph(Component.literal("Visit ").append(link("Eon Penrose", "brewing_store")).append(" for ingredients, equipment and class-gated potion stock.")),
+            HelpBlock.paragraph(Component.literal("Change saved active shortcuts in ").append(link("Quick Reference", "references")).append("."))));
 
     public static final Page PYROCLAST = page("class.pyroclast", "Pyroclast", true, List.of(
-            HelpBlock.heading("Pyroclast"),
-            HelpBlock.paragraph("A former pyrotechnician and demolition hobbyist, the Pyroclast brings fire, fireworks, and controlled chaos to dungeon fights."),
-            HelpBlock.bullet("Right-click flint with gravel in your inventory to make gunpowder (Pyroclast only)."),
-            HelpBlock.bullet("A pickup reminder can appear while carrying matching materials."),
-            HelpBlock.bullet("Can use Pyroclast-attuned gear and class chests.")));
+            HelpBlock.heading("Fire and Controlled Chaos"),
+            HelpBlock.paragraph("A former pyrotechnician and demolition hobbyist, the Pyroclast brings sword, bow, crossbow and explosive utility to dungeon fights."),
+            HelpBlock.bullet("Right-click flint with gravel in your inventory to make gunpowder. Default cost is one flint and one gravel for one gunpowder; keep room for the output."),
+            HelpBlock.bullet("The removed 2x2 inventory crafting grid is not used. A pickup reminder may appear when you have matching materials."),
+            HelpBlock.bullet("Authored D1 Cinderbite and Cindermaul rockets have enhanced enemy-only explosions with obstruction checks and no terrain damage. Damage follows server settings."),
+            HelpBlock.bullet("Sword, bow and crossbow progression is passive. Use Pyroclast-attuned gear and class chests; a renamed ordinary item does not gain an ability."),
+            HelpBlock.paragraph(Component.literal("Read ").append(link("Gear and trading", "trading")).append(" before handing equipment to another player."))));
 
     public static final Page BOGATYR = page("class.bogatyr", "Bogatyr", true, List.of(
             HelpBlock.heading("Bogatyr"),
             HelpBlock.paragraph("A survivalist, cold-weather endurance racer, and hardened wolf-handler from the frozen Russian Federation reaches, the Bogatyr favors traditional weaponry and grit."),
-            HelpBlock.bullet("Damage identity: fights alongside loyal wolf companions as a class role theme."),
+            HelpBlock.bullet("Fight beside loyal wolves with sword, bow and shield. Sword/bow skill progression is passive."),
+            HelpBlock.examples("bogatyr_wolves"),
             HelpBlock.bullet("Can use Bogatyr-attuned gear and class chests."),
-            HelpBlock.bullet("Tame wolves with bones or use Wolfpack Skills. Packs are uncapped and belong to the current dungeon run."),
+            HelpBlock.bullet("Acquire companions through wolf eggs, ordinary bone taming and breeding. Player packs are uncapped and belong to the current dungeon run."),
             HelpBlock.command("Living loaded Wolfpack count in this dungeon", "/d1 wolves"),
-            HelpBlock.bullet("Open inventory Skills for Breed, Summon, Regroup and Heal, with exact Kibble costs and affected counts."),
-            HelpBlock.bullet("Free modes: Defensive protects the master and pack; Stand Ground sits and holds even under attack; Aggressive attacks nearby hostiles nearest the master first."),
-            HelpBlock.bullet("Strategic prioritizes ranged enemies, then maximum health. Search and Rescue protects nearby party players at 3 hearts or less; Companionship restores 1 heart every 5 seconds per guarded player."),
-            HelpBlock.bullet("Danger Close stays within 16 blocks of the moving master, finishes an eligible current target, then prioritizes threats to the master."),
-            HelpBlock.tip("Select another mode to stand up. Breed is unavailable during Stand Ground. Your mode is saved with the current run."),
+            HelpBlock.bullet("Open inventory Skills to choose Patrol or Stay. Both are free; Kibble and the old skills are retired."),
+            HelpBlock.paragraph(Component.literal("Your saved bindings: ")
+                    .append(key("Patrol", "bogatyr_patrol")).append(", ")
+                    .append(key("Stay", "bogatyr_stay")).append(", ")
+                    .append(key("Feed Pack", "bogatyr_feed_pack")).append(". Hover to inspect; guide links do not execute actions.")),
+            HelpBlock.tip("Active-skill defaults: Alt+1 Patrol, Alt+2 Stay, Alt+3 Feed Pack. Rebind or unbind in Options > Controls > Key Binds > Cosmic Dungeon; gray skill hints always show your current binding."),
+            HelpBlock.tip("Shortcuts work in the world or your inventory, once per press. Chat, other menus, carried items and dragging block them. Resolve duplicate skill/native chords in Controls; different modifiers use distinct chords even if native Controls highlights the same base key."),
+            HelpBlock.bullet("Patrol is the default: wolves follow normally and defend themselves and their master against new attacks."),
+            HelpBlock.bullet("Stay calls wolves back to sit within 5 blocks. Each holds its settled place even when you move away and ignores threats."),
+            HelpBlock.tip("Choose Patrol to stand the pack up. Stay clears earlier fights; repeated Stay clicks do not move settled wolves."),
+            HelpBlock.bullet("Feed Pack spends up to 10 actual items from your inventory: bones/rotten flesh first, then raw meat, then other meat by player food value. Injured wolves are healed first; remaining food goes to healthy adult pairs within 8 blocks of each other."),
+            HelpBlock.bullet("Bones only act as food through Feed Pack. Ordinary bones, taming, and meat feeding are unchanged. Pups, breeding cooldowns, individually seated Patrol dogs, and adults without a nearby mate do not spend breeding food."),
+            HelpBlock.bullet("In Stay, feeding allows temporary mating movement. Wolves return to their original held places after birth or a failed attempt (30 seconds at default settings). Saves/reloads cancel unfinished attempts safely."),
+            HelpBlock.bullet("Allies cannot hurt or sit your wolves, but can feed and breed them. Mercenary Bogatyr packs use their own progression and limits."),
             HelpBlock.tip("Active packs survive saves and reconnects. Completion, forfeit or reset ends the pack; old archives cannot be recalled.")));
 
 
     public static final Page DRAGOON = page("class.dragoon", "Dragoon", true, List.of(
-            HelpBlock.heading("Dragoon"),
+            HelpBlock.heading("Trident and Repair Support"),
             HelpBlock.paragraph("A trident-wielding specialist in battlefield salvage and historical armorcraft."),
-            HelpBlock.bullet("Dragoon is the anvil and repair-support class."),
-            HelpBlock.bullet("Dragoons can use vanilla anvils."),
-            HelpBlock.bullet("Repair Affinity lets a Dragoon repair another player's supported damaged gear while the customer keeps item ownership."),
-            HelpBlock.bullet("The customer may offer an optional account-currency labor fee; the Dragoon supplies Elias repair materials."),
-            HelpBlock.bullet("Both players must stay nearby with the interface open. Commands: /repair <player>, /repair accept <player>, /repair deny <player>, /repair cancel."),
-            HelpBlock.bullet("Successful trident hits can trigger Dragoon chain lightning against nearby enemies."),
-            HelpBlock.bullet("Can use Dragoon-attuned gear and class chests.")));
+            HelpBlock.bullet("Use Dragoon-attuned gear and class chests. Successful melee or thrown trident hits can trigger nearby enemy chain lightning. Sword hits are not a replacement trigger."),
+            HelpBlock.examples("dragoon_trident"),
+            HelpBlock.bullet("Trident progression improves the relevant passive damage and chain benefits. Chain damage does not recursively trigger more chains."),
+            HelpBlock.heading("Repair Affinity"),
+            HelpBlock.bullet("Dragoons can use anvils and repair supported damaged gear for another player. The customer retains ownership."),
+            HelpBlock.command("Invite", "/repair <player>"),
+            HelpBlock.command("Accept", "/repair accept <player>"),
+            HelpBlock.command("Deny", "/repair deny <player>"),
+            HelpBlock.command("Cancel", "/repair cancel"),
+            HelpBlock.bullet("The customer offers the damaged item and an optional Trace labor fee. The Dragoon supplies compatible repair components; approved ordinary unmarked materials are accepted where supported."),
+            HelpBlock.bullet("Both players must remain nearby with the interface open. Review the quote and readiness controls. Materials and fees move only after successful server validation; unsupported special items cannot be repaired."),
+            HelpBlock.paragraph(Component.literal("For direct shop repairs and materials, visit ").append(link("Elias Centvin", "vendor.weapons")).append("."))));
 
     public static final Page VENEFEX = page("class.venefex", "Venefex", true, List.of(
-            HelpBlock.heading("Venefex"),
-            HelpBlock.paragraph("A toxicologist shaped by invasive-species decay, the Venefex leans into poison, debuffs, and attrition."),
-            HelpBlock.bullet("Damage identity: pressure enemies through toxic and weakening themes."),
-            HelpBlock.bullet("Can use Venefex-attuned gear and class chests.")));
+            HelpBlock.heading("Poison and Pressure"),
+            HelpBlock.paragraph("A toxicologist shaped by invasive-species decay, the Venefex uses sword, bow, poison and weakening effects to wear enemies down."),
+            HelpBlock.bullet("Use Venefex-attuned gear and class chests. Sword/bow progression and relevant arrow-duration benefits are passive."),
+            HelpBlock.bullet("Tree Viper, Bushmaster and Fer-de-Lance poison; Pestis and Black Bubo weaken; Vapours, Melancholia and Deathly Stupor slow."),
+            HelpBlock.bullet("Spicule Breach and Rend deal instant harm that scales with harmful effects against living targets under server settings. Spicule heals undead; native poison immunities still apply."),
+            HelpBlock.heading("Inventory Crafting"),
+            HelpBlock.bullet("Inside an active Dungeon 1 run, open Craft... for harmful vanilla-brewable splash recipes and legal Normal, Strong or Extended variants."),
+            HelpBlock.examples("harming_potions"),
+            HelpBlock.bullet("Both potion classes may craft drinkable Turtle Master. Its splash/lingering forms and a fictional Luck recipe are not offered."),
+            HelpBlock.examples("turtle_master"),
+            HelpBlock.bullet("Click crafts one onto the cursor, stacking only identical components up to 64. Shift-click crafts one into inventory, hotbar first. Full/incompatible destinations spend nothing."),
+            HelpBlock.bullet("Green counts use own materials, blue counts need eligible shared materials, red 0 is unavailable. Counts reserve nothing. The left fuel gauge spends one charge per recipe step; one blaze powder supplies 20."),
+            HelpBlock.paragraph(Component.literal("Read the ").append(link("Theurgist crafting reference", "class.theurgist")).append(" for full ingredient, fuel, sharing and stack rules.")),
+            HelpBlock.tip("Brewing-stand interaction remains Theurgist-only. Venefex uses Craft... in inventory, with no potion hotkey or old separate Skills window.")));
 
     public static final Page JUDICATOR = page("class.judicator", "Judicator", true, List.of(
-            HelpBlock.heading("Judicator"),
-            HelpBlock.paragraph("A wandering arbiter sworn to uphold balance."),
-            HelpBlock.bullet("Role theme: slaying undead foes and protecting the party."),
-            HelpBlock.bullet("Can use Judicator-attuned gear and class chests.")));
+            HelpBlock.heading("Oathbound Protector"),
+            HelpBlock.paragraph("A wandering arbiter sworn to uphold balance, the Judicator supports the party with mace, bow and restorative or revealing arrows."),
+            HelpBlock.bullet("Scintilla Vitalis and Lux Vitalis heal living targets and harm undead. Ebonsight provides night vision; Vielpiercer applies Glowing."),
+            HelpBlock.bullet("Use the actual authored item's tooltip and server values. Mace/bow progression is passive; it has no new action hotkey."),
+            HelpBlock.bullet("Use Judicator-attuned gear and class chests. Eon offers healing stock shared with Theurgists."),
+            HelpBlock.paragraph(Component.literal("Repair Affinity and anvil access belong to ").append(link("Dragoon", "class.dragoon")).append(".")),
+            HelpBlock.paragraph(Component.literal("Visit the ").append(link("Brewing Store", "brewing_store")).append(" for its class-gated healing rows."))));
 
     public static final Page METALMANCER = page("class.metalmancer", "Metalmancer", false, List.of(
             HelpBlock.heading("Coming in Dungeon 2"),
@@ -620,10 +707,25 @@ Once all six blooms are rescued from the dungeon, Watson’s soul is released. H
         blocks.addAll(HelpBlock.longText(backstory));
         blocks.add(HelpBlock.heading("Lore Notes"));
         blocks.addAll(HelpBlock.longText(notes));
+        blocks.add(HelpBlock.paragraph(Component.literal("Read ").append(link("Village NPCs", "village_souls"))
+                .append(" for related characters, or ").append(link("Progression", "progression"))
+                .append(" for current dungeon objectives.")));
         return page(id, title, true, List.copyOf(blocks));
     }
 
     private HelpMenuContent() {}
+
+    /** Internal guide navigation metadata only; never a command or external URL. */
+    static Component link(String label, String pageId) {
+        return Component.literal(label).withStyle(style -> style.withColor(0x73BBFF)
+                .withUnderlined(true).withInsertion("cosmic_help:" + pageId));
+    }
+
+    /** Hover/focus reads the saved binding only; this never invokes a skill. */
+    static Component key(String label, String actionId) {
+        return Component.literal(label).withStyle(style -> style.withColor(0x73BBFF)
+                .withUnderlined(true).withInsertion("cosmic_key:" + actionId));
+    }
 
     private static HelpNode node(Page page, HelpNode... children) { return new HelpNode(page, List.of(children)); }
     private static Page rootPage() { return page("root", "Guide", true, List.of(
@@ -631,7 +733,7 @@ Once all six blooms are rescued from the dungeon, Watson’s soul is released. H
             HelpBlock.paragraph("Choose a directory entry on the left to get started."))); }
     private static Page generalPage() { return page("general", "General", true, List.of(
             HelpBlock.heading("General Reference"),
-            HelpBlock.paragraph("General topics cover achievements, currency, and trading."),
+            HelpBlock.paragraph("General topics cover achievements, currency, and trading. Follow the topic links and current in-game requirements."),
             HelpBlock.tip("Choose a child topic from the left directory."))); }
     private static Page validationPage() { return page("validation", "Validation", true, List.of(
             HelpBlock.heading("Server Validation"),
@@ -664,7 +766,9 @@ Once all six blooms are rescued from the dungeon, Watson’s soul is released. H
     }
     public record HelpBlock(Kind kind, Component label, Component text) {
         static HelpBlock heading(String text) { return new HelpBlock(Kind.HEADING, Component.empty(), Component.literal(text)); }
-        static HelpBlock paragraph(String text) { return new HelpBlock(Kind.PARAGRAPH, Component.empty(), Component.literal(text)); }
+        static HelpBlock paragraph(String text) { return paragraph(Component.literal(text)); }
+        static HelpBlock paragraph(Component text) { return new HelpBlock(Kind.PARAGRAPH, Component.empty(), text); }
+        static HelpBlock examples(String topic) { return new HelpBlock(Kind.ITEMS, Component.empty(), Component.literal(topic)); }
         static HelpBlock bullet(String text) { return new HelpBlock(Kind.BULLET, Component.empty(), Component.literal(text)); }
         static HelpBlock command(String label, String text) { return new HelpBlock(Kind.COMMAND, Component.literal(label), Component.literal(text)); }
         static HelpBlock tip(String text) { return new HelpBlock(Kind.TIP, Component.empty(), Component.literal(text)); }
@@ -678,5 +782,5 @@ Once all six blooms are rescued from the dungeon, Watson’s soul is released. H
             return List.copyOf(blocks);
         }
     }
-    public enum Kind { HEADING, PARAGRAPH, BULLET, COMMAND, TIP, SPACER }
+    public enum Kind { HEADING, PARAGRAPH, BULLET, COMMAND, TIP, SPACER, ITEMS }
 }

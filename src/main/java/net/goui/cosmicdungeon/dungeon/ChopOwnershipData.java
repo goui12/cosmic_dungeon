@@ -47,6 +47,18 @@ public final class ChopOwnershipData extends SavedData {
         return entry==null?new net.minecraft.nbt.CompoundTag():(net.minecraft.nbt.CompoundTag)Entry.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE,entry).getOrThrow();
     }
     public boolean flushVerified(){return net.goui.cosmicdungeon.transaction.SavedDataProof.save(server,"cosmicdungeon_chop_owners_v1",CODEC,this);}
+    /** Both owners move in one saved image, guarded by the durable trade's exact before/after pair. */
+    public boolean transferVerified(UUID first,UUID second,net.minecraft.nbt.CompoundTag firstBefore,net.minecraft.nbt.CompoundTag secondBefore,
+            net.minecraft.nbt.CompoundTag firstAfter,net.minecraft.nbt.CompoundTag secondAfter){
+        if(first.equals(second))return false;
+        if(image(first).equals(firstAfter)&&image(second).equals(secondAfter))return flushVerified();
+        if(!image(first).equals(firstBefore)||!image(second).equals(secondBefore))return false;
+        var a=firstAfter.isEmpty()?null:Entry.CODEC.parse(net.minecraft.nbt.NbtOps.INSTANCE,firstAfter).getOrThrow();
+        var b=secondAfter.isEmpty()?null:Entry.CODEC.parse(net.minecraft.nbt.NbtOps.INSTANCE,secondAfter).getOrThrow();
+        if(a==null)owners.remove(first.toString());else owners.put(first.toString(),a);
+        if(b==null)owners.remove(second.toString());else owners.put(second.toString(),b);
+        setDirty();return flushVerified();
+    }
     /** Deliberate developer review only; normal polling never scans the owner table. */
     public boolean tokenClaimedByOther(UUID owner,UUID token){
         return token!=null&&owners.entrySet().stream().anyMatch(e->!e.getKey().equals(owner.toString())&&e.getValue().token().equals(token.toString()));

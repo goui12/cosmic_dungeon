@@ -92,12 +92,12 @@ final class MercenaryResurrectionTest {
         assertThrows(IllegalArgumentException.class,()->new PartyPayloads.Resurrection(42,"not-an-id","",0));
         assertThrows(IllegalArgumentException.class,()->new PartyPayloads.Resurrect(0,merc,death));
     }
-    @Test void hoverShowsCooldownEvenWhileRestingAndOmitsLockedAbility(){
+    @Test void hoverShowsUnavailableCooldownWhileRestingAndOmitsUnrelatedAbility(){
         var merc=UUID.randomUUID();
         var base=new PartyPayloads.Mercenary("Edmund","Owner",0,0,500,"RESPAWNING");
         assertEquals(2,MercenaryHudLayout.tooltip(base).size());
         var row=new PartyPayloads.Mercenary("Edmund","Owner",0,0,500,"RESPAWNING",PartyPayloads.Recovery.NONE,List.of(),
                 new PartyPayloads.Resurrection(42,merc.toString(),"",180));
-        assertTrue(MercenaryHudLayout.tooltip(row).contains("Resurrection: 3:00"));
+        assertTrue(MercenaryHudLayout.tooltip(row).contains("Resurrection: Unavailable / cooldown 3:00"));
     }
 }

@@ -99,7 +99,8 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
         renderTooltip(g, mx, my);
         renderCustomTooltips(g, mx, my, view, data);
         // The exact inventory account renderer, including live total/available hover details.
-        CurrencyBalanceOverlay.drawAccount(g, leftPos + 8, topPos + BALANCE_Y, WIDTH - 16, mx, my);
+        CurrencyBalanceOverlay.drawTradeAccount(g, leftPos + 8, topPos + BALANCE_Y, WIDTH - 16, mx, my,
+                data.selfBalance(), data.selfOffered());
     }
 
     private void updateCurrencyRows(TradeViewData data) {
@@ -206,7 +207,8 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
                     Component.literal("Left-click: add 1"), Component.literal("Right-click: remove 1"),
                     Component.literal(view != null && view.selfReady() ? "Locked after accepting" : "Shift: adjust by 10"),
                     Component.literal("Your offered currency: " + CurrencyAmount.ofTrace(data.selfOffered()).formatNormalized()),
-                    Component.literal("Balance: " + CurrencyAmount.ofTrace(data.selfBalance()).formatNormalized())), mx, my);
+                    Component.literal("Available after offer: " + CurrencyAmount.ofTrace(
+                            net.goui.cosmicdungeon.trade.TradeOfferBalance.remaining(data.selfBalance(), data.selfOffered())).formatNormalized())), mx, my);
         } else if (other != null) {
             g.setComponentTooltipForNextFrame(font, List.of(
                     Component.literal(data.otherName() + " offers " + other.count() + " " + displayName(CURRENCY_ICONS[other.index()].denomination())),
@@ -223,7 +225,8 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
                     Component.literal(view != null && (view.otherReady() || view.otherConfirmed()) ? "Accepted" : "Not accepted yet")), mx, my);
         } else if (inside(mx, my, 9, 38, 183, 9)) {
             g.setComponentTooltipForNextFrame(font, List.of(Component.literal("Trading with: " + data.otherName()),
-                    Component.literal("Balance: " + CurrencyAmount.ofTrace(data.otherBalance()).formatNormalized())), mx, my);
+                    Component.literal("Available after offer: " + CurrencyAmount.ofTrace(
+                            net.goui.cosmicdungeon.trade.TradeOfferBalance.remaining(data.otherBalance(), data.otherOffered())).formatNormalized())), mx, my);
         } else if (inside(mx, my, 219, 148, 73, 84)) {
             g.setTooltipForNextFrame(Component.literal(statusText(view)), mx, my);
         }

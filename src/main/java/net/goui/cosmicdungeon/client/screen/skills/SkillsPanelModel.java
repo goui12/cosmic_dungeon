@@ -34,7 +34,7 @@ public record SkillsPanelModel(String classId,String title,String resource,Compo
             case ClassKeys.CLASS_ID_BOGATYR->List.of(
                     new Action("guide","Wolf care","Read the Bogatyr guide. Use bones to tame eligible wolves and food to care for your companions.",true));
             case ClassKeys.CLASS_ID_THEURGIST->List.of(
-                    new Action("guide","Brewing","Read the Theurgist guide. Use a brewing stand to make valid potions instantly.",true));
+                    new Action("guide","Brewing","Read the Theurgist guide. Open Craft... in your inventory to make potions from real ingredients.",true));
             default->List.<Action>of();
         };
         String title=ClassKeys.CLASS_ID_NONE.equals(id)?"Skills":Character.toUpperCase(id.charAt(0))+id.substring(1)+" Skills";

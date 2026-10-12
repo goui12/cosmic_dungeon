@@ -11,12 +11,13 @@ import net.minecraft.core.registries.BuiltInRegistries;
 
 /** Active-run cards. World cards are read-only; inventory cards reveal every synchronized effect by scrolling. */
 final class PartyHealthHud {
-    private record Row(String label, PartyVitals vitals, List<String> details) {}
+    private record Row(String label, PartyVitals vitals, List<String> details, String memberId) {}
     private static int scroll;
     private static boolean dragging;
     private static double grab;
     private PartyHealthHud() {}
     static void reset() { scroll=0;dragging=false; }
+    static boolean dragging() { return dragging; }
     static PartyHealthLayout worldLayout(PartyPayloads.View view) {
         var window=Minecraft.getInstance().getWindow();
         return PartyHealthLayout.world(window.getGuiScaledWidth(),window.getGuiScaledHeight(),view.members().size()+view.mercenaries().size());
@@ -26,9 +27,9 @@ final class PartyHealthHud {
         var result=new ArrayList<Row>();
         for(var member:view.members()) {
             String label=(member.leader()?"* ":"")+member.name()+" / "+ClassSelectorScreen.className(member.classId()).getString();
-            result.add(new Row(label,member.vitals(),List.of(label,status(member.vitals()))));
+            result.add(new Row(label,member.vitals(),List.of(label,status(member.vitals()),D1PartyPresentation.sharingStatus(member)),member.memberId()));
         }
-        for(var hire:view.mercenaries()) result.add(new Row(MercenaryHudLayout.label(hire),hire.vitals(),MercenaryHudLayout.tooltip(hire)));
+        for(var hire:view.mercenaries()) result.add(new Row(MercenaryHudLayout.label(hire),hire.vitals(),MercenaryHudLayout.tooltip(hire),""));
         return result;
     }
     static String status(PartyVitals v) {
@@ -85,6 +86,8 @@ final class PartyHealthHud {
         int visible=inventory?v.effects().size():Math.min(v.effects().size(),columns);
         boolean overflow=!inventory&&(v.effects().size()>columns||v.omittedEffects()>0);
         if(overflow)visible=Math.max(0,columns-1);
+        boolean rowHovered=mx>=x&&mx<x+width-6&&my>=y&&my<y+height;
+        if(rowHovered)((DeferredTooltipAccess)g).cosmicdungeon$clearTooltip();
         boolean effectHovered=false;
         for(int i=0;i<visible;i++) {
             var effect=v.effects().get(i);int ix=x+4+(i%columns)*10,iy=y+27+(i/columns)*10;
@@ -100,9 +103,12 @@ final class PartyHealthHud {
         if(overflow)g.drawString(font,"+",x+4+visible*10,y+27,0xFFE4C98A,false);
         if(inventory&&v.omittedEffects()>0)g.drawString(font,"+"+v.omittedEffects(),x+4,y+height-10,0xFFE4C98A,false);
         if(!effectHovered&&mx>=x&&mx<x+width-6&&my>=y&&my<y+height) {
-            var details=new ArrayList<Component>();row.details().forEach(s->details.add(Component.literal(s)));
+            var details=new ArrayList<Component>();
+            if(!row.memberId().isEmpty())details.addAll(PartyInspectionHover.details(row.memberId(),row.details()));
+            else row.details().forEach(s->details.add(Component.literal(s)));
             if(v.omittedEffects()>0)details.add(Component.literal(v.omittedEffects()+" additional effects exceed the network display limit"));
-            g.setComponentTooltipForNextFrame(font,details,mx,my);
+            if(!row.memberId().isEmpty())PartyInspectionHover.tooltip(g,details,mx,my);
+            else g.setComponentTooltipForNextFrame(font,details,mx,my);
         }
     }
     static PartyPayloads.Member memberAt(PartyPayloads.View view,PartyHealthLayout box,double mx,double my) {

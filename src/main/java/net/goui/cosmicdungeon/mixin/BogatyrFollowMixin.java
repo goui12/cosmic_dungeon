@@ -17,8 +17,11 @@ public abstract class BogatyrFollowMixin {
     private int cosmicdungeon$pathDelay(int vanilla){
         return tamable instanceof Wolf wolf&&BogatyrWolfEvents.managed(wolf)?20+Math.floorMod(wolf.getUUID().hashCode(),5):vanilla;
     }
-    @Inject(method="canUse",at=@At("HEAD"))
+    @Inject(method="canUse",at=@At("HEAD"),cancellable=true)
     private void cosmicdungeon$follow(CallbackInfoReturnable<Boolean> cir){
-        if(tamable instanceof Wolf wolf&&BogatyrWolfEvents.managed(wolf))startDistance=Config.WOLF_FOLLOW_RANGE.get().floatValue();
+        if(tamable instanceof Wolf wolf&&BogatyrWolfEvents.managed(wolf)){
+            startDistance=Config.WOLF_FOLLOW_RANGE.get().floatValue();
+            if(net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrModes.standing(wolf))cir.setReturnValue(false);
+        }
     }
 }

@@ -41,6 +41,14 @@ public class CosmicMobSpawnerBlock extends Block implements EntityBlock {
     }
 
     @Override
+    public void playerDestroy(Level level, Player player, BlockPos pos, BlockState state,
+            @Nullable BlockEntity blockEntity, ItemStack tool) {
+        super.playerDestroy(level, player, pos, state, blockEntity, tool);
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)
+            net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.spawner(serverPlayer);
+    }
+
+    @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         if (DEBUG) {
             LOGGER.debug("Creating CosmicSpawnerBlockEntity at {}", pos);
@@ -86,12 +94,6 @@ public class CosmicMobSpawnerBlock extends Block implements EntityBlock {
         if (face.getStepZ() != 0) z = pos.getZ() + 0.5 + face.getStepZ() * 0.52;
         level.addParticle(new net.minecraft.core.particles.DustParticleOptions(0xB83A3A, 0.45F),
                 x, y, z, 0, 0.005, 0);
-    }
-
-    @Override
-    protected void attack(BlockState state, Level level, BlockPos pos, Player player) {
-        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)
-            net.goui.cosmicdungeon.block.entity.CosmicSpawnerFeedback.warn(serverPlayer);
     }
 
     @Override

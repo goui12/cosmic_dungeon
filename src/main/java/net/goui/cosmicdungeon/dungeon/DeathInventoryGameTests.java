@@ -127,6 +127,10 @@ public final class DeathInventoryGameTests {
                 keep.set(false, server);
                 f.player.getInventory().setItem(0, new ItemStack(Items.DIAMOND, 3));
                 f.player.getInventory().setItem(10, new ItemStack(Items.EMERALD, 2));
+                var potion=net.goui.cosmicdungeon.crafting.PotionStacks.crafted(net.minecraft.world.item.alchemy.PotionContents.createItemStack(
+                        Items.SPLASH_POTION,net.minecraft.world.item.alchemy.Potions.HEALING));
+                potion.setCount(37);potion.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,Component.literal("Preserved potion"));
+                f.player.getInventory().setItem(11,potion.copy());
                 f.player.getInventory().setItem(Inventory.SLOT_OFFHAND, new ItemStack(Items.TORCH, 4));
 
                 NeoForge.EVENT_BUS.addListener(cancel);
@@ -154,6 +158,9 @@ public final class DeathInventoryGameTests {
                         f.player.getUUID(), death.id(), f.runId, 0));
                 f.check(diamond != null && diamond.getItem().getCount() == 3,
                         "Physical death drop lost slot provenance");
+                var potionDrop=f.drop(new DeathInventoryRecovery.Provenance(f.player.getUUID(),death.id(),f.runId,11));
+                f.check(potionDrop!=null&&potionDrop.getItem().getCount()==37&&ItemStack.isSameItemSameComponents(potion,potionDrop.getItem()),
+                        "Real death preserves crafted potion count and every component");
                 var same = death.id();
                 net.goui.cosmicdungeon.mercenary.MercenaryResurrection.prepareDeath(f.player);
                 f.check(same.equals(MercenaryResurrectionState.death(
@@ -171,6 +178,8 @@ public final class DeathInventoryGameTests {
                     f.check(loaded != null && loaded.death().equals(same)
                                     && loaded.entry(10).template().getCount() == 2,
                             "Latest layout did not survive run save/load");
+                    f.check(loaded.entry(11).template().getCount()==37&&ItemStack.isSameItemSameComponents(potion,loaded.entry(11).template()),
+                            "Saved death layout preserves stack limit, effect and name");
                     var legacy = codec.parse(com.mojang.serialization.JsonOps.INSTANCE,
                             com.google.gson.JsonParser.parseString("{\"runs\":[]}")).getOrThrow();
                     f.check(DeathInventoryLayout.read(legacy, f.runId, f.player) == null,
@@ -261,12 +270,14 @@ public final class DeathInventoryGameTests {
                 f.level.getEntitiesOfClass(ItemEntity.class, f.player.getBoundingBox().inflate(8)).forEach(Entity::discard);
             }
         }
-        try (var f = new Fixture(helper, Long.MAX_VALUE - 304)) {
+        for(boolean potionCase:new boolean[]{false,true})try (var f = new Fixture(helper, Long.MAX_VALUE - (potionCase?306:304))) {
             var keep = f.level.getGameRules().getRule(GameRules.RULE_KEEPINVENTORY);
             boolean oldKeep = keep.get();
             try {
                 keep.set(false, f.level.getServer());
-                f.player.getInventory().setItem(15, new ItemStack(Items.EMERALD, 5));
+                var sample=potionCase?net.goui.cosmicdungeon.crafting.PotionStacks.crafted(net.minecraft.world.item.alchemy.PotionContents.createItemStack(
+                        Items.SPLASH_POTION,net.minecraft.world.item.alchemy.Potions.HEALING)):new ItemStack(Items.EMERALD);
+                f.player.getInventory().setItem(15,sample.copyWithCount(5));
                 f.player.setHealth(0);
                 f.player.die(f.player.damageSources().generic());
                 var death = MercenaryResurrectionState.death(f.data, f.runId, f.player.getUUID());
@@ -276,7 +287,7 @@ public final class DeathInventoryGameTests {
                 f.player.setHealth(f.player.getMaxHealth());
                 for (int slot = 0; slot < 36; slot++)
                     f.player.getInventory().setItem(slot, new ItemStack(Items.STONE, 64));
-                f.player.getInventory().setItem(0, new ItemStack(Items.EMERALD, 63));
+                f.player.getInventory().setItem(0, sample.copyWithCount(63));
                 emerald.setNoPickUpDelay();
                 emerald.playerTouch(f.player);
                 f.check(emerald.getItem().getCount() == 4
@@ -290,6 +301,8 @@ public final class DeathInventoryGameTests {
                 f.check(f.player.getInventory().getItem(15).getCount() == 4
                                 && f.player.getInventory().getItem(0).getCount() == 64,
                         "Later recovery must not move preexisting matching stacks");
+                f.check(ItemStack.isSameItemSameComponents(sample,f.player.getInventory().getItem(15)),
+                        "Partial death-drop recovery preserves complete potion components");
             } finally {
                 keep.set(oldKeep, f.level.getServer());
                 f.level.getEntitiesOfClass(ItemEntity.class, f.player.getBoundingBox().inflate(8)).forEach(Entity::discard);

@@ -1,47 +1,9 @@
 # Judicator Help Guide
 
-## Class ID
+Class ID: `judicator`. Enabled for Dungeon 1.
 
-- `judicator`
+An oathbound mace-and-bow protector. Scintilla Vitalis and Lux Vitalis provide healing to living targets and harm undead; Ebonsight provides night vision, and Vielpiercer reveals targets with Glowing. Follow each authored item's tooltip and class restrictions. Mace/bow progression is passive. Eon sells the shared Theurgist/Judicator healing offers. Repair Affinity and anvil access belong to Dragoon.
 
-## Availability
+## Shared rules and controls
 
-- Selectable class ID exists.
-- Current selector availability: not separately documented as disabled.
-
-## Overview
-
-TBD.
-
-## Abilities
-
-- TBD.
-
-## Benefits
-
-- Access to Judicator-attuned equipment, when such equipment is authored.
-- Access to Judicator class-locked chests.
-- Judicator-specific item and armor assets exist in the current content set.
-- Eon Penrose sells Potion of Healing and Splash Potion of Healing offers shared by Theurgist and Judicator.
-
-## Incentives
-
-- TBD.
-
-## Team roles
-
-- TBD.
-
-## Class restrictions and access
-
-- Can use/wear equipment attuned to `judicator`.
-- Can open Judicator class-locked chests.
-- Judicator is not the anvil/repair-support class; anvil access belongs to Dragoon.
-- Other class-specific restrictions: TBD.
-
-## Known gaps / TBD
-
-- Define ability list.
-- Define intended party role.
-- Define player-facing incentives.
-- Define any class-specific commands, resource systems, or progression hooks.
+See the [current player guide](../PLAYER_GUIDE.md) for party sharing, crafting/fuel/stacks, gear ownership, trading, progression and travel. [Controls](../PLAYER_GUIDE.md#controls-and-passive-progression) lists defaults and rebinding. The inventory class-name link opens this class in the H guide.

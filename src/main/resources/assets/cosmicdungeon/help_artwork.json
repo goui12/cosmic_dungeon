@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "width": 480,
+  "height": 270,
+  "fallback": "guide",
+  "crop": "center_cover",
+  "text_scrim_argb": "C0000000",
+  "budgets": {
+    "png_bytes": 4194304,
+    "decoded_rgba_bytes": 13631488
+  },
+  "themes": {
+    "achievements": {
+      "texture": "textures/gui/help/achievements.png",
+      "emblem": null
+    },
+    "apothecary": {
+      "texture": "textures/gui/help/apothecary.png",
+      "emblem": null
+    },
+    "bogatyr": {
+      "texture": "textures/gui/help/bogatyr.png",
+      "emblem": "textures/entity/chest/emblem_bogatyr.png"
+    },
+    "classes": {
+      "texture": "textures/gui/help/classes.png",
+      "emblem": null
+    },
+    "dragoon": {
+      "texture": "textures/gui/help/dragoon.png",
+      "emblem": "textures/entity/chest/emblem_dragoon.png"
+    },
+    "dungeons": {
+      "texture": "textures/gui/help/dungeons.png",
+      "emblem": null
+    },
+    "exchange": {
+      "texture": "textures/gui/help/exchange.png",
+      "emblem": null
+    },
+    "expedition": {
+      "texture": "textures/gui/help/expedition.png",
+      "emblem": null
+    },
+    "factions": {
+      "texture": "textures/gui/help/factions.png",
+      "emblem": null
+    },
+    "first_heart": {
+      "texture": "textures/gui/help/first_heart.png",
+      "emblem": null
+    },
+    "forge": {
+      "texture": "textures/gui/help/forge.png",
+      "emblem": null
+    },
+    "guide": {
+      "texture": "textures/gui/help/guide.png",
+      "emblem": null
+    },
+    "hearth": {
+      "texture": "textures/gui/help/hearth.png",
+      "emblem": null
+    },
+    "judicator": {
+      "texture": "textures/gui/help/judicator.png",
+      "emblem": "textures/entity/chest/emblem_judicator.png"
+    },
+    "party": {
+      "texture": "textures/gui/help/party.png",
+      "emblem": null
+    },
+    "progression": {
+      "texture": "textures/gui/help/progression.png",
+      "emblem": null
+    },
+    "pyroclast": {
+      "texture": "textures/gui/help/pyroclast.png",
+      "emblem": "textures/entity/chest/emblem_pyroclast.png"
+    },
+    "scholar": {
+      "texture": "textures/gui/help/scholar.png",
+      "emblem": null
+    },
+    "supplies": {
+      "texture": "textures/gui/help/supplies.png",
+      "emblem": null
+    },
+    "theurgist": {
+      "texture": "textures/gui/help/theurgist.png",
+      "emblem": "textures/entity/chest/emblem_theurgist.png"
+    },
+    "travel": {
+      "texture": "textures/gui/help/travel.png",
+      "emblem": null
+    },
+    "venefex": {
+      "texture": "textures/gui/help/venefex.png",
+      "emblem": "textures/entity/chest/emblem_venefex.png"
+    },
+    "village": {
+      "texture": "textures/gui/help/village.png",
+      "emblem": null
+    }
+  },
+  "pages": {
+    "root": "guide",
+    "get_started": "guide",
+    "general": "guide",
+    "references": "guide",
+    "dungeons": "dungeons",
+    "party": "party",
+    "classes": "classes",
+    "progression": "progression",
+    "factions": "factions",
+    "teleportation": "travel",
+    "achievements": "achievements",
+    "vendors": "village",
+    "village_souls": "village",
+    "npc.naton_whitlock": "supplies",
+    "vendor.general_supply": "supplies",
+    "npc.elias_centvin": "forge",
+    "vendor.weapons": "forge",
+    "npc.eon_penrose": "apothecary",
+    "brewing_store": "apothecary",
+    "npc.beatrix_farrow": "hearth",
+    "vendor.food": "hearth",
+    "npc.beluzon": "first_heart",
+    "npc.tamsin_vane": "expedition",
+    "vendor.teleport": "expedition",
+    "npc.john_hamish_watson": "scholar",
+    "currency": "exchange",
+    "trading": "exchange",
+    "class.bogatyr": "bogatyr",
+    "class.dragoon": "dragoon",
+    "class.judicator": "judicator",
+    "class.pyroclast": "pyroclast",
+    "class.theurgist": "theurgist",
+    "class.venefex": "venefex"
+  }
+}

@@ -24,9 +24,11 @@ final class SoloPartyMinimumTest {
         assertNull(lobby.startSolo(leader, anchor, 0, 6));
         var party = lobby.party(leader);
         assertEquals(6, party.capacity());
+        D1PartyTestSupport.consentAll(lobby,leader);
         assertNotNull(lobby.begin(leader, 0, Map.of(leader, "bogatyr")));
         assertNotNull(lobby.begin(leader, party.revision(), Map.of()));
         assertNotNull(lobby.begin(leader, party.revision(), Map.of(leader, "none")));
+        D1PartyTestSupport.consentAll(lobby,leader);
         assertNull(lobby.begin(leader, party.revision(), Map.of(leader, "bogatyr")));
         assertNotNull(lobby.queue(leader, party.revision()));
         assertNull(lobby.ready(leader, party.revision()));
@@ -66,6 +68,7 @@ final class SoloPartyMinimumTest {
         assertNull(lobby.invite(leader, member, anchor, 0, 120, 6));
         assertNull(lobby.accept(member, lobby.invitation(member).token(), 1));
         assertNull(lobby.joinAccepted(member, 2, 6, true));
+        D1PartyTestSupport.consentAll(lobby,leader);
         assertNull(lobby.begin(leader, lobby.revision(leader), Map.of(leader, "bogatyr", member, "bogatyr")));
     }
     @Test void soloPreservesAuthoredSixSlotSchematicPlan() {

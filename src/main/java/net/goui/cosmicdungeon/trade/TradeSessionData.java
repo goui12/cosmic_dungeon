@@ -485,7 +485,7 @@ public final class TradeSessionData {
             for (var offer : java.util.List.of(aOffer,bOffer)) {
                 for (int slot=0;slot<offer.getContainerSize();slot++) {
                     var stack=offer.getItem(slot);
-                    if(!stack.isEmpty() && !net.goui.cosmicdungeon.economy.pricing.ItemTransferRules.tradeEligible(stack)) {
+                    if(!stack.isEmpty() && !TradeItemTransfer.mayOffer(stack, offer == aOffer ? a : b)) {
                         cancel("A protected item cannot be traded."); return;
                     }
                 }
@@ -506,7 +506,7 @@ public final class TradeSessionData {
             var srv = server();
             if (srv == null || ended || !isValidFor(viewer)) return;
             var other = srv.getPlayerList().getPlayer(viewer.getUUID().equals(a) ? b : a);
-            if (other != null && refresh.changed(CurrencyService.getBalanceTrace(viewer), CurrencyService.getBalanceTrace(other))) {
+            if (other != null && refresh.changed(CurrencyService.getAvailableTrace(viewer), CurrencyService.getAvailableTrace(other))) {
                 boolean left = viewer.getUUID().equals(a);
                 syncTo(viewer, other, left ? aCurrency : bCurrency, left ? bCurrency : aCurrency,
                         left ? aReady : bReady, left ? bReady : aReady,
@@ -542,8 +542,8 @@ public final class TradeSessionData {
                     sessionId,
                     self.getName().getString(),
                     other.getName().getString(),
-                    CurrencyService.getBalanceTrace(self),
-                    CurrencyService.getBalanceTrace(other),
+                    CurrencyService.getAvailableTrace(self),
+                    CurrencyService.getAvailableTrace(other),
                     selfOfferedTrace,
                     otherOfferedTrace,
                     selfReady,
@@ -562,7 +562,7 @@ public final class TradeSessionData {
             }
 
             for (int i = 0; i < src.getContainerSize(); i++) {
-                ItemStack remaining = src.getItem(i).copy();
+                ItemStack remaining = TradeItemTransfer.forRecipient(src.getItem(i), src == aOffer ? a : b, p.getUUID());
                 if (remaining.isEmpty()) continue;
 
                 for (int slot = 0; slot < simulated.length && !remaining.isEmpty(); slot++) {

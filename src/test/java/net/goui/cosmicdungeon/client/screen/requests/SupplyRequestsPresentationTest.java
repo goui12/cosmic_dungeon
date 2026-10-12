@@ -8,24 +8,15 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SupplyRequestsPresentationTest {
-    @Test void enabledRequestPreservesExactStyledWordingAndRequiresRealLivingResourceHeadroom(){
-        var resource=new ClassResourceSnapshot(8,"brewing_supplies",12,600,true,true,false,3);
-        var model=ClassResourcePresentation.panel("theurgist",resource,false,true);
-        var request=model.actions().getFirst();assertTrue(request.enabled());
-        assertEquals("Click to request supplies from your group. If they accept, their supplies will be automatically recycled into your brewing supplies",
-                request.tooltip().getString());
-        assertEquals(TextColor.fromLegacyFormat(ChatFormatting.YELLOW),request.tooltip().getStyle().getColor());
-        var name=request.tooltip().getSiblings().getFirst();assertTrue(name.getStyle().isBold());
-        assertEquals(TextColor.fromLegacyFormat(ChatFormatting.BLUE),name.getStyle().getColor());
-        assertFalse(ClassResourcePresentation.panel("theurgist",null,false,true).actions().getFirst().enabled());
-        assertFalse(ClassResourcePresentation.panel("theurgist",resource,true,true).actions().getFirst().enabled());
-        assertFalse(ClassResourcePresentation.panel("theurgist",resource,false,false).actions().getFirst().enabled());
-        var dead=new ClassResourceSnapshot(8,"brewing_supplies",12,600,true,false,false,3);
-        var full=new ClassResourceSnapshot(8,"brewing_supplies",600,600,true,true,false,3);
-        assertFalse(ClassResourcePresentation.panel("theurgist",dead,false,true).actions().getFirst().enabled());
-        assertFalse(ClassResourcePresentation.panel("theurgist",full,false,true).actions().getFirst().enabled());
-        var kibble=new ClassResourceSnapshot(8,"kibble",1,600,true,true,false,3);
-        assertTrue(ClassResourcePresentation.panel("bogatyr",kibble,false,true).actions().getFirst().tooltip().getString().endsWith("Kibble"));
+    @Test void retiredRequestActionsStayAbsentRegardlessOfOldHeadroomOrConsent(){
+        for(String id:List.of("theurgist","bogatyr"))
+            for(int amount:new int[]{0,12,600})
+                for(boolean alive:new boolean[]{false,true})
+                    for(boolean consent:new boolean[]{false,true}){
+                        var resource=new ClassResourceSnapshot(8,id.equals("theurgist")?"brewing_supplies":"kibble",amount,600,true,alive,false,3);
+                        var model=ClassResourcePresentation.panel(id,resource,false,consent);
+                        assertTrue(model.actions().stream().noneMatch(action->action.id().equals("request_supplies")));
+                    }
     }
     @Test void hoverExposesFullRequesterClassAndExactQuotedYieldAndHonestBulkSemantics(){
         var card=SupplyRequestsSnapshotTest.card(UUID.randomUUID(),17,true);var details=SupplyRequestsComponent.details(card);

@@ -33,6 +33,8 @@ public final class D1KillStatistics {
         victim.getPersistentData().putLong(RECORDED_RUN, run.runId());
         var data = D1RunData.get(level.getServer());
         int count = data.recordKill(run.runId(), credited);
+        net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.recordMobKill(level.getServer(), run, credited,
+                net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(victim.getType()).toString());
         if (killer != null && killer.level() == level) D1Scoreboards.runKills(killer, count);
     }
 }

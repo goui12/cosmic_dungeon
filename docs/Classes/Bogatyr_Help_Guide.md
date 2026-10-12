@@ -1,44 +1,23 @@
 # Bogatyr Help Guide
 
-## Class ID
+Class ID: `bogatyr`. Enabled for Dungeon 1.
 
-- `bogatyr`
+A northern survivalist who fights with sword, bow, shield, and a loyal wolfpack. Acquire companions through existing wolf eggs, ordinary bone taming, and breeding. Player packs are uncapped, survive ordinary saves/reconnects within the run, and end on completion, forfeit, or reset. Old archives cannot summon a previous run's pack. Mercenary packs use separate progression and limits.
 
-## Availability
+Open inventory **Skills** for three actions:
 
-- Selectable class ID exists.
-- Current selector availability: not separately documented as disabled.
+| Action | Default | Behavior |
+|---|---|---|
+| Patrol | Alt+1 | Free default mode. Wolves follow and defend themselves and their master against new attacks. |
+| Stay | Alt+2 | Free mode. Wolves return within five blocks, sit, and hold their individual settled positions even when you move. They ignore threats. |
+| Feed Pack | Alt+3 | Uses up to ten actual food items from your own inventory, healing before breeding. |
 
-## Overview
+Patrol and Stay are mutually exclusive. Selecting Stay again does not move settled wolves. Selecting Patrol stands them up without resuming old fights.
 
-TBD.
+Feed Pack prefers bones/rotten flesh, then raw meat, then remaining meat by player food value. At default settings raw food/bones heal two hearts and cooked meat heals four. Injured wolves receive care first; remaining food goes to healthy eligible adult pairs within eight blocks. No mate, breeding cooldown, insufficient pair food, or an individually seated Patrol adult creates no breeding charge. Healthy pups do not consume breeding food. Bones act as food only through Feed Pack; normal bones and taming are unchanged.
 
-## Abilities
+In Stay, eligible pairs move temporarily for native mating, then return to their original held spots after birth or a failed attempt (30 seconds by default). Changing modes cancels the attempt. Reloads end unfinished attempts without invented offspring or refunds. Allies cannot harm your wolves, apply hostile effects, or sit them; they can feed and breed them. Kibble, paid Summon/Breed/Regroup/Heal, and the former combat modes are retired.
 
-- TBD.
+## Shared rules and controls
 
-## Benefits
-
-- Access to Bogatyr-attuned equipment, when such equipment is authored.
-- Access to Bogatyr class-locked chests.
-
-## Incentives
-
-- TBD.
-
-## Team roles
-
-- TBD.
-
-## Class restrictions and access
-
-- Can use/wear equipment attuned to `bogatyr`.
-- Can open Bogatyr class-locked chests.
-- Other class-specific restrictions: TBD.
-
-## Known gaps / TBD
-
-- Define ability list.
-- Define intended party role.
-- Define player-facing incentives.
-- Define any class-specific commands, resource systems, or progression hooks.
+See the [current player guide](../PLAYER_GUIDE.md) for party sharing, crafting/fuel/stacks, gear ownership, trading, progression and travel. [Controls](../PLAYER_GUIDE.md#controls-and-passive-progression) lists defaults and rebinding. The inventory class-name link opens this class in the H guide.

@@ -61,6 +61,21 @@ public final class CurrencyBalanceOverlay {
         if (ready()) draw(g,x,y,maxWidth,true,mouseX,mouseY);
     }
     private static void draw(GuiGraphics g,int x,int y,int maxWidth,boolean tooltip,int mouseX,int mouseY) {
+        draw(g,x,y,maxWidth,tooltip,mouseX,mouseY,counts,total+" Trace total",available+" Trace available",
+                Component.translatable("hud.cosmicdungeon.account"));
+    }
+    /** Menu-local preview; never mutates the synchronized account or subtracts an offer twice. */
+    public static void drawTradeAccount(GuiGraphics g,int x,int y,int maxWidth,int mouseX,int mouseY,
+                                       long availableBeforeOffer,long offered) {
+        long remaining=net.goui.cosmicdungeon.trade.TradeOfferBalance.remaining(availableBeforeOffer,offered);
+        var values=BalanceDisplayView.denominations(remaining);
+        var shown=new String[5];
+        for(int i=0;i<5;i++)shown[i]=Long.toString(values[i]);
+        draw(g,x,y,maxWidth,true,mouseX,mouseY,shown,availableBeforeOffer+" Trace available before offer",
+                remaining+" Trace available after offering "+offered,Component.literal("Available after offer"));
+    }
+    private static void draw(GuiGraphics g,int x,int y,int maxWidth,boolean tooltip,int mouseX,int mouseY,
+                             String[] counts,String totalText,String availableText,Component heading) {
         icons();
         var font=Minecraft.getInstance().font;
         int width=12;
@@ -68,7 +83,7 @@ public final class CurrencyBalanceOverlay {
         width=Math.min(width,Math.max(100,maxWidth));
         int remaining=width-12;
         g.fill(x,y,x+width,y+29,0xC0181820);
-        g.drawString(font,Component.translatable("hud.cosmicdungeon.account"),x+5,y+2,0xFFE4C98A,false);
+        g.drawString(font,heading,x+5,y+2,0xFFE4C98A,false);
         int ix=x+5;
         for(int i=0;i<5;i++){
             int cell=Math.max(20,Math.min(22+font.width(counts[i]),remaining-(4-i)*20));
@@ -78,12 +93,12 @@ public final class CurrencyBalanceOverlay {
             g.drawString(font,shown,ix+18,y+16,0xFFFFFFFF,false);
             if(tooltip && mouseX>=ix&&mouseX<ix+cell&&mouseY>=y+11&&mouseY<y+29)
                 g.setComponentTooltipForNextFrame(font,List.of(Component.literal(counts[i]+" "+NAMES[i]),
-                        Component.literal(total+" Trace total"),Component.literal(available+" Trace available")),mouseX,mouseY);
+                        Component.literal(totalText),Component.literal(availableText)),mouseX,mouseY);
             ix+=cell;
         }
         if(tooltip && mouseX>=x&&mouseX<x+width&&mouseY>=y&&mouseY<y+11)
-            g.setComponentTooltipForNextFrame(font,List.of(Component.literal(total+" Trace total"),
-                    Component.literal(available+" Trace available"),
+            g.setComponentTooltipForNextFrame(font,List.of(Component.literal(totalText),
+                    Component.literal(availableText),
                     Component.translatable("hud.cosmicdungeon.account.read_only")),mouseX,mouseY);
     }
     // TODO(native TEST): verify GUI scales/shared inventory positioning, resource packs and two licensed clients;

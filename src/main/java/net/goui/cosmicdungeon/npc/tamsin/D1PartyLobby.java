@@ -17,6 +17,8 @@ public final class D1PartyLobby {
         public net.goui.cosmicdungeon.dungeon.DungeonDifficulty difficulty() { return difficulty; }
         private final LinkedHashSet<UUID> members = new LinkedHashSet<>();
         private final Set<UUID> ready = new HashSet<>();
+        private final Map<UUID,String> resourceSharing = new HashMap<>();
+        public String resourceSharing(UUID member) { return resourceSharing.getOrDefault(member,"UNKNOWN"); }
         private final LinkedHashMap<UUID,String> hires=new LinkedHashMap<>();
         private final Map<UUID,Long> hireFees=new HashMap<>();
         private final Map<UUID,UUID> hireIds=new HashMap<>();
@@ -155,10 +157,22 @@ public final class D1PartyLobby {
         p.phase = Phase.ASSEMBLY; p.ready.clear(); p.classes = Map.of();
         p.countdownEnd = -1; p.queueOrder = 0; changed(p);
     }
+    /** A personal, explicit choice; ready confirmations do not grant inventory access. */
+    public String resourceSharing(UUID member,long expected,String context,boolean enabled) {
+        var p=party(member);
+        if(p==null||!current(member,expected)||!p.id.toString().equals(context)||p.phase==Phase.PREPARING)
+            return "Group changed; review your resource choice.";
+        String choice=enabled?"YES":"NO";
+        // Personal choices do not invalidate another member's same-roster choice packet.
+        p.resourceSharing.put(member,choice);
+        return null;
+    }
     public String begin(UUID leader, long expected, Map<UUID, String> classes) {
         var p = party(leader);
         if (p == null || !p.leader.equals(leader)) return "Only the group leader can begin readiness.";
         if (!current(leader, expected) || p.phase != Phase.ASSEMBLY) return "Group changed; refresh before readying.";
+        if (p.members.stream().anyMatch(id -> p.resourceSharing(id).equals("UNKNOWN")))
+            return "Every member must choose YES or NO for group resources first.";
         if (!D1PartyRules.fits(p.occupied(), p.capacity))
             return "The group must fit this selector's party limits.";
         if (!classes.keySet().equals(p.members) || classes.values().stream().anyMatch(c -> c == null || c.isBlank() || c.equals("none")))
@@ -209,12 +223,15 @@ public final class D1PartyLobby {
     public String ready(UUID player, long expected) {
         var p = party(player);
         if (p == null || !current(player, expected) || p.phase != Phase.READY_CHECK) return "Wait for your leader's ready check.";
+        if (p.resourceSharing(player).equals("UNKNOWN")) return "Choose YES or NO for group resources first.";
         p.ready.add(player); // Same ready-check revision permits simultaneous confirmations; duplicates are idempotent.
         return null;
     }
     public String queueProblem(UUID leader, long expected) {
         var p = party(leader);
         if (p == null || !p.leader.equals(leader)) return "Only the group leader can submit the queue.";
+        if (p.members.stream().anyMatch(id -> p.resourceSharing(id).equals("UNKNOWN")))
+            return "Every member must choose YES or NO for group resources first.";
         if (!current(leader, expected) || p.phase != Phase.READY_CHECK || !p.ready.equals(p.members))
             return "Every member must confirm ready first.";
         return null;
@@ -255,7 +272,7 @@ public final class D1PartyLobby {
         if (p == null || p.phase == Phase.PREPARING) return List.of();
         var affected = p.members();
         if (p.leader.equals(member)) complete(p);
-        else { p.members.remove(member); p.hires.remove(member); p.hireFees.remove(member); p.hireIds.remove(member); membership.remove(member); cancel(p); }
+        else { p.members.remove(member); p.resourceSharing.remove(member); p.hires.remove(member); p.hireFees.remove(member); p.hireIds.remove(member); membership.remove(member); cancel(p); }
         return affected;
     }
     public void complete(Party p) {

@@ -1,7 +1,7 @@
 # Pure release/deployment guards; no credentials or network connection creation.
 function Assert-CDPublishedRelease($Receipt, [string]$JarName, [string]$Commit) {
     $v = [string]$Receipt.version
-    if ($v -notmatch '^\d+\.\d+\.\d+-(alpha\.\d+|beta(\.\d+)?)$' -or
+    if ($v -notmatch '^\d+\.\d+\.\d+(-(alpha\.\d+|beta(\.\d+)?))?$' -or
         $JarName -cne ('cosmicdungeon-' + $v + '.jar') -or
         $Receipt.commit -cne $Commit -or $Commit -notmatch '^[0-9a-f]{40}$' -or
         $Receipt.main_project -ne 1326805 -or
@@ -45,5 +45,12 @@ function Invoke-CDServerActivation($Session, [System.Collections.IDictionary]$Ma
         $Manifest.State='NEEDS-MANUAL-RECOVERY'
         try {& $SaveJournal} catch {Write-Warning 'Journal update failed; retain its prepared operation and remote files.'}
         throw
+    }
+}
+
+# Alpha publication is complete without any server I/O (Cameron 2026-10-11).
+function Assert-CDServerReleaseChannel([string]$Version) {
+    if ($Version -notmatch '^\d+\.\d+\.\d+(-beta(\.\d+)?)?$') {
+        throw 'Server delivery is only for Beta and official releases. Alpha builds stop after CurseForge.'
     }
 }

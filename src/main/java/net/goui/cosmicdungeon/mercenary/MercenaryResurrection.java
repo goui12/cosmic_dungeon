@@ -85,6 +85,26 @@ public final class MercenaryResurrection {
         var data=D1RunData.get(server);
         return MercenaryResurrectionState.readyAt(data,run.runId(),contract.id())<=now(server)?merc:null;
     }
+    /** Read-only status for every viewer; never grants an acceptance capability. */
+    public static net.goui.cosmicdungeon.network.TheurgistPayloads.Resurrection status(
+            ServerPlayer viewer,DungeonRunRegistryData.RunRecord run,MercenaryContract contract){
+        var server=viewer.level().getServer();var data=D1RunData.get(server);
+        int seconds=MercenaryResurrectionState.seconds(MercenaryResurrectionState.readyAt(data,run.runId(),contract.id()),now(server));
+        String state;
+        if(!MercenarySkill.POSITIVE_POTIONS.supports(contract)||MercenarySkill.level(MercenarySkills.successes(data,run.runId(),contract,MercenarySkill.POSITIVE_POTIONS))<MercenaryResurrectionState.UNLOCK_LEVEL)state="LOCKED";
+        else{
+            var hirer=server.getPlayerList().getPlayer(contract.hirer());
+            if(activeRun(viewer)!=run)state="OUT_OF_RUN";
+            else if(hirer==null||!member(hirer,run))state="HIRER_UNAVAILABLE";
+            else if(hirer.level()!=viewer.level())state="DIFFERENT_DIMENSION";
+            else if(!(hirer.level().getEntity(contract.id()) instanceof MercenaryEntity mercenary)
+                    ||!mercenary.isAlive()||mercenary.dormant()||mercenary.runId()!=run.runId()
+                    ||!mercenary.contract().equals(contract)||!MercenaryLifecycle.admitted(run,contract,mercenary.getUUID(),viewer.level().dimension().location().toString()))state="UNAVAILABLE";
+            else state=seconds>0?"COOLDOWN":"READY";
+        }
+        return new net.goui.cosmicdungeon.network.TheurgistPayloads.Resurrection(state,seconds);
+    }
+
     public static PartyPayloads.Resurrection snapshot(MinecraftServer server,DungeonRunRegistryData.RunRecord run,
                                                      MercenaryContract contract,UUID viewer){
         var data=D1RunData.get(server);

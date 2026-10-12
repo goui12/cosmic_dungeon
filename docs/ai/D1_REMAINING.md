@@ -1,24 +1,24 @@
-# Current plan, 2026-10-10
+# Current plan, 2026-10-12
 
 [1.7 Alpha / 1.8 Beta batch plan](tasks/ALPHA_1_7_BATCH_PLAN_20261010.md).
+Batches1-19 completed. Exact Batch19 source b8c9aa48d9f4c489097d84470aa9bea10bb05ef5,
+CI38201815436, publisher38202005228, CurseForge9141993/helper9141991.
+**Batch20 active; Cameron authorized the focused follow-up cards21–25 on2026-10-12.**
 
-**20 planned batches:19 Alphas (1.7.1 through1.7.19), then1.8.0 Beta.**
-Zero batches in this new series have started. Cameron authorized the plan/design;
-implementation awaits a start instruction. The previous15-26 controller is COMPLETE;
-do not reset/reuse its receipts or infer autonomous execution from this document.
+The final actual-code/review audit found required corrections. Card20 therefore returns through
+unique corrective1.7.21-alpha.1 (first1.7.20 publisher failed before upload) before merged-main1.8.0-beta.1.
+[Full audit/report](tasks/BATCH_1_7_20_20261012.md),
+[all recommendations and Codex notes](tasks/BATCH_1_7_20_REVIEW_NOTES_20261012.md),
+[requirements/evidence/manual matrix](tasks/BATCH_1_7_20_REQUIREMENTS_20261012.md).
+Blocking defects or failed required tests block Beta. Final exact release/delivery evidence is recorded
+in series-1.7/receipts/batch-20.json only after completion.
 
-The plan covers inventory/class art/tooltips, ownership/trades, Tamsin sharing,
-run XML metrics, real potion recipes/fuel/stacking, resurrection, Bogatyr rework,
-hotkeys, the full spawner GUI, category artwork and the responsive H guide.
-Fuel retains20-operation charges with a graphic left of recipes. Both potion classes
-may craft mixed-effect drinkables, neither mixed splash; all potions are tradable.
-Batch20 audits every original request, per-batch recommendations, failed tests and TODOs.
-
-Two native wolf failures from Integration Gate38101339624 remain recorded OPEN;
-Batch1 must establish their cause and repair the baseline without weakening tests.
-The linked plan contains their exact IDs and current evidence.
-Delivery remains CurseForge then stopped TEST sFTP only; no local-client installs
-or additional post-publication hash checks. Historical rollout notes follow.
+Alpha ends at runtime/companion publication without TEST I/O.
+Beta requires stopped TEST sFTP runtime delivery. No local-client installs, restarts,
+server.properties writes or extra postpublication hashes. Licensed native GUI/co-op/world acceptance
+remains TESTING; stable requires a separate decision after Beta acceptance.
+Six implementation cards remain including active20. Finish20 first, then21 save/recovery,22 Stay traversal,23 ingredient-route tooltips,24 six-player crafting measurements,25 retain-all history preservation. Stop after25. The five-card source is Cameron's saved Cosmic_Dungeon_Batches_21-25.md plan; install the exact follow-up scope into the active controller after Batch20 completion. No stable or manual-testing batch is authorized.
+The previous15-26 controller remains COMPLETE; historical notes below are preserved.
 
 ---
 

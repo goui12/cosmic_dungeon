@@ -59,16 +59,12 @@ public final class SupplyRequests {
             try{return !valid(server,request);}catch(RuntimeException invalid){return true;}
         });
     }
-    public static void syncAll(MinecraftServer server){
-        prune(server);for(var p:server.getPlayerList().getPlayers())sync(p,false);
-    }
+    public static void syncAll(MinecraftServer server){ /* Retired. Existing SupplyTransfers journals still reconcile independently. */ }
     private static void warn(ServerPlayer p,RuntimeException error){
         if(state(p.level().getServer()).warned.add(p.getUUID()))
             com.mojang.logging.LogUtils.getLogger().error("Supply requests disabled without changing items for {}",p.getUUID(),error);
     }
-    public static void sync(ServerPlayer p,boolean force){
-        try{buildView(p,force);}catch(RuntimeException error){warn(p,error);send(p,SupplyRequestPayloads.View.empty(),force);}
-    }
+    public static void sync(ServerPlayer p,boolean force){ /* Retired. Existing SupplyTransfers journals still reconcile independently. */ }
     private static void buildView(ServerPlayer p,boolean force){
         var state=state(p.level().getServer());var session=session(p);var run=ClassResourceService.activeRun(p).orElse(null);
         if(run==null){session.inventory=List.of();session.quotes=Map.of();send(p,SupplyRequestPayloads.View.empty(),force);return;}
@@ -130,50 +126,7 @@ public final class SupplyRequests {
             changes.add(new ResourceRecycling.Change(change.slot(),current.copy(),after));credit+=take;headroom-=take;
         }return new ResourceRecycling.Plan(changes,credit);
     }
-    public static void action(ServerPlayer p,SupplyRequestPayloads.Action action){
-        var server=p.level().getServer();var state=state(server);var session=session(p);
-        boolean changed=false;
-        try{
-            long now=server.getTickCount();
-            if(session.lastAction!=Long.MIN_VALUE&&now>=session.lastAction&&now-session.lastAction<5)return;
-            session.lastAction=now;prune(server);
-            var run=ClassResourceService.activeRun(p).orElse(null);
-            if(run==null||run.runId()!=action.runId()||session.sent==null||session.sent.runId()!=action.runId()
-                    ||session.sent.revision()!=action.revision()||!live(p))return;
-            if(action.decision()==SupplyRequestPayloads.Decision.REQUEST){int count=state.requests.size();request(p,run);changed=state.requests.size()!=count;return;}
-            var visible=session.sent.cards().stream().map(SupplyRequestPayloads.Card::requestId).toList();
-            if(!visible.containsAll(action.requestIds()))return;
-            var ordered=visible.stream().filter(action.requestIds()::contains).toList();
-            boolean accept=action.decision()==SupplyRequestPayloads.Decision.ACCEPT||action.decision()==SupplyRequestPayloads.Decision.ACCEPT_ALL;
-            if(!accept){changed=true;ordered.forEach(id->{var r=state.requests.get(id);if(r!=null&&r.donor().equals(p.getUUID()))state.requests.remove(id);});return;}
-            if(!inventoryReady(p)||!inventoryMatches(p,session.inventory))return;
-            var quotes=session.quotes;var expected=List.copyOf(ChopTravelRecovery.inventory(p));
-            for(UUID id:ordered){
-                var request=state.requests.get(id);if(request==null||!request.donor().equals(p.getUUID())||!valid(server,request))continue;
-                var recipient=server.getPlayerList().getPlayer(request.requester());var quote=quotes.get(id);
-                if(quote==null||!inventoryReady(p)||!inventoryReady(recipient))continue;
-                if(!InventoryTransactionGuard.beforeCurrentInventoryAction(p)||!InventoryTransactionGuard.beforeCurrentInventoryAction(recipient))break;
-                if(!inventoryMatches(p,expected))break;
-                if(!valid(server,request)||!inventoryReady(p)||!inventoryReady(recipient))continue;
-                var resource=ledger(recipient,run.runId());var plan=remaining(p.getInventory(),quote,600-resource.amount(request.kind()),request.kind());
-                if(plan.credit()==0)continue;
-                // Normalize additive old resource data before reserving its exact owner image.
-                ledger(recipient,resource);
-                var before=ChopTravelRecovery.inventory(p);var after=ChopTravelRecovery.inventory(p);
-                for(var change:plan.changes())after.set(change.slot(),change.after().copy());
-                var transaction=SupplyTransferPlan.create(p.getUUID(),recipient.getUUID(),run.runId(),request.kind(),plan.credit(),
-                        ChopTravelRecovery.encode(p,before),ChopTravelRecovery.encode(p,after),resource);
-                changed=true;state.requests.remove(id); // A consent token is single-use even if native settlement must recover.
-                if(!SupplyTransfers.execute(p,recipient,transaction))break;
-                expected=List.copyOf(ChopTravelRecovery.inventory(p));ClassResourceService.pulse(recipient,now,false);
-            }
-        }catch(RuntimeException error){warn(p,error);}
-        finally{
-            prune(server);
-            if(changed)for(var viewer:server.getPlayerList().getPlayers())sync(viewer,viewer==p);
-            else sync(p,true);
-        }
-    }
+    public static void action(ServerPlayer p,SupplyRequestPayloads.Action action){ /* Retired. Existing SupplyTransfers journals still reconcile independently. */ }
     public static void invalidate(ServerPlayer p){
         var state=state(p.level().getServer());var session=session(p);
         session.sent=null;session.inventory=List.of();session.quotes=Map.of();

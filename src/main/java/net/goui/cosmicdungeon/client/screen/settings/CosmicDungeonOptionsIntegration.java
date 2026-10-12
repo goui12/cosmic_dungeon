@@ -12,11 +12,8 @@ public final class CosmicDungeonOptionsIntegration {
         net.goui.cosmicdungeon.client.screen.skills.BogatyrClient.actions(net.goui.cosmicdungeon.network.ModNetwork::sendToServer);
         net.goui.cosmicdungeon.client.screen.skills.BogatyrClient.modeActions(net.goui.cosmicdungeon.network.ModNetwork::sendToServer);
         net.goui.cosmicdungeon.client.screen.skills.TheurgistClient.actions(net.goui.cosmicdungeon.network.ModNetwork::sendToServer);
-        net.goui.cosmicdungeon.client.screen.requests.SupplyRequestsClient.actions(action ->
-                net.goui.cosmicdungeon.network.ModNetwork.sendToServer(
-                        new net.goui.cosmicdungeon.network.SupplyRequestPayloads.Action(action.runId(),action.revision(),
-                                net.goui.cosmicdungeon.network.SupplyRequestPayloads.Decision.valueOf(action.decision().name()),
-                                action.requestIds())));
+        net.goui.cosmicdungeon.client.screen.crafting.PotionCraftClient.actions(
+                net.goui.cosmicdungeon.network.ModNetwork::sendToServer, net.goui.cosmicdungeon.network.ModNetwork::sendToServer);
         net.goui.cosmicdungeon.client.screen.skills.ClassResourceClient.recycleAction(snapshot ->
                 net.goui.cosmicdungeon.network.ModNetwork.sendToServer(
                         new net.goui.cosmicdungeon.network.ClassResourcePayloads.Recycle(

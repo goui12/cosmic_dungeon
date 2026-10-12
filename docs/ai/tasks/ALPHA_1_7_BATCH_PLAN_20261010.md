@@ -1,18 +1,18 @@
 # Cosmic Dungeon 1.7 Alpha series and 1.8 Beta plan
 
 Approved design baseline: Cameron's October 10, 2026 requests and clarifications, through 20:09 PDT.
-Status: PLANNED; 0 of 20 batches implemented in this series. Creating this plan does not start execution.
+Status: Batches1-19 completed. Batch20 audits all requirements and actual review notes; confirmed fixes require corrective1.7.20-alpha.1 before validated merged-main1.8.0-beta.1. Current task: BATCH_1_7_20_20261012.md. Stop after20. Licensed acceptance remains TESTING.
 The earlier 15-26 controller remains COMPLETE. Initialize a separately identified 1.7 series only after an implementation/start instruction; archive old receipts and never reuse their batch IDs as new evidence.
 
 ## Release and completion contract
 
-- Batches 1-19 each produce one Alpha: 1.7.1-alpha.1 through 1.7.19-alpha.1. Batch 20 produces 1.8.0-beta.1.
-- Each card includes implementation, its relevant tests, review, full clean/native CI, a unique source tag, CurseForge runtime plus matching companion, and stopped TEST sFTP delivery. No feature is considered implemented merely because its interface appears.
+- Batches 1-19 each produce one published Alpha. Batch1 uses1.7.1-alpha.2 because candidate1 failed native fixture tests before upload; its old tag remains immutable. Batches2-19 use1.7.2-alpha.1 through1.7.19-alpha.1. Batch20 produces1.8.0-beta.1.
+- Each card includes implementation, its relevant tests, review, full clean/native CI, a unique source tag, CurseForge runtime plus matching companion, and channel-appropriate completion (Alpha publication only; Beta/official stopped TEST sFTP). No feature is considered implemented merely because its interface appears.
 - Fix failures before publishing a card. Never reuse a published version/tag for different bytes. Beta is an audit/release batch, not a place to conceal unfinished features.
 - Preserve Java21, server authority, authored chest stacks/loadouts/renamed rockets, existing worlds/spawner IDs and unknown save data. No automated local game/GameTest/client/server launch, restart, or server.properties edits.
-- After CurseForge, update only TEST through pinned sFTP after current shutdown evidence; save compact completion and stop at the authorized boundary. No local client/helper installs or additional post-publication hash/readback loops.
+- After CurseForge, Alpha builds save compact completion and stop: no sFTP or server checks. Beta/official builds update only TEST through pinned sFTP after current shutdown evidence, then complete. Stop at the authorized boundary. No local client/helper installs or additional post-publication hash/readback loops.
 - Use the local canon backup at C:/Users/Cameron/Documents/mod_development/cosmic_dungeon/Google Docs and Sheet/. No Google connector, OAuth or live refresh gate. Read relevant local lore/recipes; preserve recorded provenance and coverage limits.
-- Each batch report records requirement IDs, changed surfaces, build/CI/release/TEST evidence, actual manual acceptance versus TESTING, every failed GameTest and disposition, outstanding TODOs, and one useful AI recommendation for that batch (or explicitly none justified). Final Beta consolidates these without erasing failures that later passed.
+- Each batch report records requirement IDs, changed surfaces, build/CI/release/TEST evidence, actual manual acceptance versus TESTING, every failed GameTest and disposition, outstanding TODOs, and all AI recommendations and unimplemented Codex review notes for every push (or explicitly none justified). Final Beta consolidates these without erasing failures that later passed.
 - Common automated gates do not prove GUI readability or licensed multiplayer behavior. List concrete manual checks and retain their real status.
 - Normally one cooperative worker with disjoint writes. The explicitly requested category-art batch may use multiple image workers with separate assets; one coordinator owns integration. Do not change runtime dependencies/resources silently.
 
@@ -88,7 +88,7 @@ All cards are PLANNED. Dependencies are cumulative in the listed order; the scop
 
 | Batch | Release | Deliverable |
 |---|---|---|
-|1|1.7.1-alpha.1|Baseline wolf-test repair, global tooltip layering and hover party inspection|
+|1|1.7.1-alpha.2|Baseline wolf-test repair, global tooltip layering and hover party inspection|
 |2|1.7.2-alpha.1|Shared inventory framework, class-emblem artwork and Skills transparency|
 |3|1.7.3-alpha.1|Gear drop/pickup rules, unrestricted ordinary-item/potion trades and available balance|
 |4|1.7.4-alpha.1|Tamsin forward progression and resource-sharing consent|

@@ -29,6 +29,7 @@ public final class D1PartyChecks {
     }
     private static void readyAll(D1PartyLobby lobby, UUID leader) {
         var p = lobby.party(leader);
+        D1PartyTestSupport.consentAll(lobby,leader);
         check(lobby.begin(leader, p.revision(), classes(p)) == null, "Leader begins complete ready check");
         long revision = p.revision();
         for (UUID member : p.members()) check(lobby.ready(member, revision) == null, "Simultaneous personal confirmation");
@@ -56,10 +57,12 @@ public final class D1PartyChecks {
         lobby.decline(id(3), lobby.invitation(id(3)).token());
         check(lobby.invite(id(3), id(1), A, 6, 120, 6) != null, "Inviting another group leader cannot merge");
         check(lobby.begin(id(2), p.revision(), classes(p)) != null, "Nonleader cannot begin ready check");
+        D1PartyTestSupport.consentAll(lobby,id(1));
         check(lobby.begin(id(1), p.revision(), classes(p)) == null, "Two members may ready below maximum");
         lobby.cancel(p);
         check(lobby.invite(id(1), id(3), B, 6, 120, 6) != null, "Cannot change another group's selector anchor");
         join(lobby, id(1), id(3), 6);
+        D1PartyTestSupport.consentAll(lobby,id(1));
         var missing = classes(p); missing.remove(id(3));
         check(lobby.begin(id(1), p.revision(), missing) != null, "Every roster member needs class snapshot");
         var noClass = classes(p); noClass.put(id(3), "none");

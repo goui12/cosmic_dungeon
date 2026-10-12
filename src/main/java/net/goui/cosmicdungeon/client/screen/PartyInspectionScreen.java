@@ -33,11 +33,11 @@ public final class PartyInspectionScreen extends Screen {
         scroll=0;dragging=false;
     }
     @Override public boolean isPauseScreen(){return false;}
-    @Override public void onClose(){minecraft.setScreen(parent);}
+    @Override public void onClose(){InventoryModalContext.restore(parent);}
     @Override public void tick() {
         if(minecraft.player==null||!D1PartyHud.inspectionCurrent(run,subject.toString())
-                ||minecraft.player.containerMenu!=minecraft.player.inventoryMenu) {
-            minecraft.setScreen(null);return;
+                ||!PartyInspectionHover.currentMenu(parent,minecraft.player)) {
+            InventoryModalContext.dismiss(parent);return;
         }
         if(++age>40)view=null;
         if(ticks++%20==0) {

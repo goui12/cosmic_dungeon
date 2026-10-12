@@ -1,0 +1,99 @@
+{
+  "scope": "All pixels of every runtime PNG; any crop. Requires C0000000 black text scrim.",
+  "actual_gameplay": "TESTING",
+  "font_proxy": "DejaVu Sans",
+  "checks": [
+    {
+      "id": "achievements",
+      "min_contrast_b0_with_required_scrim": 5.069
+    },
+    {
+      "id": "apothecary",
+      "min_contrast_b0_with_required_scrim": 4.903
+    },
+    {
+      "id": "bogatyr",
+      "min_contrast_b0_with_required_scrim": 5.265
+    },
+    {
+      "id": "classes",
+      "min_contrast_b0_with_required_scrim": 4.956
+    },
+    {
+      "id": "dragoon",
+      "min_contrast_b0_with_required_scrim": 4.962
+    },
+    {
+      "id": "dungeons",
+      "min_contrast_b0_with_required_scrim": 5.414
+    },
+    {
+      "id": "exchange",
+      "min_contrast_b0_with_required_scrim": 5.127
+    },
+    {
+      "id": "expedition",
+      "min_contrast_b0_with_required_scrim": 5.398
+    },
+    {
+      "id": "factions",
+      "min_contrast_b0_with_required_scrim": 4.902
+    },
+    {
+      "id": "first_heart",
+      "min_contrast_b0_with_required_scrim": 5.565
+    },
+    {
+      "id": "forge",
+      "min_contrast_b0_with_required_scrim": 5.458
+    },
+    {
+      "id": "guide",
+      "min_contrast_b0_with_required_scrim": 6.084
+    },
+    {
+      "id": "hearth",
+      "min_contrast_b0_with_required_scrim": 4.868
+    },
+    {
+      "id": "judicator",
+      "min_contrast_b0_with_required_scrim": 5.281
+    },
+    {
+      "id": "party",
+      "min_contrast_b0_with_required_scrim": 5.147
+    },
+    {
+      "id": "progression",
+      "min_contrast_b0_with_required_scrim": 4.899
+    },
+    {
+      "id": "pyroclast",
+      "min_contrast_b0_with_required_scrim": 5.036
+    },
+    {
+      "id": "scholar",
+      "min_contrast_b0_with_required_scrim": 5.361
+    },
+    {
+      "id": "supplies",
+      "min_contrast_b0_with_required_scrim": 4.962
+    },
+    {
+      "id": "theurgist",
+      "min_contrast_b0_with_required_scrim": 4.88
+    },
+    {
+      "id": "travel",
+      "min_contrast_b0_with_required_scrim": 5.014
+    },
+    {
+      "id": "venefex",
+      "min_contrast_b0_with_required_scrim": 5.121
+    },
+    {
+      "id": "village",
+      "min_contrast_b0_with_required_scrim": 4.917
+    }
+  ]
+}

@@ -167,51 +167,72 @@ public final class TheurgistActionGameTests {
         try(var f=new Fixture(helper,Long.MAX_VALUE-2210,"theurgist","judicator")){
             f.amount(0,60);f.fresh();
             for(int slot=0;slot<36;slot++)f.p(0).getInventory().setItem(slot,new ItemStack(Items.DIAMOND,64));
-            f.check(!TheurgistCrafting.craft(f.p(0),f.run,false)&&f.amount(0)==60,"Full inventory cannot lose supplies or drop a potion");
-            f.p(0).getInventory().setItem(7,ItemStack.EMPTY);
-            f.check(TheurgistCrafting.craft(f.p(0),f.run,false)&&f.amount(0)==40,"One normal physical splash costs20");
-            var item=f.p(0).getInventory().getItem(7);
-            f.check(item.is(Items.SPLASH_POTION)&&item.getCount()==1&&TheurgistPotionCatalog.pool(false).contains(item.get(DataComponents.POTION_CONTENTS).potion().orElseThrow()),"Crafted normal uses exact native pool");
-            f.p(0).getInventory().setItem(8,ItemStack.EMPTY);
-            f.check(TheurgistCrafting.craft(f.p(0),f.run,true)&&f.amount(0)==0,"One epic physical splash costs40");
-            f.check(TheurgistPotionCatalog.pool(true).contains(f.p(0).getInventory().getItem(8).get(DataComponents.POTION_CONTENTS).potion().orElseThrow()),"Epic pool contains actual tierII only");
-            f.check(!TheurgistCrafting.craft(f.p(0),f.run,false)&&!TheurgistCrafting.craft(f.p(1),f.run,false),"Insufficient resources and wrong class cannot craft");
-            f.check(f.p(0).getInventory().getItem(0).is(Items.DIAMOND)&&f.p(0).getInventory().getItem(0).getCount()==64,"Crafting preserves every unrelated inventory slot");
-            f.reload(0);f.check(f.amount(0)==0&&f.p(0).getInventory().getItem(7).is(Items.SPLASH_POTION)&&f.p(0).getInventory().getItem(8).is(Items.SPLASH_POTION),"Native reload pairs physical potion delivery and exact resource debit");
-            f.amount(0,40);f.p(0).getInventory().setItem(9,ItemStack.EMPTY);f.fresh();
-            var click=f.action(0,TheurgistPayloads.Kind.CRAFT,TheurgistPayloads.NONE,TheurgistPayloads.NONE);
-            TheurgistActions.action(f.p(0),click);TheurgistActions.action(f.p(0),click);
-            f.check(f.amount(0)==20,"Duplicate craft generation spends only once");
-            f.check(f.packets.values().stream().flatMap(List::stream).noneMatch(packet->packet instanceof ClientboundContainerClosePacket),"Crafting keeps the native inventory open");
+            f.check(!TheurgistCrafting.craft(f.p(0),f.run,false)&&f.amount(0)==60,"Retired random crafting cannot debit even a full inventory");
+            f.p(0).getInventory().setItem(7,ItemStack.EMPTY);f.p(0).getInventory().setItem(8,ItemStack.EMPTY);
+            var inventory=ChopTravelRecovery.saveInventory(f.p(0));var owner=f.root(0).copy();
+            f.check(!TheurgistCrafting.craft(f.p(0),f.run,false)&&!TheurgistCrafting.craft(f.p(0),f.run,true),
+                    "Neither normal nor epic random crafting remains available with sufficient old supplies and free slots");
+            f.check(!TheurgistCrafting.craft(f.p(1),f.run,false),"Wrong-class callers also remain denied");
+            for(var kind:List.of(TheurgistPayloads.Kind.CRAFT,TheurgistPayloads.Kind.EPIC)){
+                f.fresh();f.check(!f.view(0).normal()&&!f.view(0).epic(),"Snapshots never advertise retired random potion actions");
+                var click=f.action(0,kind,TheurgistPayloads.NONE,TheurgistPayloads.NONE);
+                TheurgistActions.action(f.p(0),click);TheurgistActions.action(f.p(0),click);
+            }
+            f.check(f.root(0).equals(owner)&&ChopTravelRecovery.saveInventory(f.p(0)).equals(inventory),
+                    "Retired direct calls and duplicate/stale action tokens preserve the entire owner ledger and inventory");
+            f.check(PlayerSaveProof.save(f.p(0)),"Preserved legacy owner can still save normally");f.reload(0);
+            f.check(f.amount(0)==60&&f.p(0).getInventory().getItem(7).isEmpty()&&f.p(0).getInventory().getItem(8).isEmpty()
+                    &&f.p(0).getInventory().getItem(0).getCount()==64,"Native reload retains old balance without inventing new random potions");
+            f.check(f.packets.values().stream().flatMap(List::stream).noneMatch(packet->packet instanceof ClientboundContainerClosePacket),
+                    "Rejected retired crafting never closes the inventory");
             helper.succeed();
         }
     }
     public static void resurrection(GameTestHelper helper){
         try(var f=new Fixture(helper,Long.MAX_VALUE-2211,"theurgist","judicator","theurgist")){
-            f.amount(0,240);f.amount(2,240);
+            f.amount(0,0);f.amount(2,0);
             f.p(1).setHealth(0);var death=MercenaryResurrection.prepareDeath(f.p(1));f.fresh();f.offer(0,1);
-            f.check(f.amount(0)==240&&f.view(1).offer()!=null,"Offering resurrection costs nothing");
+            f.check(f.amount(0)==0&&f.view(1).offer()!=null,"Immediately available at zero supplies and no level gate");
+            f.check(f.view(1).casters().size()==2&&f.view(0).resurrection().ready(),"Dead viewer sees each player Theurgist");
             f.offer(2,1);f.check(f.view(1).offer().caster().equals(f.p(0).getUUID()),"Competing caster cannot replace one explicit offer");
             f.decision(1,TheurgistPayloads.Kind.DECLINE);
-            f.check(f.amount(0)==240&&f.p(1).isDeadOrDying(),"Declining costs nothing and does not respawn");
+            f.check(ResurrectionCooldown.seconds(f.p(0))==0&&f.p(1).isDeadOrDying(),"Declining starts no cooldown");
+            f.fresh();f.offer(0,1);
+            try{
+                @SuppressWarnings("unchecked") var states=(Map<Object,Object>)Fixture.field(TheurgistActions.class,"STATES",null);
+                var state=states.get(f.level.getServer());
+                @SuppressWarnings("unchecked") var offers=(Map<UUID,TheurgistActions.Pending>)Fixture.field(state.getClass(),"offers",state);
+                var o=offers.get(f.p(1).getUUID());
+                offers.put(f.p(1).getUUID(),new TheurgistActions.Pending(o.id(),o.run(),o.caster(),o.target(),o.death(),f.level.getServer().overworld().getGameTime()));
+            }catch(ReflectiveOperationException error){throw new IllegalStateException(error);}
+            f.sync();f.check(f.view(1).offer()==null&&ResurrectionCooldown.seconds(f.p(0))==0,"Expired offer clears without cooldown");
             f.fresh();f.offer(0,1);
             var offered=f.view(1).offer();var accept=f.action(1,TheurgistPayloads.Kind.ACCEPT,offered.caster(),offered.id());
             var original=f.p(1);var origin=death.position();TheurgistActions.action(original,accept);
             var replacement=f.players.get(original.getUUID());f.current.set(1,replacement);f.owned.add(replacement);
-            f.check(replacement!=original&&replacement.isAlive()&&replacement.position().equals(origin),"Accepted native resurrection restores latest death position in generic active dungeon");
-            f.check(f.amount(0)==120&&f.amount(2)==240,"Only accepted caster is charged exactly120");
-            f.check(MercenaryResurrectionState.death(D1RunData.get(f.level.getServer()),f.run,replacement.getUUID())==null,"Successful shared latest-death claim cannot be reused");
+            f.check(replacement!=original&&replacement.isAlive()&&replacement.position().equals(origin),"Accepted native resurrection restores latest death position");
+            f.check(f.amount(0)==0&&f.amount(2)==0&&ResurrectionCooldown.seconds(f.p(0))==180
+                    &&ResurrectionCooldown.seconds(f.p(2))==0,"Only successful caster starts180 seconds; nobody pays resources");
+            var cooldown=ResurrectionCooldown.read(f.root(0));
+            f.check(MercenaryResurrectionState.death(D1RunData.get(f.level.getServer()),f.run,replacement.getUUID())==null,"Successful latest-death claim cannot be reused");
             TheurgistActions.action(original,accept);TheurgistActions.action(replacement,accept);
-            f.check(f.players.get(replacement.getUUID())==replacement&&f.amount(0)==120,"Duplicate and stale players cannot respawn or charge twice");
+            f.check(f.players.get(replacement.getUUID())==replacement&&ResurrectionCooldown.read(f.root(0)).equals(cooldown),"Duplicate/stale acceptance cannot respawn or restart cooldown");
             var damage=new net.neoforged.neoforge.event.entity.EntityInvulnerabilityCheckEvent(replacement,replacement.damageSources().fellOutOfWorld(),false);
-            net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(damage);f.check(damage.isInvulnerable(),"Shared native five-second protection is retained");
-            f.check(RevivalData.get(f.level.getServer()).image().equals(f.journalBefore),"Successful owner acknowledgements retire only this revival plan");
-            // A later genuine death can be offered immediately: player resurrection has no mercenary cooldown.
+            net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(damage);f.check(damage.isInvulnerable(),"Native five-second protection retained");
+            f.check(RevivalData.get(f.level.getServer()).image().equals(f.journalBefore),"Successful owner acknowledgements retire only this plan");
+            f.reload(0);f.check(ResurrectionCooldown.read(f.root(0)).equals(cooldown),"Native owner reload preserves exact cooldown");
             replacement.setHealth(0);MercenaryResurrection.prepareDeath(replacement);f.fresh();f.offer(0,1);
-            f.check(f.view(1).offer()!=null,"No player resurrection cooldown or extra skill level gate");
-            f.p(0).setHealth(0);f.sync();f.check(f.view(1).offer()==null,"Caster death invalidates outstanding offer before acceptance");
-            f.p(0).setHealth(20);f.amount(0,119);f.fresh();
-            f.check(f.view(0).targets().stream().noneMatch(TheurgistPayloads.Target::available),"Below120 has no enabled resurrection action");
+            f.check(f.view(1).offer()==null&&f.view(0).targets().stream().noneMatch(TheurgistPayloads.Target::available),"Cooldown blocks later death even with fresh action tokens");
+            f.offer(2,1);f.check(f.view(1).offer()!=null,"Another ready Theurgist may offer");
+            f.p(2).setHealth(0);f.sync();f.check(f.view(1).offer()==null,"Caster death invalidates outstanding offer");
+            f.p(0).setHealth(0);f.sync();
+            f.check(f.view(1).casters().stream().anyMatch(c->c.id().equals(f.p(0).getUUID())&&c.resurrection().state().equals("DEAD")&&c.resurrection().seconds()==180),"Dead caster status retains remaining cooldown");
+            var old=f.p(0);var next=f.level.getServer().getPlayerList().respawn(old,false,net.minecraft.world.entity.Entity.RemovalReason.KILLED);
+            next.connection.player=next;f.current.set(0,next);f.owned.add(next);next.setPos(f.origin);
+            f.check(ResurrectionCooldown.read(f.root(0)).equals(cooldown),"Native death clone cannot reset cooldown");
+            f.players.remove(next.getUUID());f.sync();
+            f.check(f.view(1).casters().stream().anyMatch(c->c.id().equals(next.getUUID())&&c.resurrection().state().equals("OFFLINE")&&c.resurrection().seconds()==-1),"Offline caster never masquerades as ready");
+            f.players.put(next.getUUID(),next);
             helper.succeed();
         }
     }
@@ -232,22 +253,34 @@ public final class TheurgistActionGameTests {
             f.check(TheurgistRevival.reconcile(f.p(1))&&TheurgistRevival.reconcile(f.p(0))&&f.amount(0)==120,"Absent target success receipt cancels without resource loss");
             f.check(!f.root(0).contains(TheurgistRevival.CUSTODY)&&data.image().equals(f.journalBefore),"Partial prepare retires its reservations and journal only");
             f.check(f.root(0).getStringOr("future_marker","").equals("preserved"),"Recovery preserves unknown owner fields");
+            long now=f.level.getServer().overworld().getGameTime();
+            var free=RevivalPlan.free(f.p(0).getUUID(),f.p(1).getUUID(),UUID.randomUUID(),f.run,new CompoundTag(),now);
+            data.reserve(free);f.check(data.flushVerified(),"Free cooldown journal saved before owner reservations");
+            f.custody(0,free);f.custody(1,free);f.receipt(1,free);
+            f.reload(0);f.reload(1);
+            f.check(TheurgistRevival.reconcile(f.p(1))&&TheurgistRevival.reconcile(f.p(0))
+                    &&f.amount(0)==120&&ResurrectionCooldown.read(f.root(0)).equals(free.tag("after")),"Saved target success recovers free cooldown without legacy debit");
+            f.reload(0);f.reload(1);
+            f.check(TheurgistRevival.reconcile(f.p(0))&&TheurgistRevival.reconcile(f.p(1))
+                    &&ResurrectionCooldown.read(f.root(0)).equals(free.tag("after"))&&data.image().equals(f.journalBefore),"Repeated recovery cannot restart cooldown");
+            f.root(0).remove(ResurrectionCooldown.KEY); // Isolated fixture for an interrupted unsuccessful free attempt.
+            var canceledFree=RevivalPlan.free(f.p(0).getUUID(),f.p(1).getUUID(),UUID.randomUUID(),f.run,new CompoundTag(),now);
+            data.reserve(canceledFree);f.check(data.flushVerified(),"Canceled free plan prepared");f.custody(0,canceledFree);
+            f.reload(0);f.reload(1);
+            f.check(TheurgistRevival.reconcile(f.p(1))&&TheurgistRevival.reconcile(f.p(0))
+                    &&!f.root(0).contains(ResurrectionCooldown.KEY)&&f.amount(0)==120,"No target success means no cooldown or resource charge");
+
             helper.succeed();
         }
     }
 
     public static void resourceDeathIntegration(GameTestHelper helper){
         try(var f=new Fixture(helper,Long.MAX_VALUE-2604,"theurgist","judicator")){
-            f.amount(0,120);f.p(1).setHealth(0);
+            f.amount(0,120);f.p(0).getInventory().setItem(0,new ItemStack(Items.DIAMOND,2));f.p(1).setHealth(0);
             var firstDeath=MercenaryResurrection.prepareDeath(f.p(1));f.fresh();f.offer(0,1);
             var offer=f.view(1).offer();var oldAccept=f.action(1,TheurgistPayloads.Kind.ACCEPT,offer.caster(),offer.id());
-            f.check(TheurgistCrafting.craft(f.p(0),f.run,false)&&f.amount(0)==100,"A pending offer does not reserve supplies against a valid craft");
-            TheurgistActions.action(f.p(1),oldAccept);
-            f.check(f.p(1).isDeadOrDying()&&f.amount(0)==100&&f.view(1).offer()==null,
-                    "Acceptance revalidates resources spent by another feature without respawn or extra debit");
-
-            f.amount(0,140);f.fresh();f.offer(0,1);offer=f.view(1).offer();
-            oldAccept=f.action(1,TheurgistPayloads.Kind.ACCEPT,offer.caster(),offer.id());
+            f.check(!TheurgistCrafting.craft(f.p(0),f.run,false)&&f.amount(0)==120,"Retired random crafting cannot spend old supplies during a free resurrection offer");
+            f.check(f.view(1).offer()!=null&&ResurrectionCooldown.seconds(f.p(0))==0,"A rejected retired craft does not invalidate a free resurrection offer");
             var old=f.p(1);var next=f.level.getServer().getPlayerList().respawn(old,false,net.minecraft.world.entity.Entity.RemovalReason.KILLED);
             next.connection.player=next;f.current.set(1,next);f.owned.add(next);next.setPos(f.origin.add(1,0,0));
             next.getInventory().setItem(8,new ItemStack(Items.APPLE,3));next.setHealth(0);
@@ -257,17 +290,18 @@ public final class TheurgistActionGameTests {
             net.goui.cosmicdungeon.dungeon.d1.DeathInventoryLayout.capture(data,f.run,next,latest.id());
             next.getInventory().setItem(8,ItemStack.EMPTY); // Missing physical drops must never be recreated from the layout.
             TheurgistActions.action(old,oldAccept);f.sync();
-            f.check(next.isDeadOrDying()&&f.amount(0)==140&&f.view(1).offer()==null,"An old player/offer cannot resurrect a newer death");
+            f.check(next.isDeadOrDying()&&f.amount(0)==120&&f.view(1).offer()==null,"An old player/offer cannot resurrect a newer death");
             f.fresh();f.offer(0,1);f.decision(1,TheurgistPayloads.Kind.ACCEPT);
             var restored=f.players.get(next.getUUID());f.current.set(1,restored);f.owned.add(restored);
             var layout=net.goui.cosmicdungeon.dungeon.d1.DeathInventoryLayout.read(data,f.run,restored);
-            f.check(restored!=next&&restored.isAlive()&&restored.position().equals(latest.position())&&f.amount(0)==20,
-                    "Fresh acceptance restores only the latest death and debits120 once");
+            f.check(restored!=next&&restored.isAlive()&&restored.position().equals(latest.position())&&f.amount(0)==120&&ResurrectionCooldown.seconds(f.p(0))==180,
+                    "Fresh acceptance restores latest death for free and starts cooldown once");
             f.check(layout!=null&&layout.death().equals(latest.id())&&layout.entry(8).template().getCount()==3
                     &&restored.getInventory().getItem(8).isEmpty(),"Native resurrection retains organization metadata without recreating missing inventory");
-            f.reload(0);f.check(f.amount(0)==20&&f.p(0).getInventory().getItem(0).is(Items.SPLASH_POTION),
-                    "Caster reload retains the earlier potion and final shared resource balance");
+            f.reload(0);f.check(f.amount(0)==120&&f.p(0).getInventory().getItem(0).is(Items.DIAMOND)&&f.p(0).getInventory().getItem(0).getCount()==2,
+                    "Caster reload retains authored inventory and the untouched legacy resource balance");
             data.clearRun(f.run);
+            f.check(ResurrectionCooldown.seconds(f.p(0))==180,"Run cleanup cannot reset player cooldown");
             f.check(net.goui.cosmicdungeon.dungeon.d1.DeathInventoryLayout.read(data,f.run,restored)==null,
                     "Run cleanup clears the integrated death organization record");
             helper.succeed();

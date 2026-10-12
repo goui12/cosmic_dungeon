@@ -10,7 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 /** Bounded capabilities and one captured latest-death/offer token per action; never client authority. */
 public final class TheurgistPayloads {
     public static final UUID NONE=new UUID(0,0);
-    public static final int MAX_TARGETS=64;
+    public static final int MAX_TARGETS=64,MAX_CASTERS=67;
     public enum Kind { CRAFT,EPIC,OFFER,ACCEPT,DECLINE }
     private TheurgistPayloads(){}
     private static ResourceLocation id(String path){return ResourceLocation.fromNamespaceAndPath("cosmicdungeon",path);}
@@ -20,10 +20,30 @@ public final class TheurgistPayloads {
     public record Offer(UUID id,UUID caster,String name,UUID death){
         public Offer{Objects.requireNonNull(id);Objects.requireNonNull(caster);Objects.requireNonNull(death);if(name==null||name.isEmpty()||name.length()>64)throw new IllegalArgumentException("Invalid offer");}
     }
-    public record View(long run,long revision,boolean theurgist,boolean alive,boolean normal,boolean epic,List<Target> targets,Offer offer) implements CustomPacketPayload{
+    public record Resurrection(String state,int seconds){
+        public static final Resurrection UNAVAILABLE=new Resurrection("UNAVAILABLE",-1);
+        public Resurrection{
+            if(!List.of("READY","COOLDOWN","DEAD","OFFLINE","OUT_OF_RUN","LOCKED","PENDING","UNAVAILABLE","HIRER_UNAVAILABLE","DIFFERENT_DIMENSION").contains(state)
+                    ||seconds < -1||seconds>180||state.equals("READY")&&seconds!=0||state.equals("COOLDOWN")&&seconds<=0)
+                throw new IllegalArgumentException("Invalid resurrection status");
+        }
+        public boolean ready(){return state.equals("READY");}
+        private void write(FriendlyByteBuf b){b.writeUtf(state,24);b.writeVarInt(seconds);}
+        private static Resurrection read(FriendlyByteBuf b){return new Resurrection(b.readUtf(24),b.readVarInt());}
+    }
+    public record Caster(UUID id,String name,boolean mercenary,Resurrection resurrection){
+        public Caster{Objects.requireNonNull(id);Objects.requireNonNull(resurrection);
+            if(name==null||name.isBlank()||name.length()>64)throw new IllegalArgumentException("Invalid caster");}
+    }
+    public record View(long run,long revision,boolean theurgist,boolean alive,boolean normal,boolean epic,List<Target> targets,Offer offer,
+                       Resurrection resurrection,List<Caster> casters) implements CustomPacketPayload{
+        public View(long run,long revision,boolean theurgist,boolean alive,boolean normal,boolean epic,List<Target> targets,Offer offer){
+            this(run,revision,theurgist,alive,normal,epic,targets,offer,Resurrection.UNAVAILABLE,List.of());
+        }
         public View{
-            targets=List.copyOf(targets);
-            if(run<0||revision<0||targets.size()>MAX_TARGETS||targets.stream().map(Target::player).distinct().count()!=targets.size()
+            targets=List.copyOf(targets);casters=List.copyOf(casters);Objects.requireNonNull(resurrection);
+            if(run<0||revision<0||casters.size()>MAX_CASTERS||casters.stream().map(Caster::id).distinct().count()!=casters.size()
+                    ||run==0&&(!casters.isEmpty()||!resurrection.equals(Resurrection.UNAVAILABLE))||targets.size()>MAX_TARGETS||targets.stream().map(Target::player).distinct().count()!=targets.size()
                     ||(!theurgist||!alive)&&(normal||epic||!targets.isEmpty())
                     ||run==0&&(theurgist||alive||normal||epic||!targets.isEmpty()||offer!=null))
                 throw new IllegalArgumentException("Invalid Theurgist view");
@@ -36,13 +56,19 @@ public final class TheurgistPayloads {
                 b.writeBoolean(v.normal);b.writeBoolean(v.epic);b.writeVarInt(v.targets.size());
                 for(var t:v.targets){b.writeUUID(t.player);b.writeUtf(t.name,64);b.writeUUID(t.death);b.writeBoolean(t.available);}
                 b.writeBoolean(v.offer!=null);if(v.offer!=null){var o=v.offer;b.writeUUID(o.id);b.writeUUID(o.caster);b.writeUtf(o.name,64);b.writeUUID(o.death);}
+                v.resurrection.write(b);b.writeVarInt(v.casters.size());
+                for(var c:v.casters){b.writeUUID(c.id);b.writeUtf(c.name,64);b.writeBoolean(c.mercenary);c.resurrection.write(b);}
             }
             public View decode(ByteBuf raw){
                 var b=new FriendlyByteBuf(raw);long run=b.readVarLong(),revision=b.readVarLong();boolean cls=b.readBoolean(),alive=b.readBoolean(),normal=b.readBoolean(),epic=b.readBoolean();
                 int n=b.readVarInt();if(n<0||n>MAX_TARGETS)throw new IllegalArgumentException("Too many revival targets");
                 var targets=new ArrayList<Target>(n);for(int i=0;i<n;i++)targets.add(new Target(b.readUUID(),b.readUtf(64),b.readUUID(),b.readBoolean()));
                 Offer offer=b.readBoolean()?new Offer(b.readUUID(),b.readUUID(),b.readUtf(64),b.readUUID()):null;
-                return new View(run,revision,cls,alive,normal,epic,targets,offer);
+                var resurrection=Resurrection.read(b);int count=b.readVarInt();
+                if(count<0||count>MAX_CASTERS)throw new IllegalArgumentException("Too many resurrection casters");
+                var casters=new ArrayList<Caster>(count);
+                for(int i=0;i<count;i++)casters.add(new Caster(b.readUUID(),b.readUtf(64),b.readBoolean(),Resurrection.read(b)));
+                return new View(run,revision,cls,alive,normal,epic,targets,offer,resurrection,casters);
             }
         };
         public Type<View> type(){return TYPE;}

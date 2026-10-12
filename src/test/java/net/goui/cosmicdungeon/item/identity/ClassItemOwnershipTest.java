@@ -91,13 +91,15 @@ class ClassItemOwnershipTest {
         ClassItemUtil.clearAttunement(stack);
         assertTrue(ClassItemOwnership.present(stack));
         assertTrue(ItemMovementRules.flags(stack).privateStorage());
-        assertFalse(ItemTransferRules.tradeEligible(stack));
+        assertTrue(ItemTransferRules.tradeEligible(stack)); // Cleared explicit attunement may trade with custody transfer.
     }
     @Test void ordinaryQuestNoDropAndOrdinaryLootKeepTheirRules() {
         var ordinary = new ItemStack(Items.APPLE);
         assertFalse(ClassItemOwnership.bind(ordinary, UUID.randomUUID(), "bogatyr"));
         assertFalse(ItemMovementRules.flags(ordinary).noDrop());
         CustomData.update(DataComponents.CUSTOM_DATA, ordinary, tag -> tag.putBoolean("no_drop", true));
-        assertTrue(ItemMovementRules.flags(ordinary).noDrop());
+        assertFalse(ItemMovementRules.flags(ordinary).noDrop());
+        assertTrue(ItemMovementRules.flags(ordinary).privateStorage());
+        assertTrue(ordinary.get(DataComponents.CUSTOM_DATA).copyTag().getBooleanOr("no_drop", false));
     }
 }

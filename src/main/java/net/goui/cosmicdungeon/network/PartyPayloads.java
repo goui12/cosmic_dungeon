@@ -16,9 +16,13 @@ public final class PartyPayloads {
                 ByteBufCodecs.stringUtf8(16), Action::action, ByteBufCodecs.stringUtf8(36), Action::target, Action::new);
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
-    public record Member(String name, String classId, boolean ready, boolean leader, boolean mercenary, PartyVitals vitals, String memberId) {
-        public Member { if(memberId==null||memberId.length()>36)throw new IllegalArgumentException("Invalid member ID");
+    public record Member(String name, String classId, boolean ready, boolean leader, boolean mercenary, PartyVitals vitals, String memberId, String resourceSharing) {
+        public Member { if(!List.of("UNKNOWN","YES","NO").contains(resourceSharing))throw new IllegalArgumentException("Invalid sharing choice");
+            if(memberId==null||memberId.length()>36)throw new IllegalArgumentException("Invalid member ID");
             if(!memberId.isEmpty())java.util.UUID.fromString(memberId); }
+        public Member(String name,String classId,boolean ready,boolean leader,boolean mercenary,PartyVitals vitals,String memberId) {
+            this(name,classId,ready,leader,mercenary,vitals,memberId,"UNKNOWN");
+        }
         public Member(String name,String classId,boolean ready,boolean leader,boolean mercenary,PartyVitals vitals) {
             this(name,classId,ready,leader,mercenary,vitals,"");
         }
@@ -31,9 +35,9 @@ public final class PartyPayloads {
         public static final StreamCodec<ByteBuf, Member> CODEC = StreamCodec.of((buf,row)->{
             ByteBufCodecs.stringUtf8(16).encode(buf,row.name());ByteBufCodecs.stringUtf8(32).encode(buf,row.classId());
             buf.writeBoolean(row.ready());buf.writeBoolean(row.leader());buf.writeBoolean(row.mercenary());
-            PartyVitals.CODEC.encode(buf,row.vitals());ByteBufCodecs.stringUtf8(36).encode(buf,row.memberId());
+            PartyVitals.CODEC.encode(buf,row.vitals());ByteBufCodecs.stringUtf8(36).encode(buf,row.memberId());ByteBufCodecs.stringUtf8(7).encode(buf,row.resourceSharing());
         },buf->new Member(ByteBufCodecs.stringUtf8(16).decode(buf),ByteBufCodecs.stringUtf8(32).decode(buf),
-                buf.readBoolean(),buf.readBoolean(),buf.readBoolean(),PartyVitals.CODEC.decode(buf),ByteBufCodecs.stringUtf8(36).decode(buf)));
+                buf.readBoolean(),buf.readBoolean(),buf.readBoolean(),PartyVitals.CODEC.decode(buf),ByteBufCodecs.stringUtf8(36).decode(buf),ByteBufCodecs.stringUtf8(7).decode(buf)));
     }
     public record State(long revision, String phase, boolean leader, int capacity, int queuePosition, int countdownSeconds) {
         public static final StreamCodec<ByteBuf, State> CODEC = StreamCodec.composite(
@@ -141,17 +145,30 @@ public final class PartyPayloads {
         },buf->new Mercenary(ByteBufCodecs.stringUtf8(64).decode(buf),ByteBufCodecs.stringUtf8(16).decode(buf),
             buf.readFloat(),buf.readFloat(),ByteBufCodecs.VAR_INT.decode(buf),ByteBufCodecs.stringUtf8(16).decode(buf),Recovery.CODEC.decode(buf),Skill.CODEC.apply(ByteBufCodecs.list(2)).decode(buf),Resurrection.CODEC.decode(buf),ByteBufCodecs.stringUtf8(32).decode(buf),PartyVitals.CODEC.decode(buf)));
     }
-    public record Options(String difficulty,Hire hire,List<Mercenary> mercenaries){
+    /** Context binds a personal choice to this exact group/run, never another member. */
+    public record Sharing(String context,String choice) {
+        public static final Sharing NONE=new Sharing("","UNKNOWN");
+        public Sharing {
+            if(context==null||context.length()>36||!List.of("UNKNOWN","YES","NO").contains(choice)
+                    ||context.isEmpty()&&!choice.equals("UNKNOWN"))throw new IllegalArgumentException("Invalid sharing state");
+        }
+        public static final StreamCodec<ByteBuf,Sharing> CODEC=StreamCodec.composite(
+            ByteBufCodecs.stringUtf8(36),Sharing::context,ByteBufCodecs.stringUtf8(7),Sharing::choice,Sharing::new);
+    }
+    public record Options(String difficulty,Hire hire,List<Mercenary> mercenaries,Sharing sharing){
         public static final StreamCodec<ByteBuf,Options> CODEC=StreamCodec.composite(
-            ByteBufCodecs.stringUtf8(16),Options::difficulty,Hire.CODEC,Options::hire,Mercenary.CODEC.apply(ByteBufCodecs.list(3)),Options::mercenaries,Options::new);
+            ByteBufCodecs.stringUtf8(16),Options::difficulty,Hire.CODEC,Options::hire,Mercenary.CODEC.apply(ByteBufCodecs.list(3)),Options::mercenaries,Sharing.CODEC,Options::sharing,Options::new);
     }
     public record Hire(String selectedClass,int price){
         public static final Hire NONE=new Hire("",50);
         public static final StreamCodec<ByteBuf,Hire> CODEC=StreamCodec.composite(
             ByteBufCodecs.stringUtf8(32),Hire::selectedClass,ByteBufCodecs.VAR_INT,Hire::price,Hire::new);
     }
-    public record View(int containerId, State state, List<Member> members, Invite invitation, Recruitment recruitment, String difficulty, Hire hire, List<Mercenary> mercenaries) implements CustomPacketPayload {
-        public View { members=List.copyOf(members); mercenaries=List.copyOf(mercenaries);if(mercenaries.size()>3)throw new IllegalArgumentException("Too many mercenaries"); }
+    public record View(int containerId, State state, List<Member> members, Invite invitation, Recruitment recruitment, String difficulty, Hire hire, List<Mercenary> mercenaries, Sharing sharing) implements CustomPacketPayload {
+        public View { java.util.Objects.requireNonNull(sharing); members=List.copyOf(members); mercenaries=List.copyOf(mercenaries);if(mercenaries.size()>3)throw new IllegalArgumentException("Too many mercenaries"); }
+        public View(int containerId,State state,List<Member> members,Invite invitation,Recruitment recruitment,String difficulty,Hire hire,List<Mercenary> mercenaries){
+            this(containerId,state,members,invitation,recruitment,difficulty,hire,mercenaries,Sharing.NONE);
+        }
         public View(int containerId,State state,List<Member> members,Invite invitation,Recruitment recruitment,String difficulty,Hire hire){
             this(containerId,state,members,invitation,recruitment,difficulty,hire,List.of());
         }
@@ -168,8 +185,8 @@ public final class PartyPayloads {
         public static final StreamCodec<ByteBuf, View> STREAM_CODEC = StreamCodec.composite(
                 ByteBufCodecs.VAR_INT, View::containerId, State.CODEC, View::state,
                 Member.CODEC.apply(ByteBufCodecs.list(6)), View::members, Invite.CODEC, View::invitation,
-                Recruitment.CODEC, View::recruitment, Options.CODEC, v->new Options(v.difficulty(),v.hire(),v.mercenaries()),
-                (id,state,members,invite,recruitment,options)->new View(id,state,members,invite,recruitment,options.difficulty(),options.hire(),options.mercenaries()));
+                Recruitment.CODEC, View::recruitment, Options.CODEC, v->new Options(v.difficulty(),v.hire(),v.mercenaries(),v.sharing()),
+                (id,state,members,invite,recruitment,options)->new View(id,state,members,invite,recruitment,options.difficulty(),options.hire(),options.mercenaries(),options.sharing()));
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 }

@@ -84,6 +84,7 @@ final class NamedPartyRecruitmentTest {
         assertNull(lobby.invite(member, target, anchor, 3, 100, 6));
         assertNull(lobby.accept(target, lobby.invitation(target).token(), 4));
         var party = lobby.party(leader);
+        D1PartyTestSupport.consentAll(lobby,leader);
         assertNull(lobby.begin(leader, party.revision(), Map.of(leader, "bogatyr", member, "pyroclast")));
         assertNull(lobby.ready(leader, party.revision()));
         assertNull(lobby.ready(member, party.revision()));

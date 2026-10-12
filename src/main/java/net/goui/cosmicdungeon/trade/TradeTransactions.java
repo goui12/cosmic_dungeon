@@ -16,6 +16,12 @@ public final class TradeTransactions {
         var data=data(a);
         try{
             TradeCustody.capture(a);TradeCustody.capture(b);
+            CompoundTag chops;
+            try{chops=ChopTradeCustody.prepare(a,b);}
+            catch(IllegalArgumentException invalid){
+                var message=net.minecraft.network.chat.Component.literal("Trade cancelled: "+invalid.getMessage());
+                a.sendSystemMessage(message);b.sendSystemMessage(message);return false;
+            }
             var terms=new AccountTransfer.Terms(a.getUUID(),b.getUUID(),aPays,bPays,"player_trade",TradeCustody.read(a).getLongOr("run",0),id.toString());
             var receipt=data.reserve(id,terms,System.currentTimeMillis());
             if(!data.flushVerified())throw new IllegalStateException("account reservation save not verified");
@@ -23,7 +29,7 @@ public final class TradeTransactions {
             TradeCustody.write(a,TradeCustodyImages.bind(TradeCustody.read(a),id));
             TradeCustody.write(b,TradeCustodyImages.bind(TradeCustody.read(b),id));
             if(!PlayerSaveProof.save(a)||!PlayerSaveProof.save(b))throw new IllegalStateException("owner reservation save not verified");
-            var plan=new TradeCommitPlan(a.getUUID(),b.getUUID(),TradeCustody.read(a),TradeCustody.read(b),false,false);
+            var plan=new TradeCommitPlan(a.getUUID(),b.getUUID(),TradeCustody.read(a),TradeCustody.read(b),false,false,chops);
             data.prepareTrade(id,plan);if(!data.flushVerified())throw new IllegalStateException("item decision preparation not verified");
             receipt=data.commitTrade(id,System.currentTimeMillis());
             if(!data.flushVerified())throw new IllegalStateException("commit decision save not verified");
@@ -45,6 +51,12 @@ public final class TradeTransactions {
                 }else{
                     if(!TradeCustody.pending(p))throw new IllegalStateException("Verified owner custody is missing; restore review required");
                     var projected=plan.project(p.getUUID(),TradeCustody.read(p),outcome.equals(AccountTransfer.COMMITTED));
+                    // Only a durable COMMITTED decision may change offered item owners.
+                    // The saved before-images and this owner's cursor remain untouched.
+                    if(outcome.equals(AccountTransfer.COMMITTED)) {
+                        ChopTradeCustody.apply(p,plan);
+                        projected=TradeItemTransfer.projectOffers(p,projected);
+                    }
                     var root=p.getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG).copy();
                     TradeCustody.write(p,projected);
                     if(!TradeCustody.release(p)){p.getPersistentData().put(ClassData.ROOT_TAG,root);return false;}

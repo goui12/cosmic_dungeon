@@ -20,6 +20,14 @@ final class BogatyrPayloadsTest {
             finally{raw.release();}
         }
     }
+    @Test void BoundedFoodProjectionIsIndependentOfRetiredQuotes(){
+        var quotes=java.util.Collections.nCopies(4,Quote.empty());
+        var v=new View(23,9,100,quotes,net.goui.cosmicdungeon.playerclass.bogatyr.WolfMode.STAY,true,10);
+        var b=Unpooled.buffer();try{View.STREAM_CODEC.encode(b,v);assertEquals(v,View.STREAM_CODEC.decode(b));assertEquals(0,b.readableBytes());}finally{b.release();}
+        for(int count:new int[]{-1,11,Integer.MAX_VALUE})assertThrows(IllegalArgumentException.class,()->new View(23,9,100,quotes,net.goui.cosmicdungeon.playerclass.bogatyr.WolfMode.PATROL,true,count));
+        assertThrows(IllegalArgumentException.class,()->new View(23,9,100,quotes,net.goui.cosmicdungeon.playerclass.bogatyr.WolfMode.PATROL,false,1));
+        assertEquals(4,Kind.FEED_PACK.ordinal());assertEquals(0,Kind.BREED.ordinal());assertEquals(3,Kind.HEAL.ordinal());
+    }
     @Test void InvalidCapabilityShapesAndAmountsFailClosed(){
         assertThrows(IllegalArgumentException.class,()->new Quote(-1,5,true));
         assertThrows(IllegalArgumentException.class,()->new Quote(1,601,true));

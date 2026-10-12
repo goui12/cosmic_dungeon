@@ -10,7 +10,10 @@ final class TheurgistPayloadsTest {
     @Test void boundedNativeWireRoundTripsExactTokens(){
         var target=new TheurgistPayloads.Target(UUID.randomUUID(),"Teammate",UUID.randomUUID(),true);
         var offer=new TheurgistPayloads.Offer(UUID.randomUUID(),UUID.randomUUID(),"Theurgist",target.death());
-        var view=new TheurgistPayloads.View(22,7,true,true,true,true,List.of(target),offer);
+        var status=new TheurgistPayloads.Resurrection("DEAD",180);
+        var view=new TheurgistPayloads.View(22,7,true,true,true,true,List.of(target),offer,status,
+                List.of(new TheurgistPayloads.Caster(UUID.randomUUID(),"Caster",false,status),
+                        new TheurgistPayloads.Caster(UUID.randomUUID(),"Mercenary",true,new TheurgistPayloads.Resurrection("LOCKED",0))));
         var buffer=Unpooled.buffer();try{TheurgistPayloads.View.STREAM_CODEC.encode(buffer,view);assertEquals(view,TheurgistPayloads.View.STREAM_CODEC.decode(buffer));assertEquals(0,buffer.readableBytes());}finally{buffer.release();}
         for(var kind:TheurgistPayloads.Kind.values()){
             boolean craft=kind==TheurgistPayloads.Kind.CRAFT||kind==TheurgistPayloads.Kind.EPIC;
@@ -26,5 +29,21 @@ final class TheurgistPayloadsTest {
         assertThrows(IllegalArgumentException.class,()->new TheurgistPayloads.Action(22,0,TheurgistPayloads.Kind.CRAFT,target.player(),target.death()));
         var raw=Unpooled.buffer();try{var b=new FriendlyByteBuf(raw);b.writeVarLong(22);b.writeVarLong(0);for(int i=0;i<4;i++)b.writeBoolean(false);b.writeVarInt(Integer.MAX_VALUE);
             assertThrows(IllegalArgumentException.class,()->TheurgistPayloads.View.STREAM_CODEC.decode(raw));}finally{raw.release();}
+    }
+    @Test void malformedCasterStatesAndListsAreRejected(){
+        assertThrows(IllegalArgumentException.class,()->new TheurgistPayloads.Resurrection("READY",1));
+        assertThrows(IllegalArgumentException.class,()->new TheurgistPayloads.Resurrection("COOLDOWN",0));
+        assertThrows(IllegalArgumentException.class,()->new TheurgistPayloads.Resurrection("invented",0));
+        assertThrows(IllegalArgumentException.class,()->new TheurgistPayloads.Resurrection("DEAD",181));
+        var status=TheurgistPayloads.Resurrection.UNAVAILABLE;
+        var c=new TheurgistPayloads.Caster(UUID.randomUUID(),"x",false,status);
+        assertThrows(IllegalArgumentException.class,()->new TheurgistPayloads.View(22,0,false,false,false,false,List.of(),null,status,List.of(c,c)));
+        var many=java.util.stream.IntStream.range(0,68).mapToObj(i->new TheurgistPayloads.Caster(UUID.randomUUID(),"x",false,status)).toList();
+        assertThrows(IllegalArgumentException.class,()->new TheurgistPayloads.View(22,0,false,false,false,false,List.of(),null,status,many));
+        var raw=Unpooled.buffer();try{
+            var b=new FriendlyByteBuf(raw);b.writeVarLong(22);b.writeVarLong(0);for(int i=0;i<4;i++)b.writeBoolean(false);
+            b.writeVarInt(0);b.writeBoolean(false);b.writeUtf("UNAVAILABLE");b.writeVarInt(-1);b.writeVarInt(Integer.MAX_VALUE);
+            assertThrows(IllegalArgumentException.class,()->TheurgistPayloads.View.STREAM_CODEC.decode(raw));
+        }finally{raw.release();}
     }
 }

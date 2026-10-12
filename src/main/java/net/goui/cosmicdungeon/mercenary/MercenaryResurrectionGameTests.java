@@ -91,10 +91,12 @@ public final class MercenaryResurrectionGameTests {
             f.player.setHealth(0);MercenaryResurrection.died(f.player);
             f.level(44);f.data.setCount(f.id,MercenarySkills.key(f.contract.id(),MercenarySkill.NEGATIVE_POTIONS),1225);
             f.check(f.view().seconds()==-1&&!f.view().offered(),"Positive level 9 stays locked even with Negative level 50");
+            f.check(MercenaryResurrection.status(f.player,f.runs.get(f.id),f.contract).state().equals("LOCKED"),"Roster retains positive-level10 unlock state");
             f.level(45);
+            f.check(MercenaryResurrection.status(f.player,f.runs.get(f.id),f.contract).ready(),"Unlocked living mercenary status is ready");
             f.check(f.view().offered()&&MercenaryBrain.hirer(f.merc)==null,"Positive level 10 offers resurrection to its own dead hirer without weakening combat gate");
             f.merc.die(f.merc.damageSources().generic());
-            f.check(!f.view().offered(),"Dormant Theurgist cannot resurrect");
+            f.check(!f.view().offered()&&MercenaryResurrection.status(f.player,f.runs.get(f.id),f.contract).state().equals("UNAVAILABLE"),"Dormant Theurgist cannot resurrect or appear ready");
             f.merc.resumeAfterRest();f.check(f.view().offered(),"Living Theurgist regains offer");
             f.players.remove(f.player.getUUID());f.check(!f.view().offered(),"Offline hirer cannot offer");
             f.players.put(f.player.getUUID(),f.player);
@@ -115,7 +117,7 @@ public final class MercenaryResurrectionGameTests {
             var keep=f.level.getGameRules().getRule(GameRules.RULE_KEEPINVENTORY);boolean previous=keep.get();
             java.util.function.Consumer<LivingDeathEvent> cancel=event->{if(event.getEntity()==f.player)event.setCanceled(true);};
             keep.set(false,server);
-            var drops=new ArrayList<ItemEntity>();
+            var drops=new ArrayList<ItemEntity>();var potionDrops=new ArrayList<ItemEntity>();
             try{
                 NeoForge.EVENT_BUS.addListener(cancel);
                 try{
@@ -126,12 +128,19 @@ public final class MercenaryResurrectionGameTests {
                 DungeonLifecycleService.setPlayerRespawnTo(f.player,f.level,f.player.blockPosition().offset(20,0,0),24,0);
                 var normalRespawn=f.player.getRespawnConfig();
                 f.player.getInventory().setItem(0,new ItemStack(Items.DIAMOND,2));
+                var potions=net.goui.cosmicdungeon.crafting.PotionStacks.crafted(net.minecraft.world.item.alchemy.PotionContents.createItemStack(
+                        Items.SPLASH_POTION,net.minecraft.world.item.alchemy.Potions.HEALING));potions.setCount(23);
+                f.player.getInventory().setItem(12,potions.copy());
                 f.player.setHealth(0);f.player.die(f.player.damageSources().generic());
                 var death=MercenaryResurrectionState.death(f.data,f.id,f.player.getUUID());
                 f.check(death!=null&&death.position().equals(f.origin),"Native final death records exact fractional coordinates");
                 drops.addAll(f.level.getEntitiesOfClass(ItemEntity.class,f.player.getBoundingBox().inflate(4),
                         item->item.getItem().is(Items.DIAMOND)));
                 f.check(drops.stream().mapToInt(item->item.getItem().getCount()).sum()==2,"Native death drops the original inventory once");
+                potionDrops.addAll(f.level.getEntitiesOfClass(ItemEntity.class,f.player.getBoundingBox().inflate(4),
+                        item->item.getItem().is(Items.SPLASH_POTION)));
+                f.check(potionDrops.stream().mapToInt(item->item.getItem().getCount()).sum()==23,
+                        "Original crafted potion stack is physically dropped once");
                 f.player.setPos(f.origin.add(0,-2,0));
                 var request=new PartyPayloads.Resurrect(f.id,f.contract.id(),death.id());
                 MercenaryResurrection.accept(f.player,request);
@@ -153,6 +162,11 @@ public final class MercenaryResurrectionGameTests {
                 f.check(revived.getInventory().getItem(0).is(Items.DIAMOND)
                         &&revived.getInventory().getItem(0).getCount()==2,
                         "Resurrection recovers only the original physical items after native pickup");
+                f.check(revived.getInventory().countItem(Items.SPLASH_POTION)==0,
+                        "Resurrection cannot recreate the physical potion stack");
+                for(var drop:potionDrops){drop.setNoPickUpDelay();drop.playerTouch(revived);}
+                f.check(revived.getInventory().getItem(12).getCount()==23&&ItemStack.isSameItemSameComponents(potions,revived.getInventory().getItem(12)),
+                        "Accepted resurrection recovers the exact potion stack only through physical pickup");
                 var damage=new EntityInvulnerabilityCheckEvent(revived,revived.damageSources().fellOutOfWorld(),false);
                 NeoForge.EVENT_BUS.post(damage);f.check(damage.isInvulnerable(),"Five-second protection includes void damage");
                 long tick=server.overworld().getGameTime();
@@ -162,7 +176,7 @@ public final class MercenaryResurrectionGameTests {
                 helper.succeed();
             }catch(RuntimeException error){
                 com.mojang.logging.LogUtils.getLogger().error("Native resurrection fixture failed",error);throw error;
-            }finally{keep.set(previous,server);drops.forEach(Entity::discard);}
+            }finally{keep.set(previous,server);drops.forEach(Entity::discard);potionDrops.forEach(Entity::discard);}
         }
     }
 }

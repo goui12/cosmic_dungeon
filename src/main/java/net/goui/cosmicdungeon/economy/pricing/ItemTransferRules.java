@@ -12,11 +12,31 @@ public final class ItemTransferRules {
     private ItemTransferRules() {}
     public static ItemTransferPolicy.Rejection rejection(ItemStack stack, ItemTransferPolicy.Action action) {
         if (stack == null || stack.isEmpty()) return ItemTransferPolicy.Rejection.EMPTY;
+        if (action == ItemTransferPolicy.Action.TRADE)
+            return tradeEligible(stack) ? ItemTransferPolicy.Rejection.NONE : ItemTransferPolicy.Rejection.PROTECTED;
         return ItemTransferPolicy.evaluate(action, facts(stack));
     }
     public static boolean tradeEligible(ItemStack stack) {
-        return rejection(stack, ItemTransferPolicy.Action.TRADE) == ItemTransferPolicy.Rejection.NONE
-                && VendorPricingService.tradePriced(stack);
+        return stack != null && !stack.isEmpty() && tradeEligible(stack, 0, new int[]{256});
+    }
+    private static boolean tradeEligible(ItemStack stack, int depth, int[] budget) {
+        if (stack.isEmpty()) return true;
+        if (depth > 8 || --budget[0] < 0) return false;
+        // Recovery receipts/retired physical currency remain on their authoritative accounting path.
+        if (net.goui.cosmicdungeon.economy.DeathCurrencyService.marked(stack)
+                || net.goui.cosmicdungeon.economy.LegacyCurrencyPolicy.denomination(
+                        BuiltInRegistries.ITEM.getKey(stack.getItem()).toString()) != null) return false;
+        // Potions are explicitly exempt, including authored attuned/legacy potions.
+        // Pricing, ability/class tags and old no_trade markers govern other services, not barter.
+        if (!(stack.getItem() instanceof net.minecraft.world.item.PotionItem)
+                && ClassItemUtil.hasAnyAttunementMetadata(stack)) return false;
+        var bundle = stack.get(DataComponents.BUNDLE_CONTENTS);
+        if (bundle != null) for (var child : bundle.items())
+            if (!tradeEligible(child, depth + 1, budget)) return false;
+        var container = stack.get(DataComponents.CONTAINER);
+        if (container != null) for (var child : container.nonEmptyItems())
+            if (!tradeEligible(child, depth + 1, budget)) return false;
+        return true;
     }
     public static boolean vendorEligible(ItemStack stack) {
         return rejection(stack, ItemTransferPolicy.Action.VENDOR_SALE) == ItemTransferPolicy.Rejection.NONE;

@@ -128,76 +128,40 @@ public final class ClassResourceGameTests {
             exactTag(f,ClassResourceKind.KIBBLE,"rotten_flesh,beef,porkchop,mutton,chicken,rabbit");
             var inventory=f.player.getInventory();
             inventory.setItem(0,new ItemStack(Items.SUGAR,8));inventory.setItem(1,new ItemStack(Items.DIAMOND,4));
-            inventory.setItem(2,new ItemStack(Items.BEEF,5));inventory.setItem(3,new ItemStack(Items.COOKED_BEEF,2));
+            inventory.setItem(2,new ItemStack(Items.BEEF,8));inventory.setItem(3,new ItemStack(Items.COOKED_BEEF,2));
             inventory.setItem(4,new ItemStack(Items.SALMON,2));
-            f.ledger(f.ledger().withAmount(ClassResourceKind.BREWING_SUPPLIES,597));f.freshSession();
-            f.check(f.view().amount()==597&&f.view().recyclable(),"Server advertises real eligible headroom");
-            var first=f.request("brewing_supplies");ClassResourceService.recycle(f.player,first);
-            f.check(f.amount(ClassResourceKind.BREWING_SUPPLIES)==600&&inventory.getItem(0).getCount()==5,
-                    "Only three tagged items consumed at the cap");
-            f.check(inventory.getItem(1).getCount()==4&&inventory.getItem(2).getCount()==5,"Unrelated and other-class ingredients unchanged");
-            f.check(PlayerSaveProof.matches(PlayerSaveProof.snapshot(f.player),f.disk()),"Accepted native save contains the item debit and resource credit together");
-            long accepted=f.ledger().revision();
-            ClassResourceService.recycle(f.player,first);
-            f.check(f.ledger().revision()==accepted&&inventory.getItem(0).getCount()==5,"Immediate duplicate cannot charge twice");
-            f.freshSession();ClassResourceService.recycle(f.player,first);
-            f.check(f.ledger().revision()==accepted&&f.amount(ClassResourceKind.BREWING_SUPPLIES)==600,"Old token stays stale after session replacement");
-            f.freshSession();ClassResourceService.recycle(f.player,new ClassResourcePayloads.Recycle(f.runId,"kibble",accepted));
-            f.check(f.ledger().revision()==accepted&&inventory.getItem(2).getCount()==5,"Forged other-class request consumes nothing");
-            f.freshSession();ClassResourceService.recycle(f.player,new ClassResourcePayloads.Recycle(f.runId-100,"brewing_supplies",accepted));
-            f.check(f.ledger().revision()==accepted,"Stale run cannot mutate current action generation");
-            f.freshSession();ClassResourceService.recycle(f.player,f.request("brewing_supplies"));
-            f.check(f.amount(ClassResourceKind.BREWING_SUPPLIES)==600&&inventory.getItem(0).getCount()==5&&!f.view().recyclable(),"Full resource cannot waste remaining ingredients");
-            f.ledger(f.ledger().withAmount(ClassResourceKind.BREWING_SUPPLIES,590));f.freshSession();
-            var carriedRequest=f.request("brewing_supplies");
-            f.player.inventoryMenu.setCarried(new ItemStack(Items.DIAMOND));
-            ClassResourceService.recycle(f.player,carriedRequest);
-            f.check(f.ledger().revision()>carriedRequest.revision()&&f.view().revision()==f.ledger().revision(),
-                    "Rejected carried-item race acknowledges the pending generation");
-            f.check(f.amount(ClassResourceKind.BREWING_SUPPLIES)==590&&inventory.getItem(0).getCount()==5
-                    &&f.player.inventoryMenu.getCarried().is(Items.DIAMOND),"Rejected action preserves held and inventory items");
-            f.player.inventoryMenu.setCarried(ItemStack.EMPTY);f.freshSession();
-            ClassResourceService.recycle(f.player,f.request("brewing_supplies"));
-            f.check(f.amount(ClassResourceKind.BREWING_SUPPLIES)==595&&inventory.getItem(0).isEmpty(),"Fresh acknowledged retry consumes remaining five eligible items exactly once");
-            f.setClass("bogatyr");f.freshSession();ClassResourceService.recycle(f.player,f.request("kibble"));
-            f.check(f.amount(ClassResourceKind.KIBBLE)==5&&f.amount(ClassResourceKind.BREWING_SUPPLIES)==595&&inventory.getItem(2).isEmpty(),
-                    "Kibble uses its own balance and eligible raw meat");
-            f.check(inventory.getItem(1).getCount()==4&&inventory.getItem(3).getCount()==2&&inventory.getItem(4).getCount()==2,
-                    "Diamonds, cooked meat and fish are never recycled");
+            f.ledger(f.ledger().withAmount(ClassResourceKind.BREWING_SUPPLIES,597));var retired=f.root().copy();f.freshSession();
+            f.check(f.view().runId()==0&&!f.view().active()&&!f.view().recyclable(),"Theurgist Brewing Supplies has no active HUD or recycle capability");
+            for(int tick=100;tick<=200;tick+=20)ClassResourceService.pulse(f.player,tick,true);
+            for(String kind:List.of("brewing_supplies","kibble"))ClassResourceService.recycle(f.player,f.request(kind));
+            f.check(f.root().equals(retired)&&inventory.getItem(0).getCount()==8&&inventory.getItem(2).getCount()==8,
+                    "Retired Brewing Supplies neither regenerates nor recycles and preserves its historical owner fields");
+            f.setClass("bogatyr");f.ledger(f.ledger().withAmount(ClassResourceKind.KIBBLE,597));
+            var old=f.root().copy();f.freshSession();
+            f.check(!f.view().active()&&!f.view().recyclable(),"Kibble has no live HUD or recycling capability");
+            for(int tick=100;tick<=200;tick+=20)ClassResourceService.pulse(f.player,tick,true);
+            for(String kind:List.of("kibble","brewing_supplies"))ClassResourceService.recycle(f.player,f.request(kind));
+            f.check(f.root().equals(old)&&inventory.getItem(2).getCount()==8,"Retired Kibble is neither regenerated, recycled nor acknowledged by mutating legacy balance");
+            f.check(PlayerSaveProof.save(f.player)&&PlayerSaveProof.matches(PlayerSaveProof.snapshot(f.player),f.disk()),
+                    "Historical ledger and original inventory save together unchanged");
             helper.succeed();
         }
     }
     public static void persistenceDeathAndOnlineLifecycle(GameTestHelper helper){
         try(var f=new Fixture(helper,Long.MAX_VALUE-2002,"dungeon_2","bogatyr")){
-            ClassResourceService.pulse(f.player,100,false);
-            f.check(f.view().active()&&f.view().amount()==0,"Generic active dungeon starts at zero");
-            ClassResourceService.pulse(f.player,119,true);f.check(f.amount(ClassResourceKind.KIBBLE)==0,"No partial-second credit");
-            ClassResourceService.pulse(f.player,120,true);ClassResourceService.pulse(f.player,120,true);
-            f.check(f.amount(ClassResourceKind.KIBBLE)==1,"One credit per elapsed online second, even duplicate observations");
-            ClassResourceService.pulse(f.player,140,true);f.player.setHealth(0);
-            ClassResourceService.pulse(f.player,160,true);
-            f.check(f.amount(ClassResourceKind.KIBBLE)==3&&!f.view().alive()&&!f.view().recyclable(),"Dead online members retain and regenerate their resource without recycling");
-            var dead=f.player;var clone=f.createPlayer();clone.restoreFrom(dead,false);f.replace(clone);
-            f.check(f.amount(ClassResourceKind.KIBBLE)==3&&f.root().getStringOr("future_marker","").equals("retained"),
-                    "Native death clone event preserves resource and unrelated owner fields");
-            ClassResourceService.pulse(f.player,200,false);ClassResourceService.pulse(f.player,220,true);
-            f.check(f.amount(ClassResourceKind.KIBBLE)==4,"Living clone resumes one-second regeneration");
+            f.ledger(f.ledger().withAmount(ClassResourceKind.KIBBLE,37));
+            var historical=f.root().copy();
+            for(long tick:new long[]{100,120,120,140,10000})ClassResourceService.pulse(f.player,tick,true);
+            f.check(f.root().equals(historical)&&!f.view().active(),"Retired resource never accrues online or catches up");
+            var dead=f.player;dead.setHealth(0);var clone=f.createPlayer();clone.restoreFrom(dead,false);f.replace(clone);
+            f.check(f.root().equals(historical),"Native death clone preserves historical recovery fields");
             f.player.getInventory().setItem(1,new ItemStack(Items.DIAMOND,2));
-            f.check(PlayerSaveProof.save(f.player),"Native owner save is verified");var saved=f.disk();
-            var relog=f.createPlayer();relog.load(TagValueInput.create(ProblemReporter.DISCARDING,f.level.registryAccess(),saved));f.replace(relog);
-            ClassResourceService.pulse(f.player,5000,false);
-            f.check(f.amount(ClassResourceKind.KIBBLE)==4&&f.player.getInventory().getItem(1).getCount()==2,
-                    "Native owner reload retains saved resource and inventory without offline catch-up");
-            ClassResourceService.pulse(f.player,5019,true);f.check(f.amount(ClassResourceKind.KIBBLE)==4,"New session requires a full online second");
-            ClassResourceService.pulse(f.player,5020,true);f.check(f.amount(ClassResourceKind.KIBBLE)==5,"New session accrues exactly one point");
-            f.runs.remove(f.runId);ClassResourceService.pulse(f.player,6000,true);
-            f.check(f.view().runId()==0&&f.amount(ClassResourceKind.KIBBLE)==5,"Inactive run clears display and stops accrual while retaining its saved balance");
-            f.registerRun(Long.MAX_VALUE-2003);ClassResourceService.pulse(f.player,6020,false);
-            f.check(f.amount(ClassResourceKind.KIBBLE)==0&&f.amount(ClassResourceKind.BREWING_SUPPLIES)==0
-                    &&f.ledger().revision()==0&&f.root().getStringOr("future_marker","").equals("retained"),
-                    "Next generic run resets known resources and token without erasing unrelated fields");
-            ClassResourceService.pulse(f.player,100000,true);
-            f.check(f.amount(ClassResourceKind.KIBBLE)==1,"Sparse observations never manufacture catch-up credits");
+            f.check(PlayerSaveProof.save(f.player),"Native owner save");
+            var relog=f.createPlayer();relog.load(TagValueInput.create(ProblemReporter.DISCARDING,f.level.registryAccess(),f.disk()));f.replace(relog);
+            ClassResourceService.pulse(f.player,50000,true);
+            f.check(f.root().equals(historical)&&f.player.getInventory().getItem(1).getCount()==2,"Relog preserves old ledger and inventory without accrual");
+            f.runs.remove(f.runId);f.registerRun(Long.MAX_VALUE-2003);ClassResourceService.pulse(f.player,60000,true);
+            f.check(f.root().equals(historical)&&!f.view().active(),"New run never rewrites retired resource recovery data");
             helper.succeed();
         }
     }

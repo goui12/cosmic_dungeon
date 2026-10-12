@@ -13,6 +13,6 @@ public abstract class BogatyrDamageMixin {
     @Inject(method="hurtServer",at=@At("RETURN"))
     private void cosmicdungeon$dropRetaliation(ServerLevel level,DamageSource source,float amount,CallbackInfoReturnable<Boolean> cir){
         var wolf=(Wolf)(Object)this;
-        if(BogatyrModes.standing(wolf))BogatyrModes.hold(wolf);
+        if(BogatyrModes.seated(wolf))BogatyrModes.hold(wolf);
     }
 }

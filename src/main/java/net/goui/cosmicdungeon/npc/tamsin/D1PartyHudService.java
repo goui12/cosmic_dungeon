@@ -20,7 +20,7 @@ final class D1PartyHudService {
         var known = IDENTITIES.get(id);
         var row = new PartyPayloads.Member(player == null ? (known == null ? "Offline" : known.name()) : player.getGameProfile().name(),
                 player == null ? (known == null ? "none" : known.classId()) : ClassData.getClassId(player),
-                player != null && ready, leader);
+                player != null && ready, leader,false,PartyVitals.UNLOADED,id.toString());
         IDENTITIES.put(id, row); return row;
     }
     static void sync(MinecraftServer server, D1PartyLobby lobby) {
@@ -43,7 +43,10 @@ final class D1PartyHudService {
             boolean leader = false;
             if (p != null) {
                 retainedIdentities.addAll(p.members());
-                rows = new ArrayList<>(p.members().stream().map(m -> member(server, m, p.ready().contains(m), p.leader().equals(m))).toList());
+                rows = new ArrayList<>(p.members().stream().map(m -> {
+                    var row=member(server,m,p.ready().contains(m),p.leader().equals(m));
+                    return new PartyPayloads.Member(row.name(),row.classId(),row.ready(),row.leader(),false,row.vitals(),m.toString(),p.resourceSharing(m));
+                }).toList());
                 for(var hire:p.contracts())rows.add(new PartyPayloads.Member(hire.name(),hire.classId(),false,false,true));
                 name = p.name(); phase = p.phase().name(); capacity = p.capacity(); leader = p.leader().equals(id);
                 queue = lobby.queuePosition(p);
@@ -57,7 +60,7 @@ final class D1PartyHudService {
                         var subject = server.getPlayerList().getPlayer(key);
                         return PartyVitalsSnapshot.capture(subject, subject != null && run.containsDimension(subject.level().dimension()));
                     });
-                    return new PartyPayloads.Member(identity.name(),identity.classId(),false,identity.leader(),false,health,m.toString());
+                    return new PartyPayloads.Member(identity.name(),identity.classId(),false,identity.leader(),false,health,m.toString(),GroupResourceConsent.choice(net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(server),run.runId(),m));
                 }).toList();
                 var previous = LAST.get(id);
                 name = previous == null || previous.recruitment().groupName().isBlank() ? "Dungeon 1" : previous.recruitment().groupName();
@@ -71,7 +74,7 @@ final class D1PartyHudService {
                     new PartyPayloads.Invite(invitation == null ? "" : invitation.token(),
                             sender == null ? "" : sender.getGameProfile().name(), invitation != null && invitation.accepted(), false),
                     new PartyPayloads.Recruitment(name, false, 0, 1, List.of()),
-                    p != null ? p.difficulty().name() : run != null ? run.difficulty().tier() : "HARD",PartyPayloads.Hire.NONE,mercenaries);
+                    p != null ? p.difficulty().name() : run != null ? run.difficulty().tier() : "HARD",PartyPayloads.Hire.NONE,mercenaries,GroupResourceConsent.view(player,p));
             if (!view.equals(LAST.get(id))) ModNetwork.sendTo(player, view);
             if (rows.isEmpty() && invitation == null) LAST.remove(id);
             else LAST.put(id, view);

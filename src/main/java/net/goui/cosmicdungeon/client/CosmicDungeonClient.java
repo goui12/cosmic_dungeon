@@ -65,12 +65,17 @@ public final class CosmicDungeonClient {
         modEventBus.addListener(SpawnerPresetKeybindClient::registerKeyMappings);
         modEventBus.addListener(TradeRequestKeybindClient::registerKeyMappings);
         modEventBus.addListener(HelpMenuKeybindClient::registerKeyMappings);
+        modEventBus.addListener(SkillKeybindClient::registerKeyMappings);
 
         // Menu soundtrack uses the native music manager and ends when a world is joined.
         NeoForge.EVENT_BUS.register(new CosmicMenuMusic());
 
         // Existing overlays
         NeoForge.EVENT_BUS.register(CosmicSpawnerHoverOverlay.class);
+        NeoForge.EVENT_BUS.register(SpawnerHoverClient.class);
+        net.goui.cosmicdungeon.client.screen.spawner.SpawnerEditorClient.actions(
+                net.neoforged.neoforge.client.network.ClientPacketDistributor::sendToServer);
+        net.goui.cosmicdungeon.client.screen.spawner.SpawnerEditorClient.libraryActions(net.neoforged.neoforge.client.network.ClientPacketDistributor::sendToServer);
         NeoForge.EVENT_BUS.register(TradeLookPromptOverlay.class);
 
         // Dynamic tooltip line for vanilla/customized items attuned as class gear.

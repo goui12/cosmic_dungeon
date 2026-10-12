@@ -34,14 +34,15 @@ public final class SkillsPanelComponent {
             tip=Component.literal("Skills");
             if(box.track().contains(mouseX,mouseY)&&state.scroll().max()>0)tip=Component.literal("Scroll Skills");
             else for(int i=0;i<model.actions().size();i++)if(box.row(i,state.scroll().offset()).contains(mouseX,mouseY)){
-                tip=model.actions().get(i).tooltip();break;
+                var action=model.actions().get(i);
+                tip=SkillBindingLabels.tooltip(action.id(),action.label(),action.tooltip());break;
             }
         }
         if(tip!=null)tooltip(g,font,tip,mouseX,mouseY);
     }
     public static void draw(GuiGraphics g,Font font,SkillsPanelModel model,SkillsPanelState state,int mouseX,int mouseY){
         g.nextStratum();
-        var box=state.geometry();fill(g,box.panel(),0xEE17212D);fill(g,box.header(),0xFF244861);
+        var box=state.geometry();fill(g,box.panel(),0x3017212D);fill(g,box.header(),0xF0244861);
         var title=new Rect(box.header().x(),box.header().y(),Math.max(0,box.header().width()-38),box.header().height());
         text(g,font,model.title(),title,0xFFFFFFFF);
         fill(g,box.help(),0xFF267AC0);
@@ -60,8 +61,8 @@ public final class SkillsPanelComponent {
                     var action=model.actions().get(i);boolean hovered=box.body().contains(mouseX,mouseY)&&row.contains(mouseX,mouseY);
                     fill(g,row,!action.enabled()?0xFF26303A:hovered?0xFF42617B:0xFF31495E);
                     if(action.selected())border(g,row,0xFF8ED8FF);
-                    String label=font.plainSubstrByWidth(action.label(),Math.max(0,row.width()-8));
-                    g.drawCenteredString(font,label,row.x()+row.width()/2,row.y()+6,action.enabled()?0xFFFFFFFF:0xFF89939E);
+                    SkillBindingLabels.draw(g,font,action.id(),action.label(),row,
+                            action.enabled()?0xFFFFFFFF:0xFF89939E);
 
                 }
             }finally{g.disableScissor();}
@@ -72,6 +73,7 @@ public final class SkillsPanelComponent {
 
             }
         }
+        border(g,box.panel(),0x887E9AAD);
         tooltip(g,font,model,state,mouseX,mouseY);
     }
 }

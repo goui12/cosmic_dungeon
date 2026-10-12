@@ -97,6 +97,16 @@ public final class D1RunData extends SavedData {
             state.counts().put(key, value); setDirty();
         }
     }
+    /** Read-only, bounded analytics projection; existing objective keys remain untouched. */
+    public Map<String, Long> metricCounts(long runId, String prefix) {
+        State state = runs.get(runId);
+        if (state == null) return Map.of();
+        var result = new TreeMap<String, Long>();
+        state.counts().forEach((key, count) -> {
+            if (key.startsWith(prefix)) result.put(key.substring(prefix.length()), (long)Math.max(0, count));
+        });
+        return Map.copyOf(result);
+    }
     public int recordKill(long runId, UUID player) {
         String key = "kills:" + player;
         int old = count(runId, key);

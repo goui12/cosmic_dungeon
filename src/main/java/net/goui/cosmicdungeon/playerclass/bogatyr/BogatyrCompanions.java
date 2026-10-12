@@ -42,10 +42,11 @@ public final class BogatyrCompanions {
         if(!(wolf.level() instanceof ServerLevel level)||!wolf.isAddedToLevel()
                 ||level.getEntity(wolf.getUUID())!=wolf)return;
         if(BogatyrWolfEvents.managed(wolf)&&(!BogatyrRunLifecycle.admit(wolf)||!BogatyrIdentity.observe(wolf)))return;
-        BogatyrWolfEvents.added(wolf);track(wolf,true);BogatyrRecovery.onObserved(wolf);
+        BogatyrWolfEvents.added(wolf);BogatyrBreeding.loaded(wolf);track(wolf,true);BogatyrRecovery.onObserved(wolf);
     }
     public static void removing(Wolf wolf,Entity.RemovalReason reason){
         if(!(wolf.level() instanceof ServerLevel level)||!BogatyrWolfEvents.managed(wolf))return;
+        BogatyrBreeding.cancel(wolf);
         // Called before setRemoved: unload/dimension travel retains the real last location.
         track(wolf,true);
         if(BogatyrIdentity.held(wolf))return;
@@ -99,7 +100,7 @@ public final class BogatyrCompanions {
     private static int roster(net.minecraft.commands.CommandSourceStack source,int page)throws com.mojang.brigadier.exceptions.CommandSyntaxException{
         var player=source.getPlayerOrException();var run=net.goui.cosmicdungeon.playerclass.resource.ClassResourceService.activeRun(player).orElse(null);
         int count=run==null?0:BogatyrCommands.loaded(player,run.runId()).size();
-        source.sendSuccess(()->Component.literal("Wolfpack: "+count+" living loaded wolves in this dungeon. Use Skills for paid care. Packs end with the run."),false);
+        source.sendSuccess(()->Component.literal("Wolfpack: "+count+" living loaded wolves in this dungeon. Use Skills for Feed Pack, Patrol and Stay. Packs end with the run."),false);
         return count;
     }
 }

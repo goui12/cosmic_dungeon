@@ -89,9 +89,11 @@ upload: inspect the author console and reconcile the file ID rather than blindly
 again. GitHub retains this checkpoint in a draft release even if a job is interrupted.
 Accepted upload is not proof of moderation approval or visibility in the app.
 
-## Batch finish: CurseForge and sFTP (Cameron, 2026-10-07)
+## Batch finish by channel (Cameron, 2026-10-11)
 
-After successful publication, download the exact tagged runtime and publication receipt
+Alpha builds finish after successful runtime/companion publication. Retain the publication receipt and complete the batch: no sFTP, server-state checks, deployment runtime download or pending server-delivery gate. Record server delivery as not required, never deployed. No local-client installs or additional hash checks.
+
+Only Beta and official/stable builds receive stopped TEST delivery. After successful publication, download the exact tagged runtime and publication receipt
 from its GitHub release. Use `scripts/deploy-mod.ps1 -Jar <runtime> -ReleaseReceipt <receipt>`
 for a dry run; add `-Apply` after it establishes fresh TEST shutdown evidence.
 CI retains full build/test/version/hash provenance. No extra post-publication artifact,

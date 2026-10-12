@@ -3,7 +3,7 @@ package net.goui.cosmicdungeon.client.screen.skills;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.BiConsumer;
-import net.goui.cosmicdungeon.client.screen.requests.SupplyRequestsClient;
+import net.goui.cosmicdungeon.client.screen.crafting.PotionCraftClient;
 import net.goui.cosmicdungeon.playerclass.api.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -35,7 +35,7 @@ public final class SkillsPanelClient {
         if(!ClassKeys.isKnown(id)||ClassKeys.CLASS_ID_NONE.equals(id))throw new IllegalArgumentException("Unknown class");
         PROVIDERS.put(id,Objects.requireNonNull(provider));
     }
-    public static boolean inventory(Screen candidate){return candidate instanceof InventoryScreen||candidate instanceof CreativeModeInventoryScreen;}
+    public static boolean inventory(Screen candidate){return candidate instanceof InventoryScreen||candidate instanceof ExtraInventoryScreen||candidate instanceof CreativeModeInventoryScreen;}
     public static SharedInventoryLayout layout(Screen candidate){
         var inventory=(AbstractContainerScreen<?>)candidate;
         return SharedInventoryLayout.of(candidate.width,candidate.height,inventory.getGuiLeft(),inventory.getGuiTop(),
@@ -49,6 +49,9 @@ public final class SkillsPanelClient {
         var mc=Minecraft.getInstance();
         if(!inventory(candidate)||mc.player==null)return false;
         String id=ClassKeys.clamp(ClassData.getClassId(mc.player));
+        if(PotionCraftClient.brewer(id)){
+            persist();if(state!=null)state.release();screen=null;classId=null;state=null;model=null;return false;
+        }
         if(screen!=candidate||!id.equals(classId)){
             persist();if(state!=null)state.release();
             screen=candidate;classId=id;state=new SkillsPanelState(layout(candidate),preferences().get(id).orElse(null));
@@ -58,14 +61,18 @@ public final class SkillsPanelClient {
         if(!model.classId().equals(id))throw new IllegalStateException("Skills provider changed class identity");
         state.actions(model.actions().size());return true;
     }
+    public static boolean suppressesTooltips(Screen candidate){
+        return inventory(candidate) && (carrying() || screen==candidate && state!=null && state.captured());
+    }
     private static boolean carrying(){
         var player=Minecraft.getInstance().player;
-        return player==null||!player.containerMenu.getCarried().isEmpty();
+        return player==null||!player.containerMenu.getCarried().isEmpty()
+                ||Minecraft.getInstance().screen instanceof net.goui.cosmicdungeon.mixin.client.InventoryDragAccess drag
+                &&!drag.cosmicdungeon$draggingItem().isEmpty();
     }
     public static boolean ownsInput(Screen candidate,double x,double y){
-        boolean held=carrying();
-        return !held&&(SupplyRequestsClient.ownsInput(candidate,x,y,false)
-                ||candidate==screen&&state!=null&&(state.captured()||state.geometry().panel().contains(x,y)));
+        return PotionCraftClient.ownsInput(candidate,x,y) || !carrying()
+                && candidate==screen&&state!=null&&(state.captured()||state.geometry().panel().contains(x,y));
     }
     private static void warn(Exception error){
         if(!warned){com.mojang.logging.LogUtils.getLogger().warn("Could not save Skills panel layout; original file retained",error);warned=true;}
@@ -84,20 +91,19 @@ public final class SkillsPanelClient {
         if(state!=null){state.release();state=new SkillsPanelState(layout(screen),null);}
     }
     @SubscribeEvent(priority=EventPriority.LOWEST)
-    public static void init(ScreenEvent.Init.Post event){refresh(event.getScreen());SupplyRequestsClient.init(event.getScreen());}
+    public static void init(ScreenEvent.Init.Post event){refresh(event.getScreen());}
     @SubscribeEvent(priority=EventPriority.HIGHEST)
     public static void tooltip(ScreenEvent.Render.Pre event){
         if(!refresh(event.getScreen())||carrying())return;
-        if(!state.captured())SupplyRequestsClient.tooltip(screen,event.getGuiGraphics(),event.getMouseX(),event.getMouseY(),false);
-        if(!SupplyRequestsClient.ownsInput(screen,event.getMouseX(),event.getMouseY(),false))
-            SkillsPanelComponent.tooltip(event.getGuiGraphics(),Minecraft.getInstance().font,model,state,event.getMouseX(),event.getMouseY());
+        SkillsPanelComponent.tooltip(event.getGuiGraphics(),Minecraft.getInstance().font,model,state,event.getMouseX(),event.getMouseY());
     }
     @SubscribeEvent(priority=EventPriority.LOWEST)
     public static void render(ScreenEvent.Render.Post event){
         if(!refresh(event.getScreen()))return;
         boolean held=carrying();
-        SupplyRequestsClient.draw(screen,event.getGuiGraphics(),event.getMouseX(),event.getMouseY(),held||state.captured());
-        boolean suppress=held||SupplyRequestsClient.captured();
+        if(ownsInput(event.getScreen(),event.getMouseX(),event.getMouseY()))
+            ((net.goui.cosmicdungeon.client.screen.DeferredTooltipAccess)event.getGuiGraphics()).cosmicdungeon$clearTooltip();
+        boolean suppress=held;
         SkillsPanelComponent.draw(event.getGuiGraphics(),Minecraft.getInstance().font,
                 model,state,suppress?-1:event.getMouseX(),suppress?-1:event.getMouseY());
         // Native carried/touchscreen item rendering stays above the movable overlay.
@@ -107,9 +113,6 @@ public final class SkillsPanelClient {
     public static void press(ScreenEvent.MouseButtonPressed.Pre event){
         if(!refresh(event.getScreen()))return;
         boolean held=carrying();
-        if(!state.captured()&&SupplyRequestsClient.press(screen,event.getMouseX(),event.getMouseY(),event.getMouseButtonEvent().button(),held)){
-            event.setCanceled(true);return;
-        }
         boolean captured=state.captured();
         var result=state.press(event.getMouseX(),event.getMouseY(),event.getMouseButtonEvent().button(),held);
         if(!result.consumed()){if(captured&&!held)event.setCanceled(true);return;}
@@ -128,15 +131,11 @@ public final class SkillsPanelClient {
     }
     @SubscribeEvent(priority=EventPriority.HIGHEST)
     public static void drag(ScreenEvent.MouseDragged.Pre event){
-        if(SupplyRequestsClient.drag(event.getScreen(),event.getMouseY(),event.getMouseButton(),carrying())){
-            event.setCanceled(true);return;
-        }
         if(screen==event.getScreen()&&state!=null&&state.drag(event.getMouseX(),event.getMouseY(),event.getMouseButton(),carrying()))
             event.setCanceled(true);
     }
     @SubscribeEvent(priority=EventPriority.HIGHEST)
     public static void release(ScreenEvent.MouseButtonReleased.Pre event){
-        if(SupplyRequestsClient.release(event.getScreen(),event.getButton())&&!carrying())event.setCanceled(true);
         if(screen==event.getScreen()&&state!=null){
             boolean owned=state.release(event.getButton());persist();if(owned&&!carrying())event.setCanceled(true);
         }
@@ -146,16 +145,12 @@ public final class SkillsPanelClient {
         if(!refresh(event.getScreen()))return;
         boolean held=carrying();
         if(state.captured()&&!held){state.wheel(event.getMouseX(),event.getMouseY(),event.getScrollDeltaY(),false);event.setCanceled(true);return;}
-        if(SupplyRequestsClient.wheel(screen,event.getMouseX(),event.getMouseY(),event.getScrollDeltaY(),held)
-                ||SupplyRequestsClient.captured()&&!held){event.setCanceled(true);return;}
         if(state.wheel(event.getMouseX(),event.getMouseY(),event.getScrollDeltaY(),held))event.setCanceled(true);
     }
     @SubscribeEvent public static void close(ScreenEvent.Closing event){
-        SupplyRequestsClient.close(event.getScreen());
         if(screen==event.getScreen()){persist();if(state!=null)state.release();screen=null;classId=null;state=null;model=null;}
     }
-    @SubscribeEvent public static void login(ClientPlayerNetworkEvent.LoggingIn event){SupplyRequestsClient.clear();}
     @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event){
-        SupplyRequestsClient.clear();persist();if(state!=null)state.release();screen=null;classId=null;state=null;model=null;
+        persist();if(state!=null)state.release();screen=null;classId=null;state=null;model=null;
     }
 }

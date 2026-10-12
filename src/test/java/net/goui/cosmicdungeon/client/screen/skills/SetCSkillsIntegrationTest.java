@@ -23,13 +23,13 @@ final class SetCSkillsIntegrationTest {
     @BeforeEach void prepare() {
         BogatyrClient.clear();
         TheurgistClient.clear();
-        BogatyrClient.actions(action -> fail("Geometry must not send care actions"));
+        BogatyrClient.actions(action -> fail("Geometry must not send Feed Pack actions"));
         BogatyrClient.modeActions(action -> fail("Geometry must not send mode actions"));
         TheurgistClient.actions(action -> fail("Geometry must not send crafting or resurrection actions"));
         BogatyrClient.accept(new BogatyrPayloads.View(26,1,4,List.of(
                 new BogatyrPayloads.Quote(2,10,true),new BogatyrPayloads.Quote(1,30,true),
                 new BogatyrPayloads.Quote(4,4,true),new BogatyrPayloads.Quote(1,5,true)),
-                WolfMode.DANGER_CLOSE,true));
+                WolfMode.PATROL,true,10));
         var targets=new ArrayList<TheurgistPayloads.Target>();
         for(int i=0;i<TheurgistPayloads.MAX_TARGETS;i++)
             targets.add(new TheurgistPayloads.Target(new UUID(26,i+1),"Teammate "+i,new UUID(27,i+1),i%2==0));
@@ -50,10 +50,11 @@ final class SetCSkillsIntegrationTest {
                 177,600,true,true,true,7);
         var base=ClassResourcePresentation.panel(id,resource,false,true);
         var combined=id.equals("bogatyr")?BogatyrClient.augment(base):TheurgistClient.augment(base);
-        assertSame(resource,combined.resourceSnapshot(),"Class actions must retain the authoritative shared resource");
-        assertEquals(base.resourceTooltip(),combined.resourceTooltip());
-        assertEquals(List.of("request_supplies","recycle"),
-                combined.actions().subList(0,2).stream().map(SkillsPanelModel.Action::id).toList());
+        assertNull(combined.resourceSnapshot(),"Retired resource packets must not restore the resource bar");
+        assertEquals("Loaded wolves: 4",combined.resource());
+        assertEquals(List.of("Patrol","Stay","Feed Pack"),combined.actions().stream().map(SkillsPanelModel.Action::label).toList());
+        assertTrue(combined.actions().stream().noneMatch(a->a.id().equals("recycle")));
+        assertTrue(combined.actions().stream().noneMatch(a->a.id().equals("request_supplies")));
         return combined;
     }
 
@@ -79,9 +80,9 @@ final class SetCSkillsIntegrationTest {
     }
 
     @Test void fullyComposedPanelsKeepEveryActionReachableAtSupportedSurvivalAndCreativeScales() {
-        for(var id:List.of("bogatyr","theurgist")) {
+        for(var id:List.of("bogatyr")) {
             var combined=model(id);
-            assertEquals(id.equals("bogatyr")?12:69,combined.actions().size());
+            assertEquals(3,combined.actions().size());
             for(int[] size:new int[][]{{320,240},{426,240},{640,360},{854,480}})
                 for(int image:new int[]{176,195}) {
                     var shared=layout(size[0],size[1],image);
@@ -110,7 +111,7 @@ final class SetCSkillsIntegrationTest {
     @Test void simultaneousRequestsAndSkillsKeepIndependentScrollConsentAndItemDragOwnership() {
         var shared=layout(640,360,176);
         var panel=new SkillsPanelState(shared,null);
-        panel.actions(model("theurgist").actions().size());
+        panel.actions(model("bogatyr").actions().size());
         var requests=requests(shared);
         var requestBody=requests.geometry().body();
         requests.wheel(requestBody.x()+2,requestBody.y()+2,-10000,false);
@@ -158,7 +159,7 @@ final class SetCSkillsIntegrationTest {
         var path=directory.resolve("skills.json");
         var preferences=new SkillsPanelPreferences(path);
         var shared=layout(854,480,176);
-        for(var id:List.of("bogatyr","theurgist")) {
+        for(var id:List.of("bogatyr")) {
             var combined=model(id);
             var panel=new SkillsPanelState(shared,null);
             panel.actions(combined.actions().size());
@@ -172,12 +173,14 @@ final class SetCSkillsIntegrationTest {
             assertTrue(panel.minimized());
             assertEquals(0,panel.geometry().body().height());
             assertTrue(preferences.put(id,panel.placement()));
-            assertEquals(177,combined.resourceSnapshot().amount(),"Moving or minimizing is presentation only");
+            assertEquals("Loaded wolves: 4",combined.resource(),"Moving or minimizing is presentation only");
+            assertNull(combined.resourceSnapshot());
         }
         var loaded=new SkillsPanelPreferences(path);
-        assertNotEquals(loaded.get("bogatyr"),loaded.get("theurgist"));
+        assertTrue(loaded.get("bogatyr").isPresent());
+        assertTrue(loaded.get("theurgist").isEmpty(),"Hidden caster Skills cannot acquire new placements");
         var smaller=layout(320,240,195);
-        for(var id:List.of("bogatyr","theurgist")) {
+        for(var id:List.of("bogatyr")) {
             var panel=new SkillsPanelState(smaller,loaded.get(id).orElseThrow());
             panel.actions(model(id).actions().size());
             bounded(panel,smaller);
@@ -186,12 +189,22 @@ final class SetCSkillsIntegrationTest {
             panel.press(toggle.x()+2,toggle.y()+2,0,false);
             panel.release();
             assertFalse(panel.minimized());
-            assertTrue(panel.scroll().max()>0);
+            assertEquals(0,panel.scroll().offset());
+            var body=panel.geometry().body();
+            for(int i=0;i<model(id).actions().size();i++){
+                panel.scroll().reset();
+                assertTrue(panel.wheel(body.x()+2,body.y()+2,-i,false));
+                var row=panel.geometry().row(i,panel.scroll().offset());
+                assertTrue(body.contains(row.x(),row.y())&&body.contains(row.right()-1,row.bottom()-1),
+                        "Each complete mode and Feed Pack button remains reachable after restore and resize");
+                assertEquals(i,panel.press(row.x()+row.width()/2.0,row.y()+row.height()/2.0,0,false).action());
+                assertTrue(panel.release());
+            }
             bounded(panel,smaller);
         }
         assertTrue(loaded.reset());
         var reset=new SkillsPanelPreferences(path);
-        for(var id:List.of("bogatyr","theurgist")) {
+        for(var id:List.of("bogatyr")) {
             assertTrue(reset.get(id).isEmpty());
             var panel=new SkillsPanelState(shared,reset.get(id).orElse(null));
             panel.actions(model(id).actions().size());
