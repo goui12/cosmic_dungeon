@@ -44,6 +44,7 @@ public final class BogatyrDuration {
         wolf.getPersistentData().remove(BogatyrWolfEvents.RUN);
         wolf.getPersistentData().remove(BogatyrWolfEvents.OWNER);
         wolf.getPersistentData().remove(ACTIVE_TICKS);
+        BogatyrModes.released(wolf);
         // Entity.getType erases the living bound; this receiver is already verified as a Wolf.
         @SuppressWarnings("unchecked")
         var wolfType=(net.minecraft.world.entity.EntityType<? extends net.minecraft.world.entity.LivingEntity>)wolf.getType();

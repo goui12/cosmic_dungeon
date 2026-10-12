@@ -45,6 +45,8 @@ public final class BogatyrModes {
             applied.targetHeld=false;
         }
     }
+    /** Restore native targeting when a live timed companion leaves managed enrollment. */
+    public static void released(Wolf wolf){releaseTargets(wolf,APPLIED.remove(wolf));}
     private static WolfModeData.State state(Wolf wolf){
         return BogatyrCompanionData.get(((ServerLevel)wolf.level()).getServer())
                 .mode(BogatyrCompanions.owner(wolf),BogatyrThreats.run(wolf));
@@ -96,7 +98,8 @@ public final class BogatyrModes {
         });
     }
     static void apply(Wolf wolf,boolean command){
-        if(!(wolf.level() instanceof ServerLevel)||!BogatyrWolfEvents.managed(wolf))return;
+        if(!(wolf.level() instanceof ServerLevel))return;
+        if(!BogatyrWolfEvents.managed(wolf)){released(wolf);return;}
         if(unsupportedAnchor(wolf)){BogatyrBreeding.cancel(wolf);forget(wolf);hold(wolf);return;}
         var state=state(wolf);long epoch=epoch(wolf);var owner=BogatyrCompanions.owner(wolf);long run=BogatyrThreats.run(wolf);
         var next=APPLIED.get(wolf);

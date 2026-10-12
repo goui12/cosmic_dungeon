@@ -4,6 +4,7 @@ Cameron2026-10-12: remove recommendations once accomplished or deemed unnecessar
 
 | Priority | Remaining recommendation | Source | Disposition |
 |---|---|---|---|
+| P2 | Reject malformed craft receipt sequence0 before treating it as a supported prior receipt. | [PR267 note](https://github.com/goui12/cosmic_dungeon/pull/267#discussion_r4250300308), source4d426563ffd82c585ceaced856da98224ef72bc9 | Inherited Batch21 guard corrected in this Alpha candidate; exact native regression pending. Remove after validation. |
 | P2 | Reduce repeated Stay target-selector traversal with direct1/30/120-wolf counts. | [PR258 note](https://github.com/goui12/cosmic_dungeon/pull/258#discussion_r4243537947), source7040a9cc3d17450077a9d211a7862fa2a9bcec84 | Batch22 implementation; exact native validation pending. Remove after its validated completion. |
 | P2 | Show selected server-resolved brewing-route ingredients without counting intermediates twice. | [Batch7](BATCH_1_7_07_20261011.md), source3b9b6e657248338994c96351923dd66eb3fbd931 | Queued23; step/new-fuel cost already exists. |
 | P2 | Measure six consenting members with concurrent palettes, actual final route payloads and resource/fairness/isolation checks. | [Batch10](BATCH_1_7_10_20261011.md), source4ab2223c26f141d086467a06e862a3b30bffe67a | Queued24; current one-view/two-party measurements do not prove this workload. |

@@ -113,6 +113,48 @@ public final class BogatyrPatrolGameTests {
         noReset(f,()->{for(int i=0;i<40;i++)BogatyrModes.apply(wolf,false);},"Settled restored identity");
         singleReset(f,()->f.check(BogatyrModes.select(f.p(),f.run,WolfMode.PATROL),"Identity fixture returns to Patrol"),"Final Patrol");
     }
+    /** Exact native timed-release unenrollment boundary, without changing shared duration configuration. */
+    private static void nativeUnenroll(Wolf wolf,boolean releaseHook){
+        wolf.setTarget(null);wolf.getNavigation().stop();wolf.stopBeingAngry();
+        wolf.setOwnerReference(null);wolf.setTame(false,true);wolf.setOrderedToSit(false);
+        wolf.getPersistentData().remove(BogatyrWolfEvents.RUN);wolf.getPersistentData().remove(BogatyrWolfEvents.OWNER);
+        wolf.getPersistentData().remove(BogatyrDuration.ACTIVE_TICKS);
+        if(releaseHook)BogatyrModes.released(wolf);
+    }
+    private static void reenroll(BogatyrCommandGameTests.Fixture f,Wolf wolf){
+        wolf.tame(f.p());wolf.getPersistentData().putLong(BogatyrWolfEvents.RUN,f.run);
+        wolf.getPersistentData().putString(BogatyrWolfEvents.OWNER,f.p().getStringUUID());BogatyrModes.apply(wolf,false);
+    }
+    private static void timedReleaseTransitions(BogatyrCommandGameTests.Fixture f,Wolf wolf,Mob hostile){
+        var bond=BogatyrIdentity.id(wolf);var injected=new InjectedTarget(wolf,hostile);
+        wolf.targetSelector.addGoal(-1,injected);
+        var wrapped=wolf.targetSelector.getAvailableGoals().stream().filter(g->g.getGoal()==injected).findFirst().orElseThrow();
+        singleReset(f,()->f.check(BogatyrModes.select(f.p(),f.run,WolfMode.STAY),"Stay before timed release"),"Timed-release Stay entry");
+        stay(wolf).start();
+        noReset(f,()->nativeUnenroll(wolf,true),"Timed unenrollment hook");
+        f.check(!BogatyrWolfEvents.managed(wolf)&&!((TargetSelectorFlags)wolf.targetSelector).cosmicdungeon$targetDisabled(),
+                "Timed unenrollment immediately restores the live wild wolf's native TARGET flag");
+        for(int i=0;i<4;i++)wolf.targetSelector.tick();
+        f.check(wrapped.isRunning()&&injected.starts==1&&injected.ticks>0,
+                "Released wild wolf can again schedule native TARGET goals");
+        singleReset(f,()->reenroll(f,wolf),"Same-identity reenrollment");
+        f.check(BogatyrIdentity.id(wolf).equals(bond)&&BogatyrModes.standing(wolf)
+                &&wolf.isOrderedToSit()&&wolf.getTarget()==null&&!wrapped.isRunning(),
+                "Reenrollment invalidates prior cached application and reestablishes Stay without replacing the wolf");
+        singleReset(f,()->f.check(BogatyrModes.select(f.p(),f.run,WolfMode.PATROL),"Patrol before externally restricted release"),"Release restriction setup");
+        wolf.targetSelector.disableControlFlag(Goal.Flag.TARGET);
+        singleReset(f,()->f.check(BogatyrModes.select(f.p(),f.run,WolfMode.STAY),"Stay with external TARGET restriction"),"Restricted timed-release Stay entry");
+        // The per-tick unmanaged fallback also releases stale application state without erasing prior restrictions.
+        noReset(f,()->{nativeUnenroll(wolf,false);BogatyrModes.apply(wolf,false);},"Unmanaged fallback");
+        f.check(((TargetSelectorFlags)wolf.targetSelector).cosmicdungeon$targetDisabled(),
+                "Unmanaged fallback preserves a preexisting external TARGET disable");
+        int starts=injected.starts;for(int i=0;i<4;i++)wolf.targetSelector.tick();
+        f.check(!wrapped.isRunning()&&injected.starts==starts,"External restriction remains effective after release");
+        singleReset(f,()->reenroll(f,wolf),"Restricted same-identity reenrollment");
+        singleReset(f,()->f.check(BogatyrModes.select(f.p(),f.run,WolfMode.PATROL),"Release fixture returns to Patrol"),"Release fixture cleanup");
+        f.check(((TargetSelectorFlags)wolf.targetSelector).cosmicdungeon$targetDisabled(),"Reenrollment also retains the prior external restriction");
+        wolf.targetSelector.enableControlFlag(Goal.Flag.TARGET);wolf.targetSelector.removeGoal(injected);
+    }
     public static void retiredCommands(GameTestHelper helper){
         try(var f=new BogatyrCommandGameTests.Fixture(helper,Long.MAX_VALUE-2701)){
             var wolf=f.wolf(0,0,2,0);wolf.setHealth(5);f.amount(600);var before=f.root().copy();var image=BogatyrRecovery.image(wolf);
@@ -199,6 +241,7 @@ public final class BogatyrPatrolGameTests {
             f.check(hurt.canUse(),"New hit restarts native retaliation");hurt.start();
             f.check(wolf.getTarget()==hostile,"Post-Stay fresh threat is defended");
             selectorTransitions(f,wolf,hostile);
+            timedReleaseTransitions(f,wolf,hostile);
             helper.succeed();
         }
     }

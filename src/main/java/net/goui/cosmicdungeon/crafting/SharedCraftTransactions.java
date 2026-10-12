@@ -118,7 +118,7 @@ public final class SharedCraftTransactions {
             var owner = PlayerSaveProof.ownerCompound(p.getPersistentData(), ClassData.ROOT_TAG);
             var custody = PlayerSaveProof.ownerCompound(owner, CUSTODY);
             var receipt = PlayerSaveProof.ownerReceipt(owner, RECEIPT, p.getUUID(), 3, "id");
-            if (!receipt.isEmpty() && (receipt.getLongOr("run", 0) <= 0 || receipt.getLongOr("sequence", -1) < 0
+            if (!receipt.isEmpty() && (receipt.getLongOr("run", 0) <= 0 || receipt.getLongOr("sequence", -1) <= 0
                     || receipt.getBoolean("committed").isEmpty()))
                 throw new IllegalStateException("Unsupported owner receipt field " + RECEIPT + "; original save requires review.");
             var server = p.level().getServer(); var data = SharedCraftData.get(server); var plan = data.pending(p.getUUID());

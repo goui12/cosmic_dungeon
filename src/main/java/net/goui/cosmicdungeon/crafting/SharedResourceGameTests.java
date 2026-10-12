@@ -280,6 +280,24 @@ public final class SharedResourceGameTests {
                         "Malformed crafting recovery preserves the original native owner file and world decision");
             }
     }
+    private static void zeroReceiptSequence(GameTestHelper h){
+        for(boolean pending:new boolean[]{false,true})try(var f=new Fixture(h,Long.MAX_VALUE-3135-(pending?1:0))){
+            f.seed();f.saveAll();var plan=SharedCrafting.prepare(f.p(0),f.run,f.recipe());
+            if(pending){f.reserve(plan);for(int i=0;i<3;i++)f.custody(i,plan);}
+            var root=f.root(0).copy();var malformed=plan.receipt(f.p(0).getUUID());
+            malformed.putString("id",UUID.randomUUID().toString());malformed.putLong("sequence",0);
+            root.put(SharedCraftTransactions.RECEIPT,malformed);f.p(0).getPersistentData().put(ClassData.ROOT_TAG,root);f.saveAll();
+            f.check(SharedCraftData.get(f.level.getServer()).flushVerified(),"Zero-sequence fixture has its own durable journal even without a pending plan");
+            var owner=f.disk(0);var inventory=f.inventory(0);var journal=f.reloadJournal().image();f.reload(0);
+            f.disconnects.expect(f.p(0));
+            f.check(!SharedCraftTransactions.reconcile(f.p(0))&&SharedCraftTransactions.blocked(f.p(0))
+                    &&f.disconnects.recoveryHold(f.p(0)),"Zero-sequence prior receipt holds with and without a pending distinct operation");
+            f.check(f.root(0).equals(root)&&f.disk(0).equals(owner)&&f.inventory(0).equals(inventory)
+                    &&SharedCraftData.get(f.level.getServer()).image().equals(journal)
+                    &&DungeonMetricsService.resourceSequence(f.level.getServer(),f.run)==0&&f.notices(1)==0&&f.notices(2)==0,
+                    "Zero-sequence saved receipt and original owner/world evidence remain intact without debit, output, acknowledgement or metrics");
+        }
+    }
     private static void terminalReceiptConflicts(GameTestHelper h) {
         for(int scenario=0;scenario<2;scenario++)try(var f=new Fixture(h,Long.MAX_VALUE-3140-scenario)){
             f.seed();f.saveAll();var plan=SharedCrafting.prepare(f.p(0),f.run,f.recipe());f.reserve(plan);
@@ -317,6 +335,7 @@ public final class SharedResourceGameTests {
         }
     }
     public static void guards(GameTestHelper h) {
+        zeroReceiptSequence(h);
         terminalReceiptConflicts(h);
         malformedProofs(h);
         try(var f=new Fixture(h,Long.MAX_VALUE-3102)) {
