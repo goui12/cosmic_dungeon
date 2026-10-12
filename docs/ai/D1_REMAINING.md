@@ -3,7 +3,7 @@
 [1.7 Alpha / 1.8 Beta batch plan](tasks/ALPHA_1_7_BATCH_PLAN_20261010.md).
 Batches1-19 completed. Exact Batch19 source b8c9aa48d9f4c489097d84470aa9bea10bb05ef5,
 CI38201815436, publisher38202005228, CurseForge9141993/helper9141991.
-**Batch20 complete: merged main ef3c18f8, CI38266158401, publisher38266655070, CurseForge9146786/helper9146785; stopped TEST installed1.8.0-beta.1. Batch21 recovery implementation/automated validation complete; exact Alpha publication is tracked in its controller receipt. Batch22 Stay performance is under validation;23–25 remain after this card.**
+**Batch20 complete: merged main ef3c18f8, CI38266158401, publisher38266655070, CurseForge9146786/helper9146785; stopped TEST installed1.8.0-beta.1. Batch21 recovery implementation/automated validation complete; exact Alpha publication is tracked in its controller receipt. Batch22 Stay implementation/native validation complete; exact Alpha publication is tracked in its controller receipt. Three cards23–25 remain.**
 
 The final actual-code/review audit found required corrections. Card20 therefore returns through
 unique corrective1.7.21-alpha.1 (first1.7.20 publisher failed before upload) before merged-main1.8.0-beta.1.
@@ -17,7 +17,7 @@ Alpha ends at runtime/companion publication without TEST I/O.
 Beta requires stopped TEST sFTP runtime delivery. No local-client installs, restarts,
 server.properties writes or extra postpublication hashes. Licensed native GUI/co-op/world acceptance
 remains TESTING; stable requires a separate decision after Beta acceptance.
-Current card22 measures and reduces Stay traversal; three later engineering cards remain:23 ingredient-route tooltips,24 six-player crafting measurements,25 retain-all history preservation. Batch22 is now the active single requested card; stop after22, with23–25 queued. [Approved follow-up scope](tasks/FOLLOWUP_BATCHES_21_25_20261012.md) is installed in the active controller. The archived queue remains complete. No stable or manual-testing batch is authorized.
+Batch22's implementation and exact native validation are complete; three later engineering cards remain:23 ingredient-route tooltips,24 six-player crafting measurements,25 retain-all history preservation. Batch22 is now the active single requested card; stop after22, with23–25 queued. [Approved follow-up scope](tasks/FOLLOWUP_BATCHES_21_25_20261012.md) is installed in the active controller. The archived queue remains complete. No stable or manual-testing batch is authorized.
 The previous15-26 controller remains COMPLETE; historical notes below are preserved.
 
 ---
