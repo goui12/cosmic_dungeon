@@ -3,7 +3,7 @@
 [1.7 Alpha / 1.8 Beta batch plan](tasks/ALPHA_1_7_BATCH_PLAN_20261010.md).
 Batches1-19 completed. Exact Batch19 source b8c9aa48d9f4c489097d84470aa9bea10bb05ef5,
 CI38201815436, publisher38202005228, CurseForge9141993/helper9141991.
-**Batch20 complete: merged main ef3c18f8, CI38266158401, publisher38266655070, CurseForge9146786/helper9146785; stopped TEST installed1.8.0-beta.1. Batch21 recovery implementation/automated validation complete; exact Alpha publication is tracked in its controller receipt. Batch22 Stay implementation/native validation complete; exact Alpha publication is tracked in its controller receipt. Batch23 implementation/native validation and Alpha1.8.3-alpha.1 publication complete: runtime CurseForge9148415, companion9148412; TEST delivery not required. Batch24 concurrency/native validation and Alpha1.8.4-alpha.1 publication complete: runtime CurseForge9150901, companion9150900; TEST not required. One card25 remains.**
+**Batch20 complete: merged main ef3c18f8, CI38266158401, publisher38266655070, CurseForge9146786/helper9146785; stopped TEST installed1.8.0-beta.1. Batch21 recovery implementation/automated validation complete; exact Alpha publication is tracked in its controller receipt. Batch22 Stay implementation/native validation complete; exact Alpha publication is tracked in its controller receipt. Batch23 implementation/native validation and Alpha1.8.3-alpha.1 publication complete: runtime CurseForge9148415, companion9148412; TEST delivery not required. Batch24 concurrency/native validation and Alpha1.8.4-alpha.1 publication complete: runtime CurseForge9150901, companion9150900; TEST not required. Batch25 metrics/history retention is active; requested completed-set Beta1.8.5-beta.1 follows validated merge.**
 
 The final actual-code/review audit found required corrections. Card20 therefore returns through
 unique corrective1.7.21-alpha.1 (first1.7.20 publisher failed before upload) before merged-main1.8.0-beta.1.
@@ -17,7 +17,7 @@ Alpha ends at runtime/companion publication without TEST I/O.
 Beta requires stopped TEST sFTP runtime delivery. No local-client installs, restarts,
 server.properties writes or extra postpublication hashes. Licensed native GUI/co-op/world acceptance
 remains TESTING; stable requires a separate decision after Beta acceptance.
-Batch23 is complete with its exact controller receipt. Batch24 implementation, native validation and Alpha publication are complete; stop after24, with compact controller completion tracked separately. After24, one engineering card remains:25 retain-all metrics/history preservation. [Approved follow-up scope](tasks/FOLLOWUP_BATCHES_21_25_20261012.md) is installed in the active controller. The archived queue remains complete. No stable or manual-testing batch is authorized.
+Batches21–24 have exact completed controller receipts. Batch25 is active: retain-all metrics/history preservation, then the explicitly requested completed-set Beta1.8.5-beta.1 from validated merged main and stopped TEST delivery. Stop after that release; no further engineering card, stable promotion or manual-testing batch is authorized. [Approved follow-up scope](tasks/FOLLOWUP_BATCHES_21_25_20261012.md) is installed in the active controller. The archived queue remains complete. No stable or manual-testing batch is authorized.
 The previous15-26 controller remains COMPLETE; historical notes below are preserved.
 
 ---

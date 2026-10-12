@@ -159,7 +159,7 @@ public final class RunMetricsStore {
                 if (!name.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.xml")) continue;
                 var run = decodeRun(readBytes(entry, MAX_XML_BYTES)); identity(run);
                 if (!name.equals(run.instanceId() + ".xml")) throw new IOException("Mismatched canonical instance filename");
-                if (run.finalized()) { output.finish(run); copyResourceHistory(run, output); }
+                if (run.finalized()) { copyResourceHistory(run, output); output.finish(run); }
             }
         }
     }
@@ -190,20 +190,72 @@ public final class RunMetricsStore {
             atomic("resource-state/" + RunMetrics.instanceId(worldId, batch.runId()) + ".xml", ResourceMetricsStateXml.encode(next));
         return next;
     }
+    /** Verify an offline copy one segment at a time; the index bounds heap independently of history length. */
     private void copyResourceHistory(RunMetrics run, RunMetricsStore output) throws IOException {
-        var state = readResourceState(run.runId());
-        if (state.sequence() > 0)
-            output.atomic("resource-state/" + run.instanceId() + ".xml", ResourceMetricsStateXml.encode(state));
-        Path resources = directory.resolve("resources/" + run.instanceId());
-        if (!Files.exists(resources)) return;
-        try (var files = Files.newDirectoryStream(resources, "*.xml")) {
-            for (var file : files) {
-                var batch = ResourceMetricsXml.decode(readBytes(file, ResourceMetricsXml.MAX_BYTES));
-                if (!batch.worldId().equals(worldId) || batch.runId() != run.runId()
-                        || !file.getFileName().toString().equals(batch.transaction() + ".xml"))
-                    throw new IOException("Resource segment archive identity differs");
-                output.writeResources(batch);
+        String stateName = "resource-state/" + run.instanceId() + ".xml";
+        Path stateFile = directory.resolve(stateName), resources = directory.resolve("resources/" + run.instanceId());
+        byte[] stateBytes = Files.exists(stateFile) ? readBytes(stateFile, ResourceMetricsStateXml.MAX_BYTES) : null;
+        var expected = stateBytes == null ? ResourceMetricsState.empty(worldId, run.runId())
+                : ResourceMetricsStateXml.decode(stateBytes);
+        if (!worldId.equals(expected.worldId()) || run.runId() != expected.runId())
+            throw new IOException("Resource state archive identity differs; originals retained");
+        if (!Files.exists(resources)) {
+            if (expected.sequence() > 0) throw new IOException("Resource segment directory missing; originals retained");
+            if (stateBytes != null) output.atomic(stateName, stateBytes);
+            return; // v1 aggregate/embedded history predates segments; never invent its missing detail.
+        }
+        if (!Files.isDirectory(resources)) throw new IOException("Resource history is not a directory; originals retained");
+        var owners = new HashSet<UUID>(); run.members().forEach(member -> owners.add(member.id()));
+        if (!owners.containsAll(expected.members().keySet()))
+            throw new IOException("Resource state owner differs from canonical run; originals retained");
+        Path index = Files.createTempDirectory(output.directory, ".resource-rebuild-");
+        try {
+            long count = 0;
+            try (var files = Files.newDirectoryStream(resources, "*.xml")) {
+                for (var file : files) {
+                    byte[] bytes = readBytes(file, ResourceMetricsXml.MAX_BYTES);
+                    var batch = ResourceMetricsXml.decode(bytes);
+                    if (!batch.worldId().equals(worldId) || batch.runId() != run.runId()
+                            || !file.getFileName().toString().equals(batch.transaction() + ".xml")
+                            || batch.events().stream().anyMatch(e -> !owners.contains(e.donor()) || !owners.contains(e.recipient())))
+                        throw new IOException("Resource segment archive identity differs; originals retained");
+                    if (stateBytes == null) throw new IOException("Resource segments have no saved state; originals retained");
+                    if (batch.sequence() > expected.sequence())
+                        throw new IOException("Resource segment exceeds saved sequence; originals retained");
+                    try {
+                        Files.write(index.resolve(batch.sequence() + ".xml"), bytes,
+                                StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+                    } catch (FileAlreadyExistsException ex) {
+                        throw new IOException("Duplicate resource segment sequence; originals retained", ex);
+                    }
+                    count = Math.addExact(count, 1);
+                }
             }
+            if (count != expected.sequence()) throw new IOException("Missing resource segments; originals retained");
+            var rebuilt = ResourceMetricsState.empty(worldId, run.runId());
+            while (rebuilt.sequence() < expected.sequence()) {
+                long next = Math.addExact(rebuilt.sequence(), 1);
+                var batch = ResourceMetricsXml.decode(readBytes(index.resolve(next + ".xml"), ResourceMetricsXml.MAX_BYTES));
+                rebuilt = rebuilt.apply(batch);
+            }
+            if (!rebuilt.equals(expected))
+                throw new IOException("Resource segments differ from saved afterimage; originals retained");
+            // Only verified bytes reach the destination. Canonical totals are rebuilt separately, never added twice.
+            try (var files = Files.newDirectoryStream(index, "*.xml")) {
+                for (var file : files) {
+                    byte[] bytes = readBytes(file, ResourceMetricsXml.MAX_BYTES);
+                    var batch = ResourceMetricsXml.decode(bytes);
+                    output.atomic("resources/" + run.instanceId() + "/" + batch.transaction() + ".xml", bytes);
+                }
+            }
+            if (stateBytes != null) output.atomic(stateName, stateBytes);
+        } catch (RuntimeException ex) {
+            throw new IOException("Invalid resource history; originals retained", ex);
+        } finally {
+            try (var files = Files.newDirectoryStream(index)) {
+                for (var file : files) Files.delete(file);
+            }
+            Files.delete(index); // only this invocation's temporary copies; authoritative originals are untouched.
         }
     }
     public static void main(String[] args) throws IOException {

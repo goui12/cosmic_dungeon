@@ -4,7 +4,7 @@ Cameron2026-10-12: remove recommendations once accomplished or deemed unnecessar
 
 | Priority | Remaining recommendation | Source | Disposition |
 |---|---|---|---|
-| P2 | Measure metrics XML/segment growth and copied/restored history preservation; retain all by default. | [Approved follow-up25](FOLLOWUP_BATCHES_21_25_20261012.md), Batch20 audit sourceef3c18f8cb68c2f97704c0cfbd6b19183c9e2a68 | Queued25; no purge or speculative archive code. |
+| P2 | Measure metrics XML/segment growth and copied/restored history preservation; retain all by default. | [Approved follow-up25](FOLLOWUP_BATCHES_21_25_20261012.md), Batch20 audit sourceef3c18f8cb68c2f97704c0cfbd6b19183c9e2a68 | In progress25: measured copied/restored retention checks and documented policy; no purge or speculative archive code. Remove after exact automated validation. |
 | P1 | Outgoing owner-attack assistance for Patrol. | [PR262 note](https://github.com/goui12/cosmic_dungeon/pull/262#discussion_r4244287961), source59b87afcdc13aaf836d01ed6c47c5c38e256d48c | Disputed/unimplemented outside this queue. Incoming defense remains; separate Cameron gameplay choice. |
 | P2 | Native GUI-scale/layering/modal/drag/Creative/Extra visual regression, including selected brewing-route tooltip wrapping. | [Batch1](BATCH_1_7_01_20261011.md), source068fe352f96d9bef1ab3e4d4fbc01089a5523589; [Batch23](BATCH_1_8_23_20261012.md), sourcee0a3ad8838d422b8bbd9b408e179f2f13057c3cc | TESTING: licensed native play. |
 | P2 | All six class inventory scenes at two GUI scales. | [Batch2](BATCH_1_7_02_20261011.md), source24e5e5b568f2687ed07cb6cf751e8a9bfe463a8a | TESTING: native screenshot baseline. |
