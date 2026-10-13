@@ -32,31 +32,33 @@ final class MercenaryWolvesTest {
                 List.of("cosmicdungeon:d1_instance_42"),1,"ACTIVE","",0,List.of(hirer),List.of(),List.of())
                 .withMercenaries(List.of(new MercenaryContract(merc,hirer,role,2,500)));
     }
-    @Test void twoMinuteClockDoesNotSummonEarlyAndOldSavesStartAtFullInterval(){
-        int ticks=MercenaryWolves.INTERVAL;assertEquals(2400,ticks);
-        for(int i=0;i<239;i++)ticks=MercenaryWolves.advance(ticks,10);
+    @Test void thirtySecondClockDoesNotSummonEarlyAndOldSavesStartAtFullInterval(){
+        int ticks=MercenaryWolves.INTERVAL;assertEquals(600,ticks);
+        for(int i=0;i<59;i++)ticks=MercenaryWolves.advance(ticks,10);
         assertEquals(10,ticks);assertEquals(0,MercenaryWolves.advance(ticks,10));
         assertEquals(0,MercenaryWolves.advance(0,10));
+        assertEquals(590,MercenaryWolves.advance(600,Integer.MAX_VALUE));
+        assertEquals(600,MercenaryWolves.advance(600,-10));
         var old=TagValueInput.create(ProblemReporter.DISCARDING,LOOKUP,new CompoundTag());
-        assertEquals(2400,MercenaryWolves.loadCooldown(old));
+        assertEquals(600,MercenaryWolves.loadCooldown(old));
     }
     @Test void remainingSummonClockSurvivesNativeNbtWithoutOfflineCatchup(){
         var out=TagValueOutput.createWithContext(ProblemReporter.DISCARDING,LOOKUP);
-        out.putInt("mercenary_wolf_ticks",1370);
-        assertEquals(1370,MercenaryWolves.loadCooldown(TagValueInput.create(ProblemReporter.DISCARDING,LOOKUP,out.buildResult())));
+        out.putInt("mercenary_wolf_ticks",370);
+        assertEquals(370,MercenaryWolves.loadCooldown(TagValueInput.create(ProblemReporter.DISCARDING,LOOKUP,out.buildResult())));
         out.putInt("mercenary_wolf_ticks",Integer.MAX_VALUE);
-        assertEquals(2400,MercenaryWolves.loadCooldown(TagValueInput.create(ProblemReporter.DISCARDING,LOOKUP,out.buildResult())));
+        assertEquals(600,MercenaryWolves.loadCooldown(TagValueInput.create(ProblemReporter.DISCARDING,LOOKUP,out.buildResult())));
     }
     @Test void unloadedPackIsCappedAcrossSaveReloadAndDuplicateAdmission(){
         var ids=new ArrayList<UUID>();
         assertDoesNotThrow(()->{
             var data=empty();
-            for(int i=0;i<5;i++){var id=UUID.randomUUID();ids.add(id);assertTrue(MercenaryWolves.remember(data,bond(),id));}
+            for(int i=0;i<20;i++){var id=UUID.randomUUID();ids.add(id);assertTrue(MercenaryWolves.remember(data,bond(),id));}
             data=reload(data);
-            assertEquals(5,data.values(42,MercenaryWolves.key(merc)).size());
+            assertEquals(20,data.values(42,MercenaryWolves.key(merc)).size());
             assertFalse(MercenaryWolves.remember(data,bond(),UUID.randomUUID()));
             assertTrue(MercenaryWolves.remember(data,bond(),ids.getFirst()));
-            assertEquals(5,data.values(42,MercenaryWolves.key(merc)).size());
+            assertEquals(20,data.values(42,MercenaryWolves.key(merc)).size());
         });
     }
     @Test void OnlyObservedDeathReleasesASlotNotUnloadOrDimensionChange()throws Exception{
@@ -71,7 +73,7 @@ final class MercenaryWolvesTest {
     @Test void packsAreIndependentAndDismissalSurvivesReload()throws Exception{
         var data=empty();var other=new MercenaryWolves.Bond(42,UUID.randomUUID(),hirer);
         for(int i=0;i<100;i++)data.recordUnique(42,"wolves:"+hirer,UUID.randomUUID().toString());
-        for(int i=0;i<5;i++)assertTrue(MercenaryWolves.remember(data,bond(),UUID.randomUUID()));
+        for(int i=0;i<20;i++)assertTrue(MercenaryWolves.remember(data,bond(),UUID.randomUUID()));
         assertTrue(MercenaryWolves.remember(data,other,UUID.randomUUID()));
         data.setCount(42,MercenaryWolves.dismissed(merc),1);data=reload(data);
         assertEquals(100,data.values(42,"wolves:"+hirer).size());

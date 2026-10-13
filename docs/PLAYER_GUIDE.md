@@ -74,13 +74,13 @@ The D1 arsenal includes the Tree Viper, Bushmaster, and Fer-de-Lance poison fami
 
 ## Bogatyr
 
-A northern survivalist who fights with sword, bow, shield, and a loyal wolfpack. Acquire companions through existing wolf eggs, ordinary bone taming, and breeding. Player packs are uncapped, survive ordinary saves/reconnects within the run, and end on completion, forfeit, or reset. Old archives cannot summon a previous run's pack. Mercenary packs use separate progression and limits.
+A northern survivalist who fights with sword, bow, shield, and a loyal wolfpack. Acquire companions through existing wolf eggs, ordinary bone taming, and breeding. Player packs are uncapped, survive ordinary saves/reconnects within the run, and end on completion, forfeit, or reset. Old archives cannot summon a previous run's pack. Hired Bogatyrs admit at most 20 dogs, starting at one summon every 30 active seconds. Their existing skill progression improves cadence down to 20 seconds. Saved packs already above 20 are retained, but receive no new dogs until below the limit.
 
 Open inventory **Skills** for three actions:
 
 | Action | Default | Behavior |
 |---|---|---|
-| Patrol | Alt+1 | Free default mode. Wolves follow and defend themselves and their master against new attacks. |
+| Patrol | Alt+1 | Free default mode. Wolves follow, defend themselves and their master, and assist against hostile monsters their master successfully attacks. |
 | Stay | Alt+2 | Free mode. Wolves return within five blocks, sit, and hold their individual settled positions even when you move. They ignore threats. |
 | Feed Pack | Alt+3 | Uses up to ten actual food items from your own inventory, healing before breeding. |
 

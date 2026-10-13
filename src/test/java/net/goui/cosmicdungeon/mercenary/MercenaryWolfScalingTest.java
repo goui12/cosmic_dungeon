@@ -32,51 +32,57 @@ final class MercenaryWolfScalingTest {
     private static void progress(D1RunData data,MercenaryWolves.Bond bond,int level){
         data.setCount(bond.run(),MercenarySkills.key(bond.mercenary(),MercenarySkill.WOLVES),(int)MercenarySkill.threshold(level));
     }
-    @Test void baselineAndEverySecondLevelUpKeepTheRequestedPackGrowth(){
-        assertEquals(5,MercenaryWolfBalance.capacity(1));assertEquals(5,MercenaryWolfBalance.capacity(2));
-        assertEquals(6,MercenaryWolfBalance.capacity(3));assertEquals(6,MercenaryWolfBalance.capacity(4));
-        assertEquals(7,MercenaryWolfBalance.capacity(5));assertEquals(9,MercenaryWolfBalance.capacity(10));
-        assertEquals(17,MercenaryWolfBalance.capacity(25));assertEquals(29,MercenaryWolfBalance.capacity(50));
-        assertEquals(5,MercenaryWolfBalance.capacity(Integer.MIN_VALUE));
-        assertEquals(32772,MercenaryWolfBalance.capacity(Integer.MAX_VALUE));
+    @Test void capacityIsTwentyAtEverySkillLevel(){
+        for(int level:List.of(Integer.MIN_VALUE,0,1,2,3,5,10,25,50,Integer.MAX_VALUE))
+            assertEquals(20,MercenaryWolfBalance.capacity(level));
     }
-    @Test void cadenceImprovesAndCannotOverflowOrCreateABurst(){
-        assertEquals(2400,MercenaryWolfBalance.interval(1));
-        assertTrue(MercenaryWolfBalance.interval(2)<2400);
-        int previous=2400;
+    @Test void approvedCadenceImprovesFromThirtySecondsWithTwentySecondFloor(){
+        assertEquals(600,MercenaryWolfBalance.interval(1));
+        assertTrue(MercenaryWolfBalance.interval(2)<600);
+        int previous=600;
         for(int level=1;level<=65536;level++){
             int interval=MercenaryWolfBalance.interval(level);
             assertTrue(interval>=400&&interval<=previous);previous=interval;
         }
         assertEquals(400,MercenaryWolfBalance.interval(Integer.MAX_VALUE));
-        assertEquals(2400,MercenaryWolfBalance.interval(Integer.MIN_VALUE));
+        assertEquals(600,MercenaryWolfBalance.interval(Integer.MIN_VALUE));
         assertEquals(0,MercenaryWolfBalance.remaining(10,10,25));
         assertEquals(10,MercenaryWolfBalance.remaining(20,10,25));
         assertEquals(MercenaryWolfBalance.interval(25)-10,MercenaryWolfBalance.remaining(2400,10,25));
     }
-    @Test void scaledCapacityCountsUnloadedWolvesAcrossReloadAndNewRunsReset()throws Exception{
+    @Test void capacityCountsUnloadedWolvesAcrossReloadAndNewRunsReset()throws Exception{
         var data=empty();var bond=bond(merc());progress(data,bond,10);
         var ids=new ArrayList<UUID>();
-        for(int i=0;i<9;i++){var id=UUID.randomUUID();ids.add(id);assertTrue(MercenaryWolves.remember(data,bond,id));}
+        for(int i=0;i<20;i++){var id=UUID.randomUUID();ids.add(id);assertTrue(MercenaryWolves.remember(data,bond,id));}
         data=reload(data);
-        assertEquals(9,MercenaryWolves.capacity(data,bond));
+        assertEquals(20,MercenaryWolves.capacity(data,bond));
         assertFalse(MercenaryWolves.remember(data,bond,UUID.randomUUID()));
         assertTrue(MercenaryWolves.remember(data,bond,ids.getLast()));
         MercenaryWolves.died(data,bond,ids.getLast(),Entity.RemovalReason.UNLOADED_TO_CHUNK);
         assertFalse(MercenaryWolves.remember(data,bond,UUID.randomUUID()));
         MercenaryWolves.died(data,bond,ids.getLast(),Entity.RemovalReason.KILLED);
         assertTrue(MercenaryWolves.remember(data,bond,UUID.randomUUID()));
-        assertEquals(5,MercenaryWolves.capacity(data,new MercenaryWolves.Bond(43,bond.mercenary(),bond.hirer())));
+        assertEquals(20,MercenaryWolves.capacity(data,new MercenaryWolves.Bond(43,bond.mercenary(),bond.hirer())));
     }
-    @Test void existingWolvesAreNotDeletedByADowngradedCounterAndOtherPacksAreIndependent()throws Exception{
-        var data=empty();var bond=bond(merc());progress(data,bond,5);var last=UUID.randomUUID();
-        for(int i=0;i<6;i++)assertTrue(MercenaryWolves.remember(data,bond,UUID.randomUUID()));
-        assertTrue(MercenaryWolves.remember(data,bond,last));progress(data,bond,1);
-        assertTrue(MercenaryWolves.remember(data,bond,last));
+    @Test void legacyExcessIsPreservedAndOtherPacksAreIndependent()throws Exception{
+        var data=empty();var bond=bond(merc());progress(data,bond,50);var ids=new ArrayList<UUID>();
+        // Actual old-save shape: the previously approved level50 cap admitted29 identities.
+        for(int i=0;i<29;i++){var id=UUID.randomUUID();ids.add(id);data.recordUnique(42,MercenaryWolves.key(bond.mercenary()),id.toString());}
+        data=reload(data);progress(data,bond,1);
+        for(var id:ids)assertTrue(MercenaryWolves.remember(data,bond,id));
+        assertEquals(29,data.values(42,MercenaryWolves.key(bond.mercenary())).size());
         assertFalse(MercenaryWolves.remember(data,bond,UUID.randomUUID()));
-        assertEquals(5,MercenaryWolves.capacity(data,new MercenaryWolves.Bond(42,UUID.randomUUID(),bond.hirer())));
+        var other=new MercenaryWolves.Bond(42,UUID.randomUUID(),bond.hirer());
+        assertTrue(MercenaryWolves.remember(data,other,UUID.randomUUID()));
+        assertEquals(20,MercenaryWolves.capacity(data,other));
         data.setCount(42,MercenaryWolves.dismissed(bond.mercenary()),1);
-        assertFalse(MercenaryWolves.remember(reload(data),bond,last));
+        assertFalse(MercenaryWolves.remember(reload(data),bond,ids.getFirst()));
+    }
+    @Test void repeatedNativeTickIsIdempotentAndLongElapsedDoesNotCatchUp(){
+        var merc=merc();
+        assertTrue(merc.beginWolfTick());assertFalse(merc.beginWolfTick());
+        merc.tickCount+=10;assertTrue(merc.beginWolfTick());assertFalse(merc.beginWolfTick());
+        assertEquals(590,MercenaryWolfBalance.remaining(600,Integer.MAX_VALUE,1));
     }
     @Test void commandsReachWolvesBeyondFiveWithoutIncreasingPerDecisionWork(){
         var merc=merc();var roster=new ArrayList<String>();var wolves=new HashMap<UUID,Wolf>();
