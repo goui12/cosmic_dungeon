@@ -21,17 +21,17 @@ public final class MercenaryWolfGameTests {
         try{
             for(int i=0;i<3;i++)MercenarySkills.record(data,run,contract,MercenarySkill.WOLVES);
             helper.assertTrue(MercenarySkills.level(merc,MercenarySkill.WOLVES)==3
-                    &&MercenaryWolves.capacity(data,bond)==6,Component.literal("Three successes unlock the sixth slot"));
-            for(int i=0;i<6;i++)helper.assertTrue(MercenaryWolves.remember(data,bond,UUID.randomUUID()),
-                    Component.literal("Scaled roster admits all six identities"));
-            helper.assertTrue(!MercenaryWolves.remember(data,bond,UUID.randomUUID()),Component.literal("Seventh slot still locked"));
+                    &&MercenaryWolves.capacity(data,bond)==20,Component.literal("Skill progress never raises the twenty-dog admission limit"));
+            for(int i=0;i<20;i++)helper.assertTrue(MercenaryWolves.remember(data,bond,UUID.randomUUID()),
+                    Component.literal("Scaled roster admits all twenty identities"));
+            helper.assertTrue(!MercenaryWolves.remember(data,bond,UUID.randomUUID()),Component.literal("Twenty-first new identity rejected"));
             merc.die(merc.damageSources().generic());merc.resumeAfterRest();
-            helper.assertTrue(MercenaryWolves.capacity(data,bond)==6,Component.literal("Revival keeps earned capacity"));
-            merc.wolfTicks(2400);
+            helper.assertTrue(MercenaryWolves.capacity(data,bond)==20,Component.literal("Revival retains roster under the fixed admission cap"));
+            merc.wolfTicks(600);
             merc.wolfTicks(MercenaryWolfBalance.remaining(merc.wolfTicks(),10,MercenarySkills.level(merc,MercenarySkill.WOLVES)));
-            helper.assertTrue(merc.wolfTicks()<2390,Component.literal("Existing summon timer adopts the shorter interval"));
-            helper.assertTrue(MercenaryWolves.capacity(data,new MercenaryWolves.Bond(runId+1,contract.id(),contract.hirer()))==5,
-                    Component.literal("New run starts with baseline pack"));
+            helper.assertTrue(merc.wolfTicks()<590,Component.literal("Existing summon timer adopts the shorter interval"));
+            helper.assertTrue(MercenaryWolves.capacity(data,new MercenaryWolves.Bond(runId+1,contract.id(),contract.hirer()))==20,
+                    Component.literal("New run starts with the same twenty-dog limit"));
             helper.succeed();
         }finally{data.clearRun(runId);data.clearRun(runId+1);}
     }

@@ -338,13 +338,13 @@ public final class HelpMenuContent {
                     .append(key("Feed Pack", "bogatyr_feed_pack")).append(". Hover to inspect; guide links do not execute actions.")),
             HelpBlock.tip("Active-skill defaults: Alt+1 Patrol, Alt+2 Stay, Alt+3 Feed Pack. Rebind or unbind in Options > Controls > Key Binds > Cosmic Dungeon; gray skill hints always show your current binding."),
             HelpBlock.tip("Shortcuts work in the world or your inventory, once per press. Chat, other menus, carried items and dragging block them. Resolve duplicate skill/native chords in Controls; different modifiers use distinct chords even if native Controls highlights the same base key."),
-            HelpBlock.bullet("Patrol is the default: wolves follow normally and defend themselves and their master against new attacks."),
+            HelpBlock.bullet("Patrol is the default: wolves follow, defend themselves and their master, and assist against hostile monsters their master successfully attacks."),
             HelpBlock.bullet("Stay calls wolves back to sit within 5 blocks. Each holds its settled place even when you move away and ignores threats."),
             HelpBlock.tip("Choose Patrol to stand the pack up. Stay clears earlier fights; repeated Stay clicks do not move settled wolves."),
             HelpBlock.bullet("Feed Pack spends up to 10 actual items from your inventory: bones/rotten flesh first, then raw meat, then other meat by player food value. Injured wolves are healed first; remaining food goes to healthy adult pairs within 8 blocks of each other."),
             HelpBlock.bullet("Bones only act as food through Feed Pack. Ordinary bones, taming, and meat feeding are unchanged. Pups, breeding cooldowns, individually seated Patrol dogs, and adults without a nearby mate do not spend breeding food."),
             HelpBlock.bullet("In Stay, feeding allows temporary mating movement. Wolves return to their original held places after birth or a failed attempt (30 seconds at default settings). Saves/reloads cancel unfinished attempts safely."),
-            HelpBlock.bullet("Allies cannot hurt or sit your wolves, but can feed and breed them. Mercenary Bogatyr packs use their own progression and limits."),
+            HelpBlock.bullet("Allies cannot hurt or sit your wolves, but can feed and breed them. Hired Bogatyrs admit at most 20 dogs, starting at one every 30 active seconds. Their existing skill progression reduces that interval to a 20-second minimum; player packs remain uncapped."),
             HelpBlock.tip("Active packs survive saves and reconnects. Completion, forfeit or reset ends the pack; old archives cannot be recalled.")));
 
 

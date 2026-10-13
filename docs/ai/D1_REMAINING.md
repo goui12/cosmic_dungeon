@@ -1,16 +1,19 @@
 # Active FixSet, 2026-10-13
 
-F1 inventory/class-sync and potion lists plus F2 Ready styling/frozen sharing are
-the current implementation. [F1 report](tasks/FIXSET_F1_20261013.md);
-[F2 scope, validation and manual checks](tasks/FIXSET_F2_20261013.md).
-The first Alpha milestone is 1.8.6-alpha.1; exact source/CI/publication status and
-returned file IDs are established by the FixSet controller receipt.
-Four later cards: F3 wolves/Patrol, F4 development spawners/startup/names + Alpha,
+F1 inventory/class-sync and potion lists, F2 Ready/frozen sharing, and F3 wolf
+admission/mercenary bounds/Patrol assistance are the current implementation.
+[F1 report](tasks/FIXSET_F1_20261013.md); [F2 report](tasks/FIXSET_F2_20261013.md);
+[F3 evidence, limits and manual checks](tasks/FIXSET_F3_20261013.md).
+F1/F2 Alpha1.8.6-alpha.1 is published. F3 is a source checkpoint, with release
+scheduled after F4; exact source/CI/review status lives in the controller receipt.
+Three cards remain: F4 development spawners/startup/names + Alpha,
 F5 ammunition/skeleton bows, F6 loot/rewards/integration + Beta.
 All current recommendations/Codex dispositions: [active ledger](tasks/BATCH_1_7_20_REVIEW_NOTES_20261012.md).
-Licensed visual/co-op acceptance remains TESTING. Alpha requires no server delivery.
-The earlier Batch25 Beta was published but TEST delivery remains separately pending
-in series-1.7; historical prose below does not establish deployment.
+The reported immediate roughly1000-wolf event is not reproduced from available logs.
+The admission fix and repeated-event/count regressions do not establish its root cause;
+actual saved-world reproduction remains TESTING alongside licensed visual/co-op checks.
+Earlier Batch25 Beta TEST delivery remains separately pending in series-1.7.
+F3 has no publication or deployment; historical prose below does not establish either.
 
 ---
 

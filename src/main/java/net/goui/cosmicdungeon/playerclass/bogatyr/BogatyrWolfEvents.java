@@ -136,7 +136,9 @@ public final class BogatyrWolfEvents {
         }
     }
     @SubscribeEvent(priority=EventPriority.HIGHEST) public static void join(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event){
-        if(event.getEntity() instanceof Wolf wolf&&event.getLevel() instanceof ServerLevel&&!BogatyrRunLifecycle.admit(wolf))
+        if(event.getEntity() instanceof Wolf wolf&&event.getLevel() instanceof ServerLevel
+                &&(!BogatyrRunLifecycle.admit(wolf)
+                ||managed(wolf)&&!BogatyrIdentity.observe(wolf)))
             event.setCanceled(true);
     }
     public static void added(Wolf wolf){
