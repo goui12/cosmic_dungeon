@@ -43,6 +43,10 @@ public final class MercenaryWolves {
     }
     static Bond bond(Wolf wolf){return wolf.getPersistentData().read(MARKER,Bond.CODEC)
             .filter(b->b.run()>0&&!b.mercenary().equals(b.hirer())).orElse(null);}
+    public static long diagnosticRun(Wolf wolf){return wolf.getPersistentData().getCompoundOrEmpty(MARKER).getLongOr("run",0);}
+    public static String diagnosticBond(Wolf wolf){
+        var bond=bond(wolf);return bond==null?"none":"run="+bond.run()+",hire="+bond.mercenary()+",hirer="+bond.hirer();
+    }
     static void mark(Wolf wolf,Bond bond){wolf.getPersistentData().store(MARKER,Bond.CODEC,bond);}
     static boolean enabled(MercenaryContract contract){return contract!=null&&"bogatyr".equals(contract.classId());}
     static int loadCooldown(ValueInput input){
@@ -108,6 +112,7 @@ public final class MercenaryWolves {
         if(location==null)return;
         wolf.setPos(location);prepare(wolf,entity,hirer);
         if(!remember(data,bond,wolf.getUUID()))return;
+        net.goui.cosmicdungeon.playerclass.bogatyr.WolfSpawnDiagnostics.summon(wolf);
         boolean added=false;
         try{added=level.addFreshEntity(wolf);}
         finally{if(!added)data.removeUnique(bond.run(),key(bond.mercenary()),wolf.getUUID().toString());}
@@ -158,6 +163,7 @@ public final class MercenaryWolves {
         if(!(event.getLevel() instanceof ServerLevel level)||!(event.getEntity() instanceof Wolf wolf)||!managed(wolf))return;
         var bond=bond(wolf);
         if(!admitted(wolf,level,bond)||!remember(D1RunData.get(level.getServer()),bond,wolf.getUUID())){
+            net.goui.cosmicdungeon.playerclass.bogatyr.WolfSpawnDiagnostics.rejectedMercenary(wolf);
             event.setCanceled(true);wolf.discard();
         }
     }

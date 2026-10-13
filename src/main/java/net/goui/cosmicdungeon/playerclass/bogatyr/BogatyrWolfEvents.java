@@ -50,6 +50,7 @@ public final class BogatyrWolfEvents {
         wolf.tame(player);
         wolf.getPersistentData().putString(OWNER, player.getUUID().toString());
         wolf.setOrderedToSit(false); wolf.setInSittingPose(false); wolf.setTarget(null); wolf.stopBeingAngry();
+        WolfSpawnDiagnostics.egg(wolf);
         // The existing onAddedToLevel path registers the actual successful in-instance spawn.
     }
     private static UUID ownerId(Wolf wolf){
@@ -136,10 +137,15 @@ public final class BogatyrWolfEvents {
         }
     }
     @SubscribeEvent(priority=EventPriority.HIGHEST) public static void join(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event){
-        if(event.getEntity() instanceof Wolf wolf&&event.getLevel() instanceof ServerLevel
-                &&(!BogatyrRunLifecycle.admit(wolf)
-                ||managed(wolf)&&!BogatyrIdentity.observe(wolf)))
-            event.setCanceled(true);
+        if(event.getEntity() instanceof Wolf wolf&&event.getLevel() instanceof ServerLevel){
+            WolfSpawnDiagnostics.joining(event,wolf);
+            long start=net.goui.cosmicdungeon.dungeon.DungeonStartupTiming.start();
+            try{
+                if(!BogatyrRunLifecycle.admit(wolf)||managed(wolf)&&!BogatyrIdentity.observe(wolf))
+                    event.setCanceled(true);
+            }finally{net.goui.cosmicdungeon.dungeon.DungeonStartupTiming.record(
+                    net.goui.cosmicdungeon.dungeon.DungeonStartupTiming.Phase.WOLF_ADMISSION,start,1);}
+        }
     }
     public static void added(Wolf wolf){
         if(net.goui.cosmicdungeon.mercenary.MercenaryWolves.managed(wolf)
@@ -172,6 +178,7 @@ public final class BogatyrWolfEvents {
         child.getPersistentData().putLong(RUN,run.runId());
         child.getPersistentData().putString(OWNER,owner.toString());
         tune(child);child.setHealth(child.getMaxHealth());
+        WolfSpawnDiagnostics.birth(child);
     }
     // TODO(D26-D28, D2+): Bogatyr Items/Armor 1EBc7RDMA5Sm8TQ1uEG4kkPeiFRHBwOygAW_WLtGiUjg:
     // D2 T1 Hidebound wolf armor; T2 Brittle Scapula 13% temporary recruitment and Frenzy.

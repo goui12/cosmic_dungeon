@@ -26,14 +26,22 @@ final class MercenaryIdentityTest {
         assertEquals("Susanna", MercenaryIdentity.name(new UUID(0, 99)));
         assertNotNull(MercenaryIdentity.name(new UUID(Long.MIN_VALUE, Long.MAX_VALUE)));
     }
-    @Test void legacyContractRoundtripPreservesIdentityWithoutAdditionalFields() {
+    @Test void legacyContractRoundtripFreezesLegacyPresentationAndUnknownFields() {
         var hire = contract();
         var old = new CompoundTag();
         old.putString("id", ID.toString()); old.putString("hirer", hire.hirer().toString());
         old.putString("class", hire.classId()); old.putInt("slot", hire.slot()); old.putLong("fee", hire.fee());
         var loaded = MercenaryContract.CODEC.parse(NbtOps.INSTANCE, old).getOrThrow();
-        assertEquals(hire, loaded); assertEquals(hire.name(), loaded.name());
-        assertEquals(old, MercenaryContract.CODEC.encodeStart(NbtOps.INSTANCE, loaded).getOrThrow());
+        assertEquals(hire.id(),loaded.id());assertEquals(hire.hirer(),loaded.hirer());
+        assertEquals(MercenaryIdentity.name(ID),loaded.name());
+        var frozen=old.copy();frozen.putString("display_name",loaded.name());
+        assertEquals(frozen,MercenaryContract.CODEC.encodeStart(NbtOps.INSTANCE,loaded).getOrThrow());
+        old.putString("future_contract_field","retained");old.putString("display_name","Savedname");
+        var named=MercenaryContract.CODEC.parse(NbtOps.INSTANCE,old).getOrThrow();
+        assertEquals("Savedname",named.name());
+        assertEquals(old,MercenaryContract.CODEC.encodeStart(NbtOps.INSTANCE,named).getOrThrow());
+        named.unknown().putString("future_contract_field","attempted mutation");
+        assertEquals(old,MercenaryContract.CODEC.encodeStart(NbtOps.INSTANCE,named).getOrThrow());
         assertEquals(hire.name(), new MercenaryContract(ID, new UUID(2, 3), "bogatyr", 3, 777).name());
     }
     @Test void spawnAndLegacyEntityLoadUseTheSameShortName() {

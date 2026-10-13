@@ -22,7 +22,7 @@ A crafter uses their own materials first. If they cannot afford the recipe alone
 
 Stay near the party for combat rewards: qualifying Cosmic Spawner mob rewards are shared with eligible active members within 60 blocks in the same instance. A dead member's death position is used before respawn; disconnected players receive no share. After 15 minutes without observed activity, a member is marked AFK and the leader receives a kick prompt. The leader may use `/dungeoneer kick <player>`.
 
-Mercenaries follow their hirer and use their own class-specific combat/skill rules. They have separate run-based progression, do not drop their equipment on death, and may catch up when stuck or separated. Player class controls do not command every mercenary skill. Check party hover for the actual skill level and availability.
+Mercenaries follow their hirer and use their own class-specific combat/skill rules. They have separate run-based progression, do not drop their equipment on death, and may catch up when stuck or separated. Player class controls do not command every mercenary skill. Check party hover for the actual skill level and availability. New hires draw from 80 distinct historical names: English, French, German-speaking, Italian, Asia, Africa, Russia and Mediterranean, with five male and five female names per pool. Names stay at most nine letters; existing hires keep their displayed names, and saved names stay stable through respawn and reload.
 
 ## Gear, ownership, and trading
 

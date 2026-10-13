@@ -1,19 +1,17 @@
 # Active FixSet, 2026-10-13
 
-F1 inventory/class-sync and potion lists, F2 Ready/frozen sharing, and F3 wolf
-admission/mercenary bounds/Patrol assistance are the current implementation.
-[F1 report](tasks/FIXSET_F1_20261013.md); [F2 report](tasks/FIXSET_F2_20261013.md);
-[F3 evidence, limits and manual checks](tasks/FIXSET_F3_20261013.md).
-F1/F2 Alpha1.8.6-alpha.1 is published. F3 is a source checkpoint, with release
-scheduled after F4; exact source/CI/review status lives in the controller receipt.
-Three cards remain: F4 development spawners/startup/names + Alpha,
-F5 ammunition/skeleton bows, F6 loot/rewards/integration + Beta.
+F1 inventory/potions, F2 Ready/frozen sharing, F3 wolves/Patrol, and F4 development
+spawners/startup/names with bounded wolf incident logging are implemented.
+[F4 behavior, compatibility and manual checks](tasks/FIXSET_F4_20261013.md).
+The second Alpha milestone is 1.8.7-alpha.1. Exact source, CI, review and returned
+publication IDs are established by the F4 controller receipt, not this source note.
+Two cards remain: F5 ammunition/skeleton bows; F6 loot/rewards/integration + Beta.
+Stop after F4. Later cards are not authorized by this checkpoint.
 All current recommendations/Codex dispositions: [active ledger](tasks/BATCH_1_7_20_REVIEW_NOTES_20261012.md).
-The reported immediate roughly1000-wolf event is not reproduced from available logs.
-The admission fix and repeated-event/count regressions do not establish its root cause;
-actual saved-world reproduction remains TESTING alongside licensed visual/co-op checks.
-Earlier Batch25 Beta TEST delivery remains separately pending in series-1.7.
-F3 has no publication or deployment; historical prose below does not establish either.
+The immediate player wolf flood remains unreproduced; new logs are enabled for the
+next incident. Real world/GUI/co-op acceptance remains TESTING. Alpha requires no
+server delivery. Earlier Batch25 Beta TEST delivery remains separately pending
+in series-1.7; historical prose below does not establish that delivery.
 
 ---
 

@@ -149,6 +149,7 @@ public final class ClassSelectorEntryService {
         }
 
         if (!validRoster.getAsBoolean()) return false;
+        try(var startupTiming=new net.goui.cosmicdungeon.dungeon.DungeonStartupTiming("party="+ordered.size()+" hires="+hires.size())){
         DungeonLifecycleService.InstancePreparation preparationResult =
                 DungeonLifecycleService.prepareRunInstance(server, dungeonLevel.dimension(), ordered, difficulty);
         if (preparationResult instanceof DungeonLifecycleService.PreparationError preparationError) {
@@ -159,6 +160,7 @@ public final class ClassSelectorEntryService {
             return false;
         }
         DungeonLifecycleService.PreparedInstance prepared = (DungeonLifecycleService.PreparedInstance) preparationResult;
+        startupTiming.run(prepared.runId());
         try {
             if (!validRoster.getAsBoolean()) return false;
             List<TeleportTarget> teleportTargets = new ArrayList<>(max);
@@ -212,7 +214,9 @@ public final class ClassSelectorEntryService {
 
             if (!validRoster.getAsBoolean()) return false;
             finalParty.forEach(ServerPlayer::closeContainer);
-            String err = DungeonLifecycleService.startRun(
+            long registrationStart=net.goui.cosmicdungeon.dungeon.DungeonStartupTiming.start();
+            String err;
+            try{err = DungeonLifecycleService.startRun(
                     server,
                     selectorLevel.dimension(),
                     selectorPos.asLong(),
@@ -221,6 +225,8 @@ public final class ClassSelectorEntryService {
                     finalParty
             );
 
+            }finally{net.goui.cosmicdungeon.dungeon.DungeonStartupTiming.record(
+                    net.goui.cosmicdungeon.dungeon.DungeonStartupTiming.Phase.RUN_REGISTRATION,registrationStart,finalParty.size());}
             if (err != null) {
                 rollbackRegistered(server, ordered);
                 Component msg = Component.literal(err).withStyle(ChatFormatting.RED);
@@ -230,10 +236,14 @@ public final class ClassSelectorEntryService {
                 return false;
             }
 
+            long mercenaryStart=net.goui.cosmicdungeon.dungeon.DungeonStartupTiming.start();
+            int mercenaryAttempts=0;
+            try{
             if(!net.goui.cosmicdungeon.mercenary.MercenaryEntry.reserve(server,prepared.runId(),hires)){
                 DungeonLifecycleService.abortActiveRunForPlayer(finalParty.getFirst());return false;
             }
             for(var hire:hires){
+                mercenaryAttempts++;
                 var target=teleportTargets.get(hire.slot()-1);
                 if(target.level()!=dungeonLevel||!net.goui.cosmicdungeon.mercenary.MercenaryEntry.spawn(
                         dungeonLevel,prepared.runId(),hire,target.destinationPos(),success.starterChests())){
@@ -241,7 +251,13 @@ public final class ClassSelectorEntryService {
                     DungeonLifecycleService.abortActiveRunForPlayer(finalParty.getFirst());return false;
                 }
             }
+            }finally{net.goui.cosmicdungeon.dungeon.DungeonStartupTiming.record(
+                    net.goui.cosmicdungeon.dungeon.DungeonStartupTiming.Phase.MERCENARY_ADMISSION,mercenaryStart,mercenaryAttempts);}
+            long teleportStart=net.goui.cosmicdungeon.dungeon.DungeonStartupTiming.start();
+            int teleportAttempts=0;
+            try{
             for (int slotIndex = 0; slotIndex < finalParty.size(); slotIndex++) {
+                teleportAttempts++;
                 ServerPlayer p = finalParty.get(slotIndex);
                 TeleportTarget tp = teleportTargets.get(slotIndex);
                 if (!p.connection.isAcceptingMessages() || !p.isAlive() || tp == null || tp.level() == null || tp.destinationPos() == null) {
@@ -273,6 +289,8 @@ public final class ClassSelectorEntryService {
                 DungeonLifecycleService.setPlayerRespawnTo(p, tp.level(), destination, p.getYRot(), p.getXRot());
             }
 
+            }finally{net.goui.cosmicdungeon.dungeon.DungeonStartupTiming.record(
+                    net.goui.cosmicdungeon.dungeon.DungeonStartupTiming.Phase.TELEPORT,teleportStart,teleportAttempts);}
             var run = net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData.get(server)
                     .findRunForPlayer(finalParty.getFirst().getUUID()).orElseThrow();
             if (!DungeonLifecycleService.completeStartup(server, run.runId())) {
@@ -280,11 +298,13 @@ public final class ClassSelectorEntryService {
                 return false;
             }
             finalParty.forEach(net.goui.cosmicdungeon.dungeon.DungeonForfeitService::notifyEntry);
+            startupTiming.success();
             return true;
         } finally {
             // A failed paste or changed roster owns no inventory; retire its unused copy immediately.
             // Once registered, the durable run and existing handoff recovery own cleanup instead.
             net.goui.cosmicdungeon.dungeon.DungeonInstanceWorlds.get(server).discardPreparation(prepared.runId());
+        }
         }
     }
 

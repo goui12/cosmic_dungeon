@@ -21,9 +21,9 @@ public final class BogatyrIdentity {
         var owner=BogatyrCompanions.owner(wolf);if(owner==null)return false;
         UUID id=id(wolf);var data=BogatyrCompanionData.get(level.getServer());
         var old=data.find(id).orElse(null);String dimension=level.dimension().location().toString();
-        if(data.identityHeld(dimension,wolf.getUUID()))return false;
+        if(data.identityHeld(dimension,wolf.getUUID())){WolfSpawnDiagnostics.rejectedIdentity(wolf);return false;}
         if(wolf.getPersistentData().contains(WolfIdentity.KEY)&&WolfIdentity.explicit(wolf.getPersistentData()).isEmpty()){
-            data.identityHold(dimension,wolf.getUUID());return false;
+            data.identityHold(dimension,wolf.getUUID());WolfSpawnDiagnostics.rejectedIdentity(wolf);return false;
         }
         var travel=TRAVEL.get(id);
         boolean moved=old!=null&&travel!=null&&travel.owner().equals(owner)
@@ -39,8 +39,7 @@ public final class BogatyrIdentity {
                 &&wolf.getPersistentData().getStringOr(WolfArchive.MARKER,"").equals(archive.transaction().toString());
         if(!WolfIdentity.matches(old,owner,wolf.getUUID(),dimension,moved,delivered)){
             data.identityHold(dimension,wolf.getUUID());
-            com.mojang.logging.LogUtils.getLogger().error(
-                    "Companion identity conflict held: bond={} entity={} dimension={}",id,wolf.getUUID(),dimension);
+            WolfSpawnDiagnostics.rejectedIdentity(wolf);
             return false;
         }
         // Legacy identity remains unchanged. New bonds receive fresh IDs before enrollment.
