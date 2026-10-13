@@ -27,12 +27,11 @@ public final class PotionPaletteComponent {
         var potion = net.minecraft.core.registries.BuiltInRegistries.POTION.get(net.minecraft.resources.ResourceLocation.parse(parts[2]));
         return potion.isEmpty() ? key : net.minecraft.world.item.alchemy.PotionContents.createItemStack(item, potion.orElseThrow()).getHoverName().getString();
     }
-    public static List<Component> details(Entry entry, PotionPaletteModel.Variant selected, boolean pending) {
+    public static List<Component> details(Entry entry, boolean pending) {
         var lines = new ArrayList<>(Screen.getTooltipFromItem(Minecraft.getInstance(), entry.output()));
         add(lines, PotionPaletteModel.source(entry), ChatFormatting.GRAY);
         add(lines, "Craftable: own " + entry.own() + " | with eligible group " + entry.shared(), ChatFormatting.GRAY);
-        if (PotionPaletteModel.variant(entry.targetId()) != selected)
-            add(lines, "This effect has no " + selected.description.toLowerCase(Locale.ROOT) + " variant; showing its normal recipe.", ChatFormatting.GRAY);
+        add(lines, PotionPaletteModel.variantLabel(entry), ChatFormatting.AQUA);
         if (entry.materials().isEmpty()) {
             add(lines, "No affordable route: missing input, ingredients or fuel. Costs are unavailable.", ChatFormatting.GRAY);
         } else {
@@ -52,31 +51,42 @@ public final class PotionPaletteComponent {
     }
     public static void draw(GuiGraphics g, PotionPaletteLayout layout, PotionPaletteState state, int mouseX, int mouseY) {
         var font = Minecraft.getInstance().font; var panel = layout.panel();
-        g.nextStratum(); fill(g, panel, 0xF017202B);
+        g.nextStratum(); fill(g, panel, 0xFF17202B);
         g.fill(panel.x(), panel.y(), panel.right(), panel.y() + 1, 0xFF8095A9);
-        g.drawString(font, "Craft", panel.x() + 3, panel.y() + 4, 0xFFF3F5F8, false);
-        for (int i = 0; i < 3; i++) {
-            var variant = PotionPaletteModel.Variant.values()[i]; var box = layout.variants().get(i);
-            fill(g, box, state.variant() == variant ? 0xFF426A86 : 0xFF303B48);
-            g.drawCenteredString(font, variant.label, box.x() + box.width() / 2, box.y() + 4, 0xFFFFFFFF);
-            if (box.contains(mouseX, mouseY)) g.setTooltipForNextFrame(font, Component.literal(variant.description), mouseX, mouseY);
-        }
+        g.drawString(font, font.plainSubstrByWidth("Potions", Math.max(0, panel.width() - 6)), panel.x() + 3, panel.y() + 4, 0xFFF3F5F8, false);
         var fuel = layout.fuel(); fill(g, fuel, 0xFF10151C);
         int charges = state.view().charges(), capacity = Math.max(1, state.view().perPowder());
-        int height = Math.clamp(charges * Math.max(0, fuel.height() - 2) / capacity, 0, Math.max(0, fuel.height() - 2));
-        g.fill(fuel.x() + 1, fuel.bottom() - 1 - height, fuel.right() - 1, fuel.bottom() - 1, 0xFFFFB238);
+        int length = Math.clamp(charges * Math.max(0, fuel.width() - 2) / capacity, 0, Math.max(0, fuel.width() - 2));
+        g.fill(fuel.x() + 1, fuel.y() + 1, fuel.x() + 1 + length, fuel.bottom() - 1, 0xFFFFB238);
         if (fuel.contains(mouseX, mouseY))
             g.setTooltipForNextFrame(font, Component.literal("Brewing fuel: " + charges + " / " + capacity + " remaining charges. One blaze powder supplies 20 brewing steps; unused charges are preserved."), mouseX, mouseY);
         var entries = state.entries();
-        for (int i = 0; i < entries.size(); i++) {
-            var entry = entries.get(i); var box = layout.tiles().get(i);
-            fill(g, box, PotionPaletteModel.background(entry)); g.renderItem(entry.output(), box.x() + 1, box.y() + 1);
+        for (int i = 0; i < layout.tiles().size(); i++) {
+            var entry = entries.get(layout.first() + i); var box = layout.tiles().get(i);
+            var output = entry.output();
+            fill(g, box, PotionPaletteModel.background(entry));
+            g.enableScissor(box.x(), box.y(), box.right(), box.bottom());
+            boolean narrow = box.width() < 110;
+            g.renderItem(output, box.x() + 2, box.y() + 2);
             int count = PotionPaletteModel.count(entry); String text = count > 99 ? "99+" : Integer.toString(count);
-            g.drawString(font, text, box.right() - font.width(text), box.bottom() - 8, PotionPaletteModel.color(entry), true);
-            if (box.contains(mouseX, mouseY))
-                g.setTooltipForNextFrame(font, details(entry, state.variant(), state.pending()), entry.output().getTooltipImage(), entry.output(), mouseX, mouseY);
+            g.drawString(font, text, box.right() - font.width(text) - 2, box.y() + 4, PotionPaletteModel.color(entry), true);
+            int textX = box.x() + (narrow ? 2 : 22), textY = box.y() + (narrow ? 21 : 3);
+            int textWidth = Math.max(1, box.right() - textX - (narrow ? 2 : 24));
+            var lines = font.split(output.getHoverName(), textWidth);
+            int limit = Math.max(1, (box.bottom() - 13 - textY) / font.lineHeight);
+            for (int line = 0; line < Math.min(limit, lines.size()); line++)
+                g.drawString(font, lines.get(line), textX, textY + line * font.lineHeight, 0xFFFFFFFF, true);
+            g.drawString(font, font.plainSubstrByWidth(PotionPaletteModel.variantLabel(entry), Math.max(0, box.width() - 4)),
+                    box.x() + 2, box.bottom() - 11, 0xFFFFFFFF, true);
+            g.disableScissor();
+            if (box.contains(mouseX, mouseY)) {
+                var tooltip = details(entry, state.pending());
+                if (state.view().run() == 0) tooltip.add(Component.literal("Recipes are shown for reference. Crafting becomes available in an active dungeon.").withStyle(ChatFormatting.YELLOW));
+                g.setTooltipForNextFrame(font, tooltip, output.getTooltipImage(), output, mouseX, mouseY);
+            }
         }
+        if (layout.maxFirst() > 0) { fill(g, layout.track(), 0xFF10151C); fill(g, layout.thumb(), 0xFF92A8BC); }
         if (entries.isEmpty() && panel.contains(mouseX, mouseY))
-            g.setTooltipForNextFrame(font, Component.literal("No eligible quote. Crafting requires a living Theurgist or Venefex in an active dungeon with available custody. Waiting for the server; nothing is reserved."), mouseX, mouseY);
+            g.setTooltipForNextFrame(font, Component.literal("Waiting for class recipes. Nothing is reserved."), mouseX, mouseY);
     }
 }

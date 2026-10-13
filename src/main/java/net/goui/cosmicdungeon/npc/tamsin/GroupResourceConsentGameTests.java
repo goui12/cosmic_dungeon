@@ -75,7 +75,9 @@ public final class GroupResourceConsentGameTests {
         try(var f=new Fixture(h,Long.MAX_VALUE-230)) {
             var key="resource_sharing_v1:"+f.subject.getUUID();
             f.check(!GroupResourceConsent.canContribute(f.viewer,f.subject,f.id),"Missing choice never authorizes a donor");
-            f.check(GroupResourceConsent.choose(f.subject,f.id,Long.toString(f.id),true)==null,"Personal YES accepted");
+            f.check(GroupResourceConsent.choose(f.subject,f.id,Long.toString(f.id),true)!=null,"Active UNKNOWN cannot opt in");
+            f.check(GroupResourceConsent.choice(f.data,f.id,f.subject.getUUID()).equals("UNKNOWN"),"Rejected opt-in writes nothing");
+            f.data.setValue(f.id,key,"YES"); // Existing persisted YES from pre-game entry.
             f.subject.setPos(f.viewer.position().add(500,0,0));
             f.check(GroupResourceConsent.canContribute(f.viewer,f.subject,f.id),"Same-run consenting donor works at any distance");
             var outside=f.level.getServer().getLevel(net.minecraft.world.level.Level.NETHER);
@@ -101,13 +103,15 @@ public final class GroupResourceConsentGameTests {
             f.data.setValue(f.id,"watson_outcome","success");
             f.check(!GroupResourceConsent.canContribute(f.viewer,f.subject,f.id),"Sealed run cannot donate");
             f.data.setValue(f.id,"watson_outcome","");
-            f.check(GroupResourceConsent.choose(f.subject,f.id,Long.toString(f.id),false)==null,"Personal NO accepted");
-            f.check(!GroupResourceConsent.canContribute(f.viewer,f.subject,f.id),"Opt-out revokes authorization immediately");
-            f.check(f.data.values(f.id,key).equals(List.of("NO")),"Only subject choice was written");
+            f.check(GroupResourceConsent.choose(f.subject,f.id,Long.toString(f.id),false)!=null,"Even current run/context cannot change locked YES");
+            f.check(f.data.values(f.id,key).equals(List.of("YES")),"Locked YES remains unchanged");
+            f.check(GroupResourceConsent.canContribute(f.viewer,f.subject,f.id),"Eligible frozen YES still authorizes");
+            f.data.setValue(f.id,key,"NO"); // Legacy persisted NO fixture, not a gameplay mutation.
+            f.check(!GroupResourceConsent.canContribute(f.viewer,f.subject,f.id),"Persisted NO never authorizes");
             f.viewer.containerMenu=new net.goui.cosmicdungeon.playerclass.api.ExtraInventoryMenu(51,f.viewer.getInventory());
             D1PartyService.action(f.viewer,new PartyPayloads.Action(-1,f.id,"resources_yes",Long.toString(f.id)));
             f.viewer.containerMenu=f.viewer.inventoryMenu;
-            f.check(GroupResourceConsent.choice(f.data,f.id,f.viewer.getUUID()).equals("YES"),"HUD packet route updates only sender");
+            f.check(GroupResourceConsent.choice(f.data,f.id,f.viewer.getUUID()).equals("UNKNOWN"),"Forged Extra-inventory packet cannot opt in during a run");
             f.check(GroupResourceConsent.choice(f.data,f.id,f.subject.getUUID()).equals("NO"),"Sender cannot toggle another member");
         }
         h.succeed();
@@ -124,9 +128,20 @@ public final class GroupResourceConsentGameTests {
             lobby.resourceSharing(f.subject.getUUID(),party.revision(),party.id().toString(),false);
             f.data.setValue(f.id,"future_existing_key","retain me");
             GroupResourceConsent.carryIntoRun(f.level.getServer(),party);
+            f.check(GroupResourceConsent.choice(f.data,f.id,f.viewer.getUUID()).equals("UNKNOWN"),"Assembly cannot initialize an active run");
+            lobby.begin(f.viewer.getUUID(),party.revision(),Map.of(f.viewer.getUUID(),"metalmancer",f.subject.getUUID(),"metalmancer"));
+            lobby.ready(f.viewer.getUUID(),party.revision());lobby.ready(f.subject.getUUID(),party.revision());
+            lobby.queue(f.viewer.getUUID(),party.revision());
+            f.check(lobby.resourceSharing(f.subject.getUUID(),party.revision(),party.id().toString(),true)!=null,"Queued forged current revision rejected");
+            lobby.startCountdown(party,0,0);f.check(lobby.prepare(party,0),"Entry snapshot is frozen");
+            GroupResourceConsent.carryIntoRun(f.level.getServer(),party);
             lobby.complete(party);
             f.check(GroupResourceConsent.choice(f.data,f.id,f.viewer.getUUID()).equals("YES"),"Entry carries leader YES");
             f.check(GroupResourceConsent.choice(f.data,f.id,f.subject.getUUID()).equals("NO"),"Entry carries member NO");
+            f.data.setValue(f.id,"resource_sharing_v1:"+f.subject.getUUID(),"FUTURE_VALUE");
+            GroupResourceConsent.carryIntoRun(f.level.getServer(),party);
+            f.check(f.data.values(f.id,"resource_sharing_v1:"+f.subject.getUUID()).equals(List.of("FUTURE_VALUE")),"Replay preserves existing unknown saved choice");
+            f.check(!GroupResourceConsent.canContribute(f.viewer,f.subject,f.id),"Unknown saved choice remains fail closed");
             try {
                 var field=D1RunData.class.getDeclaredField("CODEC");field.setAccessible(true);var codec=(Codec<D1RunData>)field.get(null);
                 var encoded=codec.encodeStart(JsonOps.INSTANCE,f.data).getOrThrow();

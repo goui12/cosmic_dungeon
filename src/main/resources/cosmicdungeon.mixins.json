@@ -17,13 +17,15 @@
     "client.ClientHooksTooltipMixin",
     "client.InventoryCraftingSlotsMixin",
     "client.ClassInventoryScreenMixin",
-    "client.InventoryDragAccess"
+    "client.InventoryDragAccess",
+    "client.PotionInventoryBoundsMixin"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "mixins": [
     "DungeonServerAccess",
+    "DungeonStartupChunkMixin",
     "BaseSpawnerAccess",
     "CosmicSpawnerAwarenessMixin",
     "CosmicSpawnerEntityMixin",
@@ -79,6 +81,7 @@
     "InnFluidMixin",
     "InnFireMixin",
     "CraftingLookupMixin",
+    "LootSmeltingMixin",
     "CraftingPreviewMixin",
     "CraftingTakeMixin",
     "CraftingClickMixin",
@@ -98,6 +101,8 @@
     "ResurrectionReceiptMixin",
     "BogatyrLoveMixin",
     "MobPersistenceAccess",
-    "SpawnerBreakAccess"
+    "SpawnerBreakAccess",
+    "BowRocketMixin",
+    "AmmoDrawMixin"
   ]
 }

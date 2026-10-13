@@ -22,13 +22,15 @@ import net.neoforged.neoforge.client.event.*;
 public final class D1PartyHud {
     private static PartyPayloads.View view;
     private static Screen inventory;
-    private static Button ready, leave, join, revive, resources;
+    private static ReadyActionButton ready;
+    private static Button leave, join, revive, resources;
+    private static final ReadyPendingState READY_PENDING = new ReadyPendingState();
     private static String promptedContext = "";
     private static final PanelScroll lobbyScroll = new PanelScroll();
     private D1PartyHud() {}
     public static void receive(PartyPayloads.View snapshot) {
         if (snapshot.containerId() != -1) return;
-        view = snapshot;
+        view = snapshot; READY_PENDING.acknowledge();
         updateControls();
     }
     static PartyPayloads.View currentView() { return view; }
@@ -44,7 +46,7 @@ public final class D1PartyHud {
     public static PartyPayloads.Mercenary resurrectionOffer(){
         return view==null?null:view.mercenaries().stream().filter(row->row.resurrection().offered()).findFirst().orElse(null);
     }
-    private static void clear() { PartyInspectionHover.clear(); lobbyScroll.reset(); PartyHealthHud.reset(); view = null; inventory = null; ready = leave = join = revive = resources = null; promptedContext = ""; }
+    private static void clear() { PartyInspectionHover.clear(); lobbyScroll.reset(); PartyHealthHud.reset(); view = null; inventory = null; ready = null; leave = join = revive = resources = null; READY_PENDING.acknowledge(); promptedContext = ""; }
     @SubscribeEvent public static void login(ClientPlayerNetworkEvent.LoggingIn event) { clear(); }
     @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { clear(); }
     private static boolean inventory(Screen screen) {
@@ -93,10 +95,14 @@ public final class D1PartyHud {
         inventory = event.getScreen();
         PartyHealthHud.reset();
         lobbyScroll.reset();
-        ready = Button.builder(Component.literal("Ready"), button -> {
+        READY_PENDING.acknowledge();
+        ready = new ReadyActionButton(8, 8, 100, Component.literal("Ready"), true, button -> {
             var player = Minecraft.getInstance().player;
-            if (player != null) send(D1PartyPresentation.readiness(view, player.getGameProfile().name()).action());
-        }).bounds(8, 8, 100, 20).build();
+            if (player != null) {
+                READY_PENDING.begin(); button.active = false;
+                send(D1PartyPresentation.readiness(view, player.getGameProfile().name()).action());
+            }
+        });
         leave = Button.builder(Component.literal("Leave Group"), button -> send("leave")).bounds(8, 32, 100, 20).build();
         join = Button.builder(Component.literal("Join Group"), button -> send("accept")).bounds(8, 8, 100, 20).build();
         leave.setTooltip(Tooltip.create(Component.literal("Leave Group (leaders disband their group)")));
@@ -106,14 +112,15 @@ public final class D1PartyHud {
             ModNetwork.sendToServer(new PartyPayloads.Action(-1,hire.recovery().deadline(),"revive",hire.recovery().id()));
         }).bounds(8,inventory.height-26,160,20).build();
         resources = Button.builder(Component.literal("Resources"), button -> {
-            if (view != null && !view.sharing().context().isEmpty())
+            if (D1PartyPresentation.sharingMutable(view))
                 Minecraft.getInstance().setScreen(new GroupResourceConsentScreen(inventory, view.sharing().context()));
         }).bounds(8, 8, 100, 20).build();
         event.addListener(ready); event.addListener(leave); event.addListener(join); event.addListener(revive); event.addListener(resources);
         updateControls();
     }
     @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
-        if (inventory != Minecraft.getInstance().screen) { lobbyScroll.release(); PartyHealthHud.release(); inventory = null; ready = leave = join = revive = resources = null; }
+        READY_PENDING.tick();
+        if (inventory != Minecraft.getInstance().screen) { lobbyScroll.release(); PartyHealthHud.release(); inventory = null; ready = null; leave = join = revive = resources = null; READY_PENDING.acknowledge(); }
         else updateControls();
         PartyInspectionHover.tick();
         promptConsent();
@@ -150,14 +157,15 @@ public final class D1PartyHud {
         var control = D1PartyPresentation.readiness(view, mc.player == null ? null : mc.player.getGameProfile().name());
         ready.setMessage(Component.literal(control.label()));
         ready.setTooltip(Tooltip.create(Component.literal(control.label())));
-        ready.visible = lobby; ready.active = lobby && control.enabled() && !D1PartyPresentation.needsConsent(view);
+        ready.setReadyAction(control.action().equals("ready"));
+        ready.visible = lobby; ready.active = lobby && control.enabled() && !READY_PENDING.pending() && !D1PartyPresentation.needsConsent(view);
         leave.visible = lobby; leave.active = lobby && !view.state().phase().equals("PREPARING");
         join.visible = shown && !grouped && !view.invitation().token().isEmpty();
         join.active = join.visible && !view.invitation().accepted();
         for (Button button : List.of(ready, leave, join)) { button.setX(box.x()); button.setWidth(box.width()); }
         ready.setY(box.controlsY()); leave.setY(box.controlsY() + 24); join.setY(box.controlsY());
-        resources.visible = grouped && !view.sharing().context().isEmpty();
-        resources.active = resources.visible && !view.state().phase().equals("PREPARING");
+        resources.visible = grouped && D1PartyPresentation.sharingMutable(view);
+        resources.active = resources.visible;
         resources.setMessage(Component.literal("Resources: " + (resources.visible ? view.sharing().choice().equals("UNKNOWN") ? "Choose" : view.sharing().choice() : "")));
         resources.setTooltip(Tooltip.create(Component.literal("Change your YES/NO contribution choice")));
         resources.setX(box.x()); resources.setWidth(box.width());

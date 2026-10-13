@@ -7,19 +7,21 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 
-/**
- * Client-only hooks related to the player class system.
- * On login, asks the server for our current class + extra NBT,
- * which comes back as S2C_ClassSync and re-initializes Metalmancer HUD,
- * extra inventory, etc.
- */
+/** Rehydrate the current client player from the existing authoritative class sync. */
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID, value = Dist.CLIENT)
 public final class ClassClientEvents {
     private ClassClientEvents() {}
 
     @SubscribeEvent
     public static void onClientLoggingIn(ClientPlayerNetworkEvent.LoggingIn event) {
-        // Ask the server "what class am I + what's my extra inventory?"
+        ClassNet.requestClassSync();
+    }
+
+    @SubscribeEvent
+    public static void onClientClone(ClientPlayerNetworkEvent.Clone event) {
+        // Dimension travel and respawn replace LocalPlayer without copying its persistent class NBT.
+        // This hook runs after Minecraft.player is replaced, so the reply reaches the new instance.
+        // Do not copy stale client state or request again on every inventory frame.
         ClassNet.requestClassSync();
     }
 }

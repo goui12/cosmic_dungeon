@@ -1,5 +1,12 @@
 # Update 1.5.1 Notes
 
+## Later release assembly: FixSet F1-F6 Beta
+
+The six approved inventory, readiness, wolves, development-spawner, ammunition and
+loot/reward batches are assembled in [1.8.8-beta.1](1.8.8-beta.1.md).
+The [acceptance matrix](../ai/tasks/FIXSET_F6_20261013.md) distinguishes automated
+coverage from pending licensed gameplay. Historical entries below retain their context.
+
 ## Later release assembly: Set C Beta
 
 The inventory Skills, class resources, group consent, player Theurgist and run-only

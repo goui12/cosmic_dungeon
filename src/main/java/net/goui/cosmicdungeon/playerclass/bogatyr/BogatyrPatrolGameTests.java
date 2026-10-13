@@ -335,6 +335,66 @@ public final class BogatyrPatrolGameTests {
             helper.succeed();
         }
     }
+    private static void attack(BogatyrCommandGameTests.Fixture f,net.minecraft.server.level.ServerPlayer owner,Mob target){
+        owner.tickCount++;target.invulnerableTime=0;float health=target.getHealth();
+        owner.attack(target);
+        f.check(target.getHealth()<health&&owner.getLastHurtMob()==target,"Native master attack deals damage and records its target");
+    }
+    /** Native outgoing assist and constant-cost history rejection across identity/mode boundaries. */
+    private static void outgoingAssist(BogatyrCommandGameTests.Fixture f,Wolf wolf,Mob hostile){
+        var goal=wolf.targetSelector.getAvailableGoals().stream().map(WrappedGoal::getGoal)
+                .filter(g->g instanceof OwnerHurtTargetGoal).findFirst().orElseThrow();
+        BogatyrThreats.invalidate(f.p().getUUID());wolf.setTarget(null);
+        var probe=BogatyrWork.begin();try{
+            attack(f,f.p(),hostile);f.check(goal.canUse(),"Native owner-attack goal sees a fresh hostile attack");goal.start();
+            f.check(wolf.getTarget()==hostile,"Patrol assists the master's successful hostile attack");goal.stop();wolf.setTarget(null);
+
+            var neutral=enemy(f,EntityType.COW);attack(f,f.p(),neutral);
+            if(goal.canUse())goal.start();
+            wolf.setTarget(neutral);f.check(wolf.getTarget()==null,"Outgoing assist does not authorize passive animals");goal.stop();
+            var ally=f.wolf(1,0,-1,0);float allyHealth=ally.getHealth();f.p().tickCount++;f.p().attack(ally);
+            if(goal.canUse())goal.start();
+            wolf.setTarget(ally);f.check(ally.getHealth()==allyHealth&&wolf.getTarget()==null,
+                    "Friendly protection prevents master damage and outgoing assist against allied pets");goal.stop();
+            wolf.setTarget(f.current.get(1));f.check(wolf.getTarget()==null,"Other players remain protected");
+
+            var untouched=enemy(f,EntityType.SKELETON);untouched.setInvulnerable(true);f.p().tickCount++;
+            f.p().attack(untouched);wolf.setTarget(untouched);
+            f.check(wolf.getTarget()==null,"A failed master hit cannot authorize a new hostile target");untouched.setInvulnerable(false);
+
+            f.check(BogatyrModes.select(f.p(),f.run,WolfMode.STAY),"Stay ends outgoing assist");stay(wolf).start();
+            attack(f,f.p(),hostile);wolf.setTarget(hostile);
+            f.check(wolf.getTarget()==null&&!goal.canUse(),"Stay ignores the master's new outgoing attacks");
+            f.check(BogatyrModes.select(f.p(),f.run,WolfMode.PATROL),"Patrol resumes after outgoing Stay test");
+            wolf.setTarget(hostile);f.check(wolf.getTarget()==null&&!goal.canUse(),"Old and during-Stay attacks cannot restart after Patrol");
+            attack(f,f.p(),hostile);f.check(goal.canUse(),"Fresh post-Stay master attack is visible");goal.start();
+            f.check(wolf.getTarget()==hostile,"Fresh post-Stay outgoing assist resumes");goal.stop();wolf.setTarget(null);
+
+            var data=BogatyrCompanionData.get(f.level.getServer());
+            f.check(data.setMode(f.p().getUUID(),f.run,WolfMode.STAY)&&data.setMode(f.p().getUUID(),f.run,WolfMode.PATROL),
+                    "Replay fixture advances the saved mode epoch without normal cache invalidation");
+            BogatyrModes.apply(wolf,false);wolf.setTarget(hostile);
+            f.check(wolf.getTarget()==null&&!goal.canUse(),"Changed mode epoch rejects stale damage history and native owner memory");
+
+            var other=f.current.get(1);var otherHostile=enemy(f,EntityType.ZOMBIE);attack(f,other,otherHostile);
+            wolf.tame(other);wolf.getPersistentData().putString(BogatyrWolfEvents.OWNER,other.getStringUUID());BogatyrModes.apply(wolf,false);
+            wolf.setTarget(hostile);
+            f.check(wolf.getTarget()==null&&!goal.canUse(),"Changed owner cannot inherit the old fight or a pre-transfer owner timestamp");
+            attack(f,other,otherHostile);f.check(goal.canUse(),"New owner supplies a fresh eligible attack");goal.start();
+            f.check(wolf.getTarget()==otherHostile,"Patrol assists its current master after transfer");goal.stop();
+            wolf.tame(f.p());wolf.getPersistentData().putString(BogatyrWolfEvents.OWNER,f.p().getStringUUID());BogatyrModes.apply(wolf,false);
+            f.check(!goal.canUse()&&wolf.getTarget()==null,"Restored owner does not replay an earlier outgoing attack");
+
+            wolf.getPersistentData().putLong(BogatyrWolfEvents.RUN,f.run+1);BogatyrModes.apply(wolf,false);
+            attack(f,f.p(),hostile);if(goal.canUse())goal.start();wolf.setTarget(hostile);
+            f.check(wolf.getTarget()==null,"Prior-run master attacks cannot authorize another run's wolf");goal.stop();
+            wolf.getPersistentData().putLong(BogatyrWolfEvents.RUN,f.run);BogatyrModes.apply(wolf,false);
+            f.check(!goal.canUse()&&wolf.getTarget()==null,"Restored run resets native outgoing timestamp memory");
+            attack(f,f.p(),hostile);f.check(goal.canUse(),"Current-run fresh attack remains available");goal.start();
+            f.check(wolf.getTarget()==hostile,"Current-run outgoing assist remains functional");
+            f.check(probe.scans==0&&probe.decisions==0,"Outgoing assist adds no custom target scans or per-wolf decisions");
+        }finally{BogatyrWork.end();}
+    }
     public static void ownerThreatMemory(GameTestHelper helper){
         try(var f=new BogatyrCommandGameTests.Fixture(helper,Long.MAX_VALUE-2710)){
             var wolf=f.wolf(0,0,1,0);var hostile=enemy(f,EntityType.ZOMBIE);
@@ -353,6 +413,7 @@ public final class BogatyrPatrolGameTests {
                     "Fresh hit records the actual attacker and current timestamp");
             f.check(goal.canUse(),"Fresh incoming owner damage restores native defense");goal.start();
             f.check(wolf.getTarget()==hostile,"Fresh owner attacker is accepted by damage-history guard");
+            outgoingAssist(f,wolf,hostile);
             helper.succeed();
         }
     }

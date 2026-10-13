@@ -32,7 +32,12 @@ public final class ModNetwork {
     private ModNetwork() {}
 
     public static void registerPayloadHandlers(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("34");
+        final PayloadRegistrar registrar = event.registrar("35");
+        registrar.playToServer(AmmoPayloads.Cycle.TYPE,AmmoPayloads.Cycle.CODEC,
+                (payload,ctx)->ctx.enqueueWork(()->{if(ctx.player() instanceof ServerPlayer player)
+                    net.goui.cosmicdungeon.ammunition.AmmoSelectionService.cycle(player,payload);}));
+        registrar.playToClient(AmmoPayloads.View.TYPE,AmmoPayloads.View.CODEC,
+                (payload,ctx)->ctx.enqueueWork(()->ClientNetworkDispatch.dispatch("onAmmoSelection",payload)));
         registrar.playToServer(SpawnerEditorPayloads.Request.TYPE,SpawnerEditorPayloads.Request.STREAM_CODEC,
                 (payload,ctx)->ctx.enqueueWork(()->{if(ctx.player() instanceof ServerPlayer player)
                     net.goui.cosmicdungeon.spawner.editor.SpawnerEditorService.request(player,payload);}));

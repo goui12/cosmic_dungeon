@@ -23,7 +23,7 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
 /** Run-bound summons. The existing run store counts unloaded identities, not just nearby wolves. */
 @EventBusSubscriber(modid="cosmicdungeon")
 public final class MercenaryWolves {
-    public static final int INTERVAL=2400, CAP=5;
+    public static final int INTERVAL=600, CAP=20;
     static final String MARKER="cosmicdungeon_mercenary_wolf_v1";
     record Bond(long run,UUID mercenary,UUID hirer){
         static final Codec<Bond> CODEC=RecordCodecBuilder.create(i->i.group(
@@ -43,12 +43,16 @@ public final class MercenaryWolves {
     }
     static Bond bond(Wolf wolf){return wolf.getPersistentData().read(MARKER,Bond.CODEC)
             .filter(b->b.run()>0&&!b.mercenary().equals(b.hirer())).orElse(null);}
+    public static long diagnosticRun(Wolf wolf){return wolf.getPersistentData().getCompoundOrEmpty(MARKER).getLongOr("run",0);}
+    public static String diagnosticBond(Wolf wolf){
+        var bond=bond(wolf);return bond==null?"none":"run="+bond.run()+",hire="+bond.mercenary()+",hirer="+bond.hirer();
+    }
     static void mark(Wolf wolf,Bond bond){wolf.getPersistentData().store(MARKER,Bond.CODEC,bond);}
     static boolean enabled(MercenaryContract contract){return contract!=null&&"bogatyr".equals(contract.classId());}
     static int loadCooldown(ValueInput input){
         return Math.clamp(input.getIntOr("mercenary_wolf_ticks",INTERVAL),0,INTERVAL);
     }
-    static int advance(int remaining,int elapsed){return Math.max(0,remaining-Math.max(0,elapsed));}
+    static int advance(int remaining,int elapsed){return Math.max(0,remaining-Math.clamp(elapsed,0,10));}
     static String key(UUID mercenary){return "mercenary_wolves:"+mercenary;}
     static String dismissed(UUID mercenary){return "mercenary_wolves_dismissed:"+mercenary;}
     static int skillLevel(D1RunData data,Bond bond){
@@ -83,7 +87,7 @@ public final class MercenaryWolves {
         mark(wolf,new Bond(mercenary.runId(),mercenary.contract().id(),mercenary.contract().hirer()));
     }
     public static void tick(MercenaryEntity entity,ServerLevel level,ServerPlayer hirer,int elapsed){
-        if(!enabled(entity.contract()))return;
+        if(!enabled(entity.contract())||!entity.beginWolfTick())return;
         entity.wolfTicks(MercenaryWolfBalance.remaining(entity.wolfTicks(),elapsed,
                 MercenarySkills.level(entity,MercenarySkill.WOLVES)));
         if(entity.wolfTicks()>0)return;
@@ -108,6 +112,7 @@ public final class MercenaryWolves {
         if(location==null)return;
         wolf.setPos(location);prepare(wolf,entity,hirer);
         if(!remember(data,bond,wolf.getUUID()))return;
+        net.goui.cosmicdungeon.playerclass.bogatyr.WolfSpawnDiagnostics.summon(wolf);
         boolean added=false;
         try{added=level.addFreshEntity(wolf);}
         finally{if(!added)data.removeUnique(bond.run(),key(bond.mercenary()),wolf.getUUID().toString());}
@@ -158,6 +163,7 @@ public final class MercenaryWolves {
         if(!(event.getLevel() instanceof ServerLevel level)||!(event.getEntity() instanceof Wolf wolf)||!managed(wolf))return;
         var bond=bond(wolf);
         if(!admitted(wolf,level,bond)||!remember(D1RunData.get(level.getServer()),bond,wolf.getUUID())){
+            net.goui.cosmicdungeon.playerclass.bogatyr.WolfSpawnDiagnostics.rejectedMercenary(wolf);
             event.setCanceled(true);wolf.discard();
         }
     }

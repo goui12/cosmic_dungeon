@@ -53,6 +53,15 @@ final class SkillInputPolicyTest {
         assertEquals(Modifier.ALT,SkillInputPolicy.modifier(4|16|32,2));
         assertEquals(Modifier.NONE,SkillInputPolicy.modifier(16|32,2));
     }
+    @Test void modifierKeysCanBeReboundWithoutLosingOtherChordBits() {
+        for(int code:new int[]{340,344})assertEquals(Modifier.NONE,SkillInputPolicy.modifier(1,2,key(code)));
+        for(int code:new int[]{341,345})assertEquals(Modifier.NONE,SkillInputPolicy.modifier(2,2,key(code)));
+        for(int code:new int[]{342,346})assertEquals(Modifier.NONE,SkillInputPolicy.modifier(4,2,key(code)));
+        assertEquals(Modifier.CONTROL,SkillInputPolicy.modifier(3,2,key(340)));
+        assertNull(SkillInputPolicy.modifier(7,2,key(340)));
+        assertEquals(Modifier.SHIFT,SkillInputPolicy.modifier(1,2,new Input(Device.MOUSE,340)));
+        assertEquals(Modifier.CONTROL,SkillInputPolicy.modifier(8,8,key(82)));
+    }
     @Test void conflictsNeverPickAnArbitraryActionButDifferentClassesCanReuseKeys() {
         var patrol = bind(Action.PATROL, 80, Modifier.NONE);
         var stay = bind(Action.STAY, 80, Modifier.NONE);

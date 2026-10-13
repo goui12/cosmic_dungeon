@@ -1,3 +1,30 @@
+# Active FixSet, 2026-10-13
+
+F1 inventory/potions, F2 Ready/frozen sharing, F3 wolves/Patrol and F4 development
+spawners/startup/names with bounded wolf incident logging are complete. F4 published
+1.8.7-alpha.1; exact source/CI/review/publication IDs are in its controller receipt.
+F5 ammunition and spawner weapon compatibility is implemented as a source checkpoint;
+[behavior, checks and exact changed files](tasks/FIXSET_F5_20261013.md).
+Its exact build/native CI/review/commit status lives in the F5 controller receipt.
+No F5 version, tag, publication or installation is required by the approved milestones.
+One card remains: F6 loot-smelting/reward registrations, final integration and Beta.
+Cameron explicitly authorized F6 on October13: "yes sorry batch6."
+F6 candidate1.8.8-beta.1 is prepared on PR276: [scope, approved Trace table and
+six-batch acceptance matrix](tasks/FIXSET_F6_20261013.md). Cameron approved all18
+missing reward assignments on October13. The catalog covers45 supported hostile types
+with saved-config compatibility; native loot smelting preserves production restrictions.
+No payout decision remains. Finish the final full build/native CI/review, validated
+completed-set main merge, unique Beta publication and stopped TEST runtime delivery.
+The exact source, gates and delivery outcome live in the F6 controller completion receipt;
+this source note does not pre-claim publication or deployment. After that receipt,
+zero FixSet cards remain: STOP after F6. No new batch or stable promotion is authorized.
+All current recommendations/Codex dispositions: [active ledger](tasks/BATCH_1_7_20_REVIEW_NOTES_20261012.md).
+The immediate player wolf flood remains unreproduced; F4 logs await the next incident.
+Real world/GUI/co-op/Controls acceptance remains TESTING. Earlier Batch25 Beta TEST
+delivery remains separately pending in series-1.7; historical prose does not prove it.
+
+---
+
 # Current plan, 2026-10-12
 
 [1.7 Alpha / 1.8 Beta batch plan](tasks/ALPHA_1_7_BATCH_PLAN_20261010.md).

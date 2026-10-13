@@ -19,7 +19,7 @@ import java.util.*;
 @EventBusSubscriber(modid="cosmicdungeon")
 public final class BogatyrThreats {
     private record Targets(String dimension,long run,WolfMode mode,long tick,List<UUID> ids,List<UUID> patients){}
-    private record Attacks(long run,Map<UUID,Long> until){}
+    private record Attacks(String dimension,long run,long epoch,Map<UUID,Long> until){}
     private static final Map<Wolf,java.lang.ref.WeakReference<ProtectOwner>> INSTALLED=new WeakHashMap<>();
     private static final Map<UUID,Targets> CACHE=new HashMap<>();
     private static final Map<UUID,Attacks> ATTACKS=new HashMap<>();
@@ -55,12 +55,12 @@ public final class BogatyrThreats {
         return victim.getLastHurtByMob()==target&&victim.tickCount-victim.getLastHurtByMobTimestamp()<=200;
     }
     static boolean attacks(Mob target,ServerPlayer victim,long run,long now){
-        var history=ATTACKS.get(victim.getUUID());
+        var history=history(victim.level(),victim.getUUID(),run);
         var focus=target.getTarget();var guard=focus instanceof Wolf pet?goal(pet):null;
         boolean guarding=focus instanceof Wolf pet&&run(pet)==run&&BogatyrModes.mode(pet)==WolfMode.SEARCH_AND_RESCUE
                 &&guard!=null&&BogatyrThreats.patient(pet)==victim;
         return focus==victim||guarding||recent(victim,target)
-                ||history!=null&&history.run()==run&&history.until().getOrDefault(target.getUUID(),Long.MIN_VALUE)>=now;
+                ||history!=null&&history.until().getOrDefault(target.getUUID(),Long.MIN_VALUE)>=now;
     }
     private static boolean threatens(Mob target,ServerPlayer owner,long run,long now){
         var victim=target.getTarget();
@@ -135,9 +135,9 @@ public final class BogatyrThreats {
         var requested=event.getNewAboutToBeSetTarget();
         if(CompanionAllies.friendly(requested)){event.setNewAboutToBeSetTarget(null);return;}
         if(!BogatyrWolfEvents.managed(wolf)||requested==null)return;
-        var owner=BogatyrCompanions.owner(wolf);var history=owner==null?null:ATTACKS.get(owner);
+        var owner=BogatyrCompanions.owner(wolf);var history=owner==null?null:history((ServerLevel)wolf.level(),owner,run(wolf));
         boolean defended=requested instanceof Mob mob&&(requested==wolf.getTarget()||recent(wolf,mob)
-                ||history!=null&&history.run()==run(wolf)&&history.until().getOrDefault(mob.getUUID(),Long.MIN_VALUE)>=wolf.level().getGameTime());
+                ||history!=null&&history.until().getOrDefault(mob.getUUID(),Long.MIN_VALUE)>=wolf.level().getGameTime());
         if(BogatyrModes.standing(wolf)||BogatyrRecovery.held(wolf)||!defended)
             event.setNewAboutToBeSetTarget(null);
     }
@@ -149,17 +149,36 @@ public final class BogatyrThreats {
             event.setCanceled(true);wolf.setTarget(null);wolf.stopBeingAngry();
         }
     }
-    private static void remember(UUID owner,long run,Mob attacker,long now){
-        var attacks=ATTACKS.get(owner);
-        if(attacks==null||attacks.run()!=run){attacks=new Attacks(run,new LinkedHashMap<>());ATTACKS.put(owner,attacks);}
+    private static Attacks history(ServerLevel level,UUID owner,long run){
+        var history=ATTACKS.get(owner);
+        return history!=null&&history.run()==run&&history.dimension().equals(level.dimension().location().toString())
+                &&history.epoch()==BogatyrCompanionData.get(level.getServer()).modeEpoch(owner,run)?history:null;
+    }
+    private static void remember(ServerLevel level,UUID owner,long run,Mob attacker,long now){
+        var attacks=history(level,owner,run);
+        if(attacks==null){
+            attacks=new Attacks(level.dimension().location().toString(),run,
+                    BogatyrCompanionData.get(level.getServer()).modeEpoch(owner,run),new LinkedHashMap<>());
+            ATTACKS.put(owner,attacks);
+        }
         var history=attacks.until();history.values().removeIf(until->until<now);
         if(!history.containsKey(attacker.getUUID())&&history.size()>=Config.WOLF_THREAT_CANDIDATES.get())
             history.remove(history.keySet().iterator().next());
         history.put(attacker.getUUID(),now+200);
     }
     @SubscribeEvent public static void attacked(LivingDamageEvent.Post event){
-        if(!(event.getEntity().level() instanceof ServerLevel level)||event.getNewDamage()<=0
-                ||!(event.getSource().getEntity() instanceof Mob attacker)||CompanionAllies.friendly(attacker))return;
+        if(!(event.getEntity().level() instanceof ServerLevel level)||event.getNewDamage()<=0)return;
+        // Native OwnerHurtTargetGoal supplies the choice; only a successful hostile hit authorizes it.
+        // This shares the bounded damage history and adds no wolf scans or custom targeting goal.
+        if(event.getSource().getEntity() instanceof ServerPlayer player){
+            if(!(event.getEntity() instanceof Mob target)||!(target instanceof Enemy)||!target.isAlive()
+                    ||CompanionAllies.friendly(target)||player.isAlliedTo(target)||player.level()!=level)return;
+            var active=ClassResourceService.activeRun(player).orElse(null);
+            if(active!=null&&BogatyrCompanionData.get(level.getServer()).mode(player.getUUID(),active.runId()).mode()==WolfMode.PATROL)
+                remember(level,player.getUUID(),active.runId(),target,level.getGameTime());
+            return;
+        }
+        if(!(event.getSource().getEntity() instanceof Mob attacker)||CompanionAllies.friendly(attacker))return;
         UUID owner;long run;
         if(event.getEntity() instanceof Wolf wolf&&BogatyrWolfEvents.managed(wolf)){
             if(BogatyrModes.standing(wolf)){
@@ -172,7 +191,7 @@ public final class BogatyrThreats {
             owner=player.getUUID();run=active.runId();
         }else return;
         if(owner==null||BogatyrCompanionData.get(level.getServer()).mode(owner,run).mode()!=WolfMode.PATROL)return;
-        remember(owner,run,attacker,level.getGameTime());
+        remember(level,owner,run,attacker,level.getGameTime());
     }
     static final class ProtectOwner extends Goal {
         private final Wolf wolf;private Mob choice,applied;private UUID patient;private long nextChoice;
@@ -208,8 +227,8 @@ public final class BogatyrThreats {
             for(var id:shared.ids())if(owner.level().getEntity(id) instanceof Mob mob&&eligible(wolf,owner,mob)
                     &&wolf.getSensing().hasLineOfSight(mob)){choice=mob;break;}
             if(choice==null&&mode==WolfMode.DEFENSIVE){
-                var history=ATTACKS.get(owner.getUUID());var urgent=new LinkedHashSet<UUID>();
-                if(history!=null&&history.run()==run(wolf))urgent.addAll(history.until().keySet());
+                var history=history(owner.level(),owner.getUUID(),run(wolf));var urgent=new LinkedHashSet<UUID>();
+                if(history!=null)urgent.addAll(history.until().keySet());
                 if(wolf.getLastHurtByMob()!=null)urgent.add(wolf.getLastHurtByMob().getUUID());
                 if(owner.getLastHurtByMob()!=null)urgent.add(owner.getLastHurtByMob().getUUID());
                 for(var id:urgent)if(owner.level().getEntity(id) instanceof Mob mob&&eligible(wolf,owner,mob)
@@ -223,7 +242,7 @@ public final class BogatyrThreats {
             var p=BogatyrThreats.patient(wolf);
             if(p!=null&&choice!=null&&choice.getTarget()!=wolf&&attacks(choice,p,run(wolf),wolf.level().getGameTime())){
                 if(choice.getTarget() instanceof Wolf guarding&&BogatyrThreats.patient(guarding)==p)return;
-                remember(p.getUUID(),run(wolf),choice,wolf.level().getGameTime());BogatyrAggro.redirect(choice,wolf);
+                remember(p.level(),p.getUUID(),run(wolf),choice,wolf.level().getGameTime());BogatyrAggro.redirect(choice,wolf);
             }
         }
         @Override public boolean canUse(){return choose()!=null;}

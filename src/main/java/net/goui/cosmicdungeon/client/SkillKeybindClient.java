@@ -75,14 +75,7 @@ public final class SkillKeybindClient {
         };
     }
     private static Modifier modifier(int bits, Input input) {
-        if (input.device() == Device.KEY) {
-            int code = input.code();
-            if (code == GLFW.GLFW_KEY_LEFT_SHIFT || code == GLFW.GLFW_KEY_RIGHT_SHIFT) bits &= ~GLFW.GLFW_MOD_SHIFT;
-            if (code == GLFW.GLFW_KEY_LEFT_CONTROL || code == GLFW.GLFW_KEY_RIGHT_CONTROL) bits &= ~GLFW.GLFW_MOD_CONTROL;
-            if (code == GLFW.GLFW_KEY_LEFT_ALT || code == GLFW.GLFW_KEY_RIGHT_ALT) bits &= ~GLFW.GLFW_MOD_ALT;
-            if (code == GLFW.GLFW_KEY_LEFT_SUPER || code == GLFW.GLFW_KEY_RIGHT_SUPER) bits &= ~GLFW.GLFW_MOD_SUPER;
-        }
-        return SkillInputPolicy.modifier(bits, InputConstants.MOD_CONTROL);
+        return SkillInputPolicy.modifier(bits, InputConstants.MOD_CONTROL, input);
     }
     private static Input input(InputConstants.Key key) {
         Device device = key.getType() == InputConstants.Type.MOUSE ? Device.MOUSE

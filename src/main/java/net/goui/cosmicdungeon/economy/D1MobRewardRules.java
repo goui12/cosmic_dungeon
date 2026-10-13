@@ -52,7 +52,13 @@ public final class D1MobRewardRules {
         Result encounter=registered(origin,spawners,"spawner "+origin,categories);
         if(encounter!=null)return encounter;
         Result type=registered(entity,mobs,"entity type "+entity,categories);
-        return type==null?fail("unregistered dungeon mob"):type;
+        if(type!=null)return type; // Explicit zero, malformed and duplicate entries never fall back.
+        // Existing saved lists retain the old 27 defaults. Apply only the approved additions
+        // without rewriting configuration or reviving intentionally removed original entries.
+        // An empty table remains an explicit opt-out from all type defaults.
+        String added=mobs.isEmpty()?null:D1MobRewardCatalog.additions().get(entity);
+        return added==null?fail("unregistered dungeon mob"):
+                value(added,"approved entity default "+entity,categories);
     }
     private static Result registered(String key,List<? extends String> entries,String source,Map<String,Long> categories) {
         String value=null;

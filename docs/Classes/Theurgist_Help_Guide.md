@@ -6,7 +6,7 @@ A healer-alchemist who balances care and chemistry. Use mace/bow and Theurgist-a
 
 Your positive thrown potions aid allies and their companions and do not affect hostile mobs, including healing damage against undead. Restorative class arrows have their own rules.
 
-Use **Craft...** for the potion palette above. Only Theurgists may interact with brewing stands; valid brews finish rapidly under the server's instant-brewing setting while the stand is open. The stand still needs a valid recipe and fuel. Eon Penrose sells class-gated brewing equipment and advanced healing stock.
+The **Potions** list appears automatically beside inventory. Only Theurgists may interact with brewing stands; valid brews finish rapidly under the server's instant-brewing setting while the stand is open. The stand still needs a valid recipe and fuel. Eon Penrose sells class-gated brewing equipment and advanced healing stock.
 
 **Resurrect...** is available immediately in your inventory; its default shortcut is **Alt+4**. Opening the picker does not cast. Choose a dead teammate in the same active run. They have 60 seconds to accept or decline on the death screen. A successful accepted resurrection returns them to their latest recorded death location with five seconds of protection and the existing recoverable-inventory handling. It does not recreate destroyed or missing physical drops.
 

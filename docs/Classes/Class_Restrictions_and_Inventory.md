@@ -62,3 +62,9 @@ Already-started runs from before this update need a new run to receive these ass
 the update does not guess retroactive ownership or modify source schematic files.
 
 See the [task and validation notes](../ai/tasks/slot-chest-ownership-20260926.md).
+
+## Client player replacement
+
+Dungeon dimension travel and respawn replace the client player. The client requests the existing authoritative class snapshot after replacement, restoring class artwork and class actions without copying stale client NBT. Normal and Extra inventories retain native slots; Creative remains the native fallback. Theurgist/Venefex inventories show one opaque scrollable list with separate legal potion variants; previews cannot authorize a transaction.
+
+Group ingredient choices are editable only in pre-game assembly/readiness. Accepted adventure start freezes YES/NO through the queue and run; active inventory retains read-only sharing/usage information without contribution-change controls. A frozen YES still requires a currently eligible donor for each transaction.

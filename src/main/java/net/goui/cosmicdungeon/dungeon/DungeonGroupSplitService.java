@@ -62,7 +62,7 @@ public final class DungeonGroupSplitService {
         return result.valid()?result.trace():warn(entity,result.warning());
     }
     private static long warn(String entity,String reason){
-        if(WARNED.add(entity+"|"+reason))LogUtils.getLogger().warn("D1 currency: {}: {}; awarding zero Trace",entity,reason);
+        if(WARNED.add(entity+"|"+reason))LogUtils.getLogger().warn("D1 currency: {}: {}; awarding zero Trace. Review Economy.registeredMobRewards / registeredSpawnerRewards and entity reward overrides: use exactly one approved category or whole-Trace value (0 explicitly disables a reward); do not infer payouts from health or names.",entity,reason);
         return 0;
     }
     public static void clear(){WARNED.clear();}

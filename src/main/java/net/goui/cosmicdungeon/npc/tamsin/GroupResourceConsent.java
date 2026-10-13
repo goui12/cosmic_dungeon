@@ -7,7 +7,7 @@ import net.goui.cosmicdungeon.network.PartyPayloads;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
-/** Consent only. Batch 6 must call canContribute immediately before any inventory debit. */
+/** Run-frozen explicit consent; every inventory debit still revalidates live donor eligibility. */
 public final class GroupResourceConsent {
     private static final String KEY="resource_sharing_v1:";
     private GroupResourceConsent() {}
@@ -22,13 +22,16 @@ public final class GroupResourceConsent {
     }
     public static void carryIntoRun(MinecraftServer server,D1PartyLobby.Party party) {
         var run=DungeonRunRegistryData.get(server).findRunForPlayer(party.leader()).orElse(null);
-        if(run==null||run.stateEnum()!=DungeonRunState.ACTIVE
+        if(party.phase()!=D1PartyLobby.Phase.PREPARING||run==null||run.stateEnum()!=DungeonRunState.ACTIVE
                 ||!new HashSet<>(run.orderedPlayers()).equals(new HashSet<>(party.members())))return;
         var data=D1RunData.get(server);
+        if(data.sealed(run.runId()))return;
         net.goui.cosmicdungeon.dungeon.metrics.DungeonMetricsService.party(server,run,party.id());
         for(UUID id:party.members()) {
             String choice=party.resourceSharing(id);
-            if(!choice.equals("UNKNOWN"))data.setValue(run.runId(),KEY+id,choice);
+            // Existing/unknown saved values belong to this run; replay must never replace them.
+            if(!choice.equals("UNKNOWN")&&data.values(run.runId(),KEY+id).isEmpty())
+                data.setValue(run.runId(),KEY+id,choice);
         }
     }
     private static boolean online(ServerPlayer player) {
@@ -54,8 +57,7 @@ public final class GroupResourceConsent {
         var run=active(player);
         if(run==null||run.runId()!=revision||!Long.toString(run.runId()).equals(context))
             return "Dungeon group changed; review your resource choice.";
-        D1RunData.get(player.level().getServer()).setValue(run.runId(),KEY+player.getUUID(),enabled?"YES":"NO");
-        return null;
+        return "Resource choices are locked for this adventure. Change them after returning to pre-game.";
     }
     /** Live execution guard, never a cached authorization; distance within the run is irrelevant. */
     public static boolean canContribute(ServerPlayer requester,ServerPlayer donor,long expectedRun) {

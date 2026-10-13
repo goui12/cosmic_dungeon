@@ -31,7 +31,7 @@ final class GroupResourceConsentScreen extends Screen {
     }
     private void choose(String choice) {
         var view = D1PartyHud.currentView();
-        if (view == null || !context.equals(view.sharing().context()) || requested != null) return;
+        if (!D1PartyPresentation.sharingMutable(view) || !context.equals(view.sharing().context()) || requested != null) return;
         requested = choice; waitingTicks = 0; yes.active = no.active = false;
         ModNetwork.sendToServer(new PartyPayloads.Action(-1, view.state().revision(),
                 choice.equals("YES") ? "resources_yes" : "resources_no", context));
@@ -39,7 +39,7 @@ final class GroupResourceConsentScreen extends Screen {
     @Override public void tick() {
         var view = D1PartyHud.currentView();
         if (!InventoryModalContext.current(parent, minecraft.player)
-                || view == null || !context.equals(view.sharing().context())) {
+                || !D1PartyPresentation.sharingMutable(view) || !context.equals(view.sharing().context())) {
             InventoryModalContext.dismiss(parent); return;
         }
         if (requested != null && requested.equals(view.sharing().choice())) { onClose(); return; }
@@ -50,6 +50,7 @@ final class GroupResourceConsentScreen extends Screen {
     @Override public void onClose() { InventoryModalContext.restore(parent); }
     @Override public boolean isPauseScreen() { return false; }
     @Override public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        yes.visible = no.visible = D1PartyPresentation.sharingMutable(D1PartyHud.currentView());
         renderBackground(g, mouseX, mouseY, partialTick);
         var box = box(); int x = (width - box.width()) / 2, y = (height - box.height()) / 2;
         g.fill(x, y, x + box.width(), y + box.height(), 0xEF181820);
@@ -57,7 +58,7 @@ final class GroupResourceConsentScreen extends Screen {
         var view = D1PartyHud.currentView();
         String choice = view != null && context.equals(view.sharing().context()) ? view.sharing().choice() : "UNKNOWN";
         int textY = y + 36;
-        for (String paragraph : D1PartyPresentation.consentExplanation(choice)) {
+        for (String paragraph : D1PartyPresentation.consentExplanation(choice, D1PartyPresentation.sharingMutable(view))) {
             for (var line : font.split(Component.literal(paragraph), box.innerWidth())) {
                 g.drawString(font, line, x + 10, textY, 0xFFEEEEEE, false); textY += 11;
             }

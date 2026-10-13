@@ -16,6 +16,7 @@ public final class CraftingPolicy {
     private CraftingPolicy() {}
     private static volatile CraftingRules rules = CraftingRules.parse(true, CraftingRules.DEFAULT_PLAYERS, List.of());
     public static void install(CraftingRules value) { rules = value; }
+    public static CraftingRules snapshot() { return rules; }
     public static boolean player(ServerPlayer player, RecipeHolder<?> recipe) {
         return recipe != null && rules.player(recipe.id().location().toString(), ClassData.getClassId(player));
     }
@@ -23,7 +24,10 @@ public final class CraftingPolicy {
         return recipe != null && rules.automated(recipe.id().location().toString());
     }
     public static boolean lookup(RecipeType<?> type, RecipeInput input, RecipeHolder<?> recipe) {
-        if (recipe == null || !safe(input)) return false;
+        if (recipe == null) return false;
+        // Loot conversion is not player/machine production. The exception ends before assembly.
+        if (type == RecipeType.SMELTING && LootSmeltingLookup.permits(input)) return true;
+        if (!safe(input)) return false;
         String id = recipe.id().location().toString();
         return type == RecipeType.CRAFTING || type == RecipeType.SMITHING || type == RecipeType.STONECUTTING
                 ? rules.known(id) : rules.automated(id);

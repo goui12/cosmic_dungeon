@@ -76,7 +76,9 @@ public final class DungeonStartupSchematicPipeline {
             try {
                 Clipboard clipboard = clipboardCache.get(request.schematicFilename());
                 if (clipboard == null) {
-                    clipboard = loadClipboard(request.schematicFilename());
+                    long loadStart=DungeonStartupTiming.start();
+                    try{clipboard = loadClipboard(request.schematicFilename());}
+                    finally{DungeonStartupTiming.record(DungeonStartupTiming.Phase.SCHEMATIC_LOAD,loadStart,1);}
                     clipboardCache.put(request.schematicFilename(), clipboard);
                 }
 
@@ -85,6 +87,7 @@ public final class DungeonStartupSchematicPipeline {
                     holder.setTransform(new AffineTransform().rotateY(request.rotationDegrees()));
                 }
 
+                long pasteStart=DungeonStartupTiming.start();
                 try (EditSession editSession = WorldEdit.getInstance().newEditSession(worldEditWorld)) {
                     BlockPos destination = request.destination();
                     Operation operation = holder.createPaste(editSession)
@@ -92,9 +95,11 @@ public final class DungeonStartupSchematicPipeline {
                             .ignoreAirBlocks(!request.pasteAir())
                             .build();
                     Operations.complete(operation);
-                }
+                }finally{DungeonStartupTiming.record(DungeonStartupTiming.Phase.SCHEMATIC_PASTE,pasteStart,1);}
                 // The edit session has flushed the pasted block entities; never alter authored stacks.
-                chestBindings.bindPasted(targetLevel, clipboard, request);
+                long bindingStart=DungeonStartupTiming.start();
+                try{chestBindings.bindPasted(targetLevel, clipboard, request);}
+                finally{DungeonStartupTiming.record(DungeonStartupTiming.Phase.CHEST_BINDING,bindingStart,1);}
                 completed++;
             } catch (Exception exception) {
                 String message = exception.getMessage() == null

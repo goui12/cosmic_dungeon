@@ -16,9 +16,10 @@ Spawner behavior is driven by `cosmic_mob_spawner` block entities and optional p
 1. Place `cosmic_mob_spawner`.
 2. Look at spawner within command range.
 3. Set entity baseline.
-4. Configure equipment, enchants, and drop chances.
+4. Configure equipment, enchants, and drop chances. Developer **Shift + right-click** copies exact held equipment; ordinary right-click permits bow/crossbow use. Skeleton main-hand bows use native ranged AI and survive preset save/load.
 5. Set delay and cap rules.
 6. Validate with info and drop summaries.
+7. Visit the required development-world chunks to let old spawners upgrade, then explicitly `/world save dungeon_1` (or the matching dungeon) before testing a new snapshot.
 
 ## Command subset
 
@@ -59,13 +60,41 @@ Runtime model:
 
 Complex loot tables can include conditions, functions, looting bonuses, weights, and killed-by-player checks. The display uses approximate/simple percentages only when safe; otherwise it labels rows as `complex`, `conditional`, `rare/player/looting`, or similar.
 
-## 1.5.0 compatibility and lazy migration
+## Legacy compatibility and development-world migration
 
-Existing 1.5.0 Cosmic Spawner block entities are treated as legacy data when the `CosmicSpawnerDataVersion` key is missing. Loading preserves fields such as `SpawnerEntityId`, `SpawnerPreset`, boss one-shot flags, mob cap, and vanilla `BaseSpawner` fields such as delay, spawn range, player range, and spawn data. Saving after load writes the current version key.
+Existing 1.5.0 Cosmic Spawners are treated as legacy data when
+`CosmicSpawnerDataVersion` is missing. Compatibility loading preserves entity IDs,
+presets, boss progress, caps, vanilla delays/ranges, current and weighted
+`SpawnData`, components and unknown fields. Reading or saving an owned runtime
+instance does not upgrade it: an absent version key stays absent, and an old
+version stays old.
 
-Existing preset NBT fields remain supported, including `presetVersion`, entity type, custom name, illager captain variant, equipment slots, equipment drop chances, and legacy `SpawnerPreset/intrinsicDrops` float entries. Legacy intrinsic entries are loaded as configured final chances, displayed against the active loot table as overrides or custom additions, and saved in the new rule structure while also mirroring the legacy child during the 1.5.1 transition.
+Migration happens only when a spawner's chunk naturally loads in the development
+main overworld or a registered dungeon template dimension without run ownership.
+The block/preset versions advance there, authentic individual upgrade messages
+remain, and the chunk is marked for the normal world save. No chunks are forced;
+previously unloaded spawners migrate when those development chunks are visited.
+Fixed and generated instance worlds never perform this migration.
 
-Preset JSON files under `<server_root>/cosmicdungeon/spawner_presets/` keep designer-authored values. Older `formatVersion: 1` files are read safely and logged for upgrade on next save; the reader does not destructively rewrite preset files during load.
+Untouched supported presets retain their original payload through repeated
+load/save cycles, including opaque equipment/components and unknown rule fields,
+even after development migration advances the version marker. Legacy
+`SpawnerPreset/intrinsicDrops` float entries still provide compatible count-1
+final-chance rules for gameplay and display. Merely saving no longer rewrites them
+into normalized rows. Explicit rule edits write the current rule representation
+and its compatibility mirror; other edits preserve unrelated authored fields.
+Future preset schemas remain opaque.
+
+The developer must visit/upgrade or edit the required development chunks and then
+explicitly type `/world save dungeon_1` (or the matching dungeon). Neither migration
+nor adventure startup saves or overwrites a snapshot automatically. An instance
+loaded from an old snapshot stays compatible and produces a bounded actionable
+developer notice; resave the development template to update future instances.
+
+Named JSON preset files under `<server_root>/cosmicdungeon/spawner_presets/` retain
+designer values. Formats1-3 remain compatible inputs; reads do not rewrite files.
+Only an explicit file save writes current format4. Applying old preset data to a
+block preserves its authored fields and follows the same world-context boundary.
 
 ## Edge behavior
 
@@ -81,7 +110,7 @@ Multiple independent rules for the same item are supported. For example, potato 
 
 `/spawner info` shows configured rows as `Chance: <percent> [+] [-] Count: <n> [+] [-] [Default]`. The chance and count buttons target the stable rule id for that row, so duplicate item rows are safe. Clicking `[Default]` on a configured row removes only that rule; `/spawner drop intrinsic default <item>` and the backward-compatible `/spawner drop intrinsic clear <item>` remove all configured rules for that item and restore vanilla/datapack default behavior. `/spawner drop intrinsic add <item> <chance> [quantity]` always adds a new independent rule, while `/spawner drop intrinsic <item> <chance> [quantity]` upserts by item/count for convenience.
 
-Save migration is lazy and backward-compatible: 1.5.0 data, block-entity data versions 150/151, preset versions 2/3, preset file formats 1/2, old `intrinsicDrops` maps, and Phase-5 `intrinsicDropRules` keyed by item id are read as one count-1 rule per old item chance. New block entities save as data version 152, presets save as preset version 4, and preset JSON saves as format version 3 while preserving the full `spawnerPresetNbt` rule list. The legacy `intrinsicDrops` mirror remains compatibility-only and cannot represent duplicate rows.
+Save migration is lazy and backward-compatible: 1.5.0 data, block-entity data versions 150/151, preset versions 2/3, preset file formats 1/2, old `intrinsicDrops` maps, and Phase-5 `intrinsicDropRules` keyed by item id are read as one count-1 rule per old item chance. Current new block entities use data version154 and new presets use preset version5; explicit preset JSON saves use format4 with complete typed `blockEntitySnbt`. Historical versions152/4 and format3 remain readable. Old untouched instance payloads retain their saved version and representation under the development-world workflow above. The legacy `intrinsicDrops` mirror remains compatibility-only and cannot represent duplicate rows.
 
 ## Phase 7 Cosmic Spawner Spawn Defaults
 

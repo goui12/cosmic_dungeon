@@ -90,6 +90,12 @@ public final class MercenaryEntity extends PathfinderMob implements OwnableEntit
     void lightning(MercenaryLightningState value){lightning=java.util.Objects.requireNonNull(value);}
     private int wolfTicks=MercenaryWolves.INTERVAL;
     private int wolfCommandCursor;
+    private int lastWolfTick=Integer.MIN_VALUE;
+    /** Repeated AI/event callbacks in one native entity tick cannot advance or summon twice. */
+    boolean beginWolfTick(){
+        if(lastWolfTick==tickCount)return false;
+        lastWolfTick=tickCount;return true;
+    }
     int nextWolfCommand(int size){
         int index=Math.floorMod(wolfCommandCursor,size);
         wolfCommandCursor=(index+1)%size;
