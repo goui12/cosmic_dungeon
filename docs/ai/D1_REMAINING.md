@@ -8,7 +8,16 @@ F5 ammunition and spawner weapon compatibility is implemented as a source checkp
 Its exact build/native CI/review/commit status lives in the F5 controller receipt.
 No F5 version, tag, publication or installation is required by the approved milestones.
 One card remains: F6 loot-smelting/reward registrations, final integration and Beta.
-Stop after F5; F6 requires Cameron's continuation instruction.
+Cameron explicitly authorized F6 on October13: "yes sorry batch6."
+F6 is IN PROGRESS on PR276: [scope, evidence and payout proposal](tasks/FIXSET_F6_20261013.md).
+The loot repair passes800 local tests and124 native GameTests in full CI38458639885,
+source5a844d89fb12e91910742914a09fc8646885dc9e. Review finding4263365992 corrected this
+stale authorization ledger; exact final-head review/evidence lives in the F6 checkpoint.
+Only the18 missing mob category/Trace assignments need Cameron's decision; no guessed
+payouts have been implemented. Continue this authorized F6 after that decision, finish
+reward coverage/integration, validated main merge, Beta publication and stopped TEST
+runtime delivery, then STOP after F6. No new F6 authorization is required.
+F6 is not complete and no F6 Beta or installation has occurred.
 All current recommendations/Codex dispositions: [active ledger](tasks/BATCH_1_7_20_REVIEW_NOTES_20261012.md).
 The immediate player wolf flood remains unreproduced; F4 logs await the next incident.
 Real world/GUI/co-op/Controls acceptance remains TESTING. Earlier Batch25 Beta TEST
