@@ -102,4 +102,28 @@ final class D1PartyPanelTest {
         panel.setView(view("ASSEMBLY", "NO", true, false));
         assertTrue(button(build(panel, 320, 240), "Begin ready check").active);
     }
+    @Test void acceptedStartRemovesChoiceWidgetsAndLeavesReadOnlyInformation() {
+        for(String phase:List.of("QUEUED","PREPARING","ACTIVE")) {
+            var panel=new D1PartyPanel();panel.setView(view("READY_CHECK","YES",true,true));
+            button(build(panel,320,240),"Resources").onPress(null);
+            panel.setView(view(phase,"YES",true,true));
+            var widgets=build(panel,320,240);bounded(widgets,320,240);
+            assertTrue(widgets.stream().noneMatch(w->w.getMessage().getString().startsWith("YES -")
+                    ||w.getMessage().getString().startsWith("NO -")));
+            assertFalse(D1PartyPresentation.sharingMutable(view(phase,"YES",true,true)));
+            assertFalse(D1PartyPresentation.needsConsent(view(phase,"UNKNOWN",true,true)));
+            assertTrue(D1PartyPresentation.consentExplanation("YES",false).stream().anyMatch(line->line.contains("locked")));
+        }
+        assertTrue(D1PartyPresentation.sharingMutable(view("ASSEMBLY","NO",true,false)));
+        assertTrue(D1PartyPresentation.sharingMutable(view("READY_CHECK","YES",true,false)));
+    }
+    @Test void enabledReadyUsesReusableWidgetWhileConfirmedStateAndConsentStillGateIt() {
+        var panel=new D1PartyPanel();panel.setView(view("READY_CHECK","YES",true,false));
+        assertInstanceOf(ReadyActionButton.class,button(build(panel,320,240),"Ready"));
+        assertTrue(button(build(panel,320,240),"Ready").active);
+        panel.setView(view("READY_CHECK","UNKNOWN",true,false));
+        assertFalse(button(build(panel,320,240),"Ready").active);
+        panel.setView(view("READY_CHECK","YES",true,true));
+        assertEquals("unready",D1PartyPresentation.readiness(view("READY_CHECK","YES",true,true),"Cameron").action());
+    }
 }

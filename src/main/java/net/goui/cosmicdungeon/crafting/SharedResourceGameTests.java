@@ -77,7 +77,7 @@ public final class SharedResourceGameTests {
                 files.addAll(metricFiles);
             } catch(IOException ex){throw new IllegalStateException(ex);}
             runs.put(run,record);DungeonMetricsService.begin(server,record,true);
-            for(int i=0;i<3;i++) consent(i,true);
+            for(int i=0;i<3;i++) storedConsent(i,true);
         }
         static Object field(Class<?> type,String name,Object owner)throws ReflectiveOperationException {
             var field=type.getDeclaredField(name);field.setAccessible(true);return field.get(owner);
@@ -108,8 +108,10 @@ public final class SharedResourceGameTests {
         }
         ServerPlayer p(int index){return current.get(index);}
         CompoundTag root(int index){return p(index).getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG);}
-        void consent(int index,boolean enabled) {
-            check(GroupResourceConsent.choose(p(index),run,Long.toString(run),enabled)==null,"Native consent update succeeds");
+        void storedConsent(int index,boolean enabled) {
+            // Fixture setup/fault injection only: active gameplay changes are rejected by GroupResourceConsentGameTests.
+            net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(level.getServer())
+                    .setValue(run,"resource_sharing_v1:"+p(index).getUUID(),enabled?"YES":"NO");
             SharedCrafting.forget(p(index));
         }
         void seed() {
@@ -346,12 +348,12 @@ public final class SharedResourceGameTests {
             f.unchanged(full,"Output-full consumes no owner's material");
             f.seed();var before=f.images();var prepared=SharedCrafting.prepare(f.p(0),f.run,recipe);var checks=new int[1];
             f.check(!SharedCraftTransactions.execute(f.p(0),prepared,()->{
-                if(++checks[0]==2)f.consent(1,false);
+                if(++checks[0]==2)f.storedConsent(1,false);
                 return GroupResourceConsent.canContribute(f.p(0),f.p(1),f.run)&&GroupResourceConsent.canContribute(f.p(0),f.p(2),f.run);
-            }),"Consent withdrawn after durable reservations cancels before commit");
+            }),"Stored consent invalidated after durable reservations cancels before commit");
             f.check(checks[0]==2,"Consent is revalidated after all owner reservations");f.unchanged(before,"Withdrawn consent changes no inventory");
             f.check(data.image().equals(f.journalBefore)&&DungeonMetricsService.resourceSequence(server,f.run)==0,"Canceled reservations create neither metrics nor pending decisions");
-            f.consent(1,true);
+            f.storedConsent(1,true);
             prepared=SharedCrafting.prepare(f.p(0),f.run,recipe);f.p(1).getInventory().getItem(0).shrink(1);var changed=f.images();
             f.check(!SharedCraftTransactions.execute(f.p(0),prepared,()->true),"Exact current images reject a stale count even without a dirty notification");
             f.unchanged(changed,"Stale prepared count cannot charge another owner");

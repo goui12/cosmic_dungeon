@@ -14,7 +14,9 @@ Your inventory keeps armor, offhand, storage, and hotbar controls. The old 2x2 c
 
 The default party size is three to six. The leader starts readiness; each player confirms their own **Ready / Not Ready** state. Membership changes clear readiness. The leader uses **Start Adventure!** once the group is ready. Mercenaries do not have a Ready toggle. Ready controls disappear after entry. Starting an adventure cancels any party member's open trade safely.
 
-The creator receives the resource-sharing choice on group creation; joiners receive it in Tamsin's flow. Choose **YES** or **NO**, and change your choice there later. YES permits eligible recipe ingredients in your inventory to help party crafting. It does not hand over your entire inventory. Hover a party member to see their class, health, skill progress, sharing choice, resources used/contributed, and relevant resurrection availability.
+The enabled **Ready** action is green with a restrained two-second pulse. It stops pulsing while waiting for the server or once the action becomes **Not Ready**; each player still controls only their own readiness.
+
+The creator receives the resource-sharing choice on group creation; joiners receive it in Tamsin's flow. Choose **YES** or **NO** before starting. Choices lock as soon as **Start Adventure!** is accepted, including the queue and countdown, and stay fixed for the run. Change them after completion/forfeit returns you to pre-game; canceling a submitted start also returns to pre-game. YES permits eligible recipe ingredients in your inventory to help party crafting. It does not hand over your entire inventory. Hover a party member to see their class, health, skill progress, sharing choice, resources used/contributed, and relevant resurrection availability.
 
 A crafter uses their own materials first. If they cannot afford the recipe alone, consenting online, living members of the same party can supply the missing ingredients regardless of distance. A donor must have a free inventory: another container, carried cursor stack, or pending transaction can make them unavailable. The server checks the current membership, consent, ingredients, and output space on every craft. Missing materials may come from several inventories. Least-recent donors are preferred; each donor receives an item-and-recipient notification. Preview counts reserve nothing.
 
@@ -150,7 +152,7 @@ Read the in-game advancement descriptions for objectives and locked requirements
 
 Useful commands: `/progression get <your_name>`, `/d1 stats`, `/d1 claim`, `/currency balance`, `/trade <player>`, `/repair <player>`, `/home`, and `/d1 wolves` for a Bogatyr's living loaded run-pack count. Commands shown in the guide are reference text; clicking a guide link does not execute a command.
 
-## Developer-only reference — outside the H guide
+## Developer-only reference â€” outside the H guide
 
 The spawner editor is an authoring tool, not a Dungeoneer feature. The server's actual **Developer rank** is required; operator level alone does not supply that rank. A Developer looks at a Cosmic Spawner within five blocks and uses `/spawner edit`. Detailed spawner hover information is intrinsic to that rank; there is no player showlabels opt-in.
 

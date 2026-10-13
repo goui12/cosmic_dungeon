@@ -81,7 +81,7 @@ public final class PotionCraftingGameTests {
                 files.addAll(metricFiles);
             } catch(IOException ex){throw new IllegalStateException(ex);}
             runs.put(run,record);DungeonMetricsService.begin(server,record,true);
-            for(int i=0;i<members;i++) consent(i,true);
+            for(int i=0;i<members;i++) storedConsent(i,true);
         }
         static Object field(Class<?> type,String name,Object owner)throws ReflectiveOperationException {
             var field=type.getDeclaredField(name);field.setAccessible(true);return field.get(owner);
@@ -112,8 +112,10 @@ public final class PotionCraftingGameTests {
         }
         ServerPlayer p(int index){return current.get(index);}
         CompoundTag root(int index){return p(index).getPersistentData().getCompoundOrEmpty(ClassData.ROOT_TAG);}
-        void consent(int index,boolean enabled) {
-            check(GroupResourceConsent.choose(p(index),run,Long.toString(run),enabled)==null,"Native consent update succeeds");
+        void storedConsent(int index,boolean enabled) {
+            // Fixture setup/fault injection only: active gameplay changes are rejected by GroupResourceConsentGameTests.
+            net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(level.getServer())
+                    .setValue(run,"resource_sharing_v1:"+p(index).getUUID(),enabled?"YES":"NO");
             SharedCrafting.forget(p(index));
         }
         void clear() {
@@ -312,11 +314,11 @@ public final class PotionCraftingGameTests {
             f.check(plan!=null&&plan.owners().size()==3&&plan.fuel().getCompoundOrEmpty("after").getIntOr("charges",-1)==17,
                     "Multi-owner decision includes an exact fuel afterimage");
             f.check(!SharedCraftTransactions.execute(f.p(0),plan,()->{
-                if(++checks[0]==2)f.consent(1,false);
+                if(++checks[0]==2)f.storedConsent(1,false);
                 return GroupResourceConsent.canContribute(f.p(0),f.p(1),f.run)&&GroupResourceConsent.canContribute(f.p(0),f.p(2),f.run);
-            }),"Consent withdrawn after reservation cancels both inventory and fuel");
+            }),"Stored consent invalidated after reservation cancels both inventory and fuel");
             f.check(checks[0]==2&&f.charges(0)==0&&f.revision(0)==0&&data.pendingRun(f.run)==null,"Canceled decision leaves no charge or pending craft");
-            f.unchanged(before,"Consent cancellation is atomic");f.consent(1,true);
+            f.unchanged(before,"Consent cancellation is atomic");f.storedConsent(1,true);
             f.saveAll();plan=PotionCrafting.prepare(f.p(0),f.run,healing);f.reserve(plan);f.custody(1,plan);
             data=f.reloadJournal();for(int owner=0;owner<3;owner++)f.reload(owner);
             for(int owner:new int[]{2,1,0})f.check(SharedCraftTransactions.reconcile(f.p(owner)),"Partial prepared crash cancels after real owner reload");
@@ -596,12 +598,12 @@ public final class PotionCraftingGameTests {
             PotionCraftActions.request(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Request(true));
             var quote=sent(f,0);
             f.check(quote.entries().stream().filter(e->e.targetId().equals(healing)).anyMatch(e->e.own()==0&&e.shared()==3),"Shared count is authoritative");
-            f.consent(1,false);
+            f.storedConsent(1,false);
             PotionCraftActions.action(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Action(f.run,quote.revision(),healing,false));
             f.check(f.count(1,Items.POTION)==3&&f.p(0).inventoryMenu.getCarried().isEmpty()&&sent(f,0).revision()>quote.revision(),
-                    "Consent change rejects formerly affordable click and acknowledges it");
+                    "Stored-state fault rejects formerly affordable click and acknowledges it");
             // A new object models reconnect: request generation belongs to this connection, not saved class data.
-            f.saveAll();f.reload(0);f.consent(1,true);
+            f.saveAll();f.reload(0);f.storedConsent(1,true);
             PotionCraftActions.request(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Request(true));quote=sent(f,0);
             var action=new net.goui.cosmicdungeon.network.PotionCraftPayloads.Action(f.run,quote.revision(),healing,false);
             PotionCraftActions.action(f.p(0),action);PotionCraftActions.action(f.p(0),action);
@@ -703,10 +705,10 @@ public final class PotionCraftingGameTests {
                 other.check(PotionCrafting.quote(other.p(0),other.run,healing).shared()==0,
                         "Simultaneous party cannot quote another party's available donor ingredients");
                 other.check(!PotionCrafting.craft(other.p(0),first.run,healing),"Foreign run ID cannot spend another party's stock");
-                other.healing(1,1);other.consent(1,false);var before=other.images();
-                other.check(!PotionCrafting.craft(other.p(0),other.run,healing),"Own party's withdrawn donor consent remains authoritative");
+                other.healing(1,1);other.storedConsent(1,false);var before=other.images();
+                other.check(!PotionCrafting.craft(other.p(0),other.run,healing),"Own party's stored donor refusal remains authoritative");
                 other.unchanged(before,"Rejected foreign/withdrawn donation leaves every owner unchanged");
-                other.consent(1,true);other.classId(0,"venefex");
+                other.storedConsent(1,true);other.classId(0,"venefex");
                 other.check(!PotionCrafting.craft(other.p(0),other.run,healing),"Class change rejects an old positive recipe");
                 other.classId(0,"theurgist");
                 other.check(PotionCrafting.craft(other.p(0),other.run,healing),"Second party commits only its own consenting donor recipe");
@@ -981,11 +983,11 @@ public final class PotionCraftingGameTests {
             poller.nextWindow(f.p(0));PotionCraftActions.action(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Action(f.run,view.revision(),healing,true));
             noSpend(f,inventories,fuel,sequence,"Full Shift inventory destination");
             f.p(0).getInventory().clearContent();boundary(f);poller.poll(f);view=sent(f,0);
-            for(int i=1;i<6;i++)f.consent(i,false);
+            for(int i=1;i<6;i++)f.storedConsent(i,false);
             inventories=f.images();fuel=fuelImages(f);poller.nextWindow(f.p(0));
             PotionCraftActions.action(f.p(0),new net.goui.cosmicdungeon.network.PotionCraftPayloads.Action(f.run,view.revision(),healing,false));
-            noSpend(f,inventories,fuel,sequence,"All donor consent withdrawn after queued quote");
-            for(int i=1;i<6;i++)f.consent(i,true);poller.poll(f);view=sent(f,0);inventories=f.images();fuel=fuelImages(f);
+            noSpend(f,inventories,fuel,sequence,"All donor stored consent invalidated after queued quote");
+            for(int i=1;i<6;i++)f.storedConsent(i,true);poller.poll(f);view=sent(f,0);inventories=f.images();fuel=fuelImages(f);
             f.runs.put(f.run,new DungeonRunRegistryData.RunRecord(f.run,"dungeon_1","minecraft:overworld",0,List.of("cosmicdungeon:outside_batch24_fixture"),
                     1,"ACTIVE","",System.currentTimeMillis(),f.record.orderedPlayers(),List.of(),List.of()));
             try {

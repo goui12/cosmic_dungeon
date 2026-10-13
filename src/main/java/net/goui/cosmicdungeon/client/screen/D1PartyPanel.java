@@ -37,17 +37,23 @@ final class D1PartyPanel {
             // Progression belongs to the entire group flow, including recruitment and mercenary pages.
             var ready = D1PartyPresentation.readiness(view, viewerName);
             boolean answered = !D1PartyPresentation.needsConsent(view);
-            button(add, ready.label(), x + 10, y + box.progressionY(), box.halfWidth(), answered && ready.enabled(),
-                    () -> send(containerId, ready.action(), ""));
+            var readyButton = new ReadyActionButton(x + 10, y + box.progressionY(), box.halfWidth(),
+                    Component.literal(ready.label()), ready.action().equals("ready"), button -> {
+                        button.active = false; // Wait for the next authoritative snapshot/rebuild.
+                        send(containerId, ready.action(), "");
+                    });
+            readyButton.active = answered && ready.enabled(); add.accept(readyButton);
             var forward = D1PartyPresentation.forward(view);
             button(add, forward.label(), x + box.rightColumn(), y + box.progressionY(), box.halfWidth(),
                     answered && forward.enabled(), () -> send(containerId, forward.action(), ""));
         }
         if (grouped && consent()) {
-            button(add, "YES - contribute", x + 10, y + box.managementY(), box.halfWidth(), !preparing,
-                    () -> send(containerId, "resources_yes", view.sharing().context()));
-            button(add, "NO - keep materials", x + box.rightColumn(), y + box.managementY(), box.halfWidth(), !preparing,
-                    () -> send(containerId, "resources_no", view.sharing().context()));
+            if (D1PartyPresentation.sharingMutable(view)) {
+                button(add, "YES - contribute", x + 10, y + box.managementY(), box.halfWidth(), true,
+                        () -> send(containerId, "resources_yes", view.sharing().context()));
+                button(add, "NO - keep materials", x + box.rightColumn(), y + box.managementY(), box.halfWidth(), true,
+                        () -> send(containerId, "resources_no", view.sharing().context()));
+            }
             if (!D1PartyPresentation.needsConsent(view))
                 button(add, "Back", x + box.width() - 70, y + 32, 60, true, () -> { sharing = false; rebuild.run(); });
             return;
@@ -137,7 +143,7 @@ final class D1PartyPanel {
         if (consent() && !view.members().isEmpty()) {
             graphics.drawString(font, "Contribute group resources?", x + 10, y + 34, 0xFFFFFFAA, false);
             int textY = y + 58;
-            for (String paragraph : D1PartyPresentation.consentExplanation(view.sharing().choice())) {
+            for (String paragraph : D1PartyPresentation.consentExplanation(view.sharing().choice(), D1PartyPresentation.sharingMutable(view))) {
                 for (var line : font.split(Component.literal(paragraph), box.innerWidth())) {
                     graphics.drawString(font, line, x + 10, textY, 0xFFEEEEEE, false); textY += 11;
                 }

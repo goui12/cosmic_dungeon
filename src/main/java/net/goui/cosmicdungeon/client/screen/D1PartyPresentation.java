@@ -7,8 +7,12 @@ final class D1PartyPresentation {
     private D1PartyPresentation() {}
     record ReadyControl(String label, String action, boolean enabled) {}
 
+    static boolean sharingMutable(PartyPayloads.View view) {
+        return view != null && !view.sharing().context().isEmpty()
+                && (view.state().phase().equals("ASSEMBLY") || view.state().phase().equals("READY_CHECK"));
+    }
     static boolean needsConsent(PartyPayloads.View view) {
-        return view != null && !view.sharing().context().isEmpty() && view.sharing().choice().equals("UNKNOWN");
+        return sharingMutable(view) && view.sharing().choice().equals("UNKNOWN");
     }
     static ReadyControl forward(PartyPayloads.View view) {
         boolean assembly = view.state().phase().equals("ASSEMBLY");
@@ -29,9 +33,10 @@ final class D1PartyPresentation {
         return java.util.List.of(member.name() + " / " + ClassSelectorScreen.className(member.classId()).getString(),
                 status, sharingStatus(member));
     }
-    static java.util.List<String> consentExplanation(String choice) {
-        return java.util.List.of("May your group use ingredients from your inventory, sharing contributions as evenly as possible?",
-                "Only an explicit YES enables sharing. You can change this in Resources.",
+    static java.util.List<String> consentExplanation(String choice, boolean mutable) {
+        return java.util.List.of("An explicit YES lets your group use eligible ingredients from your inventory, sharing contributions as evenly as possible.",
+                mutable ? "Choose YES or NO before starting. Choices lock when Start Adventure is accepted."
+                        : "Choices are locked for this adventure. Change them after returning to pre-game.",
                 "Your choice: " + (choice.equals("UNKNOWN") ? "not chosen; no contribution" : choice));
     }
 

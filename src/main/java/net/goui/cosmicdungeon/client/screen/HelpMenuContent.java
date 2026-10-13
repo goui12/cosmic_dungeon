@@ -45,11 +45,11 @@ public final class HelpMenuContent {
 
     public static final Page PARTY = page("party", "Party", true, List.of(
             HelpBlock.heading("Ready and Start"),
-            HelpBlock.bullet("The default group size is three to six. The leader begins readiness; each player controls Ready / Not Ready."),
+            HelpBlock.bullet("The leader begins readiness; each player controls Ready / Not Ready. An available Ready action is green with a subtle pulse; Not Ready withdraws your confirmed readiness."),
             HelpBlock.bullet("Membership changes clear readiness. The leader chooses Start Adventure! when the group is ready. Mercenaries have no Ready toggle; ready controls disappear after entry."),
             HelpBlock.bullet("Starting an adventure safely cancels the party's open trades. Recruitment and mercenary pages keep forward progression available."),
             HelpBlock.heading("Share Ingredients"),
-            HelpBlock.bullet("The creator chooses YES or NO at group creation; joiners choose in Tamsin's flow. You can change the choice there later."),
+            HelpBlock.bullet("The creator and joiners explicitly choose YES or NO before starting. Choices lock when Start Adventure is accepted and remain fixed for the adventure. Change them after returning to pre-game."),
             HelpBlock.bullet("YES lets eligible recipe ingredients help party crafting. The crafter uses their own stock first, then missing materials from eligible consenting online, living teammates."),
             HelpBlock.bullet("Distance does not block ingredient sharing. Another container, held cursor stack, death, or pending transaction can make an inventory unavailable."),
             HelpBlock.bullet("Several teammates may supply different ingredients. Least-recent donors are preferred and receive item-and-recipient notifications. Consent, membership and materials are checked again at the click."),

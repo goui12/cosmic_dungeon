@@ -17,7 +17,9 @@ ordinary players to Tamsin.
 The leader chooses a maximum of1–6 with the group count controls. Fewer members can
 start once everyone personally confirms. Ready closes Tamsin, and members can move
 around the same starting dimension until the leader starts the adventure at Tamsin.
-Not Ready withdraws only your confirmation and cancels a submitted start.
+Not Ready withdraws only your confirmation and cancels a submitted start. The enabled Ready action is green with a subtle pulse; its appearance never grants readiness before the server confirms it.
+
+Choose YES or NO for ingredient contribution before starting. The choice locks when Start Adventure is accepted, including its queue/countdown. During the run, party hover and inspection still show contributions and usage; contribution-change controls are absent. Choices become editable again in pre-game after completion/forfeit, or when a pending start is canceled.
 
 The group HUD stays at top left. Open player inventory for Ready/Not Ready and Leave
 Group; invitation HUD exposes Join Group there. Recipe-book layouts use a compact

@@ -45,16 +45,17 @@ final class GroupResourceConsentTest {
         assertEquals("NO",p.resourceSharing(leader));assertEquals("YES",p.resourceSharing(member));
         assertNull(lobby.begin(leader,revision,classes));
     }
-    @Test void readinessReconfigurationKeepsExplicitChoiceButPreparationLocksIt() {
+    @Test void acceptedStartLocksChoicesBeforeCountdownAndPreparation() {
         var p=create();assertNull(lobby.resourceSharing(leader,p.revision(),p.id().toString(),false));
         assertNull(lobby.hire(leader,p.revision(),"theurgist"));assertEquals("NO",p.resourceSharing(leader));
         assertNull(lobby.begin(leader,p.revision(),Map.of(leader,"bogatyr")));
         assertNull(lobby.ready(leader,p.revision()));assertNull(lobby.queue(leader,p.revision()));
         assertEquals(Set.of(leader),p.ready()); // Mercenary never needs readiness or consent.
-        assertNull(lobby.resourceSharing(leader,p.revision(),p.id().toString(),true));
+        assertNotNull(lobby.resourceSharing(leader,p.revision(),p.id().toString(),true));
+        assertFalse(p.sharingMutable()); assertEquals("NO",p.resourceSharing(leader));
         assertEquals(Set.of(leader),p.ready());lobby.startCountdown(p,0,1);assertTrue(lobby.prepare(p,1));
-        assertNotNull(lobby.resourceSharing(leader,p.revision(),p.id().toString(),false));
-        assertEquals("YES",p.resourceSharing(leader));
+        assertNotNull(lobby.resourceSharing(leader,p.revision(),p.id().toString(),true));
+        assertEquals("NO",p.resourceSharing(leader));
     }
     @Test void soloAndDeferredInvitationUseSameNoDefaultChoice() {
         assertNull(lobby.startSolo(leader,anchor,0,6));var p=lobby.party(leader);
@@ -63,5 +64,32 @@ final class GroupResourceConsentTest {
         assertNull(lobby.accept(member,lobby.invitation(member).token(),1));
         assertNull(lobby.joinAccepted(member,2,6,false));assertNull(lobby.party(member));
         assertNull(lobby.joinAccepted(member,3,6,true));assertEquals("UNKNOWN",p.resourceSharing(member));
+    }
+    @Test void serializedStartRaceLocksLatestChoiceAndRejectsForgedCurrentRevision() {
+        var p=create();join();
+        assertNull(lobby.resourceSharing(leader,p.revision(),p.id().toString(),false));
+        assertNull(lobby.resourceSharing(member,p.revision(),p.id().toString(),false));
+        assertNull(lobby.begin(leader,p.revision(),Map.of(leader,"bogatyr",member,"theurgist")));
+        assertNull(lobby.ready(leader,p.revision()));assertNull(lobby.ready(member,p.revision()));
+        long before=p.revision();
+        assertNull(lobby.resourceSharing(member,before,p.id().toString(),true));
+        assertNull(lobby.queue(leader,before));
+        for(long revision:new long[]{before,p.revision()})
+            assertNotNull(lobby.resourceSharing(member,revision,p.id().toString(),false));
+        assertEquals("YES",p.resourceSharing(member));assertEquals("NO",p.resourceSharing(leader));
+        assertNull(lobby.unready(leader,p.revision())); // Start canceled, returning to pre-game.
+        assertTrue(p.sharingMutable());assertNull(lobby.resourceSharing(member,p.revision(),p.id().toString(),false));
+        assertEquals("NO",p.resourceSharing(member));
+    }
+    @Test void failedPreparationAndNewPregameGroupUnlockWithoutDefaultOptIn() {
+        var p=create();assertNull(lobby.resourceSharing(leader,p.revision(),p.id().toString(),true));
+        assertNull(lobby.begin(leader,p.revision(),Map.of(leader,"bogatyr")));
+        assertNull(lobby.ready(leader,p.revision()));assertNull(lobby.queue(leader,p.revision()));
+        lobby.startCountdown(p,0,0);assertTrue(lobby.prepare(p,0));lobby.cancel(p);
+        assertTrue(p.sharingMutable());assertNull(lobby.resourceSharing(leader,p.revision(),p.id().toString(),false));
+        lobby.complete(p);var next=create();
+        assertEquals("UNKNOWN",next.resourceSharing(leader));assertTrue(next.sharingMutable());
+        assertNotNull(lobby.resourceSharing(leader,p.revision(),p.id().toString(),true));
+        assertNull(lobby.resourceSharing(leader,next.revision(),next.id().toString(),false));
     }
 }

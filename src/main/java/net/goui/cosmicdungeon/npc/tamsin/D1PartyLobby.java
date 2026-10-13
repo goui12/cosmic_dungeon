@@ -44,6 +44,7 @@ public final class D1PartyLobby {
         public Set<UUID> ready() { return Set.copyOf(ready); }
         public Map<UUID, String> classes() { return classes; }
         public Phase phase() { return phase; }
+        public boolean sharingMutable() { return phase == Phase.ASSEMBLY || phase == Phase.READY_CHECK; }
         public long revision() { return revision; }
         public long countdownEnd() { return countdownEnd; }
     }
@@ -160,7 +161,7 @@ public final class D1PartyLobby {
     /** A personal, explicit choice; ready confirmations do not grant inventory access. */
     public String resourceSharing(UUID member,long expected,String context,boolean enabled) {
         var p=party(member);
-        if(p==null||!current(member,expected)||!p.id.toString().equals(context)||p.phase==Phase.PREPARING)
+        if(p==null||!current(member,expected)||!p.id.toString().equals(context)||!p.sharingMutable())
             return "Group changed; review your resource choice.";
         String choice=enabled?"YES":"NO";
         // Personal choices do not invalidate another member's same-roster choice packet.
