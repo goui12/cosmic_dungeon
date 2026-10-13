@@ -16,7 +16,7 @@ Spawner behavior is driven by `cosmic_mob_spawner` block entities and optional p
 1. Place `cosmic_mob_spawner`.
 2. Look at spawner within command range.
 3. Set entity baseline.
-4. Configure equipment, enchants, and drop chances.
+4. Configure equipment, enchants, and drop chances. Developer **Shift + right-click** copies exact held equipment; ordinary right-click permits bow/crossbow use. Skeleton main-hand bows use native ranged AI and survive preset save/load.
 5. Set delay and cap rules.
 6. Validate with info and drop summaries.
 7. Visit the required development-world chunks to let old spawners upgrade, then explicitly `/world save dungeon_1` (or the matching dungeon) before testing a new snapshot.

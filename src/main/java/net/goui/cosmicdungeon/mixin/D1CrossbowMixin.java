@@ -14,12 +14,24 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** Extend the native rocket path only for our two dedicated D1 rocket items. */
+/** Retain native rockets/effects while supporting legal inventory stock and revalidating loaded ammunition. */
 @Mixin(CrossbowItem.class)
 public abstract class D1CrossbowMixin {
     @Inject(method = "getSupportedHeldProjectiles", at = @At("RETURN"), cancellable = true)
     private void cosmicdungeon$heldRockets(CallbackInfoReturnable<Predicate<ItemStack>> ci) {
         ci.setReturnValue(ci.getReturnValue().or(D1FireworkItem::isCustomRocket));
+    }
+
+    @Inject(method="getAllSupportedProjectiles",at=@At("RETURN"),cancellable=true)
+    private void cosmicdungeon$inventoryRockets(CallbackInfoReturnable<Predicate<ItemStack>> ci){
+        ci.setReturnValue(ci.getReturnValue().or(ammo->ammo.is(net.minecraft.world.item.Items.FIREWORK_ROCKET)
+                ||D1FireworkItem.isCustomRocket(ammo)));
+    }
+    @Inject(method="performShooting",at=@At("HEAD"),cancellable=true)
+    private void cosmicdungeon$loadedPermission(Level level,LivingEntity shooter,net.minecraft.world.InteractionHand hand,
+            ItemStack weapon,float velocity,float inaccuracy,LivingEntity target,org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci){
+        if(shooter instanceof net.minecraft.server.level.ServerPlayer player
+                &&!net.goui.cosmicdungeon.ammunition.AmmoSelectionService.loadedAllowed(player,weapon))ci.cancel();
     }
 
     @Inject(method = "getShootingPower", at = @At("HEAD"), cancellable = true)
@@ -49,7 +61,7 @@ public abstract class D1CrossbowMixin {
         if (D1FireworkItem.isCustomRocket(ammo)) ci.setReturnValue(3);
     }
 
-    // Keep native held-ammo selection (rockets in offhand), consumption, multishot and enchantments.
-    // TODO(D1 native TEST): load each rocket, fire multishot, reload charged crossbows and verify
-    // 1.6 launch speed/three durability, effects once, shields/obstruction and denied class/run.
+    // Native charging, consumption, multishot and enchantments remain unchanged.
+    // Native CI covers inventory/hand loading, Multishot, preserved charged loads and authority changes.
+    // Licensed controls/visuals/world acceptance remains TESTING in FIXSET_F5_20261013.md.
 }

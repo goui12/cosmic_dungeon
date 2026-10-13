@@ -46,6 +46,17 @@ public final class SkillInputPolicy {
         if (mask == 4) return Modifier.ALT;
         return null;
     }
+    /** A modifier key can itself be a plain binding; strip only that physical key's own bit. */
+    public static Modifier modifier(int bits,int platformControlBit,Input input) {
+        if(input.device()==Device.KEY) {
+            int code=input.code();
+            if(code==340||code==344)bits&=~1; // GLFW left/right Shift
+            if(code==341||code==345)bits&=~2; // Ctrl
+            if(code==342||code==346)bits&=~4; // Alt
+            if(code==343||code==347)bits&=~8; // Super
+        }
+        return modifier(bits,platformControlBit);
+    }
     public static boolean matches(Binding binding, Input input, Modifier modifier) {
         return !binding.unbound && modifier != null && binding.modifier == modifier && binding.input.equals(input);
     }

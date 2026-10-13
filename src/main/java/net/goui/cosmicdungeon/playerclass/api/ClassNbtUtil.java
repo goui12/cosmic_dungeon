@@ -23,6 +23,9 @@ public final class ClassNbtUtil {
         classId = ClassKeys.clamp(classId);
 
         CompoundTag root = getOrCreateRoot(player);
+        if (!classId.equals(root.getStringOr(ClassData.KEY_CLASS_ID, ClassKeys.CLASS_ID_NONE))
+                && player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)
+            net.goui.cosmicdungeon.ammunition.AmmoSelectionService.invalidate(serverPlayer);
         root.putString(ClassData.KEY_CLASS_ID, classId);
     }
 

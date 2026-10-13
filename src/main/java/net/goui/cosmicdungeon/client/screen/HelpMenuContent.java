@@ -258,6 +258,8 @@ public final class HelpMenuContent {
             HelpBlock.command("Back", "Alt+Left or Back - previous guide page"),
             HelpBlock.command("Scroll", "Wheel - pane under cursor; Page Up / Page Down - focused pane (information by default)"),
             HelpBlock.command("Trade", "CAPS LOCK - default Trade Request"),
+            HelpBlock.bullet("Cycle ammunition defaults to R. Hold a bow or crossbow in the world; each press selects the next legal exact variant. Rebind or unbind in Controls. Screens, typing, lost focus and conflicting bindings block this action."),
+            HelpBlock.bullet("Ammo feedback shows the exact icon/name and current key. Exhaustion automatically switches and announces the next available type; no stock reports out of ammunition. Charged crossbows keep their current load."),
             HelpBlock.bullet("Active defaults: Bogatyr Alt+1 Patrol, Alt+2 Stay, Alt+3 Feed Pack; Theurgist Alt+4 opens Resurrect...."),
             HelpBlock.bullet("Rebind or unbind in Options > Controls > Key Binds > Cosmic Dungeon. Gray skill hints show your actual saved chord."),
             HelpBlock.bullet("Shortcuts act once per press in the world or inventory. Chat, other menus, dragging, carried items and modal controls block them. Resolve conflicting chords in Controls."),
@@ -319,6 +321,8 @@ public final class HelpMenuContent {
             HelpBlock.paragraph("A former pyrotechnician and demolition hobbyist, the Pyroclast brings sword, bow, crossbow and explosive utility to dungeon fights."),
             HelpBlock.bullet("Right-click flint with gravel in your inventory to make gunpowder. Default cost is one flint and one gravel for one gunpowder; keep room for the output."),
             HelpBlock.bullet("The removed 2x2 inventory crafting grid is not used. A pickup reminder may appear when you have matching materials."),
+            HelpBlock.bullet("Authored vanilla Cinderkiss, Cinderbite and Cindermaul rockets load from inventory or hands into bows and crossbows. Their components and existing effects are preserved. R cycles legal ammunition for the next load; the hint uses your current binding."),
+            HelpBlock.bullet("Ordinary right-click near a Cosmic Spawner allows weapon use. Developer Shift + right-click deliberately copies held equipment; skeletons can use copied bows."),
             HelpBlock.bullet("Authored D1 Cinderbite and Cindermaul rockets have enhanced enemy-only explosions with obstruction checks and no terrain damage. Damage follows server settings."),
             HelpBlock.bullet("Sword, bow and crossbow progression is passive. Use Pyroclast-attuned gear and class chests; a renamed ordinary item does not gain an ability."),
             HelpBlock.paragraph(Component.literal("Read ").append(link("Gear and trading", "trading")).append(" before handing equipment to another player."))));

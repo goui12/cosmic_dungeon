@@ -1,17 +1,18 @@
 # Active FixSet, 2026-10-13
 
-F1 inventory/potions, F2 Ready/frozen sharing, F3 wolves/Patrol, and F4 development
-spawners/startup/names with bounded wolf incident logging are implemented.
-[F4 behavior, compatibility and manual checks](tasks/FIXSET_F4_20261013.md).
-The second Alpha milestone is 1.8.7-alpha.1. Exact source, CI, review and returned
-publication IDs are established by the F4 controller receipt, not this source note.
-Two cards remain: F5 ammunition/skeleton bows; F6 loot/rewards/integration + Beta.
-Stop after F4. Later cards are not authorized by this checkpoint.
+F1 inventory/potions, F2 Ready/frozen sharing, F3 wolves/Patrol and F4 development
+spawners/startup/names with bounded wolf incident logging are complete. F4 published
+1.8.7-alpha.1; exact source/CI/review/publication IDs are in its controller receipt.
+F5 ammunition and spawner weapon compatibility is implemented as a source checkpoint;
+[behavior, checks and exact changed files](tasks/FIXSET_F5_20261013.md).
+Its exact build/native CI/review/commit status lives in the F5 controller receipt.
+No F5 version, tag, publication or installation is required by the approved milestones.
+One card remains: F6 loot-smelting/reward registrations, final integration and Beta.
+Stop after F5; F6 requires Cameron's continuation instruction.
 All current recommendations/Codex dispositions: [active ledger](tasks/BATCH_1_7_20_REVIEW_NOTES_20261012.md).
-The immediate player wolf flood remains unreproduced; new logs are enabled for the
-next incident. Real world/GUI/co-op acceptance remains TESTING. Alpha requires no
-server delivery. Earlier Batch25 Beta TEST delivery remains separately pending
-in series-1.7; historical prose below does not establish that delivery.
+The immediate player wolf flood remains unreproduced; F4 logs await the next incident.
+Real world/GUI/co-op/Controls acceptance remains TESTING. Earlier Batch25 Beta TEST
+delivery remains separately pending in series-1.7; historical prose does not prove it.
 
 ---
 

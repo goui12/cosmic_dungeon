@@ -66,6 +66,7 @@ public final class CosmicDungeonClient {
         modEventBus.addListener(TradeRequestKeybindClient::registerKeyMappings);
         modEventBus.addListener(HelpMenuKeybindClient::registerKeyMappings);
         modEventBus.addListener(SkillKeybindClient::registerKeyMappings);
+        modEventBus.addListener(AmmoKeybindClient::registerKeyMappings);
 
         // Menu soundtrack uses the native music manager and ends when a world is joined.
         NeoForge.EVENT_BUS.register(new CosmicMenuMusic());
