@@ -34,3 +34,22 @@ Class selector is a block+block-entity+menu+screen workflow that assigns class a
 ## Related dungeon lifecycle systems
 
 - [Dungeon AFK Handling](../DungeonLifecycle/Dungeon_AFK_Handling.md) documents the active-run AFK timer and Group Leader kick prompt that applies after class selector runs begin.
+
+## Development spawners and startup diagnostics
+
+Cosmic Spawners upgrade when their chunks naturally load in the development main
+overworld or registered dungeon template dimensions. Owned instance worlds never
+perform this migration. Previously unloaded chunks are handled when visited, with
+no forced chunk loading. Untouched old presets preserve all authored fields and
+opaque components across saves. Authentic per-spawner/preset upgrade messages remain.
+
+After visiting/upgrading or editing the required development chunks, the developer
+must explicitly run `/world save dungeon_1` (or the matching dungeon). No migration
+or adventure start saves a snapshot automatically. An old instance snapshot emits
+a bounded developer notice explaining this action and remains compatible.
+
+`[DungeonStartupTiming]` reports snapshot copying, world opening, synchronous
+chunk access (cached hits, initialization and waits), schematic load/paste,
+chest binding, migration, wolf admission, run registration, mercenary admission
+and teleport attempts. Nested times overlap; do not sum them. Failed phases retain
+their timings. These measurements do not change readiness, save or teleport order.

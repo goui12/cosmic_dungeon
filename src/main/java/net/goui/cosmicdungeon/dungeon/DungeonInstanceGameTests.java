@@ -119,6 +119,8 @@ public final class DungeonInstanceGameTests {
         suite.add(id("bogatyr_retired_commands"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrPatrolGameTests::retiredCommands);
         suite.add(id("bogatyr_command_save_recovery"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommandGameTests::commandSaveRecovery);
         suite.add(id("bogatyr_run_retirement"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommandGameTests::runRetirement);
+        suite.add(id("spawner_development_migration"),net.goui.cosmicdungeon.playerclass.d1.SpawnerMigrationGameTests::contexts);
+        suite.add(id("wolf_spawn_diagnostics"),net.goui.cosmicdungeon.playerclass.bogatyr.WolfDiagnosticGameTests::admission);
         suite.add(id("bogatyr_repeated_admission"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrAdmissionGameTests::repeatedAdmission);
         suite.add(id("bogatyr_duplicate_identity"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrAdmissionGameTests::duplicateIdentity);
         suite.add(id("mercenary_wolf_scheduler"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrAdmissionGameTests::mercenaryScheduler);

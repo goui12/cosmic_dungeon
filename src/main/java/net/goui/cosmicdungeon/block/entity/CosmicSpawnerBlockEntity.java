@@ -46,6 +46,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
     private String spawnerEntityId = "none";
     private CosmicSpawnerPreset spawnerPreset;
     private int loadedDataVersion = CURRENT_DATA_VERSION;
+    private boolean savedDataVersionPresent=true;
     private CompoundTag unknownFields = new CompoundTag();
     private static final java.util.Set<String> KNOWN_FIELDS = java.util.Set.of(DATA_VERSION_KEY,
             "SpawnerEntityId","SpawnerPreset","BossOneShot","BossHasSpawned","SpawnerMobCap","CosmicSpawnBlocked",
@@ -368,19 +369,30 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
             return;
         }
 
-        // Server: after chunk load, re-apply the configured entity type into the BaseSpawner.
-        if (this.level instanceof net.minecraft.server.level.ServerLevel sl) {
-            if (this.spawnerEntityId != null && !this.spawnerEntityId.equalsIgnoreCase("none")) {
-                ResourceLocation key = ResourceLocation.tryParse(this.spawnerEntityId);
-                if (key == null) return;
+        // Native load already restored weighted/current SpawnData. Reapplying an entity ID here
+        // would erase authored fields. Naturally loaded old chunks migrate only in the main world.
+        SpawnerDevelopmentMigration.loaded(this);
+    }
 
-                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getOptional(key).orElse(null);
-                if (type == null) return;
-
-                this.spawner.setEntityId(type, sl, sl.getRandom(), this.worldPosition);
-                invalidatePreviewEntityCache();
-            }
+    public boolean needsDevelopmentUpgrade(){
+        return loadedDataVersion<CURRENT_DATA_VERSION
+                ||spawnerPreset!=null&&spawnerPreset.needsDevelopmentUpgrade();
+    }
+    void upgradeDevelopmentData(){
+        if(!(level instanceof net.minecraft.server.level.ServerLevel serverLevel)
+                ||!SpawnerDevelopmentMigration.developmentWorld(serverLevel))return;
+        if(loadedDataVersion<CURRENT_DATA_VERSION){
+            int old=loadedDataVersion;
+            loadedDataVersion=CURRENT_DATA_VERSION;savedDataVersionPresent=true;
+            LOGGER.info("Upgrading Cosmic Spawner block entity at {} in development world {} from data version {} to {}",
+                    worldPosition,level.dimension().location(),old,CURRENT_DATA_VERSION);
         }
+        if(spawnerPreset!=null&&spawnerPreset.needsDevelopmentUpgrade()){
+            int old=spawnerPreset.savedVersion();spawnerPreset.upgradeDevelopmentData();
+            LOGGER.info("Upgrading Cosmic Spawner preset at {} in development world {} from version {} to {}",
+                    worldPosition,level.dimension().location(),old,CosmicSpawnerPreset.PRESET_VERSION);
+        }
+        setChanged(); // Persist with the main world's normal save; never publishes a dungeon snapshot.
     }
 
     // ----------------------------
@@ -479,13 +491,11 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         this.loadedDataVersion = dataVersion;
         this.unknownFields = SpawnerTagFields.unknown(input,KNOWN_FIELDS);
         this.spawnerPreset = null;
-        if (dataVersion < CURRENT_DATA_VERSION) {
-            LOGGER.info("Upgrading Cosmic Spawner block entity at {} from data version {} to {}", this.worldPosition, dataVersion, CURRENT_DATA_VERSION);
-        }
+        this.savedDataVersionPresent=input.getInt(DATA_VERSION_KEY).isPresent();
 
         this.spawnerEntityId = input.getString("SpawnerEntityId").orElse("none");
 
-        input.child("SpawnerPreset").ifPresent(child -> this.setSpawnerPresetInternal(CosmicSpawnerPreset.load(child)));
+        input.child("SpawnerPreset").ifPresent(child -> this.spawnerPreset=CosmicSpawnerPreset.load(child));
 
         // Boss one-shot persisted flags
 // Boss one-shot persisted flags
@@ -508,7 +518,7 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         super.saveAdditional(output);
 
         SpawnerTagFields.write(unknownFields,output);
-        output.putInt(DATA_VERSION_KEY, Math.max(loadedDataVersion,CURRENT_DATA_VERSION));
+        if(savedDataVersionPresent)output.putInt(DATA_VERSION_KEY,loadedDataVersion);
         output.putString("SpawnerEntityId", this.spawnerEntityId);
         if (this.spawnerPreset != null) {
             this.spawnerPreset.save(output.child("SpawnerPreset"));

@@ -40,6 +40,7 @@ public final class BogatyrRunLifecycle {
             var data=BogatyrCompanionData.get(server);
             data.find(BogatyrIdentity.id(wolf)).filter(e->e.run()==run&&e.owner().equals(owner)
                     &&!activeDestination(server,data,e,run)).ifPresent(data::retireRecord);
+            WolfSpawnDiagnostics.rejectedRun(wolf);
             wolf.discard();return false;
         }
         return true;

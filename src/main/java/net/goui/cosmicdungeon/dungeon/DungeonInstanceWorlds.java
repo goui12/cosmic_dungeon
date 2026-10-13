@@ -63,8 +63,11 @@ public final class DungeonInstanceWorlds {
             for (var pair : mapping.entrySet()) {
                 if (server.getLevel(pair.getValue()) != null || closing.containsKey(pair.getValue()))
                     throw new IOException("Instance ID is already loaded: " + pair.getValue().location());
-                files.copyFresh(snapshotRoot.resolve(DungeonWorldSnapshotService.sanitizeDimensionId(pair.getKey())),
-                        DungeonWorldSnapshotService.getDimensionFolder(server, pair.getValue()));
+                long copyStart=DungeonStartupTiming.start();
+                try{
+                    files.copyFresh(snapshotRoot.resolve(DungeonWorldSnapshotService.sanitizeDimensionId(pair.getKey())),
+                            DungeonWorldSnapshotService.getDimensionFolder(server, pair.getValue()));
+                }finally{DungeonStartupTiming.record(DungeonStartupTiming.Phase.SNAPSHOT_COPY,copyStart,1);}
             }
             restore(reservation);
             net.goui.cosmicdungeon.rift.RiftRegistryData.get(server).copyTemplatePortals(mapping);
@@ -88,7 +91,11 @@ public final class DungeonInstanceWorlds {
                 throw new IOException("Existing run directory is missing; recovery retained for " + physical.location());
         }
         for (var pair : mapping.entrySet()) {
-            if (server.getLevel(pair.getValue()) == null) open(pair.getKey(), pair.getValue());
+            if (server.getLevel(pair.getValue()) == null) {
+                long openStart=DungeonStartupTiming.start();
+                try{open(pair.getKey(),pair.getValue());}
+                finally{DungeonStartupTiming.record(DungeonStartupTiming.Phase.WORLD_OPEN,openStart,1);}
+            }
         }
     }
 

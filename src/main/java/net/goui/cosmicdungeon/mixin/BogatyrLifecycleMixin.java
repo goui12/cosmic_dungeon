@@ -13,11 +13,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class BogatyrLifecycleMixin {
     @Inject(method="onAddedToLevel",at=@At("RETURN"))
     private void cosmicdungeon$added(CallbackInfo info){
-        if((Object)this instanceof Wolf wolf)BogatyrCompanions.added(wolf);
+        if((Object)this instanceof Wolf wolf){
+            BogatyrCompanions.added(wolf);
+            net.goui.cosmicdungeon.playerclass.bogatyr.WolfSpawnDiagnostics.added(wolf);
+        }
     }
     @Inject(method="setRemoved",at=@At("HEAD"))
     private void cosmicdungeon$removing(Entity.RemovalReason reason,CallbackInfo info){
-        if((Object)this instanceof Wolf wolf && wolf.getRemovalReason()==null)BogatyrCompanions.removing(wolf,reason);
+        if((Object)this instanceof Wolf wolf && wolf.getRemovalReason()==null){
+            net.goui.cosmicdungeon.playerclass.bogatyr.WolfSpawnDiagnostics.removing(wolf,reason);
+            BogatyrCompanions.removing(wolf,reason);
+        }
     }
     @Inject(method="saveWithoutId",at=@At("HEAD"))
     private void cosmicdungeon$saving(ValueOutput output,CallbackInfo info){

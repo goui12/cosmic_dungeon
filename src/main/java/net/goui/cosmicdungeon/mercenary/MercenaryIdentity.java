@@ -3,7 +3,7 @@ package net.goui.cosmicdungeon.mercenary;
 import java.util.List;
 import java.util.UUID;
 
-/** Stable presentation from the existing random hire UUID; no new save fields or lookups. */
+/** Frozen legacy UUID presentation and the separate selector for newly created hires. */
 public final class MercenaryIdentity {
     private MercenaryIdentity() {}
     // Keep this pool and its ordering stable so existing hires retain their names.
@@ -32,5 +32,10 @@ public final class MercenaryIdentity {
 
     public static String name(UUID hireId) {
         return NAMES.get(Math.floorMod(hireId.hashCode(), NAMES.size()));
+    }
+
+    /** Select once for a new hire; callers persist the result separately from legacy identity. */
+    public static String newName(UUID hireId) {
+        return MercenaryNamePool.name(hireId);
     }
 }

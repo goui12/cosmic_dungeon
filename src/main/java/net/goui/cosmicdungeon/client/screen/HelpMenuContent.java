@@ -56,7 +56,7 @@ public final class HelpMenuContent {
             HelpBlock.paragraph(Component.literal("See the ").append(link("Theurgist guide", "class.theurgist")).append(" for recipe counts, fuel and shared potion crafting.")),
             HelpBlock.heading("Party Hover and Mercenaries"),
             HelpBlock.bullet("Hover a party member for class, health, skills, sharing YES/NO, shared resources used/contributed and relevant resurrection cooldowns."),
-            HelpBlock.bullet("Mercenaries follow their hirer, use class-specific combat skills and separate run progression, and may catch up when stuck. They drop no equipment on death."),
+            HelpBlock.bullet("Mercenaries follow their hirer, use class-specific skills and separate progression, and drop no equipment. New hires draw from 80 short historical names across eight balanced regional pools; existing hires keep their names through saves and respawns."),
             HelpBlock.heading("Group Split and AFK"),
             HelpBlock.bullet("Qualifying mob Trace is shared with eligible active members within 60 blocks in the same instance. Before respawn, a dead member's death position is used; disconnected players receive no share."),
             HelpBlock.bullet("After 15 minutes without observed activity, a member is marked AFK and the leader receives a kick prompt."),
