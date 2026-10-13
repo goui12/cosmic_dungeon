@@ -100,13 +100,17 @@ Dragoons may use anvils. For **Repair Affinity**, invite a customer with `/repai
 
 A sword, bow, and crossbow fighter with explosive utility. **Right-click flint** while carrying gravel to make gunpowder. Default cost is one flint plus one gravel for one gunpowder; keep output space free. The old shapeless inventory-grid instructions no longer apply.
 
-Use the authored D1 Cinderbite and Cindermaul rockets with their supported crossbow behavior. Their enhanced explosions affect eligible enemies, respect obstruction, and do not damage terrain. Actual damage follows the server configuration. Sword, bow, and crossbow skills progress passively. Renaming an ordinary item does not grant a class ability.
+The authored vanilla Cinderkiss, Cinderbite and Cindermaul rockets load from your inventory or hands into bows and crossbows with their existing names, components and effects. Hold a bow or crossbow and press **R** to cycle legal ammunition in a stable order; exact tipped-arrow and other component variants remain separate. The icon/name and message show the selected type and your current binding. When that type runs out, selection automatically switches to available legal stock and announces it; no stock shows an out-of-ammo notice. A charged crossbow keeps its loaded ammunition: cycling chooses the next load. Native consumption, enchantments and class/ownership/run restrictions still apply.
+
+Authored D1 Cinderbite and Cindermaul retain their supported abilities. Their enhanced explosions affect eligible enemies, respect obstruction, and do not damage terrain. Actual damage follows the server configuration. Sword, bow, and crossbow skills progress passively. Renaming an ordinary item does not grant a class ability.
 
 ## Judicator
 
 An oathbound mace-and-bow protector. Scintilla Vitalis and Lux Vitalis provide healing to living targets and harm undead; Ebonsight provides night vision, and Vielpiercer reveals targets with Glowing. Follow each authored item's tooltip and class restrictions. Mace/bow progression is passive. Eon sells the shared Theurgist/Judicator healing offers. Repair Affinity and anvil access belong to Dragoon.
 
 ## Controls and passive progression
+
+**Cycle ammunition** defaults to **R** and can be rebound or unbound in Controls. It works once per physical press while holding a bow or crossbow in the world; screens, chat, modals, lost focus and conflicting bindings block it. Ammo feedback uses your actual current binding. The following inventory shortcuts are class skills.
 
 Change bindings under **Options > Controls > Key Binds > Cosmic Dungeon**. Gray hints beside active skills show your saved binding, including an unbound state. Active shortcuts work once per press in the world or your inventory when the action is eligible. Chat, other menus, dragging, held cursor items, and modal controls block them. Resolve duplicate chords with other actions in Controls. Different modifier chords are distinct even if Controls highlights the same base key.
 
@@ -155,6 +159,8 @@ Useful commands: `/progression get <your_name>`, `/d1 stats`, `/d1 claim`, `/cur
 ## Developer-only reference â€” outside the H guide
 
 The spawner editor is an authoring tool, not a Dungeoneer feature. The server's actual **Developer rank** is required; operator level alone does not supply that rank. A Developer looks at a Cosmic Spawner within five blocks and uses `/spawner edit`. Detailed spawner hover information is intrinsic to that rank; there is no player showlabels opt-in.
+
+Ordinary right-clicks at a Cosmic Spawner allow bow drawing and crossbow loading/firing. Developers can deliberately **Shift + right-click** with held equipment to copy its exact components into the preset; ordinary combat never copies equipment. A copied bow enables a skeleton's native ranged attack. Only uninterrupted actual wrong-tool mining warns after one second; holding/using a bow or crossbow does not spam the mining title.
 
 The editor keeps changes in a draft until Apply. Review the target and unsaved-change prompt; Cancel abandons the draft. Entity/name/captain selection, six equipment slots, searchable item selection, copying real held-item components, enchantments, flags, drop chances, intrinsic/custom loot, boss/cap/delay controls, and named preset operations belong here. Normal enchantments retain compatibility and normal limits; Advanced/Unsafe permits deliberate bounded exceptions. The preview is visual only and does not spawn mobs. Existing five preset shortcuts remain available. Do not confuse a conditional native loot table with guaranteed custom loot.
 

@@ -100,6 +100,8 @@
     "ResurrectionReceiptMixin",
     "BogatyrLoveMixin",
     "MobPersistenceAccess",
-    "SpawnerBreakAccess"
+    "SpawnerBreakAccess",
+    "BowRocketMixin",
+    "AmmoDrawMixin"
   ]
 }
