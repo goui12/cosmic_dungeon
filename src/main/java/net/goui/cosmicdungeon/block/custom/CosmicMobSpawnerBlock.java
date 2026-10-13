@@ -107,12 +107,14 @@ public class CosmicMobSpawnerBlock extends Block implements EntityBlock {
 
     @Override
     protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        // Equipment authoring is deliberate; ordinary weapon use must reach the native item handler.
-        if (stack.isEmpty() || !player.isShiftKeyDown() || level.isClientSide())
-            return InteractionResult.PASS;
+        // Only projectile weapons gain pass-through; unrelated items retain the existing block interaction guard.
+        if (stack.isEmpty()) return InteractionResult.PASS;
+        boolean weapon = net.goui.cosmicdungeon.ammunition.AmmoChoices.weapon(stack);
+        if (level.isClientSide()) return weapon ? InteractionResult.PASS : InteractionResult.SUCCESS;
         if (!(player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)
+                || !player.isShiftKeyDown()
                 || !net.goui.cosmicdungeon.auth.AccessPolicy.isDeveloper(serverPlayer))
-            return InteractionResult.PASS;
+            return weapon ? InteractionResult.PASS : InteractionResult.FAIL;
         BlockEntity be = level.getBlockEntity(pos);
         if (!(be instanceof CosmicSpawnerBlockEntity cosmic)) return InteractionResult.PASS;
 

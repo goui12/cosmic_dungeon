@@ -48,6 +48,33 @@ public final class SpawnerWeaponGameTests {
         f.player.stopUsingItem();
         f.check(before.equals(be.saveWithoutMetadata(f.level.registryAccess())),"Ordinary and non-Developer Shift clicks preserve exact preset data");
     }
+    private static void rejectedItem(CosmicSpawnerGameTests.Fixture f,BlockPos pos,Item item,boolean developer){
+        if(developer)RankStore.get(f.level).setRank(f.player.getUUID(),Rank.DEVELOPER);
+        else RankStore.get(f.level).clearRank(f.player.getUUID());
+        f.player.setShiftKeyDown(false);f.player.stopUsingItem();
+        var held=new ItemStack(item);f.player.setItemInHand(InteractionHand.MAIN_HAND,held);
+        var original=held.copy();var be=(CosmicSpawnerBlockEntity)f.level.getBlockEntity(pos);
+        var preset=be.saveWithoutMetadata(f.level.registryAccess());
+        var surroundings=new LinkedHashMap<BlockPos,net.minecraft.world.level.block.state.BlockState>();
+        BlockPos.betweenClosed(pos.offset(-1,-1,-1),pos.offset(1,1,1)).forEach(p->surroundings.put(p.immutable(),f.level.getBlockState(p)));
+        var bounds=new AABB(pos).inflate(3);
+        var entities=f.level.getEntitiesOfClass(Entity.class,bounds).stream().map(Entity::getUUID).collect(java.util.stream.Collectors.toSet());
+        try{
+            // Preserve the existing block callback contract. ServerPlayerGameMode separately owns
+            // native item.useOn fallthrough; this assertion does not claim to change that policy.
+            var result=f.level.getBlockState(pos).useItemOn(held,f.level,f.player,InteractionHand.MAIN_HAND,
+                    new BlockHitResult(Vec3.atCenterOf(pos),Direction.NORTH,pos,false));
+            f.check(result==InteractionResult.FAIL,"The spawner block boundary retains its server rejection for nonweapons");
+            f.check(ItemStack.matches(original,f.player.getMainHandItem()),"Rejected bucket, ignition, block or egg preserves the exact held stack");
+            f.check(preset.equals(be.saveWithoutMetadata(f.level.registryAccess())),"Rejected nonweapon click cannot edit the spawner preset");
+            f.check(surroundings.entrySet().stream().allMatch(e->f.level.getBlockState(e.getKey()).equals(e.getValue())),
+                    "Rejected nonweapon click cannot place a block, fluid or fire");
+            f.check(entities.equals(f.level.getEntitiesOfClass(Entity.class,bounds).stream().map(Entity::getUUID)
+                    .collect(java.util.stream.Collectors.toSet())),"Rejected spawn egg cannot create a world entity");
+        }finally{
+            f.level.getEntitiesOfClass(Entity.class,bounds,e->!entities.contains(e.getUUID())).forEach(Entity::discard);
+        }
+    }
     private static void breaking(CosmicSpawnerGameTests.Fixture f,BlockPos pos){
         f.player.gameMode.handleBlockBreakAction(pos,ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK,
                 Direction.NORTH,f.level.getMaxY(),0);
@@ -65,6 +92,12 @@ public final class SpawnerWeaponGameTests {
             try{
                 var pos=f.spawner(0,1,2);var be=(CosmicSpawnerBlockEntity)f.level.getBlockEntity(pos);
                 be.setSpawnerEntityId("minecraft:skeleton");
+                // An empty adjacent target with solid support makes placement/ignition/egg regressions observable.
+                f.place(0,1,1,net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+                f.place(0,0,1,net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+                for(var item:List.of(Items.WATER_BUCKET,Items.FLINT_AND_STEEL,Items.STONE,Items.SKELETON_SPAWN_EGG)){
+                    rejectedItem(f,pos,item,false);rejectedItem(f,pos,item,true);
+                }
                 for(var item:List.of(Items.BOW,Items.CROSSBOW)){
                     pass(f,pos,item,false,false);pass(f,pos,item,true,false);pass(f,pos,item,false,true);
                 }
