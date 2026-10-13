@@ -3,7 +3,7 @@ package net.goui.cosmicdungeon.client.screen.crafting;
 import java.util.*;
 import net.goui.cosmicdungeon.network.PotionCraftPayloads.Entry;
 
-/** One tile per effect family; variants never invent an unavailable server recipe. */
+/** Every legal server entry has its own row; variants never invent a recipe. */
 public final class PotionPaletteModel {
     public enum Variant {
         NORMAL("I", "Normal potency"), STRONG("II", "Stronger potency"), EXTENDED("+", "Extended duration");
@@ -23,19 +23,16 @@ public final class PotionPaletteModel {
             default -> id;
         };
     }
-    public static List<Entry> visible(List<Entry> entries, Variant variant) {
-        var families = new TreeMap<String, EnumMap<Variant, Entry>>();
-        for (var entry : entries)
-            families.computeIfAbsent(family(entry.targetId()), ignored -> new EnumMap<>(Variant.class))
-                    .put(variant(entry.targetId()), entry);
-        var result = new ArrayList<Entry>();
-        for (var family : families.values()) {
-            var selected = family.get(variant);
-            if (selected == null) selected = family.get(Variant.NORMAL);
-            if (selected == null) selected = family.values().iterator().next();
-            result.add(selected);
-        }
-        return List.copyOf(result);
+    public static List<Entry> visible(List<Entry> entries) {
+        return entries.stream().sorted(Comparator.comparing((Entry e) -> family(e.targetId()))
+                .thenComparing(e -> variant(e.targetId())).thenComparing(Entry::targetId)).toList();
+    }
+    public static String variantLabel(Entry entry) {
+        return switch (variant(entry.targetId())) {
+            case NORMAL -> "Normal";
+            case STRONG -> "Strong / II";
+            case EXTENDED -> "Extended";
+        };
     }
     public static int count(Entry entry) { return entry.own() > 0 ? entry.own() : entry.shared(); }
     public static int color(Entry entry) { return entry.own() > 0 ? 0xFFFFFFFF : entry.shared() > 0 ? 0xFF66B6FF : 0xFFA51F2B; }

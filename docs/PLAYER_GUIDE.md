@@ -32,9 +32,9 @@ All potions may be traded, including types your class cannot craft. Other invent
 
 ## Potion crafting, fuel, and stacks
 
-Inside an active Dungeon 1 run, a **Theurgist** or **Venefex** opens inventory and selects **Craft...**. Theurgists craft beneficial vanilla-brewable splash potions; Venefex craft harmful ones. Both may craft mixed-effect **drinkable Turtle Master**. Its splash and lingering forms are not offered. Luck has no vanilla brewing recipe and is not a craft tile. Existing potions remain usable/tradable according to their item rules even when absent from this palette.
+Inside an active Dungeon 1 run, a **Theurgist** or **Venefex** opens inventory to the always-visible **Potions** list on its right. Theurgists craft beneficial vanilla-brewable splash potions; Venefex craft harmful ones. Both may craft mixed-effect **drinkable Turtle Master**. Its splash and lingering forms are not offered. Luck has no vanilla brewing recipe and is not a craft tile. Existing potions remain usable/tradable according to their item rules even when absent from this palette.
 
-Use the Normal, Strong, and Extended variant controls where a legal recipe exists. Hover a tile for its potion effects and availability explanation:
+Each legal Normal, Strong, and Extended variant has its own labeled row. Scroll with the mouse wheel or drag the scrollbar. Recipes stay visible as disabled previews outside a dungeon. Hover a row for its potion effects and availability explanation:
 
 | Tile | Meaning |
 |---|---|
@@ -48,7 +48,7 @@ The count is an alternative capacity for that recipe, not a reservation or a pro
 
 Hover a potion tile to see the server-selected route for one output: the one existing potion input consumed, exact remaining ingredient quantities, and own/eligible-group stock. Intermediate stages made within that route are not charged again. The required blaze powder total includes both any reagent and new fuel refill; the fuel line identifies the refill portion, while saved charges reduce it. Own affordable routes are preferred before pooled routes. Unavailable tiles quote no affordable route. Quantities reserve nothing; a pending click shows the previous snapshot until the server replies, and execution rechecks all costs.
 
-Recipes use the complete applicable vanilla chain: a water bottle or supported intermediate potion, all remaining ingredients, and gunpowder for a splash output. Not every route needs nether wart. Intermediate potions skip already completed steps. The fuel gauge left of the palette shows your remaining **brewing charges**. One blaze powder supplies **20 steps**; each remaining brewing operation consumes one charge. Strength may need blaze powder both as an ingredient and as fuel when the gauge is empty. Unused charges survive normal saves, reconnects, and death. Invalid/full destinations or changed eligibility spend neither ingredients nor fuel.
+Recipes use the complete applicable vanilla chain: a water bottle or supported intermediate potion, all remaining ingredients, and gunpowder for a splash output. Not every route needs nether wart. Intermediate potions skip already completed steps. The fuel gauge at the top of the list shows your remaining **brewing charges**. One blaze powder supplies **20 steps**; each remaining brewing operation consumes one charge. Strength may need blaze powder both as an ingredient and as fuel when the gauge is empty. Unused charges survive normal saves, reconnects, and death. Invalid/full destinations or changed eligibility spend neither ingredients nor fuel.
 
 Requests, random-potion skills, and the virtual Brewing Supplies resource are retired. They are not required to craft or resurrect, and obsolete balances do not become physical item refunds. Theurgist and Venefex do not use the old separate Skills window.
 
@@ -58,7 +58,7 @@ A healer-alchemist who balances care and chemistry. Use mace/bow and Theurgist-a
 
 Your positive thrown potions aid allies and their companions and do not affect hostile mobs, including healing damage against undead. Restorative class arrows have their own rules.
 
-Use **Craft...** for the potion palette above. Only Theurgists may interact with brewing stands; valid brews finish rapidly under the server's instant-brewing setting while the stand is open. The stand still needs a valid recipe and fuel. Eon Penrose sells class-gated brewing equipment and advanced healing stock.
+The **Potions** list appears automatically beside inventory. Only Theurgists may interact with brewing stands; valid brews finish rapidly under the server's instant-brewing setting while the stand is open. The stand still needs a valid recipe and fuel. Eon Penrose sells class-gated brewing equipment and advanced healing stock.
 
 **Resurrect...** is available immediately in your inventory; its default shortcut is **Alt+4**. Opening the picker does not cast. Choose a dead teammate in the same active run. They have 60 seconds to accept or decline on the death screen. A successful accepted resurrection returns them to their latest recorded death location with five seconds of protection and the existing recoverable-inventory handling. It does not recreate destroyed or missing physical drops.
 
@@ -66,7 +66,7 @@ Player resurrection costs no items or currency and starts a **180-second cooldow
 
 ## Venefex
 
-A sword-and-bow toxicologist who weakens enemies and exploits their ailments. Use **Craft...** for harmful splash recipes and drinkable Turtle Master. The same shared ingredients, fuel, cursor/Shift-click, and stack rules apply; brewing-stand interaction remains Theurgist-only.
+A sword-and-bow toxicologist who weakens enemies and exploits their ailments. The **Potions** list beside inventory shows harmful splash recipes and drinkable Turtle Master. The same shared ingredients, fuel, cursor/Shift-click, and stack rules apply; brewing-stand interaction remains Theurgist-only.
 
 The D1 arsenal includes the Tree Viper, Bushmaster, and Fer-de-Lance poison family; Pestis and Black Bubo weakness; Vapours, Melancholia, and Deathly Stupor slowing; and Spicule Breach/Rend instant harm. Spicule damage against living enemies grows with harmful effects under the server's balance settings. Spicule instead heals undead, and native poison immunities still matter. Sword/bow progression and the appropriate arrow-duration benefits are passive, not new hotkey abilities.
 

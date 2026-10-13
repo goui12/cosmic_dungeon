@@ -4,7 +4,7 @@ Cameron2026-10-12: remove recommendations once accomplished or deemed unnecessar
 
 | Priority | Remaining recommendation | Source | Disposition |
 |---|---|---|---|
-| P1 | Outgoing owner-attack assistance for Patrol. | [PR262 note](https://github.com/goui12/cosmic_dungeon/pull/262#discussion_r4244287961), source59b87afcdc13aaf836d01ed6c47c5c38e256d48c | Disputed/unimplemented outside this queue. Incoming defense remains; separate Cameron gameplay choice. |
+| P1 | Outgoing owner-attack assistance for Patrol. | [PR262 note](https://github.com/goui12/cosmic_dungeon/pull/262#discussion_r4244287961), source59b87afcdc13aaf836d01ed6c47c5c38e256d48c | Approved by Cameron2026-10-13; queued in FixSet F3. Still unimplemented in F1; retain until code and tests pass. |
 | P2 | Native GUI-scale/layering/modal/drag/Creative/Extra visual regression, including selected brewing-route tooltip wrapping. | [Batch1](BATCH_1_7_01_20261011.md), source068fe352f96d9bef1ab3e4d4fbc01089a5523589; [Batch23](BATCH_1_8_23_20261012.md), sourcee0a3ad8838d422b8bbd9b408e179f2f13057c3cc | TESTING: licensed native play. |
 | P2 | All six class inventory scenes at two GUI scales. | [Batch2](BATCH_1_7_02_20261011.md), source24e5e5b568f2687ed07cb6cf751e8a9bfe463a8a | TESTING: native screenshot baseline. |
 | P2 | Licensed co-op trade/drop/pickup/full-inventory/consent/potion/death/resurrection journey, including six-player palette/input acceptance. | [Batch3](BATCH_1_7_03_20261011.md), sourcef1cb4c3813a1df455b70727b7d68b6f43543f69b; [Batch24](BATCH_1_8_24_20261012.md), source0cf2dc21a67a513411a7235ee453d94ec63fc6ed | TESTING: automated recovery/concurrency/transactions pass; licensed co-op/native latency journey unrun. |
@@ -17,4 +17,4 @@ Cameron2026-10-12: remove recommendations once accomplished or deemed unnecessar
 | P2 | Native guide font/link/resource-pack/crop/resize acceptance. | [Batch18](BATCH_1_7_18_20261012.md), source6a417bcb690b151b395c2eef89c17a215aedf163; [Batch19](BATCH_1_7_19_20261012.md), sourceb8c9aa48d9f4c489097d84470aa9bea10bb05ef5 | TESTING: authored acceptance matrix retained; actual native execution pending. |
 | P2 | Profile real terrain/whole-world cost only if licensed play exposes a problem. | [Batch17](BATCH_1_7_17_20261012.md), source59b87afcdc13aaf836d01ed6c47c5c38e256d48c | Conditional/deferred; measured quiet kernels and packet/storage bounds remain the baseline. |
 
-Only remaining genuine unimplemented Codex topic: P1 outgoing-attack assistance, disputed/deferred. Fresh PR review coverage is recorded in each batch's operational receipts; an earlier no-findings review does not prove a later head was reviewed.
+Only remaining genuine unimplemented Codex topic: P1 outgoing-attack assistance, approved and queued for FixSet F3. Fresh PR review coverage is recorded in each batch's operational receipts; an earlier no-findings review does not prove a later head was reviewed.

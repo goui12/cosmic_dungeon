@@ -17,7 +17,8 @@
     "client.ClientHooksTooltipMixin",
     "client.InventoryCraftingSlotsMixin",
     "client.ClassInventoryScreenMixin",
-    "client.InventoryDragAccess"
+    "client.InventoryDragAccess",
+    "client.PotionInventoryBoundsMixin"
   ],
   "injectors": {
     "defaultRequire": 1

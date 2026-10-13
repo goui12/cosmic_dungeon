@@ -1,31 +1,35 @@
 package net.goui.cosmicdungeon.client.screen.crafting;
 
+import java.util.*;
 import java.util.function.Consumer;
 import net.goui.cosmicdungeon.client.screen.ClassInventoryPresentation;
 import net.goui.cosmicdungeon.client.screen.DeferredTooltipAccess;
+import net.goui.cosmicdungeon.crafting.PotionRecipeCatalog;
 import net.goui.cosmicdungeon.network.PotionCraftPayloads.*;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.network.chat.Component;
+import net.minecraft.world.flag.FeatureFlagSet;
+import net.minecraft.world.item.alchemy.PotionContents;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.*;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.*;
 
-/** Client-only palette; recipes, prices, custody and inventory placement remain server authoritative. */
+/** Always-visible class inventory list; server quotes remain the only authority for crafting. */
 @EventBusSubscriber(modid = "cosmicdungeon", value = Dist.CLIENT)
 public final class PotionCraftClient {
     private static final PotionPaletteState STATE = new PotionPaletteState();
     private static AbstractContainerScreen<?> screen;
-    private static int pressedButtons;
+    private static String role = "";
+    private static int pressedButtons, retryTicks;
+    private static double scrollGrab = -1;
+    private static FeatureFlagSet catalogFlags;
+    private static PotionRecipeCatalog catalog;
     private PotionCraftClient() {}
     public static void actions(Consumer<Action> actions, Consumer<Request> requests) { STATE.actions(actions, requests); }
     public static void receive(View view) { STATE.receive(view); }
-    public static void clear() { STATE.clear(); screen = null; pressedButtons = 0; }
+    public static void clear() { STATE.clear(); screen = null; role = ""; pressedButtons = retryTicks = 0; scrollGrab = -1; }
     public static boolean brewer(String id) { return "theurgist".equals(id) || "venefex".equals(id); }
     private static boolean dragging(AbstractContainerScreen<?> candidate) {
         return !((net.goui.cosmicdungeon.mixin.client.InventoryDragAccess)candidate).cosmicdungeon$draggingItem().isEmpty();
@@ -36,29 +40,37 @@ public final class PotionCraftClient {
                 && mc.player.containerMenu == candidate.getMenu() && brewer(ClassInventoryPresentation.theme().classId());
     }
     private static boolean current(Screen candidate) {
-        if (!STATE.open() || candidate != screen) return false;
-        if (eligible(screen)) return true;
-        close(); return false;
+        if (!ClassInventoryPresentation.supports(candidate) || !eligible((AbstractContainerScreen<?>)candidate)) {
+            if (candidate == screen) close();
+            return false;
+        }
+        String id = ClassInventoryPresentation.theme().classId();
+        if (candidate != screen || !id.equals(role)) {
+            close(); screen = (AbstractContainerScreen<?>)candidate; role = id;
+            var flags = Minecraft.getInstance().level.enabledFeatures();
+            if (catalog == null || !flags.equals(catalogFlags)) {
+                catalog = PotionRecipeCatalog.vanilla(flags); catalogFlags = flags;
+            }
+            STATE.preview(catalog.targets().stream().filter(t -> t.classes().contains(id))
+                    .map(t -> new Entry(t.id(), PotionContents.createItemStack(t.container(), t.potion()), 0, 0, 0, 0, List.of())).toList());
+        }
+        return STATE.ensureOpen();
     }
-    private static void close() { STATE.close(); screen = null; pressedButtons = 0; }
+    private static void close() { STATE.close(); screen = null; role = ""; pressedButtons = retryTicks = 0; scrollGrab = -1; }
     private static PotionPaletteLayout layout() {
-        return PotionPaletteLayout.of(screen.width, screen.height, screen.getGuiLeft(), screen.getGuiTop(), screen.getXSize(), STATE.entries().size());
+        var geometry = PotionPaletteLayout.of(screen.width, screen.height, screen.getGuiLeft(), screen.getGuiTop(), screen.getXSize(), STATE.entries().size(), STATE.first());
+        STATE.first(geometry.first()); return geometry;
     }
     public static boolean inputCaptured(Screen candidate) { return candidate == screen && pressedButtons != 0; }
-    public static boolean ownsInput(Screen candidate, double x, double y) {
-        return current(candidate) && layout().panel().contains(x, y);
-    }
-    @SubscribeEvent public static void init(ScreenEvent.Init.Post event) {
-        if (ClassInventoryPresentation.supports(event.getScreen()))
-            event.addListener(new CraftButton((AbstractContainerScreen<?>)event.getScreen()));
-    }
+    public static boolean ownsInput(Screen candidate, double x, double y) { return current(candidate) && layout().panel().contains(x, y); }
+    @SubscribeEvent public static void init(ScreenEvent.Init.Post event) { current(event.getScreen()); }
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void render(ScreenEvent.Render.Post event) {
         if (!current(event.getScreen())) return;
         var geometry = layout(); var graphics = event.getGuiGraphics();
         int mx = event.getMouseX(), my = event.getMouseY();
         if (geometry.panel().contains(mx, my)) ((DeferredTooltipAccess)graphics).cosmicdungeon$clearTooltip();
-        PotionPaletteComponent.draw(graphics, geometry, STATE, dragging(screen) ? -1 : mx, dragging(screen) ? -1 : my);
+        PotionPaletteComponent.draw(graphics, geometry, STATE, dragging(screen) || scrollGrab >= 0 ? -1 : mx, dragging(screen) || scrollGrab >= 0 ? -1 : my);
         screen.renderCarriedItem(graphics, mx, my);
     }
     @SubscribeEvent(priority = EventPriority.HIGHEST)
@@ -69,53 +81,45 @@ public final class PotionCraftClient {
         if (button >= 0 && button < 8) pressedButtons |= 1 << button;
         if (button != 0 || dragging(screen)) return;
         var geometry = layout();
-        for (int i = 0; i < 3; i++) if (geometry.variants().get(i).contains(event.getMouseX(), event.getMouseY())) {
-            STATE.variant(PotionPaletteModel.Variant.values()[i]); return;
+        if (geometry.maxFirst() > 0 && geometry.track().contains(event.getMouseX(), event.getMouseY())) {
+            scrollGrab = geometry.thumb().contains(event.getMouseX(), event.getMouseY()) ? event.getMouseY() - geometry.thumb().y() : geometry.thumb().height() / 2.0;
+            STATE.first(geometry.offsetAt(event.getMouseY(), scrollGrab)); return;
         }
-        var entries = STATE.entries();
-        for (int i = 0; i < entries.size(); i++) if (geometry.tiles().get(i).contains(event.getMouseX(), event.getMouseY())) {
-            STATE.craft(entries.get(i).targetId(), Minecraft.getInstance().hasShiftDown()); return;
-        }
+        int index = geometry.indexAt(event.getMouseX(), event.getMouseY());
+        if (index >= 0) STATE.craft(STATE.entries().get(index).targetId(), Minecraft.getInstance().hasShiftDown());
     }
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void release(ScreenEvent.MouseButtonReleased.Pre event) {
+        if (event.getScreen() != screen) return;
         int button = event.getButton();
         if (button < 0 || button >= 8) return;
         int mask = 1 << button;
         if ((pressedButtons & mask) != 0) { event.setCanceled(true); pressedButtons &= ~mask; }
+        if (button == 0) scrollGrab = -1;
     }
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void drag(ScreenEvent.MouseDragged.Pre event) {
-        if (current(event.getScreen()) && (pressedButtons != 0 || ownsInput(event.getScreen(), event.getMouseX(), event.getMouseY())))
+        if (!current(event.getScreen())) return;
+        if (pressedButtons != 0 || ownsInput(event.getScreen(), event.getMouseX(), event.getMouseY())) {
             event.setCanceled(true);
+            if (scrollGrab >= 0 && event.getMouseButton() == 0 && !dragging(screen))
+                STATE.first(layout().offsetAt(event.getMouseY(), scrollGrab));
+        }
     }
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void scroll(ScreenEvent.MouseScrolled.Pre event) {
-        if (ownsInput(event.getScreen(), event.getMouseX(), event.getMouseY())) event.setCanceled(true);
+        if (!ownsInput(event.getScreen(), event.getMouseX(), event.getMouseY())) return;
+        event.setCanceled(true);
+        if (!dragging(screen) && event.getScrollDeltaY() != 0)
+            STATE.first(Math.clamp(STATE.first() + (event.getScrollDeltaY() > 0 ? -1 : 1), 0, layout().maxFirst()));
+    }
+    @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
+        if (screen != null && Minecraft.getInstance().screen != screen) { close(); return; }
+        // Invalid/temporarily unavailable server sessions close themselves. Retry at most once per second.
+        if (screen != null && ++retryTicks >= 20) { retryTicks = 0; STATE.refreshUnavailable(); }
     }
     @SubscribeEvent public static void closing(ScreenEvent.Closing event) { if (screen == event.getScreen()) close(); }
-    @SubscribeEvent public static void login(ClientPlayerNetworkEvent.LoggingIn event) { clear(); }
-    @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { clear(); }
-
-    private static final class CraftButton extends Button {
-        private final AbstractContainerScreen<?> parent;
-        CraftButton(AbstractContainerScreen<?> parent) {
-            super(parent.getGuiLeft() + 98, parent.getGuiTop() + 25, 73, 20, Component.literal("Craft..."),
-                    button -> ((CraftButton)button).toggle(), DEFAULT_NARRATION);
-            this.parent = parent;
-            setTooltip(Tooltip.create(Component.literal("Open potion recipes. Click to craft one; Shift-click places one in your inventory, hotbar first.")));
-        }
-        private void toggle() {
-            if (!eligible(parent) || dragging(parent)) return;
-            if (screen != null && screen != parent) close();
-            screen = parent; STATE.toggle();
-            if (!STATE.open()) screen = null;
-        }
-        @Override protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-            active = eligible(parent) && !dragging(parent);
-            if (!brewer(ClassInventoryPresentation.theme().classId())) return;
-            setMessage(Component.literal(STATE.open() && screen == parent ? "Craft -" : "Craft..."));
-            super.renderWidget(graphics, mouseX, mouseY, partialTick);
-        }
-    }
+    @SubscribeEvent public static void clone(ClientPlayerNetworkEvent.Clone event) { clear(); }
+    @SubscribeEvent public static void login(ClientPlayerNetworkEvent.LoggingIn event) { clear(); catalog = null; catalogFlags = null; }
+    @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { clear(); catalog = null; catalogFlags = null; }
 }

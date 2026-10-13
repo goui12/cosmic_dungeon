@@ -22,15 +22,17 @@ final class PotionPaletteTest {
                 own, shared, shared>0?steps:0, 0, materials);
     }
     private View view(long run, long revision, Entry... entries) { return new View(run, revision, "theurgist", 17, 20, List.of(entries)); }
-    @Test void variantsKeepAllFamiliesAndOnlySelectRealServerEntries() {
-        var normal = entry("healing", 2, 4); var strong = entry("strong_healing", 0, 1); var other = entry("night_vision", 0, 0);
-        var entries = List.of(normal, strong, other);
-        assertEquals(List.of(normal, other), PotionPaletteModel.visible(entries, PotionPaletteModel.Variant.NORMAL));
-        assertEquals(List.of(strong, other), PotionPaletteModel.visible(entries, PotionPaletteModel.Variant.STRONG));
-        assertEquals(List.of(normal, other), PotionPaletteModel.visible(entries, PotionPaletteModel.Variant.EXTENDED));
+    @Test void everyLegalVariantHasItsOwnStableRowWithoutInventedRecipes() {
+        var normal = entry("healing", 2, 4); var strong = entry("strong_healing", 0, 1);
+        var extended = entry("long_night_vision", 0, 0); var other = entry("night_vision", 0, 0);
+        assertEquals(List.of(normal, strong, other, extended), PotionPaletteModel.visible(List.of(extended, strong, other, normal)));
+        assertEquals("Normal", PotionPaletteModel.variantLabel(normal));
+        assertEquals("Strong / II", PotionPaletteModel.variantLabel(strong));
+        assertEquals("Extended", PotionPaletteModel.variantLabel(extended));
         assertEquals("minecraft:turtle_master_drinkable", PotionPaletteModel.family("minecraft:long_turtle_master_drinkable"));
-        assertEquals(PotionPaletteModel.Variant.EXTENDED, PotionPaletteModel.variant("minecraft:long_turtle_master_drinkable"));
+        assertThrows(UnsupportedOperationException.class, () -> PotionPaletteModel.visible(List.of(normal)).clear());
     }
+
     @Test void ownSharedAndMissingCountsHaveDistinctPresentations() {
         var own = entry("healing", 2, 5); var shared = entry("healing", 0, 5); var missing = entry("healing", 0, 0);
         assertEquals(2, PotionPaletteModel.count(own)); assertEquals(5, PotionPaletteModel.count(shared)); assertEquals(0, PotionPaletteModel.count(missing));
@@ -41,25 +43,35 @@ final class PotionPaletteTest {
         assertNotEquals(PotionPaletteModel.background(own), PotionPaletteModel.background(shared));
         assertNotEquals(PotionPaletteModel.background(missing), PotionPaletteModel.background(shared));
     }
-    @Test void minimumAndLargeScreensKeepEveryTileVisibleOutsideNativeSlots() {
+    @Test void scrollingReachesEveryEntryWithoutDrawingOrClickingHiddenRowsOrSlots() {
         for (int[] size : new int[][] {{320,240}, {426,240}, {640,360}, {854,480}})
             for (int inventoryHeight : new int[] {166,184})
-                for (int count : new int[] {9,11}) {
+                for (int count : new int[] {0,1,9,24,96}) {
                     int left = (size[0] - 176) / 2, top = (size[1] - inventoryHeight) / 2;
-                    var layout = PotionPaletteLayout.of(size[0], size[1], left, top, 176, count);
-                    assertTrue(layout.panel().x() >= left + 176);
-                    assertTrue(layout.panel().right() <= size[0] && layout.panel().bottom() <= size[1]);
-                    assertEquals(count, layout.tiles().size());
-                    for (var tile : layout.tiles()) {
-                        assertTrue(tile.x() >= layout.panel().x() && tile.right() <= layout.panel().right());
-                        assertTrue(tile.y() >= layout.panel().y() && tile.bottom() <= layout.panel().bottom());
-                        assertFalse(tile.intersects(layout.fuel()));
-                        for (var toggle : layout.variants()) assertFalse(tile.intersects(toggle));
+                    var initial = PotionPaletteLayout.of(size[0],size[1],left,top,176,count);
+                    var reached = new HashSet<Integer>();
+                    for (int offset = 0; offset <= initial.maxFirst(); offset++) {
+                        var layout = PotionPaletteLayout.of(size[0],size[1],left,top,176,count,offset);
+                        assertTrue(layout.panel().x() >= left+176);
+                        assertTrue(layout.panel().right() <= size[0] && layout.panel().bottom() <= size[1]);
+                        for (var tile : layout.tiles()) {
+                            assertTrue(tile.x() >= layout.panel().x() && tile.right() <= layout.panel().right());
+                            assertTrue(tile.y() >= layout.panel().y() && tile.bottom() <= layout.panel().bottom());
+                            assertFalse(tile.intersects(layout.fuel())); assertFalse(tile.intersects(layout.track()));
+                            reached.add(layout.indexAt(tile.x()+1,tile.y()+1));
+                        }
+                        assertEquals(-1,layout.indexAt(left+88,top+90));
+                        assertEquals(-1,layout.indexAt(layout.panel().x(),layout.panel().bottom()+1));
                     }
-                    assertEquals(count, layout.tiles().stream().distinct().count());
-                    if (size[0] >= 640) assertEquals(2, layout.tiles().stream().map(box -> box.y()).distinct().count());
+                    assertEquals(count,reached.size());
+                    assertEquals(initial.maxFirst(),PotionPaletteLayout.of(size[0],size[1],left,top,176,count,Integer.MAX_VALUE).first());
+                    if (initial.maxFirst()>0) {
+                        assertEquals(0,initial.offsetAt(initial.track().y(),0));
+                        assertEquals(initial.maxFirst(),initial.offsetAt(initial.track().bottom(),0));
+                    }
                 }
     }
+
     @Test void exactGenerationsAndAcknowledgementsProtectRepeatedClicks() {
         var state = new PotionPaletteState(); var sent = new ArrayList<Action>(); var requests = new ArrayList<Request>();
         state.actions(sent::add, requests::add); assertTrue(state.toggle()); assertEquals(List.of(new Request(true)), requests);
@@ -84,16 +96,29 @@ final class PotionPaletteTest {
         assertFalse(state.craft(zero.targetId(), false)); assertTrue(sent.isEmpty());
         state.clear(); assertFalse(state.open()); assertFalse(state.pending());
     }
-    @Test void changingVariantsWhilePendingCannotQueueAnotherPurchase() {
+    @Test void separateVariantRowsStillShareOneInFlightCraftAndExactAcknowledgement() {
         var state = new PotionPaletteState(); var sent = new ArrayList<Action>();
-        state.actions(sent::add, request -> {}); state.toggle();
-        var normal = entry("healing", 1, 1); var strong = entry("strong_healing", 1, 1);
-        state.receive(view(8, 1, normal, strong)); state.craft(normal.targetId(), false);
-        state.variant(PotionPaletteModel.Variant.STRONG);
-        assertFalse(state.craft(strong.targetId(), false));
-        state.receive(view(8, 2, normal, strong));
-        assertFalse(state.craft(normal.targetId(), false), "Only the displayed variant is actionable");
-        assertTrue(state.craft(strong.targetId(), false)); assertEquals(2, sent.size());
+        state.actions(sent::add, request -> {}); state.ensureOpen();
+        var normal = entry("healing",1,1); var strong = entry("strong_healing",1,1);
+        state.receive(view(8,1,normal,strong)); assertEquals(2,state.entries().size());
+        assertTrue(state.craft(normal.targetId(),false));
+        state.first(1); assertFalse(state.craft(strong.targetId(),false));
+        state.receive(view(8,2,normal,strong));
+        assertTrue(state.craft(strong.targetId(),true)); assertEquals(2,sent.size());
+        assertEquals(new Action(8,2,strong.targetId(),true),sent.getLast());
+    }
+    @Test void alwaysVisiblePreviewNeverAuthorizesCraftOrRepeatsOpenPerFrame() {
+        var state = new PotionPaletteState(); var sent = new ArrayList<Action>(); var requests = new ArrayList<Request>();
+        state.actions(sent::add,requests::add);
+        var preview = entry("healing",0,0); state.preview(List.of(preview));
+        for(int frame=0;frame<120;frame++) assertTrue(state.ensureOpen());
+        assertEquals(List.of(new Request(true)),requests);
+        assertEquals(List.of(preview),state.entries()); assertFalse(state.craft(preview.targetId(),false));
+        state.receive(view(8,1,entry("healing",1,1)));
+        state.refreshUnavailable(); assertEquals(1,requests.size());
+        state.receive(View.empty(2)); assertEquals(List.of(preview),state.entries());
+        state.refreshUnavailable(); assertEquals(2,requests.size());
+        state.close(); assertFalse(state.open()); assertTrue(state.entries().isEmpty()); assertTrue(sent.isEmpty());
     }
 
     @Test void quoteWrappingKeepsAllWordsAndCodepointsWithinAvailableWidth() {

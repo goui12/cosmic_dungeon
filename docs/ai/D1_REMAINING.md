@@ -1,3 +1,18 @@
+# Active FixSet, 2026-10-13
+
+F1 inventory/class-sync and opaque potion list are the current implementation.
+[Scope, changes and manual checks](tasks/FIXSET_F1_20261013.md).
+Six implementation batches; Alpha publication only after F2/F4, final Beta after F6.
+Five later cards: F2 Ready/sharing, F3 wolves/Patrol, F4 spawners/startup/names,
+F5 ammunition/skeleton bows, F6 loot/rewards/integration.
+The earlier Batch25 Beta was published but TEST delivery remains pending in the
+series-1.7 yield receipt. Historical prose below does not establish deployment.
+All current recommendations/Codex dispositions: [active ledger](tasks/BATCH_1_7_20_REVIEW_NOTES_20261012.md).
+Exact F1 build/CI/source/review completion is recorded by the isolated FixSet controller.
+No F1 publication, local client install, game launch or TEST delivery.
+
+---
+
 # Current plan, 2026-10-12
 
 [1.7 Alpha / 1.8 Beta batch plan](tasks/ALPHA_1_7_BATCH_PLAN_20261010.md).
