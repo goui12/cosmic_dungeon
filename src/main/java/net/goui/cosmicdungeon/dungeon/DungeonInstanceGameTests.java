@@ -123,6 +123,9 @@ public final class DungeonInstanceGameTests {
         suite.add(id("wolf_spawn_diagnostics"),net.goui.cosmicdungeon.playerclass.bogatyr.WolfDiagnosticGameTests::admission);
         suite.add(id("loot_native_smelting"),net.goui.cosmicdungeon.playerclass.d1.LootSmeltingGameTests::loot);
         suite.add(id("loot_production_guards"),net.goui.cosmicdungeon.playerclass.d1.LootSmeltingGameTests::production);
+        suite.add(id("mob_reward_registry"),net.goui.cosmicdungeon.playerclass.d1.MobRewardGameTests::coverage);
+        suite.add(id("mob_reward_death_split_replay"),net.goui.cosmicdungeon.playerclass.d1.MobRewardGameTests::deathAndReplay);
+        suite.add(id("mob_reward_eligibility_overrides"),net.goui.cosmicdungeon.playerclass.d1.MobRewardGameTests::eligibilityAndOverrides);
         suite.add(id("bow_rocket_loading"),net.goui.cosmicdungeon.playerclass.d1.BowRocketGameTests::loading);
         suite.add(id("ammo_selection"),net.goui.cosmicdungeon.playerclass.d1.AmmoSelectionGameTests::selection);
         suite.add(id("crossbow_ammo_loading"),net.goui.cosmicdungeon.playerclass.d1.AmmoSelectionGameTests::crossbows);

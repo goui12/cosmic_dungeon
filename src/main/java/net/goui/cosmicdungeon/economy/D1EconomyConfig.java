@@ -39,16 +39,10 @@ public final class D1EconomyConfig {
                 "Initial ordinary-mob categories are developer defaults chosen from the supplied baseline table, not encounter-specific canon.",
                 "Only mobs carrying the existing Cosmic Spawner provenance tag qualify. Existing spawner contents are untouched.",
                 "An encounter may override with exactly one persistent cosmicdungeon.reward_category or cosmicdungeon.reward_trace value.",
+                "F6 approved additions also apply when absent from a nonempty saved table; explicit entries, including zero, take priority.",
+                "An empty table disables type defaults; removed original registrations stay unregistered. No saved list is rewritten.",
                 "Unknown or duplicate registrations award zero and warn instead of guessing from max health.")
-                .defineListAllowEmpty("registeredMobRewards",List.of(
-                    "minecraft:zombie=common","minecraft:skeleton=common","minecraft:husk=tough","minecraft:drowned=common",
-                    "minecraft:spider=common","minecraft:cave_spider=weak","minecraft:creeper=tough","minecraft:stray=tough",
-                    "minecraft:bogged=tough","minecraft:enderman=tough","minecraft:witch=elite","minecraft:silverfish=weak",
-                    "minecraft:blaze=tough","minecraft:wither_skeleton=tough","minecraft:ghast=elite","minecraft:piglin=common",
-                    "minecraft:piglin_brute=elite","minecraft:zombified_piglin=common","minecraft:hoglin=tough",
-                    "minecraft:magma_cube=common","minecraft:slime=weak","minecraft:endermite=weak",
-                    "minecraft:guardian=tough","minecraft:elder_guardian=miniboss","minecraft:warden=boss","minecraft:wither=boss",
-                    "minecraft:ender_dragon=boss"),()->"minecraft:zombie=common",v->v instanceof String s&&s.matches("[a-z0-9_.-]+:[a-z0-9_./-]+=[a-z0-9_]+"));
+                .defineListAllowEmpty("registeredMobRewards",D1MobRewardCatalog.defaults(),()->"minecraft:zombie=common",v->v instanceof String s&&s.matches("[a-z0-9_.-]+:[a-z0-9_./-]+=[a-z0-9_]+"));
         SPAWNER_REWARDS=b.comment("Optional D1 authored encounter overrides: cosmic_spawner_X_Y_Z=category or wholeTrace.",
                 "Coordinates are the existing provenance tag and apply to matching copies of D1; no world/preset migration.",
                 "Exactly one spawner origin is required. Duplicate entries or malformed values award zero with a warning.",

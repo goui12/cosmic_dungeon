@@ -60,6 +60,7 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Mercenaries follow their hirer, use class-specific skills and separate progression, and drop no equipment. New hires draw from 80 short historical names across eight balanced regional pools; existing hires keep their names through saves and respawns."),
             HelpBlock.heading("Group Split and AFK"),
             HelpBlock.bullet("Qualifying mob Trace is shared with eligible active members within 60 blocks in the same instance. Before respawn, a dead member's death position is used; disconnected players receive no share."),
+            HelpBlock.bullet("Supported dungeon enemies include zombie villagers (3 Trace) and shulkers (4 Trace) before the group split, at default settings. Authored encounters and server settings may override the amount; ordinary unbound mobs and protected NPCs do not qualify."),
             HelpBlock.bullet("After 15 minutes without observed activity, a member is marked AFK and the leader receives a kick prompt."),
             HelpBlock.command("Group Leader", "/dungeoneer kick <player>")));
 
