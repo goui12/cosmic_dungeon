@@ -8,7 +8,7 @@ Meet Tamsin Vane, follow her introduction, choose an enabled class, and assemble
 
 Press **H** to read the guide. Use its left directory or underlined links to move between topics. **Alt+Left** or **Back** returns to the previous guide page. The wheel scrolls the pane under your pointer; **Page Up / Page Down** scroll the focused pane (information pane by default). **Tab / Shift+Tab** moves focus; **Enter** opens the focused link. The class name in your inventory opens your class guide. Demonstration item tiles are read-only: hover for the actual item tooltip; they cannot give, take, craft, equip, or move items. **Esc** closes the guide without pausing the world.
 
-Your inventory keeps armor, offhand, storage, and hotbar controls. The old 2x2 crafting grid and recipe book are absent. Class actions occupy that space where applicable. Normal crafting remains subject to the server's recipe rules; a guide example is not a recipe unlock.
+Your inventory keeps armor, offhand, storage, and hotbar controls. The old 2x2 crafting grid and recipe book are absent. Class actions occupy that space where applicable. Normal crafting remains subject to the server's recipe rules; a guide example is not a recipe unlock. Loot can arrive cooked when its native drop conditions allow it. Crafting, furnaces and automatic crafters still require approved recipes.
 
 ## Party, readiness, and sharing
 

@@ -81,6 +81,7 @@
     "InnFluidMixin",
     "InnFireMixin",
     "CraftingLookupMixin",
+    "LootSmeltingMixin",
     "CraftingPreviewMixin",
     "CraftingTakeMixin",
     "CraftingClickMixin",

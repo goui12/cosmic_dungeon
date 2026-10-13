@@ -14,6 +14,7 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Use the left directory or underlined text links. Wheel scrolling affects the pane under your pointer; Page Up and Page Down scroll the focused pane (information pane by default). Tab / Shift+Tab moves focus; Enter opens the focused link."),
             HelpBlock.bullet("Hover example item tiles for their real tooltips. These are read-only illustrations: they cannot grant, craft, equip, or move items."),
             HelpBlock.bullet("Your inventory keeps armor, offhand, storage and hotbar controls. The old 2x2 crafting grid and recipe book are absent."),
+            HelpBlock.bullet("Loot can arrive cooked when its native drop conditions allow it. Crafting, furnaces and automatic crafters still require approved recipes."),
             HelpBlock.paragraph(Component.literal("The class name in your inventory opens your class guide. See ").append(link("Quick Reference", "references")).append(" for controls and commands.")),
             HelpBlock.tip("Artwork illustrates the lore. It does not unlock a class, recipe, location, or encounter.")));
 

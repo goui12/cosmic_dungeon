@@ -121,6 +121,8 @@ public final class DungeonInstanceGameTests {
         suite.add(id("bogatyr_run_retirement"),net.goui.cosmicdungeon.playerclass.bogatyr.BogatyrCommandGameTests::runRetirement);
         suite.add(id("spawner_development_migration"),net.goui.cosmicdungeon.playerclass.d1.SpawnerMigrationGameTests::contexts);
         suite.add(id("wolf_spawn_diagnostics"),net.goui.cosmicdungeon.playerclass.bogatyr.WolfDiagnosticGameTests::admission);
+        suite.add(id("loot_native_smelting"),net.goui.cosmicdungeon.playerclass.d1.LootSmeltingGameTests::loot);
+        suite.add(id("loot_production_guards"),net.goui.cosmicdungeon.playerclass.d1.LootSmeltingGameTests::production);
         suite.add(id("bow_rocket_loading"),net.goui.cosmicdungeon.playerclass.d1.BowRocketGameTests::loading);
         suite.add(id("ammo_selection"),net.goui.cosmicdungeon.playerclass.d1.AmmoSelectionGameTests::selection);
         suite.add(id("crossbow_ammo_loading"),net.goui.cosmicdungeon.playerclass.d1.AmmoSelectionGameTests::crossbows);
