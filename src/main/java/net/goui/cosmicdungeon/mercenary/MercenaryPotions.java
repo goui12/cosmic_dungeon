@@ -15,8 +15,10 @@ public final class MercenaryPotions {
     private MercenaryPotions(){}
     public static void mark(Entity projectile,MercenaryEntity mercenary){
         projectile.getPersistentData().putString(SOURCE,mercenary.getUUID().toString());
+        MercenaryAntiFarming.mark(projectile,mercenary);
     }
     public static void inherit(Entity cloud,Entity projectile){
+        MercenaryAntiFarming.inherit(cloud,projectile);
         if(projectile.getPersistentData().contains(SOURCE))
             cloud.getPersistentData().putString(SOURCE,projectile.getPersistentData().getStringOr(SOURCE,""));
     }
@@ -55,6 +57,9 @@ public final class MercenaryPotions {
         var mercenary=owner(source);
         if(!marked(source)&&mercenary==null)return true;
         if(mercenary==null||MercenaryBrain.hirer(mercenary)==null)return false;
+        if(helpful(effect,target.isInvertedHealAndHarm())
+                &&(effect==MobEffects.INSTANT_HEALTH.value()||effect==MobEffects.REGENERATION.value())
+                &&!MercenaryAntiFarming.healingAllowed(mercenary,target))return false;
         // Potion role boundaries must not disable other classes' existing tipped-arrow effects.
         if((source instanceof AbstractThrownPotion||source instanceof AreaEffectCloud)
                 &&!roleAllows(mercenary.contract(),effect,target.isInvertedHealAndHarm()))return false;

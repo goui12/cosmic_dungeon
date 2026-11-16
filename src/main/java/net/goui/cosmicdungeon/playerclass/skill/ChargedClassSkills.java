@@ -116,7 +116,7 @@ public final class ChargedClassSkills {
         if(caster instanceof ServerPlayer player)return ClassSkills.enemy(target,player);
         if(caster instanceof MercenaryEntity merc){
             var owner=MercenaryBrain.hirer(merc);
-            return owner!=null&&!target.isAlliedTo(owner)&&(target instanceof net.minecraft.world.entity.monster.Enemy
+            return owner!=null&&MercenaryAntiFarming.allows(merc,target)&&!target.isAlliedTo(owner)&&(target instanceof net.minecraft.world.entity.monster.Enemy
                     ||target instanceof Mob mob&&mob.getTarget()!=null&&MercenaryBrain.ally(merc,mob.getTarget()));
         }
         return false;

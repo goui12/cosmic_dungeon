@@ -11,6 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.*;
 /** Copy/upgrade/downgrade follows the native effect that actually deals the damage. */
 @Mixin(MobEffectInstance.class)
 public abstract class MercenaryPotionEffectMixin implements MercenaryPotionCredit {
+    @Shadow private MobEffectInstance hiddenEffect;
+    @Override public MobEffectInstance cosmicdungeon$hidden(){return hiddenEffect;}
     @Unique private Dose cosmicdungeon$dose;
     @Unique private boolean cosmicdungeon$replaced;
     @Override public Dose cosmicdungeon$dose(){return cosmicdungeon$dose;}

@@ -9,6 +9,7 @@ import net.minecraft.world.entity.LivingEntity;
 /** Transient attribution on native effect instances; no global cache or saved-data schema. */
 public interface MercenaryPotionCredit {
     Dose cosmicdungeon$dose();
+    net.minecraft.world.effect.MobEffectInstance cosmicdungeon$hidden();
     void cosmicdungeon$dose(Dose dose);
 
     record Dose(UUID owner,long run,CompoundTag source) {
@@ -24,7 +25,7 @@ public interface MercenaryPotionCredit {
             if(net.goui.cosmicdungeon.playerclass.bogatyr.CompanionAllies.friendly(target)
                     ||merc!=null&&!MercenaryBrain.enemy(merc,target))return true;
             float health=target.getHealth(),absorption=target.getAbsorptionAmount();
-            boolean result=apply.getAsBoolean();
+            boolean result=MercenaryAntiFarming.effectDamage(this,target,apply);
             if(merc!=null&&target.getHealth()+target.getAbsorptionAmount()<health+absorption)
                 once(()->MercenarySkills.success(merc,MercenarySkill.NEGATIVE_POTIONS));
             return result;

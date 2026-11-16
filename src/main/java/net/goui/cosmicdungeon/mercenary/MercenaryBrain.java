@@ -52,7 +52,7 @@ public final class MercenaryBrain {
     }
     public static boolean ally(MercenaryEntity entity,LivingEntity target){return ally(context(entity),target);}
     private static boolean enemy(Context context,MercenaryEntity entity,LivingEntity target){
-        if(context==null||!target.isAlive()||target.level()!=entity.level()||CompanionAllies.friendly(target)
+        if(context==null||!target.isAlive()||target.level()!=entity.level()||!MercenaryAntiFarming.allows(entity,target)||CompanionAllies.friendly(target)
                 ||target.isAlliedTo(entity)||target.isAlliedTo(context.owner()))return false;
         return target instanceof Enemy||target instanceof Mob mob&&mob.getTarget()!=null&&ally(context,mob.getTarget());
     }

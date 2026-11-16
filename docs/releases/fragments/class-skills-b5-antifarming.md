@@ -1,0 +1,1 @@
+Mercenary spawner participation and separate stationary-healing protections now retain run counters, filter every owned damage/healing recipient and preserve delayed-effect origin through reload. Source beta only until Batch6.

@@ -13,6 +13,9 @@ public abstract class ClassSkillDeathMixin {
     @Shadow protected boolean dead;
     @Inject(method="die",at=@At("TAIL"))
     private void cosmicdungeon$chargedKill(DamageSource source,CallbackInfo ci){
-        if(dead)ChargedClassSkills.killed((LivingEntity)(Object)this,source);
+        if(dead){
+            ChargedClassSkills.killed((LivingEntity)(Object)this,source);
+            net.goui.cosmicdungeon.mercenary.MercenaryAntiFarming.killed((LivingEntity)(Object)this,source);
+        }
     }
 }

@@ -93,6 +93,7 @@
     "SkillProjectileWeaponMixin",
     "SkillSplashPotionMixin",
     "MercenaryPotionEffectMixin",
+    "MercenaryEffectSaveMixin",
     "SkillCloudMixin",
     "SkillLingeringPotionMixin",
     "SkillDrinkPotionMixin",

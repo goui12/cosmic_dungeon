@@ -91,7 +91,7 @@ public final class CosmicSpawnerEntities {
     }
     @SubscribeEvent public static void stopped(ServerStoppedEvent event) { LEVELS.clear(); MAINTENANCE.clear(); }
 
-    static BlockPos position(String tag) {
+    public static BlockPos position(String tag) {
         if (!tag.startsWith(PREFIX)) return null;
         String[] parts = tag.substring(PREFIX.length()).split("_", -1);
         if (parts.length != 3) return null;

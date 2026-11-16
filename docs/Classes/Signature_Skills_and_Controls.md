@@ -56,3 +56,11 @@ Mercenaries cast automatically when useful. Equal/weaker timed buffs cannot stac
 Cooldowns survive death, reconnect and class switching within the same run, and reset with a new run. X/C remain unassigned. Pyroclast has no new buff; Theurgist potion crafting and resurrection retain their existing controls. Group effect attribution/timers and the final combat HUD are reserved for Batch6.
 
 See [the six-batch plan](../ai/tasks/CLASS_SKILLS_BATCHES_20261115.md) for the approved future behavior.
+
+## Mercenary participation and healing
+
+Mercenary kills from one Cosmic Spawner share a party counter. The hirer receives a private warning at **30** and refusal at **40**. The restriction includes melee, arrows, fireworks, charged area abilities, harmful potions and mercenary wolves. Other spawners and ordinary hostiles remain eligible.
+
+To restore help, walk at least one block and actually damage enemies from that spawner. The movement must be recent (within ten seconds); simply looking, jumping vertically or being pushed does not prove walking. A party-player death resets all spawner counters. Reconnecting or reviving a mercenary does not reset them; a new dungeon does.
+
+The separate healing rule observes each recipient. Repeated accepted injuries no more than ten seconds apart, while remaining within one horizontal block, warn after **30 seconds** and stop mercenary healing after **40 seconds**. Move one horizontal block to restore healing immediately. Attacking from the same position does not clear this restriction, and movement alone does not clear the spawner counter. A blocked player cannot receive healing indirectly from a splash aimed at an eligible teammate. Other allies, player potions, max-health buffs and resurrection remain available.

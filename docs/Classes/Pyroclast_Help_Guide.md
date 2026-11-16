@@ -11,3 +11,5 @@ Authored D1 Cinderbite and Cindermaul retain their supported abilities. Their en
 ## Shared rules and controls
 
 See the [current player guide](../PLAYER_GUIDE.md) for party sharing, crafting/fuel/stacks, gear ownership, trading, progression and travel. [Controls](../PLAYER_GUIDE.md#controls-and-passive-progression) lists defaults and rebinding. The inventory class-name link opens this class in the H guide.
+
+Hired mercenaries follow the shared [participation and healing rules](Signature_Skills_and_Controls.md#mercenary-participation-and-healing). At 30 unassisted kills from one spawner they warn, and at 40 refuse its enemies until a player walks and joins that fight or a party player dies. This includes owned wolves and secondary attacks.
