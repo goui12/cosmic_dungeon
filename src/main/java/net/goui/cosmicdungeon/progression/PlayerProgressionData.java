@@ -53,7 +53,9 @@ public final class PlayerProgressionData extends SavedData {
             DATA_CODEC.optionalFieldOf("player_progression", Map.of()).forGetter(d -> d.byPlayer),
             WatsonReceipt.MAP_CODEC.optionalFieldOf("watson_receipts", Map.of()).forGetter(d -> d.watsonReceipts),
             Codec.unboundedMap(UUID_CODEC, net.goui.cosmicdungeon.playerclass.skill.ClassSkillRules.CODEC)
-                    .optionalFieldOf("class_skill_xp", Map.of()).forGetter(d -> d.skillXp)
+                    .optionalFieldOf("class_skill_xp", Map.of()).forGetter(d -> d.skillXp),
+            Codec.unboundedMap(UUID_CODEC, net.goui.cosmicdungeon.playerclass.skill.SignatureProgress.CODEC)
+                    .optionalFieldOf("signature_skills", Map.of()).forGetter(d -> d.signatureSkills)
     ).apply(inst, PlayerProgressionData::fromCodec));
 
     public static final SavedDataType<PlayerProgressionData> TYPE = new SavedDataType<>(SAVE_ID, PlayerProgressionData::new, CODEC);
@@ -78,12 +80,28 @@ public final class PlayerProgressionData extends SavedData {
         }
         return next;
     }
-    private static PlayerProgressionData fromCodec(Map<UUID, Entry> values, Map<UUID, WatsonReceipt> receipts, Map<UUID, Map<String, Integer>> skills) {
+    private final Map<UUID, net.goui.cosmicdungeon.playerclass.skill.SignatureProgress> signatureSkills = new HashMap<>();
+    public int signatureProgress(UUID owner, net.goui.cosmicdungeon.playerclass.skill.SignatureSkill skill) {
+        if (owner == null || skill == null) throw new IllegalArgumentException("Missing signature owner/skill");
+        return signatureSkills.getOrDefault(owner, net.goui.cosmicdungeon.playerclass.skill.SignatureProgress.EMPTY)
+                .get(skill, skillXp(owner, "theurgist.potions"));
+    }
+    public int addSignatureProgress(UUID owner, net.goui.cosmicdungeon.playerclass.skill.SignatureSkill skill, int amount, long cap) {
+        if (owner == null || skill == null) throw new IllegalArgumentException("Missing signature owner/skill");
+        var old = signatureSkills.getOrDefault(owner, net.goui.cosmicdungeon.playerclass.skill.SignatureProgress.EMPTY);
+        var next = old.add(skill, amount, skillXp(owner, "theurgist.potions"), cap);
+        if (!next.equals(old)) { signatureSkills.put(owner, next); setDirty(); }
+        return signatureProgress(owner, skill);
+    }
+    private static PlayerProgressionData fromCodec(Map<UUID, Entry> values, Map<UUID, WatsonReceipt> receipts,
+            Map<UUID, Map<String, Integer>> skills,
+            Map<UUID, net.goui.cosmicdungeon.playerclass.skill.SignatureProgress> signatures) {
         WatsonReceipt.validate(receipts);
         PlayerProgressionData data = new PlayerProgressionData();
         if (values != null) data.byPlayer.putAll(values);
         data.watsonReceipts.putAll(receipts);
         skills.forEach((owner, xp) -> data.skillXp.put(owner, Map.copyOf(xp)));
+        data.signatureSkills.putAll(signatures);
         return data;
     }
 

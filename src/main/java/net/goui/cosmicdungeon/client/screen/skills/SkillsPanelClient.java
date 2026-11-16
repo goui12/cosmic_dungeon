@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.BiConsumer;
 import net.goui.cosmicdungeon.client.screen.crafting.PotionCraftClient;
+import net.goui.cosmicdungeon.client.screen.crafting.PotionPaletteLayout;
 import net.goui.cosmicdungeon.playerclass.api.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -38,8 +39,21 @@ public final class SkillsPanelClient {
     public static boolean inventory(Screen candidate){return candidate instanceof InventoryScreen||candidate instanceof ExtraInventoryScreen||candidate instanceof CreativeModeInventoryScreen;}
     public static SharedInventoryLayout layout(Screen candidate){
         var inventory=(AbstractContainerScreen<?>)candidate;
-        return SharedInventoryLayout.of(candidate.width,candidate.height,inventory.getGuiLeft(),inventory.getGuiTop(),
+        var shared=SharedInventoryLayout.of(candidate.width,candidate.height,inventory.getGuiLeft(),inventory.getGuiTop(),
                 inventory.getXSize(),inventory.getYSize());
+        var player=Minecraft.getInstance().player;
+        if(player!=null&&PotionCraftClient.brewer(ClassData.getClassId(player))){
+            var palette=PotionPaletteLayout.of(candidate.width,candidate.height,inventory.getGuiLeft(),inventory.getGuiTop(),
+                    inventory.getXSize(),0);
+            shared=reservePalette(shared,palette.panel());
+        }
+        return shared;
+    }
+    /** The draggable panel must stop before the palette, including after resize or restoring a saved position. */
+    static SharedInventoryLayout reservePalette(SharedInventoryLayout shared,SharedInventoryLayout.Rect palette){
+        if(palette.width()==0)return shared;
+        return new SharedInventoryLayout(shared.group(),palette,shared.skillsDefault(),shared.account(),
+                shared.worldResource(),shared.screenWidth(),shared.screenHeight(),shared.compact());
     }
     private static SkillsPanelPreferences preferences(){
         if(preferences==null)preferences=new SkillsPanelPreferences(FMLPaths.CONFIGDIR.get().resolve("cosmicdungeon-skills-layout.json"));
@@ -49,9 +63,6 @@ public final class SkillsPanelClient {
         var mc=Minecraft.getInstance();
         if(!inventory(candidate)||mc.player==null)return false;
         String id=ClassKeys.clamp(ClassData.getClassId(mc.player));
-        if(PotionCraftClient.brewer(id)){
-            persist();if(state!=null)state.release();screen=null;classId=null;state=null;model=null;return false;
-        }
         if(screen!=candidate||!id.equals(classId)){
             persist();if(state!=null)state.release();
             screen=candidate;classId=id;state=new SkillsPanelState(layout(candidate),preferences().get(id).orElse(null));
@@ -59,6 +70,7 @@ public final class SkillsPanelClient {
         var provider=PROVIDERS.get(id);
         model=provider==null?INITIAL.computeIfAbsent(id,SkillsPanelModel::initial):Objects.requireNonNull(provider.view(mc.player));
         if(!model.classId().equals(id))throw new IllegalStateException("Skills provider changed class identity");
+        model=ClassAbilityClient.augment(model);
         state.actions(model.actions().size());return true;
     }
     public static boolean suppressesTooltips(Screen candidate){
@@ -123,6 +135,9 @@ public final class SkillsPanelClient {
             var action=model.actions().get(result.action());
             if(!action.enabled())return;
             if(action.id().equals("guide"))help.accept(screen,classId);
+            else if(net.goui.cosmicdungeon.client.SkillInputPolicy.Action.forId(action.id())!=null
+                    &&net.goui.cosmicdungeon.client.SkillInputPolicy.Action.forId(action.id()).slot!=null)
+                ClassAbilityClient.activate(action.id());
             else{
                 var provider=PROVIDERS.get(classId);var player=Minecraft.getInstance().player;
                 if(provider!=null&&player!=null)provider.activate(player,action.id());

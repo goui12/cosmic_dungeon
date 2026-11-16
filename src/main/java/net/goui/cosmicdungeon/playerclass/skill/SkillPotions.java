@@ -64,6 +64,14 @@ public final class SkillPotions {
         // Recipient-local bound; no global owner/target cache and no eviction that bypasses the interval.
         if (!times.contains(effect) && times.keySet().size()>=64) return false;
         if (ClassSkillRules.budget(attack.action().getIntOr("xp_spent",0),ClassSkillConfig.SUPPORT_XP.get(),ClassSkillConfig.ACTION_CAP.get())<=0) return false;
+        // Seed from exact legacy XP before that independent weapon counter advances.
+        if (potion(attack)) {
+            int credit=ClassSkillRules.budget(attack.action().getIntOr("xp_spent",0),
+                    ClassSkillConfig.SUPPORT_XP.get(),ClassSkillConfig.ACTION_CAP.get());
+            var data=net.goui.cosmicdungeon.progression.PlayerProgressionData.get(attack.player().level().getServer());
+            data.addSignatureProgress(attack.player().getUUID(),SignatureSkill.POSITIVE_POTIONS,credit,
+                    SignatureSkill.POSITIVE_POTIONS.threshold(SignatureSkill.PLAYER_CAP,ClassSkillConfig.BASE.get(),ClassSkillConfig.STEP.get()));
+        }
         ClassSkills.award(attack,ClassSkillConfig.SUPPORT_XP.get(),true);
         times.putLong(effect,now);target.getPersistentData().put(SUPPORT,times);return true;
     }

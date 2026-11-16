@@ -4,6 +4,7 @@ Cameron2026-10-12: remove recommendations once accomplished or deemed unnecessar
 
 | Priority | Remaining recommendation | Source | Disposition |
 |---|---|---|---|
+| P2 | Native generic G/Z/X/C remap/unbound/conflict/class-switch and brewer Skills-panel layout at two GUI scales. | [Class skills Batch 1](CLASS_SKILLS_B1_20261115.md), baseline c5a7991e54a329f61cb59389695260072ebeacef | TESTING: automated input/layout/persistence coverage is not native play; delivery and manual acceptance held until Batch 6. |
 | P2 | Native GUI-scale/layering/modal/drag/Creative/Extra visual regression, including selected brewing-route tooltip wrapping. | [Batch1](BATCH_1_7_01_20261011.md), source068fe352f96d9bef1ab3e4d4fbc01089a5523589; [Batch23](BATCH_1_8_23_20261012.md), sourcee0a3ad8838d422b8bbd9b408e179f2f13057c3cc | TESTING: licensed native play. |
 | P2 | All six class inventory scenes at two GUI scales. | [Batch2](BATCH_1_7_02_20261011.md), source24e5e5b568f2687ed07cb6cf751e8a9bfe463a8a | TESTING: native screenshot baseline. |
 | P2 | Licensed co-op trade/drop/pickup/full-inventory/consent/potion/death/resurrection journey, including six-player palette/input acceptance. | [Batch3](BATCH_1_7_03_20261011.md), sourcef1cb4c3813a1df455b70727b7d68b6f43543f69b; [Batch24](BATCH_1_8_24_20261012.md), source0cf2dc21a67a513411a7235ee453d94ec63fc6ed | TESTING: automated recovery/concurrency/transactions pass; licensed co-op/native latency journey unrun. |

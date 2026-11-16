@@ -38,6 +38,10 @@ public final class ModNetworkClient {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private ModNetworkClient() {}
+    public static void onClassSkills(net.goui.cosmicdungeon.network.ClassSkillPayloads.View payload){
+        net.goui.cosmicdungeon.client.screen.skills.ClassAbilityClient.actions(ModNetworkClient::sendToServer);
+        net.goui.cosmicdungeon.client.screen.skills.ClassAbilityClient.receive(payload);
+    }
     public static void onAmmoSelection(net.goui.cosmicdungeon.network.AmmoPayloads.View payload){AmmoKeybindClient.receive(payload);}
     public static void onSpawnerEditor(net.goui.cosmicdungeon.network.SpawnerEditorPayloads.View payload){
         net.goui.cosmicdungeon.client.screen.spawner.SpawnerEditorClient.receive(payload);

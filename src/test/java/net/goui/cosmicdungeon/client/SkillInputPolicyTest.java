@@ -22,7 +22,7 @@ final class SkillInputPolicyTest {
     @AfterEach void cleanup() { BogatyrClient.clear(); TheurgistClient.clear(); }
     @Test void defaultsAreClassScopedAndPotionCraftingHasNoBinding() {
         var bindings = java.util.Arrays.stream(Action.values())
-                .map(a -> bind(a, a.defaultKey, Modifier.ALT)).toList();
+                .filter(a -> a.slot == null).map(a -> bind(a, a.defaultKey, a.defaultModifier)).toList();
         assertEquals(4, bindings.size());
         for (var b : bindings) assertEquals(b.action(), SkillInputPolicy.resolve(b.action().classId, bindings,
                 b.input(), Modifier.ALT, false));
@@ -30,6 +30,32 @@ final class SkillInputPolicyTest {
         assertNull(SkillInputPolicy.resolve("theurgist", bindings, key(51), Modifier.ALT, false));
         assertNull(Action.forId("theurgist_craft")); assertNull(Action.forId("guide"));
         assertEquals(Action.RESURRECT, Action.forId("theurgist_resurrect:member:death"));
+    }
+    @Test void genericSlotsUseBareKeysAcrossClassesAndDoNotCollideSilentlyWithLegacyActions() {
+        var generic = java.util.Arrays.stream(Action.values()).filter(a -> a.slot != null)
+                .map(a -> bind(a, a.defaultKey, a.defaultModifier)).toList();
+        assertEquals(List.of(71, 90, 88, 67), generic.stream().map(b -> b.input().code()).toList());
+        for (String cls : List.of("bogatyr", "dragoon", "judicator", "pyroclast", "theurgist", "venefex")) {
+            for (var b : generic) assertEquals(b.action(),
+                    SkillInputPolicy.resolve(cls, generic, b.input(), Modifier.NONE, false));
+            assertNull(SkillInputPolicy.resolve(cls, generic, key(71), Modifier.ALT, false));
+        }
+        for (String cls : List.of("none", "invalid", ""))
+            assertNull(SkillInputPolicy.resolve(cls, generic, key(71), Modifier.NONE, false));
+        var rebound = List.of(bind(Action.PRIMARY, 49, Modifier.ALT), bind(Action.PATROL, 49, Modifier.ALT));
+        assertNull(SkillInputPolicy.resolve("bogatyr", rebound, key(49), Modifier.ALT, false));
+        assertEquals(Action.PRIMARY, SkillInputPolicy.resolve("dragoon", rebound, key(49), Modifier.ALT, false));
+        assertEquals(Action.PRIMARY, Action.forId("primary_class_skill"));
+        assertEquals(Action.SKILL_1, Action.forId("class_skill_1"));
+        assertEquals(Action.PATROL, Action.forId("bogatyr_patrol"));
+    }
+    @Test void genericDispatchUsesOnlyTheGenericServiceAndKeepsTheSelectedSlot() {
+        var calls = new ArrayList<net.goui.cosmicdungeon.playerclass.skill.ClassSkillSlot>();
+        assertTrue(SkillInputPolicy.dispatch(Action.SKILL_2, "venefex", id -> fail("Legacy action invoked"),
+                () -> fail("Resurrection consulted"), () -> fail("Picker opened"), slot -> calls.add(slot)));
+        assertEquals(List.of(net.goui.cosmicdungeon.playerclass.skill.ClassSkillSlot.SKILL_2), calls);
+        assertFalse(SkillInputPolicy.dispatch(Action.PRIMARY, "none", id -> fail("Legacy action invoked"),
+                () -> false, () -> fail("Picker opened"), slot -> fail("Classless action invoked")));
     }
     @Test void rebindUnbindAndModifiersUseTheCurrentSnapshot() {
         var original = bind(Action.FEED_PACK, 51, Modifier.ALT);

@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
+import net.goui.cosmicdungeon.playerclass.api.ClassKeys;
+import net.goui.cosmicdungeon.playerclass.skill.ClassSkillSlot;
 
 /** Testable input decisions; no native window, key mapping, packet or saved player state. */
 public final class SkillInputPolicy {
@@ -13,11 +15,27 @@ public final class SkillInputPolicy {
         PATROL("bogatyr_patrol", "bogatyr", "Patrol", 49),
         STAY("bogatyr_stay", "bogatyr", "Stay", 50),
         FEED_PACK("bogatyr_feed_pack", "bogatyr", "Feed Pack", 51),
-        RESURRECT("theurgist_resurrect", "theurgist", "Resurrect...", 52);
+        RESURRECT("theurgist_resurrect", "theurgist", "Resurrect...", 52),
+        PRIMARY("primary_class_skill", ClassSkillSlot.PRIMARY, 71),
+        SKILL_1("class_skill_1", ClassSkillSlot.SKILL_1, 90),
+        SKILL_2("class_skill_2", ClassSkillSlot.SKILL_2, 88),
+        SKILL_3("class_skill_3", ClassSkillSlot.SKILL_3, 67);
         public final String id, classId, label;
         public final int defaultKey;
+        public final Modifier defaultModifier;
+        public final ClassSkillSlot slot;
         Action(String id, String classId, String label, int defaultKey) {
             this.id = id; this.classId = classId; this.label = label; this.defaultKey = defaultKey;
+            this.defaultModifier = Modifier.ALT; this.slot = null;
+        }
+        Action(String id, ClassSkillSlot slot, int defaultKey) {
+            this.id = id; this.classId = ""; this.label = slot.label(); this.defaultKey = defaultKey;
+            this.defaultModifier = Modifier.NONE; this.slot = slot;
+        }
+        public boolean supports(String selectedClass) { return supportsClass(classId, selectedClass); }
+        public static Action forSlot(ClassSkillSlot slot) {
+            for (var action : values()) if (action.slot == slot && slot != null) return action;
+            throw new IllegalArgumentException("Unknown class skill slot");
         }
         public static Action forId(String id) {
             if (id == null) return null;
@@ -25,6 +43,11 @@ public final class SkillInputPolicy {
             for (var action : values()) if (action.id.equals(id)) return action;
             return null;
         }
+    }
+    public static boolean supportsClass(String actionClass, String selectedClass) {
+        return selectedClass != null && (actionClass.isEmpty()
+                ? ClassKeys.isKnown(selectedClass) && !ClassKeys.CLASS_ID_NONE.equals(selectedClass)
+                : actionClass.equals(selectedClass));
     }
     public enum Device { KEY, SCANCODE, MOUSE }
     public enum Modifier { NONE, SHIFT, CONTROL, ALT }
@@ -65,7 +88,7 @@ public final class SkillInputPolicy {
         if (externalConflict) return null;
         Action found = null;
         for (var binding : bindings) {
-            if (!binding.action.classId.equals(classId) || !matches(binding, input, modifier)) continue;
+            if (!binding.action.supports(classId) || !matches(binding, input, modifier)) continue;
             if (found != null) return null; // Fail closed instead of arbitrarily selecting a conflicting action.
             found = binding.action;
         }
@@ -73,7 +96,13 @@ public final class SkillInputPolicy {
     }
     public static boolean dispatch(Action action, String classId, Predicate<String> bogatyr,
                                    BooleanSupplier canResurrect, Runnable openPicker) {
-        if (action == null || !action.classId.equals(classId)) return false;
+        return dispatch(action, classId, bogatyr, canResurrect, openPicker, slot -> false);
+    }
+    public static boolean dispatch(Action action, String classId, Predicate<String> bogatyr,
+                                   BooleanSupplier canResurrect, Runnable openPicker,
+                                   Predicate<ClassSkillSlot> classSkill) {
+        if (action == null || !action.supports(classId)) return false;
+        if (action.slot != null) return classSkill.test(action.slot);
         if (action != Action.RESURRECT) return bogatyr.test(action.id);
         if (!canResurrect.getAsBoolean()) return false;
         openPicker.run();

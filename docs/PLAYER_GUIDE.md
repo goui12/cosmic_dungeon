@@ -1,6 +1,6 @@
 # Cosmic Dungeon player guide
 
-Current guide for the 1.7.19 Alpha series. The in-game **H** guide contains the same current player rules, class pages, and full Village NPC backstories. Artwork illustrates the lore; it does not unlock a class, recipe, location, or encounter.
+Current source guide, including the unpublished 1.8.9-beta.1 class-skills foundation. The in-game **H** guide contains the same current player rules, class pages, and full Village NPC backstories. Artwork illustrates the lore; it does not unlock a class, recipe, location, or encounter.
 
 ## Getting started and finding help
 
@@ -54,7 +54,11 @@ Hover a potion tile to see the server-selected route for one output: the one exi
 
 Recipes use the complete applicable vanilla chain: a water bottle or supported intermediate potion, all remaining ingredients, and gunpowder for a splash output. Not every route needs nether wart. Intermediate potions skip already completed steps. The fuel gauge at the top of the list shows your remaining **brewing charges**. One blaze powder supplies **20 steps**; each remaining brewing operation consumes one charge. Strength may need blaze powder both as an ingredient and as fuel when the gauge is empty. Unused charges survive normal saves, reconnects, and death. Invalid/full destinations or changed eligibility spend neither ingredients nor fuel.
 
-Requests, random-potion skills, and the virtual Brewing Supplies resource are retired. They are not required to craft or resurrect, and obsolete balances do not become physical item refunds. Theurgist and Venefex do not use the old separate Skills window.
+Requests, random-potion skills, and the virtual Brewing Supplies resource are retired. They are not required to craft or resurrect, and obsolete balances do not become physical item refunds. Theurgist and Venefex now show shared skill slots alongside the Potions list; retired random-potion actions remain absent.
+
+## Shared class skill controls
+
+The inventory Skills panel shows the current signature track and generic slots: **Primary class skill (G)** and **Class skill 1/2/3 (Z/X/C)**. Remap these once in Controls; the bindings remain unchanged when switching classes. Buttons show the actual binding in smaller italic text, and unassigned slots stay gray. In this foundation beta, all four new slots are unassigned; later batches supply their abilities. Existing Bogatyr utility and Theurgist resurrection remain available. See [signature tracks and controls](Classes/Signature_Skills_and_Controls.md) for progress and legacy-binding details.
 
 ## Theurgist
 

@@ -29,6 +29,8 @@ public final class DungeonInstanceGameTests {
 
     private static FunctionGameTestSuite createSuite() {
         var suite = new FunctionGameTestSuite(ENVIRONMENT);
+        suite.add(id("signature_player_persistence"),net.goui.cosmicdungeon.playerclass.skill.SignatureSkillGameTests::playerPersistence);
+        suite.add(id("signature_mercenary_compatibility"),net.goui.cosmicdungeon.playerclass.skill.SignatureSkillGameTests::mercenaryCompatibility);
         suite.add(id("slot_mapping"), DungeonInstanceGameTests::slotMapping);
         suite.add(id("legacy_run_codec"), DungeonInstanceGameTests::legacyRunCodec);
         suite.add(id("farrows_chop_target_codec"), DungeonInstanceGameTests::farrowsChopTargetCodec);

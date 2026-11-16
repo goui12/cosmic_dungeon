@@ -1,4 +1,8 @@
 {
+  "key.cosmicdungeon.primary_class_skill": "Primary class skill",
+  "key.cosmicdungeon.class_skill_1": "Class skill 1",
+  "key.cosmicdungeon.class_skill_2": "Class skill 2",
+  "key.cosmicdungeon.class_skill_3": "Class skill 3",
   "item.cosmicdungeon.mending_sting": "Mending Sting",
   "item.cosmicdungeon.verdant_jolt": "Verdant Jolt",
   "item.cosmicdungeon.tree_viper": "Venom of the Tree Viper",

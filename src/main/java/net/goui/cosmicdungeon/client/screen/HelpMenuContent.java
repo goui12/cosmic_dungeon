@@ -40,7 +40,7 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Class flags remain placeable where the dungeon expects them. Authored items keep their actual components and restrictions."),
             HelpBlock.heading("Actions and Passive Skills"),
             HelpBlock.bullet("Bogatyr uses inventory Skills for Patrol, Stay and Feed Pack. Theurgist uses the inventory Potions list and Resurrect...; Venefex uses the same Potions list."),
-            HelpBlock.bullet("Theurgist and Venefex do not use the old separate Skills window. Requests, Brewing Supplies and Kibble are retired."),
+            HelpBlock.bullet("Shared Skills slots appear for all six classes, alongside the Potions list for brewers. Requests, Brewing Supplies and Kibble are retired."),
             HelpBlock.bullet("Eligible combat and useful support earn passive class skills. Progression is not an active button or a new class unlock."),
             HelpBlock.paragraph(Component.literal("Read the class pages in the left directory and ").append(link("Quick Reference", "references")).append(" for saved bindings."))));
 
@@ -262,8 +262,13 @@ public final class HelpMenuContent {
             HelpBlock.command("Trade", "CAPS LOCK - default Trade Request"),
             HelpBlock.bullet("Cycle ammunition defaults to R. Hold a bow or crossbow in the world; each press selects the next legal exact variant. Rebind or unbind in Controls. Screens, typing, lost focus and conflicting bindings block this action."),
             HelpBlock.bullet("Ammo feedback shows the exact icon/name and current key. Exhaustion automatically switches and announces the next available type; no stock reports out of ammunition. Charged crossbows keep their current load."),
+            HelpBlock.paragraph(Component.literal("Shared class controls: ").append(key("Primary class skill", "primary_class_skill"))
+                    .append(", ").append(key("Class skill 1", "class_skill_1"))
+                    .append(", ").append(key("Class skill 2", "class_skill_2"))
+                    .append(", ").append(key("Class skill 3", "class_skill_3")).append(".")),
+            HelpBlock.bullet("Defaults are G, Z, X and C. Bindings stay the same when switching classes. Inventory shows slot names and current keys in small italics; unassigned slots stay gray. All four new slots are unassigned in this foundation beta."),
             HelpBlock.bullet("Active defaults: Bogatyr Alt+1 Patrol, Alt+2 Stay, Alt+3 Feed Pack; Theurgist Alt+4 opens Resurrect...."),
-            HelpBlock.bullet("Rebind or unbind in Options > Controls > Key Binds > Cosmic Dungeon. Gray skill hints show your actual saved chord."),
+            HelpBlock.bullet("Rebind or unbind in Options > Controls > Key Binds > Cosmic Dungeon. Small italic skill hints show your actual saved chord."),
             HelpBlock.bullet("Shortcuts act once per press in the world or inventory. Chat, other menus, dragging, carried items and modal controls block them. Resolve conflicting chords in Controls."),
             HelpBlock.bullet("Potion crafting requires the inventory and has no hotkey. Passive skills are not action buttons. Reset the movable Skills panel in Cosmic Dungeon settings if needed."),
             HelpBlock.heading("Player Commands"),
@@ -386,7 +391,7 @@ public final class HelpMenuContent {
             HelpBlock.paragraph(Component.literal("Read the ").append(link("Theurgist crafting reference", "class.theurgist")).append(" for full ingredient, fuel, sharing and stack rules.")),
             HelpBlock.bullet("Hover a row for its selected one-output route: one consumed potion input, remaining ingredients and own/eligible-group quantities. Intermediate stages are made within the route, not charged again."),
             HelpBlock.bullet("The required powder total includes reagent and new fuel; the fuel line identifies the refill part. Saved charges reduce new fuel. Own affordable routes are preferred; unavailable rows quote no affordable route. Quantities reserve nothing and pending clicks show the previous snapshot until the server replies."),
-            HelpBlock.tip("Brewing-stand interaction remains Theurgist-only. Venefex uses the Potions list in inventory, with no potion hotkey or old separate Skills window.")));
+            HelpBlock.tip("Brewing-stand interaction remains Theurgist-only. Venefex uses the Potions list in inventory with no potion-crafting hotkey. Shared Skills slots appear alongside it.")));
 
     public static final Page JUDICATOR = page("class.judicator", "Judicator", true, List.of(
             HelpBlock.heading("Oathbound Protector"),
