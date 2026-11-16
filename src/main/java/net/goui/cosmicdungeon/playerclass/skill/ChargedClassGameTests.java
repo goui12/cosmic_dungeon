@@ -53,7 +53,10 @@ public final class ChargedClassGameTests {
                 @Override public void resetPosition(){}
                 @Override public void teleport(double x,double y,double z,float yaw,float pitch){}
             };
+            // GameTest servers default to Creative, whose damage bypasses native invulnerability.
+            player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
             player.setPos(origin);player.setHealth(20);classId(cls);
+            check(!player.isCreative(),"Fixture uses production survival damage semantics");
             try{
                 var rf=DungeonRunRegistryData.class.getDeclaredField("runsById");rf.setAccessible(true);
                 runs=(Map<Long,DungeonRunRegistryData.RunRecord>)rf.get(DungeonRunRegistryData.get(server));
