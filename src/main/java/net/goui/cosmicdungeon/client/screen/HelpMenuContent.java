@@ -266,7 +266,7 @@ public final class HelpMenuContent {
                     .append(", ").append(key("Class skill 1", "class_skill_1"))
                     .append(", ").append(key("Class skill 2", "class_skill_2"))
                     .append(", ").append(key("Class skill 3", "class_skill_3")).append(".")),
-            HelpBlock.bullet("Defaults are G, Z, X and C. Bindings stay the same when switching classes. Inventory shows slot names and current keys in small italics; unassigned slots stay gray. All four new slots are unassigned in this beta."),
+            HelpBlock.bullet("Defaults are G, Z, X and C. Bindings stay the same when switching classes. Inventory shows slot names and current keys in small italics. Primary class skill arms Dragoon Chain Lightning or activates Judicator Smite when charged; unassigned slots stay gray."),
             HelpBlock.bullet("Active defaults: Bogatyr Alt+1 Patrol, Alt+2 Stay, Alt+3 Feed Pack; Theurgist Alt+4 opens Resurrect...."),
             HelpBlock.bullet("Rebind or unbind in Options > Controls > Key Binds > Cosmic Dungeon. Small italic skill hints show your actual saved chord."),
             HelpBlock.bullet("Shortcuts act once per press in the world or inventory. Chat, other menus, dragging, carried items and modal controls block them. Resolve conflicting chords in Controls."),
@@ -368,9 +368,11 @@ public final class HelpMenuContent {
     public static final Page DRAGOON = page("class.dragoon", "Dragoon", true, List.of(
             HelpBlock.heading("Trident and Repair Support"),
             HelpBlock.paragraph("A trident-wielding specialist in battlefield salvage and historical armorcraft."),
-            HelpBlock.bullet("Use Dragoon-attuned gear and class chests. Successful melee or thrown trident hits can trigger nearby enemy chain lightning. Sword hits are not a replacement trigger."),
+            HelpBlock.bullet("Use Dragoon-attuned gear and class chests. Land 100 valid damaging melee or thrown trident hits against hostile mobs to fill Chain Lightning. Sword hits, arrows, misses and immune targets do not charge it."),
             HelpBlock.examples("dragoon_trident"),
-            HelpBlock.bullet("Trident progression improves the relevant passive damage and chain benefits. Chain damage does not recursively trigger more chains."),
+            HelpBlock.bullet("At 100/100, use Primary class skill (default G) or its inventory button to arm your next valid trident strike. Dragoon mercenaries automatically arm at 100 and release on their next valid trident strike."),
+            HelpBlock.bullet("The chain hits eligible nearby enemies in line of sight without striking the original victim again. There is one bar with no overflow. No effective additional target leaves the full bar armed."),
+            HelpBlock.bullet("A useful chain spends the bar and earns one Chain Lightning proficiency success. Secondary damage cannot charge or trigger another chain. Existing trident weapon progression still affects the triggering strike."),
             HelpBlock.heading("Repair Affinity"),
             HelpBlock.bullet("Dragoons can use anvils and repair supported damaged gear for another player. The customer retains ownership."),
             HelpBlock.command("Invite", "/repair <player>"),
@@ -403,8 +405,15 @@ public final class HelpMenuContent {
             HelpBlock.heading("Oathbound Protector"),
             HelpBlock.paragraph("A wandering arbiter sworn to uphold balance, the Judicator supports the party with mace, bow and restorative or revealing arrows."),
             HelpBlock.bullet("Scintilla Vitalis and Lux Vitalis heal living targets and harm undead. Ebonsight provides night vision; Vielpiercer applies Glowing."),
-            HelpBlock.bullet("Use the actual authored item's tooltip and server values. Mace/bow progression is passive; it has no new action hotkey."),
+            HelpBlock.bullet("Use the actual authored item's tooltip and server values. Mace/bow progression stays passive; Smite uses the separate Primary class skill control."),
             HelpBlock.bullet("Use Judicator-attuned gear and class chests. Eon offers healing stock shared with Theurgists."),
+            HelpBlock.heading("Smite"),
+            HelpBlock.bullet("Ten credited undead kills fill Smite. Use Primary class skill (default G) or its inventory button; Judicator mercenaries activate automatically when charged and useful."),
+            HelpBlock.bullet("Smite damages hostile undead around the caster. Allies, companions and non-undead are protected. A successful activation spends all ten charge and earns one proficiency success, regardless of target count."),
+            HelpBlock.bullet("Level 1: Gravehammer, 3 blocks, 2.5 HP. Level 2: Bonegrinder, 4 blocks, 2.5 HP, after 10 successful activations."),
+            HelpBlock.bullet("Level 3: Deathpurge, 5 blocks, 5 HP, after 30 successful activations. Level 4: Last Rites, 6 blocks, 5 HP, after 60 successful activations."),
+            HelpBlock.bullet("The bar has no overflow; Smite damage cannot recharge it. If no mob takes damage, all charge is retained."),
+            HelpBlock.tip("Smite only works on undead! You did not damage any mobs"),
             HelpBlock.paragraph(Component.literal("Repair Affinity and anvil access belong to ").append(link("Dragoon", "class.dragoon")).append(".")),
             HelpBlock.paragraph(Component.literal("Visit the ").append(link("Brewing Store", "brewing_store")).append(" for its class-gated healing rows."))));
 

@@ -103,6 +103,7 @@
     "MobPersistenceAccess",
     "SpawnerBreakAccess",
     "BowRocketMixin",
-    "AmmoDrawMixin"
+    "AmmoDrawMixin",
+    "ClassSkillDeathMixin"
   ]
 }

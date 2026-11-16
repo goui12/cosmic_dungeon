@@ -5,6 +5,8 @@ import java.util.*;
 import net.goui.cosmicdungeon.dungeon.*;
 import net.goui.cosmicdungeon.dungeon.d1.D1RunData;
 import net.goui.cosmicdungeon.entity.ModEntities;
+import net.goui.cosmicdungeon.playerclass.judicator.SmiteCombat;
+import net.goui.cosmicdungeon.playerclass.skill.*;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.*;
@@ -67,15 +69,11 @@ public final class MercenaryJudicatorGameTests {
         void kills(int value){data.setCount(id,MercenarySkills.key(contract.id(),MercenarySkill.COMBAT),value);}
         void hit(Mob target,float amount){target.invulnerableTime=0;target.hurtServer(level,merc.damageSources().mobAttack(merc),amount);}
         void reset(){for(var mob:mobs)if(mob.isAlive()){mob.invulnerableTime=0;mob.setHealth(100);}}
-        void procSeed(){
-            // Choose a deterministic seed whose first two rolls both proc at level four.
-            // A broken recursive guard would therefore cause a visible second burst.
-            for(long seed=0;seed<100000;seed++){
-                var random=RandomSource.create(seed);
-                if(random.nextInt(100)<4&&random.nextInt(100)<4){merc.getRandom().setSeed(seed);return;}
-            }
-            throw new IllegalStateException("No deterministic burst seed");
+        void fillSmite(){
+            for(int charge=ChargedClassSkills.charge(merc,SignatureSkill.SMITE);charge<10;charge++)
+                ChargedClassSkills.addCharge(merc,SignatureSkill.SMITE);
         }
+        int smiteProgress(){return data.count(id,SignatureSkills.smiteKey(contract.id()));}
         void check(boolean condition,String message){helper.assertTrue(condition,Component.literal(message));}
         @Override public void close(){
             mobs.forEach(Entity::discard);merc.discard();players.remove(owner.getUUID());
@@ -87,61 +85,77 @@ public final class MercenaryJudicatorGameTests {
     }
     public static void combat(GameTestHelper helper){
         try(var f=new Fixture(helper,Long.MAX_VALUE-1801)){
-            var primary=f.mob(EntityType.CREEPER,0,0);var secondary=f.mob(EntityType.CREEPER,1.5,0);
-            var edge=f.mob(EntityType.CREEPER,0,2);var outside=f.mob(EntityType.CREEPER,3.25,0);
-            var diagonal=f.mob(EntityType.CREEPER,1.5,1.5);var immune=f.mob(EntityType.CREEPER,0,-1);
-            immune.setInvulnerable(true);
-            var cow=f.mob(EntityType.COW,-1,0);var wolf=f.mob(EntityType.WOLF,-1,1);
-            wolf.setOwnerReference(EntityReference.of(f.owner.getUUID()));
-            var angryWolf=f.mob(EntityType.WOLF,-1,-1);angryWolf.setTarget(f.owner);
-            var angryBee=f.mob(EntityType.BEE,-.5,-1);angryBee.setTarget(f.owner);
-            var angryBear=f.mob(EntityType.POLAR_BEAR,-.5,1);angryBear.setTarget(f.owner);
-            var villager=f.mob(EntityType.VILLAGER,.5,0);var allay=f.mob(EntityType.ALLAY,.5,.5);
-            var iron=f.mob(EntityType.IRON_GOLEM,.5,-.5);var snow=f.mob(EntityType.SNOW_GOLEM,0,.5);
-            var teammate=f.mob(EntityType.CREEPER,0,1);
-            var companion=new MercenaryEntity(ModEntities.MERCENARY.get(),f.level);
-            companion.initialize(f.id,new MercenaryContract(UUID.randomUUID(),f.owner.getUUID(),"judicator",3,50));
-            companion.setNoAi(true);companion.setPos(f.origin.add(.5,0,1));
-            companion.getAttribute(Attributes.MAX_HEALTH).setBaseValue(100);companion.setHealth(100);
-            f.level.addFreshEntity(companion);f.mobs.add(companion);
-            var allies=List.of(cow,wolf,angryWolf,angryBee,angryBear,villager,allay,iron,snow,teammate,companion);
+            f.merc.setPos(f.origin);
+            var primary=f.mob(EntityType.ZOMBIE,1,0);var edge=f.mob(EntityType.SKELETON,0,3);
+            var outside=f.mob(EntityType.ZOMBIE,3.01,0);var diagonal=f.mob(EntityType.ZOMBIE,2.4,2.4);
+            var immune=f.mob(EntityType.HUSK,0,-1);immune.setInvulnerable(true);
+            var creeper=f.mob(EntityType.CREEPER,1.5,0);var cow=f.mob(EntityType.COW,-1,0);
+            var wolf=f.mob(EntityType.WOLF,-1,1);wolf.setOwnerReference(EntityReference.of(f.owner.getUUID()));
+            var teammate=f.mob(EntityType.ZOMBIE,0,1);
             var board=f.level.getScoreboard();var team=board.addPlayerTeam("judge"+f.owner.getUUID().toString().substring(0,8));
             board.addPlayerToTeam(f.owner.getScoreboardName(),team);board.addPlayerToTeam(teammate.getScoreboardName(),team);
             try{
-                f.procSeed();f.hit(primary,1);
-                f.check(secondary.getHealth()==100&&f.kills()==0,"Level zero cannot proc or earn from a nonlethal hit");
-                f.kills(12);f.reset();f.procSeed();f.hit(primary,1);
-                f.check(secondary.getHealth()==96&&edge.getHealth()==96,"Level four deals exactly four HP through the two-block boundary");
-                f.check(outside.getHealth()==100&&diagonal.getHealth()==100,"Radius is spherical and secondary hits never chain another burst");
-                f.check(immune.getHealth()==100&&allies.stream().allMatch(m->m.getHealth()==100)
-                        &&f.merc.getHealth()==20&&f.owner.getHealth()==20,"All allied, neutral, owned, teammate and immune entities are protected");
-                f.check(f.kills()==12,"Damage alone grants no Combat kill credit");
+                f.kills(12);f.hit(primary,1);
+                f.check(edge.getHealth()==100,"Ordinary Judicator hits no longer trigger the historical random Combat burst");
+                f.reset();
+                for(int i=0;i<9;i++)ChargedClassSkills.addCharge(f.merc,SignatureSkill.SMITE);
+                MercenaryJudicator.tick(f.merc);
+                f.check(primary.getHealth()==100&&ChargedClassSkills.charge(f.merc,SignatureSkill.SMITE)==9,
+                        "Nine undead-kill charges cannot activate Smite");
 
-                f.reset();f.procSeed();primary.setInvulnerable(true);f.hit(primary,1);
-                f.check(secondary.getHealth()==100,"Invulnerable primary cannot trigger a burst");primary.setInvulnerable(false);
-                f.procSeed();f.hit(primary,0);f.check(secondary.getHealth()==100,"Zero damage cannot trigger a burst");
-                f.reset();f.procSeed();f.hit(teammate,1);
-                f.check(secondary.getHealth()==100&&teammate.getHealth()==100,"Allied direct hit cannot trigger");
-                f.reset();f.procSeed();
-                primary.hurtServer(f.level,f.merc.damageSources().indirectMagic(f.merc,f.merc),1);
-                f.check(secondary.getHealth()==100,"Indirect potion or magic damage cannot trigger");
-
-                f.reset();f.procSeed();
-                var arrow=new Arrow(f.level,f.merc,new ItemStack(Items.ARROW),null);
-                primary.hurtServer(f.level,f.merc.damageSources().arrow(arrow,f.merc),1);
-                f.check(secondary.getHealth()==96,"The Judicator's own direct arrow hit triggers around the struck enemy");
-                f.reset();f.procSeed();
-                var foreign=new Arrow(f.level,f.owner,new ItemStack(Items.ARROW),null);
-                primary.hurtServer(f.level,f.merc.damageSources().arrow(foreign,f.merc),1);
-                f.check(secondary.getHealth()==100,"Mismatched arrow ownership cannot trigger a forged direct hit");
-
-                f.reset();f.procSeed();primary.setHealth(1);secondary.setHealth(1);
-                f.hit(primary,1);
-                f.check(!primary.isAlive()&&!secondary.isAlive()&&f.kills()==14,
-                        "Fatal direct hit still bursts; primary and secondary deaths each earn one Combat kill");
-                f.check(f.data.count(f.id,"kills:"+f.owner.getUUID())==2,"Secondary deaths retain ordinary owner kill credit");
-                primary.die(f.merc.damageSources().mobAttack(f.merc));secondary.die(f.merc.damageSources().mobAttack(f.merc));
-                f.check(f.kills()==14,"Repeated native death callbacks cannot duplicate Combat credit");
+                int[] thresholds={0,10,30,60};
+                for(int skill=1;skill<=4;skill++){
+                    var rank=SmiteCombat.rank(skill);f.reset();
+                    primary.setPos(f.origin.add(1,0,0));edge.setPos(f.origin.add(0,0,rank.radius()));
+                    outside.setPos(f.origin.add(rank.radius()+.01,0,0));
+                    diagonal.setPos(f.origin.add(rank.radius()*.8,0,rank.radius()*.8));
+                    f.data.setCount(f.id,SignatureSkills.smiteKey(f.contract.id()),thresholds[skill-1]);f.fillSmite();
+                    MercenaryJudicator.tick(f.merc);
+                    f.check(primary.getHealth()==100-rank.damage()&&edge.getHealth()==100-rank.damage(),
+                            "Rank "+skill+" deals its exact native damage through the inclusive radius");
+                    f.check(outside.getHealth()==100&&diagonal.getHealth()==100,"Smite uses a sphere, not a box");
+                    f.check(immune.getHealth()==100&&creeper.getHealth()==100&&cow.getHealth()==100
+                            &&wolf.getHealth()==100&&teammate.getHealth()==100&&f.merc.getHealth()==20&&f.owner.getHealth()==20,
+                            "Smite protects immune targets, non-undead, companions, allies and caster");
+                    f.check(ChargedClassSkills.charge(f.merc,SignatureSkill.SMITE)==0
+                            &&f.smiteProgress()==Math.min(60,thresholds[skill-1]+1),
+                            "One useful activation spends all ten charge and earns one proficiency, including at the level cap");
+                    f.check(f.kills()==12,"Nonlethal Smite does not reinterpret historical Combat kill progress");
+                }
+                f.reset();f.fillSmite();primary.setInvulnerable(true);edge.setInvulnerable(true);
+                MercenaryJudicator.tick(f.merc);
+                f.check(ChargedClassSkills.charge(f.merc,SignatureSkill.SMITE)==10&&f.smiteProgress()==60,
+                        "An all-immune burst preserves charge and proficiency");
+                primary.setInvulnerable(false);edge.setInvulnerable(false);
+                java.util.function.Consumer<net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent> cancel=
+                        e->{if(e.getEntity()==primary||e.getEntity()==edge)e.setCanceled(true);};
+                NeoForge.EVENT_BUS.addListener(cancel);
+                try{
+                    MercenaryJudicator.tick(f.merc);
+                    f.check(primary.getHealth()==100&&edge.getHealth()==100
+                            &&ChargedClassSkills.charge(f.merc,SignatureSkill.SMITE)==10,
+                            "Cancelled native damage also preserves all charge");
+                }finally{NeoForge.EVENT_BUS.unregister(cancel);}
+                f.owner.setHealth(0);MercenaryJudicator.tick(f.merc);
+                f.check(primary.getHealth()==100,"An unavailable hirer cannot activate Smite");
+                f.owner.setHealth(f.owner.getMaxHealth());
+                f.check(ChargedClassSkills.charge(f.merc,SignatureSkill.SMITE)==10,
+                        "The inactive owner's bank remains intact when the hirer returns");
+                primary.getAttribute(Attributes.MAX_ABSORPTION).setBaseValue(10);
+                primary.setAbsorptionAmount(10);edge.setInvulnerable(true);MercenaryJudicator.tick(f.merc);
+                f.check(primary.getHealth()==100&&primary.getAbsorptionAmount()==5
+                        &&ChargedClassSkills.charge(f.merc,SignatureSkill.SMITE)==0,
+                        "Actual absorption damage is a useful Smite and spends charge");
+                primary.setAbsorptionAmount(0);primary.invulnerableTime=0;edge.setInvulnerable(false);
+                f.fillSmite();primary.setHealth(1);edge.setHealth(1);MercenaryJudicator.tick(f.merc);
+                f.check(!primary.isAlive()&&!edge.isAlive()&&ChargedClassSkills.charge(f.merc,SignatureSkill.SMITE)==0,
+                        "Fatal secondary Smite hits cannot recharge or recursively activate themselves");
+                f.check(f.kills()==14&&f.data.count(f.id,"kills:"+f.owner.getUUID())==2,
+                        "Smite retains normal owner kill attribution and historical Combat kill records");
+                primary.die(f.merc.damageSources().indirectMagic(f.merc,f.merc));
+                edge.die(f.merc.damageSources().indirectMagic(f.merc,f.merc));
+                f.check(f.kills()==14&&ChargedClassSkills.charge(f.merc,SignatureSkill.SMITE)==0,
+                        "Repeated native death callbacks cannot duplicate Smite charge or Combat credit");
             }finally{board.removePlayerTeam(team);}
             helper.succeed();
         }

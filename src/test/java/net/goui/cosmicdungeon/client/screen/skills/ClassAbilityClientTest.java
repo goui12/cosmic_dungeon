@@ -72,7 +72,7 @@ final class ClassAbilityClientTest {
         ClassAbilityClient.receive(view(13, 10, "dragoon", ready(), List.of()));
         var active = ClassAbilityClient.augment(SkillsPanelModel.initial("dragoon")).actions().getFirst();
         assertTrue(active.enabled());
-        assertEquals("Primary class skill: Test ability",active.label());
+        assertEquals("Primary [100/100]: Test ability",active.label());
         ClassAbilityClient.clear();
         assertTrue(ClassAbilityClient.augment(SkillsPanelModel.initial("dragoon")).actions().stream().noneMatch(SkillsPanelModel.Action::enabled));
     }

@@ -78,6 +78,7 @@ public final class MercenaryBrain {
         entity.timers(entity.timers().advance(10));attack=Math.max(0,attack-10);collection=Math.max(0,collection-10);
         MercenaryFireworks.tick(entity,10);
         MercenaryLightning.tick(entity,level,10);
+        MercenaryJudicator.tick(entity);
         double distance=entity.distanceToSqr(owner);
         if(distance>16&&lastPosition!=null&&lastPosition.distanceToSqr(entity.position())<.09)stuck+=10;else stuck=0;
         lastPosition=entity.position();

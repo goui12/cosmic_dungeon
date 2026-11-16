@@ -7,7 +7,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
-/** Server-owned slot sessions. Later batches attach abilities; unassigned slots never fall through to old actions. */
+/** Server-owned slot sessions; current actor/run/charge is revalidated for every activation. */
 public final class ClassSkillActions {
     /** One deferred acknowledgement bit coalesces rejected presses until the existing periodic sync. */
     static final class Session {
@@ -35,9 +35,33 @@ public final class ClassSkillActions {
     public static List<ClassSkillPayloads.SlotView> slots(){
         return Arrays.stream(ClassSkillSlot.values()).map(ClassSkillPayloads.SlotView::unassigned).toList();
     }
+    public static ClassSkillPayloads.SlotView primary(String cls,int level,int charge,boolean armed,boolean active){
+        if(cls.equals("dragoon")){
+            String description=!active?"Requires an active dungeon.":armed?"Armed: your next valid trident strike releases Chain Lightning."
+                    :"Land 100 direct hostile trident hits, then arm your next strike. Charge: "+charge+"/100.";
+            return new ClassSkillPayloads.SlotView(ClassSkillSlot.PRIMARY,"chain_lightning",
+                    armed?"Chain Lightning (Armed)":"Chain Lightning",description,active&&charge==100&&!armed,0,charge,100);
+        }
+        if(cls.equals("judicator")){
+            var rank=net.goui.cosmicdungeon.playerclass.judicator.SmiteCombat.rank(level);
+            String description=!active?"Requires an active dungeon.":"Kill 10 undead to charge. "+rank.damage()+" damage to undead within "
+                    +rank.radius()+" blocks. Only activations that damage undead earn proficiency. Charge: "+charge+"/10.";
+            return new ClassSkillPayloads.SlotView(ClassSkillSlot.PRIMARY,"smite","Smite ("+rank.name()+")",
+                    description,active&&charge==10,0,charge,10);
+        }
+        return ClassSkillPayloads.SlotView.unassigned(ClassSkillSlot.PRIMARY);
+    }
+    public static List<ClassSkillPayloads.SlotView> slots(ServerPlayer p){
+        var result=new ArrayList<>(slots());String cls=ClassData.getClassId(p);
+        var skill=SignatureSkill.forClass(cls).orElse(null);
+        if(skill!=null&&ChargedSkillState.limit(skill)>0)result.set(0,primary(cls,ChargedClassSkills.level(p,skill),
+                ChargedClassSkills.charge(p,skill),skill==SignatureSkill.CHAIN_LIGHTNING&&ChargedClassSkills.armed(p),
+                ChargedClassSkills.active(p,skill)));
+        return List.copyOf(result);
+    }
     private static ClassSkillPayloads.View snapshot(ServerPlayer p,long revision){
         var run=ClassSkills.run(p);
-        return new ClassSkillPayloads.View(run==null?0:run.runId(),revision,ClassData.getClassId(p),slots(),SignatureSkills.playerSnapshot(p));
+        return new ClassSkillPayloads.View(run==null?0:run.runId(),revision,ClassData.getClassId(p),slots(p),SignatureSkills.playerSnapshot(p));
     }
     public static void sync(ServerPlayer p,boolean force){
         if(p.connection==null||p.hasDisconnected())return;
@@ -58,9 +82,12 @@ public final class ClassSkillActions {
         var run=ClassSkills.run(p);
         if(!matches(session.sent,request,run==null?0:run.runId(),ClassData.getClassId(p))){sync(p,true);return;}
         // Resolve from current server catalog, not the old sent snapshot or a client ability ID.
-        var current=slots().stream().filter(s->s.slot()==request.slot()).findFirst().orElseThrow();
-        p.displayClientMessage(Component.literal(current.abilityId().isEmpty()
-                ?request.slot().label()+": no ability assigned.":current.title()+": unavailable."),true);
+        var current=slots(p).stream().filter(s->s.slot()==request.slot()).findFirst().orElseThrow();
+        if(current.enabled()&&current.abilityId().equals("chain_lightning")){
+            if(ChargedClassSkills.arm(p))p.displayClientMessage(Component.literal("Chain Lightning armed for your next trident strike."),true);
+        }else if(current.enabled()&&current.abilityId().equals("smite"))ChargedClassSkills.smite(p);
+        else p.displayClientMessage(Component.literal(current.abilityId().isEmpty()
+                ?request.slot().label()+": no ability assigned.":current.title()+": "+current.description()),true);
         sync(p,true);
     }
     public static void forget(ServerPlayer p){SESSIONS.remove(p);}

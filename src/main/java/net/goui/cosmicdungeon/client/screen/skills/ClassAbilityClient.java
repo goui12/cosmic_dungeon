@@ -82,7 +82,9 @@ public final class ClassAbilityClient {
             var description = Component.literal(slot.description()).withStyle(ChatFormatting.YELLOW);
             if (!enabled) description.append(Component.literal("\n" + (pending ? "Waiting for the server."
                     : unavailable(view, base.classId(), slot.slot()))).withStyle(ChatFormatting.GRAY));
-            String title = slot.slot().label() + (slot.abilityId().isBlank() ? "" : ": " + slot.title());
+            String title = slot.abilityId().isBlank() ? slot.slot().label()
+                    : (slot.slot()==ClassSkillSlot.PRIMARY ? "Primary" : slot.slot().label())
+                    + (slot.maxCharge()>0 ? " ["+slot.charge()+"/"+slot.maxCharge()+"]" : "") + ": " + slot.title();
             actions.add(new SkillsPanelModel.Action(actionId(slot.slot()), title, description, enabled));
         }
         String resource = base.resource();

@@ -58,7 +58,7 @@ Requests, random-potion skills, and the virtual Brewing Supplies resource are re
 
 ## Shared class skill controls
 
-The inventory Skills panel shows the current signature track and generic slots: **Primary class skill (G)** and **Class skill 1/2/3 (Z/X/C)**. Remap these once in Controls; the bindings remain unchanged when switching classes. Buttons show the actual binding in smaller italic text, and unassigned slots stay gray. In this beta, all four new slots are unassigned; later batches supply their abilities. Existing Bogatyr utility and Theurgist resurrection remain available. See [signature tracks and controls](Classes/Signature_Skills_and_Controls.md) for progress and legacy-binding details.
+The inventory Skills panel shows the current signature track and generic slots: **Primary class skill (G)** and **Class skill 1/2/3 (Z/X/C)**. Remap these once in Controls; the bindings remain unchanged when switching classes. Buttons show the actual binding in smaller italic text. Primary class skill arms Dragoon Chain Lightning or activates Judicator Smite when charged. Its inventory button shows charge and readiness, including the armed state. Other unassigned primary slots and Class skill 1/2/3 stay gray. Existing Bogatyr utility and Theurgist resurrection remain available. See [signature tracks and controls](Classes/Signature_Skills_and_Controls.md) for progress and legacy-binding details.
 
 ## Theurgist
 
@@ -102,7 +102,9 @@ In Stay, eligible pairs move temporarily for native mating, then return to their
 
 ## Dragoon
 
-A trident specialist and repair supporter. Successful melee or thrown **trident** hits can trigger short-range chain lightning against nearby enemies; it is passive and does not chain recursively. Trident progression improves the relevant damage/chain benefits. Sword hits are not a replacement trigger.
+A trident specialist and repair supporter. Land **100 valid melee or thrown trident hits** against hostile mobs to fill Chain Lightning. Hits must deal damage; sword hits, arrows, misses and immune targets do not charge it. At 100/100, press **Primary class skill (default G)** or its inventory button to arm your next valid trident strike. That strike releases the chain against eligible nearby enemies in line of sight. Dragoon mercenaries use the same 100-hit bar and automatically arm for their next valid trident strike.
+
+There is one bar with no overflow bank. If the chain damages no additional enemy, it stays fully charged and armed for another strike. A useful chain spends the bar and earns one Chain Lightning proficiency success. Chain damage does not refill the bar or trigger another chain. Existing trident weapon progression still affects the triggering strike; Chain Lightning is a separate signature track.
 
 Dragoons may use anvils. For **Repair Affinity**, invite a customer with `/repair <player>`; accept with `/repair accept <player>`, decline with `/repair deny <player>`, or cancel with `/repair cancel`. The customer supplies damaged supported gear and may offer an optional account-currency labor fee. The Dragoon supplies compatible repair components, including approved ordinary unmarked materials where accepted. The customer retains ownership. Both participants must remain nearby with the interface open and review the quote/readiness controls. Items, materials, and fees move only after successful validation; not every special item is supported. See [Repair Affinity](Classes/Dragoon_Repair_Affinity.md).
 
@@ -117,6 +119,17 @@ Authored D1 Cinderbite and Cindermaul retain their supported abilities. Their en
 ## Judicator
 
 An oathbound mace-and-bow protector. Scintilla Vitalis and Lux Vitalis provide healing to living targets and harm undead; Ebonsight provides night vision, and Vielpiercer reveals targets with Glowing. Follow each authored item's tooltip and class restrictions. Mace/bow progression is passive. Eon sells the shared Theurgist/Judicator healing offers. Repair Affinity and anvil access belong to Dragoon.
+
+**Smite** charges from **10 credited undead kills**. Press **Primary class skill (default G)** or its inventory button to strike hostile undead around you. Judicator mercenaries activate Smite automatically when charged and a useful target is nearby. Allies, companions and non-undead are protected.
+
+| Smite level | Skill | Radius | Damage | Successful activations to unlock |
+|---|---|---|---|---|
+| 1 | Gravehammer | 3 blocks | 2.5 HP (1.25 hearts) | 0 |
+| 2 | Bonegrinder | 4 blocks | 2.5 HP (1.25 hearts) | 10 |
+| 3 | Deathpurge | 5 blocks | 5 HP (2.5 hearts) | 30 |
+| 4 | Last Rites | 6 blocks | 5 HP (2.5 hearts) | 60 |
+
+Each activation that damages at least one undead spends the ten-charge bar and earns **one** proficiency success, regardless of how many targets it hits. Kills fill charge; successful activations improve Smite. The bar stores no overflow, and Smite's own damage does not recharge it. If no mob takes damage, all charge is retained and the player sees: **Smite only works on undead! You did not damage any mobs**
 
 ## Controls and passive progression
 
