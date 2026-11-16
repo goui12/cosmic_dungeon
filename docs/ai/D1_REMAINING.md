@@ -1,12 +1,11 @@
 # Active class-skills series, 2026-11-15
 
-Batch 1 is the authorized shared foundation: [implementation boundary](tasks/CLASS_SKILLS_B1_20261115.md). Exact completion evidence lives in the class-skills-20261115 controller receipt. Stop after Batch 1; five cards remain.
+Batch 1 foundation is complete. Batch 2 implements Theurgist max-health progression and crafting: [implementation boundary](tasks/CLASS_SKILLS_B2_20261115.md). Exact completion evidence lives in the class-skills-20261115 controller receipts. Stop after Batch 2; four cards remain.
 
-1. Batch 2: Theurgist max-health progression and crafting.
-2. Batch 3: charged Chain Lightning and Smite.
-3. Batch 4: shared buffs and automatic mercenary use.
-4. Batch 5: independent spawner/healing anti-farming protections.
-5. Batch 6: party HUD, cooldown/effect displays, full integration and official stable release.
+1. Batch 3: charged Chain Lightning and Smite.
+2. Batch 4: shared buffs and automatic mercenary use.
+3. Batch 5: independent spawner/healing anti-farming protections.
+4. Batch 6: party HUD, cooldown/effect displays, full integration and official stable release.
 
 [Approved plan and settled values](tasks/CLASS_SKILLS_BATCHES_20261115.md). Batches 1–5 update local development source and GitHub only, as unpublished betas. No TEST/local-client/CurseForge distribution until Batch 6 finishes. All unresolved recommendations: [active ledger](tasks/BATCH_1_7_20_REVIEW_NOTES_20261012.md). Historical series notes below remain evidence of their own scope, not authorization for this series.
 

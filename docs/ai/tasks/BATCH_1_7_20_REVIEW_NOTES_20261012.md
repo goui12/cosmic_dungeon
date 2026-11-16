@@ -4,6 +4,7 @@ Cameron2026-10-12: remove recommendations once accomplished or deemed unnecessar
 
 | Priority | Remaining recommendation | Source | Disposition |
 |---|---|---|---|
+| P2 | Max-health potion names/tooltips, 45-minute timer, hearts and mercenary stock/cadence in real co-op play. | [Class skills Batch 2](CLASS_SKILLS_B2_20261115.md), baseline0b8df5b09474514f173371b561695f5c6de3caad | TESTING: automated native effect/crafting/save coverage; distribution and licensed acceptance held until Batch 6. |
 | P2 | Native generic G/Z/X/C remap/unbound/conflict/class-switch and brewer Skills-panel layout at two GUI scales. | [Class skills Batch 1](CLASS_SKILLS_B1_20261115.md), baseline c5a7991e54a329f61cb59389695260072ebeacef | TESTING: automated input/layout/persistence coverage is not native play; delivery and manual acceptance held until Batch 6. |
 | P2 | Native GUI-scale/layering/modal/drag/Creative/Extra visual regression, including selected brewing-route tooltip wrapping. | [Batch1](BATCH_1_7_01_20261011.md), source068fe352f96d9bef1ab3e4d4fbc01089a5523589; [Batch23](BATCH_1_8_23_20261012.md), sourcee0a3ad8838d422b8bbd9b408e179f2f13057c3cc | TESTING: licensed native play. |
 | P2 | All six class inventory scenes at two GUI scales. | [Batch2](BATCH_1_7_02_20261011.md), source24e5e5b568f2687ed07cb6cf751e8a9bfe463a8a | TESTING: native screenshot baseline. |

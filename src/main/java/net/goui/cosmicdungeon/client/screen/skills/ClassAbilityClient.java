@@ -37,6 +37,9 @@ public final class ClassAbilityClient {
         view = incoming;
         pending = false;
     }
+    public static int level(String classId){
+        return view==null||!view.classId().equals(classId)||view.tracks().isEmpty()?0:view.tracks().getFirst().level();
+    }
     public static void clear() { view = null; pending = false; }
     @SubscribeEvent public static void login(ClientPlayerNetworkEvent.LoggingIn event) { clear(); }
     @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { clear(); }

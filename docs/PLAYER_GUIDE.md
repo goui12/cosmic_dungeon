@@ -58,11 +58,11 @@ Requests, random-potion skills, and the virtual Brewing Supplies resource are re
 
 ## Shared class skill controls
 
-The inventory Skills panel shows the current signature track and generic slots: **Primary class skill (G)** and **Class skill 1/2/3 (Z/X/C)**. Remap these once in Controls; the bindings remain unchanged when switching classes. Buttons show the actual binding in smaller italic text, and unassigned slots stay gray. In this foundation beta, all four new slots are unassigned; later batches supply their abilities. Existing Bogatyr utility and Theurgist resurrection remain available. See [signature tracks and controls](Classes/Signature_Skills_and_Controls.md) for progress and legacy-binding details.
+The inventory Skills panel shows the current signature track and generic slots: **Primary class skill (G)** and **Class skill 1/2/3 (Z/X/C)**. Remap these once in Controls; the bindings remain unchanged when switching classes. Buttons show the actual binding in smaller italic text, and unassigned slots stay gray. In this beta, all four new slots are unassigned; later batches supply their abilities. Existing Bogatyr utility and Theurgist resurrection remain available. See [signature tracks and controls](Classes/Signature_Skills_and_Controls.md) for progress and legacy-binding details.
 
 ## Theurgist
 
-A healer-alchemist who balances care and chemistry. Use mace/bow and Theurgist-attuned gear; beneficial potion work and successful support contribute to the appropriate passive skills. Mending Sting and Verdant Jolt provide regenerative aid. Scintilla Vitalis and Lux Vitalis heal living targets and harm undead. Read actual item effects and server values rather than assuming every named arrow is an ordinary damage arrow.
+A healer-alchemist who balances care and chemistry. Use mace/bow and Theurgist-attuned gear; beneficial potion work and successful support contribute to the appropriate passive skills. Mending Sting and Verdant Jolt provide regenerative aid. The authored restorative arrows named Scintilla Vitalis and Lux Vitalis heal living targets and harm undead; these arrows are separate from the max-health potions below. Read actual item effects and server values rather than assuming every named arrow is an ordinary damage arrow.
 
 Your positive thrown potions aid allies and their companions and do not affect hostile mobs, including healing damage against undead. Restorative class arrows have their own rules.
 
@@ -71,6 +71,10 @@ The **Potions** list appears automatically beside inventory. Only Theurgists may
 **Resurrect...** is available immediately in your inventory; its default shortcut is **Alt+4**. Opening the picker does not cast. Choose a dead teammate in the same active run. They have 60 seconds to accept or decline on the death screen. A successful accepted resurrection returns them to their latest recorded death location with five seconds of protection and the existing recoverable-inventory handling. It does not recreate destroyed or missing physical drops.
 
 Player resurrection costs no items or currency and starts a **180-second cooldown only after success**. Declined, expired, stale, or failed offers start no cooldown. The cooldown survives death, reconnect, and run cleanup; server downtime pauses this game-time cooldown. Party hover and the death screen show each caster's readiness, cooldown, or reason for unavailability. Mercenary Theurgists retain their separate Positive Potions level-10 resurrection unlock and their displayed cooldown rules.
+
+Max-health potions use standard Splash Healing materials at every rank and last 45 minutes without healing. Scintilla starts at +10% of base health; Favilla unlocks at Positive Potions25 with +15%, reaching Fulgor Vitae at68 with +55%. Only the highest unlocked rank is craftable. The 10-block splash includes the caster and same-party players, mercenaries and wolves; stronger replaces weaker, and equal/weaker doses cannot refresh or earn progress. [Full rank table and rules](Classes/Theurgist_Help_Guide.md#max-health-potions).
+
+Theurgist mercenaries use Healing and max health only. Standard Healing applies below level25; positive potion quality/cooldown bonuses begin at25. Player beneficial recipes and resurrection remain available.
 
 ## Venefex
 

@@ -32,7 +32,7 @@ public final class ModNetwork {
     private ModNetwork() {}
 
     public static void registerPayloadHandlers(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("36");
+        final PayloadRegistrar registrar = event.registrar("37");
         registrar.playToClient(ClassSkillPayloads.View.TYPE,ClassSkillPayloads.View.STREAM_CODEC,
                 (payload,ctx)->ctx.enqueueWork(()->ClientNetworkDispatch.dispatch("onClassSkills",payload)));
         registrar.playToServer(ClassSkillPayloads.Action.TYPE,ClassSkillPayloads.Action.STREAM_CODEC,

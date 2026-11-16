@@ -1,6 +1,7 @@
 package net.goui.cosmicdungeon.crafting;
 
 import java.util.*;
+import net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.flag.FeatureFlagSet;
@@ -12,14 +13,14 @@ public final class PotionCrafting {
     public record Offer(int own, int shared, BrewingFuel.View fuel, int steps, int powders) {}
     private record Catalog(FeatureFlagSet flags, PotionRecipeCatalog recipes, PotionRecipeSelection selection) {}
     private record Stock(Map<String, Integer> own, Map<String, Integer> pooled) {}
-    private record QuoteCache(long run, String role, int charges, Stock stock, List<net.goui.cosmicdungeon.network.PotionCraftPayloads.Entry> entries) {}
+    private record QuoteCache(long run, String role, int rank, int charges, Stock stock, List<net.goui.cosmicdungeon.network.PotionCraftPayloads.Entry> entries) {}
     private static final Map<ServerPlayer, QuoteCache> QUOTES = new WeakHashMap<>();
     private static final Map<MinecraftServer, Catalog> CATALOGS = new WeakHashMap<>();
     private PotionCrafting() {}
     private static Catalog data(ServerPlayer player) {
         var server = player.level().getServer(); var flags = player.level().enabledFeatures(); var old = CATALOGS.get(server);
         if (old == null || !old.flags().equals(flags)) {
-            var recipes = PotionRecipeCatalog.vanilla(flags); old = new Catalog(flags, recipes, new PotionRecipeSelection(recipes)); CATALOGS.put(server, old);
+            var recipes = PotionRecipeCatalog.classRecipes(flags); old = new Catalog(flags, recipes, new PotionRecipeSelection(recipes)); CATALOGS.put(server, old);
         }
         return old;
     }
@@ -46,7 +47,7 @@ public final class PotionCrafting {
     }
     public static Offer quote(ServerPlayer player, long expected, String targetId) {
         var catalog = data(player); var target = catalog.recipes().target(targetId); var fuel = fuel(player);
-        var run = target == null ? null : SharedCrafting.run(player, expected, target.classes());
+        var run = target == null || !VitalityPotions.craftable(targetId,VitalityPotions.level(player)) ? null : SharedCrafting.run(player, expected, target.classes());
         if (run == null || !SharedCrafting.availableOwner(player, false) || SharedCraftData.get(player.level().getServer()).pendingRun(expected) != null)
             return new Offer(0, 0, fuel, 0, 0);
         var stock = stock(player, run, false); var planner = catalog.selection();
@@ -57,7 +58,7 @@ public final class PotionCrafting {
     }
     private static SharedCrafting.Recipe recipe(ServerPlayer player, long expected, String targetId, boolean cursor) {
         var catalog = data(player); var target = catalog.recipes().target(targetId);
-        var run = target == null ? null : SharedCrafting.run(player, expected, target.classes());
+        var run = target == null || !VitalityPotions.craftable(targetId,VitalityPotions.level(player)) ? null : SharedCrafting.run(player, expected, target.classes());
         var journal = SharedCraftData.get(player.level().getServer());
         if (run == null || !SharedCrafting.availableOwner(player, false, cursor) || journal.pendingRun(expected) != null) return null;
         var fuel = journal.fuel(player.getUUID()); var stock = stock(player, run, true);
@@ -97,14 +98,15 @@ public final class PotionCrafting {
                 || SharedCraftData.get(player.level().getServer()).pendingRun(run.runId()) != null)
             return net.goui.cosmicdungeon.network.PotionCraftPayloads.View.empty(revision);
         var fuel = fuel(player); var stock = stock(player, run, false); var old = QUOTES.get(player);
-        if (old == null || old.run() != run.runId() || !old.role().equals(role) || old.charges() != fuel.charges() || !old.stock().equals(stock)) {
+        int potionLevel=VitalityPotions.level(player), rank=VitalityPotions.rank(potionLevel).amplifier();
+        if (old == null || old.run() != run.runId() || !old.role().equals(role) || old.rank()!=rank || old.charges() != fuel.charges() || !old.stock().equals(stock)) {
             if (CraftingWork.probe != null) CraftingWork.probe.quoteBuilds++;
             var catalog = data(player); var planner = catalog.selection();
             var entries = new ArrayList<net.goui.cosmicdungeon.network.PotionCraftPayloads.Entry>();
-            for (var target : catalog.recipes().targets()) if (target.classes().contains(role)) {
+            for (var target : catalog.recipes().targets()) if (target.classes().contains(role) && VitalityPotions.craftable(target.id(),potionLevel)) {
                 entries.add(entry(target, planner, stock.own(), stock.pooled(), fuel.charges()));
             }
-            old = new QuoteCache(run.runId(), role, fuel.charges(), stock, List.copyOf(entries)); QUOTES.put(player, old);
+            old = new QuoteCache(run.runId(), role, rank, fuel.charges(), stock, List.copyOf(entries)); QUOTES.put(player, old);
         }
         return new net.goui.cosmicdungeon.network.PotionCraftPayloads.View(run.runId(), revision, role, fuel.charges(), fuel.capacity(), old.entries());
     }

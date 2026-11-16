@@ -40,9 +40,14 @@ public final class MercenaryPotions {
         return effect.getCategory()==MobEffectCategory.BENEFICIAL;
     }
     public static boolean permits(boolean helpful,boolean ally,boolean enemy){return helpful?ally:enemy;}
+    static boolean positiveEffect(MobEffect effect){
+        return effect==MobEffects.INSTANT_HEALTH.value()
+                ||net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions.isVitality(effect);
+    }
     static boolean roleAllows(MercenaryContract contract,MobEffect effect,boolean inverted){
         boolean positive=helpful(effect,false);
-        return MercenaryBrewing.supports(contract,positive)&&positive==helpful(effect,inverted);
+        return MercenaryBrewing.supports(contract,positive)&&positive==helpful(effect,inverted)
+                &&(!positive||positiveEffect(effect));
     }
     public static boolean allows(Entity source,LivingEntity target,MobEffect effect){
         if(MercenaryWolves.protectedCompanion(target)&&MercenaryBrain.friendlySource(source)
@@ -66,6 +71,8 @@ public final class MercenaryPotions {
         if(helpful(effect,target.isInvertedHealAndHarm())
                 &&(effect.isInstantenous()||incoming.getEffect().equals(MobEffects.REGENERATION)))
             return target.getHealth()<target.getMaxHealth();
+        if(net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions.isVitality(incoming))
+            return net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions.useful(target,incoming.getAmplifier());
         var old=target.getEffect(incoming.getEffect());
         return old==null||old.getAmplifier()<incoming.getAmplifier()||old.getDuration()<40;
     }

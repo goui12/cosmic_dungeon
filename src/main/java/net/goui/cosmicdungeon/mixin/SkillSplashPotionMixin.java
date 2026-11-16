@@ -10,6 +10,12 @@ import org.spongepowered.asm.mixin.injection.*;
 
 @Mixin(ThrownSplashPotion.class)
 public abstract class SkillSplashPotionMixin {
+    @Inject(method="onHitAsPotion",at=@At("HEAD"),cancellable=true)
+    private void cosmicdungeon$vitality(ServerLevel level,net.minecraft.world.item.ItemStack stack,
+            net.minecraft.world.phys.HitResult hit,org.spongepowered.asm.mixin.injection.callback.CallbackInfo callback){
+        if(net.goui.cosmicdungeon.playerclass.theurgist.VitalitySplash.apply(
+                (ThrownSplashPotion)(Object)this,level,stack,hit))callback.cancel();
+    }
     @Redirect(method="onHitAsPotion",at=@At(value="INVOKE",target="Lnet/minecraft/world/effect/MobEffect;applyInstantenousEffect(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/LivingEntity;ID)V"))
     private void cosmicdungeon$instant(MobEffect effect,ServerLevel level,Entity source,Entity owner,LivingEntity target,int amplifier,double proximity) {
         if(!net.goui.cosmicdungeon.playerclass.theurgist.TheurgistPotionProtection.allows((Entity)(Object)this,target,effect)

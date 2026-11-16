@@ -1,6 +1,6 @@
 # Approved class-skills series — 2026-11-15
 
-Cameron's latest authorization: execute Batch 1, then pause. Batches 1–5 are unpublished source betas; update development files and GitHub each time. Do not update TEST, local client, or CurseForge until Batch 6 is finished; release that completed set as an official stable build. Never launch or stop a game/server automatically.
+Cameron's latest authorization: Batch 1 completed; execute Batch 2, then pause. Batches 1–5 are unpublished source betas; update development files and GitHub each time. Do not update TEST, local client, or CurseForge until Batch 6 is finished; release that completed set as an official stable build. Never launch or stop a game/server automatically.
 
 The six cards below retain the settled design. Abilities and effects apply consistently to players and their class mercenaries; the latter use applicable abilities automatically. Preserve existing resurrection and utility behavior.
 

@@ -115,6 +115,21 @@ public final class PotionRecipeCatalog {
         return new PotionRecipeCatalog(targets,routes);
     }
 
+    /** Custom vitality outputs reuse every standard Healing route, including fuel/intermediate-input costs. */
+    public static PotionRecipeCatalog classRecipes(FeatureFlagSet flags){
+        var vanilla=vanilla(flags);var healing=vanilla.target("minecraft:healing_splash");
+        if(healing==null)return vanilla;
+        var targets=new ArrayList<>(vanilla.targets);var routes=new LinkedHashMap<>(vanilla.routes);
+        for(var rank:net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions.RANKS){
+            var target=new Target(rank.targetId(),net.goui.cosmicdungeon.potion.ModPotions.VITALITY.get(rank.amplifier()),
+                    Items.SPLASH_POTION,Set.of("theurgist"));
+            targets.add(target);
+            routes.put(target.id(),vanilla.routes(healing).stream()
+                    .map(r->new Route(target,r.inputPotion(),r.inputContainer(),r.ingredients())).toList());
+        }
+        targets.sort(Comparator.comparing(Target::id));return new PotionRecipeCatalog(targets,routes);
+    }
+
     private static void collect(Target target,State current,Map<State,List<Edge>> incoming,Set<State> visited,
                                 List<Item> suffix,Map<String,Route> found) {
         for(var edge:incoming.getOrDefault(current,List.of())) {

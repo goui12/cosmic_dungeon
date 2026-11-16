@@ -22,5 +22,6 @@ public final class ModMobEffects {
     public static final DeferredHolder<MobEffect, MobEffect> MELANCHOLIA = MOB_EFFECTS.register("melancholia", () -> new D1TunedMobEffect("venefex","melancholia","slow",5859697));
     public static final DeferredHolder<MobEffect, MobEffect> DEATHLY_STUPOR = MOB_EFFECTS.register("deathly_stupor", () -> new D1TunedMobEffect("venefex","deathly_stupor","slow",3225928));
     public static final DeferredHolder<MobEffect, MobEffect> COMPANIONSHIP = MOB_EFFECTS.register("companionship", CompanionshipMobEffect::new);
+    public static final DeferredHolder<MobEffect, MobEffect> VITALITY = MOB_EFFECTS.register("vitality", VitalityMobEffect::new);
     public static void register(IEventBus eventBus) { MOB_EFFECTS.register(eventBus); }
 }
