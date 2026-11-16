@@ -1,6 +1,6 @@
 # Signature skills and shared controls
 
-Players and mercenaries share these signature identities. The current beta includes max-health potion progression and charged Dragoon/Judicator combat:
+Players and mercenaries share these signature identities. The current beta includes max-health potion progression, charged Dragoon/Judicator combat and shared party buffs:
 
 | Class | Signature | Abbreviation |
 |---|---|---|
@@ -20,7 +20,7 @@ The inventory Skills panel shows the current player signature level and progress
 | Class skill 2 | X | Class skill 2 |
 | Class skill 3 | C | Class skill 3 |
 
-Remap these entries in Options > Controls > Key Binds > Cosmic Dungeon. Bindings stay the same when changing classes. Each button shows its current binding in smaller italic text; unbound keys are labeled Unbound. Unassigned slots remain gray. Primary class skill now arms Dragoon Chain Lightning or activates Judicator Smite. Its inventory button shows the current charge and readiness/armed state. Other primary slots and Class skill 1/2/3 remain unassigned; later batches add their abilities. The existing Alt+1/2/3 Bogatyr utility and Alt+4 resurrection shortcuts retain their saved bindings.
+Remap these entries in Options > Controls > Key Binds > Cosmic Dungeon. Bindings stay the same when changing classes. Each button shows its current binding in smaller italic text; unbound keys are labeled Unbound. Unassigned slots remain gray. Primary class skill now arms Dragoon Chain Lightning or activates Judicator Smite. Its inventory button shows the current charge and readiness/armed state. Class skill 1 activates the four buffs below; other primary slots and Class skill 2/3 remain gray. The existing Alt+1/2/3 Bogatyr utility and Alt+4 resurrection shortcuts retain their saved bindings.
 
 Shortcuts act once per press in the world or player inventory. Chat, other menus, carried stacks, dragging, modal controls, lost focus and conflicting bindings block execution. A rejected action gives a short on-screen reason. The server owns the active class, run, slot availability and revision.
 
@@ -38,5 +38,21 @@ Positive Potions now selects the [max-health potion rank](Theurgist_Help_Guide.m
 Both bars have no overflow bank. Secondary ability damage cannot refill them. Charge and the armed state survive death/reconnect in the same run and reset with the run; player proficiency persists separately, while mercenary proficiency stays with its run. Historical mercenary Combat progress is retained separately from Smite.
 
 This beta shows charge/readiness in the inventory Skills panel. The final combat HUD is reserved for Batch 6.
+
+## Shared party buffs
+
+Class skill 1 (default **Z**) activates the current class buff from the world or inventory. Remap it once in Controls; the numbered button shows your current key in small italics and a **m:ss** cooldown. Each buff has a **five-minute cooldown** and includes the caster, nearby party players, mercenaries and allied wolves within **10 blocks** in the same active dungeon.
+
+| Class | Buff | Effect | Duration |
+|---|---|---|---|
+| Bogatyr | Flurry of Fangs | +10% melee attack speed, including mercenaries and wolves | 30 minutes |
+| Dragoon | Blackiron Sheath | 20% damage reduction through native Resistance | 15 minutes |
+| Judicator, Smite 1 | Judicator’s Aegis | +3 melee attack damage (1½ hearts) | 30 minutes |
+| Judicator, Smite 3 | Defender’s Bulwark | +6 melee attack damage (3 hearts), replacing Aegis | 30 minutes |
+| Venefex | Banish Afflictions | Remove harmful effects only; keep beneficial and neutral effects | Instant |
+
+Mercenaries cast automatically when useful. Equal/weaker timed buffs cannot stack or refresh the current family; a stronger effect replaces it. Strength and Resistance share their native potion effects instead of adding duplicate bonuses. A cast that helps nobody spends no cooldown. Flurry changes melee cadence, not ranged attacks or mining.
+
+Cooldowns survive death, reconnect and class switching within the same run, and reset with a new run. X/C remain unassigned. Pyroclast has no new buff; Theurgist potion crafting and resurrection retain their existing controls. Group effect attribution/timers and the final combat HUD are reserved for Batch6.
 
 See [the six-batch plan](../ai/tasks/CLASS_SKILLS_BATCHES_20261115.md) for the approved future behavior.

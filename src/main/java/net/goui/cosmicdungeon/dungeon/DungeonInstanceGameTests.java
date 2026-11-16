@@ -54,6 +54,13 @@ public final class DungeonInstanceGameTests {
         suite.add(id("mercenary_firework_persistence"),net.goui.cosmicdungeon.mercenary.MercenaryFireworkGameTests::persistence);
         suite.add(id("pyroclast_rocket_explosion"),net.goui.cosmicdungeon.playerclass.d1.D1RocketGameTests::explosion);
         suite.add(id("pyroclast_rocket_denial"),net.goui.cosmicdungeon.playerclass.d1.D1RocketGameTests::denied);
+        suite.add(id("melee_haste_mercenary"),net.goui.cosmicdungeon.playerclass.skill.MeleeHasteGameTests::mercenary);
+        suite.add(id("melee_haste_wolf"),net.goui.cosmicdungeon.playerclass.skill.MeleeHasteGameTests::wolf);
+        suite.add(id("class_buff_recipients"),net.goui.cosmicdungeon.playerclass.skill.ClassBuffGameTests::recipients);
+        suite.add(id("class_buff_strength_defense"),net.goui.cosmicdungeon.playerclass.skill.ClassBuffGameTests::strengthAndDefense);
+        suite.add(id("class_buff_cleanse_refund"),net.goui.cosmicdungeon.playerclass.skill.ClassBuffGameTests::cleanseAndRefund);
+        suite.add(id("class_buff_persistence_authority"),net.goui.cosmicdungeon.playerclass.skill.ClassBuffGameTests::persistenceAndAuthority);
+        suite.add(id("class_buff_mercenaries"),net.goui.cosmicdungeon.playerclass.skill.ClassBuffGameTests::mercenaries);
         suite.add(id("charged_player_lightning"),net.goui.cosmicdungeon.playerclass.skill.ChargedClassGameTests::lightning);
         suite.add(id("charged_player_smite"),net.goui.cosmicdungeon.playerclass.skill.ChargedClassGameTests::smite);
         suite.add(id("charged_skill_persistence"),net.goui.cosmicdungeon.playerclass.skill.ChargedClassGameTests::persistence);

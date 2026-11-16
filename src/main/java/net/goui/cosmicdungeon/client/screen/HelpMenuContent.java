@@ -266,7 +266,7 @@ public final class HelpMenuContent {
                     .append(", ").append(key("Class skill 1", "class_skill_1"))
                     .append(", ").append(key("Class skill 2", "class_skill_2"))
                     .append(", ").append(key("Class skill 3", "class_skill_3")).append(".")),
-            HelpBlock.bullet("Defaults are G, Z, X and C. Bindings stay the same when switching classes. Inventory shows slot names and current keys in small italics. Primary class skill arms Dragoon Chain Lightning or activates Judicator Smite when charged; unassigned slots stay gray."),
+            HelpBlock.bullet("Defaults are G, Z, X and C. Bindings stay the same when switching classes. Inventory shows slot names and current keys in small italics. Primary class skill arms Dragoon Chain Lightning or activates Judicator Smite when charged; Class skill 1 (default Z) activates your party buff and shows its cooldown; unassigned slots stay gray."),
             HelpBlock.bullet("Active defaults: Bogatyr Alt+1 Patrol, Alt+2 Stay, Alt+3 Feed Pack; Theurgist Alt+4 opens Resurrect...."),
             HelpBlock.bullet("Rebind or unbind in Options > Controls > Key Binds > Cosmic Dungeon. Small italic skill hints show your actual saved chord."),
             HelpBlock.bullet("Shortcuts act once per press in the world or inventory. Chat, other menus, dragging, carried items and modal controls block them. Resolve conflicting chords in Controls."),
@@ -342,6 +342,7 @@ public final class HelpMenuContent {
 
     public static final Page BOGATYR = page("class.bogatyr", "Bogatyr", true, List.of(
             HelpBlock.heading("Bogatyr"),
+            HelpBlock.bullet("Flurry of Fangs: Class skill 1 (default Z) grants 10% faster melee attacks for 30 minutes to you and party players, mercenaries and allied wolves within 10 blocks. Five-minute cooldown; hired Bogatyrs cast automatically when useful."),
             HelpBlock.paragraph("A survivalist, cold-weather endurance racer, and hardened wolf-handler from the frozen Russian Federation reaches, the Bogatyr favors traditional weaponry and grit."),
             HelpBlock.bullet("Fight beside loyal wolves with sword, bow and shield. Sword/bow skill progression is passive."),
             HelpBlock.examples("bogatyr_wolves"),
@@ -367,6 +368,7 @@ public final class HelpMenuContent {
 
     public static final Page DRAGOON = page("class.dragoon", "Dragoon", true, List.of(
             HelpBlock.heading("Trident and Repair Support"),
+            HelpBlock.bullet("Blackiron Sheath: Class skill 1 (default Z) grants 20% native Resistance damage reduction for 15 minutes to you and party players, mercenaries and allied wolves within 10 blocks. Five-minute cooldown; hired Dragoons cast automatically when useful."),
             HelpBlock.paragraph("A trident-wielding specialist in battlefield salvage and historical armorcraft."),
             HelpBlock.bullet("Use Dragoon-attuned gear and class chests. Land 100 valid damaging melee or thrown trident hits against hostile mobs to fill Chain Lightning. Sword hits, arrows, misses and immune targets do not charge it."),
             HelpBlock.examples("dragoon_trident"),
@@ -385,6 +387,7 @@ public final class HelpMenuContent {
 
     public static final Page VENEFEX = page("class.venefex", "Venefex", true, List.of(
             HelpBlock.heading("Poison and Pressure"),
+            HelpBlock.bullet("Banish Afflictions: Class skill 1 (default Z) removes harmful effects from you and party players, mercenaries and allied wolves within 10 blocks. Beneficial and neutral effects remain. Five-minute cooldown; hired Venefexes cast automatically when useful."),
             HelpBlock.paragraph("A toxicologist shaped by invasive-species decay, the Venefex uses sword, bow, poison and weakening effects to wear enemies down."),
             HelpBlock.bullet("Use Venefex-attuned gear and class chests. Sword/bow progression and relevant arrow-duration benefits are passive."),
             HelpBlock.bullet("Tree Viper, Bushmaster and Fer-de-Lance poison; Pestis and Black Bubo weaken; Vapours, Melancholia and Deathly Stupor slow."),
@@ -403,6 +406,7 @@ public final class HelpMenuContent {
 
     public static final Page JUDICATOR = page("class.judicator", "Judicator", true, List.of(
             HelpBlock.heading("Oathbound Protector"),
+            HelpBlock.bullet("Class skill 1 (default Z) grants Judicator’s Aegis: 3 extra melee damage for 30 minutes. At Smite level 3, Defender’s Bulwark replaces it with 6. Includes you and party players, mercenaries and allied wolves within 10 blocks. Shared five-minute cooldown; hired Judicators cast automatically when useful."),
             HelpBlock.paragraph("A wandering arbiter sworn to uphold balance, the Judicator supports the party with mace, bow and restorative or revealing arrows."),
             HelpBlock.bullet("Scintilla Vitalis and Lux Vitalis heal living targets and harm undead. Ebonsight provides night vision; Vielpiercer applies Glowing."),
             HelpBlock.bullet("Use the actual authored item's tooltip and server values. Mace/bow progression stays passive; Smite uses the separate Primary class skill control."),

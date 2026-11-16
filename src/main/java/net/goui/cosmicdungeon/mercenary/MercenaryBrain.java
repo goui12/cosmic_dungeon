@@ -27,7 +27,8 @@ import net.neoforged.neoforge.event.entity.living.MobEffectEvent;
 @EventBusSubscriber(modid="cosmicdungeon")
 public final class MercenaryBrain {
     private Vec3 lastPosition;
-    private int stuck, attack, collection;
+    private int stuck, collection;
+    private final net.goui.cosmicdungeon.playerclass.skill.MeleeHasteClock attack=new net.goui.cosmicdungeon.playerclass.skill.MeleeHasteClock();
     public static ServerPlayer hirer(MercenaryEntity entity){
         if(entity.dormant()||!entity.isAlive()||!(entity.level() instanceof ServerLevel level))return null;
         var run=D1Members.run(level).orElse(null);
@@ -74,11 +75,13 @@ public final class MercenaryBrain {
         if((entity.tickCount+entity.getId())%10!=0)return;
         var context=context(entity);
         var owner=context==null?null:context.owner();
-        if(owner==null){entity.potionCasting().cancel();entity.regeneration().combat();entity.setTarget(null);entity.getNavigation().stop();lastPosition=null;stuck=0;return;}
-        entity.timers(entity.timers().advance(10));attack=Math.max(0,attack-10);collection=Math.max(0,collection-10);
+        if(owner==null){entity.potionCasting().cancel();entity.regeneration().combat();entity.setTarget(null);entity.getNavigation().stop();lastPosition=null;stuck=0;attack.discardCredit();return;}
+        entity.timers(entity.timers().advance(10));
+        attack.advance(10,net.goui.cosmicdungeon.playerclass.skill.ClassBuffs.hasted(entity));collection=Math.max(0,collection-10);
         MercenaryFireworks.tick(entity,10);
         MercenaryLightning.tick(entity,level,10);
         MercenaryJudicator.tick(entity);
+        net.goui.cosmicdungeon.playerclass.skill.ClassBuffs.tick(entity);
         double distance=entity.distanceToSqr(owner);
         if(distance>16&&lastPosition!=null&&lastPosition.distanceToSqr(entity.position())<.09)stuck+=10;else stuck=0;
         lastPosition=entity.position();
@@ -95,7 +98,7 @@ public final class MercenaryBrain {
         MercenaryPotions.use(entity,candidates);
         LivingEntity target=candidates.stream().filter(t->enemy(context,entity,t)&&owner.distanceToSqr(t)<=64
                 &&entity.getSensing().hasLineOfSight(t)).min(Comparator.comparingDouble(entity::distanceToSqr)).orElse(null);
-        LivingEntity fireworkTarget=attack==0?MercenaryFireworks.target(entity,candidates):null;
+        LivingEntity fireworkTarget=attack.ready()?MercenaryFireworks.target(entity,candidates):null;
         if(fireworkTarget!=null)target=fireworkTarget;
         entity.setTarget(target);
         MercenaryRegeneration.tick(entity,10,target!=null);
@@ -106,14 +109,15 @@ public final class MercenaryBrain {
             boolean ranged=entity.getMainHandItem().getItem() instanceof BowItem
                     ||entity.getMainHandItem().getItem() instanceof CrossbowItem;
             if(fireworkTarget!=null&&MercenaryFireworks.launch(entity,fireworkTarget,level)){
-                entity.getNavigation().stop();attack=40;
+                entity.getNavigation().stop();attack.restart(40,false,false);
             }else if(ranged&&ammunition(entity,target)>=0){
                 entity.getNavigation().stop();
-                if(attack==0&&shoot(entity,target,level))attack=40;
+                if(attack.ready()&&shoot(entity,target,level))attack.restart(40,false,false);
             }else{
                 if(entity.distanceToSqr(target)>4)entity.getNavigation().moveTo(target,1);
-                else {entity.getNavigation().stop();if(attack==0){
-                    entity.swing(net.minecraft.world.InteractionHand.MAIN_HAND);entity.doHurtTarget(level,target);attack=20;
+                else {entity.getNavigation().stop();if(attack.ready()){
+                    entity.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+                    boolean hit=entity.doHurtTarget(level,target);attack.restart(20,true,hit);
                 }}
             }
         }else if(distance>9)entity.getNavigation().moveTo(owner,1.05);

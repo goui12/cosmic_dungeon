@@ -26,7 +26,7 @@ import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 /** Real native damage/death and network action paths; synchronous isolated server fixtures only. */
 public final class ChargedClassGameTests {
     private ChargedClassGameTests(){}
-    private static final class Fixture implements AutoCloseable {
+    static final class Fixture implements AutoCloseable {
         final GameTestHelper h;final ServerLevel level;final long run;final Vec3 origin;final ServerPlayer player;
         final Map<Long,DungeonRunRegistryData.RunRecord> runs;final Map<UUID,ServerPlayer> players;
         final List<Entity> entities=new ArrayList<>();final List<Packet<?>> packets=new ArrayList<>();
@@ -82,14 +82,15 @@ public final class ChargedClassGameTests {
         void hit(Mob mob,float damage){mob.invulnerableTime=0;mob.hurtServer(level,player.damageSources().playerAttack(player),damage);}
         void fill(SignatureSkill skill){while(ChargedClassSkills.charge(player,skill)<ChargedSkillState.limit(skill))
             check(ChargedClassSkills.addCharge(player,skill),"Fixture charge advances");}
-        void press(){
+        void press(){press(ClassSkillSlot.PRIMARY);}
+        void press(ClassSkillSlot slot){
             ClassSkillActions.forget(player);ClassSkillActions.sync(player,true);
             try{
                 var sf=ClassSkillActions.class.getDeclaredField("SESSIONS");sf.setAccessible(true);
                 var session=(ClassSkillActions.Session)((Map<?,?>)sf.get(null)).get(player);
                 check(session!=null&&session.sent!=null,"Native capability snapshot sent");
                 ClassSkillActions.action(player,new net.goui.cosmicdungeon.network.ClassSkillPayloads.Action(
-                        run,session.sent.revision(),ClassData.getClassId(player),ClassSkillSlot.PRIMARY));
+                        run,session.sent.revision(),ClassData.getClassId(player),slot));
             }catch(ReflectiveOperationException ex){throw new IllegalStateException(ex);}
         }
         boolean message(String text){return packets.stream().anyMatch(p->p instanceof net.minecraft.network.protocol.game.ClientboundSystemChatPacket c

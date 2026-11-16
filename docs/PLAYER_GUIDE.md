@@ -58,7 +58,7 @@ Requests, random-potion skills, and the virtual Brewing Supplies resource are re
 
 ## Shared class skill controls
 
-The inventory Skills panel shows the current signature track and generic slots: **Primary class skill (G)** and **Class skill 1/2/3 (Z/X/C)**. Remap these once in Controls; the bindings remain unchanged when switching classes. Buttons show the actual binding in smaller italic text. Primary class skill arms Dragoon Chain Lightning or activates Judicator Smite when charged. Its inventory button shows charge and readiness, including the armed state. Other unassigned primary slots and Class skill 1/2/3 stay gray. Existing Bogatyr utility and Theurgist resurrection remain available. See [signature tracks and controls](Classes/Signature_Skills_and_Controls.md) for progress and legacy-binding details.
+The inventory Skills panel shows the current signature track and generic slots: **Primary class skill (G)** and **Class skill 1/2/3 (Z/X/C)**. Remap these once in Controls; the bindings remain unchanged when switching classes. Buttons show the actual binding in smaller italic text. Primary class skill arms Dragoon Chain Lightning or activates Judicator Smite when charged. Its inventory button shows charge and readiness, including the armed state. Class skill 1 (Z) activates the Bogatyr, Dragoon, Judicator or Venefex party buff and shows its remaining cooldown; X/C and other unassigned primary slots stay gray. Existing Bogatyr utility and Theurgist resurrection remain available. See [signature tracks and controls](Classes/Signature_Skills_and_Controls.md) for progress and legacy-binding details.
 
 ## Theurgist
 
@@ -196,3 +196,19 @@ Mechanics above were checked against the shipped class, crafting, sharing, trade
 Class atmosphere retains the local canon mirror reviewed for Batch 18 (six active class sources and full NPC lore). Later-dungeon equipment in that mirror remains deferred; artwork is not evidence of availability. No online canon refresh or gameplay balance change is implied by this guide.
 
 Chop trades transfer the personal ownership record with the item. Each recipient must still satisfy the one-Chop limit; offer an existing Chop in the same exchange if necessary. A bound return Chop requires the recipient's own stored inventory in that active run. Trades never transfer another player's stored inventory, grant run membership, or bypass the return destination checks. If these conditions fail, the trade cancels and returns its original offers.
+
+## Shared party buffs
+
+Class skill 1 (default **Z**) activates the current class buff from the world or inventory. Remap it once in Controls; the numbered button shows your current key in small italics and a **m:ss** cooldown. Each buff has a **five-minute cooldown** and includes the caster, nearby party players, mercenaries and allied wolves within **10 blocks** in the same active dungeon.
+
+| Class | Buff | Effect | Duration |
+|---|---|---|---|
+| Bogatyr | Flurry of Fangs | +10% melee attack speed, including mercenaries and wolves | 30 minutes |
+| Dragoon | Blackiron Sheath | 20% damage reduction through native Resistance | 15 minutes |
+| Judicator, Smite 1 | Judicator’s Aegis | +3 melee attack damage (1½ hearts) | 30 minutes |
+| Judicator, Smite 3 | Defender’s Bulwark | +6 melee attack damage (3 hearts), replacing Aegis | 30 minutes |
+| Venefex | Banish Afflictions | Remove harmful effects only; keep beneficial and neutral effects | Instant |
+
+Mercenaries cast automatically when useful. Equal/weaker timed buffs cannot stack or refresh the current family; a stronger effect replaces it. Strength and Resistance share their native potion effects instead of adding duplicate bonuses. A cast that helps nobody spends no cooldown. Flurry changes melee cadence, not ranged attacks or mining.
+
+Cooldowns survive death, reconnect and class switching within the same run, and reset with a new run. X/C remain unassigned. Pyroclast has no new buff; Theurgist potion crafting and resurrection retain their existing controls. Group effect attribution/timers and the final combat HUD are reserved for Batch6.

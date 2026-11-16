@@ -759,5 +759,6 @@
   "item.minecraft.lingering_potion.effect.cosmicdungeon.balsamum_solis": "Balsamum Solis",
   "item.minecraft.potion.effect.cosmicdungeon.fulgor_vitae": "Fulgor Vitae",
   "item.minecraft.splash_potion.effect.cosmicdungeon.fulgor_vitae": "Fulgor Vitae",
-  "item.minecraft.lingering_potion.effect.cosmicdungeon.fulgor_vitae": "Fulgor Vitae"
+  "item.minecraft.lingering_potion.effect.cosmicdungeon.fulgor_vitae": "Fulgor Vitae",
+  "effect.cosmicdungeon.flurry_of_fangs": "Flurry of Fangs"
 }

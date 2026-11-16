@@ -84,7 +84,9 @@ public final class ClassAbilityClient {
                     : unavailable(view, base.classId(), slot.slot()))).withStyle(ChatFormatting.GRAY));
             String title = slot.abilityId().isBlank() ? slot.slot().label()
                     : (slot.slot()==ClassSkillSlot.PRIMARY ? "Primary" : slot.slot().label())
-                    + (slot.maxCharge()>0 ? " ["+slot.charge()+"/"+slot.maxCharge()+"]" : "") + ": " + slot.title();
+                    + (slot.maxCharge()>0 ? " ["+slot.charge()+"/"+slot.maxCharge()+"]" : "")
+                    + (slot.remainingTicks()>0 ? " ["+net.goui.cosmicdungeon.playerclass.skill.ClassBuffCooldown.display(slot.remainingTicks())+"]" : "")
+                    + ": " + slot.title();
             actions.add(new SkillsPanelModel.Action(actionId(slot.slot()), title, description, enabled));
         }
         String resource = base.resource();

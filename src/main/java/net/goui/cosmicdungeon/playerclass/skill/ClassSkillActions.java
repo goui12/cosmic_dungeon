@@ -57,6 +57,7 @@ public final class ClassSkillActions {
         if(skill!=null&&ChargedSkillState.limit(skill)>0)result.set(0,primary(cls,ChargedClassSkills.level(p,skill),
                 ChargedClassSkills.charge(p,skill),skill==SignatureSkill.CHAIN_LIGHTNING&&ChargedClassSkills.armed(p),
                 ChargedClassSkills.active(p,skill)));
+        result.set(1,ClassBuffs.slot(p));
         return List.copyOf(result);
     }
     private static ClassSkillPayloads.View snapshot(ServerPlayer p,long revision){
@@ -86,10 +87,11 @@ public final class ClassSkillActions {
         if(current.enabled()&&current.abilityId().equals("chain_lightning")){
             if(ChargedClassSkills.arm(p))p.displayClientMessage(Component.literal("Chain Lightning armed for your next trident strike."),true);
         }else if(current.enabled()&&current.abilityId().equals("smite"))ChargedClassSkills.smite(p);
+        else if(current.enabled()&&request.slot()==ClassSkillSlot.SKILL_1)ClassBuffs.cast(p);
         else p.displayClientMessage(Component.literal(current.abilityId().isEmpty()
                 ?request.slot().label()+": no ability assigned.":current.title()+": "+current.description()),true);
         sync(p,true);
     }
     public static void forget(ServerPlayer p){SESSIONS.remove(p);}
-    public static void stop(){SESSIONS.clear();}
+    public static void stop(){SESSIONS.clear();ClassBuffs.stop();}
 }

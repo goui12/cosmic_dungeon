@@ -17,6 +17,12 @@ An oathbound mace-and-bow protector. Scintilla Vitalis and Lux Vitalis provide h
 
 Each activation that damages at least one undead spends the ten-charge bar and earns **one** proficiency success, regardless of how many targets it hits. Kills fill charge; successful activations improve Smite. The bar stores no overflow, and Smite's own damage does not recharge it. If no mob takes damage, all charge is retained and the player sees: **Smite only works on undead! You did not damage any mobs**
 
+## Strength buff
+
+**Class skill 1 (default Z)** grants **Judicator’s Aegis**, +3 melee attack damage (1½ hearts) at Smite level 1. At Smite level 3, **Defender’s Bulwark** replaces it with +6 (3 hearts). Both last 30 minutes with a shared five-minute cooldown and include the caster and party players, mercenaries and allied wolves within 10 blocks.
+
+Judicator mercenaries cast automatically when useful. Native Strength is shared with equivalent potions; ranks do not stack. Successful casts announce "<name> shares renewed strength for battle." followed by the skill name in blue italics.
+
 ## Shared rules and controls
 
 See the [current player guide](../PLAYER_GUIDE.md) for party sharing, crafting/fuel/stacks, gear ownership, trading, progression and travel. [Controls](../PLAYER_GUIDE.md#controls-and-passive-progression) lists defaults and rebinding. The inventory class-name link opens this class in the H guide.

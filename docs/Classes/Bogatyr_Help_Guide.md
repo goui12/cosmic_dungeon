@@ -4,7 +4,7 @@ Class ID: `bogatyr`. Enabled for Dungeon 1.
 
 A northern survivalist who fights with sword, bow, shield, and a loyal wolfpack. Acquire companions through existing wolf eggs, ordinary bone taming, and breeding. Player packs are uncapped, survive ordinary saves/reconnects within the run, and end on completion, forfeit, or reset. Old archives cannot summon a previous run's pack. Hired Bogatyrs admit at most 20 dogs, starting at one summon every 30 active seconds. Their existing skill progression improves cadence down to 20 seconds. Saved packs already above 20 are retained, but receive no new dogs until below the limit.
 
-Open inventory **Skills** for three actions:
+Open inventory **Skills** for Flurry of Fangs and these three utility actions:
 
 | Action | Default | Behavior |
 |---|---|---|
@@ -17,6 +17,10 @@ Patrol and Stay are mutually exclusive. Selecting Stay again does not move settl
 Feed Pack prefers bones/rotten flesh, then raw meat, then remaining meat by player food value. At default settings raw food/bones heal two hearts and cooked meat heals four. Injured wolves receive care first; remaining food goes to healthy eligible adult pairs within eight blocks. No mate, breeding cooldown, insufficient pair food, or an individually seated Patrol adult creates no breeding charge. Healthy pups do not consume breeding food. Bones act as food only through Feed Pack; normal bones and taming are unchanged.
 
 In Stay, eligible pairs move temporarily for native mating, then return to their original held spots after birth or a failed attempt (30 seconds by default). Changing modes cancels the attempt. Reloads end unfinished attempts without invented offspring or refunds. Allies cannot harm your wolves, apply hostile effects, or sit them; they can feed and breed them. Kibble, paid Summon/Breed/Regroup/Heal, and the former combat modes are retired.
+
+## Flurry of Fangs
+
+Use **Class skill 1 (default Z)** or its inventory button for +10% melee attack speed for 30 minutes. The caster, nearby party players, mercenaries and allied wolves within 10 blocks benefit; mercenary and wolf melee timers receive the same speed increase. Ranged attacks and mining are unchanged. Cooldown: five minutes. Bogatyr mercenaries cast automatically when useful.
 
 ## Shared rules and controls
 
