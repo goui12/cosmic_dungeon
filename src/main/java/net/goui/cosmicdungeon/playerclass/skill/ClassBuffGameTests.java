@@ -99,8 +99,11 @@ public final class ClassBuffGameTests {
             f.check(active.getDuration()==0,"Overwritten lower class buff cannot reappear after the stronger effect expires");
             f.player.removeEffect(MobEffects.STRENGTH);f.classId("dragoon");f.press(ClassSkillSlot.SKILL_1);
             f.check(f.player.getEffect(MobEffects.RESISTANCE).getDuration()==18000,"Blackiron Sheath lasts15minutes");
-            f.player.setHealth(20);f.player.invulnerableTime=0;f.player.hurtServer(f.level,f.player.damageSources().generic(),10);
-            f.check(Math.abs(f.player.getHealth()-12)<.0001,"Native Sheath reduces eligible damage by20percent");
+            // Native ServerPlayer rejects all damage until the client-loaded handshake completes.
+            f.player.setClientLoaded(true);f.player.setHealth(20);f.player.invulnerableTime=0;
+            f.check(!f.player.isInvulnerableTo(f.level,f.player.damageSources().generic()),"Loaded survival player accepts eligible damage");
+            f.check(f.player.hurtServer(f.level,f.player.damageSources().generic(),10),"Native Sheath test damage is accepted");
+            f.check(Math.abs(f.player.getHealth()-12)<.0001,"Native Sheath reduces eligible damage by20percent; health="+f.player.getHealth());
             f.check(ClassBuffs.strengthMessage("Caster",ClassBuff.BULWARK.title()).getString()
                     .equals("Caster shares renewed strength for battle. Defender’s Bulwark"),"Exact strength broadcast wording");
         }h.succeed();
@@ -177,18 +180,37 @@ public final class ClassBuffGameTests {
         }h.succeed();
     }
     public static void mercenaries(GameTestHelper h){
-        try(var f=new ChargedClassGameTests.Fixture(h,Long.MAX_VALUE-15005,"theurgist")){
-            var bogatyr=merc(f,"bogatyr");var dragoon=merc(f,"dragoon");var judicator=merc(f,"judicator");var venefex=merc(f,"venefex");
-            f.player.addEffect(new MobEffectInstance(MobEffects.POISON,600,0));
-            for(var m:List.of(bogatyr,dragoon,judicator,venefex))ClassBuffs.tick(m);
-            f.check(ClassBuffs.hasted(f.player)&&f.player.hasEffect(MobEffects.RESISTANCE)
-                    &&f.player.hasEffect(MobEffects.STRENGTH)&&!f.player.hasEffect(MobEffects.POISON),
-                    "All four mercenary classes use the same useful party buffs automatically");
-            for(var m:List.of(bogatyr,dragoon,judicator,venefex))f.check(ClassBuffs.remaining(m)==6000,"Mercenary success owns5minute cooldown");
-            f.check(ClassBuffs.selected(merc(f,"pyroclast")).isEmpty()&&ClassBuffs.selected(merc(f,"theurgist")).isEmpty(),
-                    "Pyroclast receives no new buff; Theurgist skills remain separate");
-            f.player.setHealth(0);f.check(!ClassBuffs.cast(bogatyr),"Unavailable hirer cannot trigger mercenary buff");
-            f.player.setHealth(20);f.check(ClassBuffs.remaining(bogatyr)==6000,"Hirer recovery retains mercenary cooldown");
-        }h.succeed();
+        // Each real roster permits one hire per owner and at most three mercenaries.
+        // Exercise all six classes through independent valid single-hire runs.
+        int sequence=0;
+        for(String cls:List.of("bogatyr","dragoon","judicator","venefex","pyroclast","theurgist")){
+            try(var f=new ChargedClassGameTests.Fixture(h,Long.MAX_VALUE-15005-sequence++,"theurgist")){
+                var merc=merc(f,cls);
+                f.check(MercenaryBrain.hirer(merc)==f.player,"Valid native single-hire roster: "+cls);
+                f.player.addEffect(new MobEffectInstance(MobEffects.POISON,600,0));
+                ClassBuffs.tick(merc);
+                boolean supported=ClassBuffs.selected(merc).isPresent();
+                f.check(supported==List.of("bogatyr","dragoon","judicator","venefex").contains(cls),
+                        "Correct class buff assignment: "+cls);
+                if(!supported){
+                    f.check(ClassBuffs.remaining(merc)==0&&!ClassBuffs.hasted(f.player)
+                            &&!f.player.hasEffect(MobEffects.RESISTANCE)&&!f.player.hasEffect(MobEffects.STRENGTH)
+                            &&f.player.hasEffect(MobEffects.POISON),"No new buff for "+cls);
+                    continue;
+                }
+                boolean applied=switch(cls){
+                    case "bogatyr"->ClassBuffs.hasted(f.player);
+                    case "dragoon"->f.player.hasEffect(MobEffects.RESISTANCE);
+                    case "judicator"->f.player.hasEffect(MobEffects.STRENGTH);
+                    case "venefex"->!f.player.hasEffect(MobEffects.POISON);
+                    default->false;
+                };
+                f.check(applied,"Mercenary automatically applies its useful party buff: "+cls);
+                f.check(ClassBuffs.remaining(merc)==6000,"Mercenary success owns five-minute cooldown: "+cls);
+                f.player.setHealth(0);f.check(!ClassBuffs.cast(merc),"Unavailable hirer cannot trigger "+cls);
+                f.player.setHealth(20);f.check(ClassBuffs.remaining(merc)==6000,"Hirer recovery retains cooldown: "+cls);
+            }
+        }
+        h.succeed();
     }
 }
