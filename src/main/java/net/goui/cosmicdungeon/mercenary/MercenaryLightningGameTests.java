@@ -5,6 +5,7 @@ import com.mojang.authlib.GameProfile;
 import net.goui.cosmicdungeon.dungeon.*;
 import net.goui.cosmicdungeon.dungeon.d1.D1RunData;
 import net.goui.cosmicdungeon.entity.ModEntities;
+import net.goui.cosmicdungeon.playerclass.skill.*;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -105,31 +106,48 @@ public final class MercenaryLightningGameTests {
                 level.setBlockAndUpdate(pos,net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
             }
             helper.assertTrue(MercenaryLightning.activeOwner(merc)==owner,Component.literal("Fixture uses real active contract and online hirer guard"));
-            merc.lightning(new MercenaryLightningState(48,8,Optional.of(primary.getUUID()),0));
-            primary.hurtServer(level,merc.damageSources().mobAttack(merc),8);
-            helper.assertTrue(merc.lightning().hits()==49,Component.literal("Native successful hit credits exactly once"));
-            MercenaryLightning.tick(merc,level,0);
-            helper.assertTrue(secondary.getHealth()==200,Component.literal("Forty-nine hits cannot trigger"));
+            merc.setItemSlot(EquipmentSlot.MAINHAND,new ItemStack(Items.IRON_SWORD));
+            primary.hurtServer(level,merc.damageSources().mobAttack(merc),1);
+            helper.assertTrue(ChargedClassSkills.charge(merc,SignatureSkill.CHAIN_LIGHTNING)==0,
+                    Component.literal("Nontrident merc attacks do not charge lightning"));
+            merc.setItemSlot(EquipmentSlot.MAINHAND,new ItemStack(Items.TRIDENT));
+            for(int i=0;i<98;i++)ChargedClassSkills.addCharge(merc,SignatureSkill.CHAIN_LIGHTNING);
             primary.invulnerableTime=0;primary.hurtServer(level,merc.damageSources().mobAttack(merc),8);
-            var primaryHealth=primary.getHealth();float power=merc.lightning().damage();
+            helper.assertTrue(ChargedClassSkills.charge(merc,SignatureSkill.CHAIN_LIGHTNING)==99,
+                    Component.literal("Native successful trident hit credits exactly once"));
             MercenaryLightning.tick(merc,level,0);
-            helper.assertTrue(merc.lightning().hits()==1&&secondary.getHealth()<200&&primary.getHealth()==primaryHealth,
-                    Component.literal("Fiftieth hit triggers: secondary hit counts once, original victim not hit twice"));
-            helper.assertTrue(MercenarySkills.level(merc,MercenarySkill.CHAIN_LIGHTNING)==2&&merc.lightning().damage()==power,
-                    Component.literal("One successful cast reaches level 2 without recursively multiplying power"));
+            helper.assertTrue(secondary.getHealth()==200,Component.literal("Ninety-nine hits cannot trigger"));
+            primary.invulnerableTime=0;primary.hurtServer(level,merc.damageSources().mobAttack(merc),8);
+            helper.assertTrue(ChargedClassSkills.charge(merc,SignatureSkill.CHAIN_LIGHTNING)==100
+                    &&ChargedClassSkills.armed(merc)&&secondary.getHealth()==200,
+                    Component.literal("Hundredth hit auto-arms without firing until the next trident strike"));
+            primary.invulnerableTime=0;
+            var primaryHits=new java.util.concurrent.atomic.AtomicInteger();
+            java.util.function.Consumer<net.neoforged.neoforge.event.entity.living.LivingDamageEvent.Post> count=
+                    event->{if(event.getEntity()==primary)primaryHits.incrementAndGet();};
+            net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(count);
+            try{primary.hurtServer(level,merc.damageSources().mobAttack(merc),8);}
+            finally{net.neoforged.neoforge.common.NeoForge.EVENT_BUS.unregister(count);}
+            helper.assertTrue(ChargedClassSkills.charge(merc,SignatureSkill.CHAIN_LIGHTNING)==0
+                    &&secondary.getHealth()<200&&primaryHits.get()==1,
+                    Component.literal("Next strike releases once without secondary recharge or hitting original victim twice"));
+            helper.assertTrue(MercenarySkills.level(merc,MercenarySkill.CHAIN_LIGHTNING)==2,
+                    Component.literal("One successful cast earns one existing progression success"));
             helper.assertTrue(immune.getHealth()==200&&cow.getHealth()==200&&wolf.getHealth()==200&&merc.getHealth()==200
                     &&wallTarget.getHealth()==200&&teamTarget.getHealth()==200
                     &&angryWolf.getHealth()==200&&angryBee.getHealth()==200&&angryBear.getHealth()==200,
                     Component.literal("Walls, scoreboard allies, immune, neutral, owned and self targets are protected"));
-            merc.lightning(new MercenaryLightningState(98,power,Optional.of(primary.getUUID()),20));
-            var health=secondary.getHealth();MercenaryLightning.tick(merc,level,10);
-            helper.assertTrue(secondary.getHealth()==health&&merc.lightning().hits()==98,Component.literal("Banked hits do not bypass one-second cast spacing"));
-            secondary.setInvulnerable(true);MercenaryLightning.tick(merc,level,10);
-            helper.assertTrue(merc.lightning().hits()==98&&MercenarySkills.level(merc,MercenarySkill.CHAIN_LIGHTNING)==2,
-                    Component.literal("Fully denied cast refunds charge and earns no skill success"));
-            secondary.setInvulnerable(false);
-            players.remove(owner.getUUID());MercenaryLightning.tick(merc,level,20);
-            helper.assertTrue(merc.lightning().hits()==98&&secondary.getHealth()==health,Component.literal("Offline hirer cannot cast or drain charge"));
+            for(int i=0;i<100;i++)ChargedClassSkills.addCharge(merc,SignatureSkill.CHAIN_LIGHTNING);
+            MercenaryLightning.tick(merc,level,10);var health=secondary.getHealth();secondary.setInvulnerable(true);
+            primary.invulnerableTime=0;primary.hurtServer(level,merc.damageSources().mobAttack(merc),8);
+            helper.assertTrue(ChargedClassSkills.charge(merc,SignatureSkill.CHAIN_LIGHTNING)==100
+                    &&ChargedClassSkills.armed(merc)&&MercenarySkills.level(merc,MercenarySkill.CHAIN_LIGHTNING)==2,
+                    Component.literal("Fully denied cast preserves armed bar and earns no skill success"));
+            secondary.setInvulnerable(false);players.remove(owner.getUUID());
+            primary.invulnerableTime=0;primary.hurtServer(level,merc.damageSources().mobAttack(merc),8);
+            players.put(owner.getUUID(),owner);
+            helper.assertTrue(ChargedClassSkills.charge(merc,SignatureSkill.CHAIN_LIGHTNING)==100&&secondary.getHealth()==health,
+                    Component.literal("Offline hirer cannot cast or drain retained charge"));
             helper.succeed();
         }finally{
             targets.forEach(Entity::discard);wall.forEach(level::setBlockAndUpdate);scoreboard.removePlayerTeam(team);

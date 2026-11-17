@@ -358,6 +358,7 @@ public final class PotionCraftingGameTests {
 
     public static void paletteCursor(GameTestHelper h) {
         ingredientQuotes(h);
+        vitalityRanks(h);
         try(var f=new Fixture(h,Long.MAX_VALUE-3203)) {
             String healing="minecraft:healing_splash";f.clear();f.healing(0,2);f.healing(1,2);var donor=f.inventory(1);
             var quotes=PotionCrafting.view(f.p(0),1);
@@ -411,6 +412,37 @@ public final class PotionCraftingGameTests {
                     "Shift makes exactly one and prefers an empty hotbar slot over a main-inventory merge");
         }
         h.succeed();
+    }
+
+    private static void vitalityRanks(GameTestHelper h){
+        try(var f=new Fixture(h,Long.MAX_VALUE-3220)){
+            var skill=net.goui.cosmicdungeon.playerclass.skill.SignatureSkill.POSITIVE_POTIONS;
+            var low=net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions.rank(0);
+            var high=net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions.rank(25);
+            f.clear();f.healing(0,2);
+            var old=net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions.splash(0);
+            f.p(0).getInventory().setItem(9,old.copy());
+            var beforeView=PotionCrafting.view(f.p(0),1);
+            f.check(beforeView.entries().stream().filter(e->e.targetId().startsWith("cosmicdungeon:")).count()==1
+                    &&beforeView.entries().stream().anyMatch(e->e.targetId().equals(low.targetId())),"Only starter vitality appears initially");
+            var progress=net.goui.cosmicdungeon.progression.PlayerProgressionData.get(f.level.getServer());
+            int base=net.goui.cosmicdungeon.playerclass.skill.ClassSkillConfig.BASE.get();
+            int step=net.goui.cosmicdungeon.playerclass.skill.ClassSkillConfig.STEP.get();
+            progress.addSignatureProgress(f.p(0).getUUID(),skill,(int)skill.threshold(25,base,step),skill.threshold(100,base,step));
+            var afterView=PotionCrafting.view(f.p(0),2);
+            f.check(afterView.entries().stream().filter(e->e.targetId().startsWith("cosmicdungeon:")).count()==1
+                    &&afterView.entries().stream().anyMatch(e->e.targetId().equals(high.targetId())),
+                    "Rank unlock invalidates palette quote cache without inventory/fuel change");
+            var images=f.images();int charges=f.charges(0);
+            f.check(!PotionCrafting.craft(f.p(0),f.run,low.targetId(),false)&&f.charges(0)==charges,
+                    "Stale lower-rank craft is rejected before fuel debit");
+            f.unchanged(images,"Stale lower-rank craft cannot spend any owner's items");
+            f.check(PotionCrafting.craft(f.p(0),f.run,high.targetId(),false),"New highest rank uses ordinary Healing ingredients");
+            f.check(f.charges(0)==17&&ItemStack.matches(old,f.p(0).getInventory().getItem(9)),
+                    "Same three brewing steps, saved fuel and existing lower bottle preserved");
+            f.check(net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions.in(f.p(0).inventoryMenu.getCarried())
+                    .orElseThrow().equals(high),"Server delivers exact unlocked max-health rank");
+        }
     }
 
     private static String material(Item item){return PotionRecipeSelection.itemKey(item);}

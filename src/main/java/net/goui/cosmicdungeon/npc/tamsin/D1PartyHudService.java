@@ -20,7 +20,9 @@ final class D1PartyHudService {
         var known = IDENTITIES.get(id);
         var row = new PartyPayloads.Member(player == null ? (known == null ? "Offline" : known.name()) : player.getGameProfile().name(),
                 player == null ? (known == null ? "none" : known.classId()) : ClassData.getClassId(player),
-                player != null && ready, leader,false,PartyVitals.UNLOADED,id.toString());
+                player != null && ready, leader,false,player==null
+                        ?PartyVitals.OFFLINE.withSkills(known==null?PartySkills.NONE:known.vitals().skills(),server.overworld().getGameTime())
+                        :PartyVitalsSnapshot.capture(player,false),id.toString());
         IDENTITIES.put(id, row); return row;
     }
     static void sync(MinecraftServer server, D1PartyLobby lobby) {
@@ -58,7 +60,8 @@ final class D1PartyHudService {
                     var identity = member(server, m, false, run.groupLeader().filter(m::equals).isPresent());
                     var health = vitals.computeIfAbsent(m, key -> {
                         var subject = server.getPlayerList().getPlayer(key);
-                        return PartyVitalsSnapshot.capture(subject, subject != null && run.containsDimension(subject.level().dimension()));
+                        return subject==null?PartyVitals.OFFLINE.withSkills(identity.vitals().skills(),server.overworld().getGameTime())
+                                :PartyVitalsSnapshot.capture(subject,run.containsDimension(subject.level().dimension()));
                     });
                     return new PartyPayloads.Member(identity.name(),identity.classId(),false,identity.leader(),false,health,m.toString(),GroupResourceConsent.choice(net.goui.cosmicdungeon.dungeon.d1.D1RunData.get(server),run.runId(),m));
                 }).toList();

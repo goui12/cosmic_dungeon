@@ -6,7 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.UUIDUtil;
 
-/** A fixed-size bank, not a queued cast list. Native autosave persists it with the entity. */
+/** Legacy bank retained verbatim for old saves; charged-class gameplay no longer reads or updates it. */
 record MercenaryLightningState(int hits,float damage,Optional<UUID> excluded,int cooldown) {
     static final int CAST_TICKS=20;
     static final Codec<MercenaryLightningState> CODEC=RecordCodecBuilder.create(i->i.group(

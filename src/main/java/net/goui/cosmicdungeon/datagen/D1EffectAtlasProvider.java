@@ -20,6 +20,12 @@ public final class D1EffectAtlasProvider implements DataProvider {
         var companionship=new JsonObject();companionship.addProperty("type","minecraft:single");
         companionship.addProperty("resource","minecraft:mob_effect/regeneration");
         companionship.addProperty("sprite","cosmicdungeon:companionship");sources.add(companionship);
+        var vitality=new JsonObject();vitality.addProperty("type","minecraft:single");
+        vitality.addProperty("resource","minecraft:mob_effect/health_boost");
+        vitality.addProperty("sprite","cosmicdungeon:vitality");sources.add(vitality);
+        var flurry=new JsonObject();flurry.addProperty("type","minecraft:single");
+        flurry.addProperty("resource","minecraft:mob_effect/haste");
+        flurry.addProperty("sprite","cosmicdungeon:flurry_of_fangs");sources.add(flurry);
         root.add("sources",sources);
         return DataProvider.saveStable(cache,root,output.getOutputFolder(PackOutput.Target.RESOURCE_PACK)
                 .resolve("minecraft/atlases/mob_effects.json"));

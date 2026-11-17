@@ -66,6 +66,7 @@ public final class D1RocketAbilities {
         boolean damaged=burst(rocket,level,owner,power);
         CosmicSpawnerFireworks.destroy(rocket,level,owner);
         if(damaged&&owner instanceof MercenaryEntity merc)MercenarySkills.success(merc,MercenarySkill.FIREWORKS);
+        else if(damaged&&owner instanceof ServerPlayer player)net.goui.cosmicdungeon.playerclass.skill.SignatureSkills.success(player,net.goui.cosmicdungeon.playerclass.skill.SignatureSkill.FIREWORKS);
         return true;
     }
     /** Damage policy is shared by native player and mercenary rocket detonations. */

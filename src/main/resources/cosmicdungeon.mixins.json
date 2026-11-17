@@ -93,6 +93,7 @@
     "SkillProjectileWeaponMixin",
     "SkillSplashPotionMixin",
     "MercenaryPotionEffectMixin",
+    "MercenaryEffectSaveMixin",
     "SkillCloudMixin",
     "SkillLingeringPotionMixin",
     "SkillDrinkPotionMixin",
@@ -103,6 +104,8 @@
     "MobPersistenceAccess",
     "SpawnerBreakAccess",
     "BowRocketMixin",
-    "AmmoDrawMixin"
+    "AmmoDrawMixin",
+    "ClassSkillDeathMixin",
+    "ClassBuffEffectMixin"
   ]
 }

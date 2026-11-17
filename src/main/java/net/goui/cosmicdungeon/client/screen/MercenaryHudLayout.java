@@ -9,10 +9,11 @@ public final class MercenaryHudLayout {
         return row.status().equals("ACTIVE")&&row.maxHealth()>0
             ?Math.round(Math.max(0,width)*row.health()/row.maxHealth()):0;
     }
-    public static String label(PartyPayloads.Mercenary row){
-        return row.classId().isEmpty() ? row.name() : row.name()+" / "
-                +net.minecraft.network.chat.Component.translatable("playerclass.cosmicdungeon."+row.classId()).getString();
+    public static net.minecraft.network.chat.Component identity(PartyPayloads.Mercenary row){
+        return PartySkillPresentation.identity(row.name(),row.classId().isEmpty()?net.minecraft.network.chat.Component.empty()
+                :ClassSelectorScreen.className(row.classId()),row.vitals().skills(),false);
     }
+    public static String label(PartyPayloads.Mercenary row){ return identity(row).getString(); }
     public static java.util.List<String> tooltip(PartyPayloads.Mercenary row){
         var lines=new java.util.ArrayList<String>();
         lines.add(label(row));lines.add(status(row));

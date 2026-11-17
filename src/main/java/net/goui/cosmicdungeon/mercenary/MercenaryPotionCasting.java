@@ -11,6 +11,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.ThrownSplashPotion;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.alchemy.PotionContents;
+import net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions;
 
 /** One prepared cast, revalidated at release. Existing ten-tick AI pass and candidate list only. */
 final class MercenaryPotionCasting {
@@ -25,7 +26,7 @@ final class MercenaryPotionCasting {
                 ||old.getAmplifier()==incoming.getAmplifier()&&!old.isInfiniteDuration()&&old.getDuration()<40;
     }
     private static int score(MercenaryEntity entity,LivingEntity target,ItemStack stack,boolean combat){
-        if(!MercenaryBrewing.roleSplash(stack,entity.contract())||!target.isAlive()||!target.isAffectedByPotions()
+        if(!target.isAlive()||!target.isAffectedByPotions()
                 ||entity.distanceToSqr(target)>64||!entity.getSensing().hasLineOfSight(target))return -1;
         int score=-1;
         for(var effect:stack.getOrDefault(DataComponents.POTION_CONTENTS,PotionContents.EMPTY).getAllEffects()){
@@ -36,7 +37,9 @@ final class MercenaryPotionCasting {
                 if(!combat&&!(target instanceof ServerPlayer))continue;
                 boolean healing=effect.getEffect().value().isInstantenous()||effect.getEffect().equals(MobEffects.REGENERATION);
                 if(healing&&target.getHealth()>=target.getMaxHealth())continue;
-                if(!healing&&!refresh(target.getEffect(effect.getEffect()),effect))continue;
+                if(!healing&&(VitalityPotions.isVitality(effect)
+                        ?!VitalityPotions.useful(target,effect.getAmplifier())
+                        :!refresh(target.getEffect(effect.getEffect()),effect)))continue;
                 score=Math.max(score,healing?300+(int)(100*(1-target.getHealth()/target.getMaxHealth()))
                         :target instanceof ServerPlayer?160:100);
             }else{
@@ -58,15 +61,20 @@ final class MercenaryPotionCasting {
     boolean tick(MercenaryEntity entity,List<LivingEntity> candidates){
         if(!MercenaryBrewing.enabled(entity.contract())||!(entity.level() instanceof ServerLevel level)
                 ||MercenaryBrain.hirer(entity)==null){cancel();return false;}
+        boolean positive=MercenaryBrewing.supports(entity.contract(),true);
+        var activeSkill=positive?MercenarySkill.POSITIVE_POTIONS:MercenarySkill.NEGATIVE_POTIONS;
+        int casterLevel=MercenarySkills.level(entity,activeSkill);
         boolean combat=candidates.stream().anyMatch(t->MercenaryBrain.enemy(entity,t));
         if(target!=null){
             if(level.getGameTime()<readyTick)return false;
             var victim=level.getEntity(target);
+            var cast=MercenaryBrewing.castStack(prepared,positive,casterLevel);
             if(!(victim instanceof LivingEntity living)||slot<0||slot>=entity.supplies().size()
                     ||!ItemStack.isSameItemSameComponents(prepared,entity.supplies().get(slot))
-                    ||entity.supplies().get(slot).isEmpty()||score(entity,living,prepared,combat)<0
+                    ||entity.supplies().get(slot).isEmpty()||!MercenaryBrewing.usable(prepared,entity.contract(),casterLevel)
+                    ||score(entity,living,cast,combat)<0
                     ||skill(entity,living)!=skill){cancel();return false;}
-            var shot=new ThrownSplashPotion(level,entity,prepared.copyWithCount(1));
+            var shot=new ThrownSplashPotion(level,entity,cast);
             MercenaryPotions.mark(shot,entity);
             double x=living.getX()-shot.getX(),z=living.getZ()-shot.getZ();
             // Aim at feet; per-recipient effect guards protect every ally/enemy in the splash.
@@ -74,10 +82,12 @@ final class MercenaryPotionCasting {
             else shot.shoot(x,living.getY()+.1-shot.getY()+Math.sqrt(x*x+z*z)*.2,z,.75f,0);
             if(!level.addFreshEntity(shot)){cancel();return false;}
             entity.supplies().get(slot).shrink(1);
-            int cadence=MercenaryPotionBalance.cadence(MercenaryConfig.potionTicks(MercenaryPotions.key(prepared)),
-                    MercenarySkills.level(entity,skill),40);
+            int base=MercenaryConfig.potionTicks(MercenaryPotions.key(cast));
+            int cadence=skill==MercenarySkill.POSITIVE_POTIONS
+                    ?MercenaryPotionBalance.positiveCadence(base,casterLevel,40)
+                    :MercenaryPotionBalance.cadence(base,casterLevel,40);
             entity.timers(entity.timers().used(MercenaryPotionBalance.throwKey(skill),cadence)
-                    .used(MercenaryPotions.key(prepared),cadence).used(MercenaryPotionBalance.GLOBAL,MercenaryPotionBalance.GLOBAL_GAP));
+                    .used(MercenaryPotions.key(cast),cadence).used(MercenaryPotionBalance.GLOBAL,MercenaryPotionBalance.GLOBAL_GAP));
             if(combat)entity.regeneration().combat();
             flash(entity,level,true);cancel();return true;
         }
@@ -85,11 +95,13 @@ final class MercenaryPotionCasting {
         int best=-1;
         for(int i=0;i<entity.supplies().size();i++){
             var stack=entity.supplies().get(i);
-            if(!MercenaryBrewing.effectSplash(stack)||!entity.timers().ready(MercenaryPotions.key(stack)))continue;
+            if(!MercenaryBrewing.usable(stack,entity.contract(),casterLevel))continue;
+            var cast=MercenaryBrewing.castStack(stack,positive,casterLevel);
+            if(!entity.timers().ready(MercenaryPotions.key(cast)))continue;
             for(var candidate:candidates){
                 var category=skill(entity,candidate);
                 if(!category.supports(entity.contract())||!entity.timers().ready(MercenaryPotionBalance.throwKey(category)))continue;
-                int score=score(entity,candidate,stack,combat);
+                int score=score(entity,candidate,cast,combat);
                 if(score>best){best=score;slot=i;target=candidate.getUUID();prepared=stack.copyWithCount(1);skill=category;}
             }
         }

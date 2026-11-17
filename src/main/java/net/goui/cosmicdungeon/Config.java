@@ -231,7 +231,7 @@ public final class Config {
                 .defineInRange("threatQueriesPerTick",8,1,32);
         B.pop();
         B.push("Dragoon");
-        CHAIN_CHANCE = B.comment("Probability per successful trident hit; debloated Classes!S4.")
+        CHAIN_CHANCE = B.comment("Retained legacy setting; ignored by the charged 100-hit Chain Lightning skill.")
                 .defineInRange("chainLightningChance", 0.03, 0.0, 1.0);
         CHAIN_RADIUS = B.comment("Blocks. Server line-of-sight approximation for 'on screen'; bounded implementation choice.")
                 .defineInRange("chainLightningRadius", 32.0, 1.0, 128.0);

@@ -1,3 +1,12 @@
+# Active class-skills series, 2026-11-15
+
+Batches 1–5 have verified source checkpoints. Batch 6 completes party signature/effect/ability presentation and successful-action integration: [scope and checks](tasks/CLASS_SKILLS_B6_20261117.md). The completed set targets official **1.8.13** as explicitly authorized by Cameron. Merge, exact full CI, publication and stopped TEST delivery are verified in the active controller completion receipt; this source note does not pre-claim those operations.
+
+After that receipt, **zero implementation cards remain**. Stop at Batch 6. Licensed GUI/co-op acceptance remains TESTING. [Approved plan](tasks/CLASS_SKILLS_BATCHES_20261115.md) · [all remaining recommendations](tasks/BATCH_1_7_20_REVIEW_NOTES_20261012.md).
+
+
+---
+
 # Active FixSet, 2026-10-13
 
 F1 inventory/potions, F2 Ready/frozen sharing, F3 wolves/Patrol and F4 development

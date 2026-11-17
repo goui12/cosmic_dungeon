@@ -65,7 +65,7 @@ public final class ClassSkills {
         return new Attack(player,cls,skill,data);
     }
     public static Attack attack(DamageSource source) {
-        if (net.goui.cosmicdungeon.playerclass.dragoon.DragoonPassiveEvents.chaining()) return null;
+        if (SecondarySkillDamage.active()) return null;
         var potion = SkillPotions.current();
         if (potion != null && source.getEntity() == potion.player()) return potion;
         if (!(source.getEntity() instanceof ServerPlayer player)) return null;

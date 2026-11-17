@@ -64,6 +64,19 @@ final class SkillBindingLabelsTest {
         var unbound = SkillBindingLabels.tooltip("Feed Pack", description, Component.literal("<Unbound>"));
         assertTrue(unbound.getString().endsWith("Hotkey: <Unbound>"));
     }
+    @Test void scaledHintUsesItsOwnWidthAndTooltipKeepsItalicStyle() {
+        // Five title units + four gap units + ceil(seven hint units * .75) fit exactly in fifteen.
+        assertTrue(layout("Skill", "<G KEY>", 15).stacked(), "An unscaled hint must require two lines here");
+        var line = SkillBindingLabels.layout("Skill", "<G KEY>", 15, String::length,
+                text -> (int)Math.ceil(text.length()*.75),
+                (text,width) -> text.substring(0,Math.min(text.length(),width)),
+                (text,width) -> text.substring(0,Math.min(text.length(),(int)(width/.75))));
+        assertFalse(line.stacked());
+        assertEquals("<G KEY>",line.hint());
+        assertEquals(15,line.hintX()+(int)Math.ceil(line.hint().length()*.75));
+        var tip=SkillBindingLabels.tooltip("Skill",Component.literal("Effect"),Component.literal("<G KEY>"));
+        assertTrue(tip.getSiblings().getLast().getStyle().isItalic());
+    }
     @Test void existingActionTitleIsNotRepeatedByTooltipDecoration() {
         var description = Component.literal("Stay\nRecall and sit.").withStyle(ChatFormatting.WHITE);
         var tip = SkillBindingLabels.tooltip("Stay", description, Component.literal("<Alt + 2>"));

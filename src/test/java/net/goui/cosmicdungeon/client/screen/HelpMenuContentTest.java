@@ -47,7 +47,7 @@ class HelpMenuContentTest {
             }
         }
         assertTrue(links >= 20);
-        assertEquals(8, keys);
+        assertEquals(12, keys); // Eight preserved utility links plus four generic slot bindings.
     }
     @Test void itemTopicsAreBoundedAndLoreRemainsComplete() {
         Set<String> supported = Set.of("healing_potions", "harming_potions", "turtle_master",

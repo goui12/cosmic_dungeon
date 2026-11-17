@@ -72,15 +72,19 @@ public final class MercenaryRespawns {
             if(level.getEntity(contract.id()) instanceof MercenaryEntity entity&&run.runId()==entity.runId()
                     &&contract.equals(entity.contract())){
                 if(entity.rest()!=null)rest=entity.rest();
-                else if(entity.isAlive()) return new PartyPayloads.Mercenary(name,owner,entity.getHealth(),entity.getMaxHealth(),-1,"ACTIVE",PartyPayloads.Recovery.NONE,skills,resurrection,contract.classId(),
-                        net.goui.cosmicdungeon.npc.tamsin.PartyVitalsSnapshot.capture(entity,true));
+                else if(entity.isAlive()){
+                    var vitals=net.goui.cosmicdungeon.npc.tamsin.PartyVitalsSnapshot.capture(entity,true);
+                    return new PartyPayloads.Mercenary(name,owner,vitals.health(),vitals.maxHealth(),-1,"ACTIVE",PartyPayloads.Recovery.NONE,skills,resurrection,contract.classId(),vitals);
+                }
                 break;
             }
         }
-        if(rest==null)return new PartyPayloads.Mercenary(name,owner,0,0,-1,"UNLOADED",PartyPayloads.Recovery.NONE,skills,resurrection,contract.classId());
+        if(rest==null)return new PartyPayloads.Mercenary(name,owner,0,0,-1,"UNLOADED",PartyPayloads.Recovery.NONE,skills,resurrection,contract.classId(),
+                net.goui.cosmicdungeon.network.PartyVitals.UNLOADED.withSkills(net.goui.cosmicdungeon.npc.tamsin.PartySkillsSnapshot.mercenary(server,run.runId(),contract),server.overworld().getGameTime()));
         boolean paid=MercenaryRevival.paid(server,run.runId(),contract.id(),rest);
         var controls=new PartyPayloads.Recovery(net.goui.cosmicdungeon.economy.MercenaryRevivePayment.id(run.runId(),contract.id(),rest.death(),rest.until()).toString(),rest.until(),MercenaryRevival.price(contract),
                 viewer.equals(contract.hirer())&&!paid&&!rest.due(server.overworld().getGameTime()));
-        return new PartyPayloads.Mercenary(name,owner,0,0,paid?0:rest.seconds(server.overworld().getGameTime()),"RESPAWNING",controls,skills,resurrection,contract.classId());
+        return new PartyPayloads.Mercenary(name,owner,0,0,paid?0:rest.seconds(server.overworld().getGameTime()),"RESPAWNING",controls,skills,resurrection,contract.classId(),
+                net.goui.cosmicdungeon.network.PartyVitals.DEAD.withSkills(net.goui.cosmicdungeon.npc.tamsin.PartySkillsSnapshot.mercenary(server,run.runId(),contract),server.overworld().getGameTime()));
     }
 }

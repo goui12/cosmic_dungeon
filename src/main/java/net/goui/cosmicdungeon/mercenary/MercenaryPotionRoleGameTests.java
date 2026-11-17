@@ -5,6 +5,7 @@ import java.util.*;
 import net.goui.cosmicdungeon.dungeon.DungeonRunRegistryData;
 import net.goui.cosmicdungeon.dungeon.d1.D1RunData;
 import net.goui.cosmicdungeon.entity.ModEntities;
+import net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.*;
@@ -67,6 +68,38 @@ final class MercenaryPotionRoleGameTests {
             runs.remove(id);data.clearRun(id);
         }
     }
+    private static void verifyVitality(Fixture f,LivingEntity enemy){
+        var legacy=net.minecraft.world.item.alchemy.PotionContents.createItemStack(
+                net.minecraft.world.item.Items.SPLASH_POTION,net.minecraft.world.item.alchemy.Potions.STRENGTH);
+        f.splash(legacy,f.merc);
+        f.check(!f.merc.hasEffect(MobEffects.STRENGTH)&&f.count(MercenarySkill.POSITIVE_POTIONS)==1,
+                "Retained legacy Strength cannot apply or earn positive skill");
+        var weak=VitalityPotions.splash(0);
+        var effect=weak.get(net.minecraft.core.component.DataComponents.POTION_CONTENTS).getAllEffects().iterator().next();
+        var holder=effect.getEffect();
+        float baseMax=f.merc.getMaxHealth();f.merc.setHealth(baseMax-3);
+        float health=f.merc.getHealth();
+        f.splash(weak,f.merc);
+        var current=f.merc.getEffect(holder);
+        f.check(current!=null&&current.getDuration()==54000,"Merc vitality lasts a full 45 minutes");
+        f.check(f.merc.getMaxHealth()>baseMax&&f.merc.getHealth()==health,"Vitality raises maximum health without healing");
+        f.check(!enemy.hasEffect(holder)&&f.count(MercenarySkill.POSITIVE_POTIONS)==2,
+                "Useful vitality affects only allies and earns one positive success");
+        current.tickServer(f.level,f.merc,()->{});
+        int duration=current.getDuration();
+        f.splash(weak,f.merc);
+        f.check(f.merc.getEffect(holder).getDuration()==duration&&f.count(MercenarySkill.POSITIVE_POTIONS)==2,
+                "Equal-rank vitality cannot refresh duration or farm progress");
+        f.splash(VitalityPotions.splash(35),f.merc);
+        var stronger=f.merc.getEffect(holder);
+        f.check(stronger.getAmplifier()==VitalityPotions.rank(35).amplifier()&&stronger.getDuration()==54000,
+                "A stronger rank replaces the weaker vitality for 45 minutes");
+        f.check(f.merc.getHealth()==health&&f.count(MercenarySkill.POSITIVE_POTIONS)==3,
+                "Useful rank replacement earns one success without healing");
+        f.splash(weak,f.merc);
+        f.check(f.merc.getEffect(holder).getAmplifier()==stronger.getAmplifier()
+                &&f.count(MercenarySkill.POSITIVE_POTIONS)==3,"A weaker rank cannot downgrade vitality or earn progress");
+    }
     static void verify(GameTestHelper helper){
         try(var f=new Fixture(helper,"theurgist",Long.MAX_VALUE-1701)){
             var enemy=f.enemy(EntityType.SPIDER,1);enemy.setHealth(10);f.merc.setHealth(4);
@@ -83,6 +116,7 @@ final class MercenaryPotionRoleGameTests {
             f.check(undead.getHealth()==health,"Positive role cannot damage undead through inversion");
             f.check(MercenarySkills.snapshot(f.level.getServer(),f.id,f.contract).size()==1,
                     "Theurgist exposes only its positive skill");
+            verifyVitality(f,enemy);
         }
         try(var f=new Fixture(helper,"venefex",Long.MAX_VALUE-1702)){
             var first=f.enemy(EntityType.CREEPER,1);var second=f.enemy(EntityType.CREEPER,2);

@@ -2,106 +2,43 @@ package net.goui.cosmicdungeon.playerclass.dragoon;
 
 import net.goui.cosmicdungeon.CosmicDungeonMod;
 import net.goui.cosmicdungeon.Config;
-import net.goui.cosmicdungeon.dungeon.d1.D1Members;
-import net.goui.cosmicdungeon.playerclass.d1.D1CombatRules;
-import net.minecraft.world.damagesource.DamageTypes;
-import net.minecraft.util.AbortableIterationConsumer;
-import net.minecraft.world.level.entity.EntityTypeTest;
 import net.goui.cosmicdungeon.particle.ModParticleTypes;
 import net.goui.cosmicdungeon.playerclass.api.ClassData;
 import net.goui.cosmicdungeon.playerclass.api.ClassKeys;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID)
 public final class DragoonPassiveEvents {
     private static final int PARTICLES_PER_ARC = 10;
-    private static final ThreadLocal<Boolean> CHAINING = ThreadLocal.withInitial(() -> false);
-
     private DragoonPassiveEvents() {}
-    public static boolean chaining() { return CHAINING.get(); }
-
-
-    @SubscribeEvent
-    public static void onLivingDamagePost(LivingDamageEvent.Post event) {
-        if (CHAINING.get()) return;
-        if (!(event.getEntity().level() instanceof ServerLevel level)) return;
-        if (!(event.getEntity() instanceof Mob initialTarget)) return;
-        DamageSource source = event.getSource();
-        if (!(source.getEntity() instanceof ServerPlayer dragoon)) return;
-        if (!ClassKeys.CLASS_ID_DRAGOON.equals(ClassData.getClassId(dragoon))) return;
-        var run = D1Members.run(level).orElse(null);
-        boolean active = run != null && dragoon.level() == level && D1Members.inside(dragoon, run);
-        boolean thrown = source.is(DamageTypes.TRIDENT)
-                && source.getDirectEntity() instanceof net.minecraft.world.entity.projectile.ThrownTrident;
-        boolean melee = source.is(DamageTypes.PLAYER_ATTACK) && source.getDirectEntity() == dragoon
-                && dragoon.getMainHandItem().is(net.minecraft.world.item.Items.TRIDENT);
-        if (!D1CombatRules.tridentHit(active, thrown, melee, event.getNewDamage())) return;
-        float damage = (float)(event.getNewDamage() * Config.CHAIN_DAMAGE.get());
-        if (damage <= 0.0F || dragoon.getRandom().nextDouble() >= Math.min(1,Config.CHAIN_CHANCE.get()
-                + net.goui.cosmicdungeon.playerclass.skill.ClassSkills.bonus(
-                    net.goui.cosmicdungeon.playerclass.skill.ClassSkills.attack(source),
-                    net.goui.cosmicdungeon.playerclass.skill.ClassSkillConfig.CHAIN.get()))) return;
-
-        List<Mob> targets = collectTargets(level, dragoon, initialTarget);
-        if (targets.isEmpty()) return;
-
-        CHAINING.set(true);
-        try {
-            LivingEntity from = dragoon;
-            for (Mob target : targets) {
-                spawnLightningArc(level, from, target);
-                target.hurtServer(level, source, damage);
-                from = target;
-            }
-        } finally {
-            CHAINING.set(false);
-        }
+    public static boolean chaining(){return net.goui.cosmicdungeon.playerclass.skill.SecondarySkillDamage.active();}
+    @SubscribeEvent public static void onLivingDamagePost(LivingDamageEvent.Post event){
+        if(chaining()||!(event.getEntity() instanceof Mob initial))return;
+        var source=event.getSource();
+        var attack=net.goui.cosmicdungeon.playerclass.skill.ClassSkills.attack(source);
+        if(attack==null||!"dragoon".equals(attack.cls())||!"trident".equals(attack.skill())
+                ||!net.goui.cosmicdungeon.playerclass.skill.ChargedClassSkills.active(attack.player(),
+                    net.goui.cosmicdungeon.playerclass.skill.SignatureSkill.CHAIN_LIGHTNING)
+                ||!net.goui.cosmicdungeon.playerclass.skill.ChargedClassSkills.enemy(attack.player(),initial))return;
+        float dealt=event.getNewDamage()+event.getReduction(
+                net.neoforged.neoforge.common.damagesource.DamageContainer.Reduction.ABSORPTION);
+        if(!(dealt>0)||!Float.isFinite(dealt))return;
+        var player=attack.player();
+        if(net.goui.cosmicdungeon.playerclass.skill.ChargedClassSkills.armed(player)){
+            if(net.goui.cosmicdungeon.playerclass.skill.ChargedClassSkills.lightning(player,
+                    ()->LightningCombat.cast(player,initial,source,dealt)))
+                player.displayClientMessage(net.minecraft.network.chat.Component.literal("Chain Lightning!"),true);
+        }else net.goui.cosmicdungeon.playerclass.skill.ChargedClassSkills.addCharge(player,
+                net.goui.cosmicdungeon.playerclass.skill.SignatureSkill.CHAIN_LIGHTNING);
     }
-
-    private static List<Mob> collectTargets(ServerLevel level, ServerPlayer dragoon, Mob initialTarget) {
-        double range = Config.CHAIN_RADIUS.get();
-        int limit = Config.CHAIN_CANDIDATE_LIMIT.get();
-        var candidates = new ArrayList<Mob>();
-        int[] visited = {0};
-        level.getEntities().get(EntityTypeTest.forClass(Mob.class), dragoon.getBoundingBox().inflate(range), mob -> {
-            visited[0]++;
-            if (mob.isAlive() && mob != initialTarget && mob instanceof net.minecraft.world.entity.monster.Enemy
-                    && !mob.isAlliedTo(dragoon) && dragoon.distanceToSqr(mob) <= range * range)
-                candidates.add(mob);
-            return visited[0] >= limit ? AbortableIterationConsumer.Continuation.ABORT
-                    : AbortableIterationConsumer.Continuation.CONTINUE;
-        });
-        candidates.sort(java.util.Comparator.<Mob>comparingDouble(dragoon::distanceToSqr)
-                .thenComparing(mob -> mob.getUUID().toString()));
-        var targets = new ArrayList<Mob>();
-        for (var mob : candidates) {
-            if (dragoon.hasLineOfSight(mob)) targets.add(mob);
-            if (targets.size() >= Config.CHAIN_TARGET_LIMIT.get()) break;
-        }
-        return targets;
-    }
-    // TODO(M60, licensed TEST): Classes!S4 says approximately 3% and "everything on the screen".
-    // Q&A D21 delegates configurable defaults. This retains hostile-only, 32-block server LOS,
-    // 64 additional targets and configured final-hit multiplier; it does not infer client FOV.
-    // Candidate saturation can omit targets. Verify shields/armor, thrown/melee and no double
-    // original-victim damage in TEST. Classes!T4 riptide/channeling is an authored-equipment
-    // review against the newer Dragoon overview (1uG80jIWpLKZvTGCmbHStqJs565iqEvqhr6N5oYBIHOE,
-    // Aug 28) and exact chest stacks; do not rewrite their enchantments or manufacture gear.
 
     @SubscribeEvent
     public static void passiveRepair(net.neoforged.neoforge.event.tick.PlayerTickEvent.Post event) {

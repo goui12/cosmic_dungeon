@@ -9,6 +9,7 @@ import net.goui.cosmicdungeon.client.screen.ClassInventoryPresentation;
 import net.goui.cosmicdungeon.client.screen.ResurrectPickerScreen;
 import net.goui.cosmicdungeon.client.screen.crafting.PotionCraftClient;
 import net.goui.cosmicdungeon.client.screen.skills.BogatyrClient;
+import net.goui.cosmicdungeon.client.screen.skills.ClassAbilityClient;
 import net.goui.cosmicdungeon.client.screen.skills.SkillsPanelClient;
 import net.goui.cosmicdungeon.client.screen.skills.TheurgistClient;
 import net.goui.cosmicdungeon.playerclass.api.ClassData;
@@ -42,7 +43,8 @@ public final class SkillKeybindClient {
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
         for (var action : Action.values()) {
             var mapping = new KeyMapping("key.cosmicdungeon." + action.id, new ClassContext(action.classId),
-                    KeyModifier.ALT, InputConstants.Type.KEYSYM, action.defaultKey,
+                    action.defaultModifier == Modifier.ALT ? KeyModifier.ALT : KeyModifier.NONE,
+                    InputConstants.Type.KEYSYM, action.defaultKey,
                     CosmicDungeonKeybindCategories.COSMIC_DUNGEON);
             KEYS.put(action, mapping);
             event.register(mapping);
@@ -51,11 +53,12 @@ public final class SkillKeybindClient {
     private record ClassContext(String classId) implements IKeyConflictContext {
         @Override public boolean isActive() {
             var mc = Minecraft.getInstance();
-            return mc.screen == null && mc.player != null && classId.equals(ClassData.getClassId(mc.player));
+            return mc.screen == null && mc.player != null
+                    && SkillInputPolicy.supportsClass(classId, ClassData.getClassId(mc.player));
         }
         @Override public boolean conflicts(IKeyConflictContext other) {
             return other == KeyConflictContext.UNIVERSAL || other == KeyConflictContext.IN_GAME
-                    || other instanceof ClassContext c && classId.equals(c.classId);
+                    || other instanceof ClassContext c && (classId.isEmpty() || c.classId.isEmpty() || classId.equals(c.classId));
         }
     }
     public static Component hint(String actionId) {
@@ -64,7 +67,8 @@ public final class SkillKeybindClient {
         var mapping = KEYS.get(action);
         var label = mapping == null || mapping.isUnbound() ? Component.translatable("key.cosmicdungeon.unbound")
                 : mapping.getTranslatedKeyMessage();
-        return Component.literal("<").append(label).append(">").withStyle(ChatFormatting.GRAY);
+        return Component.literal("<").append(label).append(action.slot != null && mapping != null && !mapping.isUnbound() ? " KEY>" : ">")
+                .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
     }
     private static Modifier modifier(KeyModifier modifier) {
         return switch (modifier) {
@@ -126,7 +130,8 @@ public final class SkillKeybindClient {
         var action = SkillInputPolicy.resolve(classId, bindings, input, modifier, conflict(mc, input, modifier));
         if (action == null) return false;
         if (execute) SkillInputPolicy.dispatch(action, classId, BogatyrClient::activate, TheurgistClient::canOpenPicker,
-                () -> mc.setScreen(new ResurrectPickerScreen(mc.screen instanceof AbstractContainerScreen<?> parent ? parent : null)));
+                () -> mc.setScreen(new ResurrectPickerScreen(mc.screen instanceof AbstractContainerScreen<?> parent ? parent : null)),
+                ClassAbilityClient::activate);
         return true;
     }
     @SubscribeEvent public static void key(InputEvent.Key event) {

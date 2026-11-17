@@ -29,6 +29,8 @@ public final class DungeonInstanceGameTests {
 
     private static FunctionGameTestSuite createSuite() {
         var suite = new FunctionGameTestSuite(ENVIRONMENT);
+        suite.add(id("signature_player_persistence"),net.goui.cosmicdungeon.playerclass.skill.SignatureSkillGameTests::playerPersistence);
+        suite.add(id("signature_mercenary_compatibility"),net.goui.cosmicdungeon.playerclass.skill.SignatureSkillGameTests::mercenaryCompatibility);
         suite.add(id("slot_mapping"), DungeonInstanceGameTests::slotMapping);
         suite.add(id("legacy_run_codec"), DungeonInstanceGameTests::legacyRunCodec);
         suite.add(id("farrows_chop_target_codec"), DungeonInstanceGameTests::farrowsChopTargetCodec);
@@ -52,6 +54,25 @@ public final class DungeonInstanceGameTests {
         suite.add(id("mercenary_firework_persistence"),net.goui.cosmicdungeon.mercenary.MercenaryFireworkGameTests::persistence);
         suite.add(id("pyroclast_rocket_explosion"),net.goui.cosmicdungeon.playerclass.d1.D1RocketGameTests::explosion);
         suite.add(id("pyroclast_rocket_denial"),net.goui.cosmicdungeon.playerclass.d1.D1RocketGameTests::denied);
+        suite.add(id("melee_haste_mercenary"),net.goui.cosmicdungeon.playerclass.skill.MeleeHasteGameTests::mercenary);
+        suite.add(id("melee_haste_wolf"),net.goui.cosmicdungeon.playerclass.skill.MeleeHasteGameTests::wolf);
+        suite.add(id("mercenary_antifarm_thresholds"),net.goui.cosmicdungeon.mercenary.MercenaryAntiFarmingGameTests::thresholds);
+        suite.add(id("mercenary_antifarm_damagepaths"),net.goui.cosmicdungeon.mercenary.MercenaryAntiFarmingGameTests::damagePaths);
+        suite.add(id("mercenary_antifarm_persistence"),net.goui.cosmicdungeon.mercenary.MercenaryAntiFarmingGameTests::persistence);
+        suite.add(id("mercenary_antifarm_effect_persistence"),net.goui.cosmicdungeon.mercenary.MercenaryAntiFarmingGameTests::effectPersistence);
+        suite.add(id("mercenary_antifarm_healing"),net.goui.cosmicdungeon.mercenary.MercenaryAntiFarmingGameTests::healing);
+        suite.add(id("mercenary_antifarm_participation"),net.goui.cosmicdungeon.mercenary.MercenaryAntiFarmingGameTests::participation);
+        suite.add(id("final_skill_presentation"),net.goui.cosmicdungeon.playerclass.skill.FinalSkillIntegrationGameTests::presentation);
+        suite.add(id("final_skill_progression"),net.goui.cosmicdungeon.playerclass.skill.FinalSkillIntegrationGameTests::progression);
+        suite.add(id("final_skill_provenance"),net.goui.cosmicdungeon.playerclass.skill.FinalSkillIntegrationGameTests::provenance);
+        suite.add(id("class_buff_recipients"),net.goui.cosmicdungeon.playerclass.skill.ClassBuffGameTests::recipients);
+        suite.add(id("class_buff_strength_defense"),net.goui.cosmicdungeon.playerclass.skill.ClassBuffGameTests::strengthAndDefense);
+        suite.add(id("class_buff_cleanse_refund"),net.goui.cosmicdungeon.playerclass.skill.ClassBuffGameTests::cleanseAndRefund);
+        suite.add(id("class_buff_persistence_authority"),net.goui.cosmicdungeon.playerclass.skill.ClassBuffGameTests::persistenceAndAuthority);
+        suite.add(id("class_buff_mercenaries"),net.goui.cosmicdungeon.playerclass.skill.ClassBuffGameTests::mercenaries);
+        suite.add(id("charged_player_lightning"),net.goui.cosmicdungeon.playerclass.skill.ChargedClassGameTests::lightning);
+        suite.add(id("charged_player_smite"),net.goui.cosmicdungeon.playerclass.skill.ChargedClassGameTests::smite);
+        suite.add(id("charged_skill_persistence"),net.goui.cosmicdungeon.playerclass.skill.ChargedClassGameTests::persistence);
         suite.add(id("mercenary_lightning_persistence"),net.goui.cosmicdungeon.mercenary.MercenaryLightningGameTests::persistence);
         suite.add(id("mercenary_lightning_combat"),net.goui.cosmicdungeon.mercenary.MercenaryLightningGameTests::combat);
         suite.add(id("mercenary_judicator_combat"),net.goui.cosmicdungeon.mercenary.MercenaryJudicatorGameTests::combat);

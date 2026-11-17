@@ -73,7 +73,9 @@ public final class BogatyrWolfEvents {
         if(oldRun>0 && (oldRun!=run||!oldOwner.equals(owner.toString())))
             data.removeUnique(oldRun,"wolves:"+oldOwner,BogatyrIdentity.id(wolf).toString());
         wolf.getPersistentData().putLong(RUN,run);wolf.getPersistentData().putString(OWNER,owner.toString());
-        data.recordUnique(run,"wolves:"+owner,BogatyrIdentity.id(wolf).toString());
+        boolean first=data.recordUnique(run,"wolves:"+owner,BogatyrIdentity.id(wolf).toString());
+        if(first&&wolf.isAddedToLevel()&&level.getServer().getPlayerList().getPlayer(owner) instanceof ServerPlayer player)
+            net.goui.cosmicdungeon.playerclass.skill.SignatureSkills.success(player,net.goui.cosmicdungeon.playerclass.skill.SignatureSkill.WOLVES);
         tune(wolf);BogatyrCompanions.track(wolf,true);
     }
     /** Player packs are uncapped; breeding still validates run membership and health without scans. */

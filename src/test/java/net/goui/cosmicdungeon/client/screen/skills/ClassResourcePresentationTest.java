@@ -33,6 +33,9 @@ final class ClassResourcePresentationTest {
     }
     @Test void theurgistRetainsRealIngredientGuide(){
         var panel=ClassResourcePresentation.panel("theurgist",snapshot("brewing_supplies",600,true),false,true);
-        assertTrue(panel.actions().getFirst().tooltip().getString().contains("Craft..."));
+        String tooltip = panel.actions().getFirst().tooltip().getString();
+        assertTrue(tooltip.contains("Potions list"));
+        assertTrue(tooltip.contains("real ingredients"));
+        assertFalse(tooltip.contains("Craft..."));
     }
 }

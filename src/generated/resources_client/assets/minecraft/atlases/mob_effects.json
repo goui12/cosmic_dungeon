@@ -54,6 +54,16 @@
       "type": "minecraft:single",
       "resource": "minecraft:mob_effect/regeneration",
       "sprite": "cosmicdungeon:companionship"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/health_boost",
+      "sprite": "cosmicdungeon:vitality"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/haste",
+      "sprite": "cosmicdungeon:flurry_of_fangs"
     }
   ]
 }

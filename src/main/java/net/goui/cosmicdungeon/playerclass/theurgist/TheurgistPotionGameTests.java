@@ -124,6 +124,7 @@ public final class TheurgistPotionGameTests {
         }
     }
     public static void splashSafety(GameTestHelper helper){
+        vitality(helper);
         try(var f=new Fixture(helper,Long.MAX_VALUE-2201)){
             f.splash(f.shot(Potions.SWIFTNESS));
             f.check(!f.hostile.hasEffect(MobEffects.SPEED)&&!f.undead.hasEffect(MobEffects.SPEED),
@@ -154,6 +155,67 @@ public final class TheurgistPotionGameTests {
             var other=f.shot(Potions.SWIFTNESS);f.classId("theurgist");TheurgistPotionProtection.capture(other);f.splash(other);
             f.check(f.hostile.hasEffect(MobEffects.SPEED),"Other-class throw remains native after later becoming Theurgist");
             helper.succeed();
+        }
+    }
+    private static final class VitalityCow extends net.minecraft.world.entity.animal.Cow {
+        VitalityCow(ServerLevel level){super(EntityType.COW,level);}
+        void effectTick(){tickEffects();}
+    }
+    private static void vitality(GameTestHelper helper){
+        try(var f=new Fixture(helper,Long.MAX_VALUE-2203)){
+            var holder=net.goui.cosmicdungeon.effect.ModMobEffects.VITALITY;
+            f.teammate.setPos(f.origin.add(7,0,0));
+            float before=f.teammate.getHealth();
+            f.splash(f.shot(VitalityPotions.potion(0)));
+            for(var ally:List.of(f.caster,f.teammate,f.merc,f.pet))
+                f.check(ally.hasEffect(holder)&&ally.getEffect(holder).getDuration()==54000,
+                        "Vitality covers caster, party, mercenary and wolf with full duration at up to ten blocks");
+            f.check(f.teammate.getHealth()==before&&!f.hostile.hasEffect(holder)&&!f.neutral.hasEffect(holder)
+                    &&!f.alliedUndead.hasEffect(holder),"Max health does not heal or buff unrelated native entities");
+            f.teammate.removeEffect(holder);f.teammate.setPos(f.origin.add(10.01,0,0));
+            f.splash(f.shot(VitalityPotions.potion(0)));
+            f.check(!f.teammate.hasEffect(holder),"Targets beyond ten blocks receive no vitality");
+
+            var cow=f.add(new VitalityCow(f.level),2);
+            var health=cow.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+            health.setBaseValue(20);
+            health.addPermanentModifier(new net.minecraft.world.entity.ai.attributes.AttributeModifier(
+                    net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("cosmicdungeon","vitality_test"),
+                    20,net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE));
+            var multiplier=net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("cosmicdungeon","vitality_multiplier_test");
+            health.addPermanentModifier(new net.minecraft.world.entity.ai.attributes.AttributeModifier(multiplier,
+                    1,net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+            cow.setHealth(10);
+            f.check(VitalityPotions.apply(cow,new MobEffectInstance(holder,5,0),f.caster),"Fresh vitality applies");
+            f.check(cow.getMaxHealth()==82&&cow.getHealth()==10,"Ten percent adds only2HP despite base20, flat20, and double-total modifiers");
+            cow.getPersistentData().getCompoundOrEmpty(VitalityPotions.SOURCE).putString("future","retained");
+            f.check(VitalityPotions.apply(cow,new MobEffectInstance(holder,10,9),f.caster),"Higher rank replaces");
+            f.check(cow.getMaxHealth()==91&&cow.getHealth()==10,"Fifty-five percent remains base-relative and never heals");
+            cow.effectTick();int duration=cow.getEffect(holder).getDuration();
+            f.check(!cow.addEffect(new MobEffectInstance(holder,54000,9),f.caster)
+                    &&!VitalityPotions.apply(cow,new MobEffectInstance(holder,54000,0),f.caster)
+                    &&cow.getEffect(holder).getDuration()==duration,"Native equal and helper weaker applications cannot refresh");
+            var output=TagValueOutput.createWithContext(ProblemReporter.DISCARDING,f.level.registryAccess());
+            cow.saveWithoutId(output);
+            var restored=new VitalityCow(f.level);
+            restored.load(TagValueInput.create(ProblemReporter.DISCARDING,f.level.registryAccess(),output.buildResult()));
+            f.owned.add(restored);
+            f.check(restored.getMaxHealth()==91&&restored.getHealth()==10
+                    &&restored.getEffect(holder).getDuration()==duration,"Save/reload retains exact remaining effect and one modifier");
+            var metadata=restored.getPersistentData().getCompoundOrEmpty(VitalityPotions.SOURCE);
+            f.check(metadata.getStringOr("caster","").equals(f.caster.getStringUUID())
+                    &&metadata.getStringOr("future","").equals("retained"),"Caster attribution and unknown fields survive reload");
+            restored.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH).setBaseValue(40);
+            holder.get().applyEffectTick(f.level,restored,9);
+            f.check(restored.getMaxHealth()==142&&restored.getHealth()==10,"Base changes update only the extra maximum");
+            restored.setHealth(142);
+            restored.getActiveEffectsMap().put(holder,new MobEffectInstance(holder,1,9));
+            restored.effectTick();
+            f.check(!restored.hasEffect(holder)&&restored.getMaxHealth()==120&&restored.getHealth()==120,
+                    "Native expiry removes modifier, clamps health, and never resurrects the weaker tier");
+            VitalityPotions.apply(restored,new MobEffectInstance(holder,54000,0),f.caster);
+            restored.removeAllEffects();
+            f.check(restored.getMaxHealth()==120,"Native effect clearing removes vitality normally");
         }
     }
     public static void cloudAttribution(GameTestHelper helper){

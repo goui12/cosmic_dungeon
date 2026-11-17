@@ -25,6 +25,7 @@ public final class PotionCraftClient {
     private static int pressedButtons, retryTicks;
     private static double scrollGrab = -1;
     private static FeatureFlagSet catalogFlags;
+    private static int previewRank=-1;
     private static PotionRecipeCatalog catalog;
     private PotionCraftClient() {}
     public static void actions(Consumer<Action> actions, Consumer<Request> requests) { STATE.actions(actions, requests); }
@@ -49,9 +50,16 @@ public final class PotionCraftClient {
             close(); screen = (AbstractContainerScreen<?>)candidate; role = id;
             var flags = Minecraft.getInstance().level.enabledFeatures();
             if (catalog == null || !flags.equals(catalogFlags)) {
-                catalog = PotionRecipeCatalog.vanilla(flags); catalogFlags = flags;
+                catalog = PotionRecipeCatalog.classRecipes(flags); catalogFlags = flags;
             }
-            STATE.preview(catalog.targets().stream().filter(t -> t.classes().contains(id))
+            previewRank=-1;
+        }
+        int level=net.goui.cosmicdungeon.client.screen.skills.ClassAbilityClient.level(id);
+        int rank=net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions.rank(level).amplifier();
+        if(previewRank!=rank){
+            previewRank=rank;
+            STATE.preview(catalog.targets().stream().filter(t -> t.classes().contains(id)
+                    &&net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions.craftable(t.id(),level))
                     .map(t -> new Entry(t.id(), PotionContents.createItemStack(t.container(), t.potion()), 0, 0, 0, 0, List.of())).toList());
         }
         return STATE.ensureOpen();

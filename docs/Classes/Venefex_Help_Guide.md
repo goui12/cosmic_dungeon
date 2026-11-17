@@ -8,6 +8,12 @@ The D1 arsenal includes the Tree Viper, Bushmaster, and Fer-de-Lance poison fami
 
 Hover a potion tile to see the server-selected route for one output: the one existing potion input consumed, exact remaining ingredient quantities, and own/eligible-group stock. Intermediate stages made within that route are not charged again. The required blaze powder total includes both any reagent and new fuel refill; the fuel line identifies the refill portion, while saved charges reduce it. Own affordable routes are preferred before pooled routes. Unavailable tiles quote no affordable route. Quantities reserve nothing; a pending click shows the previous snapshot until the server replies, and execution rechecks all costs.
 
+## Banish Afflictions
+
+Use **Class skill 1 (default Z)** or its inventory button to remove harmful effects from the caster and party players, mercenaries and allied wolves within 10 blocks. Beneficial and neutral effects remain. No milk bucket is consumed. Cooldown: five minutes; no effective removal spends no cooldown. Venefex mercenaries cast automatically when useful.
+
 ## Shared rules and controls
 
 See the [current player guide](../PLAYER_GUIDE.md) for party sharing, crafting/fuel/stacks, gear ownership, trading, progression and travel. [Controls](../PLAYER_GUIDE.md#controls-and-passive-progression) lists defaults and rebinding. The inventory class-name link opens this class in the H guide.
+
+Hired mercenaries follow the shared [participation and healing rules](Signature_Skills_and_Controls.md#mercenary-participation-and-healing). At 30 unassisted kills from one spawner they warn, and at 40 refuse its enemies until a player walks and joins that fight or a party player dies. This includes owned wolves and secondary attacks.

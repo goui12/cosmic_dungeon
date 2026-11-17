@@ -4,7 +4,7 @@ Class ID: `bogatyr`. Enabled for Dungeon 1.
 
 A northern survivalist who fights with sword, bow, shield, and a loyal wolfpack. Acquire companions through existing wolf eggs, ordinary bone taming, and breeding. Player packs are uncapped, survive ordinary saves/reconnects within the run, and end on completion, forfeit, or reset. Old archives cannot summon a previous run's pack. Hired Bogatyrs admit at most 20 dogs, starting at one summon every 30 active seconds. Their existing skill progression improves cadence down to 20 seconds. Saved packs already above 20 are retained, but receive no new dogs until below the limit.
 
-Open inventory **Skills** for three actions:
+Open inventory **Skills** for Flurry of Fangs and these three utility actions:
 
 | Action | Default | Behavior |
 |---|---|---|
@@ -18,6 +18,12 @@ Feed Pack prefers bones/rotten flesh, then raw meat, then remaining meat by play
 
 In Stay, eligible pairs move temporarily for native mating, then return to their original held spots after birth or a failed attempt (30 seconds by default). Changing modes cancels the attempt. Reloads end unfinished attempts without invented offspring or refunds. Allies cannot harm your wolves, apply hostile effects, or sit them; they can feed and breed them. Kibble, paid Summon/Breed/Regroup/Heal, and the former combat modes are retired.
 
+## Flurry of Fangs
+
+Use **Class skill 1 (default Z)** or its inventory button for +10% melee attack speed for 30 minutes. The caster, nearby party players, mercenaries and allied wolves within 10 blocks benefit; mercenary and wolf melee timers receive the same speed increase. Ranged attacks and mining are unchanged. Cooldown: five minutes. Bogatyr mercenaries cast automatically when useful.
+
 ## Shared rules and controls
 
 See the [current player guide](../PLAYER_GUIDE.md) for party sharing, crafting/fuel/stacks, gear ownership, trading, progression and travel. [Controls](../PLAYER_GUIDE.md#controls-and-passive-progression) lists defaults and rebinding. The inventory class-name link opens this class in the H guide.
+
+Hired mercenaries follow the shared [participation and healing rules](Signature_Skills_and_Controls.md#mercenary-participation-and-healing). At 30 unassisted kills from one spawner they warn, and at 40 refuse its enemies until a player walks and joins that fight or a party player dies. This includes owned wolves and secondary attacks.

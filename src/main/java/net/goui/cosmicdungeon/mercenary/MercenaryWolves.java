@@ -137,8 +137,8 @@ public final class MercenaryWolves {
             UUID uuid;try{uuid=UUID.fromString(id);}catch(IllegalArgumentException invalid){continue;}
             if(!(find.apply(uuid) instanceof Wolf wolf)||!belongs(wolf,mercenary.runId(),mercenary.contract())
                     ||!wolf.isAlive()||wolf.isOrderedToSit())continue;
-            if(target!=null&&!CompanionAllies.friendly(target))wolf.setTarget(target);
-            else if(CompanionAllies.friendly(wolf.getTarget())){wolf.setTarget(null);wolf.stopBeingAngry();}
+            if(target!=null&&!CompanionAllies.friendly(target)&&MercenaryAntiFarming.allowsSource(wolf,target))wolf.setTarget(target);
+            else if(wolf.getTarget()!=null&&(CompanionAllies.friendly(wolf.getTarget())||!MercenaryAntiFarming.allowsSource(wolf,wolf.getTarget()))){wolf.setTarget(null);wolf.stopBeingAngry();}
         }
     }
     public static void dismiss(MinecraftServer server,DungeonRunRegistryData.RunRecord run,MercenaryContract contract){
@@ -178,11 +178,13 @@ public final class MercenaryWolves {
         if(!(event.getEntity() instanceof Wolf wolf)||!managed(wolf)||wolf.tickCount%40!=0
                 ||!(wolf.level() instanceof ServerLevel level))return;
         if(!admitted(wolf,level,bond(wolf))){wolf.discard();return;}
-        if(CompanionAllies.friendly(wolf.getTarget())){wolf.setTarget(null);wolf.stopBeingAngry();}
+        if(wolf.getTarget()!=null&&(CompanionAllies.friendly(wolf.getTarget())||!MercenaryAntiFarming.allowsSource(wolf,wolf.getTarget()))){wolf.setTarget(null);wolf.stopBeingAngry();}
     }
     @SubscribeEvent(priority=EventPriority.LOWEST)
     public static void targeting(LivingChangeTargetEvent event){
-        if(managed(event.getEntity())&&CompanionAllies.friendly(event.getNewAboutToBeSetTarget()))
+        if(managed(event.getEntity())&&event.getNewAboutToBeSetTarget()!=null
+                &&(CompanionAllies.friendly(event.getNewAboutToBeSetTarget())
+                ||!MercenaryAntiFarming.allowsSource(event.getEntity(),event.getNewAboutToBeSetTarget())))
             event.setNewAboutToBeSetTarget(null);
     }
     @SubscribeEvent(priority=EventPriority.HIGHEST)

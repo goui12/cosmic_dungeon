@@ -23,17 +23,6 @@ final class MercenaryJudicatorTest {
         assertThrows(IllegalArgumentException.class,()->MercenaryJudicator.threshold(-1));
         assertThrows(IllegalArgumentException.class,()->MercenaryJudicator.level(-1));
     }
-    @Test void eachLevelGetsExactlyItsPercentChanceCappedAtOneHundred(){
-        for(int level:new int[]{0,1,4,31,99,100,101,Integer.MAX_VALUE}){
-            int successes=0;
-            for(int roll=0;roll<100;roll++)if(MercenaryJudicator.procs(level,roll))successes++;
-            assertEquals(Math.min(level,100),successes);
-        }
-        assertFalse(MercenaryJudicator.procs(4,4));
-        assertTrue(MercenaryJudicator.procs(4,3));
-        assertThrows(IllegalArgumentException.class,()->MercenaryJudicator.procs(4,100));
-        assertThrows(IllegalArgumentException.class,()->MercenaryJudicator.procs(4,-1));
-    }
     @Test void hudUsesDistanceToNextDoublingGoalWithoutOverflow(){
         assertEquals("Combat - Level 0 (0/1)",MercenarySkill.description("combat",0));
         assertEquals("Combat - Level 1 (0/2)",MercenarySkill.description("combat",1));

@@ -1,6 +1,6 @@
 # Cosmic Dungeon player guide
 
-Current guide for the 1.7.19 Alpha series. The in-game **H** guide contains the same current player rules, class pages, and full Village NPC backstories. Artwork illustrates the lore; it does not unlock a class, recipe, location, or encounter.
+Current source guide, including the unpublished 1.8.9-beta.1 class-skills foundation. The in-game **H** guide contains the same current player rules, class pages, and full Village NPC backstories. Artwork illustrates the lore; it does not unlock a class, recipe, location, or encounter.
 
 ## Getting started and finding help
 
@@ -54,11 +54,15 @@ Hover a potion tile to see the server-selected route for one output: the one exi
 
 Recipes use the complete applicable vanilla chain: a water bottle or supported intermediate potion, all remaining ingredients, and gunpowder for a splash output. Not every route needs nether wart. Intermediate potions skip already completed steps. The fuel gauge at the top of the list shows your remaining **brewing charges**. One blaze powder supplies **20 steps**; each remaining brewing operation consumes one charge. Strength may need blaze powder both as an ingredient and as fuel when the gauge is empty. Unused charges survive normal saves, reconnects, and death. Invalid/full destinations or changed eligibility spend neither ingredients nor fuel.
 
-Requests, random-potion skills, and the virtual Brewing Supplies resource are retired. They are not required to craft or resurrect, and obsolete balances do not become physical item refunds. Theurgist and Venefex do not use the old separate Skills window.
+Requests, random-potion skills, and the virtual Brewing Supplies resource are retired. They are not required to craft or resurrect, and obsolete balances do not become physical item refunds. Theurgist and Venefex now show shared skill slots alongside the Potions list; retired random-potion actions remain absent.
+
+## Shared class skill controls
+
+The inventory Skills panel shows the current signature track and generic slots: **Primary class skill (G)** and **Class skill 1/2/3 (Z/X/C)**. Remap these once in Controls; the bindings remain unchanged when switching classes. Buttons show the actual binding in smaller italic text. Primary class skill arms Dragoon Chain Lightning or activates Judicator Smite when charged. Its inventory button shows charge and readiness, including the armed state. Class skill 1 (Z) activates the Bogatyr, Dragoon, Judicator or Venefex party buff and shows its remaining cooldown; X/C and other unassigned primary slots stay gray. Existing Bogatyr utility and Theurgist resurrection remain available. See [signature tracks and controls](Classes/Signature_Skills_and_Controls.md) for progress and legacy-binding details.
 
 ## Theurgist
 
-A healer-alchemist who balances care and chemistry. Use mace/bow and Theurgist-attuned gear; beneficial potion work and successful support contribute to the appropriate passive skills. Mending Sting and Verdant Jolt provide regenerative aid. Scintilla Vitalis and Lux Vitalis heal living targets and harm undead. Read actual item effects and server values rather than assuming every named arrow is an ordinary damage arrow.
+A healer-alchemist who balances care and chemistry. Use mace/bow and Theurgist-attuned gear; beneficial potion work and successful support contribute to the appropriate passive skills. Mending Sting and Verdant Jolt provide regenerative aid. The authored restorative arrows named Scintilla Vitalis and Lux Vitalis heal living targets and harm undead; these arrows are separate from the max-health potions below. Read actual item effects and server values rather than assuming every named arrow is an ordinary damage arrow.
 
 Your positive thrown potions aid allies and their companions and do not affect hostile mobs, including healing damage against undead. Restorative class arrows have their own rules.
 
@@ -67,6 +71,10 @@ The **Potions** list appears automatically beside inventory. Only Theurgists may
 **Resurrect...** is available immediately in your inventory; its default shortcut is **Alt+4**. Opening the picker does not cast. Choose a dead teammate in the same active run. They have 60 seconds to accept or decline on the death screen. A successful accepted resurrection returns them to their latest recorded death location with five seconds of protection and the existing recoverable-inventory handling. It does not recreate destroyed or missing physical drops.
 
 Player resurrection costs no items or currency and starts a **180-second cooldown only after success**. Declined, expired, stale, or failed offers start no cooldown. The cooldown survives death, reconnect, and run cleanup; server downtime pauses this game-time cooldown. Party hover and the death screen show each caster's readiness, cooldown, or reason for unavailability. Mercenary Theurgists retain their separate Positive Potions level-10 resurrection unlock and their displayed cooldown rules.
+
+Max-health potions use standard Splash Healing materials at every rank and last 45 minutes without healing. Scintilla starts at +10% of base health; Favilla unlocks at Positive Potions25 with +15%, reaching Fulgor Vitae at68 with +55%. Only the highest unlocked rank is craftable. The 10-block splash includes the caster and same-party players, mercenaries and wolves; stronger replaces weaker, and equal/weaker doses cannot refresh or earn progress. [Full rank table and rules](Classes/Theurgist_Help_Guide.md#max-health-potions).
+
+Theurgist mercenaries use Healing and max health only. Standard Healing applies below level25; positive potion quality/cooldown bonuses begin at25. Player beneficial recipes and resurrection remain available.
 
 ## Venefex
 
@@ -94,7 +102,9 @@ In Stay, eligible pairs move temporarily for native mating, then return to their
 
 ## Dragoon
 
-A trident specialist and repair supporter. Successful melee or thrown **trident** hits can trigger short-range chain lightning against nearby enemies; it is passive and does not chain recursively. Trident progression improves the relevant damage/chain benefits. Sword hits are not a replacement trigger.
+A trident specialist and repair supporter. Land **100 valid melee or thrown trident hits** against hostile mobs to fill Chain Lightning. Hits must deal damage; sword hits, arrows, misses and immune targets do not charge it. At 100/100, press **Primary class skill (default G)** or its inventory button to arm your next valid trident strike. That strike releases the chain against eligible nearby enemies in line of sight. Dragoon mercenaries use the same 100-hit bar and automatically arm for their next valid trident strike.
+
+There is one bar with no overflow bank. If the chain damages no additional enemy, it stays fully charged and armed for another strike. A useful chain spends the bar and earns one Chain Lightning proficiency success. Chain damage does not refill the bar or trigger another chain. Existing trident weapon progression still affects the triggering strike; Chain Lightning is a separate signature track.
 
 Dragoons may use anvils. For **Repair Affinity**, invite a customer with `/repair <player>`; accept with `/repair accept <player>`, decline with `/repair deny <player>`, or cancel with `/repair cancel`. The customer supplies damaged supported gear and may offer an optional account-currency labor fee. The Dragoon supplies compatible repair components, including approved ordinary unmarked materials where accepted. The customer retains ownership. Both participants must remain nearby with the interface open and review the quote/readiness controls. Items, materials, and fees move only after successful validation; not every special item is supported. See [Repair Affinity](Classes/Dragoon_Repair_Affinity.md).
 
@@ -109,6 +119,17 @@ Authored D1 Cinderbite and Cindermaul retain their supported abilities. Their en
 ## Judicator
 
 An oathbound mace-and-bow protector. Scintilla Vitalis and Lux Vitalis provide healing to living targets and harm undead; Ebonsight provides night vision, and Vielpiercer reveals targets with Glowing. Follow each authored item's tooltip and class restrictions. Mace/bow progression is passive. Eon sells the shared Theurgist/Judicator healing offers. Repair Affinity and anvil access belong to Dragoon.
+
+**Smite** charges from **10 credited undead kills**. Press **Primary class skill (default G)** or its inventory button to strike hostile undead around you. Judicator mercenaries activate Smite automatically when charged and a useful target is nearby. Allies, companions and non-undead are protected.
+
+| Smite level | Skill | Radius | Damage | Successful activations to unlock |
+|---|---|---|---|---|
+| 1 | Gravehammer | 3 blocks | 2.5 HP (1.25 hearts) | 0 |
+| 2 | Bonegrinder | 4 blocks | 2.5 HP (1.25 hearts) | 10 |
+| 3 | Deathpurge | 5 blocks | 5 HP (2.5 hearts) | 30 |
+| 4 | Last Rites | 6 blocks | 5 HP (2.5 hearts) | 60 |
+
+Each activation that damages at least one undead spends the ten-charge bar and earns **one** proficiency success, regardless of how many targets it hits. Kills fill charge; successful activations improve Smite. The bar stores no overflow, and Smite's own damage does not recharge it. If no mob takes damage, all charge is retained and the player sees: **Smite only works on undead! You did not damage any mobs**
 
 ## Controls and passive progression
 
@@ -175,3 +196,35 @@ Mechanics above were checked against the shipped class, crafting, sharing, trade
 Class atmosphere retains the local canon mirror reviewed for Batch 18 (six active class sources and full NPC lore). Later-dungeon equipment in that mirror remains deferred; artwork is not evidence of availability. No online canon refresh or gameplay balance change is implied by this guide.
 
 Chop trades transfer the personal ownership record with the item. Each recipient must still satisfy the one-Chop limit; offer an existing Chop in the same exchange if necessary. A bound return Chop requires the recipient's own stored inventory in that active run. Trades never transfer another player's stored inventory, grant run membership, or bypass the return destination checks. If these conditions fail, the trade cancels and returns its original offers.
+
+## Shared party buffs
+
+Class skill 1 (default **Z**) activates the current class buff from the world or inventory. Remap it once in Controls; the numbered button shows your current key in small italics and a **m:ss** cooldown. Each buff has a **five-minute cooldown** and includes the caster, nearby party players, mercenaries and allied wolves within **10 blocks** in the same active dungeon.
+
+| Class | Buff | Effect | Duration |
+|---|---|---|---|
+| Bogatyr | Flurry of Fangs | +10% melee attack speed, including mercenaries and wolves | 30 minutes |
+| Dragoon | Blackiron Sheath | 20% damage reduction through native Resistance | 15 minutes |
+| Judicator, Smite 1 | Judicator’s Aegis | +3 melee attack damage (1½ hearts) | 30 minutes |
+| Judicator, Smite 3 | Defender’s Bulwark | +6 melee attack damage (3 hearts), replacing Aegis | 30 minutes |
+| Venefex | Banish Afflictions | Remove harmful effects only; keep beneficial and neutral effects | Instant |
+
+Mercenaries cast automatically when useful. Equal/weaker timed buffs cannot stack or refresh the current family; a stronger effect replaces it. Strength and Resistance share their native potion effects instead of adding duplicate bonuses. A cast that helps nobody spends no cooldown. Flurry changes melee cadence, not ranged attacks or mining.
+
+Cooldowns survive death, reconnect and class switching within the same run, and reset with a new run. X/C remain unassigned. Pyroclast has no new buff; Theurgist potion crafting and resurrection retain their existing controls. Group effect attribution/timers and the final combat HUD are reserved for Batch6.
+
+## Mercenary participation and healing
+
+Mercenary kills from one Cosmic Spawner share a party counter. The hirer receives a private warning at **30** and refusal at **40**. The restriction includes melee, arrows, fireworks, charged area abilities, harmful potions and mercenary wolves. Other spawners and ordinary hostiles remain eligible.
+
+To restore help, walk at least one block and actually damage enemies from that spawner. The movement must be recent (within ten seconds); simply looking, jumping vertically or being pushed does not prove walking. A party-player death resets all spawner counters. Reconnecting or reviving a mercenary does not reset them; a new dungeon does.
+
+The separate healing rule observes each recipient. Repeated accepted injuries no more than ten seconds apart, while remaining within one horizontal block, warn after **30 seconds** and stop mercenary healing after **40 seconds**. Move one horizontal block to restore healing immediately. Attacking from the same position does not clear this restriction, and movement alone does not clear the spawner counter. A blocked player cannot receive healing indirectly from a splash aimed at an eligible teammate. Other allies, player potions, max-health buffs and resurrection remain available.
+
+## Party skill and effect displays
+
+World party names show the class in yellow and the abbreviated signature level in blue, for example **Cameron / Theurgist / PP – 35**. Hover details retain the full identity when a narrow layout clips the label.
+
+Inventory party cards and group inspection show each available charge bar and class-buff cooldown. Buff cooldown bars have five one-minute sections; charge bars show the actual count and armed/readiness state separately. The client counts down between server snapshots; reaching zero locally never authorizes an action before server confirmation.
+
+Hover an effect for its name and amount in green, **Cast by** the winning caster in blue, and **Remaining** in yellow (for example **32m 18s**). Historical effects with no recorded caster say **Unknown**. Equal/weaker rejected applications cannot change the winner. Offline/unloaded members retain known signature identity but show no invented effect or ability readiness.

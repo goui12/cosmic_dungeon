@@ -28,6 +28,8 @@ public final class PotionPaletteModel {
                 .thenComparing(e -> variant(e.targetId())).thenComparing(Entry::targetId)).toList();
     }
     public static String variantLabel(Entry entry) {
+        var vitality=net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions.target(entry.targetId());
+        if(vitality.isPresent())return "+"+vitality.orElseThrow().percent()+"% Max Health";
         return switch (variant(entry.targetId())) {
             case NORMAL -> "Normal";
             case STRONG -> "Strong / II";

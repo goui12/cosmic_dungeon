@@ -14,3 +14,5 @@ The responsive H guide contains six enabled class pages. Click the class name in
 Metalmancer and Deadeye are deferred. They are absent from the current player navigation; retained source IDs and artwork fallbacks do not enable them.
 
 See the [player guide](../PLAYER_GUIDE.md), [H interface](../Help_Menu.md), and [Dragoon Repair Affinity](Dragoon_Repair_Affinity.md).
+
+Shared signature tracks and generic G/Z/X/C bindings: [current foundation behavior](Signature_Skills_and_Controls.md). New slots are unassigned until the ability batches; old class utility and resurrection remain available.

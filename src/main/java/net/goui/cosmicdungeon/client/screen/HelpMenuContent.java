@@ -40,7 +40,7 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Class flags remain placeable where the dungeon expects them. Authored items keep their actual components and restrictions."),
             HelpBlock.heading("Actions and Passive Skills"),
             HelpBlock.bullet("Bogatyr uses inventory Skills for Patrol, Stay and Feed Pack. Theurgist uses the inventory Potions list and Resurrect...; Venefex uses the same Potions list."),
-            HelpBlock.bullet("Theurgist and Venefex do not use the old separate Skills window. Requests, Brewing Supplies and Kibble are retired."),
+            HelpBlock.bullet("Shared Skills slots appear for all six classes, alongside the Potions list for brewers. Requests, Brewing Supplies and Kibble are retired."),
             HelpBlock.bullet("Eligible combat and useful support earn passive class skills. Progression is not an active button or a new class unlock."),
             HelpBlock.paragraph(Component.literal("Read the class pages in the left directory and ").append(link("Quick Reference", "references")).append(" for saved bindings."))));
 
@@ -56,8 +56,12 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Several teammates may supply different ingredients. Least-recent donors are preferred and receive item-and-recipient notifications. Consent, membership and materials are checked again at the click."),
             HelpBlock.paragraph(Component.literal("See the ").append(link("Theurgist guide", "class.theurgist")).append(" for recipe counts, fuel and shared potion crafting.")),
             HelpBlock.heading("Party Hover and Mercenaries"),
-            HelpBlock.bullet("Hover a party member for class, health, skills, sharing YES/NO, shared resources used/contributed and relevant resurrection cooldowns."),
+            HelpBlock.bullet("Party names show yellow class and blue abbreviated signature level. Inventory party cards show charge and five-section buff cooldown bars. Hover effects for green name/amount, blue caster and yellow remaining time; missing historical caster data says Unknown. Member details retain health, sharing YES/NO, resources and resurrection cooldowns."),
             HelpBlock.bullet("Mercenaries follow their hirer, use class-specific skills and separate progression, and drop no equipment. New hires draw from 80 short historical names across eight balanced regional pools; existing hires keep their names through saves and respawns."),
+            HelpBlock.heading("Mercenary Participation"),
+            HelpBlock.bullet("After 30 unassisted mercenary kills from one Cosmic Spawner, its hirer receives a private warning. At 40 the party's mercenaries and their wolves refuse that spawner's enemies, including ranged and area attacks."),
+            HelpBlock.bullet("Walk at least one block and actually damage that spawner's enemies to resume help. A party-player death resets the spawner counters. Reconnecting or reviving a mercenary does not; each new dungeon starts fresh."),
+            HelpBlock.bullet("Stationary healing is separate: repeated injuries while staying within one horizontal block warn after 30 seconds and stop mercenary healing after 40. Move one horizontal block to resume healing; attacking in place does not clear it. Other allies can still be healed."),
             HelpBlock.heading("Group Split and AFK"),
             HelpBlock.bullet("Qualifying mob Trace is shared with eligible active members within 60 blocks in the same instance. Before respawn, a dead member's death position is used; disconnected players receive no share."),
             HelpBlock.bullet("Supported dungeon enemies include zombie villagers (3 Trace) and shulkers (4 Trace) before the group split, at default settings. Authored encounters and server settings may override the amount; ordinary unbound mobs and protected NPCs do not qualify."),
@@ -262,8 +266,13 @@ public final class HelpMenuContent {
             HelpBlock.command("Trade", "CAPS LOCK - default Trade Request"),
             HelpBlock.bullet("Cycle ammunition defaults to R. Hold a bow or crossbow in the world; each press selects the next legal exact variant. Rebind or unbind in Controls. Screens, typing, lost focus and conflicting bindings block this action."),
             HelpBlock.bullet("Ammo feedback shows the exact icon/name and current key. Exhaustion automatically switches and announces the next available type; no stock reports out of ammunition. Charged crossbows keep their current load."),
+            HelpBlock.paragraph(Component.literal("Shared class controls: ").append(key("Primary class skill", "primary_class_skill"))
+                    .append(", ").append(key("Class skill 1", "class_skill_1"))
+                    .append(", ").append(key("Class skill 2", "class_skill_2"))
+                    .append(", ").append(key("Class skill 3", "class_skill_3")).append(".")),
+            HelpBlock.bullet("Defaults are G, Z, X and C. Bindings stay the same when switching classes. Inventory shows slot names and current keys in small italics. Primary class skill arms Dragoon Chain Lightning or activates Judicator Smite when charged; Class skill 1 (default Z) activates your party buff and shows its cooldown; unassigned slots stay gray. Signature skills earn from real useful actions: one successful harmful potion cast, damaging rocket, or newly admitted owned wolf, without repeat credit from targets/ticks/reloading."),
             HelpBlock.bullet("Active defaults: Bogatyr Alt+1 Patrol, Alt+2 Stay, Alt+3 Feed Pack; Theurgist Alt+4 opens Resurrect...."),
-            HelpBlock.bullet("Rebind or unbind in Options > Controls > Key Binds > Cosmic Dungeon. Gray skill hints show your actual saved chord."),
+            HelpBlock.bullet("Rebind or unbind in Options > Controls > Key Binds > Cosmic Dungeon. Small italic skill hints show your actual saved chord."),
             HelpBlock.bullet("Shortcuts act once per press in the world or inventory. Chat, other menus, dragging, carried items and modal controls block them. Resolve conflicting chords in Controls."),
             HelpBlock.bullet("Potion crafting requires the inventory and has no hotkey. Passive skills are not action buttons. Reset the movable Skills panel in Cosmic Dungeon settings if needed."),
             HelpBlock.heading("Player Commands"),
@@ -286,7 +295,7 @@ public final class HelpMenuContent {
             HelpBlock.heading("Healer and Alchemist"),
             HelpBlock.paragraph("Once a battlefield medic, the Theurgist combines chemistry and measured restoration to sustain the living and recall the fallen."),
             HelpBlock.bullet("Use Theurgist-attuned gear and class chests. Mace, bow and potion progression is passive; useful healing and support can earn the appropriate skill."),
-            HelpBlock.bullet("Mending Sting and Verdant Jolt give regenerative aid. Scintilla Vitalis and Lux Vitalis heal living targets and harm undead."),
+            HelpBlock.bullet("Mending Sting and Verdant Jolt give regenerative aid. The authored arrows Scintilla Vitalis and Lux Vitalis heal living targets and harm undead; the new max-health potions are separate items."),
             HelpBlock.heading("Potions"),
             HelpBlock.paragraph("Open inventory for the opaque Potions list on its right. Every legal Normal, Strong and Extended beneficial potion has its own labeled row. Scroll the list with the wheel or its scrollbar; crafting requires an active Dungeon 1 run."),
             HelpBlock.examples("healing_potions"),
@@ -297,6 +306,13 @@ public final class HelpMenuContent {
             HelpBlock.bullet("Counts are alternative recipe capacities, not reservations. Hover for effects and the own/shared-material explanation."),
             HelpBlock.bullet("Click creates exactly one potion on the cursor. Repeat to stack identical crafted potions, with all components matching, up to 64. A different/full cursor spends nothing."),
             HelpBlock.bullet("Shift-click crafts exactly one into inventory, hotbar first. Drinking or throwing uses one potion at a time; drinks return a bottle. Crafting has no hotkey."),
+            HelpBlock.heading("Max Health"),
+            HelpBlock.bullet("One current max-health rank appears in Potions. All ranks cost standard Splash Healing materials and fuel. Old bottles remain usable; lower ranks stop being craftable after an unlock."),
+            HelpBlock.bullet("Scintilla Vitalis: level 0, +10% of base health. Favilla Vitas: 25, +15%. Tepor Sanans: 35, +20%. Flamma Vitalis: 42, +25%. Lux Vitalis: 50, +30%."),
+            HelpBlock.bullet("Radius Sanans: 55, +35%. Stella Sanans: 59, +40%. Aurora Reficiens: 63, +45%. Balsamum Solis: 66, +50%. Fulgor Vitae: 68, +55%."),
+            HelpBlock.bullet("Max health lasts 45 minutes and does not heal. Within 10 blocks of impact it affects the caster and same-party players, mercenaries and wolves. Stronger replaces weaker; equal/weaker cannot stack, refresh or earn progress."),
+            HelpBlock.bullet("A hired Theurgist warns a repeatedly injured stationary player at 30 seconds and refuses healing at 40. Moving one horizontal block restores healing immediately. This does not disable your own potions, max-health buffs or resurrection."),
+            HelpBlock.bullet("Theurgist mercenaries use only Healing and max health. Positive potion cooldown and quality bonuses start at level 25. Players retain normal/strong beneficial recipes; their extra class potion bonus also begins at 25."),
             HelpBlock.heading("Real Ingredients and Fuel"),
             HelpBlock.bullet("Use a water bottle or supported intermediate potion plus every remaining vanilla-chain ingredient, including gunpowder for splash. Some recipes do not need nether wart."),
             HelpBlock.examples("brewing_fuel"),
@@ -331,6 +347,7 @@ public final class HelpMenuContent {
 
     public static final Page BOGATYR = page("class.bogatyr", "Bogatyr", true, List.of(
             HelpBlock.heading("Bogatyr"),
+            HelpBlock.bullet("Flurry of Fangs: Class skill 1 (default Z) grants 10% faster melee attacks for 30 minutes to you and party players, mercenaries and allied wolves within 10 blocks. Five-minute cooldown; hired Bogatyrs cast automatically when useful."),
             HelpBlock.paragraph("A survivalist, cold-weather endurance racer, and hardened wolf-handler from the frozen Russian Federation reaches, the Bogatyr favors traditional weaponry and grit."),
             HelpBlock.bullet("Fight beside loyal wolves with sword, bow and shield. Sword/bow skill progression is passive."),
             HelpBlock.examples("bogatyr_wolves"),
@@ -356,10 +373,13 @@ public final class HelpMenuContent {
 
     public static final Page DRAGOON = page("class.dragoon", "Dragoon", true, List.of(
             HelpBlock.heading("Trident and Repair Support"),
+            HelpBlock.bullet("Blackiron Sheath: Class skill 1 (default Z) grants 20% native Resistance damage reduction for 15 minutes to you and party players, mercenaries and allied wolves within 10 blocks. Five-minute cooldown; hired Dragoons cast automatically when useful."),
             HelpBlock.paragraph("A trident-wielding specialist in battlefield salvage and historical armorcraft."),
-            HelpBlock.bullet("Use Dragoon-attuned gear and class chests. Successful melee or thrown trident hits can trigger nearby enemy chain lightning. Sword hits are not a replacement trigger."),
+            HelpBlock.bullet("Use Dragoon-attuned gear and class chests. Land 100 valid damaging melee or thrown trident hits against hostile mobs to fill Chain Lightning. Sword hits, arrows, misses and immune targets do not charge it."),
             HelpBlock.examples("dragoon_trident"),
-            HelpBlock.bullet("Trident progression improves the relevant passive damage and chain benefits. Chain damage does not recursively trigger more chains."),
+            HelpBlock.bullet("At 100/100, use Primary class skill (default G) or its inventory button to arm your next valid trident strike. Dragoon mercenaries automatically arm at 100 and release on their next valid trident strike."),
+            HelpBlock.bullet("The chain hits eligible nearby enemies in line of sight without striking the original victim again. There is one bar with no overflow. No effective additional target leaves the full bar armed."),
+            HelpBlock.bullet("A useful chain spends the bar and earns one Chain Lightning proficiency success. Secondary damage cannot charge or trigger another chain. Existing trident weapon progression still affects the triggering strike."),
             HelpBlock.heading("Repair Affinity"),
             HelpBlock.bullet("Dragoons can use anvils and repair supported damaged gear for another player. The customer retains ownership."),
             HelpBlock.command("Invite", "/repair <player>"),
@@ -372,6 +392,7 @@ public final class HelpMenuContent {
 
     public static final Page VENEFEX = page("class.venefex", "Venefex", true, List.of(
             HelpBlock.heading("Poison and Pressure"),
+            HelpBlock.bullet("Banish Afflictions: Class skill 1 (default Z) removes harmful effects from you and party players, mercenaries and allied wolves within 10 blocks. Beneficial and neutral effects remain. Five-minute cooldown; hired Venefexes cast automatically when useful."),
             HelpBlock.paragraph("A toxicologist shaped by invasive-species decay, the Venefex uses sword, bow, poison and weakening effects to wear enemies down."),
             HelpBlock.bullet("Use Venefex-attuned gear and class chests. Sword/bow progression and relevant arrow-duration benefits are passive."),
             HelpBlock.bullet("Tree Viper, Bushmaster and Fer-de-Lance poison; Pestis and Black Bubo weaken; Vapours, Melancholia and Deathly Stupor slow."),
@@ -386,14 +407,22 @@ public final class HelpMenuContent {
             HelpBlock.paragraph(Component.literal("Read the ").append(link("Theurgist crafting reference", "class.theurgist")).append(" for full ingredient, fuel, sharing and stack rules.")),
             HelpBlock.bullet("Hover a row for its selected one-output route: one consumed potion input, remaining ingredients and own/eligible-group quantities. Intermediate stages are made within the route, not charged again."),
             HelpBlock.bullet("The required powder total includes reagent and new fuel; the fuel line identifies the refill part. Saved charges reduce new fuel. Own affordable routes are preferred; unavailable rows quote no affordable route. Quantities reserve nothing and pending clicks show the previous snapshot until the server replies."),
-            HelpBlock.tip("Brewing-stand interaction remains Theurgist-only. Venefex uses the Potions list in inventory, with no potion hotkey or old separate Skills window.")));
+            HelpBlock.tip("Brewing-stand interaction remains Theurgist-only. Venefex uses the Potions list in inventory with no potion-crafting hotkey. Shared Skills slots appear alongside it.")));
 
     public static final Page JUDICATOR = page("class.judicator", "Judicator", true, List.of(
             HelpBlock.heading("Oathbound Protector"),
+            HelpBlock.bullet("Class skill 1 (default Z) grants Judicator’s Aegis: 3 extra melee damage for 30 minutes. At Smite level 3, Defender’s Bulwark replaces it with 6. Includes you and party players, mercenaries and allied wolves within 10 blocks. Shared five-minute cooldown; hired Judicators cast automatically when useful."),
             HelpBlock.paragraph("A wandering arbiter sworn to uphold balance, the Judicator supports the party with mace, bow and restorative or revealing arrows."),
             HelpBlock.bullet("Scintilla Vitalis and Lux Vitalis heal living targets and harm undead. Ebonsight provides night vision; Vielpiercer applies Glowing."),
-            HelpBlock.bullet("Use the actual authored item's tooltip and server values. Mace/bow progression is passive; it has no new action hotkey."),
+            HelpBlock.bullet("Use the actual authored item's tooltip and server values. Mace/bow progression stays passive; Smite uses the separate Primary class skill control."),
             HelpBlock.bullet("Use Judicator-attuned gear and class chests. Eon offers healing stock shared with Theurgists."),
+            HelpBlock.heading("Smite"),
+            HelpBlock.bullet("Ten credited undead kills fill Smite. Use Primary class skill (default G) or its inventory button; Judicator mercenaries activate automatically when charged and useful."),
+            HelpBlock.bullet("Smite damages hostile undead around the caster. Allies, companions and non-undead are protected. A successful activation spends all ten charge and earns one proficiency success, regardless of target count."),
+            HelpBlock.bullet("Level 1: Gravehammer, 3 blocks, 2.5 HP. Level 2: Bonegrinder, 4 blocks, 2.5 HP, after 10 successful activations."),
+            HelpBlock.bullet("Level 3: Deathpurge, 5 blocks, 5 HP, after 30 successful activations. Level 4: Last Rites, 6 blocks, 5 HP, after 60 successful activations."),
+            HelpBlock.bullet("The bar has no overflow; Smite damage cannot recharge it. If no mob takes damage, all charge is retained."),
+            HelpBlock.tip("Smite only works on undead! You did not damage any mobs"),
             HelpBlock.paragraph(Component.literal("Repair Affinity and anvil access belong to ").append(link("Dragoon", "class.dragoon")).append(".")),
             HelpBlock.paragraph(Component.literal("Visit the ").append(link("Brewing Store", "brewing_store")).append(" for its class-gated healing rows."))));
 

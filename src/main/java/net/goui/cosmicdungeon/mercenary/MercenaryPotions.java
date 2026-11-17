@@ -15,8 +15,10 @@ public final class MercenaryPotions {
     private MercenaryPotions(){}
     public static void mark(Entity projectile,MercenaryEntity mercenary){
         projectile.getPersistentData().putString(SOURCE,mercenary.getUUID().toString());
+        MercenaryAntiFarming.mark(projectile,mercenary);
     }
     public static void inherit(Entity cloud,Entity projectile){
+        MercenaryAntiFarming.inherit(cloud,projectile);
         if(projectile.getPersistentData().contains(SOURCE))
             cloud.getPersistentData().putString(SOURCE,projectile.getPersistentData().getStringOr(SOURCE,""));
     }
@@ -40,9 +42,14 @@ public final class MercenaryPotions {
         return effect.getCategory()==MobEffectCategory.BENEFICIAL;
     }
     public static boolean permits(boolean helpful,boolean ally,boolean enemy){return helpful?ally:enemy;}
+    static boolean positiveEffect(MobEffect effect){
+        return effect==MobEffects.INSTANT_HEALTH.value()
+                ||net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions.isVitality(effect);
+    }
     static boolean roleAllows(MercenaryContract contract,MobEffect effect,boolean inverted){
         boolean positive=helpful(effect,false);
-        return MercenaryBrewing.supports(contract,positive)&&positive==helpful(effect,inverted);
+        return MercenaryBrewing.supports(contract,positive)&&positive==helpful(effect,inverted)
+                &&(!positive||positiveEffect(effect));
     }
     public static boolean allows(Entity source,LivingEntity target,MobEffect effect){
         if(MercenaryWolves.protectedCompanion(target)&&MercenaryBrain.friendlySource(source)
@@ -50,6 +57,9 @@ public final class MercenaryPotions {
         var mercenary=owner(source);
         if(!marked(source)&&mercenary==null)return true;
         if(mercenary==null||MercenaryBrain.hirer(mercenary)==null)return false;
+        if(helpful(effect,target.isInvertedHealAndHarm())
+                &&(effect==MobEffects.INSTANT_HEALTH.value()||effect==MobEffects.REGENERATION.value())
+                &&!MercenaryAntiFarming.healingAllowed(mercenary,target))return false;
         // Potion role boundaries must not disable other classes' existing tipped-arrow effects.
         if((source instanceof AbstractThrownPotion||source instanceof AreaEffectCloud)
                 &&!roleAllows(mercenary.contract(),effect,target.isInvertedHealAndHarm()))return false;
@@ -66,6 +76,8 @@ public final class MercenaryPotions {
         if(helpful(effect,target.isInvertedHealAndHarm())
                 &&(effect.isInstantenous()||incoming.getEffect().equals(MobEffects.REGENERATION)))
             return target.getHealth()<target.getMaxHealth();
+        if(net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions.isVitality(incoming))
+            return net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions.useful(target,incoming.getAmplifier());
         var old=target.getEffect(incoming.getEffect());
         return old==null||old.getAmplifier()<incoming.getAmplifier()||old.getDuration()<40;
     }

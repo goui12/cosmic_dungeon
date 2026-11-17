@@ -59,6 +59,8 @@ public final class MercenarySkills {
         int after=record(data,run,entity.contract(),skill);
         if (after<=before) return false;
         int oldLevel=skill.levelFor(before), newLevel=skill.levelFor(after);
+        if(skill==MercenarySkill.POSITIVE_POTIONS)
+            net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions.unlocked(server,run,entity.contract().name(),oldLevel,newLevel);
         if (newLevel>oldLevel) {
             var message=Component.literal(entity.contract().name()+" reached level "+newLevel+" in "+skill.title()+"!");
             for (var id:run.orderedPlayers().stream().limit(6).toList()) {

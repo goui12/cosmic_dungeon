@@ -44,6 +44,9 @@ public final class MercenarySkillEffects {
         return after!=null && (before==null || after.getAmplifier()>before.getAmplifier()
                 || after.getAmplifier()==before.getAmplifier() && after.getDuration()>before.getDuration());
     }
+    static boolean improvedStrength(MobEffectInstance before,MobEffectInstance after){
+        return after!=null&&(before==null||after.getAmplifier()>before.getAmplifier());
+    }
     public static boolean timed(Entity source, LivingEntity target, MobEffectInstance incoming, BooleanSupplier apply) {
         var owner=caster(source);
         if(owner==null || !MercenaryPotions.allows(source,target,incoming.getEffect().value()))
@@ -58,7 +61,10 @@ public final class MercenarySkillEffects {
         var current=target.getEffect(incoming.getEffect());
         var before=current==null ? null : new MobEffectInstance(current);
         boolean changed=apply.getAsBoolean();
-        if (changed && improved(before,target.getEffect(incoming.getEffect())))
+        var after=target.getEffect(incoming.getEffect());
+        boolean useful=net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions.isVitality(incoming)
+                ?improvedStrength(before,after):improved(before,after);
+        if (changed && useful)
             credit(source,owner,positive?MercenarySkill.POSITIVE_POTIONS:MercenarySkill.NEGATIVE_POTIONS);
         return changed;
     }
