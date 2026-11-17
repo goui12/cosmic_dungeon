@@ -18,7 +18,10 @@ public final class PartyVitalsSnapshot {
         if(!active)return (!inRun||entity.isRemoved()?PartyVitals.UNLOADED:PartyVitals.DEAD).withSkills(skills,now);
         var effects=entity.getActiveEffects().stream().map(e->effect(entity,e,now))
                 .sorted(Comparator.comparing(PartyVitals.Effect::id)).toList();
-        return new PartyVitals(entity.getHealth(),entity.getMaxHealth(),"ACTIVE",
+        // Native load/attribute reductions can briefly leave current health above the new maximum.
+        // Bound the read-only presentation without changing entity health or weakening the wire contract.
+        float maximum=entity.getMaxHealth();
+        return new PartyVitals(Math.clamp(entity.getHealth(),0,maximum),maximum,"ACTIVE",
                 effects.stream().limit(PartyVitals.MAX_EFFECTS).toList(),Math.max(0,effects.size()-PartyVitals.MAX_EFFECTS),now,skills);
     }
     static PartyVitals.Effect effect(LivingEntity entity,MobEffectInstance e,long now){

@@ -31,3 +31,9 @@ Manual TESTING: at two GUI scales check all six class cards, full hover text/col
 Normal scoped source push, validated completed-set PR merge, unique annotated `v1.8.13` tag and one CurseForge Release publisher. Runtime and matching client-only loading companion publish together. Exact source/CI/publisher/file IDs and stopped TEST transfer acknowledgements are recorded in `class-skills-20261115/evidence/batch06` and its controller completion receipt. This report does not pre-claim those external results.
 
 Only the runtime deploys to TEST after fresh stopped evidence through the existing pinned SFTP script. Never install local client/helper JARs, launch or stop games/servers, alter server.properties, or perform extra post-publication hashes/readbacks. After the final receipt, zero implementation cards remain; stop.
+
+### Native validation correction
+
+The first full CI run caught a native wolf reload edge: restoring health precedes the wolf taming-state maximum-health reset, briefly allowing current health above the new maximum. The party snapshot now bounds its displayed health to the current maximum without changing entity health. The packet validator remains strict, and native coverage explicitly checks both the bounded snapshot and unchanged entity health before continuing the saved-effect attribution assertions.
+
+Mercenary roster rows use the same captured, bounded health values, preserving the outer-row/vitals consistency contract. Native six-class presentation coverage also reduces each mercenary maximum and verifies its status row remains valid without altering gameplay health.

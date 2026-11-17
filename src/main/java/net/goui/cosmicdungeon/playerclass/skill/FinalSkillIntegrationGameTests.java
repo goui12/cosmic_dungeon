@@ -67,6 +67,12 @@ public final class FinalSkillIntegrationGameTests {
                 f.check(buff.cooldownTicks()==6000&&buff.readyAt()-f.level.getServer().overworld().getGameTime()==6000,
                         "Five-minute mercenary cooldown appears independently of effect duration");
             }
+            float rawHealth=merc.getHealth();
+            merc.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH).setBaseValue(1);
+            f.check(rawHealth>merc.getMaxHealth(),"Native mercenary attribute reduction leaves excess health");
+            var row=MercenaryRespawns.status(f.level.getServer(),f.runs.get(f.run),merc.contract(),f.player.getName().getString(),f.player.getUUID());
+            f.check(row.health()==merc.getMaxHealth()&&row.vitals().health()==row.health()&&merc.getHealth()==rawHealth,
+                    "Mercenary row reuses bounded snapshot without mutating gameplay health");
         }
         h.succeed();
     }
@@ -170,6 +176,13 @@ public final class FinalSkillIntegrationGameTests {
             var output=TagValueOutput.createWithContext(ProblemReporter.DISCARDING,f.level.registryAccess());wolf.saveWithoutId(output);
             var restored=EntityType.WOLF.create(f.level,EntitySpawnReason.COMMAND);
             restored.load(TagValueInput.create(ProblemReporter.DISCARDING,f.level.registryAccess(),output.buildResult()));
+            // Native untamed Wolf loading restores Health before resetting base MAX_HEALTH to 8.
+            // A display snapshot must tolerate the resulting transient excess without changing gameplay health.
+            float rawHealth=restored.getHealth(),currentMaximum=restored.getMaxHealth();
+            f.check(rawHealth>currentMaximum,"Native attribute reduction leaves saved health above the current maximum");
+            var bounded=PartyVitalsSnapshot.capture(restored,true);
+            f.check(bounded.health()==currentMaximum&&bounded.maxHealth()==currentMaximum
+                    &&restored.getHealth()==rawHealth,"Party display bounds excess health without mutating native entity health");
             f.check(effect(restored,slow).caster().equals(caster)
                     &&restored.getPersistentData().getCompoundOrEmpty(PartyEffectSource.KEY).getStringOr("future_root","").equals("retained")
                     &&restored.getPersistentData().getCompoundOrEmpty(PartyEffectSource.KEY).getCompoundOrEmpty(slow).getStringOr("future","").equals("retained"),
