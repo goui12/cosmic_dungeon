@@ -56,7 +56,7 @@ public final class PartyInspectionService {
             if(ClassData.getClassId(subject).equals("metalmancer")) {
                 readings.add(new PartyInspectionPayloads.Reading("Ore",SatchelApi.get(subject)+" / "+SatchelApi.capacity(subject)));
                 readings.addAll(MetalmancerActions.inspectionCooldowns(subject));
-            } else if(!ClassData.getClassId(subject).equals("theurgist")) readings.add(new PartyInspectionPayloads.Reading("Ability cooldowns","No timed class action"));
+            } else if(vitals.skills().abilities().isEmpty()&&!ClassData.getClassId(subject).equals("theurgist")) readings.add(new PartyInspectionPayloads.Reading("Ability cooldowns","No timed class action"));
             var shown=new HashSet<net.minecraft.resources.ResourceLocation>();
             int extra=0;
             for(int i=0;i<subject.getInventory().getContainerSize();i++) {

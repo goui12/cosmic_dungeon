@@ -57,7 +57,7 @@ public final class ClassBuffs {
         var buff=choice.get();boolean active=context(player)!=null;int remaining=remaining(player);
         String detail=buff.description()+" Caster and party allies within 10 blocks. Cooldown: 5 minutes."
                 +(active?"":" Requires an active dungeon.");
-        return new SlotView(ClassSkillSlot.SKILL_1,buff.id(),buff.title(),detail,active&&remaining==0,remaining,0,0);
+        return new SlotView(ClassSkillSlot.SKILL_1,buff.id(),buff.title(),detail,active&&remaining==0,remaining,0,0,remaining==0?0:now(player)+remaining);
     }
     private static boolean recipient(Context ctx,LivingEntity caster,LivingEntity target){
         if(target.level()!=caster.level()||!target.isAlive()||target.isSpectator()

@@ -27,10 +27,14 @@ final class D1PartyPresentation {
             default -> "Not chosen (no contribution)";
         };
     }
+    static net.minecraft.network.chat.Component identity(PartyPayloads.Member member) {
+        return PartySkillPresentation.identity(member.name(),ClassSelectorScreen.className(member.classId()),
+                member.vitals().skills(),member.leader());
+    }
     static java.util.List<String> memberDetails(PartyPayloads.View view, PartyPayloads.Member member) {
         String status = view.state().phase().equals("ACTIVE") ? PartyHealthHud.status(member.vitals())
                 : member.mercenary() ? "Mercenary" : member.ready() ? "Ready" : "Not Ready";
-        return java.util.List.of(member.name() + " / " + ClassSelectorScreen.className(member.classId()).getString(),
+        return java.util.List.of(identity(member).getString(),
                 status, sharingStatus(member));
     }
     static java.util.List<String> consentExplanation(String choice, boolean mutable) {

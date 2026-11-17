@@ -35,7 +35,7 @@ public final class PartyHealthGameTests {
             check(h,first.health()==7.5F&&first.maxHealth()==p.getMaxHealth()&&first.effects().size()==2,"Human HP and both effect categories are captured");
             p.removeEffect(MobEffects.STRENGTH);
             p.addEffect(new MobEffectInstance(MobEffects.STRENGTH,199,1));
-            check(h,first.equals(PartyVitalsSnapshot.capture(p,true)),"Duration-only changes do not resend the party snapshot");
+            check(h,!first.equals(PartyVitalsSnapshot.capture(p,true)),"Replacing an effect with a different expiry updates its countdown");
             p.removeEffect(MobEffects.POISON);p.setHealth(15);
             var changed=PartyVitalsSnapshot.capture(p,true);
             check(h,!changed.equals(first)&&changed.effects().size()==1&&changed.health()==15,"Healing and effect removal replace the snapshot");
@@ -60,7 +60,7 @@ public final class PartyHealthGameTests {
             var after=PartyVitalsSnapshot.capture(merc,true);
             check(h,after.effects().isEmpty()&&after.health()==after.maxHealth(),"Companion recovery removes expired icons");
             merc.discard();
-            check(h,PartyVitalsSnapshot.capture(merc,true).equals(PartyVitals.UNLOADED),"Removed companions are never shown alive");
+            check(h,PartyVitalsSnapshot.capture(merc,true).state().equals("UNLOADED"),"Removed companions are never shown alive");
         } finally {merc.discard();}
         h.succeed();
     }

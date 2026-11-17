@@ -15,12 +15,21 @@ public final class ClassSkillPayloads {
     private static ResourceLocation id(String id){return ResourceLocation.fromNamespaceAndPath("cosmicdungeon",id);}
     private static void text(String value,int max){if(value==null||value.length()>max)throw new IllegalArgumentException("Invalid class skill text");}
     public record SlotView(ClassSkillSlot slot,String abilityId,String title,String description,
-                           boolean enabled,int remainingTicks,int charge,int maxCharge){
+                           boolean enabled,int remainingTicks,int charge,int maxCharge,long readyAt){
+        public SlotView(ClassSkillSlot slot,String abilityId,String title,String description,boolean enabled,int remainingTicks,int charge,int maxCharge){
+            this(slot,abilityId,title,description,enabled,remainingTicks,charge,maxCharge,0);
+        }
         public SlotView{
             Objects.requireNonNull(slot);text(abilityId,128);text(title,128);text(description,512);
-            if(remainingTicks<0||charge<0||maxCharge<0||charge>maxCharge||enabled&&(abilityId.isBlank()||remainingTicks>0))
+            if(readyAt<0||remainingTicks<0||charge<0||maxCharge<0||charge>maxCharge||enabled&&(abilityId.isBlank()||remainingTicks>0))
                 throw new IllegalArgumentException("Invalid class skill slot");
         }
+        @Override public boolean equals(Object o){
+            return o instanceof SlotView s&&slot==s.slot&&abilityId.equals(s.abilityId)&&title.equals(s.title)
+                    &&description.equals(s.description)&&enabled==s.enabled&&charge==s.charge&&maxCharge==s.maxCharge
+                    &&readyAt==s.readyAt&&(readyAt>0||remainingTicks==s.remainingTicks);
+        }
+        @Override public int hashCode(){return Objects.hash(slot,abilityId,title,description,enabled,charge,maxCharge,readyAt,readyAt>0?0:remainingTicks);}
         public static SlotView unassigned(ClassSkillSlot slot){
             return new SlotView(slot,"","Unassigned","No ability is assigned to this slot.",false,0,0,0);
         }
@@ -49,7 +58,7 @@ public final class ClassSkillPayloads {
             public void encode(ByteBuf raw,View v){
                 var b=new FriendlyByteBuf(raw);b.writeVarLong(v.run);b.writeVarLong(v.revision);b.writeUtf(v.classId,32);
                 for(var s:v.slots){b.writeEnum(s.slot);b.writeUtf(s.abilityId,128);b.writeUtf(s.title,128);b.writeUtf(s.description,512);
-                    b.writeBoolean(s.enabled);b.writeVarInt(s.remainingTicks);b.writeVarInt(s.charge);b.writeVarInt(s.maxCharge);}
+                    b.writeBoolean(s.enabled);b.writeVarInt(s.remainingTicks);b.writeVarInt(s.charge);b.writeVarInt(s.maxCharge);b.writeVarLong(s.readyAt);}
                 b.writeVarInt(v.tracks.size());
                 for(var t:v.tracks){b.writeUtf(t.id,32);b.writeUtf(t.title,64);b.writeUtf(t.abbreviation,8);
                     b.writeVarInt(t.level);b.writeVarInt(t.progress);b.writeVarInt(t.next);}
@@ -58,7 +67,7 @@ public final class ClassSkillPayloads {
                 var b=new FriendlyByteBuf(raw);long run=b.readVarLong(),revision=b.readVarLong();String cls=b.readUtf(32);
                 var slots=new ArrayList<SlotView>(4);
                 for(int i=0;i<4;i++)slots.add(new SlotView(b.readEnum(ClassSkillSlot.class),b.readUtf(128),b.readUtf(128),b.readUtf(512),
-                        b.readBoolean(),b.readVarInt(),b.readVarInt(),b.readVarInt()));
+                        b.readBoolean(),b.readVarInt(),b.readVarInt(),b.readVarInt(),b.readVarLong()));
                 int count=b.readVarInt();if(count<0||count>1)throw new IllegalArgumentException("Invalid signature count");
                 var tracks=new ArrayList<Track>(count);
                 for(int i=0;i<count;i++)tracks.add(new Track(b.readUtf(32),b.readUtf(64),b.readUtf(8),b.readVarInt(),b.readVarInt(),b.readVarInt()));

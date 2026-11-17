@@ -1,6 +1,6 @@
 # Signature skills and shared controls
 
-Players and mercenaries share these signature identities. The current beta includes max-health potion progression, charged Dragoon/Judicator combat and shared party buffs:
+Players and mercenaries share these signature identities. The current release includes max-health potion progression, charged Dragoon/Judicator combat and shared party buffs:
 
 | Class | Signature | Abbreviation |
 |---|---|---|
@@ -24,7 +24,7 @@ Remap these entries in Options > Controls > Key Binds > Cosmic Dungeon. Bindings
 
 Shortcuts act once per press in the world or player inventory. Chat, other menus, carried stacks, dragging, modal controls, lost focus and conflicting bindings block execution. A rejected action gives a short on-screen reason. The server owns the active class, run, slot availability and revision.
 
-Positive Potions begins with the player's exact existing potion XP and continues from eligible useful support. Its independent level ceiling is 100 so future ranks above the old weapon-skill ceiling can be reached; existing weapon progression is unchanged. New non-potion player signature tracks begin at level 0, except Smite at level 1. Chain Lightning and Smite now earn one proficiency success per activation that actually damages an eligible target. Other new player signature earning hooks remain for later integration; their display alone does not activate an ability.
+Positive Potions begins with the player's exact existing potion XP and continues from eligible useful support. Its independent level ceiling is 100 so future ranks above the old weapon-skill ceiling can be reached; existing weapon progression is unchanged. New non-potion player signature tracks begin at level 0, except Smite at level 1. Chain Lightning and Smite now earn one proficiency success per activation that actually damages an eligible target. Negative Potions earns one success per useful harmful splash/cloud: actual instant damage, a new/stronger non-damaging harmful effect, or actual poison/wither tick damage. Multiple targets/ticks from one launch cannot multiply credit. Fireworks earns one success per rocket that damages a hostile. Wolves earns one success when a genuinely new owned wolf is admitted to the active run; repeated registration/reloading cannot repeat that credit. Misses, denied effects and inactive/wrong-class actions earn nothing.
 
 Existing mercenary counters and their existing level curves are preserved. Smite receives a separate successful-cast counter instead of reinterpreting historic Combat kills. Mercenary progress remains run-based. Player signature records persist independently per player and class across saves and reconnects.
 
@@ -37,7 +37,7 @@ Positive Potions now selects the [max-health potion rank](Theurgist_Help_Guide.m
 
 Both bars have no overflow bank. Secondary ability damage cannot refill them. Charge and the armed state survive death/reconnect in the same run and reset with the run; player proficiency persists separately, while mercenary proficiency stays with its run. Historical mercenary Combat progress is retained separately from Smite.
 
-This beta shows charge/readiness in the inventory Skills panel. The final combat HUD is reserved for Batch 6.
+The inventory Skills panel and party cards show charge/readiness independently from timed buffs.
 
 ## Shared party buffs
 
@@ -53,9 +53,9 @@ Class skill 1 (default **Z**) activates the current class buff from the world or
 
 Mercenaries cast automatically when useful. Equal/weaker timed buffs cannot stack or refresh the current family; a stronger effect replaces it. Strength and Resistance share their native potion effects instead of adding duplicate bonuses. A cast that helps nobody spends no cooldown. Flurry changes melee cadence, not ranged attacks or mining.
 
-Cooldowns survive death, reconnect and class switching within the same run, and reset with a new run. X/C remain unassigned. Pyroclast has no new buff; Theurgist potion crafting and resurrection retain their existing controls. Group effect attribution/timers and the final combat HUD are reserved for Batch6.
+Cooldowns survive death, reconnect and class switching within the same run, and reset with a new run. X/C remain unassigned. Pyroclast has no new buff; Theurgist potion crafting and resurrection retain their existing controls. Party cards display effect attribution, remaining duration and class-buff cooldowns.
 
-See [the six-batch plan](../ai/tasks/CLASS_SKILLS_BATCHES_20261115.md) for the approved future behavior.
+See [the six-batch plan](../ai/tasks/CLASS_SKILLS_BATCHES_20261115.md) for the approved six-batch scope.
 
 ## Mercenary participation and healing
 
@@ -64,3 +64,11 @@ Mercenary kills from one Cosmic Spawner share a party counter. The hirer receive
 To restore help, walk at least one block and actually damage enemies from that spawner. The movement must be recent (within ten seconds); simply looking, jumping vertically or being pushed does not prove walking. A party-player death resets all spawner counters. Reconnecting or reviving a mercenary does not reset them; a new dungeon does.
 
 The separate healing rule observes each recipient. Repeated accepted injuries no more than ten seconds apart, while remaining within one horizontal block, warn after **30 seconds** and stop mercenary healing after **40 seconds**. Move one horizontal block to restore healing immediately. Attacking from the same position does not clear this restriction, and movement alone does not clear the spawner counter. A blocked player cannot receive healing indirectly from a splash aimed at an eligible teammate. Other allies, player potions, max-health buffs and resurrection remain available.
+
+## Party skill and effect displays
+
+World party names show the class in yellow and the abbreviated signature level in blue, for example **Cameron / Theurgist / PP – 35**. Hover details retain the full identity when a narrow layout clips the label.
+
+Inventory party cards and group inspection show each available charge bar and class-buff cooldown. Buff cooldown bars have five one-minute sections; charge bars show the actual count and armed/readiness state separately. The client counts down between server snapshots; reaching zero locally never authorizes an action before server confirmation.
+
+Hover an effect for its name and amount in green, **Cast by** the winning caster in blue, and **Remaining** in yellow (for example **32m 18s**). Historical effects with no recorded caster say **Unknown**. Equal/weaker rejected applications cannot change the winner. Offline/unloaded members retain known signature identity but show no invented effect or ability readiness.

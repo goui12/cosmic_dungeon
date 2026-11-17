@@ -21,6 +21,9 @@ import net.neoforged.neoforge.client.event.*;
 @EventBusSubscriber(modid = CosmicDungeonMod.MOD_ID, value = Dist.CLIENT)
 public final class D1PartyHud {
     private static PartyPayloads.View view;
+    private static long clientTicks, receivedAt;
+    static long clientTicks() { return clientTicks; }
+    static long now(PartyVitals vitals) { return PartySkillPresentation.now(vitals.sampledAt(),receivedAt,clientTicks); }
     private static Screen inventory;
     private static ReadyActionButton ready;
     private static Button leave, join, revive, resources;
@@ -30,7 +33,7 @@ public final class D1PartyHud {
     private D1PartyHud() {}
     public static void receive(PartyPayloads.View snapshot) {
         if (snapshot.containerId() != -1) return;
-        view = snapshot; READY_PENDING.acknowledge();
+        view = snapshot; receivedAt = clientTicks; READY_PENDING.acknowledge();
         updateControls();
     }
     static PartyPayloads.View currentView() { return view; }
@@ -46,7 +49,7 @@ public final class D1PartyHud {
     public static PartyPayloads.Mercenary resurrectionOffer(){
         return view==null?null:view.mercenaries().stream().filter(row->row.resurrection().offered()).findFirst().orElse(null);
     }
-    private static void clear() { PartyInspectionHover.clear(); lobbyScroll.reset(); PartyHealthHud.reset(); view = null; inventory = null; ready = null; leave = join = revive = resources = null; READY_PENDING.acknowledge(); promptedContext = ""; }
+    private static void clear() { clientTicks = receivedAt = 0; PartyInspectionHover.clear(); lobbyScroll.reset(); PartyHealthHud.reset(); view = null; inventory = null; ready = null; leave = join = revive = resources = null; READY_PENDING.acknowledge(); promptedContext = ""; }
     @SubscribeEvent public static void login(ClientPlayerNetworkEvent.LoggingIn event) { clear(); }
     @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { clear(); }
     private static boolean inventory(Screen screen) {
@@ -119,6 +122,7 @@ public final class D1PartyHud {
         updateControls();
     }
     @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
+        if (!Minecraft.getInstance().isPaused()) clientTicks++;
         READY_PENDING.tick();
         if (inventory != Minecraft.getInstance().screen) { lobbyScroll.release(); PartyHealthHud.release(); inventory = null; ready = null; leave = join = revive = resources = null; READY_PENDING.acknowledge(); }
         else updateControls();
@@ -253,6 +257,9 @@ public final class D1PartyHud {
         if (mouseX >= box.x() && mouseX < box.x() + box.width() && mouseY >= y && mouseY < y + 11)
             graphics.setComponentTooltipForNextFrame(font, List.of(Component.literal(text)), mouseX, mouseY);
     }
+    private static void line(GuiGraphics graphics, Component text, int y) {
+        var box=layout(); PartySkillPresentation.drawClipped(graphics,Minecraft.getInstance().font,text,box.x()+4,y,box.width()-8);
+    }
     private static void draw(GuiGraphics graphics, int mouseX, int mouseY) {
         if(activeHealth()) {
             PartyHealthHud.draw(graphics,view,healthLayout(),inventory(Minecraft.getInstance().screen),mouseX,mouseY);return;
@@ -283,17 +290,15 @@ public final class D1PartyHud {
         line(graphics, difficulty + " / " + status, box.y() + 16, 0xFF90CAF9, mouseX, mouseY);
         int y = box.y() + 30;
         for (var member : view.members()) {
-            line(graphics, (member.leader() ? "* " : "") + member.name() + " / "
-                    + ClassSelectorScreen.className(member.classId()).getString()
-                    + D1PartyPresentation.readySuffix(view, member), y,
-                    D1PartyPresentation.showsReadiness(view, member) && member.ready() ? 0xFFAAFFAA : 0xFFDDDDDD, mouseX, mouseY);
+            line(graphics, D1PartyPresentation.identity(member).copy()
+                    .append(Component.literal(D1PartyPresentation.readySuffix(view,member)).withStyle(net.minecraft.ChatFormatting.GRAY)),y);
             y += 12;
         }
         y=box.y()+box.height()+6;
         for(var hire:view.mercenaries()){
             graphics.fill(box.x(),y,box.x()+box.width(),y+26,0xD0181820);
             // Schedule only the complete row tooltip: GuiGraphics keeps the first tooltip submitted.
-            line(graphics,MercenaryHudLayout.label(hire),y+2,0xFFE4C98A,-1,-1);
+            line(graphics,MercenaryHudLayout.identity(hire),y+2);
             line(graphics,MercenaryHudLayout.status(hire),y+12,hire.status().equals("ACTIVE")?0xFFAAFFAA:0xFFDDDDDD,-1,-1);
             int width=box.width()-8;
             graphics.fill(box.x()+4,y+23,box.x()+4+width,y+25,0xFF553333);
@@ -328,9 +333,8 @@ public final class D1PartyHud {
         if (!grouped) {
             line(g,view.invitation().accepted()?"Finish setup at Tamsin":"Open inventory to join",y,0xFFBBBBBB,mouseX,pointerY);
         } else for (var member:view.members()) {
-            line(g,(member.leader()?"* ":"")+member.name()+" / "+ClassSelectorScreen.className(member.classId()).getString()
-                    +D1PartyPresentation.readySuffix(view,member),y,
-                    D1PartyPresentation.showsReadiness(view,member)&&member.ready()?0xFFAAFFAA:0xFFDDDDDD,-1,-1);
+            line(g,D1PartyPresentation.identity(member).copy()
+                    .append(Component.literal(D1PartyPresentation.readySuffix(view,member)).withStyle(net.minecraft.ChatFormatting.GRAY)),y);
             if (!lobbyScroll.captured() && mouseX >= box.x() && mouseX < box.x() + box.width() - 6
                     && pointerY >= y && pointerY < y + 11)
                 g.setComponentTooltipForNextFrame(Minecraft.getInstance().font,
@@ -339,7 +343,7 @@ public final class D1PartyHud {
             y+=12;
         }
         for (var hire:view.mercenaries()) {
-            line(g,MercenaryHudLayout.label(hire),y,0xFFE4C98A,-1,-1);
+            line(g,MercenaryHudLayout.identity(hire),y);
             line(g,MercenaryHudLayout.status(hire),y+11,0xFFBBBBBB,-1,-1);
             int barWidth=Math.max(0,box.width()-14);
             g.fill(box.x()+4,y+22,box.x()+4+barWidth,y+24,0xFF553333);

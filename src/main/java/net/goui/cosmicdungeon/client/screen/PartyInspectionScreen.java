@@ -7,9 +7,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 
 /** One open, read-only member view; bounded refresh stops immediately when it closes. */
@@ -19,7 +17,7 @@ public final class PartyInspectionScreen extends Screen {
     private final long run;
     private final UUID subject;
     private PartyInspectionPayloads.View view;
-    private long requested, accepted;
+    private long requested, accepted, receivedAt;
     private int ticks, age, scroll;
     private boolean dragging;
     private double grab;
@@ -51,7 +49,7 @@ public final class PartyInspectionScreen extends Screen {
         if(request.run()!=screen.run||!request.subject().equals(screen.subject)
                 ||request.sequence()>screen.requested||request.sequence()<=screen.accepted
                 ||!D1PartyHud.inspectionCurrent(screen.run,screen.subject.toString()))return;
-        screen.accepted=request.sequence();screen.view=payload;screen.age=0;
+        screen.accepted=request.sequence();screen.view=payload;screen.age=0;screen.receivedAt=D1PartyHud.clientTicks();
     }
     private PartyHealthLayout box() {
         int w=Math.min(360,width-16);
@@ -64,14 +62,13 @@ public final class PartyInspectionScreen extends Screen {
         else {
             source.add(Component.literal(PartyHealthHud.status(view.vitals())));
             for(var reading:view.readings())source.add(Component.literal(reading.label()+": "+reading.value()));
+            long now=PartySkillPresentation.now(view.vitals().sampledAt(),receivedAt,D1PartyHud.clientTicks());
+            for(var ability:view.vitals().skills().abilities())
+                source.add(Component.literal(PartySkillPresentation.ability(ability,now)).withStyle(net.minecraft.ChatFormatting.AQUA));
             source.add(Component.literal("Effects"));
             if(view.vitals().effects().isEmpty())source.add(Component.literal(
                     view.vitals().state().equals("ACTIVE")?"None":"Unavailable"));
-            for(var effect:view.vitals().effects()) {
-                var holder=BuiltInRegistries.MOB_EFFECT.get(ResourceLocation.parse(effect.id()));
-                source.add(holder.<Component>map(h->h.value().getDisplayName().copy().append(" "+(effect.amplifier()+1)))
-                        .orElse(Component.literal(effect.id()+" "+(effect.amplifier()+1))));
-            }
+            for(var effect:view.vitals().effects())source.addAll(PartySkillPresentation.effect(effect,now));
             if(view.vitals().omittedEffects()>0)source.add(Component.literal("+"+view.vitals().omittedEffects()+" additional effects"));
         }
         var result=new ArrayList<FormattedCharSequence>();
@@ -83,7 +80,7 @@ public final class PartyInspectionScreen extends Screen {
         renderBackground(g,mx,my,partialTick);
         var box=box();var lines=lines(box);int total=lines.size()*12;
         scroll=box.clampScroll(scroll,total);
-        Component heading=view!=null&&view.allowed()?Component.literal(view.name()+" / "+ClassSelectorScreen.className(view.classId()).getString()):title;
+        Component heading=view!=null&&view.allowed()?PartySkillPresentation.identity(view.name(),ClassSelectorScreen.className(view.classId()),view.vitals().skills(),false):title;
         g.drawCenteredString(font,heading,width/2,14,0xFFE4C98A);
         g.fill(box.x(),box.y(),box.x()+box.width(),box.y()+box.height(),0xE0181820);
         g.drawString(font,"Current run",box.x()+6,box.y()+6,0xFF90CAF9,false);

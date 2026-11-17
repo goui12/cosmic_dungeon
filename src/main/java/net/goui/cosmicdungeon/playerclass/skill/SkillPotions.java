@@ -24,6 +24,7 @@ public final class SkillPotions {
     public static void inherit(Entity cloud, Entity projectile) {
         net.goui.cosmicdungeon.playerclass.theurgist.TheurgistPotionProtection.inherit(cloud,projectile);
         net.goui.cosmicdungeon.mercenary.MercenaryPotions.inherit(cloud,projectile);
+        NegativePotionSkills.inherit(cloud,projectile);
         if (projectile.getPersistentData().contains(ClassSkills.SHOT))
             cloud.getPersistentData().put(ClassSkills.SHOT,projectile.getPersistentData().getCompoundOrEmpty(ClassSkills.SHOT).copy());
     }
@@ -42,25 +43,33 @@ public final class SkillPotions {
                                Entity source, Entity owner, LivingEntity target, int amplifier, double proximity) {
         boolean eligible=potion(attack) && (ClassSkills.ally(target,attack.player()) || ClassSkills.enemy(target,attack.player()));
         double scale=eligible ? 1+potionBonus(attack) : 1;
-        float before=target.getHealth();
+        float before=target.getHealth(),absorption=target.getAbsorptionAmount();
         var previous=CURRENT.get();
         if (eligible) CURRENT.set(attack);
         try { effect.applyInstantenousEffect(level,source,owner,target,amplifier,proximity*scale); }
         finally { if(previous==null)CURRENT.remove();else CURRENT.set(previous); }
         if (eligible && target.getHealth()>before) support(attack,target,"healing");
+        if(target.getHealth()+target.getAbsorptionAmount()<before+absorption)NegativePotionSkills.success(source,target);
     }
     public static boolean timed(ClassSkills.Attack attack, LivingEntity target, MobEffectInstance incoming, Entity source) {
+        return timed(attack,target,incoming,source,source);
+    }
+    public static boolean timed(ClassSkills.Attack attack,LivingEntity target,MobEffectInstance incoming,Entity source,Entity actionSource){
         boolean eligible=potion(attack) && (ClassSkills.ally(target,attack.player()) || ClassSkills.enemy(target,attack.player()));
         var old=target.getEffect(incoming.getEffect());
+        boolean harmful=incoming.getEffect().value().getCategory()==MobEffectCategory.HARMFUL
+                &&(old==null||incoming.getAmplifier()>old.getAmplifier());
         boolean useful=ClassSkillRules.usefulBuff(incoming.getEffect().value().getCategory()==MobEffectCategory.BENEFICIAL,
                 old==null?null:old.getAmplifier(),incoming.getAmplifier());
         if (incoming.getEffect().equals(MobEffects.REGENERATION) && target.getHealth()>=target.getMaxHealth()) useful=false;
         boolean vitality=net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions.isVitality(incoming);
         var applied=eligible&&!vitality ? incoming.withScaledDuration((float)(1+potionBonus(attack))) : incoming;
+        NegativePotionSkills.attach(actionSource,target,applied);
         boolean changed=vitality?net.goui.cosmicdungeon.playerclass.theurgist.VitalityPotions.apply(target,incoming,source)
                 :target.addEffect(applied,source);
         if (eligible && changed && useful && target.hasEffect(incoming.getEffect()))
             support(attack,target,BuiltInRegistries.MOB_EFFECT.getKey(incoming.getEffect().value()).toString());
+        if(changed&&harmful&&!NegativePotionSkills.delayed(incoming)&&target.hasEffect(incoming.getEffect()))NegativePotionSkills.success(actionSource,target);
         return changed;
     }
     public static boolean support(ClassSkills.Attack attack, LivingEntity target, String effect) {

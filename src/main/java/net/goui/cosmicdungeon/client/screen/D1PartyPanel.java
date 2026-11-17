@@ -185,10 +185,9 @@ final class D1PartyPanel {
                     x + 10, y + 46, 0xFFBBBBBB, false);
             int rowY = y + 64;
             for (var member : view.members()) {
-                String row = (member.leader() ? "* " : "  ") + member.name() + " / "
-                        + ClassSelectorScreen.className(member.classId()).getString() + D1PartyPresentation.readySuffix(view, member);
-                graphics.drawString(font, font.plainSubstrByWidth(row, box.innerWidth()), x + 10, rowY,
-                        D1PartyPresentation.showsReadiness(view, member) && member.ready() ? 0xFFAAFFAA : 0xFFFFFFFF, false);
+                var row=D1PartyPresentation.identity(member).copy()
+                        .append(Component.literal(D1PartyPresentation.readySuffix(view,member)).withStyle(net.minecraft.ChatFormatting.GRAY));
+                PartySkillPresentation.drawClipped(graphics,font,row,x+10,rowY,box.innerWidth());
                 rowY += 11;
             }
             String status = switch (state.phase()) {

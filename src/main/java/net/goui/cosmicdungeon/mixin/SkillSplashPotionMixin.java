@@ -28,6 +28,6 @@ public abstract class SkillSplashPotionMixin {
         if(!net.goui.cosmicdungeon.playerclass.theurgist.TheurgistPotionProtection.allows((Entity)(Object)this,target,effect.getEffect().value())
                 ||!net.goui.cosmicdungeon.mercenary.MercenaryPotions.allows((Entity)(Object)this,target,effect.getEffect().value()))return false;
         return net.goui.cosmicdungeon.mercenary.MercenarySkillEffects.timed((Entity)(Object)this,target,effect,
-                ()->SkillPotions.timed(ClassSkills.projectile((Entity)(Object)this),target,effect,source));
+                ()->SkillPotions.timed(ClassSkills.projectile((Entity)(Object)this),target,effect,source,(Entity)(Object)this));
     }
 }

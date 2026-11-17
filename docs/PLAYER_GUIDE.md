@@ -220,3 +220,11 @@ Mercenary kills from one Cosmic Spawner share a party counter. The hirer receive
 To restore help, walk at least one block and actually damage enemies from that spawner. The movement must be recent (within ten seconds); simply looking, jumping vertically or being pushed does not prove walking. A party-player death resets all spawner counters. Reconnecting or reviving a mercenary does not reset them; a new dungeon does.
 
 The separate healing rule observes each recipient. Repeated accepted injuries no more than ten seconds apart, while remaining within one horizontal block, warn after **30 seconds** and stop mercenary healing after **40 seconds**. Move one horizontal block to restore healing immediately. Attacking from the same position does not clear this restriction, and movement alone does not clear the spawner counter. A blocked player cannot receive healing indirectly from a splash aimed at an eligible teammate. Other allies, player potions, max-health buffs and resurrection remain available.
+
+## Party skill and effect displays
+
+World party names show the class in yellow and the abbreviated signature level in blue, for example **Cameron / Theurgist / PP – 35**. Hover details retain the full identity when a narrow layout clips the label.
+
+Inventory party cards and group inspection show each available charge bar and class-buff cooldown. Buff cooldown bars have five one-minute sections; charge bars show the actual count and armed/readiness state separately. The client counts down between server snapshots; reaching zero locally never authorizes an action before server confirmation.
+
+Hover an effect for its name and amount in green, **Cast by** the winning caster in blue, and **Remaining** in yellow (for example **32m 18s**). Historical effects with no recorded caster say **Unknown**. Equal/weaker rejected applications cannot change the winner. Offline/unloaded members retain known signature identity but show no invented effect or ability readiness.

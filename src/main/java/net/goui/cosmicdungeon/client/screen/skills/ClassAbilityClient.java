@@ -19,6 +19,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 /** Displays server capabilities. A slot never supplies gameplay authority or invents an ability. */
 @EventBusSubscriber(modid = "cosmicdungeon", value = Dist.CLIENT)
@@ -26,6 +27,7 @@ public final class ClassAbilityClient {
     private static View view;
     private static Consumer<ClassSkillPayloads.Action> sender;
     private static boolean pending;
+    private static long elapsedTicks;
     private ClassAbilityClient() {}
 
     public static void actions(Consumer<ClassSkillPayloads.Action> callback) {
@@ -35,12 +37,20 @@ public final class ClassAbilityClient {
         Objects.requireNonNull(incoming);
         if (view != null && incoming.run() == view.run() && incoming.revision() < view.revision()) return;
         view = incoming;
+        elapsedTicks = 0;
         pending = false;
     }
     public static int level(String classId){
         return view==null||!view.classId().equals(classId)||view.tracks().isEmpty()?0:view.tracks().getFirst().level();
     }
-    public static void clear() { view = null; pending = false; }
+    public static void clear() { view = null; pending = false; elapsedTicks = 0; }
+    static void tickClock() { if(view!=null&&elapsedTicks<Long.MAX_VALUE)elapsedTicks++; }
+    @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
+        if(!Minecraft.getInstance().isPaused())tickClock();
+    }
+    private static int remaining(SlotView slot,long elapsed) {
+        return (int)Math.max(0,slot.remainingTicks()-Math.max(0,elapsed));
+    }
     @SubscribeEvent public static void login(ClientPlayerNetworkEvent.LoggingIn event) { clear(); }
     @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { clear(); }
     @SubscribeEvent public static void clone(ClientPlayerNetworkEvent.Clone event) { clear(); }
@@ -65,11 +75,16 @@ public final class ClassAbilityClient {
         return Optional.of(new ClassSkillPayloads.Action(snapshot.run(), snapshot.revision(), classId, slot));
     }
     public static String unavailable(View snapshot, String classId, ClassSkillSlot slot) {
+        return unavailable(snapshot,classId,slot,0);
+    }
+    private static String unavailable(View snapshot, String classId, ClassSkillSlot slot,long elapsed) {
         var selected = slots(snapshot, classId).stream().filter(value -> value.slot() == slot).findFirst().orElseThrow();
         if (selected.abilityId().isBlank()) return slot.label() + " is not assigned.";
         if (!matches(snapshot, classId) || snapshot.run() <= 0) return "Class skills require an active dungeon.";
-        if (selected.remainingTicks() > 0) return selected.title() + " is ready in "
-                + ((selected.remainingTicks() + 19L) / 20) + " seconds.";
+        int remaining=remaining(selected,elapsed);
+        if (remaining > 0) return selected.title() + " is ready in "
+                + ((remaining + 19L) / 20) + " seconds.";
+        if(selected.remainingTicks()>0&&!selected.enabled())return selected.title()+" is awaiting server confirmation.";
         if (selected.maxCharge() > 0 && selected.charge() < selected.maxCharge())
             return selected.title() + ": " + selected.charge() + "/" + selected.maxCharge() + " charge.";
         return selected.description().isBlank() ? selected.title() + " is unavailable." : selected.description();
@@ -81,11 +96,11 @@ public final class ClassAbilityClient {
             boolean enabled = sender != null && !pending && request(view, base.classId(), slot.slot()).isPresent();
             var description = Component.literal(slot.description()).withStyle(ChatFormatting.YELLOW);
             if (!enabled) description.append(Component.literal("\n" + (pending ? "Waiting for the server."
-                    : unavailable(view, base.classId(), slot.slot()))).withStyle(ChatFormatting.GRAY));
+                    : unavailable(view, base.classId(), slot.slot(),elapsedTicks))).withStyle(ChatFormatting.GRAY));
             String title = slot.abilityId().isBlank() ? slot.slot().label()
                     : (slot.slot()==ClassSkillSlot.PRIMARY ? "Primary" : slot.slot().label())
                     + (slot.maxCharge()>0 ? " ["+slot.charge()+"/"+slot.maxCharge()+"]" : "")
-                    + (slot.remainingTicks()>0 ? " ["+net.goui.cosmicdungeon.playerclass.skill.ClassBuffCooldown.display(slot.remainingTicks())+"]" : "")
+                    + (remaining(slot,elapsedTicks)>0 ? " ["+net.goui.cosmicdungeon.playerclass.skill.ClassBuffCooldown.display(remaining(slot,elapsedTicks))+"]" : "")
                     + ": " + slot.title();
             actions.add(new SkillsPanelModel.Action(actionId(slot.slot()), title, description, enabled));
         }
@@ -114,7 +129,7 @@ public final class ClassAbilityClient {
         var action = request(view, classId, slot);
         if (pending || sender == null || action.isEmpty()) {
             String reason = pending ? "Waiting for the server." : sender == null
-                    ? "Class skills are not ready yet." : unavailable(view, classId, slot);
+                    ? "Class skills are not ready yet." : unavailable(view, classId, slot,elapsedTicks);
             mc.player.displayClientMessage(Component.literal(reason).withStyle(ChatFormatting.GRAY), true);
             return false;
         }

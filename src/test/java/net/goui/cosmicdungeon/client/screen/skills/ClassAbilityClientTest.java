@@ -76,6 +76,23 @@ final class ClassAbilityClientTest {
         ClassAbilityClient.clear();
         assertTrue(ClassAbilityClient.augment(SkillsPanelModel.initial("dragoon")).actions().stream().noneMatch(SkillsPanelModel.Action::enabled));
     }
+    @Test void countdownUpdatesWithoutPacketsButExpiryNeedsServerConfirmation() {
+        var cooling=view(13,8,"dragoon",new SlotView(PRIMARY,"test","Test ability","Useful effect.",false,40,0,0),List.of());
+        ClassAbilityClient.actions(action->fail("Presentation must not send"));
+        ClassAbilityClient.receive(cooling);
+        var base=SkillsPanelModel.initial("dragoon");
+        assertTrue(ClassAbilityClient.augment(base).actions().getFirst().label().contains("[0:02]"));
+        for(int i=0;i<20;i++)ClassAbilityClient.tickClock();
+        assertTrue(ClassAbilityClient.augment(base).actions().getFirst().label().contains("[0:01]"));
+        for(int i=0;i<20;i++)ClassAbilityClient.tickClock();
+        var expired=ClassAbilityClient.augment(base).actions().getFirst();
+        assertFalse(expired.label().contains("[0:"));
+        assertFalse(expired.enabled());
+        assertTrue(expired.tooltip().getString().contains("awaiting server confirmation"));
+        assertTrue(ClassAbilityClient.request(cooling,"dragoon",PRIMARY).isEmpty());
+        ClassAbilityClient.receive(view(13,9,"dragoon",ready(),List.of()));
+        assertTrue(ClassAbilityClient.augment(base).actions().getFirst().enabled());
+    }
     @Test void brewerPanelCannotOverlapPotionPaletteAfterSavedPositionResizeOrDrag() {
         for (int width : new int[]{320, 480, 854}) {
             int height = 240, inventoryWidth = 176, left = (width-inventoryWidth)/2;

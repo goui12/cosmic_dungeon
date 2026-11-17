@@ -62,6 +62,9 @@ public final class DungeonInstanceGameTests {
         suite.add(id("mercenary_antifarm_effect_persistence"),net.goui.cosmicdungeon.mercenary.MercenaryAntiFarmingGameTests::effectPersistence);
         suite.add(id("mercenary_antifarm_healing"),net.goui.cosmicdungeon.mercenary.MercenaryAntiFarmingGameTests::healing);
         suite.add(id("mercenary_antifarm_participation"),net.goui.cosmicdungeon.mercenary.MercenaryAntiFarmingGameTests::participation);
+        suite.add(id("final_skill_presentation"),net.goui.cosmicdungeon.playerclass.skill.FinalSkillIntegrationGameTests::presentation);
+        suite.add(id("final_skill_progression"),net.goui.cosmicdungeon.playerclass.skill.FinalSkillIntegrationGameTests::progression);
+        suite.add(id("final_skill_provenance"),net.goui.cosmicdungeon.playerclass.skill.FinalSkillIntegrationGameTests::provenance);
         suite.add(id("class_buff_recipients"),net.goui.cosmicdungeon.playerclass.skill.ClassBuffGameTests::recipients);
         suite.add(id("class_buff_strength_defense"),net.goui.cosmicdungeon.playerclass.skill.ClassBuffGameTests::strengthAndDefense);
         suite.add(id("class_buff_cleanse_refund"),net.goui.cosmicdungeon.playerclass.skill.ClassBuffGameTests::cleanseAndRefund);
