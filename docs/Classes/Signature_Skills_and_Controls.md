@@ -37,7 +37,7 @@ Positive Potions now selects the [max-health potion rank](Theurgist_Help_Guide.m
 
 Both bars have no overflow bank. Secondary ability damage cannot refill them. Charge and the armed state survive death/reconnect in the same run and reset with the run; player proficiency persists separately, while mercenary proficiency stays with its run. Historical mercenary Combat progress is retained separately from Smite.
 
-The inventory Skills panel and party cards show charge/readiness independently from timed buffs.
+Your primary meter sits above the hearts during play. The bound key shimmers when Smite or Chain Lightning is ready. Open inventory for compact Skills and Group panels. Use the arrow on a party row to hide its skills. Human choices persist on your client and mercenary choices last for the run. Default collapse skills in Cosmic Dungeon settings starts everyone closed. Expand individual rows temporarily or turn the setting off to restore saved human choices.
 
 ## Shared party buffs
 

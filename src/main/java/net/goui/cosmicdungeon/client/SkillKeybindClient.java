@@ -61,6 +61,11 @@ public final class SkillKeybindClient {
                     || other instanceof ClassContext c && (classId.isEmpty() || c.classId.isEmpty() || classId.equals(c.classId));
         }
     }
+    public static Component shortBinding(String actionId) {
+        var action = Action.forId(actionId);
+        var mapping = action == null ? null : KEYS.get(action);
+        return mapping == null || mapping.isUnbound() ? Component.literal("\u2014") : mapping.getTranslatedKeyMessage();
+    }
     public static Component hint(String actionId) {
         var action = Action.forId(actionId);
         if (action == null) return Component.empty();
@@ -109,26 +114,51 @@ public final class SkillKeybindClient {
                 mc.getOverlay() != null, screen == null || inventory, busy,
                 screen != null && typing(screen), menu));
     }
-    private static boolean conflict(Minecraft mc, Input input, Modifier modifier) {
+    private static boolean vanillaActionAvailable(Minecraft mc, KeyMapping mapping) {
+        if (mapping == mc.options.keySaveHotbarActivator || mapping == mc.options.keyLoadHotbarActivator)
+            return mc.screen == null && mc.player.hasInfiniteMaterials();
+        if (mapping != mc.options.keyQuickActions) return true;
+        if (mc.screen != null) return false;
+        // Vanilla opens Quick Actions only when the server's dialog registry resolves an entry.
+        var dialogs = mc.player.connection.registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.DIALOG);
+        int tagged = dialogs.get(net.minecraft.tags.DialogTags.QUICK_ACTIONS).map(entries -> entries.size()).orElse(0);
+        return SkillInputPolicy.quickActionsAvailable(tagged,
+                tagged > 1 && dialogs.get(net.minecraft.server.dialog.Dialogs.QUICK_ACTIONS).isPresent());
+    }
+    private static KeyMapping conflict(Minecraft mc, Input input, Modifier modifier) {
         for (var mapping : mc.options.keyMappings) {
             if (KEYS.containsValue(mapping) || mapping.isUnbound()) continue;
             // Inventory also uses native in-game bindings (close inventory, swap hotbar, drop).
             if (!mapping.getKeyConflictContext().isActive()
                     && !(mc.screen != null && mapping.getKeyConflictContext() == KeyConflictContext.IN_GAME)) continue;
-            if (SkillInputPolicy.matches(binding(Action.PATROL, mapping), input, modifier)) return true;
+            if (SkillInputPolicy.matches(binding(Action.PATROL, mapping), input, modifier)
+                    && vanillaActionAvailable(mc, mapping)) return mapping;
         }
-        return false;
+        return null;
     }
     /** Returns consumed for an unambiguous skill even when the current capability declines it. */
     private static boolean activate(Input input, int bits, boolean execute) {
         var mc = Minecraft.getInstance();
         if (!allowed(mc)) return false;
+        // InputEvent.Key is posted even after vanilla handles F3+G (chunk borders).
+        if (input.device() == Device.KEY && InputConstants.isKeyDown(mc.getWindow(), GLFW.GLFW_KEY_F3)) return false;
         var modifier = modifier(bits, input);
         List<Binding> bindings = new ArrayList<>(KEYS.size());
         KEYS.forEach((action, mapping) -> bindings.add(binding(action, mapping)));
         String classId = ClassData.getClassId(mc.player);
-        var action = SkillInputPolicy.resolve(classId, bindings, input, modifier, conflict(mc, input, modifier));
-        if (action == null) return false;
+        var action = SkillInputPolicy.resolve(classId, bindings, input, modifier, false);
+        if (action == null) {
+            if (execute && bindings.stream().anyMatch(b -> b.action().supports(classId)
+                    && SkillInputPolicy.matches(b, input, modifier)))
+                mc.player.displayClientMessage(Component.literal("Multiple class skills share this binding. Check Controls > Key Binds."), true);
+            return false;
+        }
+        var conflicting = conflict(mc, input, modifier);
+        if (conflicting != null) {
+            if (execute) mc.player.displayClientMessage(Component.literal(action.label + " shares a binding with ")
+                    .append(Component.translatable(conflicting.getName())).append(". Check Controls > Key Binds."), true);
+            return false;
+        }
         if (execute) SkillInputPolicy.dispatch(action, classId, BogatyrClient::activate, TheurgistClient::canOpenPicker,
                 () -> mc.setScreen(new ResurrectPickerScreen(mc.screen instanceof AbstractContainerScreen<?> parent ? parent : null)),
                 ClassAbilityClient::activate);

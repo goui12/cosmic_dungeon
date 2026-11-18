@@ -80,6 +80,10 @@ public final class SkillInputPolicy {
         }
         return modifier(bits,platformControlBit);
     }
+    static boolean quickActionsAvailable(int taggedDialogs, boolean hasListDialog) {
+        return taggedDialogs == 1 || (taggedDialogs > 1 && hasListDialog);
+    }
+
     public static boolean matches(Binding binding, Input input, Modifier modifier) {
         return !binding.unbound && modifier != null && binding.modifier == modifier && binding.input.equals(input);
     }

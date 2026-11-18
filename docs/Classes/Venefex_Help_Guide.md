@@ -10,7 +10,7 @@ Hover a potion tile to see the server-selected route for one output: the one exi
 
 ## Banish Afflictions
 
-Use **Class skill 1 (default Z)** or its inventory button to remove harmful effects from the caster and party players, mercenaries and allied wolves within 10 blocks. Beneficial and neutral effects remain. No milk bucket is consumed. Cooldown: five minutes; no effective removal spends no cooldown. Venefex mercenaries cast automatically when useful.
+Use **Class skill 1 (default Z)** or its inventory button to remove harmful effects from the caster and party players, mercenaries and allied wolves within 10 blocks. Beneficial and neutral effects remain. No milk bucket is consumed. Cooldown: five minutes; no effective removal spends no cooldown. A ready Venefex mercenary waits for a nearby ally to have a harmful effect, then cleanses automatically and tells the hirer. Its harmful potion throws use separate targeting rules.
 
 ## Shared rules and controls
 

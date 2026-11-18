@@ -44,6 +44,17 @@ public final class ClassAbilityClient {
         return view==null||!view.classId().equals(classId)||view.tracks().isEmpty()?0:view.tracks().getFirst().level();
     }
     public static void clear() { view = null; pending = false; elapsedTicks = 0; }
+    static SlotView primary(String classId) {
+        if (!matches(view, classId) || view.run() <= 0) return null;
+        for (var slot : view.slots()) {
+            if (slot.slot() == ClassSkillSlot.PRIMARY && !slot.abilityId().isEmpty()) return slot;
+        }
+        return null;
+    }
+    static boolean ready(SlotView slot) {
+        return sender != null && !pending && slot.enabled() && slot.remainingTicks() == 0
+                && slot.charge() >= slot.maxCharge();
+    }
     static void tickClock() { if(view!=null&&elapsedTicks<Long.MAX_VALUE)elapsedTicks++; }
     @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
         if(!Minecraft.getInstance().isPaused())tickClock();

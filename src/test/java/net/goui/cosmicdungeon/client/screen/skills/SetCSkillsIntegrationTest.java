@@ -208,7 +208,9 @@ final class SetCSkillsIntegrationTest {
             assertTrue(reset.get(id).isEmpty());
             var panel=new SkillsPanelState(shared,reset.get(id).orElse(null));
             panel.actions(model(id).actions().size());
-            assertEquals(shared.skillsDefault(),panel.geometry().panel());
+            assertEquals(shared.skillsDefault().x(),panel.geometry().panel().x());
+            assertEquals(shared.skillsDefault().y(),panel.geometry().panel().y());
+            assertEquals(3*SkillsPanelState.ROW,panel.geometry().body().height());
             assertFalse(panel.minimized());
             assertEquals(0,panel.scroll().offset());
             bounded(panel,shared);

@@ -18,8 +18,8 @@ public record SharedInventoryLayout(Rect group,Rect requests,Rect skillsDefault,
         int sw=Math.max(1,screenWidth),sh=Math.max(1,screenHeight);
         int left=Math.max(0,guiLeft-16),right=guiLeft+imageWidth+8;
         boolean compact=left<40||sh<180;
-        int skillWidth=compact?Math.min(112,sw-8):Math.min(176,left);
-        int skillHeight=compact?36:Math.clamp(sh/3,72,128);
+        int skillWidth=compact?Math.min(112,sw-8):Math.min(154,left);
+        int skillHeight=SkillsPanelState.HEADER+SkillsPanelState.RESOURCE+(compact?0:SkillsPanelState.ROW);
         var skills=bounded(8,8,skillWidth,skillHeight,sw,sh);
         int groupY=skills.bottom()+8;
         var group=bounded(8,groupY,Math.min(224,left),Math.max(24,sh-groupY-32),sw,sh);

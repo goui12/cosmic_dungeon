@@ -19,7 +19,7 @@ public final class CosmicDungeonOptionsScreen extends Screen {
     protected void init() {
         super.init();
         int centerX = this.width / 2;
-        int y = this.height / 2 - 22;
+        int y = this.height / 2 - 34;
         addRenderableWidget(Button.builder(Component.literal("Cosmic Spawner HUD"), b ->
                 Minecraft.getInstance().setScreen(new CosmicSpawnerHudOptionsScreen(this)))
                 .bounds(centerX - 100, y, 200, 20)
@@ -27,6 +27,10 @@ public final class CosmicDungeonOptionsScreen extends Screen {
         addRenderableWidget(Button.builder(Component.literal("Reset Skill Panel UI"), b ->
                 net.goui.cosmicdungeon.client.screen.skills.SkillsPanelClient.resetLayout())
                 .bounds(centerX - 100, y + 24, 200, 20).build());
+        var group = net.goui.cosmicdungeon.client.screen.GroupSkillPreferences.client();
+        addRenderableWidget(net.minecraft.client.gui.components.CycleButton.onOffBuilder(group.defaultCollapsed())
+                .create(centerX - 100, y + 48, 200, 20, Component.literal("Default collapse skills"),
+                        (button, value) -> group.setDefaultCollapsed(value)));
         addRenderableWidget(Button.builder(Component.literal("Done"), b -> onClose())
                 .bounds(centerX - 100, this.height - 28, 200, 20)
                 .build());

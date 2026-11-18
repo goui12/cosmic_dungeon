@@ -1,3 +1,7 @@
+# 1.8.14 Beta
+
+One authorized batch for all-class activation checks, the gameplay primary meter and compact inventory panels. See [release notes](../releases/1.8.14-beta.1.md). Manual gameplay acceptance remains pending.
+
 # Active class-skills series, 2026-11-15
 
 Batches 1–5 have verified source checkpoints. Batch 6 completes party signature/effect/ability presentation and successful-action integration: [scope and checks](tasks/CLASS_SKILLS_B6_20261117.md). The completed set targets official **1.8.13** as explicitly authorized by Cameron. Merge, exact full CI, publication and stopped TEST delivery are verified in the active controller completion receipt; this source note does not pre-claim those operations.

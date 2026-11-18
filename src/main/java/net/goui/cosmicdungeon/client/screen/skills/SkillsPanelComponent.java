@@ -18,7 +18,9 @@ public final class SkillsPanelComponent {
         g.fill(r.right()-1,r.y(),r.right(),r.bottom(),color);
     }
     private static void text(GuiGraphics g,Font font,String text,Rect box,int color){
-        g.drawString(font,font.plainSubstrByWidth(text,Math.max(0,box.width()-8)),box.x()+4,box.y()+5,color,false);
+        int width = (int)(Math.max(0, box.width() - 6) / SkillBindingLabels.TEXT_SCALE);
+        int offset = Math.max(0, (box.height() - (int)Math.ceil(font.lineHeight * SkillBindingLabels.TEXT_SCALE)) / 2);
+        SkillBindingLabels.drawText(g, font, font.plainSubstrByWidth(text,width),box.x()+3,box.y()+offset,color);
     }
     private static void tooltip(GuiGraphics g,Font font,Component text,int x,int y){
         if(x>=0&&y>=0)g.setComponentTooltipForNextFrame(font,List.of(text),x,y);

@@ -123,16 +123,14 @@ final class BogatyrClientTest {
         assertFalse(BogatyrClient.pending());assertTrue(feed().enabled());
         assertTrue(model().actions().get(1).selected());assertFalse(feed().selected());assertTrue(sent.isEmpty());
     }
-    @Test void threeRowsRemainReachableByScrollingTheSmallPanelWithoutAResource(){
+    @Test void threeRowsFitTheSmallPanelWithoutScrolling(){
         BogatyrClient.accept(view(23,50,WolfMode.PATROL,2));
         var panel=new SkillsPanelState(SharedInventoryLayout.of(320,240,72,37,176,166),null);
         panel.actions(model().actions().size());
         assertEquals(3,model().actions().size());assertEquals(0,panel.scroll().offset());
         var body=panel.geometry().body();
-        assertTrue(panel.scroll().max()>0);
-        var hidden=panel.geometry().row(2,0);
-        assertFalse(body.contains(hidden.x(),hidden.y()));
-        assertEquals(-1,panel.press(hidden.x()+1,hidden.y()+1,0,false).action());panel.release();
+        assertEquals(0,panel.scroll().max());
+        assertEquals(3*SkillsPanelState.ROW,body.height());
         for(int i=0;i<3;i++){
             panel.scroll().reset();assertTrue(panel.wheel(body.x()+2,body.y()+2,-i,false));
             var row=panel.geometry().row(i,panel.scroll().offset());

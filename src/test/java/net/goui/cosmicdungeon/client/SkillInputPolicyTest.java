@@ -49,6 +49,16 @@ final class SkillInputPolicyTest {
         assertEquals(Action.SKILL_1, Action.forId("class_skill_1"));
         assertEquals(Action.PATROL, Action.forId("bogatyr_patrol"));
     }
+    @Test void gDispatchesPrimaryWhenQuickActionsHasNoDialogToOpen() {
+        var key = key(Action.PRIMARY.defaultKey);
+        var bindings = List.of(bind(Action.PRIMARY, key.code(), Modifier.NONE));
+        assertEquals(Action.PRIMARY, SkillInputPolicy.resolve("judicator", bindings, key, Modifier.NONE,
+                SkillInputPolicy.quickActionsAvailable(0, true)));
+        assertNull(SkillInputPolicy.resolve("judicator", bindings, key, Modifier.NONE,
+                SkillInputPolicy.quickActionsAvailable(1, false)));
+        assertFalse(SkillInputPolicy.quickActionsAvailable(2, false));
+        assertTrue(SkillInputPolicy.quickActionsAvailable(2, true));
+    }
     @Test void genericDispatchUsesOnlyTheGenericServiceAndKeepsTheSelectedSlot() {
         var calls = new ArrayList<net.goui.cosmicdungeon.playerclass.skill.ClassSkillSlot>();
         assertTrue(SkillInputPolicy.dispatch(Action.SKILL_2, "venefex", id -> fail("Legacy action invoked"),
