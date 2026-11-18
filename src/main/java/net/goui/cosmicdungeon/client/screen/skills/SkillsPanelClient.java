@@ -71,7 +71,23 @@ public final class SkillsPanelClient {
         model=provider==null?INITIAL.computeIfAbsent(id,SkillsPanelModel::initial):Objects.requireNonNull(provider.view(mc.player));
         if(!model.classId().equals(id))throw new IllegalStateException("Skills provider changed class identity");
         model=ClassAbilityClient.augment(model);
-        state.actions(model.actions().size());return true;
+        int desiredWidth = Math.max(70, SkillBindingLabels.textWidth(mc.font, model.title()) + 40);
+        desiredWidth = Math.max(desiredWidth, SkillBindingLabels.textWidth(mc.font, model.resource()) + 8);
+        for (var action : model.actions())
+            desiredWidth = Math.max(desiredWidth, SkillBindingLabels.textWidth(mc.font, action.label()) + 22);
+        state.content(model.actions().size(), desiredWidth);
+        return true;
+    }
+    /** Group layout follows the actual movable panel, including after minimization or resize. */
+    public static SharedInventoryLayout.Rect groupLane(Screen candidate, int width, int bottom) {
+        var full = new SharedInventoryLayout.Rect(8, 8, width, Math.max(24, bottom - 8));
+        if (!inventory(candidate) || (screen != candidate || state == null) && !refresh(candidate)) return full;
+        var panel = state.geometry().panel();
+        if (panel.x() >= full.right() || panel.right() <= full.x()) return full;
+        int below = Math.max(0, bottom - panel.bottom() - 4);
+        int above = Math.max(0, panel.y() - full.y() - 4);
+        return above > below ? new SharedInventoryLayout.Rect(8, 8, width, Math.max(24, above))
+                : new SharedInventoryLayout.Rect(8, panel.bottom() + 4, width, Math.max(24, below));
     }
     public static boolean suppressesTooltips(Screen candidate){
         return inventory(candidate) && (carrying() || screen==candidate && state!=null && state.captured());

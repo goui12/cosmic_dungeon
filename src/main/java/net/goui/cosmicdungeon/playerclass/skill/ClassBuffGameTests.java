@@ -188,7 +188,8 @@ public final class ClassBuffGameTests {
                 var merc=merc(f,cls);
                 f.check(MercenaryBrain.hirer(merc)==f.player,"Valid native single-hire roster: "+cls);
                 f.player.addEffect(new MobEffectInstance(MobEffects.POISON,600,0));
-                ClassBuffs.tick(merc);
+                merc.tickCount = 10 - merc.getId();
+                new MercenaryBrain().tick(merc, f.level);
                 boolean supported=ClassBuffs.selected(merc).isPresent();
                 f.check(supported==List.of("bogatyr","dragoon","judicator","venefex").contains(cls),
                         "Correct class buff assignment: "+cls);
@@ -206,6 +207,15 @@ public final class ClassBuffGameTests {
                     default->false;
                 };
                 f.check(applied,"Mercenary automatically applies its useful party buff: "+cls);
+                if (cls.equals("venefex")) {
+                    f.check(f.message(merc.getName().getString() + " used Banish Afflictions."),
+                            "Hirer sees the successful automatic cleanse");
+                    ready(f, merc, ClassBuff.BANISH);
+                    f.check(!ClassBuffs.cast(merc) && ClassBuffs.remaining(merc) == 0,
+                            "Ready Venefex waits while party has no harmful effects");
+                    f.player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 600));
+                    f.check(ClassBuffs.cast(merc), "Next harmful effect is eligible");
+                }
                 f.check(ClassBuffs.remaining(merc)==6000,"Mercenary success owns five-minute cooldown: "+cls);
                 f.player.setHealth(0);f.check(!ClassBuffs.cast(merc),"Unavailable hirer cannot trigger "+cls);
                 f.player.setHealth(20);f.check(ClassBuffs.remaining(merc)==6000,"Hirer recovery retains cooldown: "+cls);

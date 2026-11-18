@@ -115,6 +115,8 @@ public final class ClassBuffs {
             empty(actor,buff);return false;
         }
         if(actor instanceof ServerPlayer player)player.displayClientMessage(Component.literal(buff.title()+" activated."),true);
+        if (buff == ClassBuff.BANISH && actor instanceof MercenaryEntity merc)
+            ctx.owner.displayClientMessage(merc.getName().copy().append(" used Banish Afflictions."), true);
         if(buff==ClassBuff.AEGIS||buff==ClassBuff.BULWARK){
             var message=strengthMessage(actor.getName().getString(),buff.title());
             for(var id:ctx.run.orderedPlayers().stream().limit(6).toList()){

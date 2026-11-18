@@ -36,8 +36,10 @@ final class SkillsPanelStateTest {
         var result=state.press(toggle.x()+2,toggle.y()+2,0,false);
         assertTrue(result.changed());assertTrue(state.minimized());
         assertEquals(before.x(),state.geometry().panel().x());assertEquals(before.y(),state.geometry().panel().y());
-        assertEquals(18,state.geometry().header().height());assertEquals(18,state.geometry().resource().height());
-        assertEquals(0,state.geometry().body().height());assertEquals(36,state.geometry().panel().height());
+        assertEquals(SkillsPanelState.HEADER,state.geometry().header().height());
+        assertEquals(SkillsPanelState.RESOURCE,state.geometry().resource().height());
+        assertEquals(0,state.geometry().body().height());
+        assertEquals(SkillsPanelState.HEADER+SkillsPanelState.RESOURCE,state.geometry().panel().height());
         state.release();toggle=state.geometry().minimize();state.press(toggle.x()+2,toggle.y()+2,0,false);
         assertFalse(state.minimized());assertEquals(before,state.geometry().panel());
         var reset=new SkillsPanelState(layout(320,240),null);
@@ -49,7 +51,7 @@ final class SkillsPanelStateTest {
         var box=state.geometry();
         for(int i=0;i<20;i++){
             assertEquals(box.row(0,0).width(),box.row(i,0).width());
-            assertEquals(20,box.row(i,0).height());
+            assertEquals(SkillsPanelState.BUTTON,box.row(i,0).height());
         }
         assertTrue(state.scroll().max()>0);
         assertFalse(state.wheel(200,100,-1,false));assertFalse(state.wheel(10,50,-1,true));
@@ -67,6 +69,21 @@ final class SkillsPanelStateTest {
         state.release();
         var head=state.geometry().header();state.press(head.x()+2,head.y()+4,0,false);
         assertFalse(state.drag(100,100,0,true));assertFalse(state.captured());
+    }
+    @Test void contentGrowthUsesOnlyTheRequiredSpaceBeforeScrolling(){
+        var panel=new SkillsPanelState(layout(854,480),null);
+        panel.content(1,96);
+        var small=panel.geometry();
+        assertEquals(96,small.panel().width());
+        assertEquals(SkillsPanelState.ROW,small.body().height());
+        panel.content(7,128);
+        assertEquals(128,panel.geometry().panel().width());
+        assertEquals(7*SkillsPanelState.ROW,panel.geometry().body().height());
+        assertEquals(0,panel.scroll().max());assertEquals(0,panel.geometry().track().width());
+        panel.actions(110);
+        assertTrue(panel.scroll().max()>0);assertTrue(panel.geometry().track().width()>0);
+        panel.content(1,96);
+        assertEquals(small,panel.geometry());assertEquals(0,panel.scroll().offset());
     }
     @Test void invalidSavedCoordinatesAreRejectedAndOutOfRangeValuesRecover(){
         assertThrows(IllegalArgumentException.class,()->new SkillsPanelState.Placement(Double.NaN,0,false));

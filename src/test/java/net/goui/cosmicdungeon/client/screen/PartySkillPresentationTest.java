@@ -72,8 +72,9 @@ final class PartySkillPresentationTest {
                 1000,new PartySkills("SM",1,abilities));
         for(int width:List.of(24,80,148,224)) {
             var box=new PartyHealthLayout(8,8,width,180,1,0);
-            assertEquals(box.rowHeight(1)+32,PartyHealthHud.rowHeight(v,box));
-            int content=9*PartyHealthHud.rowHeight(v,box);
+            assertEquals(box.rowHeight(1), PartyHealthHud.rowHeight(v,box,true));
+            assertEquals(box.rowHeight(1)+20,PartyHealthHud.rowHeight(v,box,false));
+            int content=9*PartyHealthHud.rowHeight(v,box,false);
             assertTrue(box.maxScroll(content)>0);
             assertEquals(box.maxScroll(content),box.scrollAt(box.y()+box.height()-box.thumbHeight(content),content));
         }

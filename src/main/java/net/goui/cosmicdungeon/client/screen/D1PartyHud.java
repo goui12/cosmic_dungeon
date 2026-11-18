@@ -33,6 +33,7 @@ public final class D1PartyHud {
     private D1PartyHud() {}
     public static void receive(PartyPayloads.View snapshot) {
         if (snapshot.containerId() != -1) return;
+        GroupSkillPreferences.client().enterRun(snapshot.state().phase().equals("ACTIVE") ? snapshot.state().revision() : 0);
         view = snapshot; receivedAt = clientTicks; READY_PENDING.acknowledge();
         updateControls();
     }
@@ -49,7 +50,7 @@ public final class D1PartyHud {
     public static PartyPayloads.Mercenary resurrectionOffer(){
         return view==null?null:view.mercenaries().stream().filter(row->row.resurrection().offered()).findFirst().orElse(null);
     }
-    private static void clear() { clientTicks = receivedAt = 0; PartyInspectionHover.clear(); lobbyScroll.reset(); PartyHealthHud.reset(); view = null; inventory = null; ready = null; leave = join = revive = resources = null; READY_PENDING.acknowledge(); promptedContext = ""; }
+    private static void clear() { clientTicks = receivedAt = 0; PartyInspectionHover.clear(); lobbyScroll.reset(); PartyHealthHud.forget(); view = null; inventory = null; ready = null; leave = join = revive = resources = null; READY_PENDING.acknowledge(); promptedContext = ""; }
     @SubscribeEvent public static void login(ClientPlayerNetworkEvent.LoggingIn event) { clear(); }
     @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { clear(); }
     private static boolean inventory(Screen screen) {
@@ -63,11 +64,24 @@ public final class D1PartyHud {
         return SharedInventoryLayout.of(screen.width, screen.height, screen.getGuiLeft(), screen.getGuiTop(),
                 screen.getXSize(), screen.getYSize());
     }
+    private static SharedInventoryLayout.Rect groupLane(AbstractContainerScreen<?> screen) {
+        var reserved = inventoryLayout(screen).group();
+        int width = Math.min(176, reserved.width());
+        int bottom = screen.height - (ownRevival() == null ? 6 : 30);
+        return SkillsPanelClient.groupLane(screen, width, bottom);
+    }
+
+    private static int lobbyFooter() {
+        if (view == null || view.members().isEmpty()) return 24;
+        return D1PartyPresentation.sharingMutable(view) ? 72 : 48;
+    }
     private static D1PartyHudLayout layout() {
         var screen = Minecraft.getInstance().screen;
         if (inventory(screen)) {
-            var group = inventoryLayout((AbstractContainerScreen<?>)screen).group();
-            return new D1PartyHudLayout(group.x(), group.y(), group.width(), Math.max(24, group.height() - 72));
+            var group = groupLane((AbstractContainerScreen<?>)screen);
+            int content = view == null ? 24 : 24 + lobbyContentHeight();
+            return new D1PartyHudLayout(group.x(), group.y(), group.width(),
+                    Math.max(24, Math.min(content, group.height() - lobbyFooter())));
         }
         return D1PartyHudLayout.forView(-1, view == null ? 0 : view.members().size());
     }
@@ -75,8 +89,8 @@ public final class D1PartyHud {
     private static PartyHealthLayout healthLayout() {
         var screen = Minecraft.getInstance().screen;
         if (inventory(screen)) {
-            var group = inventoryLayout((AbstractContainerScreen<?>)screen).group();
-            return new PartyHealthLayout(group.x(), group.y(), group.width(), Math.max(24, group.height() - 24), 1, 0);
+            var group = groupLane((AbstractContainerScreen<?>)screen);
+            return PartyHealthHud.fit(view, new PartyHealthLayout(group.x(), group.y(), group.width(), group.height(), 1, 0));
         }
         return PartyHealthHud.worldLayout(view);
     }
@@ -155,7 +169,11 @@ public final class D1PartyHud {
             revive.setTooltip(Tooltip.create(Component.literal("Revive "+hire.name()+" now")));
         }
         // Footer remains outside inventory slots and the reserved group lane.
-        revive.setX(8);revive.setY(inventory.height-26);revive.setWidth(Math.min(224,inventory.width-16));
+        revive.setX(box.x()); revive.setWidth(box.width());
+        if (activeHealth() && hire != null) {
+            var health = healthLayout();
+            revive.setY(health.y() + health.height() + 2);
+        } else revive.setY(inventory.height - 26);
         boolean grouped = shown && !view.members().isEmpty();
         boolean lobby = grouped && !view.state().phase().equals("ACTIVE");
         var control = D1PartyPresentation.readiness(view, mc.player == null ? null : mc.player.getGameProfile().name());
@@ -173,8 +191,7 @@ public final class D1PartyHud {
         resources.setMessage(Component.literal("Resources: " + (resources.visible ? view.sharing().choice().equals("UNKNOWN") ? "Choose" : view.sharing().choice() : "")));
         resources.setTooltip(Tooltip.create(Component.literal("Change your YES/NO contribution choice")));
         resources.setX(box.x()); resources.setWidth(box.width());
-        var groupBox = inventoryLayout((AbstractContainerScreen<?>) inventory).group();
-        resources.setY(lobby ? box.controlsY() + 48 : groupBox.y() + groupBox.height() - 20);
+        resources.setY(box.controlsY() + 48);
     }
     @SubscribeEvent public static void hud(RenderGuiEvent.Post event) {
         var mc = Minecraft.getInstance();

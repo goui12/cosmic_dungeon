@@ -81,7 +81,11 @@ public final class ClassSkillActions {
         long now=p.level().getServer().getTickCount();
         if(!session.acceptAction(now))return;
         var run=ClassSkills.run(p);
-        if(!matches(session.sent,request,run==null?0:run.runId(),ClassData.getClassId(p))){sync(p,true);return;}
+        if (!matches(session.sent, request, run == null ? 0 : run.runId(), ClassData.getClassId(p))) {
+            p.displayClientMessage(Component.literal("Your skill state changed. Check the updated skill and try again."), true);
+            sync(p, true);
+            return;
+        }
         // Resolve from current server catalog, not the old sent snapshot or a client ability ID.
         var current=slots(p).stream().filter(s->s.slot()==request.slot()).findFirst().orElseThrow();
         if(current.enabled()&&current.abilityId().equals("chain_lightning")){

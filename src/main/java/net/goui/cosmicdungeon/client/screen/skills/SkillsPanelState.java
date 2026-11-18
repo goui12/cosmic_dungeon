@@ -4,7 +4,7 @@ import net.goui.cosmicdungeon.client.screen.skills.SharedInventoryLayout.Rect;
 
 /** Pure geometry and pointer ownership. Item drags cannot acquire or extend a panel capture. */
 public final class SkillsPanelState {
-    public static final int HEADER=18,RESOURCE=18,ROW=24,BUTTON=20;
+    public static final int HEADER=14,RESOURCE=16,ROW=16,BUTTON=15;
     public record Placement(double x,double y,boolean minimized){
         public Placement{
             if(!Double.isFinite(x)||!Double.isFinite(y))throw new IllegalArgumentException("Non-finite placement");
@@ -13,13 +13,16 @@ public final class SkillsPanelState {
     }
     public record Geometry(Rect panel,Rect header,Rect resource,Rect body,Rect help,Rect minimize,Rect track){
         public Rect row(int index,int scroll){
-            return new Rect(body.x()+4,body.y()+index*ROW-scroll,Math.max(0,body.width()-16),BUTTON);
+            int padding = track.width() == 0 ? 6 : 14;
+            return new Rect(body.x()+3,body.y()+index*ROW-scroll,Math.max(0,body.width()-padding),BUTTON);
         }
     }
     public record Press(boolean consumed,boolean changed,boolean help,int action){
         static final Press NONE=new Press(false,false,false,-1);
     }
     private SharedInventoryLayout shared;private Placement placement;private boolean positioned,dirty;
+    private boolean compactExpanded;
+    private int preferredWidth = Integer.MAX_VALUE;
     private Geometry geometry;private int actions,auxiliaryButtons;private boolean moving,ownedPress;private double grabX,grabY;
     private final PanelScroll scroll=new PanelScroll();
     public SkillsPanelState(SharedInventoryLayout shared,Placement saved){
@@ -29,22 +32,32 @@ public final class SkillsPanelState {
         if(value.equals(shared))return;
         release();shared=value;rebuild();
     }
-    public void actions(int count){actions=Math.clamp(count,0,128);scroll.configure(actions*ROW,geometry.body.height());}
+    public void actions(int count){content(count,preferredWidth);}
+    public void content(int count,int width){
+        int nextCount=Math.clamp(count,0,128);
+        if(nextCount==actions && width==preferredWidth)return;
+        actions=nextCount;
+        preferredWidth=width;
+        rebuild();
+    }
     public Geometry geometry(){return geometry;}
     public PanelScroll scroll(){return scroll;}
     public Placement placement(){return placement;}
     public boolean dirty(){return dirty;}
     public void saved(){dirty=false;}
     public boolean captured(){return moving||ownedPress||scroll.captured();}
-    public boolean minimized(){return placement.minimized()||shared.compact();}
+    public boolean minimized(){return placement.minimized() || (shared.compact() && !compactExpanded);}
     private int xLimit(int width){
         int right=shared.requests().width()>0?shared.requests().x()-4:shared.screenWidth()-4;
         return Math.max(4,right-width);
     }
     private int yLimit(int height){return Math.max(4,shared.screenHeight()-height-4);}
     private void rebuild(){
-        int width=Math.min(shared.screenWidth(),Math.max(40,shared.skillsDefault().width()));
-        int height=Math.min(shared.screenHeight(),minimized()?HEADER+RESOURCE:Math.max(60,shared.skillsDefault().height()));
+        int width=Math.min(shared.screenWidth(),Math.max(40,Math.min(preferredWidth,shared.skillsDefault().width())));
+        int desired=HEADER+RESOURCE+(minimized()?0:Math.max(1,actions)*ROW);
+        // Keep the group controls reachable in the same lane while the skill list scrolls.
+        int heightLimit=Math.max(HEADER+RESOURCE+ROW,shared.screenHeight()-120);
+        int height=Math.min(shared.screenHeight(),Math.min(desired,heightLimit));
         int x=positioned?4+(int)Math.round(placement.x()*(xLimit(width)-4)):shared.skillsDefault().x();
         int y=positioned?4+(int)Math.round(placement.y()*(yLimit(height)-4)):shared.skillsDefault().y();
         x=Math.clamp(x,0,Math.min(shared.screenWidth()-width,xLimit(width)));
@@ -54,7 +67,7 @@ public final class SkillsPanelState {
         var res=new Rect(x,y+header,width,resource);var body=new Rect(x,y+header+resource,width,height-header-resource);
         geometry=new Geometry(panel,head,res,body,new Rect(Math.max(x,x+width-36),y+2,14,Math.max(0,header-4)),
                 new Rect(Math.max(x,x+width-18),y+2,14,Math.max(0,header-4)),
-                new Rect(Math.max(x,body.right()-9),body.y(),7,body.height()));
+                new Rect(Math.max(x,body.right()-9),body.y(),actions*ROW>body.height()?7:0,body.height()));
         scroll.configure(actions*ROW,body.height());
     }
     private void locate(double x,double y){
@@ -74,7 +87,9 @@ public final class SkillsPanelState {
         if(geometry.minimize.contains(x,y)){
             // Preserve the current top-left when the panel's height changes.
             int px=geometry.panel.x(),py=geometry.panel.y();
-            placement=new Placement(placement.x(),placement.y(),!placement.minimized());positioned=true;dirty=true;
+            boolean collapse = !minimized();
+            compactExpanded = !collapse;
+            placement=new Placement(placement.x(),placement.y(),collapse);positioned=true;dirty=true;
             rebuild();locate(px,py);scroll.reset();return new Press(true,true,false,-1);
         }
         if(geometry.help.contains(x,y))return new Press(true,false,true,-1);

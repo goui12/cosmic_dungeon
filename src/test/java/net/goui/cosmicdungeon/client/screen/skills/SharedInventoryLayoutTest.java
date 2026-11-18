@@ -32,5 +32,13 @@ final class SharedInventoryLayoutTest {
         var state=new SkillsPanelState(shared,null);
         assertTrue(state.minimized());assertEquals(0,state.geometry().body().height());
         inside(state.geometry().panel(),240,160);
+        state.actions(8);
+        var toggle=state.geometry().minimize();
+        assertTrue(state.press(toggle.x()+1,toggle.y()+1,0,false).changed());
+        state.release();
+        assertFalse(state.minimized());
+        assertTrue(state.geometry().body().height()>=SkillsPanelState.ROW);
+        assertTrue(state.scroll().max()>0);
+        inside(state.geometry().panel(),240,160);
     }
 }

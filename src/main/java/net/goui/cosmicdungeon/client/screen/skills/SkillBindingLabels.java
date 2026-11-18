@@ -12,7 +12,20 @@ import net.minecraft.network.chat.Component;
 /** Live controls presentation; model/tooltip tests can supply hints without creating native key mappings. */
 public final class SkillBindingLabels {
     public static final int HINT_COLOR = 0xFFAAAAAA;
-    public static final float HINT_SCALE = .75F;
+    static final float TEXT_SCALE = .80F;
+    public static final float HINT_SCALE = .65F;
+    static int textWidth(Font font, String text) {
+        return (int)Math.ceil(font.width(text) * TEXT_SCALE);
+    }
+    static void drawText(GuiGraphics g, Font font, String text, int x, int y, int color) {
+        var pose = g.pose();
+        pose.pushMatrix();
+        try {
+            pose.translate(x, y);
+            pose.scale(TEXT_SCALE, TEXT_SCALE);
+            g.drawString(font, text, 0, 0, color, false);
+        } finally { pose.popMatrix(); }
+    }
     public record Layout(String title, String hint, int titleX, int hintX, boolean stacked) {}
     private SkillBindingLabels() {}
 
@@ -57,16 +70,17 @@ public final class SkillBindingLabels {
     public static void draw(GuiGraphics g, Font font, String actionId, String title, Rect row, int color) {
         // Query every draw so changes in Controls, including unbinding, appear immediately.
         String hint = SkillKeybindClient.hint(actionId).getString();
-        var line = layout(title, hint, row.width() - 8, font::width,
+        var line = layout(title, hint, row.width() - 4, text -> textWidth(font, text),
                 text -> (int)Math.ceil(font.width(Component.literal(text).withStyle(ChatFormatting.ITALIC)) * HINT_SCALE),
-                (text, width) -> clip(font, text, width),
+                (text, width) -> clip(font, text, (int)(width / TEXT_SCALE)),
                 (text, width) -> clip(font, text, Math.max(0,(int)(width / HINT_SCALE)-2)));
-        int y = row.y() + (line.stacked() ? 1 : Math.max(0, (row.height() - font.lineHeight) / 2));
-        g.drawString(font, line.title(), row.x() + 4 + line.titleX(), y, color, false);
+        int titleHeight = (int)Math.ceil(font.lineHeight * TEXT_SCALE);
+        int y = row.y() + (line.stacked() ? 0 : Math.max(0, (row.height() - titleHeight) / 2));
+        drawText(g, font, line.title(), row.x() + 2 + line.titleX(), y, color);
         if (!line.hint().isEmpty()) {
             var pose=g.pose();pose.pushMatrix();
             try {
-                pose.translate(row.x()+4+line.hintX(),line.stacked()?row.y()+11:y+1);
+                pose.translate(row.x()+2+line.hintX(),line.stacked()?row.y()+titleHeight:y+1);
                 pose.scale(HINT_SCALE,HINT_SCALE);
                 g.drawString(font,Component.literal(line.hint()).withStyle(ChatFormatting.ITALIC),0,0,HINT_COLOR,false);
             } finally { pose.popMatrix(); }

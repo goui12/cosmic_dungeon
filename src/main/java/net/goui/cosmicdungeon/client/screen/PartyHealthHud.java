@@ -11,7 +11,14 @@ import net.minecraft.core.registries.BuiltInRegistries;
 
 /** Active-run cards. World cards are read-only; inventory cards reveal every synchronized effect by scrolling. */
 final class PartyHealthHud {
-    private record Row(Component label, PartyVitals vitals, List<String> details, String memberId) {}
+    private static final int ABILITY_HEIGHT = 10;
+    private record Row(String key, String memberId, Component label, Component plainLabel,
+                       PartyVitals vitals, PartyPayloads.Member member, PartyPayloads.Mercenary hire) {
+        boolean collapsed() { return GroupSkillPreferences.client().collapsed(key, !memberId.isEmpty()); }
+        boolean hasSkill() { return !vitals.skills().abbreviation().isEmpty(); }
+    }
+    private static List<Row> cachedRows = List.of();
+    private static PartyPayloads.View cachedView;
     private static int scroll;
     private static boolean dragging;
     private static double grab;
@@ -24,13 +31,32 @@ final class PartyHealthHud {
     }
     static PartyHealthLayout inventoryLayout(int left,int height) { return PartyHealthLayout.inventory(left,height); }
     private static List<Row> rows(PartyPayloads.View view) {
-        var result=new ArrayList<Row>();
-        for(var member:view.members()) {
-            var label=D1PartyPresentation.identity(member);
-            result.add(new Row(label,member.vitals(),List.of(label.getString(),status(member.vitals()),D1PartyPresentation.sharingStatus(member)),member.memberId()));
+        if (view == cachedView) return cachedRows;
+        var result = new ArrayList<Row>();
+        for (var member : view.members()) {
+            String id = member.mercenary() ? "" : member.memberId();
+            String key = id.isEmpty() ? "member:" + member.name() : id;
+            Component plain = PartySkillPresentation.identity(member.name(), ClassSelectorScreen.className(member.classId()),
+                    PartySkills.NONE, member.leader());
+            result.add(new Row(key, id, D1PartyPresentation.identity(member), plain, member.vitals(), member, null));
         }
-        for(var hire:view.mercenaries()) result.add(new Row(MercenaryHudLayout.identity(hire),hire.vitals(),MercenaryHudLayout.tooltip(hire),""));
-        return result;
+        var duplicates = new HashMap<String, Integer>();
+        for (var hire : view.mercenaries()) {
+            String identity = "merc:" + hire.owner() + "/" + hire.classId() + "/" + hire.name();
+            Component cls = hire.classId().isEmpty() ? Component.empty() : ClassSelectorScreen.className(hire.classId());
+            Component plain = PartySkillPresentation.identity(hire.name(), cls, PartySkills.NONE, false);
+            result.add(new Row(identity + "/" + duplicates.merge(identity, 1, Integer::sum), "",
+                    MercenaryHudLayout.identity(hire), plain, hire.vitals(), null, hire));
+        }
+        cachedRows = List.copyOf(result);
+        cachedView = view;
+        return cachedRows;
+    }
+    static void forget() {
+        cachedView = null;
+        cachedRows = List.of();
+        GroupSkillPreferences.client().enterRun(0);
+        reset();
     }
     static String status(PartyVitals v) {
         return switch(v.state()) {
@@ -40,11 +66,15 @@ final class PartyHealthHud {
             default -> "Unloaded / outside dungeon";
         };
     }
-    static int rowHeight(PartyVitals vitals,PartyHealthLayout box) {
-        return box.rowHeight(vitals.effects().size())+(vitals.omittedEffects()>0?10:0)+vitals.skills().abilities().size()*16;
+    static int rowHeight(PartyVitals vitals,PartyHealthLayout box,boolean collapsed) {
+        return box.rowHeight(vitals.effects().size())+(vitals.omittedEffects()>0?10:0)+(collapsed ? 0 : vitals.skills().abilities().size() * ABILITY_HEIGHT);
     }
     private static int content(List<Row> rows,PartyHealthLayout box) {
-        return rows.stream().mapToInt(r->rowHeight(r.vitals(),box)).sum();
+        return rows.stream().mapToInt(r->rowHeight(r.vitals(),box,r.collapsed())).sum();
+    }
+    static PartyHealthLayout fit(PartyPayloads.View view, PartyHealthLayout bounds) {
+        int height = Math.min(bounds.height(), PartyHealthLayout.HEADER + content(rows(view), bounds));
+        return new PartyHealthLayout(bounds.x(), bounds.y(), bounds.width(), height, 1, 0);
     }
     static void draw(GuiGraphics g,PartyPayloads.View view,PartyHealthLayout box,boolean inventory,int mx,int my) {
         var font=Minecraft.getInstance().font;var rows=rows(view);
@@ -59,7 +89,7 @@ final class PartyHealthHud {
         int y=box.y()+PartyHealthLayout.HEADER-(inventory?scroll:0);
         for(int i=0;i<rows.size();i++) {
             var row=rows.get(i);int x=box.x();
-            int height=inventory?rowHeight(row.vitals(),box):PartyHealthLayout.ROW;
+            int height=inventory?rowHeight(row.vitals(),box,row.collapsed()):PartyHealthLayout.ROW;
             if(!inventory) {
                 x+=(i/box.rowsPerColumn())*(box.width()+4);
                 y=box.y()+PartyHealthLayout.HEADER+(i%box.rowsPerColumn())*PartyHealthLayout.ROW;
@@ -80,7 +110,11 @@ final class PartyHealthHud {
     }
     private static void card(GuiGraphics g,Row row,int x,int y,int width,int height,boolean inventory,int mx,int my) {
         var font=Minecraft.getInstance().font;var v=row.vitals();int textWidth=width-(inventory?14:8);
-        PartySkillPresentation.drawClipped(g,font,row.label(),x+4,y+1,textWidth);
+        boolean toggle = inventory && row.hasSkill();
+        boolean collapsed = toggle && row.collapsed();
+        int inset = toggle ? 11 : 0;
+        if (toggle) drawArrow(g, x + 4, y + 2, collapsed);
+        PartySkillPresentation.drawClipped(g,font,collapsed ? row.plainLabel() : row.label(),x+4+inset,y+1,textWidth-inset);
         g.drawString(font,font.plainSubstrByWidth(status(v),textWidth),x+4,y+11,v.state().equals("ACTIVE")?0xFFAAFFAA:0xFFBBBBBB,false);
         g.fill(x+4,y+22,x+4+textWidth,y+24,0xFF553333);
         if(v.state().equals("ACTIVE")&&v.maxHealth()>0)
@@ -105,22 +139,44 @@ final class PartyHealthHud {
         if(inventory) {
             int abilityY=y+27+Math.max(1,(v.effects().size()+columns-1)/columns)*10;
             if(v.omittedEffects()>0){g.drawString(font,"+"+v.omittedEffects(),x+4,abilityY,0xFFE4C98A,false);abilityY+=10;}
-            for(var ability:v.skills().abilities()) {
-                String label=PartySkillPresentation.ability(ability,D1PartyHud.now(v));
-                g.drawString(font,font.plainSubstrByWidth(label,textWidth),x+4,abilityY,0xFF90CAF9,false);
-                PartySkillPresentation.bar(g,ability,D1PartyHud.now(v),x+4,abilityY+10,textWidth);
-                if(rowHovered&&my>=abilityY&&my<abilityY+16) {
-                    g.setComponentTooltipForNextFrame(font,List.of(Component.literal(label)),mx,my);effectHovered=true;
+            if (!collapsed) for (var ability : v.skills().abilities()) {
+                long now = D1PartyHud.now(v);
+                String label = PartySkillPresentation.ability(ability, now);
+                int barWidth = Math.max(0, Math.min(38, textWidth / 3));
+                PartySkillPresentation.bar(g, ability, now, x + 4, abilityY + 3, barWidth);
+                var pose = g.pose();
+                pose.pushMatrix();
+                pose.translate(x + 7 + barWidth, abilityY);
+                pose.scale(.75f, .75f);
+                g.drawString(font, font.plainSubstrByWidth(ability.title(),
+                        Math.max(0, (int)((textWidth - barWidth - 3) / .75f))), 0, 0, 0xFF90CAF9, false);
+                pose.popMatrix();
+                if (rowHovered && my >= abilityY && my < abilityY + ABILITY_HEIGHT) {
+                    if (row.hire() != null && ability.title().equals("Banish Afflictions") && ability.readyAt() <= now)
+                        label += " (waiting for a nearby ally with a harmful effect)";
+                    g.setComponentTooltipForNextFrame(font,List.of(Component.literal(label)),mx,my);
+                    effectHovered = true;
                 }
-                abilityY+=16;
+                abilityY += ABILITY_HEIGHT;
+            }
+            if (toggle && arrowAt(x, y, mx, my)) {
+                g.setComponentTooltipForNextFrame(font, List.of(Component.literal(collapsed ? "Show skills" : "Hide skills")), mx, my);
+                return;
             }
         }
         if(!effectHovered&&mx>=x&&mx<x+width-6&&my>=y&&my<y+height) {
             var details=new ArrayList<Component>();
-            details.add(row.label());
-            if(!row.memberId().isEmpty())details.addAll(PartyInspectionHover.details(row.memberId(),row.details()));
-            else row.details().forEach(s->details.add(Component.literal(s)));
-            for(var ability:v.skills().abilities())details.add(Component.literal(PartySkillPresentation.ability(ability,D1PartyHud.now(v))).withStyle(net.minecraft.ChatFormatting.AQUA));
+            details.add(collapsed ? row.plainLabel() : row.label());
+            if (collapsed) {
+                details.add(Component.literal(status(v)));
+                if (row.member() != null) details.add(Component.literal(D1PartyPresentation.sharingStatus(row.member())));
+            } else if (!row.memberId().isEmpty()) {
+                details.addAll(PartyInspectionHover.details(row.memberId(), List.of(status(v), D1PartyPresentation.sharingStatus(row.member()))));
+            } else if (row.hire() != null) {
+                MercenaryHudLayout.tooltip(row.hire()).forEach(s -> details.add(Component.literal(s)));
+            }
+            if (!collapsed) for(var ability:v.skills().abilities())
+                details.add(Component.literal(PartySkillPresentation.ability(ability,D1PartyHud.now(v))).withStyle(net.minecraft.ChatFormatting.AQUA));
             if(v.omittedEffects()>0)details.add(Component.literal(v.omittedEffects()+" additional effects exceed the network display limit"));
             if(!row.memberId().isEmpty())PartyInspectionHover.tooltip(g,details,mx,my);
             else g.setComponentTooltipForNextFrame(font,details,mx,my);
@@ -129,12 +185,22 @@ final class PartyHealthHud {
     static PartyPayloads.Member memberAt(PartyPayloads.View view,PartyHealthLayout box,double mx,double my) {
         if(!box.contains(mx,my)||mx>=box.x()+box.width()-6||my<box.y()+PartyHealthLayout.HEADER)return null;
         int y=box.y()+PartyHealthLayout.HEADER-box.clampScroll(scroll,content(rows(view),box));
-        for(var member:view.members()) {
-            int height=rowHeight(member.vitals(),box);
-            if(my>=y&&my<y+height)return member.mercenary()||member.memberId().isEmpty()?null:member;
-            y+=height;
+        for (var row : rows(view)) {
+            int height = rowHeight(row.vitals(), box, row.collapsed());
+            if (my >= y && my < y + height)
+                return row.memberId().isEmpty() || row.hasSkill() && arrowAt(box.x(), y, mx, my) ? null : row.member();
+            y += height;
         }
         return null;
+    }
+    private static void drawArrow(GuiGraphics g, int x, int y, boolean closed) {
+        for (int i = 0; i < 4; i++) {
+            if (closed) g.fill(x+i, y+i, x+i+1, y+7-i, 0xFFE4C98A);
+            else g.fill(x+i, y+i+1, x+7-i, y+i+2, 0xFFE4C98A);
+        }
+    }
+    private static boolean arrowAt(int x, int y, double mx, double my) {
+        return mx >= x && mx < x + 14 && my >= y && my < y + 11;
     }
     static boolean wheel(PartyPayloads.View view,PartyHealthLayout box,double mx,double my,double delta) {
         if(!box.contains(mx,my)||my<box.y()+PartyHealthLayout.HEADER||delta==0)return false;
@@ -142,6 +208,16 @@ final class PartyHealthHud {
     }
     static boolean press(PartyPayloads.View view,PartyHealthLayout box,double mx,double my) {
         int total=content(rows(view),box);
+        if (box.contains(mx,my) && mx < box.x()+box.width()-6 && my >= box.y()+PartyHealthLayout.HEADER) {
+            int y = box.y() + PartyHealthLayout.HEADER - box.clampScroll(scroll, total);
+            for (var row : rows(view)) {
+                if (row.hasSkill() && arrowAt(box.x(), y, mx, my)) {
+                    GroupSkillPreferences.client().toggle(row.key(), !row.memberId().isEmpty());
+                    return true;
+                }
+                y += rowHeight(row.vitals(), box, row.collapsed());
+            }
+        }
         if(!box.contains(mx,my)||mx<box.x()+box.width()-6||my<box.y()+PartyHealthLayout.HEADER||box.maxScroll(total)==0)return false;
         int top=box.thumbY(scroll,total),height=box.thumbHeight(total);
         grab=my>=top&&my<top+height?my-top:height/2.0;
