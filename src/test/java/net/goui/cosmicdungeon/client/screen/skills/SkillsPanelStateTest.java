@@ -85,6 +85,22 @@ final class SkillsPanelStateTest {
         panel.content(1,96);
         assertEquals(small,panel.geometry());assertEquals(0,panel.scroll().offset());
     }
+    @Test void draggedSkillsLeaveAContiguousLobbyAndThreeButtonFooter() {
+        var shared = layout(400,240);
+        var state = new SkillsPanelState(shared,null);
+        state.actions(14);
+        state.reserveGroup(96,234,112);
+        var header = state.geometry().header();
+        assertTrue(state.press(header.x()+2,header.y()+3,0,false).consumed());
+        for (int requestedY = 0; requestedY <= 240; requestedY++) {
+            assertTrue(state.drag(12, requestedY, 0, false));
+            var panel = state.geometry().panel();
+            int above = panel.y() - 4 - 8;
+            int below = 234 - panel.bottom() - 4;
+            assertTrue(Math.max(above,below) >= 112, "Footer and first row must fit at y=" + requestedY);
+        }
+        state.release();
+    }
     @Test void invalidSavedCoordinatesAreRejectedAndOutOfRangeValuesRecover(){
         assertThrows(IllegalArgumentException.class,()->new SkillsPanelState.Placement(Double.NaN,0,false));
         var state=new SkillsPanelState(layout(320,240),new SkillsPanelState.Placement(-20,30,false));

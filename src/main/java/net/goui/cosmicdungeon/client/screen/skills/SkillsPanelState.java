@@ -23,6 +23,27 @@ public final class SkillsPanelState {
     private SharedInventoryLayout shared;private Placement placement;private boolean positioned,dirty;
     private boolean compactExpanded;
     private int preferredWidth = Integer.MAX_VALUE;
+    private int groupWidth, groupBottom, groupMinimum;
+
+    void reserveGroup(int width, int bottom, int minimum) {
+        if (width == groupWidth && bottom == groupBottom && minimum == groupMinimum) return;
+        groupWidth = width;
+        groupBottom = bottom;
+        groupMinimum = minimum;
+        rebuild();
+    }
+
+    // When both free intervals are too short, snap the rendered panel to the nearer
+    // legal edge. Placement retains the requested coordinates for later resizes.
+    private int avoidSplittingGroup(int x, int y, int width, int height) {
+        if (groupMinimum == 0 || x >= 8 + groupWidth || x + width <= 8) return y;
+        int highestUnderGroup = 8 + groupMinimum + 4;
+        int lowestAboveGroup = groupBottom - groupMinimum - 4 - height;
+        if (y >= highestUnderGroup || y <= lowestAboveGroup) return y;
+        if (highestUnderGroup > yLimit(height)) return Math.max(0, lowestAboveGroup);
+        if (lowestAboveGroup < 0) return highestUnderGroup;
+        return y - lowestAboveGroup <= highestUnderGroup - y ? lowestAboveGroup : highestUnderGroup;
+    }
     private Geometry geometry;private int actions,auxiliaryButtons;private boolean moving,ownedPress;private double grabX,grabY;
     private final PanelScroll scroll=new PanelScroll();
     public SkillsPanelState(SharedInventoryLayout shared,Placement saved){
@@ -57,11 +78,14 @@ public final class SkillsPanelState {
         int desired=HEADER+RESOURCE+(minimized()?0:Math.max(1,actions)*ROW);
         // Keep the group controls reachable in the same lane while the skill list scrolls.
         int heightLimit=Math.max(HEADER+RESOURCE+ROW,shared.screenHeight()-120);
+        if (groupMinimum > 0)
+            heightLimit = Math.min(heightLimit, Math.max(HEADER + RESOURCE + ROW, groupBottom - groupMinimum - 8));
         int height=Math.min(shared.screenHeight(),Math.min(desired,heightLimit));
         int x=positioned?4+(int)Math.round(placement.x()*(xLimit(width)-4)):shared.skillsDefault().x();
         int y=positioned?4+(int)Math.round(placement.y()*(yLimit(height)-4)):shared.skillsDefault().y();
         x=Math.clamp(x,0,Math.min(shared.screenWidth()-width,xLimit(width)));
         y=Math.clamp(y,0,Math.min(shared.screenHeight()-height,yLimit(height)));
+        y = avoidSplittingGroup(x, y, width, height);
         int header=Math.min(HEADER,height),resource=Math.min(RESOURCE,height-header);
         var panel=new Rect(x,y,width,height);var head=new Rect(x,y,width,header);
         var res=new Rect(x,y+header,width,resource);var body=new Rect(x,y+header+resource,width,height-header-resource);

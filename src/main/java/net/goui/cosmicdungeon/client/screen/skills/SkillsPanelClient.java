@@ -79,9 +79,10 @@ public final class SkillsPanelClient {
         return true;
     }
     /** Group layout follows the actual movable panel, including after minimization or resize. */
-    public static SharedInventoryLayout.Rect groupLane(Screen candidate, int width, int bottom) {
+    public static SharedInventoryLayout.Rect groupLane(Screen candidate, int width, int bottom, int minimum) {
         var full = new SharedInventoryLayout.Rect(8, 8, width, Math.max(24, bottom - 8));
         if (!inventory(candidate) || (screen != candidate || state == null) && !refresh(candidate)) return full;
+        state.reserveGroup(width, bottom, minimum);
         var panel = state.geometry().panel();
         if (panel.x() >= full.right() || panel.right() <= full.x()) return full;
         int below = Math.max(0, bottom - panel.bottom() - 4);

@@ -68,7 +68,9 @@ public final class D1PartyHud {
         var reserved = inventoryLayout(screen).group();
         int width = Math.min(176, reserved.width());
         int bottom = screen.height - (ownRevival() == null ? 6 : 30);
-        return SkillsPanelClient.groupLane(screen, width, bottom);
+        // A scrollable member row must remain visible above the complete native footer.
+        int minimum = !visible() ? 0 : activeHealth() ? 48 : 40 + lobbyFooter();
+        return SkillsPanelClient.groupLane(screen, width, bottom, minimum);
     }
 
     private static int lobbyFooter() {
