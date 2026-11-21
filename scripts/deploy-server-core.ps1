@@ -12,18 +12,23 @@ function Assert-CDPublishedRelease($Receipt, [string]$JarName, [string]$Commit) 
     }
 }
 function Assert-CDShutdownTail([string[]]$Lines) {
+    # Recognize the vanilla console and NeoForge latest.log layouts. Player chat,
+    # commands and other loggers can quote the stop text while the server is active.
+    $timestamp = '(?:\[(?:(?:\d{1,2}[A-Za-z]{3}\d{4}|\d{4}-\d{2}-\d{2}) )?\d{2}:\d{2}:\d{2}(?:[.,]\d{1,3})?\] )?'
+    $logger = '(?: \[(?:(?:net\.minecraft\.server\.|ne\.mi\.se\.|minecraft/)?MinecraftServer)/?\])?'
+    $header = $timestamp + '\[Server thread/INFO\]' + $logger + ': '
+    $stopLine = '^' + $header + 'Stopping (?:the )?server$'
+    $saveLine = '^(?:' + $header + ')?(?:Saving (?:players|worlds)|Saving chunks for level ''[^'']+''/[a-z0-9_.-]+:[a-z0-9_./-]+|ThreadedAnvilChunkStorage(?: \([^)]+\))?: All (?:chunks|dimensions) are saved)$'
+
     $nonempty = @($Lines | Where-Object {$_.Trim()})
     $stop = -1
     for ($i=0; $i -lt $nonempty.Count; $i++) {
-        if ($nonempty[$i] -match 'Stopping the server') {$stop=$i}
+        if ($nonempty[$i] -cmatch $stopLine) {$stop=$i}
     }
     if ($stop -lt 0) {throw 'No current shutdown indicator; server state is not established.'}
     for ($i=$stop+1; $i -lt $nonempty.Count; $i++) {
-        if ($nonempty[$i] -notmatch '(?i)(Saving (players|worlds|chunks)|saved|ThreadedAnvilChunkStorage|Closing|Stopping|Unloading|Shutting down|All dimensions|Flushing)') {
+        if ($nonempty[$i] -cnotmatch $saveLine) {
             throw 'Activity after shutdown indicator requires investigation.'
-        }
-        if ($nonempty[$i] -match '(?i)(Starting|Done \(|joined the game|logged in|issued server command)') {
-            throw 'Server resumed after its shutdown indicator.'
         }
     }
     return $nonempty[$stop]

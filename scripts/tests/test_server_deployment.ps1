@@ -14,6 +14,27 @@ Reject {Assert-CDShutdownTail @($stop,'Starting minecraft server version 1.21.10
 Reject {Assert-CDShutdownTail @($stop,'Done (12 seconds)!')} 'Completed restart denied'
 Reject {Assert-CDShutdownTail @($stop,'Player joined the game')} 'Resumed activity denied'
 Reject {Assert-CDShutdownTail @($stop,'Unknown activity')} 'Unknown later activity denied'
+$official='[21Nov2026 13:08:40.006] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Stopping the server'
+$vanilla='[13:08:40] [Server thread/INFO]: Stopping server'
+$short='[13:08:40] [Server thread/INFO] [minecraft/MinecraftServer]: '
+foreach($line in @($official,$vanilla,($short+'Stopping server'),'[Server thread/INFO] [ne.mi.se.MinecraftServer/]: Stopping server')){
+    Check ((Assert-CDShutdownTail @($line)) -ceq $line) 'Exact native announcement establishes shutdown'
+}
+$saves=@($official,($short+'Saving players'),($short+'Saving worlds'),
+    ($short+"Saving chunks for level 'ServerLevel[world]'/minecraft:overworld"),
+    ($short+'ThreadedAnvilChunkStorage (world): All chunks are saved'),
+    ($short+'ThreadedAnvilChunkStorage: All dimensions are saved'))
+Check ((Assert-CDShutdownTail $saves) -ceq $official) 'Native world saves may follow an authentic stop'
+foreach($bad in @(($short+'<Player> Stopping the server'),($short+'[Server] Stopping the server'),
+    '[Server thread/INFO] [example/MinecraftServer]: Stopping server',
+    '[Async Chat Thread/INFO]: Stopping the server','Stopping the server',($short+'Stopping server soon'))){
+    Reject {Assert-CDShutdownTail @($bad)} 'Quoted or unrelated shutdown denied'
+}
+foreach($bad in @(($short+'<Player> All chunks are saved'),($short+'Stopping another task'),
+    ($short+'Saving players took 2 ms'),'[Server thread/INFO] [other/logger]: Saving players')){
+    Reject {Assert-CDShutdownTail @($official,$bad)} 'Unrelated activity cannot count as shutdown progress'
+}
+Reject {Assert-CDShutdownTail @($official,($short+'Player joined the game'),($short+'<Player> Stopping the server'))} 'A quoted stop cannot clear resumed activity'
 $commit='a'*40
 $r=[pscustomobject]@{version='1.6.7-alpha.1';commit=$commit;main_project=1326805;status='submitted';files=@{main=@{file_id=1};loading_companion=@{file_id=2}};sha256=@{main='b'*64}}
 Assert-CDPublishedRelease $r 'cosmicdungeon-1.6.7-alpha.1.jar' $commit
