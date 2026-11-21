@@ -27,6 +27,19 @@ public final class GroupResourceConsent {
         if (party != null && always(player) && party.resourceSharing(player.getUUID()).equals("UNKNOWN"))
             lobby.resourceSharing(player.getUUID(), party.revision(), party.id().toString(), true);
     }
+    static String chooseInLobby(ServerPlayer player, D1PartyLobby lobby, PartyPayloads.Action request) {
+        UUID member = player.getUUID();
+        // Turning off the default never grants consent, even after a delayed or repeated packet.
+        if (request.action().equals("resources_ask")) {
+            String error = lobby.sharingProblem(member, request.revision(), request.target());
+            if (error == null) remember(player, false);
+            return error;
+        }
+        boolean yes = !request.action().equals("resources_no");
+        String error = lobby.resourceSharing(member, request.revision(), request.target(), yes);
+        if (error == null && (!yes || request.action().equals("resources_always"))) remember(player, yes);
+        return error;
+    }
     public static boolean inventoryContext(ServerPlayer player) {
         return player.containerMenu == player.inventoryMenu
                 || player.containerMenu instanceof net.goui.cosmicdungeon.playerclass.api.ExtraInventoryMenu

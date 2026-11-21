@@ -189,12 +189,9 @@ public final class D1PartyService {
         if(tick-LAST_SHARING_ACTION.getOrDefault(player.getUUID(),-1000000L)<Config.PARTY_ACTION_TICKS.get())return;
         LAST_SHARING_ACTION.put(player.getUUID(),tick);
         var party=LOBBY.party(player.getUUID());
-        boolean enabled=!request.action().equals("resources_no");
         String error=party!=null ? (!onboarded(player) ? "Group is unavailable." :
-                LOBBY.resourceSharing(player.getUUID(),request.revision(),request.target(),enabled))
-                : GroupResourceConsent.choose(player,request.revision(),request.target(),enabled);
-        if (error == null && (request.action().equals("resources_always") || request.action().equals("resources_ask") || !enabled))
-            GroupResourceConsent.remember(player, request.action().equals("resources_always"));
+                GroupResourceConsent.chooseInLobby(player, LOBBY, request))
+                : GroupResourceConsent.choose(player,request.revision(),request.target(),request.action().equals("resources_yes"));
         if(error!=null)message(player,error);
         show(player,true);syncViewers(server);
     }

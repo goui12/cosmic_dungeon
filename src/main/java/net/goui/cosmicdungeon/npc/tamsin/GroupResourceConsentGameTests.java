@@ -134,6 +134,10 @@ public final class GroupResourceConsentGameTests {
             lobby.accept(f.subject.getUUID(),lobby.invitation(f.subject.getUUID()).token(),1);
             lobby.joinAccepted(f.subject.getUUID(),2,6,true);
             lobby.resourceSharing(f.subject.getUUID(),party.revision(),party.id().toString(),false);
+            var stopRemembering = new PartyPayloads.Action(-1, party.revision(), "resources_ask", party.id().toString());
+            f.check(GroupResourceConsent.chooseInLobby(f.subject, lobby, stopRemembering) == null
+                    && party.resourceSharing(f.subject.getUUID()).equals("NO"),
+                    "Delayed uncheck cannot turn a newer No into Yes");
             f.data.setValue(f.id,"future_existing_key","retain me");
             GroupResourceConsent.carryIntoRun(f.level.getServer(),party);
             f.check(GroupResourceConsent.choice(f.data,f.id,f.viewer.getUUID()).equals("UNKNOWN"),"Assembly cannot initialize an active run");

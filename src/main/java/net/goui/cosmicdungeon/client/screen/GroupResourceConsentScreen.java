@@ -53,7 +53,7 @@ final class GroupResourceConsentScreen extends Screen {
     private boolean confirmed(PartyPayloads.Sharing sharing) {
         return switch (requested) {
             case "resources_always" -> sharing.choice().equals("YES") && sharing.always();
-            case "resources_ask" -> sharing.choice().equals("YES") && !sharing.always();
+            case "resources_ask" -> !sharing.always();
             case "resources_yes" -> sharing.choice().equals("YES");
             case "resources_no" -> sharing.choice().equals("NO");
             default -> false;

@@ -159,10 +159,15 @@ public final class D1PartyLobby {
         p.countdownEnd = -1; p.queueOrder = 0; changed(p);
     }
     /** A personal, explicit choice; ready confirmations do not grant inventory access. */
+    String sharingProblem(UUID member, long expected, String context) {
+        var p = party(member);
+        return p == null || !current(member, expected) || !p.id.toString().equals(context) || !p.sharingMutable()
+                ? "Group changed; review your resource choice." : null;
+    }
     public String resourceSharing(UUID member,long expected,String context,boolean enabled) {
-        var p=party(member);
-        if(p==null||!current(member,expected)||!p.id.toString().equals(context)||!p.sharingMutable())
-            return "Group changed; review your resource choice.";
+        String problem = sharingProblem(member, expected, context);
+        if (problem != null) return problem;
+        var p = party(member);
         String choice=enabled?"YES":"NO";
         // Personal choices do not invalidate another member's same-roster choice packet.
         p.resourceSharing.put(member,choice);

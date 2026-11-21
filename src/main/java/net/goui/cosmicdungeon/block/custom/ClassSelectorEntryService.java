@@ -297,7 +297,7 @@ public final class ClassSelectorEntryService {
                 DungeonLifecycleService.abortActiveRunForPlayer(finalParty.getFirst());
                 return false;
             }
-            finalParty.forEach(DungeonLifecycleService::onFreshEntry);
+            finalParty.forEach(net.goui.cosmicdungeon.dungeon.DungeonForfeitService::notifyEntry);
             startupTiming.success();
             return true;
         } finally {

@@ -160,7 +160,7 @@ public final class DungeonInventoryHandoffs {
                     for (int slot = 0; slot < replacement.size(); slot++) p.getInventory().setItem(slot, replacement.get(slot).copy());
                     p.getInventory().setChanged();
                 }
-                if (plan.kind().equals("cleanup")) DungeonLifecycleService.restoreForfeitHealth(p, plan.reason());
+                if (plan.kind().equals("cleanup")) DungeonRunHealth.afterCleanup(p, plan.reason(), plan.originalHealth());
                 var next = root(p).copy(); next.put(RECEIPT, plan.receipt());
                 if (plan.kind().equals("cleanup")) next.putLong(COMPLETED, plan.run());
                 p.getPersistentData().put(ClassData.ROOT_TAG, next);
