@@ -1,3 +1,7 @@
+# 1.8.15 Beta
+
+One authorized batch. [Changes and player controls](../releases/1.8.15-beta.1.md). Official-server delivery uses the pinned saved WinSCP site on Goggins. The controller records the actual build, CI, publication and delivery receipts. No further implementation cards are queued. [Outstanding QA and review items](tasks/BATCH_1_7_20_REVIEW_NOTES_20261012.md).
+
 # 1.8.14 Beta
 
 One authorized batch for all-class activation checks, the gameplay primary meter and compact inventory panels. See [release notes](../releases/1.8.14-beta.1.md). Manual gameplay acceptance remains pending.

@@ -17,6 +17,22 @@ class HelpGuideInteractionTest {
         public int lineHeight() { return 9; }
         public float glyph(int codepoint, Style style) { return style.isBold() ? 7 : 6; }
     };
+    @Test void helpUsesTheSingleBackgroundPassOwnedByTheNativeScreen() throws Exception {
+        assertEquals(1, backgroundCalls(Screen.class, "renderWithTooltipAndSubtitles"));
+        assertEquals(0, backgroundCalls(HelpMenuScreen.class, "render"),
+                "A second background blur in Help crashes the Minecraft render thread");
+    }
+    private static long backgroundCalls(Class<?> owner, String method) throws Exception {
+        try (var bytes = owner.getResourceAsStream(owner.getSimpleName() + ".class")) {
+            assertNotNull(bytes);
+            var type = new org.objectweb.asm.tree.ClassNode();
+            new org.objectweb.asm.ClassReader(bytes).accept(type, org.objectweb.asm.ClassReader.SKIP_DEBUG);
+            var render = type.methods.stream().filter(m -> method.equals(m.name)).findFirst().orElseThrow();
+            return java.util.Arrays.stream(render.instructions.toArray())
+                    .filter(i -> i instanceof org.objectweb.asm.tree.MethodInsnNode call
+                            && "renderBackground".equals(call.name)).count();
+        }
+    }
     @Test void everyPageIsReachableAndLinksCannotEscapeTheEnabledTree() {
         var navigation = new HelpGuideNavigation();
         assertEquals(33, navigation.pages().size());

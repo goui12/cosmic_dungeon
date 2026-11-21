@@ -65,6 +65,7 @@ final class CosmicSpawnerRuntime {
                 CosmicSpawnerSpawnDefaults.applyIfNeeded(part);
                 owner.maintainTaggedEntity(part);
             });
+            SpawnerMobScale.apply(entity, owner.getSpawnerMobScale());
             if (!CosmicSpawnerPlacement.place(level, entity, pos)) {
                 owner.setSpawnBlocked(true);
                 owner.deferPlacement(level.getGameTime());

@@ -89,19 +89,19 @@ upload: inspect the author console and reconcile the file ID rather than blindly
 again. GitHub retains this checkpoint in a draft release even if a job is interrupted.
 Accepted upload is not proof of moderation approval or visibility in the app.
 
-## Batch finish by channel (Cameron, 2026-10-11)
+## Batch finish by channel (Cameron, 2026-11-21)
 
 Alpha builds finish after successful runtime/companion publication. Retain the publication receipt and complete the batch: no sFTP, server-state checks, deployment runtime download or pending server-delivery gate. Record server delivery as not required, never deployed. No local-client installs or additional hash checks.
 
-Only Beta and official/stable builds receive stopped TEST delivery. After successful publication, download the exact tagged runtime and publication receipt
+Only Beta and official/stable builds deploy to the stopped official server. After successful publication, download the exact tagged runtime and publication receipt
 from its GitHub release. Use `scripts/deploy-mod.ps1 -Jar <runtime> -ReleaseReceipt <receipt>`
-for a dry run; add `-Apply` after it establishes fresh TEST shutdown evidence.
+for a dry run; add `-Apply` after it establishes fresh official-server shutdown evidence.
 CI retains full build/test/version/hash provenance. No extra post-publication artifact,
 staging or installed/readback hashes. Deployment retains pinned SFTP, exact source/version/
 receipt, byte counts, acknowledged transfer/renames and a transaction journal.
 Preserve server.properties, unrelated mods and worlds. No restart or client launch.
 
-Only TEST receives a direct copy. No local-client/helper installation, client-process
+Only the official server receives the published runtime directly. Goggins uses its saved WinSCP site `cosmicdungeon`, the pinned ed25519 host key and the official SFTP account ending in `.463499`. Official receipts identify the account and live under `releases/v<version>/official/` in the local AI cache. No local-client/helper installation, client-process
 gate, hash parity or routine current-test feed remains. After acknowledged sFTP, save
 one compact completion receipt and stop at the requested batch limit.
 Unknown state or pending journal blocks replacement. Reconcile uncertain operations

@@ -137,7 +137,9 @@ public final class PartyTradeGameTests {
             session.setConfirm(f.member,true);f.readyUnchanged(revision);
             f.check(f.start(f.member,revision)!=null&&f.start(f.leader,revision-1)!=null,"Unauthorized and stale Start are rejected");
             f.check(TradeSessionData.isBusy(f.member),"Rejected Start leaves the unfinished trade intact");
-            f.ok(f.start(f.leader,revision));
+            f.ok(f.lobby.unready(f.member.getUUID(), revision));
+            f.check(TradeSessionData.isBusy(f.member), "A partial ready check keeps the trade open");
+            f.ok(D1PartyTrades.ready(f.level.getServer(), f.lobby, f.member.getUUID(), f.party.revision()));
             f.check(f.party.phase()==D1PartyLobby.Phase.QUEUED&&f.party.ready().size()==2,"Start queues the same ready group");
             f.check(!TradeSessionData.isBusy(f.member)&&!TradeSessionData.isBusy(f.outsider)
                     &&f.member.containerMenu==f.member.inventoryMenu&&f.outsider.containerMenu==f.outsider.inventoryMenu,"Start closes both menus, including outsider");

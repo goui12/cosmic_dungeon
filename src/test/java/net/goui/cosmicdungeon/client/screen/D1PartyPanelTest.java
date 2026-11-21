@@ -48,7 +48,7 @@ final class D1PartyPanelTest {
                 var widgets = build(panel, viewport[0], viewport[1]); bounded(widgets, viewport[0], viewport[1]);
                 button(widgets, destination).onPress(null);
                 widgets = build(panel, viewport[0], viewport[1]); bounded(widgets, viewport[0], viewport[1]);
-                assertTrue(button(widgets, "Start Adventure!").active, destination);
+                assertTrue(widgets.stream().noneMatch(w -> w.getMessage().getString().equals("Start Adventure!")), destination);
                 assertTrue(button(widgets, "Not Ready").active, destination);
             }
         }
@@ -56,20 +56,20 @@ final class D1PartyPanelTest {
     @Test void initialChoiceHasTwoExplicitOptionsAndDoesNotEnableProgression() {
         var panel = new D1PartyPanel(); panel.setView(view("ASSEMBLY", "UNKNOWN", true, false));
         var widgets = build(panel, 320, 240); bounded(widgets, 320, 240);
-        assertTrue(button(widgets, "YES - contribute").active);
-        assertTrue(button(widgets, "NO - keep materials").active);
+        assertTrue(button(widgets, "Yes").active);
+        assertTrue(button(widgets, "No").active);
+        assertTrue(button(widgets, "☐ Always contribute").active);
         assertFalse(button(widgets, "Begin ready check").active);
         assertFalse(button(widgets, "Ready").active);
         assertTrue(D1PartyPresentation.needsConsent(view("ASSEMBLY", "UNKNOWN", true, false)));
         assertFalse(D1PartyPresentation.needsConsent(view("ASSEMBLY", "NO", true, false)));
     }
     @Test void beginAndStartRemainLeaderOnlyWhileMercenariesNeverBlockHumanReady() {
-        for (String phase : List.of("ASSEMBLY", "READY_CHECK")) {
-            assertFalse(D1PartyPresentation.forward(view(phase, "YES", false, true)).enabled());
-            assertTrue(D1PartyPresentation.forward(view(phase, "YES", true, true)).enabled());
-        }
-        assertFalse(D1PartyPresentation.forward(view("READY_CHECK", "YES", true, false)).enabled());
-        assertFalse(D1PartyPresentation.forward(view("PREPARING", "YES", true, true)).enabled());
+        var panel = new D1PartyPanel();
+        panel.setView(view("ASSEMBLY", "YES", false, false));
+        assertTrue(build(panel, 320, 240).stream().noneMatch(w -> w.getMessage().getString().equals("Begin ready check")));
+        panel.setView(view("ASSEMBLY", "YES", true, false));
+        assertTrue(button(build(panel, 320, 240), "Begin ready check").active);
         var original = view("READY_CHECK", "NO", true, true);
         var mercenary = new PartyPayloads.Member("Hire", "theurgist", false, false, true);
         var mixed = new PartyPayloads.View(1, original.state(), List.of(original.members().getFirst(), mercenary), original.invitation());
@@ -98,7 +98,7 @@ final class D1PartyPanelTest {
     }
     @Test void serverAnswerReturnsFromInitialConsentWithoutBack() {
         var panel = new D1PartyPanel(); panel.setView(view("ASSEMBLY", "UNKNOWN", true, false));
-        assertTrue(button(build(panel, 320, 240), "NO - keep materials").active);
+        assertTrue(button(build(panel, 320, 240), "No").active);
         panel.setView(view("ASSEMBLY", "NO", true, false));
         assertTrue(button(build(panel, 320, 240), "Begin ready check").active);
     }
@@ -108,8 +108,8 @@ final class D1PartyPanelTest {
             button(build(panel,320,240),"Resources").onPress(null);
             panel.setView(view(phase,"YES",true,true));
             var widgets=build(panel,320,240);bounded(widgets,320,240);
-            assertTrue(widgets.stream().noneMatch(w->w.getMessage().getString().startsWith("YES -")
-                    ||w.getMessage().getString().startsWith("NO -")));
+            assertTrue(widgets.stream().noneMatch(w->w.getMessage().getString().equals("Yes")
+                    ||w.getMessage().getString().equals("No")));
             assertFalse(D1PartyPresentation.sharingMutable(view(phase,"YES",true,true)));
             assertFalse(D1PartyPresentation.needsConsent(view(phase,"UNKNOWN",true,true)));
             assertTrue(D1PartyPresentation.consentExplanation("YES",false).stream().anyMatch(line->line.contains("locked")));

@@ -247,8 +247,8 @@ public final class SpawnerEditorScreen extends Screen {
     }
     private void spawningPage() {
         int x = layout.contentX(), y = layout.contentY(), w = (layout.contentWidth() - 10) / 2;
-        toggle("Boss one-shot", x, y, w, state::boss, state::boss,
-                "Boss spawners release one boss only. The normal population cap does not create additional bosses.");
+        number("Mob scale", x, y, w, state.mobScale(), state::mobScale,
+                "Size of newly spawned mobs, from 0.0625 to 4. Enter 0.5 for half size or 1 for the authored size.");
         number("Living mob cap", x + w + 10, y, w, state.cap(), state::cap,
                 "Maximum simultaneously living mobs from this spawner. Zero means uncapped.");
         number("Min delay (ticks)", x, y + 40, w, state.minDelay(), state::minDelay,
@@ -262,7 +262,9 @@ public final class SpawnerEditorScreen extends Screen {
         toggle("No AI", x + w + 10, y, w, state::noAi, state::noAi, "Disable the spawned mob's AI.");
         toggle("Invulnerable", x, y + 26, w, state::invulnerable, state::invulnerable, "Make the spawned entity invulnerable.");
         toggle("Persistent", x + w + 10, y + 26, w, state::persistent, state::persistent, "Prevent natural despawning.");
-        toggle("Always show name", x, y + 52, layout.contentWidth(), state::nameVisible, state::nameVisible,
+        toggle("Boss one-shot", x + w + 10, y + 52, w, state::boss, state::boss,
+                "Boss spawners release one boss only.");
+        toggle("Always show name", x, y + 52, w, state::nameVisible, state::nameVisible,
                 "Keep the custom name visible. Set a custom name on the Entity page.");
     }
     private EditBox field(int x, int y, int w, String value, String hint, int maxLength, Consumer<String> change) {
@@ -399,7 +401,10 @@ public final class SpawnerEditorScreen extends Screen {
             } catch (RuntimeException unavailable) { previewFailure = "Preview unavailable for this entity."; }
         }
         int x = layout.contentX(), y = layout.contentY(), w = layout.contentWidth(), h = layout.contentHeight();
-        g.drawCenteredString(font, "Preview only / never spawned", x + w / 2, y, 0xFF9CA9B6);
+        double factor = state.scaleFactor();
+        String caption = net.goui.cosmicdungeon.block.entity.SpawnerMobScale.valid(factor)
+                ? "Preview / mob scale " + factor + "x" : "Preview / invalid scale";
+        g.drawCenteredString(font, caption, x + w / 2, y, 0xFF9CA9B6);
         if (preview != null) {
             preview.setCustomName(state.name().isEmpty() ? null : Component.literal(state.name()));
             preview.setCustomNameVisible(state.nameVisible());
@@ -415,6 +420,8 @@ public final class SpawnerEditorScreen extends Screen {
             }
             float scale = Math.max(1, Math.min((w - 12) / Math.max(1, preview.getBbWidth() * 2),
                     (h - 24) / Math.max(1, preview.getBbHeight())));
+            // Small mobs visibly shrink. Large previews stay framed while the caption shows the exact factor.
+            if (net.goui.cosmicdungeon.block.entity.SpawnerMobScale.valid(factor)) scale *= (float)Math.min(1, factor);
             float angle = (float) ((System.nanoTime() - openedNanos) / 1_000_000_000.0 * 0.45);
             try {
                 InventoryScreen.renderEntityInInventory(g, x, y + 14, x + w, y + h, scale,

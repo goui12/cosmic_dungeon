@@ -2,7 +2,7 @@
 
 Press **H** for the current player guide. The screen occupies about 80% of the available scaled width and height, with an anchored title, left directory and wrapping information pane. It does not pause the game.
 
-Use the directory or underlined inline links for navigation. **Back** / **Alt+Left** restores the previous guide page. **H** / **Esc** closes it. Wheel input scrolls the pane beneath the pointer; **Page Up / Page Down** scrolls the focused pane (information pane by default). **Tab / Shift+Tab** moves focus; **Enter** opens the focused link. The class-name link in inventory opens the corresponding class page.
+Use the directory or underlined inline links for navigation. **Back** / **Alt+Left** restores the previous guide page. **H** / **Esc** closes it. Wheel input scrolls the pane beneath the pointer; **Page Up / Page Down** scrolls the focused pane (information pane by default). **Tab / Shift+Tab** moves focus; **Enter** opens the focused link. The class-name link in inventory opens the corresponding class page. The party page explains automatic entry and remembered resource sharing.
 
 The directory retains the existing six root entries: Get Started, Dungeons, Party, Classes, General and References. Its 33 reachable pages retain their IDs and hierarchy. Six active class pages are listed; Metalmancer and Deadeye remain unavailable and are not added to the player directory.
 

@@ -118,6 +118,24 @@ public final class DeathInventoryGameTests {
     public static void lifecycle(GameTestHelper helper) {
         try (var f = new Fixture(helper, Long.MAX_VALUE - 301)) {
             var server = f.level.getServer();
+            var maxHealth = f.player.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+            double previousMax = maxHealth.getBaseValue();
+            try {
+                maxHealth.setBaseValue(28);
+                f.player.setHealth(3);
+                DungeonLifecycleService.restoreForfeitHealth(f.player, "STARTUP_ABORT");
+                f.check(f.player.getHealth() == 3, "Aborted startup does not grant a free heal");
+                DungeonLifecycleService.restoreForfeitHealth(f.player, "ABANDONED");
+                f.check(f.player.getHealth() == 28, "Forfeit restores the current maximum, including modifiers");
+                f.player.setHealth(5);
+                f.check(DungeonInventoryHandoffs.reconcile(f.player) && f.player.getHealth() == 5,
+                        "Reconnecting without a pending forfeit keeps the owner's health");
+                DungeonLifecycleService.onFreshEntry(f.player);
+                f.check(f.player.getHealth() == 28, "Fresh admission restores every missing heart");
+            } finally {
+                maxHealth.setBaseValue(previousMax);
+                f.player.setHealth(f.player.getMaxHealth());
+            }
             var keep = f.level.getGameRules().getRule(GameRules.RULE_KEEPINVENTORY);
             boolean oldKeep = keep.get();
             java.util.function.Consumer<LivingDeathEvent> cancel = event -> {

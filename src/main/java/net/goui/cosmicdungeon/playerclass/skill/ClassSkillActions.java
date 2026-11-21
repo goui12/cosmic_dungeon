@@ -37,10 +37,11 @@ public final class ClassSkillActions {
     }
     public static ClassSkillPayloads.SlotView primary(String cls,int level,int charge,boolean armed,boolean active){
         if(cls.equals("dragoon")){
+            int limit = ChargedSkillState.limit(SignatureSkill.CHAIN_LIGHTNING);
             String description=!active?"Requires an active dungeon.":armed?"Armed: your next valid trident strike releases Chain Lightning."
-                    :"Land 100 direct hostile trident hits, then arm your next strike. Charge: "+charge+"/100.";
+                    :"Land "+limit+" direct hostile trident hits, then arm your next strike. Charge: "+charge+"/"+limit+".";
             return new ClassSkillPayloads.SlotView(ClassSkillSlot.PRIMARY,"chain_lightning",
-                    armed?"Chain Lightning (Armed)":"Chain Lightning",description,active&&charge==100&&!armed,0,charge,100);
+                    armed?"Chain Lightning (Armed)":"Chain Lightning",description,active&&charge==limit&&!armed,0,charge,limit);
         }
         if(cls.equals("judicator")){
             var rank=net.goui.cosmicdungeon.playerclass.judicator.SmiteCombat.rank(level);

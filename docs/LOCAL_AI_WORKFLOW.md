@@ -1,11 +1,11 @@
-# Local AI development and TEST-server I/O
+# Local AI development and server delivery
 
 ## Entry points
 
 - Active repository: read `CosmicDungeon_AI/BatchRunner/config.json`.
 - Human-auditable cache: sibling folder `CosmicDungeon_AI`, starting at `CURRENT_STATE.md` and `DECISIONS.md`.
 - Machine-specific, non-secret settings: `CosmicDungeon_AI/config.json`. Do not commit this file.
-- Encrypted credential: `%LOCALAPPDATA%\CosmicDungeon\secrets\test-sftp.credential.xml`; never copy it into the cache, repository, logs or chat.
+- Legacy TEST encrypted credential: `%LOCALAPPDATA%\CosmicDungeon\secrets\test-sftp.credential.xml`; never copy it into the cache, repository, logs or chat.
 - Read the root [AGENTS.md](../AGENTS.md) before changing anything. Contradictory design choices and increased client resource requirements need Cameron's approval.
 
 ## Current player guidance
@@ -26,14 +26,18 @@ Optional logged wrapper: `powershell -NoProfile -ExecutionPolicy Bypass -File .\
 A successful build issues a local receipt with the Git commit, build-input fingerprint, jar SHA256 and log path. Deployment uses the exact CI publication receipt. Legacy feed publication requires explicit `-PublishLegacyFeed`.
 The same wrapper accepts the other four tasks. Cameron revoked automatic development-client launches on 2026-10-04; a new explicit launch request is required. clean still refuses to destroy a tracked build artifact. No Gradle heap setting is changed.
 
-## Credential setup and trust
+## Official server authentication
+
+Beta and stable deployments on Goggins use the current Windows user's WinSCP site `cosmicdungeon`. The deployment script checks the saved site's host, port, account and SFTP protocol before opening it with the pinned ed25519 host key. The official account ends in `.463499`. WinSCP handles its saved authentication internally. A missing site, incomplete authentication or a changed identity blocks delivery.
+
+## Legacy TEST credential setup
 
 Run `powershell -NoProfile -ExecutionPolicy Bypass -STA -File .\scripts\set-sftp-credential.ps1` on Cameron's desktop. Use `-Reset` only to replace a saved credential.
 Type the password in the masked local form, or explicitly select the existing local `COSMIC_SFTP_PASS` value without displaying it. The legacy environment variable is not deleted automatically.
 The exported PSCredential is encrypted by Windows DPAPI and restricted by NTFS permissions. It is reusable by the same Windows user on the same computer, not a portable or everlasting backup, and not protection against compromised same-user/admin code.
 The scripts use WinSCP's installed .NET assembly with SecurePassword and a pinned SHA256 host fingerprint. No password-bearing command line, plaintext temporary script, wildcard host-key acceptance, or automatic host-key reset is used.
 
-## I/O commands (from the repository)
+## Legacy TEST I/O commands (from the repository)
 
 `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\cosmic-io.ps1 -Action Status` records live Git state and setup flags, without reading secret contents.
 `... -Action Probe` validates SFTP reads and server identity; `... -Action Probe -Apply` additionally uploads, reads back, hashes and removes a uniquely named harmless probe file.
@@ -44,15 +48,15 @@ The scripts use WinSCP's installed .NET assembly with SecurePassword and a pinne
 `... -Action Launch -Apply` opens the verified CurseForge shortcut only after client-path confirmation. Cameron performs legitimate Microsoft login/Play as Goui12. It does not automate authentication or guarantee an instance has started.
 `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\capture-client.ps1 -Seconds 30 -IntervalSeconds 5` samples target-client CPU/RAM to CSV and stops automatically. Duration is capped at 300 seconds. It neither launches Minecraft nor attaches a profiler. CPU percentages are normalized to the whole machine, not one core.
 
-## CurseForge and TEST deployment (2026-10-11)
+## CurseForge and official server deployment (2026-11-21)
 
 1. Validate/commit/push source and unique tag. CurseForge Actions builds/tests and publishes runtime plus companion.
 2. For Alpha, retain the publication receipt and finish: server delivery is not required. Do not download the runtime for deployment, inspect server state, use sFTP or create pending server delivery. The following steps apply only to Beta and official/stable builds.
 3. Download exact tagged runtime and curseforge-receipt.json from the GitHub release; no additional artifact/readback hashes.
-4. Use `scripts/deploy-mod.ps1 -Jar <runtime> -ReleaseReceipt <receipt>` for dry run. It validates source/version/receipt, pinned TEST identity and current shutdown logs.
-5. Add `-Apply` to update stopped TEST with fresh shutdown check, staging byte count and acknowledged transfer/rename journals. No client target is read/changed.
+4. Use `scripts/deploy-mod.ps1 -Jar <runtime> -ReleaseReceipt <receipt>` for dry run. It validates source/version/receipt, the pinned official account, root, internal port, online-mode and current shutdown logs.
+5. Add `-Apply` to update the stopped official server with fresh shutdown check, staging byte count and acknowledged transfer/rename journals. No client target is read/changed.
 6. Preserve server.properties, unrelated mods/config/worlds and legitimate authentication. No restart/client launch. Save compact receipt and finish; clients use CurseForge.
-7. Unknown state or deploy-pending.json blocks. Reconcile old/staged/backup/target paths before retrying uncertain operations. Retain recovery files as needed, not permanent rollback copies.
+7. Unknown state or deploy-pending.json blocks. Reconcile old/staged/backup/target paths before retrying uncertain operations. The official receipt is `CosmicDungeon_AI/releases/v<version>/official/server-installation.json`. Earlier TEST receipts belong to that server. Retain recovery files as needed, not permanent rollback copies.
 
 Latest-session "Stopping the server" without later startup/activity suffices; normal
 shutdown saves are accepted. Ask for shutdown only when observed running.

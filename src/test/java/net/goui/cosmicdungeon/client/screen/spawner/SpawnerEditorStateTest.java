@@ -57,6 +57,16 @@ final class SpawnerEditorStateTest {
         state.cap(Integer.toString(SpawnerEditorDraft.MAX_CAP));
         assertTrue(state.error().isEmpty()); assertTrue(state.beginApply());
     }
+    @Test void fractionalScaleSurvivesNavigationAndInvalidValuesCannotApply() {
+        for (String bad : new String[]{"", "NaN", "Infinity", "0", "-1", "0.06", "4.001", "abc"}) {
+            var state=state();state.mobScale(bad);assertFalse(state.beginApply(),bad);
+            assertFalse(state.draft().error().isEmpty(),bad);
+        }
+        for (String value : new String[]{"0.0625","0.5","1","4"}) {
+            var state=state();state.mobScale(value);state.tab(SpawnerEditorState.Tab.PREVIEW);
+            assertEquals(Double.parseDouble(value),state.draft().mobScale());assertTrue(state.beginApply());
+        }
+    }
     @Test void revertingFieldsRestoresCleanDraftButSearchAndNavigationNeverDirtyIt() {
         var state = state(); state.search("zombie"); state.page(5); state.tab(SpawnerEditorState.Tab.PREVIEW);
         assertFalse(state.dirty());

@@ -14,11 +14,6 @@ final class D1PartyPresentation {
     static boolean needsConsent(PartyPayloads.View view) {
         return sharingMutable(view) && view.sharing().choice().equals("UNKNOWN");
     }
-    static ReadyControl forward(PartyPayloads.View view) {
-        boolean assembly = view.state().phase().equals("ASSEMBLY");
-        return new ReadyControl(assembly ? "Begin ready check" : "Start Adventure!", assembly ? "begin" : "queue",
-                view.state().leader() && (assembly || view.state().phase().equals("READY_CHECK") && allHumansReady(view)));
-    }
     static String sharingStatus(PartyPayloads.Member member) {
         if (member.mercenary()) return "Group resources: not applicable";
         return "Group resources: " + switch (member.resourceSharing()) {
@@ -38,12 +33,21 @@ final class D1PartyPresentation {
                 status, sharingStatus(member));
     }
     static java.util.List<String> consentExplanation(String choice, boolean mutable) {
-        return java.util.List.of("An explicit YES lets your group use eligible ingredients from your inventory, sharing contributions as evenly as possible.",
-                mutable ? "Choose YES or NO before starting. Choices lock when Start Adventure is accepted."
-                        : "Choices are locked for this adventure. Change them after returning to pre-game.",
-                "Your choice: " + (choice.equals("UNKNOWN") ? "not chosen; no contribution" : choice));
+        return java.util.List.of("Share eligible ingredients for group crafting.",
+                mutable ? "Choose before everyone is ready." : "Your choice is locked for this run.",
+                "Sharing: " + (choice.equals("UNKNOWN") ? "Undecided" : choice));
     }
 
+    static net.minecraft.client.gui.components.Button alwaysButton(boolean selected, int x, int y, int width,
+            java.util.function.Consumer<String> send) {
+        var button = net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal(
+                (selected ? "☑ " : "☐ ") + "Always contribute"), pressed -> {
+                    send.accept(selected ? "resources_ask" : "resources_always");
+                }).bounds(x, y, width, 20).build();
+        button.setTooltip(net.minecraft.client.gui.components.Tooltip.create(net.minecraft.network.chat.Component.literal(
+                selected ? "Ask again for future groups." : "Choose Yes for this group and future groups.")));
+        return button;
+    }
     static boolean showsReadiness(PartyPayloads.View view, PartyPayloads.Member member) {
         return !member.mercenary() && !view.state().phase().equals("ACTIVE");
     }

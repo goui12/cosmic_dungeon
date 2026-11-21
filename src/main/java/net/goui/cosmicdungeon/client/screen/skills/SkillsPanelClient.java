@@ -39,19 +39,20 @@ public final class SkillsPanelClient {
     public static boolean inventory(Screen candidate){return candidate instanceof InventoryScreen||candidate instanceof ExtraInventoryScreen||candidate instanceof CreativeModeInventoryScreen;}
     public static SharedInventoryLayout layout(Screen candidate){
         var inventory=(AbstractContainerScreen<?>)candidate;
-        var shared=SharedInventoryLayout.of(candidate.width,candidate.height,inventory.getGuiLeft(),inventory.getGuiTop(),
+        return SharedInventoryLayout.of(candidate.width,candidate.height,inventory.getGuiLeft(),inventory.getGuiTop(),
                 inventory.getXSize(),inventory.getYSize());
-        var player=Minecraft.getInstance().player;
-        if(player!=null&&PotionCraftClient.brewer(ClassData.getClassId(player))){
-            var palette=PotionPaletteLayout.of(candidate.width,candidate.height,inventory.getGuiLeft(),inventory.getGuiTop(),
-                    inventory.getXSize(),0);
-            shared=reservePalette(shared,palette.panel());
-        }
-        return shared;
     }
-    /** The draggable panel must stop before the palette, including after resize or restoring a saved position. */
+    private static final SharedInventoryLayout.Rect NO_PALETTE = new SharedInventoryLayout.Rect(0, 0, 0, 0);
+    private static SharedInventoryLayout skillsLayout(Screen candidate) {
+        var shared = layout(candidate);
+        var inventory = (AbstractContainerScreen<?>)candidate;
+        // The live inventory shows a potion palette for brewers. Other classes have this space free.
+        var palette = PotionCraftClient.showsPalette(candidate)
+                ? PotionPaletteLayout.of(candidate.width, candidate.height, inventory.getGuiLeft(),
+                        inventory.getGuiTop(), inventory.getXSize(), 0).panel() : NO_PALETTE;
+        return reservePalette(shared, palette);
+    }
     static SharedInventoryLayout reservePalette(SharedInventoryLayout shared,SharedInventoryLayout.Rect palette){
-        if(palette.width()==0)return shared;
         return new SharedInventoryLayout(shared.group(),palette,shared.skillsDefault(),shared.account(),
                 shared.worldResource(),shared.screenWidth(),shared.screenHeight(),shared.compact());
     }
@@ -65,8 +66,8 @@ public final class SkillsPanelClient {
         String id=ClassKeys.clamp(ClassData.getClassId(mc.player));
         if(screen!=candidate||!id.equals(classId)){
             persist();if(state!=null)state.release();
-            screen=candidate;classId=id;state=new SkillsPanelState(layout(candidate),preferences().get(id).orElse(null));
-        }else state.resize(layout(candidate));
+            screen=candidate;classId=id;state=new SkillsPanelState(skillsLayout(candidate),preferences().get(id).orElse(null));
+        }else state.resize(skillsLayout(candidate));
         var provider=PROVIDERS.get(id);
         model=provider==null?INITIAL.computeIfAbsent(id,SkillsPanelModel::initial):Objects.requireNonNull(provider.view(mc.player));
         if(!model.classId().equals(id))throw new IllegalStateException("Skills provider changed class identity");
@@ -99,6 +100,9 @@ public final class SkillsPanelClient {
                 ||Minecraft.getInstance().screen instanceof net.goui.cosmicdungeon.mixin.client.InventoryDragAccess drag
                 &&!drag.cosmicdungeon$draggingItem().isEmpty();
     }
+    public static boolean hasPanelCapture(Screen candidate) {
+        return candidate == screen && state != null && state.captured();
+    }
     public static boolean ownsInput(Screen candidate,double x,double y){
         return PotionCraftClient.ownsInput(candidate,x,y) || !carrying()
                 && candidate==screen&&state!=null&&(state.captured()||state.geometry().panel().contains(x,y));
@@ -117,22 +121,17 @@ public final class SkillsPanelClient {
     /** Settings action resets all known class placements; no player/world data is touched. */
     public static void resetLayout(){
         try{preferences().reset();}catch(IOException error){warn(error);}
-        if(state!=null){state.release();state=new SkillsPanelState(layout(screen),null);}
+        if(state!=null){state.release();state=new SkillsPanelState(skillsLayout(screen),null);}
     }
     @SubscribeEvent(priority=EventPriority.LOWEST)
     public static void init(ScreenEvent.Init.Post event){refresh(event.getScreen());}
-    @SubscribeEvent(priority=EventPriority.HIGHEST)
-    public static void tooltip(ScreenEvent.Render.Pre event){
-        if(!refresh(event.getScreen())||carrying())return;
-        SkillsPanelComponent.tooltip(event.getGuiGraphics(),Minecraft.getInstance().font,model,state,event.getMouseX(),event.getMouseY());
-    }
     @SubscribeEvent(priority=EventPriority.LOWEST)
     public static void render(ScreenEvent.Render.Post event){
         if(!refresh(event.getScreen()))return;
         boolean held=carrying();
-        if(ownsInput(event.getScreen(),event.getMouseX(),event.getMouseY()))
+        if (!held && (state.captured() || state.geometry().panel().contains(event.getMouseX(), event.getMouseY())))
             ((net.goui.cosmicdungeon.client.screen.DeferredTooltipAccess)event.getGuiGraphics()).cosmicdungeon$clearTooltip();
-        boolean suppress=held;
+        boolean suppress = held || state.captured() || PotionCraftClient.inputCaptured(event.getScreen());
         SkillsPanelComponent.draw(event.getGuiGraphics(),Minecraft.getInstance().font,
                 model,state,suppress?-1:event.getMouseX(),suppress?-1:event.getMouseY());
         // Native carried/touchscreen item rendering stays above the movable overlay.

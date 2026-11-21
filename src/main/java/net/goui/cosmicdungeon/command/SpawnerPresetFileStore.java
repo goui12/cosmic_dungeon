@@ -22,7 +22,7 @@ public final class SpawnerPresetFileStore {
     public static final int FORMAT_VERSION=4,MAX_BYTES=262144;
     public static final String FILE_METADATA="CosmicPresetFileMetadata";
     private static final Gson GSON=new GsonBuilder().setPrettyPrinting().create();
-    private static final Set<String> FILE_KEYS=Set.of("format","formatVersion","entityTypeId","bossOneShot","spawnerMobCap","minSpawnDelay","maxSpawnDelay","spawnerPresetNbt","blockEntitySnbt");
+    private static final Set<String> FILE_KEYS=Set.of("format","formatVersion","entityTypeId","bossOneShot","spawnerMobCap","mobScale","minSpawnDelay","maxSpawnDelay","spawnerPresetNbt","blockEntitySnbt");
     private static final Set<String> TRANSIENT=Set.of("id","x","y","z","Delay","BossHasSpawned","CosmicSpawnBlocked",FILE_METADATA);
     private SpawnerPresetFileStore(){}
     public static boolean validName(String name){
@@ -48,7 +48,7 @@ public final class SpawnerPresetFileStore {
         public CompoundTag applyTo(CompoundTag target){
             var out=target.copy();var source=configuration.copy();
             if(complete){
-                for(String key:List.of("SpawnerPreset","SpawnData","SpawnPotentials"))if(!source.contains(key))out.remove(key);
+                for(String key:List.of("SpawnerPreset","SpawnData","SpawnPotentials",SpawnerMobScale.KEY))if(!source.contains(key))out.remove(key);
             }else{
                 // Legacy files are partial overlays: retain authored settings while keeping entity identity consistent on reload.
                 if(!source.contains("SpawnerPreset")&&out.contains("SpawnerPreset")){
@@ -84,6 +84,8 @@ public final class SpawnerPresetFileStore {
         root.addProperty("entityTypeId",saved.getStringOr("SpawnerEntityId","minecraft:pig"));
         root.addProperty("bossOneShot",saved.getBooleanOr("BossOneShot",false));root.addProperty("spawnerMobCap",saved.getIntOr("SpawnerMobCap",0));
         root.addProperty("minSpawnDelay",saved.getIntOr("MinSpawnDelay",200));root.addProperty("maxSpawnDelay",saved.getIntOr("MaxSpawnDelay",800));
+        if (saved.contains(SpawnerMobScale.KEY)) root.addProperty("mobScale", SpawnerMobScale.read(saved));
+        else root.remove("mobScale");
         if(saved.contains("SpawnerPreset"))root.add("spawnerPresetNbt",CompoundTag.CODEC.encodeStart(JsonOps.INSTANCE,saved.getCompoundOrEmpty("SpawnerPreset")).getOrThrow());
         else root.remove("spawnerPresetNbt");
         return root;
@@ -102,6 +104,13 @@ public final class SpawnerPresetFileStore {
                 config.putInt("SpawnerMobCap",root.has("spawnerMobCap")?root.get("spawnerMobCap").getAsInt():0);
                 int min=root.has("minSpawnDelay")?root.get("minSpawnDelay").getAsInt():200;
                 config.putInt("MinSpawnDelay",min);config.putInt("MaxSpawnDelay",root.has("maxSpawnDelay")?root.get("maxSpawnDelay").getAsInt():min);
+                if (root.has("mobScale")) {
+                    var scale = root.getAsJsonPrimitive("mobScale");
+                    if (!scale.isNumber()) throw new IllegalArgumentException(SpawnerMobScale.ERROR);
+                    double value = scale.getAsDouble();
+                    if (!SpawnerMobScale.valid(value)) throw new IllegalArgumentException(SpawnerMobScale.ERROR);
+                    config.putDouble(SpawnerMobScale.KEY, value);
+                }
                 if(root.has("spawnerPresetNbt")&&!root.get("spawnerPresetNbt").isJsonNull())
                     config.put("SpawnerPreset",CompoundTag.CODEC.parse(JsonOps.INSTANCE,root.get("spawnerPresetNbt")).getOrThrow());
             }
@@ -118,6 +127,7 @@ public final class SpawnerPresetFileStore {
         String id=config.getStringOr("SpawnerEntityId","");var entity=ResourceLocation.tryParse(id);
         if(!(opening&&id.equals("none"))&&(entity==null||net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getOptional(entity).isEmpty()))
             throw new IllegalArgumentException("Unknown preset entity.");
+        if (!SpawnerMobScale.valid(SpawnerMobScale.read(config))) throw new IllegalArgumentException(SpawnerMobScale.ERROR);
         int min=config.getIntOr("MinSpawnDelay",200),max=config.getIntOr("MaxSpawnDelay",800),cap=config.getIntOr("SpawnerMobCap",0);
         if(min<1||max<min||max>32767||cap<0||cap>32767)throw new IllegalArgumentException("Invalid preset spawn limits.");
         if(config.getIntOr("CosmicSpawnerDataVersion",0)>CosmicSpawnerBlockEntity.CURRENT_DATA_VERSION||

@@ -32,7 +32,7 @@ Positive Potions now selects the [max-health potion rank](Theurgist_Help_Guide.m
 
 ## Charged primary skills
 
-- **Dragoon:** 100 valid damaging melee/thrown trident hits fill one bar. The player presses G (or the remapped Primary class skill) to arm the next valid trident strike. Mercenaries automatically arm at 100. A chain with no effective additional target retains the full armed bar.
+- **Dragoon:** 10 valid damaging melee/thrown trident hits fill one bar. The player presses G (or the remapped Primary class skill) to arm the next valid trident strike. Mercenaries automatically arm at 10. A chain with no effective additional target retains the full armed bar.
 - **Judicator:** ten credited undead kills fill one bar. G activates an undead-only Smite around the player; mercenaries activate automatically when useful. [Smite ranks](Judicator_Help_Guide.md#smite) unlock after 0, 10, 30 and 60 successful activations. An activation that damages nothing retains all charge and displays: **Smite only works on undead! You did not damage any mobs**
 
 Both bars have no overflow bank. Secondary ability damage cannot refill them. Charge and the armed state survive death/reconnect in the same run and reset with the run; player proficiency persists separately, while mercenary proficiency stays with its run. Historical mercenary Combat progress is retained separately from Smite.

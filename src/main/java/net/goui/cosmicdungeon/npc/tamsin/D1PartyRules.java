@@ -3,7 +3,7 @@ package net.goui.cosmicdungeon.npc.tamsin;
 /** Shared admission boundaries; maximum capacity is never a required party size. */
 public final class D1PartyRules {
     private D1PartyRules() {}
-    /** Keep the leader at Start Adventure; preserve successful member Ready dismissal. */
+    /** Keep the leader at the roster while members may dismiss their menus after readying. */
     public static boolean closeAfterReady(D1PartyLobby.Party party, java.util.UUID actor, String action, String error) {
         return error == null && "ready".equals(action) && party != null
                 && party.members().contains(actor) && !party.leader().equals(actor);

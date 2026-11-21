@@ -12,7 +12,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.damagesource.DamageContainer;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 
-/** Same 100-hit bar as players; automatically arms, then spends on the next effective trident strike. */
+/** Same 10-hit bar as players; automatically arms, then spends on the next effective trident strike. */
 @EventBusSubscriber(modid="cosmicdungeon")
 public final class MercenaryLightning {
     private MercenaryLightning(){}

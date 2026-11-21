@@ -13,7 +13,7 @@ public final class SpawnerEditorState {
     public enum Tab { ENTITY, EQUIPMENT, SPAWNING, FLAGS, PREVIEW }
     private final UUID session;
     private final SpawnerEditorDraft original;
-    private String entityId, name, cap, minDelay, maxDelay;
+    private String entityId, name, cap, minDelay, maxDelay, mobScale;
     private boolean captain, boss, silent, noAi, invulnerable, persistent, nameVisible;
     private boolean pending, closed, presetLoaded;
     private SpawnerLootDraft loot = SpawnerLootDraft.unchanged();
@@ -26,6 +26,7 @@ public final class SpawnerEditorState {
         this.session = Objects.requireNonNull(session);
         original = Objects.requireNonNull(draft);
         entityId = draft.entityId(); name = draft.name(); captain = draft.captain(); boss = draft.boss();
+        mobScale = Double.toString(draft.mobScale());
         cap = Integer.toString(draft.cap()); minDelay = Integer.toString(draft.minDelay());
         maxDelay = Integer.toString(draft.maxDelay()); silent = draft.silent(); noAi = draft.noAi();
         invulnerable = draft.invulnerable(); persistent = draft.persistent(); nameVisible = draft.nameVisible();
@@ -55,7 +56,7 @@ public final class SpawnerEditorState {
     }
     public SpawnerEditorDraft draft() {
         return new SpawnerEditorDraft(entityId, name, captain, boss, number(cap), number(minDelay), number(maxDelay),
-                silent, noAi, invulnerable, persistent, nameVisible);
+                silent, noAi, invulnerable, persistent, nameVisible, scaleFactor());
     }
     public String error() {
         if (number(cap) < 0 || number(minDelay) < 0 || number(maxDelay) < 0)
@@ -80,6 +81,12 @@ public final class SpawnerEditorState {
     public void entityId(String value) { entityId = value; notice = ""; }
     public String name() { return name; }
     public void name(String value) { name = value; notice = ""; }
+    public String mobScale() { return mobScale; }
+    public void mobScale(String value) { mobScale = value; notice = ""; }
+    public double scaleFactor() {
+        try { return Double.parseDouble(mobScale); }
+        catch (NumberFormatException invalid) { return Double.NaN; }
+    }
     public String cap() { return cap; }
     public void cap(String value) { cap = value; notice = ""; }
     public String minDelay() { return minDelay; }

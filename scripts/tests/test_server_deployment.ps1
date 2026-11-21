@@ -55,3 +55,31 @@ foreach($fail in @(0,1,2)){
     }
 }
 Write-Output "$count deployment safeguard checks passed."
+
+# Official release transport uses a pinned saved site. All operations below are offline fixtures.
+. "$PSScriptRoot\..\official-server-session.ps1"
+$t=Get-CDOfficialTarget
+$site=[pscustomobject]@{HostName=$t.HostName;UserName=$t.UserName;PortNumber=22;Protocol=2}
+Assert-CDOfficialSite $t $site
+Check ($t.Name -ceq 'official' -and $t.Site -ceq 'cosmicdungeon' -and $t.UserName -cmatch '\.463499$') 'official site and account'
+Check ($t.Pin -cmatch '^ssh-ed25519 255 [A-Za-z0-9+/]{43}$') 'single fixed host key'
+foreach ($property in @('HostName','PortNumber','Protocol','UserName')) {
+    $wrong=$site.PSObject.Copy()
+    $wrong.$property=switch($property){HostName{'other.example'} PortNumber{23} Protocol{0} UserName{'cprees112@gmail.com.503323'}}
+    Reject {Assert-CDOfficialSite $t $wrong} "misdirected saved site: $property"
+}
+$transport=[pscustomobject]@{Target=$t}
+Check ((ConvertTo-CDRemoteArgument $transport '/minecraft-neoforge/mods/runtime.jar') -ceq '"/minecraft-neoforge/mods/runtime.jar"') 'quoted literal root path'
+foreach($bad in @('/other/mod.jar','/minecraft-neoforge/../world','/minecraft-neoforge/*','/minecraft-neoforge/m%TEMP%','/minecraft-neoforge/x"','/minecraft-neoforge//mods')){
+    Reject {ConvertTo-CDRemoteArgument $transport $bad} 'unsafe scripting path'
+}
+$ns='http://winscp.net/schema/session/1.0'
+$xml=[xml]"<session xmlns='$ns'><stat><filename value='/minecraft-neoforge/mod.jar'/><file><type value='-'/><size value='42'/><modification value='2026-11-20T04:03:02.000Z'/></file><result success='true'/></stat></session>"
+$stat=Read-CDOfficialAcknowledgement $xml 'stat'
+$info=Get-CDOfficialEntry $stat.file 'mod.jar'
+Check ($info.IsFile -and !$info.IsDirectory -and $info.Length -eq 42 -and $info.LastWriteTime.Kind -eq 'Utc') 'WinSCP stat acknowledgement and metadata'
+Reject {Read-CDOfficialAcknowledgement $xml 'upload'} 'different operation'
+foreach($content in @("<mv><result success='false'/></mv>","<mv><result success='true'/></mv><failure/>","<mv><result success='true'/></mv><mv><result success='true'/></mv>")){
+    Reject {Read-CDOfficialAcknowledgement ([xml]"<session xmlns='$ns'>$content</session>") 'mv'} 'uncertain official rename'
+}
+Write-Output "$count total deployment safeguard checks passed."

@@ -40,8 +40,11 @@ public final class PotionCraftClient {
         return mc.screen == candidate && mc.player != null && mc.player.isAlive()
                 && mc.player.containerMenu == candidate.getMenu() && brewer(ClassInventoryPresentation.theme().classId());
     }
+    public static boolean showsPalette(Screen candidate) {
+        return ClassInventoryPresentation.supports(candidate) && eligible((AbstractContainerScreen<?>)candidate);
+    }
     private static boolean current(Screen candidate) {
-        if (!ClassInventoryPresentation.supports(candidate) || !eligible((AbstractContainerScreen<?>)candidate)) {
+        if (!showsPalette(candidate)) {
             if (candidate == screen) close();
             return false;
         }
@@ -107,7 +110,8 @@ public final class PotionCraftClient {
     }
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void drag(ScreenEvent.MouseDragged.Pre event) {
-        if (!current(event.getScreen())) return;
+        if (net.goui.cosmicdungeon.client.screen.skills.SkillsPanelClient.hasPanelCapture(event.getScreen())
+                || !current(event.getScreen())) return;
         if (pressedButtons != 0 || ownsInput(event.getScreen(), event.getMouseX(), event.getMouseY())) {
             event.setCanceled(true);
             if (scrollGrab >= 0 && event.getMouseButton() == 0 && !dragging(screen))

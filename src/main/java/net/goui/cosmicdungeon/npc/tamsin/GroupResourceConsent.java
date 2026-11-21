@@ -11,6 +11,22 @@ import net.minecraft.server.level.ServerPlayer;
 public final class GroupResourceConsent {
     private static final String KEY="resource_sharing_v1:";
     private GroupResourceConsent() {}
+    private static final String ALWAYS = "cosmicdungeon:always_contribute";
+    static boolean always(ServerPlayer player) {
+        return player.getPersistentData().getCompoundOrEmpty(ServerPlayer.PERSISTED_NBT_TAG).getBooleanOr(ALWAYS, false);
+    }
+    static void remember(ServerPlayer player, boolean enabled) {
+        var root = player.getPersistentData();
+        var preferences = root.getCompoundOrEmpty(ServerPlayer.PERSISTED_NBT_TAG);
+        if (enabled) preferences.putBoolean(ALWAYS, true);
+        else preferences.remove(ALWAYS);
+        root.put(ServerPlayer.PERSISTED_NBT_TAG, preferences);
+    }
+    static void applyPreference(ServerPlayer player, D1PartyLobby lobby) {
+        var party = lobby.party(player.getUUID());
+        if (party != null && always(player) && party.resourceSharing(player.getUUID()).equals("UNKNOWN"))
+            lobby.resourceSharing(player.getUUID(), party.revision(), party.id().toString(), true);
+    }
     public static boolean inventoryContext(ServerPlayer player) {
         return player.containerMenu == player.inventoryMenu
                 || player.containerMenu instanceof net.goui.cosmicdungeon.playerclass.api.ExtraInventoryMenu
@@ -48,7 +64,7 @@ public final class GroupResourceConsent {
     }
     public static PartyPayloads.Sharing view(ServerPlayer player,D1PartyLobby.Party party) {
         if(party!=null&&party.members().contains(player.getUUID()))
-            return new PartyPayloads.Sharing(party.id().toString(),party.resourceSharing(player.getUUID()));
+            return new PartyPayloads.Sharing(party.id().toString(),party.resourceSharing(player.getUUID()),always(player));
         var run=active(player);
         return run==null?PartyPayloads.Sharing.NONE:new PartyPayloads.Sharing(Long.toString(run.runId()),
                 choice(D1RunData.get(player.level().getServer()),run.runId(),player.getUUID()));

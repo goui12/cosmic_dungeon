@@ -4,7 +4,7 @@ import java.util.*;
 import net.goui.cosmicdungeon.trade.TradeSessionData;
 import net.minecraft.server.MinecraftServer;
 
-/** Server-thread handoff: menu changes never alter readiness; explicit valid Start ends trades first. */
+/** Server-thread handoff: menu changes never alter readiness; the final valid Ready ends trades first. */
 final class D1PartyTrades {
     // Readiness lobbies are transient. Weak keys retain retries without keeping ended groups/servers alive.
     private static final Map<D1PartyLobby.Party, Map<UUID,UUID>> RECOVERY = new WeakHashMap<>();
@@ -12,6 +12,15 @@ final class D1PartyTrades {
     static boolean allowed(D1PartyLobby.Party party) {
         return party == null || party.phase() != D1PartyLobby.Phase.QUEUED
                 && party.phase() != D1PartyLobby.Phase.PREPARING;
+    }
+    static String ready(MinecraftServer server, D1PartyLobby lobby, UUID member, long revision) {
+        String error = lobby.ready(member, revision);
+        var party = lobby.party(member);
+        if (error != null || !party.ready().containsAll(party.members())) return error;
+        error = start(server, lobby, party.leader(), revision);
+        // A held trade can be recovered. Let the last member try Ready again.
+        if (error != null) lobby.unready(member, revision);
+        return error;
     }
     static String start(MinecraftServer server, D1PartyLobby lobby, UUID leader, long revision) {
         String problem = lobby.queueProblem(leader, revision);

@@ -171,7 +171,22 @@ public final class SpawnerEditorGameTests {
             futurePreset.applyToEntity(zombie);
             f.check(ItemStack.matches(existingSword,zombie.getMainHandItem())&&Objects.equals(existingName,zombie.getCustomName())
                     &&zombie.isSilent()&&zombie.isNoAi(),"Unknown future preset does not interpret masks or erase native mob state");
-            zombie.discard();pillager.discard();helper.succeed();
+            var skeleton = new WitherSkeleton(EntityType.WITHER_SKELETON, f.level);
+            var size = skeleton.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.SCALE);
+            size.setBaseValue(1.25);skeleton.refreshDimensions();
+            double height = skeleton.getBoundingBox().getYsize();
+            SpawnerMobScale.apply(skeleton,1);
+            f.check(size.getModifiers().isEmpty() && size.getBaseValue()==1.25, "Default preserves authored scale");
+            SpawnerMobScale.apply(skeleton,0.5);SpawnerMobScale.apply(skeleton,0.5);
+            f.check(Math.abs(skeleton.getBoundingBox().getYsize()-height/2)<0.0001
+                    && size.getBaseValue()==1.25 && size.getModifiers().size()==1,
+                    "Wither skeleton scales its physical box immediately and its authored base stays intact");
+            var saved=net.minecraft.world.level.storage.TagValueOutput.createWithContext(ProblemReporter.DISCARDING,f.level.registryAccess());
+            skeleton.saveWithoutId(saved);
+            var reloaded=new WitherSkeleton(EntityType.WITHER_SKELETON,f.level);
+            reloaded.load(TagValueInput.create(ProblemReporter.DISCARDING,f.level.registryAccess(),saved.buildResult()));
+            f.check(Math.abs(reloaded.getScale()-0.625)<0.0001, "Native entity save retains spawner scale");
+            skeleton.discard();reloaded.discard();zombie.discard();pillager.discard();helper.succeed();
         }
     }
 }

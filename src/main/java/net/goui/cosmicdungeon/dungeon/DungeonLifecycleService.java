@@ -854,6 +854,15 @@ public final class DungeonLifecycleService {
         // D1 has no Metalmancer golems. Deferred D2 cleanup remains in the existing non-D1 path.
     }
 
+    static void restoreForfeitHealth(ServerPlayer player, String reason) {
+        if (DungeonResetReason.ABANDONED.name().equals(reason)) player.setHealth(player.getMaxHealth());
+    }
+
+    public static void onFreshEntry(ServerPlayer player) {
+        player.setHealth(player.getMaxHealth());
+        DungeonForfeitService.notifyEntry(player);
+    }
+
     /** Commit only after every native player inventory/location save succeeded. */
     public static boolean completeStartup(MinecraftServer server, long runId) {
         var runs = DungeonRunRegistryData.get(server);
@@ -903,6 +912,7 @@ public final class DungeonLifecycleService {
             restoreInventoryFromSnapshot(sp, snapshot == null ? new CompoundTag() : snapshot.inventoryNbt());
         }
         clearTemporaryPlayerState(sp);
+        if (def == DungeonDefinitions.DUNGEON_1) restoreForfeitHealth(sp, reasonText);
         BloomSharedAdvancements.clearTemporaryBloomProgress(server, sp);
         if (def == DungeonDefinitions.DUNGEON_1) net.goui.cosmicdungeon.dungeon.d1.D1Scoreboards.resetRun(sp);
         MetalmancerResonanceTracker.clearForPlayer(sp.getUUID());

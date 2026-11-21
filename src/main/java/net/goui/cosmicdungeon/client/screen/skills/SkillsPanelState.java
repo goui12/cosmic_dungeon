@@ -69,10 +69,29 @@ public final class SkillsPanelState {
     public boolean captured(){return moving||ownedPress||scroll.captured();}
     public boolean minimized(){return placement.minimized() || (shared.compact() && !compactExpanded);}
     private int xLimit(int width){
-        int right=shared.requests().width()>0?shared.requests().x()-4:shared.screenWidth()-4;
-        return Math.max(4,right-width);
+        return Math.max(4, shared.screenWidth() - width - 4);
     }
     private int yLimit(int height){return Math.max(4,shared.screenHeight()-height-4);}
+    /** Use the nearest free edge of a right-side panel only when its actual rectangle is occupied. */
+    private Rect avoidRightPanel(Rect desired) {
+        Rect obstacle = shared.requests();
+        if (obstacle.width() == 0 || obstacle.height() == 0 || !desired.intersects(obstacle)) return desired;
+        int w = desired.width(), h = desired.height(), x = desired.x(), y = desired.y();
+        Rect nearest = null;
+        int distance = Integer.MAX_VALUE;
+        for (Rect candidate : new Rect[]{
+                new Rect(obstacle.x() - w, y, w, h), new Rect(obstacle.right(), y, w, h),
+                new Rect(x, obstacle.y() - h, w, h), new Rect(x, obstacle.bottom(), w, h)}) {
+            if (candidate.x() < 0 || candidate.y() < 0 || candidate.right() > shared.screenWidth()
+                    || candidate.bottom() > shared.screenHeight()) continue;
+            int move = Math.abs(candidate.x() - x) + Math.abs(candidate.y() - y);
+            if (move < distance) {
+                nearest = candidate;
+                distance = move;
+            }
+        }
+        return nearest == null ? desired : nearest;
+    }
     private void rebuild(){
         int width=Math.min(shared.screenWidth(),Math.max(40,Math.min(preferredWidth,shared.skillsDefault().width())));
         int desired=HEADER+RESOURCE+(minimized()?0:Math.max(1,actions)*ROW);
@@ -85,7 +104,9 @@ public final class SkillsPanelState {
         int y=positioned?4+(int)Math.round(placement.y()*(yLimit(height)-4)):shared.skillsDefault().y();
         x=Math.clamp(x,0,Math.min(shared.screenWidth()-width,xLimit(width)));
         y=Math.clamp(y,0,Math.min(shared.screenHeight()-height,yLimit(height)));
-        y = avoidSplittingGroup(x, y, width, height);
+        Rect free = avoidRightPanel(new Rect(x, y, width, height));
+        x = free.x();
+        y = avoidSplittingGroup(x, free.y(), width, height);
         int header=Math.min(HEADER,height),resource=Math.min(RESOURCE,height-header);
         var panel=new Rect(x,y,width,height);var head=new Rect(x,y,width,header);
         var res=new Rect(x,y+header,width,resource);var body=new Rect(x,y+header+resource,width,height-header-resource);

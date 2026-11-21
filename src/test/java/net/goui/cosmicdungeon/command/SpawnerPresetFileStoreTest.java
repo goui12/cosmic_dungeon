@@ -23,6 +23,22 @@ class SpawnerPresetFileStoreTest {
         var applied=decoded.applyTo(target);assertEquals(t.get("SpawnPotentials"),applied.get("SpawnPotentials"));
         assertEquals(t.get("FutureByte"),applied.get("FutureByte"));assertEquals(7,applied.getIntOr("SpawnCount",0));assertEquals("keep",applied.getStringOr("TargetUnknown",""));
     }
+    @Test void completePresetsReplaceScaleAndLegacyPartialFilesOnlyChangeItWhenProvided(){
+        String key=net.goui.cosmicdungeon.block.entity.SpawnerMobScale.KEY;
+        var configured=config();configured.putDouble(key,0.5);
+        var full=SpawnerPresetFileStore.encode(configured,new JsonObject());
+        assertEquals(0.5,SpawnerPresetFileStore.decode(full).applyTo(config()).getDoubleOr(key,-1));
+        var plain=SpawnerPresetFileStore.encode(config(),full);
+        assertFalse(plain.has("mobScale"));assertFalse(SpawnerPresetFileStore.decode(plain).applyTo(configured).contains(key));
+        for(int version=1;version<=3;version++){
+            var old=new JsonObject();old.addProperty("formatVersion",version);old.addProperty("entityTypeId","minecraft:wither_skeleton");
+            assertEquals(0.5,SpawnerPresetFileStore.decode(old).applyTo(configured).getDoubleOr(key,-1));
+            old.addProperty("mobScale",0.75);assertEquals(0.75,SpawnerPresetFileStore.decode(old).applyTo(configured).getDoubleOr(key,-1));
+            old.addProperty("mobScale",12);assertThrows(IllegalArgumentException.class,()->SpawnerPresetFileStore.decode(old));
+        }
+        configured.putString(key,"invalid");assertThrows(IllegalArgumentException.class,()->SpawnerPresetFileStore.validate(configured));
+        configured.putDouble(key,Double.NaN);assertThrows(IllegalArgumentException.class,()->SpawnerPresetFileStore.validate(configured));
+    }
     @Test void importKeepsIdentityAndResetsOnlyRuntimeProgress(){
         var t=config();t.putString("id","wrong:block");t.putInt("x",999);t.putInt("Delay",1);t.putBoolean("BossHasSpawned",true);
         var target=config();target.putInt("x",12);target.putString("id","cosmicdungeon:cosmic_mob_spawner");

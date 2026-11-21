@@ -52,6 +52,38 @@ class SpawnerEditorPreservationTest {
         assertTrue(round.getBooleanOr("BossHasSpawned",false));assertEquals(11,b.getSpawnerMaxNearbyEntities());
         assertEquals(7,b.getSpawnerSpawnCount());assertEquals(19,b.getSpawnerRequiredPlayerRange());assertEquals(8,b.getSpawnerMobCap());
     }
+    @Test void editingOnlyScaleLeavesLegacyWeightedAndAuthoredNbtIntactAndRoundTripsThePacket() {
+        var be=be();be.setSpawnerEntityId("minecraft:wither_skeleton");
+        var source=be.saveWithoutMetadata(lookup());
+        source.remove(CosmicSpawnerBlockEntity.DATA_VERSION_KEY);
+        source.putString("ExtraAuthorData","retained");
+        var mob=new CompoundTag();mob.putString("id","minecraft:wither_skeleton");
+        var attributes=new ListTag();var scale=new CompoundTag();scale.putString("id","minecraft:scale");
+        scale.putDouble("base",1.25);attributes.add(scale);mob.put("attributes",attributes);
+        var spawn=new CompoundTag();spawn.put("entity",mob);source.put("SpawnData",spawn.copy());
+        var weighted=new CompoundTag();weighted.putInt("weight",3);weighted.put("data",spawn);
+        var choices=new ListTag();choices.add(weighted);source.put("SpawnPotentials",choices);
+        load(be,source);
+        var saved=be.saveWithoutMetadata(lookup());
+        var original=SpawnerEditorConfig.read(be,saved);
+        assertEquals(1.0,original.mobScale());assertFalse(saved.contains(SpawnerMobScale.KEY));
+        var state=new net.goui.cosmicdungeon.client.screen.spawner.SpawnerEditorState(java.util.UUID.randomUUID(),original);
+        state.mobScale("0.5");
+        var scaled=SpawnerEditorConfig.patch(saved,original,state.draft());
+        var expected=saved.copy();expected.putDouble(SpawnerMobScale.KEY,0.5);assertEquals(expected,scaled);
+        load(be,scaled);assertEquals(0.5,be.getSpawnerMobScale());
+        var round=be.saveWithoutMetadata(lookup());assertEquals(scaled,round);
+        assertEquals(saved,SpawnerEditorConfig.patch(round,state.draft(),original));
+
+        var request=new net.goui.cosmicdungeon.network.SpawnerEditorPayloads.Request(state.session(),
+                net.goui.cosmicdungeon.network.SpawnerEditorPayloads.Kind.APPLY,state.draft());
+        var raw=io.netty.buffer.Unpooled.buffer();
+        try {
+            var buf=new net.minecraft.network.RegistryFriendlyByteBuf(raw,RegistryAccess.EMPTY);
+            var codec=net.goui.cosmicdungeon.network.SpawnerEditorPayloads.Request.STREAM_CODEC;
+            codec.encode(buf,request);assertEquals(state.draft(),codec.decode(buf).draft());assertEquals(0,buf.readableBytes());
+        } finally { raw.release(); }
+    }
     @Test void noOpPatchIsDetachedAndByteEquivalent(){
         var d=SpawnerEditorDraft.empty();var source=new CompoundTag();source.putString("unknown","keep");
         var result=SpawnerEditorConfig.patch(source,d,d);assertEquals(source,result);assertNotSame(source,result);
