@@ -3,6 +3,7 @@ package net.goui.cosmicdungeon.dungeon;
 import com.mojang.authlib.GameProfile;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import net.goui.cosmicdungeon.dungeon.d1.D1RunData;
 import net.goui.cosmicdungeon.dungeon.d1.DeathInventoryLayout;
@@ -13,7 +14,14 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
@@ -118,6 +126,39 @@ public final class DeathInventoryGameTests {
     public static void lifecycle(GameTestHelper helper) {
         try (var f = new Fixture(helper, Long.MAX_VALUE - 301)) {
             var server = f.level.getServer();
+            var maxHealth = f.player.getAttribute(Attributes.MAX_HEALTH);
+            double previousMax = maxHealth.getBaseValue();
+            try {
+                maxHealth.setBaseValue(28);
+                f.player.setHealth(3);
+                DungeonRunHealth.afterCleanup(f.player, "STARTUP_ABORT", Optional.empty());
+                f.check(f.player.getHealth() == 3, "Legacy startup rollback preserves current HP");
+
+                var helmet = new ItemStack(Items.IRON_HELMET);
+                var bonus = new AttributeModifier(ResourceLocation.fromNamespaceAndPath("cosmicdungeon", "test_entry_health"),
+                        10, AttributeModifier.Operation.ADD_VALUE);
+                helmet.set(DataComponents.ATTRIBUTE_MODIFIERS,
+                        ItemAttributeModifiers.builder().add(Attributes.MAX_HEALTH, bonus, EquipmentSlotGroup.HEAD).build());
+                f.player.setItemSlot(EquipmentSlot.HEAD, helmet);
+                DungeonRunHealth.afterCleanup(f.player, "ABANDONED", Optional.empty());
+                f.check(f.player.getHealth() == 38, "Forfeit includes the newly restored helmet before the next tick");
+                DungeonRunHealth.afterCleanup(f.player, "STARTUP_ABORT", Optional.of(32.5f));
+                f.check(f.player.getHealth() == 32.5f, "Rollback restores original fractional HP with the original loadout");
+                f.player.setHealth(5);
+                f.check(DungeonInventoryHandoffs.reconcile(f.player) && f.player.getHealth() == 5,
+                        "Reconnecting without a pending forfeit keeps the owner's health");
+                f.check(!DungeonLifecycleService.completeStartup(server, f.runId) && f.player.getHealth() == 5,
+                        "An active run without a startup marker cannot repeat the entry heal");
+                f.player.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
+                DungeonRunHealth.fill(f.player);
+                f.check(f.player.getHealth() == 28, "Entry reads the maximum after replacing equipment");
+                var saved = net.goui.cosmicdungeon.transaction.PlayerSaveProof.snapshot(f.player);
+                f.check(saved.getFloatOr("Health", -1) == 28, "The native player image includes full entry health");
+            } finally {
+                f.player.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
+                maxHealth.setBaseValue(previousMax);
+                f.player.setHealth(f.player.getMaxHealth());
+            }
             var keep = f.level.getGameRules().getRule(GameRules.RULE_KEEPINVENTORY);
             boolean oldKeep = keep.get();
             java.util.function.Consumer<LivingDeathEvent> cancel = event -> {

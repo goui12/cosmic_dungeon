@@ -13,7 +13,7 @@ final class GroupResourceConsentScreen extends Screen {
     private final String context;
     private String requested;
     private int waitingTicks;
-    private Button yes, no;
+    private Button yes, no, always;
     GroupResourceConsentScreen(Screen parent, String context) {
         super(Component.literal("Tamsin: Group resources"));
         this.parent = parent;
@@ -22,9 +22,12 @@ final class GroupResourceConsentScreen extends Screen {
     private D1PartyPanelLayout box() { return D1PartyPanelLayout.forViewport(width, height); }
     @Override protected void init() {
         var box = box(); int x = (width - box.width()) / 2, y = (height - box.height()) / 2;
-        yes = addRenderableWidget(Button.builder(Component.literal("YES - contribute"), b -> choose("YES"))
+        var view = D1PartyHud.currentView();
+        always = addRenderableWidget(D1PartyPresentation.alwaysButton(view != null && view.sharing().always(),
+                x + 10, y + box.navigationY(), box.innerWidth(), this::choose));
+        yes = addRenderableWidget(Button.builder(Component.literal("Yes"), b -> choose("resources_yes"))
                 .bounds(x + 10, y + box.managementY(), box.halfWidth(), 20).build());
-        no = addRenderableWidget(Button.builder(Component.literal("NO - keep materials"), b -> choose("NO"))
+        no = addRenderableWidget(Button.builder(Component.literal("No"), b -> choose("resources_no"))
                 .bounds(x + box.rightColumn(), y + box.managementY(), box.halfWidth(), 20).build());
         addRenderableWidget(Button.builder(Component.literal("Close"), b -> onClose())
                 .bounds(x + 10, y + box.progressionY(), box.innerWidth(), 20).build());
@@ -32,9 +35,9 @@ final class GroupResourceConsentScreen extends Screen {
     private void choose(String choice) {
         var view = D1PartyHud.currentView();
         if (!D1PartyPresentation.sharingMutable(view) || !context.equals(view.sharing().context()) || requested != null) return;
-        requested = choice; waitingTicks = 0; yes.active = no.active = false;
+        requested = choice; waitingTicks = 0; always.active = yes.active = no.active = false;
         ModNetwork.sendToServer(new PartyPayloads.Action(-1, view.state().revision(),
-                choice.equals("YES") ? "resources_yes" : "resources_no", context));
+                choice, context));
     }
     @Override public void tick() {
         var view = D1PartyHud.currentView();
@@ -42,16 +45,24 @@ final class GroupResourceConsentScreen extends Screen {
                 || !D1PartyPresentation.sharingMutable(view) || !context.equals(view.sharing().context())) {
             InventoryModalContext.dismiss(parent); return;
         }
-        if (requested != null && requested.equals(view.sharing().choice())) { onClose(); return; }
+        if (requested != null && confirmed(view.sharing())) { onClose(); return; }
         if (requested != null && ++waitingTicks >= 60) {
-            requested = null; yes.active = no.active = true;
+            requested = null; rebuildWidgets();
         }
+    }
+    private boolean confirmed(PartyPayloads.Sharing sharing) {
+        return switch (requested) {
+            case "resources_always" -> sharing.choice().equals("YES") && sharing.always();
+            case "resources_ask" -> !sharing.always();
+            case "resources_yes" -> sharing.choice().equals("YES");
+            case "resources_no" -> sharing.choice().equals("NO");
+            default -> false;
+        };
     }
     @Override public void onClose() { InventoryModalContext.restore(parent); }
     @Override public boolean isPauseScreen() { return false; }
     @Override public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        yes.visible = no.visible = D1PartyPresentation.sharingMutable(D1PartyHud.currentView());
-        renderBackground(g, mouseX, mouseY, partialTick);
+        always.visible = yes.visible = no.visible = D1PartyPresentation.sharingMutable(D1PartyHud.currentView());
         var box = box(); int x = (width - box.width()) / 2, y = (height - box.height()) / 2;
         g.fill(x, y, x + box.width(), y + box.height(), 0xEF181820);
         g.drawString(font, title, x + 10, y + 10, 0xFFE4C98A, false);
@@ -64,7 +75,7 @@ final class GroupResourceConsentScreen extends Screen {
             }
             textY += 6;
         }
-        if (requested != null) g.drawString(font, "Waiting for server...", x + 10, y + box.navigationY(), 0xFF90CAF9, false);
+        if (requested != null) g.drawString(font, "Waiting for server...", x + 10, y + box.navigationY() - 12, 0xFF90CAF9, false);
         super.render(g, mouseX, mouseY, partialTick);
     }
 }

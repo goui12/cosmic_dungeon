@@ -285,6 +285,10 @@ public final class DungeonRunRegistryData extends SavedData {
         var image = startup.get(Long.toString(run));
         return image == null ? new net.minecraft.nbt.CompoundTag() : image.getCompoundOrEmpty(owner.toString()).copy();
     }
+    boolean hasStartupHealth(long run, UUID owner) {
+        var owners = startup.get(Long.toString(run));
+        return owners != null && owners.getCompoundOrEmpty(owner.toString()).contains(DungeonRunHealth.ORIGINAL);
+    }
     public void prepareStartup(long run, net.minecraft.nbt.CompoundTag owners) {
         var record = getRun(run).orElseThrow();
         validateStartup(record, owners);
@@ -314,6 +318,7 @@ public final class DungeonRunRegistryData extends SavedData {
             var image = owners.getCompound(owner).orElseThrow();
             if (image.getCompound("inventory").isEmpty() || image.getCompound("ownership").isEmpty())
                 throw new IllegalArgumentException("Missing pre-entry image");
+            DungeonRunHealth.originalHealth(image);
             var ownership = image.getCompoundOrEmpty("ownership");
             if (!ownership.isEmpty()) ChopOwnershipData.Entry.CODEC.parse(net.minecraft.nbt.NbtOps.INSTANCE, ownership).getOrThrow();
         }

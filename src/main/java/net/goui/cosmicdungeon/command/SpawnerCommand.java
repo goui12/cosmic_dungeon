@@ -38,6 +38,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 
+import net.goui.cosmicdungeon.block.entity.SpawnerMobScale;
+import com.mojang.brigadier.arguments.DoubleArgumentType;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 import java.util.concurrent.CompletableFuture;
@@ -63,6 +65,8 @@ public final class SpawnerCommand {
                         .then(Commands.literal("clear").executes(c -> withPreset(c.getSource(), p -> p.setCustomName(null)))))
                 .then(Commands.literal("boss").executes(c -> setBossFlag(c.getSource(), true))
                         .then(Commands.argument("value", BoolArgumentType.bool()).executes(c -> setBossFlag(c.getSource(), BoolArgumentType.getBool(c, "value")))))
+                .then(Commands.literal("scale").then(Commands.argument("factor", DoubleArgumentType.doubleArg(SpawnerMobScale.MIN, SpawnerMobScale.MAX))
+                        .executes(c -> setScale(c.getSource(), DoubleArgumentType.getDouble(c,"factor")))))
                 .then(Commands.literal("cap").then(Commands.argument("amount", IntegerArgumentType.integer(0)).executes(c -> setCapFlag(c.getSource(), IntegerArgumentType.getInteger(c, "amount")))))
                 .then(Commands.literal("equip").executes(c -> helpEquip(c.getSource())).then(Commands.argument("slot", StringArgumentType.word()).suggests(SpawnerCommand::suggestSlots)
                                 .then(Commands.argument("item", ResourceLocationArgument.id()).suggests(SpawnerCommand::suggestItems).executes(c -> withPreset(c.getSource(), p -> p.setEquipment(slot(c), BuiltInRegistries.ITEM.get(ResourceLocationArgument.getId(c,"item")).map(ItemStack::new).orElse(ItemStack.EMPTY)))))
@@ -134,7 +138,7 @@ public final class SpawnerCommand {
 
     private static int help(CommandSourceStack src) { return syntax(src, "Spawner command guide", new String[]{
             "/spawner set <namespace:entity>", "/spawner boss [true|false]", "/spawner equip <slot> <namespace:item>", "/spawner drop <slot> <0.0-1.0>",
-            "/spawner drops", "/spawner edit", "/spawner preset save <preset_name>", "/spawner preset load <preset_name>", "/spawner preset delete <preset_name>", "/spawner preset reload", "/spawner keybind <1-5> <preset_name>", "/spawner info", "/spawner reset", "/spawner help"
+            "/spawner drops", "/spawner edit", "/spawner scale <0.0625..4>", "/spawner preset save <preset_name>", "/spawner preset load <preset_name>", "/spawner preset delete <preset_name>", "/spawner preset reload", "/spawner keybind <1-5> <preset_name>", "/spawner info", "/spawner reset", "/spawner help"
     }); }
 
     private static int helpSet(CommandSourceStack src){ return syntax(src, "Set syntax", new String[]{"/spawner set <namespace:entity>","Tip: Use TAB to browse entities."}); }
@@ -157,6 +161,21 @@ public final class SpawnerCommand {
     private static int removeEnchant(CommandSourceStack src, CosmicSpawnerPreset.Slot slot, ResourceLocation enchId) { return withPreset(src, p -> { ItemStack stack = p.getEquipment(slot).copy(); var enchOpt = src.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).get(enchId); enchOpt.ifPresent(enchantment -> EnchantmentHelper.updateEnchantments(stack, enchantments -> enchantments.set(enchantment, 0))); p.setEquipment(slot, stack); });}
     private static int clearEnchantments(CommandSourceStack src, CosmicSpawnerPreset.Slot slot) { return withPreset(src, p -> { ItemStack stack = p.getEquipment(slot).copy(); EnchantmentHelper.updateEnchantments(stack, enchantments -> enchantments.removeIf(enchantment -> true)); p.setEquipment(slot, stack); });}
     private static int setBossFlag(CommandSourceStack src, boolean enabled) { try { var player = src.getPlayerOrException(); var be = getTargetSpawnerBE(src, player, player.level()); if (be == null) return 0; be.setBossOneShot(enabled); src.sendSuccess(() -> Component.literal("Spawner boss one-shot flag " + (enabled ? "enabled." : "disabled.")), false); return 1; } catch (Exception e) { src.sendFailure(Component.literal("Failed: " + e.getMessage())); return 0; } }
+    private static int setScale(CommandSourceStack src, double factor) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        var player = src.getPlayerOrException();
+        var be = getTargetSpawnerBE(src, player, player.level());
+        if (be == null) return 0;
+        var configuration = be.saveWithoutMetadata(src.registryAccess());
+        try {
+            SpawnerMobScale.write(configuration, factor);
+            net.goui.cosmicdungeon.spawner.editor.SpawnerEditorService.applyConfiguration(player, be, configuration);
+        } catch (IllegalArgumentException invalid) {
+            src.sendFailure(Component.literal(invalid.getMessage()));
+            return 0;
+        }
+        src.sendSuccess(() -> Component.literal("New mobs from this spawner use " + factor + "x size."), false);
+        return 1;
+    }
     private static int setCapFlag(CommandSourceStack src, int cap) { try { var player = src.getPlayerOrException(); var be = getTargetSpawnerBE(src, player, player.level()); if (be == null) return 0; be.setSpawnerMobCap(cap); src.sendSuccess(() -> Component.literal(cap <= 0 ? "Spawner mob cap disabled." : "Spawner mob cap set to " + cap + "."), false); return 1; } catch (Exception e) { src.sendFailure(Component.literal("Failed: " + e.getMessage())); return 0; } }
     private static int setDelay(CommandSourceStack src, int ticks) { try { var player = src.getPlayerOrException(); var be = getTargetSpawnerBE(src, player, player.level()); if (be == null) return 0; int deadband = Math.max(1, ticks / 2); int min = Math.max(1, ticks - deadband); int max = Math.max(min, ticks + deadband); be.setSpawnerDelayRange(min, max); be.setSpawnerDelayTicks(ticks); src.sendSuccess(() -> Component.literal("Spawner delay set to " + ticks + " ticks (range " + min + "-" + max + ")."), false); return 1; } catch (Exception e) { src.sendFailure(Component.literal("Failed: " + e.getMessage())); return 0; } }
 
@@ -188,6 +207,7 @@ public final class SpawnerCommand {
 
             src.sendSuccess(() -> Component.literal("Spawner Properties:").withStyle(ChatFormatting.LIGHT_PURPLE), false);
             src.sendSuccess(() -> Component.literal("  Boss: ").withStyle(ChatFormatting.GRAY).append(Component.literal(Boolean.toString(be.isBossOneShot())).withStyle(ChatFormatting.WHITE)), false);
+            src.sendSuccess(() -> Component.literal("  Mob scale: " + be.getSpawnerMobScale() + "x"), false);
             src.sendSuccess(() -> Component.literal("  Cap: ").withStyle(ChatFormatting.GRAY).append(Component.literal(Integer.toString(be.getSpawnerMobCap())).withStyle(ChatFormatting.WHITE)), false);
             src.sendSuccess(() -> Component.literal("  Delay: ").withStyle(ChatFormatting.GRAY).append(Component.literal(be.getSpawnerMinSpawnDelay()+"-"+be.getSpawnerMaxSpawnDelay()).withStyle(ChatFormatting.WHITE)), false);
 

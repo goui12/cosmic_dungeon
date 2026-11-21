@@ -1,6 +1,7 @@
 package net.goui.cosmicdungeon.spawner.editor;
 
 import net.goui.cosmicdungeon.block.entity.CosmicSpawnerBlockEntity;
+import net.goui.cosmicdungeon.block.entity.SpawnerMobScale;
 import net.minecraft.nbt.*;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
@@ -20,7 +21,7 @@ public final class SpawnerEditorConfig {
                 be.getSpawnerMobCap(),be.getSpawnerMinSpawnDelay(),be.getSpawnerMaxSpawnDelay(),
                 flag(flags,entity,"Silent",false),flag(flags,entity,"NoAI",false),
                 flag(flags,entity,"Invulnerable",false),flag(flags,entity,"PersistenceRequired",captain),
-                flag(flags,entity,"CustomNameVisible",false));
+                flag(flags,entity,"CustomNameVisible",false),SpawnerMobScale.read(data));
     }
     private static boolean flag(CompoundTag f,CompoundTag e,String k,boolean fallback){
         return f.getBoolean(k).orElseGet(()->e.getBooleanOr(k,fallback));
@@ -49,6 +50,7 @@ public final class SpawnerEditorConfig {
         if(!after.error().isEmpty())throw new IllegalArgumentException(after.error());
         var out=source.copy();
         if(before.boss()!=after.boss()){out.putBoolean("BossOneShot",after.boss());if(after.boss())out.putBoolean("BossHasSpawned",false);}
+        if (before.mobScale() != after.mobScale()) SpawnerMobScale.write(out, after.mobScale());
         if(before.cap()!=after.cap())out.putInt("SpawnerMobCap",after.cap());
         if(before.minDelay()!=after.minDelay())out.putInt("MinSpawnDelay",after.minDelay());
         if(before.maxDelay()!=after.maxDelay())out.putInt("MaxSpawnDelay",after.maxDelay());

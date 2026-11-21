@@ -246,6 +246,7 @@ public final class DungeonLifecycleService {
             if (!sp.isAlive() || !net.goui.cosmicdungeon.transaction.InventoryTransactionGuard.beforeInventoryChange(sp))
                 return "Party inventory recovery must finish before entry.";
             var image = new CompoundTag();
+            image.putFloat(DungeonRunHealth.ORIGINAL, sp.getHealth());
             image.put("inventory", ChopTravelRecovery.saveInventory(sp));
             image.put("ownership", ChopOwnershipData.get(server).image(sp.getUUID()));
             var entitlement = ChopOwnershipData.get(server).entry(sp.getUUID());
@@ -854,15 +855,17 @@ public final class DungeonLifecycleService {
         // D1 has no Metalmancer golems. Deferred D2 cleanup remains in the existing non-D1 path.
     }
 
-    /** Commit only after every native player inventory/location save succeeded. */
+    /** Commit after the entry loadout, full HP, and location are durable for every member. */
     public static boolean completeStartup(MinecraftServer server, long runId) {
         var runs = DungeonRunRegistryData.get(server);
         var run = runs.getRun(runId).orElse(null);
         if (run == null || !runs.starting(runId) || run.stateEnum() != DungeonRunState.ACTIVE) return false;
         for (UUID owner : run.orderedPlayers()) {
             var p = server.getPlayerList().getPlayer(owner);
-            if (p == null || !p.isAlive() || !p.connection.isAcceptingMessages() || !run.containsDimension(p.level().dimension())
-                    || !net.goui.cosmicdungeon.transaction.PlayerSaveProof.saveWithLocation(p)) return false;
+            if (p == null || !p.isAlive() || !p.connection.isAcceptingMessages()
+                    || !run.containsDimension(p.level().dimension()) || !runs.hasStartupHealth(runId, owner)) return false;
+            DungeonRunHealth.fill(p);
+            if (!net.goui.cosmicdungeon.transaction.PlayerSaveProof.saveWithLocation(p)) return false;
         }
         server.saveEverything(true, true, true);
         if(!runs.completeStartupVerified(runId))return false;
@@ -903,6 +906,7 @@ public final class DungeonLifecycleService {
             restoreInventoryFromSnapshot(sp, snapshot == null ? new CompoundTag() : snapshot.inventoryNbt());
         }
         clearTemporaryPlayerState(sp);
+        if (def == DungeonDefinitions.DUNGEON_1) DungeonRunHealth.afterCleanup(sp, reasonText, Optional.empty());
         BloomSharedAdvancements.clearTemporaryBloomProgress(server, sp);
         if (def == DungeonDefinitions.DUNGEON_1) net.goui.cosmicdungeon.dungeon.d1.D1Scoreboards.resetRun(sp);
         MetalmancerResonanceTracker.clearForPlayer(sp.getUUID());

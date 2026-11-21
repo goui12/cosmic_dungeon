@@ -284,6 +284,11 @@ public class CosmicSpawnerBlockEntity extends BlockEntity implements Spawner {
         return bossHasSpawned;
     }
 
+    public double getSpawnerMobScale() {
+        // Raw optional data stays in the lossless passthrough map, including on old chunk saves.
+        return SpawnerMobScale.read(unknownFields);
+    }
+
     public int getSpawnerMobCap() {
         return spawnerMobCap;
     }

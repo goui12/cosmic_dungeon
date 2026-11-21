@@ -57,10 +57,19 @@ public final class InventoryHandoffChecks {
             var p = InventoryHandoffPlan.cleanup(OWNER, 28, "ABANDONED", inventory("regular snapshot excludes Chop", 10), null,
                     starting, ownership(binding), inventory("partly entered", 1), true);
             check(p.reason().equals("STARTUP_ABORT") && !p.keep(), "Incomplete entry always rolls back");
+            check(p.originalHealth().isEmpty(), "An older startup image has no inferred health");
             check(p.tag("after").equals(starting.getCompoundOrEmpty("inventory")), "Startup restores full pre-entry inventory");
             check(p.tag("ownership_after").equals(ownership(0)), "Startup restores exact old token; no extra Raw entitlement");
         }
         reject(() -> InventoryHandoffPlan.cleanup(OWNER, 28, "ABANDONED", empty(), null, starting, ownership(99), empty(), false), "Foreign startup ownership held");
+        starting.putFloat(DungeonRunHealth.ORIGINAL, 5.5f);
+        var rollback = InventoryHandoffPlan.cleanup(OWNER, 28, "ABANDONED", empty(), null, starting, ownership(0), empty(), false);
+        var restored = InventoryHandoffPlan.CODEC.parse(NbtOps.INSTANCE, rollback.ready().image()).getOrThrow();
+        check(restored.originalHealth().orElseThrow() == 5.5f, "Offline startup rollback retains original HP across restart and world receipt");
+        var invalid = restored.image(); invalid.putString("reason", "ABANDONED");
+        reject(() -> new InventoryHandoffPlan(invalid), "Normal forfeit cannot inherit a rollback health value");
+        var badHp = restored.image(); badHp.putFloat(DungeonRunHealth.ORIGINAL, Float.NaN);
+        reject(() -> new InventoryHandoffPlan(badHp), "Invalid rollback HP cannot injure the owner");
         var legacy = empty(); legacy.put("inventory", inventory("legacy", 1));
         reject(() -> InventoryHandoffPlan.cleanup(OWNER, 28, "ABANDONED", empty(), null, legacy, empty(), empty(), false), "Missing startup entitlement held");
     }
@@ -171,10 +180,14 @@ public final class InventoryHandoffChecks {
         check(!d.starting(28), "Legacy active runs are not treated as unfinished entry");
         var owners = empty();
         for (UUID owner : List.of(OWNER, OTHER)) {
-            var image = empty(); image.put("inventory", inventory(owner.toString(), 3)); image.put("ownership", empty()); owners.put(owner.toString(), image);
+            var image = empty(); image.put("inventory", inventory(owner.toString(), 3)); image.put("ownership", empty());
+            if (owner.equals(OWNER)) image.putFloat(DungeonRunHealth.ORIGINAL, 4.25f);
+            owners.put(owner.toString(), image);
         }
         d.prepareStartup(28, owners); d = reload(DungeonRunRegistryData.class, d);
         check(d.starting(28) && d.startupImage(28, OWNER).equals(owners.getCompoundOrEmpty(OWNER.toString())), "Full startup roster survives native codec round trip");
+        check(d.hasStartupHealth(28, OWNER) && !d.hasStartupHealth(28, OTHER),
+                "Restart preserves independent rollback HP and leaves legacy owners without new heal authority");
         check(d.isSlotOccupied(1), "Unfinished startup reserves its instance");
         var saved = d;
         reject(() -> saved.removePlayer(28, OWNER), "Partial member removal cannot invalidate startup rollback");
@@ -201,6 +214,10 @@ public final class InventoryHandoffChecks {
                 "Inventory/location readback also verifies native respawn binding");
         check(net.goui.cosmicdungeon.transaction.PlayerSaveProof.matchesLocation(saved, saved.copy()),
                 "Unchanged native respawn passes exact readback");
+        saved.putFloat("Health", 30);
+        var staleHealth = saved.copy(); staleHealth.putFloat("Health", 5);
+        check(!net.goui.cosmicdungeon.transaction.PlayerSaveProof.matchesLocation(saved, staleHealth),
+                "An older player save with matching inventory, location and respawn cannot prove the new HP");
         for (String kind : List.of("COMPLETED", "ABANDONED", "KICKED", "LINK_DEAD", "claim"))
             for (boolean outside : List.of(false, true)) interruptions(kind, outside);
         System.out.println("Inventory handoff checks passed: " + checks);

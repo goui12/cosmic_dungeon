@@ -43,15 +43,17 @@ final class D1PartyPanel {
                         send(containerId, ready.action(), "");
                     });
             readyButton.active = answered && ready.enabled(); add.accept(readyButton);
-            var forward = D1PartyPresentation.forward(view);
-            button(add, forward.label(), x + box.rightColumn(), y + box.progressionY(), box.halfWidth(),
-                    answered && forward.enabled(), () -> send(containerId, forward.action(), ""));
+            if (state.leader() && state.phase().equals("ASSEMBLY"))
+                button(add, "Begin ready check", x + box.rightColumn(), y + box.progressionY(), box.halfWidth(),
+                        answered, () -> send(containerId, "begin", ""));
         }
         if (grouped && consent()) {
             if (D1PartyPresentation.sharingMutable(view)) {
-                button(add, "YES - contribute", x + 10, y + box.managementY(), box.halfWidth(), true,
+                add.accept(D1PartyPresentation.alwaysButton(view.sharing().always(), x + 10, y + box.navigationY(),
+                        box.innerWidth(), action -> send(containerId, action, view.sharing().context())));
+                button(add, "Yes", x + 10, y + box.managementY(), box.halfWidth(), true,
                         () -> send(containerId, "resources_yes", view.sharing().context()));
-                button(add, "NO - keep materials", x + box.rightColumn(), y + box.managementY(), box.halfWidth(), true,
+                button(add, "No", x + box.rightColumn(), y + box.managementY(), box.halfWidth(), true,
                         () -> send(containerId, "resources_no", view.sharing().context()));
             }
             if (!D1PartyPresentation.needsConsent(view))
@@ -141,7 +143,7 @@ final class D1PartyPanel {
         var state = view.state();
         var social = view.recruitment();
         if (consent() && !view.members().isEmpty()) {
-            graphics.drawString(font, "Contribute group resources?", x + 10, y + 34, 0xFFFFFFAA, false);
+            graphics.drawString(font, "Share group resources?", x + 10, y + 34, 0xFFFFFFAA, false);
             int textY = y + 58;
             for (String paragraph : D1PartyPresentation.consentExplanation(view.sharing().choice(), D1PartyPresentation.sharingMutable(view))) {
                 for (var line : font.split(Component.literal(paragraph), box.innerWidth())) {
@@ -193,7 +195,7 @@ final class D1PartyPanel {
             String status = switch (state.phase()) {
                 case "QUEUED" -> state.countdownSeconds() < 0 ? "Queue " + state.queuePosition() + ": waiting for an instance."
                         : "Entry in " + state.countdownSeconds() + " seconds.";
-                case "READY_CHECK" -> "Everyone confirms; the leader starts.";
+                case "READY_CHECK" -> "The dungeon starts when everyone is ready.";
                 case "PREPARING" -> "Preparing your instance";
                 default -> "Leader begins; everyone confirms personally.";
             };

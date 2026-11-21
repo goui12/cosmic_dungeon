@@ -19,7 +19,7 @@ public final class ChargedClassSkills {
     public static final String PREFIX="class_charge_v1:";
     public static final String KILL="cosmicdungeon_charged_kill_v1";
     public static final String EMPTY_SMITE="Smite only works on undead! You did not damage any mobs";
-    private record Ref(D1RunData data,long run,String key){}
+    private record Ref(D1RunData data,long run,String key,SignatureSkill skill){}
     private ChargedClassSkills(){}
     public static boolean active(LivingEntity actor,SignatureSkill skill){return ref(actor,skill)!=null;}
     private static Ref ref(LivingEntity actor,SignatureSkill skill){
@@ -38,12 +38,12 @@ public final class ChargedClassSkills {
         if(data.sealed(run))return null;
         var recovery=PendingDungeonRecoveryData.get(level.getServer());var handoff=recovery.handoff(owner);
         if(recovery.completed(owner)>=run||handoff!=null&&handoff.run()==run&&handoff.kind().equals("cleanup"))return null;
-        return new Ref(data,run,PREFIX+identity+":"+skill.id());
+        return new Ref(data,run,PREFIX+identity+":"+skill.id(),skill);
     }
     private static ChargedSkillState state(Ref ref){
         if(ref==null)return ChargedSkillState.empty();
         int armed=ref.data.count(ref.run,ref.key+":armed");
-        return new ChargedSkillState(armed>1?-1:ref.data.count(ref.run,ref.key),armed==1);
+        return ChargedSkillState.fromSaved(ref.skill, ref.data.count(ref.run,ref.key), armed);
     }
     private static void write(Ref ref,ChargedSkillState state){
         ref.data.setCount(ref.run,ref.key,state.charge());ref.data.setCount(ref.run,ref.key+":armed",state.armed()?1:0);
@@ -65,7 +65,7 @@ public final class ChargedClassSkills {
     public static boolean arm(LivingEntity actor){
         var ref=ref(actor,SignatureSkill.CHAIN_LIGHTNING);if(ref==null)return false;
         var old=state(ref);if(!old.ready(SignatureSkill.CHAIN_LIGHTNING)||old.armed())return false;
-        write(ref,old.arm());return true;
+        write(ref,old.arm(ref.skill));return true;
     }
     public static int level(LivingEntity actor,SignatureSkill skill){
         if(actor instanceof ServerPlayer p)return SignatureSkills.playerLevel(p,skill);

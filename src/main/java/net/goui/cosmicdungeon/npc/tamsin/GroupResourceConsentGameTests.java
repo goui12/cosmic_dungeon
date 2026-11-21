@@ -121,11 +121,23 @@ public final class GroupResourceConsentGameTests {
             var lobby=new D1PartyLobby();var anchor=new D1PartyLobby.Anchor(UUID.randomUUID(),"minecraft:overworld",0);
             lobby.create(f.viewer.getUUID(),anchor,0,"Consent");
             var party=lobby.party(f.viewer.getUUID());
-            lobby.resourceSharing(f.viewer.getUUID(),party.revision(),party.id().toString(),true);
+            GroupResourceConsent.applyPreference(f.viewer, lobby);
+            f.check(party.resourceSharing(f.viewer.getUUID()).equals("UNKNOWN"), "Default preference asks before sharing");
+            GroupResourceConsent.remember(f.viewer, true);
+            GroupResourceConsent.applyPreference(f.viewer, lobby);
+            f.check(party.resourceSharing(f.viewer.getUUID()).equals("YES") && GroupResourceConsent.view(f.viewer,party).always(),
+                    "Remembered consent is personal and applies on group entry");
+            GroupResourceConsent.remember(f.viewer, false);
+            f.check(!GroupResourceConsent.always(f.viewer) && party.resourceSharing(f.viewer.getUUID()).equals("YES"),
+                    "Turning off the preference keeps this group's choice");
             lobby.invite(f.viewer.getUUID(),f.subject.getUUID(),anchor,0,100,6);
             lobby.accept(f.subject.getUUID(),lobby.invitation(f.subject.getUUID()).token(),1);
             lobby.joinAccepted(f.subject.getUUID(),2,6,true);
             lobby.resourceSharing(f.subject.getUUID(),party.revision(),party.id().toString(),false);
+            var stopRemembering = new PartyPayloads.Action(-1, party.revision(), "resources_ask", party.id().toString());
+            f.check(GroupResourceConsent.chooseInLobby(f.subject, lobby, stopRemembering) == null
+                    && party.resourceSharing(f.subject.getUUID()).equals("NO"),
+                    "Delayed uncheck cannot turn a newer No into Yes");
             f.data.setValue(f.id,"future_existing_key","retain me");
             GroupResourceConsent.carryIntoRun(f.level.getServer(),party);
             f.check(GroupResourceConsent.choice(f.data,f.id,f.viewer.getUUID()).equals("UNKNOWN"),"Assembly cannot initialize an active run");

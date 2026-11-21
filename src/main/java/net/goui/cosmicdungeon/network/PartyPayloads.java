@@ -146,14 +146,15 @@ public final class PartyPayloads {
             buf.readFloat(),buf.readFloat(),ByteBufCodecs.VAR_INT.decode(buf),ByteBufCodecs.stringUtf8(16).decode(buf),Recovery.CODEC.decode(buf),Skill.CODEC.apply(ByteBufCodecs.list(2)).decode(buf),Resurrection.CODEC.decode(buf),ByteBufCodecs.stringUtf8(32).decode(buf),PartyVitals.CODEC.decode(buf)));
     }
     /** Context binds a personal choice to this exact group/run, never another member. */
-    public record Sharing(String context,String choice) {
+    public record Sharing(String context,String choice,boolean always) {
+        public Sharing(String context, String choice) { this(context, choice, false); }
         public static final Sharing NONE=new Sharing("","UNKNOWN");
         public Sharing {
             if(context==null||context.length()>36||!List.of("UNKNOWN","YES","NO").contains(choice)
                     ||context.isEmpty()&&!choice.equals("UNKNOWN"))throw new IllegalArgumentException("Invalid sharing state");
         }
         public static final StreamCodec<ByteBuf,Sharing> CODEC=StreamCodec.composite(
-            ByteBufCodecs.stringUtf8(36),Sharing::context,ByteBufCodecs.stringUtf8(7),Sharing::choice,Sharing::new);
+            ByteBufCodecs.stringUtf8(36),Sharing::context,ByteBufCodecs.stringUtf8(7),Sharing::choice,ByteBufCodecs.BOOL,Sharing::always,Sharing::new);
     }
     public record Options(String difficulty,Hire hire,List<Mercenary> mercenaries,Sharing sharing){
         public static final StreamCodec<ByteBuf,Options> CODEC=StreamCodec.composite(

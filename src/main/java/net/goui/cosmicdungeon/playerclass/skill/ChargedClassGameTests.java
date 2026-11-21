@@ -117,24 +117,24 @@ public final class ChargedClassGameTests {
             f.player.setItemSlot(EquipmentSlot.MAINHAND,new ItemStack(Items.TRIDENT));
             first.setInvulnerable(true);f.hit(first,1);first.setInvulnerable(false);
             f.check(ChargedClassSkills.charge(f.player,SignatureSkill.CHAIN_LIGHTNING)==0,"Denied native hit earns no charge");
-            for(int i=0;i<99;i++)f.hit(first,1);
-            f.check(ChargedClassSkills.charge(f.player,SignatureSkill.CHAIN_LIGHTNING)==99&&second.getHealth()==1024,"99 valid hits, no random proc");
+            for(int i=0;i<9;i++)f.hit(first,1);
+            f.check(ChargedClassSkills.charge(f.player,SignatureSkill.CHAIN_LIGHTNING)==9&&second.getHealth()==1024,"9 valid hits, no random proc");
             var shot=new ThrownTrident(f.level,f.player,new ItemStack(Items.TRIDENT));shot.setPos(f.origin);f.entities.add(shot);
             f.check(f.level.addFreshEntity(shot),"Native trident admitted and captured");
             first.invulnerableTime=0;first.hurtServer(f.level,f.player.damageSources().trident(shot,f.player),1);
-            f.check(ChargedClassSkills.charge(f.player,SignatureSkill.CHAIN_LIGHTNING)==100&&!ChargedClassSkills.armed(f.player),
-                    "Thrown trident fills100 but never auto-arms a player");
+            f.check(ChargedClassSkills.charge(f.player,SignatureSkill.CHAIN_LIGHTNING)==10&&!ChargedClassSkills.armed(f.player),
+                    "Thrown trident fills 10 but never auto-arms a player");
             f.press();f.check(ChargedClassSkills.armed(f.player)&&f.message("Chain Lightning armed for your next trident strike."),
                     "Generic primary network action arms and confirms skill");
             second.setInvulnerable(true);f.hit(first,1);
-            f.check(ChargedClassSkills.charge(f.player,SignatureSkill.CHAIN_LIGHTNING)==100&&ChargedClassSkills.armed(f.player),
+            f.check(ChargedClassSkills.charge(f.player,SignatureSkill.CHAIN_LIGHTNING)==10&&ChargedClassSkills.armed(f.player),
                     "Wholly ineffective chain retains armed charge");
             second.setInvulnerable(false);f.hit(first,1);
             f.check(second.getHealth()<1024&&ChargedClassSkills.charge(f.player,SignatureSkill.CHAIN_LIGHTNING)==0
                     &&!ChargedClassSkills.armed(f.player),"Next native strike releases and secondary damage cannot refill");
             f.check(SignatureSkills.playerProgress(f.player,SignatureSkill.CHAIN_LIGHTNING)==1,"One effective chain earns one proficiency");
             f.fill(SignatureSkill.CHAIN_LIGHTNING);var before=second.getHealth();f.hit(first,1);
-            f.check(second.getHealth()==before&&ChargedClassSkills.charge(f.player,SignatureSkill.CHAIN_LIGHTNING)==100,"Full unarmed bar holds without random proc/overflow");
+            f.check(second.getHealth()==before&&ChargedClassSkills.charge(f.player,SignatureSkill.CHAIN_LIGHTNING)==10,"Full unarmed bar holds without random proc/overflow");
         }
         h.succeed();
     }
@@ -186,7 +186,7 @@ public final class ChargedClassGameTests {
             var data=D1RunData.get(f.level.getServer());data.setValue(f.run,"future_charge_field","retained");
             f.check(data.flushVerified(),"Native charge store saved");
             data=DurableRecoveryGameTestSupport.reload(f.level.getServer(),D1RunData.class,"cosmicdungeon_d1_objectives_v1");
-            f.check(ChargedClassSkills.charge(f.player,SignatureSkill.CHAIN_LIGHTNING)==100&&ChargedClassSkills.armed(f.player),
+            f.check(ChargedClassSkills.charge(f.player,SignatureSkill.CHAIN_LIGHTNING)==10&&ChargedClassSkills.armed(f.player),
                     "Native SavedData reload retains charge and armed state");
             f.classId("judicator");f.check(ChargedClassSkills.charge(f.player,SignatureSkill.SMITE)==0&&!ChargedClassSkills.armed(f.player),
                     "Class switch cannot spend another class bar");

@@ -142,11 +142,8 @@ public final class D1PartyService {
         if (p == null) return "Join a group first.";
         String problem = rosterProblem(player.level().getServer(), p, true);
         if (problem != null) { LOBBY.cancel(p); return problem; }
-        return switch (action) {
-            case "ready" -> LOBBY.ready(player.getUUID(), revision);
-            case "unready" -> LOBBY.unready(player.getUUID(), revision);
-            default -> D1PartyTrades.start(player.level().getServer(), LOBBY, player.getUUID(), revision);
-        };
+        if (action.equals("unready")) return LOBBY.unready(player.getUUID(), revision);
+        return D1PartyTrades.ready(player.level().getServer(), LOBBY, player.getUUID(), revision);
     }
     private static void hudAction(ServerPlayer player, PartyPayloads.Action request) {
         if(Set.of("revive","revive_help").contains(request.action())){
@@ -192,15 +189,14 @@ public final class D1PartyService {
         if(tick-LAST_SHARING_ACTION.getOrDefault(player.getUUID(),-1000000L)<Config.PARTY_ACTION_TICKS.get())return;
         LAST_SHARING_ACTION.put(player.getUUID(),tick);
         var party=LOBBY.party(player.getUUID());
-        boolean enabled=request.action().equals("resources_yes");
         String error=party!=null ? (!onboarded(player) ? "Group is unavailable." :
-                LOBBY.resourceSharing(player.getUUID(),request.revision(),request.target(),enabled))
-                : GroupResourceConsent.choose(player,request.revision(),request.target(),enabled);
+                GroupResourceConsent.chooseInLobby(player, LOBBY, request))
+                : GroupResourceConsent.choose(player,request.revision(),request.target(),request.action().equals("resources_yes"));
         if(error!=null)message(player,error);
         show(player,true);syncViewers(server);
     }
     public static void action(ServerPlayer player, PartyPayloads.Action request) {
-        if(Set.of("resources_yes","resources_no").contains(request.action())){sharingAction(player,request);return;}
+        if(Set.of("resources_yes","resources_no","resources_always","resources_ask").contains(request.action())){sharingAction(player,request);return;}
         if (request.containerId() == -1) { hudAction(player, request); return; }
         if (!(player.containerMenu instanceof ClassSelectorMenu menu) || menu.containerId != request.containerId()
                 || menu.tamsinNpc() == null || !menu.stillValid(player) || !onboarded(player)) return;
@@ -226,6 +222,7 @@ public final class D1PartyService {
             case "create" -> {
                 if (anchor == null || !nearby(player, anchor)) { error = "Speak with Tamsin to create a group."; break; }
                 error = LOBBY.create(player.getUUID(), anchor, request.revision(), request.target(), selector(server, anchor).getMaxPlayers());
+                if (error == null) GroupResourceConsent.applyPreference(player, LOBBY);
             }
             case "hire", "release_hire" -> {
                 if(anchor==null||!nearby(player,anchor)){error="Speak with Tamsin to change a hire.";break;}
@@ -255,6 +252,7 @@ public final class D1PartyService {
                 }
                 error = LOBBY.startSolo(player.getUUID(), anchor, request.revision(),
                         selector(server, anchor).getMaxPlayers());
+                if (error == null) GroupResourceConsent.applyPreference(player, LOBBY);
             }
             case "invite" -> {
                 if (anchor == null || !nearby(player, anchor)) { error = "Speak with Tamsin to form a group."; break; }
@@ -292,7 +290,7 @@ public final class D1PartyService {
                     error = LOBBY.begin(player.getUUID(), request.revision(), classes);
                 }
             }
-            case "ready", "queue" -> {
+            case "ready" -> {
                 error = readiness(player, request.revision(), request.action());
                 if (D1PartyRules.closeAfterReady(p, player.getUUID(), request.action(), error)) player.closeContainer();
             }
@@ -315,6 +313,7 @@ public final class D1PartyService {
         if (error != null) message(player, error);
         else if (!wasGrouped && LOBBY.party(player.getUUID()) != null) {
             var party = LOBBY.party(player.getUUID());
+            GroupResourceConsent.applyPreference(player, LOBBY);
             notify(server, party, player.getGameProfile().name() + " joined. All ready confirmations cleared.");
         }
     }

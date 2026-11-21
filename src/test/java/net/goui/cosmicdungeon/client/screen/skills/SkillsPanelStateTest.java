@@ -101,6 +101,45 @@ final class SkillsPanelStateTest {
         }
         state.release();
     }
+    @Test void emptyRightSideAcceptsDragsAcrossTheInventoryAtSmallAndLargeGuiScales() {
+        for (int width : new int[]{320, 480, 854, 1696}) {
+            var shared = SkillsPanelClient.reservePalette(layout(width,240), new SharedInventoryLayout.Rect(0,0,0,0));
+            var state = new SkillsPanelState(shared,null);
+            state.content(3,92);
+            var header = state.geometry().header();
+            assertTrue(state.press(header.x()+2,header.y()+3,0,false).consumed());
+            assertTrue(state.drag(width,100,0,false));
+            var right = state.geometry().panel();
+            assertEquals(width-4,right.right());
+            assertTrue(right.x() >= (width+176)/2, "Skills must fit to the right of the native inventory");
+            assertTrue(state.release());
+            var restored = new SkillsPanelState(shared,state.placement());
+            restored.content(3,92);
+            assertEquals(right,restored.geometry().panel());
+            assertTrue(restored.press(right.x()+2,right.y()+3,0,false).consumed());
+            assertTrue(restored.drag(0,100,0,false));
+            assertEquals(4,restored.geometry().panel().x());
+            assertTrue(restored.release());
+        }
+    }
+    @Test void anOccupiedPanelOnlyReservesItsOwnRectangleAfterDraggingOrResizing() {
+        var room = layout(1200,480);
+        var state = new SkillsPanelState(room,null);
+        state.content(2,110);
+        var header = state.geometry().header();
+        assertTrue(state.press(header.x()+2,header.y()+3,0,false).consumed());
+        assertTrue(state.drag(1200,room.requests().y()+10,0,false));
+        assertTrue(state.geometry().panel().x() >= room.requests().right());
+        assertTrue(state.drag(room.requests().x()+15,4,0,false));
+        assertTrue(state.geometry().panel().x() >= room.requests().x());
+        assertTrue(state.geometry().panel().bottom() <= room.requests().y());
+        assertTrue(state.drag(room.requests().x()+15,room.requests().y()+8,0,false));
+        assertFalse(state.geometry().panel().intersects(room.requests()));
+        state.release();
+        var smaller = layout(320,240);
+        state.resize(smaller);
+        assertFalse(state.geometry().panel().intersects(smaller.requests()));
+    }
     @Test void invalidSavedCoordinatesAreRejectedAndOutOfRangeValuesRecover(){
         assertThrows(IllegalArgumentException.class,()->new SkillsPanelState.Placement(Double.NaN,0,false));
         var state=new SkillsPanelState(layout(320,240),new SkillsPanelState.Placement(-20,30,false));

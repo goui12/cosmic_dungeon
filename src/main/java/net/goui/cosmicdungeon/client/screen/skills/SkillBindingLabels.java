@@ -11,8 +11,8 @@ import net.minecraft.network.chat.Component;
 
 /** Live controls presentation; model/tooltip tests can supply hints without creating native key mappings. */
 public final class SkillBindingLabels {
-    public static final int HINT_COLOR = 0xFFAAAAAA;
-    static final float TEXT_SCALE = .80F;
+    public static final int HINT_COLOR = 0xFFCEDCE3;
+    static final float TEXT_SCALE = .90F;
     public static final float HINT_SCALE = .65F;
     static int textWidth(Font font, String text) {
         return (int)Math.ceil(font.width(text) * TEXT_SCALE);

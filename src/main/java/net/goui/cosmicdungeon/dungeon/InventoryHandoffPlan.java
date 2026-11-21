@@ -24,6 +24,8 @@ public final class InventoryHandoffPlan {
             throw new IllegalArgumentException("Invalid stored-inventory claim");
         if (kind().equals("cleanup") && !Set.of("COMPLETED", "ABANDONED", "KICKED", "LINK_DEAD", "STARTUP_ABORT", "MANUAL").contains(reason()))
             throw new IllegalArgumentException("Unknown cleanup outcome");
+        if (originalHealth().isPresent() && !(kind().equals("cleanup") && reason().equals("STARTUP_ABORT")))
+            throw new IllegalArgumentException("Original health is only valid for startup rollback");
         var escrow = tag("escrow");
         if (!escrow.isEmpty()) {
             var entry = DungeonInventoryEscrowData.Entry.CODEC.parse(net.minecraft.nbt.NbtOps.INSTANCE, escrow).getOrThrow();
@@ -69,8 +71,10 @@ public final class InventoryHandoffPlan {
             if (entry.runId() == run)
                 ownershipAfter = ChopOwnershipData.entryImage(new ChopOwnershipData.Entry(UUID.randomUUID().toString(), 0, true));
         }
-        return create(owner, run, "cleanup", startup ? "STARTUP_ABORT" : reason, keep, online, before,
+        var plan = create(owner, run, "cleanup", startup ? "STARTUP_ABORT" : reason, keep, online, before,
                 after, stored, DungeonInventoryEscrowData.image(escrow), ownershipBefore, ownershipAfter, "", new CompoundTag());
+        if (startup) DungeonRunHealth.originalHealth(starting).ifPresent(hp -> plan.data.putFloat(DungeonRunHealth.ORIGINAL, hp));
+        return plan;
     }
     /** Additive frozen completion tier; old handoffs retain their NORMAL/Hard meaning. */
     public DungeonDifficulty difficulty() {
@@ -87,6 +91,7 @@ public final class InventoryHandoffPlan {
     public long run() { return data.getLongOr("run", 0); }
     public String kind() { return data.getStringOr("kind", ""); }
     public String reason() { return data.getStringOr("reason", ""); }
+    public Optional<Float> originalHealth() { return DungeonRunHealth.originalHealth(data); }
     public String key() { return data.getStringOr("key", ""); }
     public boolean keep() { return data.getBooleanOr("keep", false); }
     public boolean exactBefore() { return data.getBooleanOr("exact_before", false); }

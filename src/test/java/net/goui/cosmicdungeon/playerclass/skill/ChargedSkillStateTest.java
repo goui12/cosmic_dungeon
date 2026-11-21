@@ -7,10 +7,10 @@ final class ChargedSkillStateTest {
         for(var skill:new SignatureSkill[]{SignatureSkill.CHAIN_LIGHTNING,SignatureSkill.SMITE}){
             var state=ChargedSkillState.empty();int max=ChargedSkillState.limit(skill);
             for(int i=0;i<max-1;i++)state=state.hit(skill);
-            assertFalse(state.ready(skill));assertFalse(state.arm().armed());
+            assertFalse(state.ready(skill));assertFalse(state.arm(skill).armed());
             state=state.hit(skill);assertTrue(state.ready(skill));
             for(int i=0;i<1000;i++)state=state.hit(skill);
-            assertEquals(max,state.charge());assertEquals(skill==SignatureSkill.CHAIN_LIGHTNING,state.arm().armed());
+            assertEquals(max,state.charge());assertEquals(skill==SignatureSkill.CHAIN_LIGHTNING,state.arm(skill).armed());
         }
     }
     @Test void corruptOrWrongTrackCannotBecomeReady(){
@@ -21,6 +21,15 @@ final class ChargedSkillStateTest {
         assertFalse(new ChargedSkillState(10,true).valid(SignatureSkill.SMITE));
         assertFalse(new ChargedSkillState(99,true).valid(SignatureSkill.CHAIN_LIGHTNING));
         assertFalse(ChargedSkillState.empty().ready(SignatureSkill.WOLVES));
+    }
+    @Test void oldLightningCountsStayUsableWithoutRepairingInvalidArmedFlags() {
+        var skill = SignatureSkill.CHAIN_LIGHTNING;
+        assertEquals(10, ChargedSkillState.limit(skill));
+        for (int hits : new int[]{0, 9, 10, 11, 87, 100})
+            assertEquals(new ChargedSkillState(Math.min(hits, 10), false), ChargedSkillState.fromSaved(skill, hits, 0));
+        assertTrue(ChargedSkillState.fromSaved(skill, 100, 1).armed());
+        assertFalse(ChargedSkillState.fromSaved(skill, 99, 1).valid(skill));
+        assertFalse(ChargedSkillState.fromSaved(skill, 101, 0).valid(skill));
     }
     @Test void secondaryScopeRestoresItsPriorStateEvenAfterFailure(){
         assertFalse(SecondarySkillDamage.active());

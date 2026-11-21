@@ -100,7 +100,7 @@ final class MobilePartyReadinessTest {
         assertFalse(D1PartyRules.sameStartingDimension(null, "minecraft:overworld"));
     }
 
-    @Test void leaderReadyKeepsMenuAndStillRequiresAnExplicitAuthorizedStart() {
+    @Test void leaderCanWatchRosterWhileOnlyACompleteReadyCheckCanQueue() {
         var lobby = pair(); var party = lobby.party(leader);
         D1PartyTestSupport.consentAll(lobby,leader);
         assertNull(lobby.begin(leader, party.revision(), Map.of(leader, "bogatyr", member, "theurgist")));

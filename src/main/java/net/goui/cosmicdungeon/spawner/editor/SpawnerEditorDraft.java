@@ -1,11 +1,18 @@
 package net.goui.cosmicdungeon.spawner.editor;
 
+import net.goui.cosmicdungeon.block.entity.SpawnerMobScale;
 import net.minecraft.resources.ResourceLocation;
 
 /** Bounded editable fields only; authored stacks, loot, potentials and unknown NBT never come from clients. */
 public record SpawnerEditorDraft(String entityId, String name, boolean captain, boolean boss, int cap,
         int minDelay, int maxDelay, boolean silent, boolean noAi, boolean invulnerable,
-        boolean persistent, boolean nameVisible) {
+        boolean persistent, boolean nameVisible, double mobScale) {
+    public SpawnerEditorDraft(String entityId, String name, boolean captain, boolean boss, int cap,
+            int minDelay, int maxDelay, boolean silent, boolean noAi, boolean invulnerable,
+            boolean persistent, boolean nameVisible) {
+        this(entityId, name, captain, boss, cap, minDelay, maxDelay, silent, noAi, invulnerable,
+                persistent, nameVisible, SpawnerMobScale.DEFAULT);
+    }
     public static final int MAX_CAP = 32767, MAX_DELAY = 32767, MAX_NAME = 128;
     public SpawnerEditorDraft {
         if (entityId == null || entityId.length() > 256 || name == null || name.length() > MAX_NAME)
@@ -21,6 +28,7 @@ public record SpawnerEditorDraft(String entityId, String name, boolean captain, 
         if (cap < 0 || cap > MAX_CAP) return "Cap must be between 0 (uncapped) and " + MAX_CAP + ".";
         if (minDelay < 1 || maxDelay < minDelay || maxDelay > MAX_DELAY)
             return "Delays must satisfy 1 <= minimum <= maximum <= " + MAX_DELAY + " ticks.";
+        if (!SpawnerMobScale.valid(mobScale)) return SpawnerMobScale.ERROR;
         return "";
     }
 }

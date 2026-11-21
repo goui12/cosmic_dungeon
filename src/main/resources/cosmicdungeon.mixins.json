@@ -25,6 +25,7 @@
   },
   "mixins": [
     "DungeonServerAccess",
+    "DungeonEquipmentAccess",
     "DungeonStartupChunkMixin",
     "BaseSpawnerAccess",
     "CosmicSpawnerAwarenessMixin",

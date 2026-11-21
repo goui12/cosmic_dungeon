@@ -93,7 +93,7 @@ public final class HelpMenuScreen extends Screen {
         if (navigation.back()) { rebuild(); triggerImmediateNarration(false); }
     }
     @Override public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        renderBackground(g, mouseX, mouseY, partialTick);
+        // Screen.renderWithTooltipAndSubtitles has already drawn the background for this frame.
         ensureLayout();
         var window = geometry.window();
         var theme = HelpMenuArtwork.forPage(navigation.page().id());

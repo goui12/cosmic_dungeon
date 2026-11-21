@@ -1,4 +1,4 @@
-# CurseForge -> stopped TEST only. No local-client install or post-publication hashes.
+# CurseForge -> stopped official server. No local-client install or post-publication hashes.
 [CmdletBinding()] param(
     [Parameter(Mandatory=$true)][string]$Jar,
     [Parameter(Mandatory=$true)][string]$ReleaseReceipt,
@@ -6,9 +6,10 @@
 )
 . "$PSScriptRoot\cd-common.ps1"
 . "$PSScriptRoot\deploy-server-core.ps1"
+. "$PSScriptRoot\official-server-session.ps1"
 $release=Get-Content -LiteralPath $ReleaseReceipt -Raw | ConvertFrom-Json
 Assert-CDServerReleaseChannel ([string]$release.version)
-$c=Get-CDConfig
+$c=Get-CDOfficialTarget
 $source=Get-Item -LiteralPath $Jar
 $tag='v'+$release.version
 $commit=(& git -C $script:CDRepo rev-parse ($tag+'^{commit}')).Trim()
@@ -31,59 +32,73 @@ try {
         }
     } finally {$zip.Dispose()}
     $pending=Join-Path $script:CDCache 'deploy-pending.json'
-    $recordDir=Join-Path $script:CDCache ('releases\'+$tag)
+    $recordDir=Join-Path $script:CDCache ('releases\'+$tag+'\official')
     [void][IO.Directory]::CreateDirectory($recordDir)
     $manifestPath=Join-Path $recordDir 'server-installation.json'
     $lock=[IO.File]::Open((Join-Path $script:CDCache 'deployment.lock'),'OpenOrCreate','ReadWrite','None')
     if(Test-Path -LiteralPath $pending){throw 'Unresolved deployment journal; reconcile before another operation.'}
     if(Test-Path -LiteralPath $manifestPath){
         $prior=Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
-        if($prior.State -eq 'complete' -and $prior.Commit -eq $commit){
+        if($prior.State -eq 'complete' -and $prior.Commit -eq $commit -and $prior.Target -ceq $c.Name -and
+            $prior.Identity.UserName -ceq $c.UserName -and $prior.Identity.Host -ceq $c.HostName -and
+            $prior.Identity.Root -ceq $c.RemoteRoot -and $prior.Identity.HostKeyPin -ceq $c.Pin){
             Write-Output "Existing completed server receipt: $manifestPath"; return
         }
         throw 'Existing release installation record needs reconciliation.'
     }
-    $s=New-CDSession
-    $identity=Test-CDRemoteIdentity $s
+    $s=Get-CDOfficialTransport
+    $propertiesFile=[IO.Path]::GetTempFileName()
+    try {
+        [void](Receive-CDOfficialFile $s ($c.RemoteRoot+'/server.properties') $propertiesFile 65536)
+        $observed=Assert-CDServerProperties ([IO.File]::ReadAllText($propertiesFile)) $c.ExpectedServerPort
+    } finally {if(Test-Path -LiteralPath $propertiesFile){Remove-Item -LiteralPath $propertiesFile -Force}}
+    $identity=[ordered]@{Host=$c.HostName;UserName=$c.UserName;SftpPort=$c.PortNumber;Root=$c.RemoteRoot;HostKeyPin=$c.Pin;Site=$c.Site;ServerPropertiesPort=$observed.ServerPropertiesPort;OnlineMode=$observed.OnlineMode;VerifiedUtc=[DateTime]::UtcNow.ToString('o')}
     function Read-Shutdown {
-        $remote=$c.RemoteRoot+'/logs/latest.log'
-        $info=$s.GetFileInfo($remote)
-        if($info.Length -gt 33554432){throw 'Latest log exceeds bounded shutdown inspection.'}
         $local=Join-Path $recordDir 'server-shutdown-latest.log'
-        $s.GetFiles([WinSCP.RemotePath]::EscapeFileMask($remote),$local,$false).Check()
+        $info=Receive-CDOfficialFile $s ($c.RemoteRoot+'/logs/latest.log') $local 33554432
         $line=Assert-CDShutdownTail @(Get-Content -LiteralPath $local -Tail 100)
         return @{CheckedUtc=[DateTime]::UtcNow.ToString('o');LogModified=$info.LastWriteTime.ToString('o');Indicator=$line;Evidence=$local}
     }
+    function Get-InstalledRuntime {
+        $jars=@(Get-CDOfficialDirectory $s ($c.RemoteRoot+'/mods') | Where-Object {$_.Name -match '^cosmicdungeon-[0-9].*\.jar$'})
+        if($jars.Count -ne 1 -or !$jars[0].IsFile -or $jars[0].Name -cnotmatch '^cosmicdungeon-[0-9]+\.[0-9]+\.[0-9]+(?:-(?:alpha|beta)(?:\.[0-9]+)?)?\.jar$'){
+            throw 'Unexpected official runtime inventory; nothing replaced.'
+        }
+        return $jars[0]
+    }
     $shutdown=Read-Shutdown
     $remoteMods=$c.RemoteRoot+'/mods'
-    $old=@($s.ListDirectory($remoteMods).Files | Where-Object {!$_.IsDirectory -and $_.Name -match '^cosmicdungeon-[0-9].*\.jar$'})
-    if($old.Count -ne 1 -or $old[0].Name -match '-(loading-screen|sources|dev|api)\.jar$'){
-        throw 'Unexpected server runtime inventory; nothing replaced.'
-    }
-    $old=$old[0]
+    $old=Get-InstalledRuntime
     if($old.Name -eq $source.Name){throw 'Target version exists without a completed receipt; reconcile before retry.'}
-    $plan=@{Mode=$(if($Apply){'APPLY'}else{'DRY RUN'});Tag=$tag;Commit=$commit;Jar=$source.Name;Bytes=$source.Length;OldJar=$old.Name;Identity=$identity;Shutdown=$shutdown;ClientInstallation='not_requested';HashChecks='publisher receipt only'}
+    $plan=@{Target=$c.Name;Mode=$(if($Apply){'APPLY'}else{'DRY RUN'});Tag=$tag;Commit=$commit;Jar=$source.Name;Bytes=$source.Length;OldJar=$old.Name;Identity=$identity;Shutdown=$shutdown;ClientInstallation='not_requested';HashChecks='publisher receipt only'}
     if(!$Apply){$plan | ConvertTo-Json -Depth 5;return}
     $id=[DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ')+'-'+[guid]::NewGuid().ToString('N').Substring(0,8)
     $stageBase=$c.RemoteRoot+'/.cosmic-ai-staging';$backupBase=$c.RemoteRoot+'/.cosmic-ai-backups'
-    foreach($dir in @($stageBase,$backupBase)){if(!$s.FileExists($dir)){$s.CreateDirectory($dir)}}
-    $manifest=[ordered]@{Id=$id;State='staging';Tag=$tag;Commit=$commit;Jar=$source.Name;Bytes=$source.Length;PublisherSHA256=$release.sha256.main;FileId=$release.files.main.file_id;RemoteStage=$stageBase+'/'+$id+'.jar.staged';OldPath=$remoteMods+'/'+$old.Name;BackupPath=$backupBase+'/'+$id+'-'+$old.Name;TargetPath=$remoteMods+'/'+$source.Name;Identity=$identity;Shutdown=$shutdown;CompletedOperations=@();ServerRestarted=$false;ClientInstalled=$false}
+    $manifest=[ordered]@{Id=$id;Target=$c.Name;State='staging';Tag=$tag;Commit=$commit;Jar=$source.Name;Bytes=$source.Length;PublisherSHA256=$release.sha256.main;FileId=$release.files.main.file_id;RemoteStage=$stageBase+'/'+$id+'.jar.staged';OldPath=$remoteMods+'/'+$old.Name;BackupPath=$backupBase+'/'+$id+'-'+$old.Name;TargetPath=$remoteMods+'/'+$source.Name;Identity=$identity;Shutdown=$shutdown;CompletedOperations=@();ServerRestarted=$false;ClientInstalled=$false}
     $save={
         $json=$manifest | ConvertTo-Json -Depth 7
         $json | Set-Content -LiteralPath $manifestPath -Encoding UTF8
         $json | Set-Content -LiteralPath $pending -Encoding UTF8
     }
     & $save
-    $s.PutFiles($source.FullName,[WinSCP.RemotePath]::EscapeFileMask($manifest.RemoteStage),$false).Check()
-    if($s.GetFileInfo($manifest.RemoteStage).Length -ne $source.Length){throw 'Incomplete staging transfer.'}
-    $manifest.Shutdown=Read-Shutdown
-    $now=@($s.ListDirectory($remoteMods).Files | Where-Object {!$_.IsDirectory -and $_.Name -match '^cosmicdungeon-[0-9].*\.jar$'})
-    if($now.Count -ne 1 -or $now[0].Name -ne $old.Name -or $now[0].Length -ne $old.Length -or $now[0].LastWriteTime -ne $old.LastWriteTime){
-        throw 'Server runtime inventory changed during staging.'
+    $rootEntries=@(Get-CDOfficialDirectory $s $c.RemoteRoot)
+    foreach($dir in @($stageBase,$backupBase)){
+        $name=$dir.Substring($c.RemoteRoot.Length+1)
+        $match=@($rootEntries | Where-Object {$_.Name -ceq $name})
+        if($match.Count -eq 0){
+            $ack=Invoke-CDOfficialCommand $s ('mkdir -- '+(ConvertTo-CDRemoteArgument $s $dir)) 'mkdir'
+            if($ack.filename.value -cne $dir){throw 'Unexpected official directory acknowledgement.'}
+        } elseif($match.Count -ne 1 -or !$match[0].IsDirectory){throw 'Unsafe official staging or recovery directory.'}
     }
+    Send-CDOfficialStage $s $source.FullName $manifest.RemoteStage $source.Length
+    $now=Get-InstalledRuntime
+    if($now.Name -cne $old.Name -or $now.Length -ne $old.Length -or $now.LastWriteTime -ne $old.LastWriteTime){
+        throw 'Official runtime inventory changed during staging.'
+    }
+    $manifest.Shutdown=Read-Shutdown
     Invoke-CDServerActivation $s $manifest $save
     Remove-Item -LiteralPath $pending
-    Write-Output "TEST updated to $($release.version); server remains stopped. Receipt: $manifestPath"
+    Write-Output "Official server updated to $($release.version); server remains stopped. Receipt: $manifestPath"
 } finally {
-    if($s){$s.Dispose()};if($lock){$lock.Dispose()};$sourceLock.Dispose()
+    if($lock){$lock.Dispose()};$sourceLock.Dispose()
 }

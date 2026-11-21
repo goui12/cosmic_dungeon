@@ -17,6 +17,7 @@ This document covers the full `/spawner` command surface for Cosmic Dungeon oper
 - `/spawner name clear`
 - `/spawner boss [true|false]`
 - `/spawner cap <amount>`
+- `/spawner scale <0.0625..4>` sets the size multiplier for future root mobs. Look at a wither skeleton spawner and enter `/spawner scale 0.5` to halve its size. A value of 1 restores the authored size for future spawns. The same field is available under **Spawning** in `/spawner edit`.
 - `/spawner equip <slot> <namespace:item>`
 - `/spawner equip <slot> fromhand`
 - `/spawner equip clear <slot>`

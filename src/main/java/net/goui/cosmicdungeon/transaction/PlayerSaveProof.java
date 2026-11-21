@@ -41,7 +41,8 @@ public final class PlayerSaveProof {
                 .equals(actual.getCompoundOrEmpty("NeoForgeData").getCompoundOrEmpty(ClassData.ROOT_TAG));
     }
     public static boolean matchesLocation(CompoundTag expected,CompoundTag actual){
-        return matches(expected,actual)&&Objects.equals(expected.get("Dimension"),actual.get("Dimension"))
+        return matches(expected,actual)&&Objects.equals(expected.get("Health"),actual.get("Health"))
+                &&Objects.equals(expected.get("Dimension"),actual.get("Dimension"))
                 &&Objects.equals(expected.get("Pos"),actual.get("Pos"))&&Objects.equals(expected.get("Rotation"),actual.get("Rotation"))
                 &&Objects.equals(expected.get("respawn"),actual.get("respawn"));
     }

@@ -28,11 +28,11 @@ public final class SpawnerEditorPayloads {
         b.writeBoolean(d.captain()); b.writeBoolean(d.boss()); b.writeVarInt(d.cap());
         b.writeVarInt(d.minDelay()); b.writeVarInt(d.maxDelay());
         b.writeBoolean(d.silent()); b.writeBoolean(d.noAi()); b.writeBoolean(d.invulnerable());
-        b.writeBoolean(d.persistent()); b.writeBoolean(d.nameVisible());
+        b.writeBoolean(d.persistent()); b.writeBoolean(d.nameVisible()); b.writeDouble(d.mobScale());
     }
     private static SpawnerEditorDraft read(RegistryFriendlyByteBuf b) {
         return new SpawnerEditorDraft(b.readUtf(256),b.readUtf(128),b.readBoolean(),b.readBoolean(),b.readVarInt(),
-                b.readVarInt(),b.readVarInt(),b.readBoolean(),b.readBoolean(),b.readBoolean(),b.readBoolean(),b.readBoolean());
+                b.readVarInt(),b.readVarInt(),b.readBoolean(),b.readBoolean(),b.readBoolean(),b.readBoolean(),b.readBoolean(),b.readDouble());
     }
     private static List<ItemStack> readStacks(RegistryFriendlyByteBuf b){
         var result=new ArrayList<ItemStack>();for(int i=0;i<6;i++)result.add(ItemStack.OPTIONAL_STREAM_CODEC.decode(b));return result;
